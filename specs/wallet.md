@@ -103,10 +103,12 @@ This means wallet.sh has two roles:
 
 ## Wallet Creation Flow
 
+**Bootstrap exception:** `POST /v1/wallets` is the ONE free endpoint across all of agentstack. An agent can't pay for a wallet before it has a wallet. This endpoint requires no x402 payment. Every other endpoint on every primitive does.
+
 ```
 Agent (or human setting up an agent)
     ↓
-POST /v1/wallets
+POST /v1/wallets                  ← FREE (no x402 payment required)
     { "chain": "eip155:8453" }    ← Base mainnet
     ↓
 wallet.sh generates a keypair locally (no CDP dependency)

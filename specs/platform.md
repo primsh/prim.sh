@@ -155,10 +155,15 @@ agentstack/
 └── package.json             # Workspace root
 ```
 
+## Domain Strategy
+
+- `agentstack.sh` is taken. Don't block on it — acquire later if traction justifies it.
+- `wallet.sh` is available. Register it as the anchor domain.
+- Other primitive domains (relay.sh, spawn.sh, etc.) — check and register opportunistically.
+- For now, specs can reference `api.wallet.sh`, `api.relay.sh` etc. as target URLs. If a domain isn't available, fall back to subdomains under whatever root domain we have.
+
 ## Open Questions
 
-1. **Monorepo vs polyrepo?** Monorepo is simpler for shared middleware. Polyrepo gives independent deploy cycles. Starting monorepo, can split later.
-2. **Single VPS vs multi-service?** Start with all primitives on one box behind a reverse proxy. Split when scale demands it.
-3. **Domain strategy?** Do we actually buy spawn.sh, relay.sh, wallet.sh domains? Or is everything under agentstack.sh? (`api.agentstack.sh/spawn/v1/...` vs `api.spawn.sh/v1/...`)
-4. **Railgunner integration depth?** wallet.sh can import railgunner as a library (for Polygon/Railgun features) while adding Base/x402 support natively. Or wallet.sh can be a clean rewrite that borrows patterns from railgunner.
-5. **Facilitator self-hosting?** Coinbase's facilitator is free for 1k tx/month. At scale, self-hosting a facilitator removes the dependency and the per-tx fee.
+1. **Single VPS vs multi-service?** Start with all primitives on one box behind a reverse proxy. Split when scale demands it.
+2. **Railgunner integration depth?** wallet.sh can import railgunner as a library (for Polygon/Railgun features) while adding Base/x402 support natively. Or wallet.sh can be a clean rewrite that borrows patterns from railgunner.
+3. **Facilitator self-hosting?** Coinbase's facilitator is free for 1k tx/month. At scale, self-hosting a facilitator removes the dependency and the per-tx fee.
