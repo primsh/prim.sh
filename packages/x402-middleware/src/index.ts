@@ -1,3 +1,3 @@
-export * from "./middleware.ts";
-export * from "./types.ts";
+export * from "./middleware";
+export * from "./types";
 

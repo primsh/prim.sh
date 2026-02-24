@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { createX402Middleware } from "../src/middleware.ts";
+import { createX402Middleware } from "../src/middleware";
 
 describe("x402 middleware", () => {
   it("creates a middleware function", () => {

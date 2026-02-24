@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import app from "../src/index.ts";
+import app from "../src/index";
 
 describe("spawn.sh app", () => {
   it("exposes a default export", () => {
