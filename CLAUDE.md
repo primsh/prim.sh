@@ -4,58 +4,94 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## What This Is
 
-Static marketing site for **agentstack** — an agent-native cloud platform offering 19 infrastructure primitives (spawn, store, vault, dns, relay, ring, cron, pipe, pay, docs, pins, seek, mart, hive, ads, ship, hands, id, corp). Each primitive has its own subdirectory with a single `index.html`.
+**AgentStack** — the agent-native cloud. A collection of 26 independent infrastructure primitives where the customer is the agent, not the human. Every primitive accepts x402 payment (USDC on Base) as the sole authentication mechanism. No signup, no GUI, no KYC.
 
-## Running Locally
+The project has two layers:
+1. **Marketing site** — Static HTML landing pages (current state, `site/` equivalent)
+2. **Primitives** — Actual services being built (wallet.sh, relay.sh, spawn.sh, etc.)
+
+## Dev Commands
 
 ```bash
-python serve.py
-# Serves on 100.91.44.60:8892
-# Routes: / → agentstack/index.html, /spawn → spawn/index.html, etc.
+# Primitives (after P-3 monorepo setup)
+pnpm install                              # Install all deps
+bun run packages/wallet/src/index.ts      # Run wallet.sh locally
+bun run packages/relay/src/index.ts       # Run relay.sh locally
+pnpm -r check                            # Lint + typecheck + test (all packages)
+pnpm -r test                             # Tests only
+pnpm -r lint                             # Biome lint
+
+# Landing pages (current, pre-monorepo)
+python serve.py                           # Serves on 100.91.44.60:8892
+# After P-3: python site/serve.py
 ```
 
-No build step. No dependencies. Edit HTML directly.
+## Project Structure (after P-3 monorepo setup)
 
-## Architecture
+```
+agentstack/
+├── packages/
+│   ├── x402-middleware/      # @agentstack/x402-middleware (shared)
+│   ├── wallet/               # @agentstack/wallet (wallet.sh)
+│   ├── relay/                # @agentstack/relay (relay.sh)
+│   └── spawn/                # @agentstack/spawn (spawn.sh)
+├── site/                     # Landing pages (HTML, moved from root)
+│   ├── serve.py              # Dev server
+│   └── <primitive>/index.html
+├── specs/                    # Product specs
+├── tasks/                    # Plan docs (active/ and completed/)
+├── TASKS.md                  # Phased roadmap
+├── package.json              # Workspace root
+├── pnpm-workspace.yaml
+├── tsconfig.base.json
+└── biome.json
+```
 
-- **Zero JS, zero external deps.** Every page is a self-contained HTML file with inlined CSS.
-- **`serve.py`** — Minimal Python HTTP server with a route map. All 19 primitives + root are defined in `ROUTES`.
-- **`agentstack/index.html`** — Hub landing page listing all 19 primitives.
-- **`index.html` (root)** — Duplicate of `agentstack/index.html`.
-- **Each `<primitive>/index.html`** — Standalone product page with hero, API examples, pricing, CTA.
+### Current structure (pre-monorepo)
 
-## Design System
+Landing pages are at root level (`spawn/index.html`, `relay/index.html`, etc.). `serve.py` is at root. No `packages/` dir yet. P-3 migrates to the structure above.
 
-All pages share a dark-mode design system via CSS custom properties:
+## Primitives (26)
 
-- `--bg: #0a0a0a`, `--surface: #111`, `--border: #1a1a1a`, `--text: #e0e0e0`, `--muted: #666`
+Core: wallet, relay, spawn, store, vault, dns, cron, pipe, code
+Communication: ring, browse
+Intelligence: mem, infer, seek, docs
+Operations: watch, trace, auth, id
+Physical world: pins, mart, ship, hands, pay, corp
+Social: hive, ads
+
+## Tech Stack
+
+- **TypeScript + Bun** — Bun runs TS natively, no build step. `bun run src/index.ts` just works.
+- **Hono** — Web framework. Lightweight, middleware-friendly. x402 has first-party Hono middleware.
+- **pnpm workspaces** — Monorepo. Each primitive is `packages/<name>/`.
+- **Biome** — Lint + format (matches Railgunner conventions).
+- **vitest** — Test runner.
+- **x402** — Payment protocol (Coinbase). USDC on Base chain. Sub-cent gas.
+
+## Key Architecture Decisions
+
+- **x402 payment** is the auth layer. Every endpoint returns 402 → agent pays → gets resource.
+- **Each primitive is independent.** No shared DB. Shared `@agentstack/x402-middleware` package only.
+- **wallet.sh** is the keystone — adapts patterns from `~/Developer/railgunner` (encrypted keystore, execution journal, circuit breaker).
+- **relay.sh** wraps Stalwart Mail Server (Rust, JMAP + REST API).
+- **spawn.sh** wraps Hetzner Cloud API.
+
+## Build Priority
+
+1. wallet.sh — Crypto wallets + x402 integration (foundation for everything)
+2. relay.sh — Email (wraps Stalwart, receive-only first)
+3. spawn.sh — VPS provisioning (wraps Hetzner)
+4. llms.txt — Machine-readable primitive catalog
+
+## Landing Page Design System
+
+Dark-mode, monospace, CSS custom properties:
+- `--bg: #0a0a0a`, `--surface: #111`, `--text: #e0e0e0`, `--muted: #666`
 - Font: `'SF Mono', SFMono-Regular, 'Cascadia Code', Consolas, monospace`
-- Each primitive page sets `--accent` to its unique color (green for spawn, gold for pay, etc.)
-- The landing page assigns 19 named color variables (`--green` through `--slate`) and maps them to `.product.p1` through `.product.p19`
+- Each primitive sets `--accent` to its unique color
+- Color utility classes: `.g` green, `.b` blue, `.r` red, `.p` purple, `.o` orange, `.cy` cyan, `.y` yellow, `.pk` pink, `.gl` gold, `.t` teal, `.m` magenta, `.l` lime, `.c` coral, `.i` indigo, `.v` violet, `.z` azure, `.br` brown, `.e` emerald, `.s` slate, `.w` text
 
-**Color utility classes** in code blocks: `.g` (green), `.b` (blue), `.r` (red), `.p` (purple), `.o` (orange), `.cy` (cyan), `.y` (yellow), `.pk` (pink), `.gl` (gold), `.t` (teal), `.m` (muted/magenta), `.l` (lime), `.c` (coral — but see known bug), `.i` (indigo), `.v` (violet), `.z` (azure), `.br` (brown), `.e` (emerald), `.s` (slate), `.w` (text/white).
+## Related Projects
 
-## Page Template Pattern
-
-Every primitive page follows this structure:
-1. Hero — logo, tagline, curl example, feature badges
-2. How it works — HTTP flow diagram (request → 402 → payment → 201)
-3. Interfaces — REST / MCP / OpenAI function spec cards
-4. API reference — endpoint listing in `<pre><code>` blocks
-5. Use cases grid
-6. x402 payment explanation
-7. Pricing table
-8. CTA + footer
-
-Responsive breakpoint at 600px. Single-column on mobile.
-
-## Known Issues
-
-Tracked in `TASKS.md`:
-
-1. **"Fourteen primitives" copy error** — Should be "Nineteen". Appears in the manifesto section and CTA of `agentstack/index.html`.
-2. **`.c` class collision** — In `agentstack/index.html`, `.c{color:var(--coral)}` (line 49) is overridden by `.c{color:#444}` (line 50), so coral-intended elements render gray.
-
-## Not a Git Repo
-
-This project has no `.git/` directory and no version control configured.
+- **railgunner** (`~/Developer/railgunner`) — Polygon wallet ops tool. Source of wallet.sh patterns (keystore, journal, circuit breaker). JS/Node, ~5.8k LOC.

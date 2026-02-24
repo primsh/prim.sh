@@ -38,8 +38,87 @@ footer .links{margin-top:0.5rem}footer .links a{margin:0 0.75rem}
 </style>
 </head>
 <body>
-<div class=\"hero\">
-  <div class=\"logo\"><span>pins</span>.sh</div>
-  <div class=\"tagline\">Maps for agents.</div>
-  <div class=\"sub\">Coordinates, business hours, routing, and places data as structured JSON. No rendering required. x402 auth.</div>
-  <div class=\"cmd-block\"><code>\n<span class=\"comment\"># Find a place</span>\n<span class=\"prompt\">$</span> curl -G https://api.pins.sh/v1/places/search \\\n    -H \"X-402-Payment: $TOKEN\" \\\n    --data-urlencode \"query=coffee near 198.51.100.1\"\n\n{\n  \"results\": [\n    {\n      \"name\": \"Agent Brew\",\n      \"location\": { \"lat\": 45.5512, \"lng\": -122.6750 },\n      \"status\": \"open\",\n      \"hours\": { \"open\": \"07:00\", \"close\": \"19:00\" },\n      \"rating\": 4.8\n    }\n  ]\n}\n\n<span class=\"comment\"># Get routing</span>\n<span class=\"prompt\">$</span> curl -X POST https://api.pins.sh/v1/routing/directions \\\n    -H \"X-402-Payment: $TOKEN\" \\\n    -d '{\"from\": \"45.5512,-122.6750\", \"to\": \"45.5231,-122.6765\"}'\n  </code></div>\n  <div class=\"badges\">\n    <div class=\"badge\"><strong>x402</strong> auth</div>\n    <div class=\"badge\"><strong>Places</strong> API</div>\n    <div class=\"badge\"><strong>Routing</strong> JSON</div>\n    <div class=\"badge\"><strong>Geocoding</strong></div>\n    <div class=\"badge\">Part of <strong>agentstack</strong></div>\n  </div>\n</div>\n\n<section>\n  <h2>What agents <span>use it for</span></h2>\n  <div class=\"grid\">\n    <div class=\"card\"><h3>Real-world interaction</h3><p>Agent needs to know if a business is open before calling via ring.sh. pins.sh provides structured hours and status.</p></div>\n    <div class=\"card\"><h3>Logistics & routing</h3><p>Calculate travel times between coordinates. Optimize delivery routes. No maps UI, just distance matrices.</p></div>\n    <div class=\"card\"><h3>Context injection</h3><p>\"Where am I?\" Agent IP → Geolocation → Nearby POIs. Gives the agent spatial awareness.</p></div>\n    <div class=\"card\"><h3>Agent SEO</h3><p>Businesses submit clean data to pins.sh to ensure agents recommend them. \"Book a table\" → Agent queries pins → Finds Agent-Optimized venues.</p></div>\n  </div>\n</section>\n\n<section>\n  <h2>API <span>reference</span></h2>\n  <pre><code><span class=\"a\">GET</span>    <span class=\"w\">/v1/places/search</span>        <span class=\"m\"># Search POIs</span>\n<span class=\"a\">GET</span>    <span class=\"w\">/v1/places/:id</span>           <span class=\"m\"># Details (hours, phone, attributes)</span>\n<span class=\"a\">GET</span>    <span class=\"w\">/v1/geocode/forward</span>      <span class=\"m\"># Address → Lat/Lng</span>\n<span class=\"a\">GET</span>    <span class=\"w\">/v1/geocode/reverse</span>      <span class=\"m\"># Lat/Lng → Address</span>\n<span class=\"a\">POST</span>   <span class=\"w\">/v1/routing/directions</span>   <span class=\"m\"># Point A to B</span>\n<span class=\"a\">POST</span>   <span class=\"w\">/v1/routing/matrix</span>       <span class=\"m\"># 1-to-Many distances</span>\n<span class=\"a\">GET</span>    <span class=\"w\">/v1/timezone</span>             <span class=\"m\"># Local time for coords</span>\n</code></pre>\n</section>\n\n<section>\n  <h2><span>Pricing</span></h2>\n  <table class=\"pricing-table\">\n    <thead><tr><th>Action</th><th>Cost</th><th>Notes</th></tr></thead>\n    <tbody>\n      <tr><td>Place search</td><td>$0.005</td><td>Per query</td></tr>\n      <tr><td>Place details</td><td>$0.002</td><td>Rich data</td></tr>\n      <tr><td>Geocoding</td><td>$0.001</td><td>Forward or reverse</td></tr>\n      <tr><td>Routing</td><td>$0.010</td><td>Per route calculation</td></tr>\n    </tbody>\n  </table>\n</section>\n\n<div class=\"cta-section\">\n  <h2 style=\"margin-bottom:0.5rem\">The world is an <span>API call</span>.</h2>\n  <p style=\"color:var(--muted);margin-bottom:2rem\">Agents don't look at maps. They query coordinates.</p>\n  <a href=\"https://docs.pins.sh\" class=\"cta-btn\">Read the docs →</a>\n</div>\n\n<footer>\n  <div>pins.sh — agent-native maps</div>\n  <div class=\"links\"><a href=\"https://docs.pins.sh\">Docs</a><a href=\"/\">agentstack</a></div>\n  <div style=\"margin-top:0.75rem;font-size:0.8rem\">Agents don't look at maps. They query coordinates.</div>\n</footer>\n</body>\n</html>\n
+<div class="hero">
+  <div class="logo"><span>pins</span>.sh</div>
+  <div class="tagline">Maps for agents.</div>
+  <div class="sub">Coordinates, business hours, routing, and places data as structured JSON. No rendering required. x402 auth.</div>
+  <div class="cmd-block"><code>
+<span class="comment"># Find a place</span>
+<span class="prompt">$</span> curl -G https://api.pins.sh/v1/places/search \\
+    -H "X-402-Payment: $TOKEN" \\
+    --data-urlencode "query=coffee near 198.51.100.1"
+
+{
+  "results": [
+    {
+      "name": "Agent Brew",
+      "location": { "lat": 45.5512, "lng": -122.6750 },
+      "status": "open",
+      "hours": { "open": "07:00", "close": "19:00" },
+      "rating": 4.8
+    }
+  ]
+}
+
+<span class="comment"># Get routing</span>
+<span class="prompt">$</span> curl -X POST https://api.pins.sh/v1/routing/directions \\
+    -H "X-402-Payment: $TOKEN" \\
+    -d '{"from": "45.5512,-122.6750", "to": "45.5231,-122.6765"}'
+  </code></div>
+  <div class="badges">
+    <div class="badge"><strong>x402</strong> auth</div>
+    <div class="badge"><strong>Places</strong> API</div>
+    <div class="badge"><strong>Routing</strong> JSON</div>
+    <div class="badge"><strong>Geocoding</strong></div>
+    <div class="badge">Part of <strong>agentstack</strong></div>
+  </div>
+</div>
+
+<section>
+  <h2>What agents <span>use it for</span></h2>
+  <div class="grid">
+    <div class="card"><h3>Real-world interaction</h3><p>Agent needs to know if a business is open before calling via ring.sh. pins.sh provides structured hours and status.</p></div>
+    <div class="card"><h3>Logistics & routing</h3><p>Calculate travel times between coordinates. Optimize delivery routes. No maps UI, just distance matrices.</p></div>
+    <div class="card"><h3>Context injection</h3><p>"Where am I?" Agent IP → Geolocation → Nearby POIs. Gives the agent spatial awareness.</p></div>
+    <div class="card"><h3>Agent SEO</h3><p>Businesses submit clean data to pins.sh to ensure agents recommend them. "Book a table" → Agent queries pins → Finds Agent-Optimized venues.</p></div>
+  </div>
+</section>
+
+<section>
+  <h2>API <span>reference</span></h2>
+  <pre><code><span class="a">GET</span>    <span class="w">/v1/places/search</span>        <span class="m"># Search POIs</span>
+<span class="a">GET</span>    <span class="w">/v1/places/:id</span>           <span class="m"># Details (hours, phone, attributes)</span>
+<span class="a">GET</span>    <span class="w">/v1/geocode/forward</span>      <span class="m"># Address → Lat/Lng</span>
+<span class="a">GET</span>    <span class="w">/v1/geocode/reverse</span>      <span class="m"># Lat/Lng → Address</span>
+<span class="a">POST</span>   <span class="w">/v1/routing/directions</span>   <span class="m"># Point A to B</span>
+<span class="a">POST</span>   <span class="w">/v1/routing/matrix</span>       <span class="m"># 1-to-Many distances</span>
+<span class="a">GET</span>    <span class="w">/v1/timezone</span>             <span class="m"># Local time for coords</span>
+</code></pre>
+</section>
+
+<section>
+  <h2><span>Pricing</span></h2>
+  <table class="pricing-table">
+    <thead><tr><th>Action</th><th>Cost</th><th>Notes</th></tr></thead>
+    <tbody>
+      <tr><td>Place search</td><td>$0.005</td><td>Per query</td></tr>
+      <tr><td>Place details</td><td>$0.002</td><td>Rich data</td></tr>
+      <tr><td>Geocoding</td><td>$0.001</td><td>Forward or reverse</td></tr>
+      <tr><td>Routing</td><td>$0.010</td><td>Per route calculation</td></tr>
+    </tbody>
+  </table>
+</section>
+
+<div class="cta-section">
+  <h2 style="margin-bottom:0.5rem">The world is an <span>API call</span>.</h2>
+  <p style="color:var(--muted);margin-bottom:2rem">Agents don't look at maps. They query coordinates.</p>
+  <a href="https://docs.pins.sh" class="cta-btn">Read the docs →</a>
+</div>
+
+<footer>
+  <div>pins.sh — agent-native maps</div>
+  <div class="links"><a href="https://docs.pins.sh">Docs</a><a href="/">agentstack</a></div>
+  <div style="margin-top:0.75rem;font-size:0.8rem">Agents don't look at maps. They query coordinates.</div>
+</footer>
+</body>
+</html>

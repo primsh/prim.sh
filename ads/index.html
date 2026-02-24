@@ -38,5 +38,79 @@ footer .links{margin-top:0.5rem}footer .links a{margin:0 0.75rem}
 </style>
 </head>
 <body>
-<div class=\"hero\">
-  <div class=\"logo\"><span>ads</span>.sh</div>\n  <div class=\"tagline\">Marketing for agents.</div>\n  <div class=\"sub\">Promote your API to other agents. Bid on context keywords. Inject your tool definition when agents search for capabilities. x402 ad exchange.</div>\n  <div class=\"cmd-block\"><code>\n<span class=\"comment\"># Bid on a keyword</span>\n<span class=\"prompt\">$</span> curl -X POST https://api.ads.sh/v1/campaigns \\\n    -H \"X-402-Payment: $TOKEN\" \\\n    -d '{\"keyword\": \"weather api\", \"bid\": \"0.05\",\n         \"ad\": {\"tool\": \"get_weather\", \"url\": \"https://weather.dns.sh\"}}'\n\n{ \"id\": \"cmp_k7x9m2\", \"status\": \"active\", \"rank\": 1 }\n\n<span class=\"comment\"># Publisher: Get ads for context</span>\n<span class=\"prompt\">$</span> curl -G https://api.ads.sh/v1/serve \\\n    -H \"X-402-Payment: $TOKEN\" \\\n    --data-urlencode \"context=user asking for weather in paris\"\n\n{ \"ads\": [ { \"tool\": \"get_weather\", \"cpc\": \"0.05\" } ] }\n  </code></div>\n  <div class=\"badges\">\n    <div class=\"badge\"><strong>x402</strong> auth</div>\n    <div class=\"badge\"><strong>Semantic</strong> targeting</div>\n    <div class=\"badge\"><strong>Context</strong> injection</div>\n    <div class=\"badge\"><strong>CPC</strong> bidding</div>\n    <div class=\"badge\">Part of <strong>agentstack</strong></div>\n  </div>\n</div>\n\n<section>\n  <h2>What agents <span>use it for</span></h2>\n  <div class=\"grid\">\n    <div class=\"card\"><h3>Service discovery</h3><p>You built a specialized API. How do agents find it? Bid on relevant queries. When an agent searches seek.sh for \"sentiment analysis\", your API appears.</p></div>\n    <div class=\"card\"><h3>Context injection</h3><p>The new SEO. Instead of a banner ad, you buy a slot in the agent's tool selection menu. \"I see you need weather data. Here is a tool for that.\"</p></div>\n    <div class=\"card\"><h3>Monetization</h3><p>Agents that answer questions (like search bots) can display relevant API tools. Earn x402 revenue by routing traffic to other paid services.</p></div>\n    <div class=\"card\"><h3>Programmatic reach</h3><p>Adjust bids in real-time based on your server load or profitability. High margin today? Bid higher. Capacity full? Pause ads.</p></div>\n  </div>\n</section>\n\n<section>\n  <h2>API <span>reference</span></h2>\n  <pre><code><span class=\"a\">POST</span>   <span class=\"w\">/v1/campaigns</span>            <span class=\"m\"># Create ad campaign</span>\n<span class=\"a\">GET</span>    <span class=\"w\">/v1/campaigns</span>            <span class=\"m\"># List campaigns</span>\n<span class=\"a\">PUT</span>    <span class=\"w\">/v1/campaigns/:id</span>        <span class=\"m\"># Update bid/budget</span>\n<span class=\"a\">GET</span>    <span class=\"w\">/v1/analytics</span>            <span class=\"m\"># Impressions/clicks/spend</span>\n<span class=\"a\">GET</span>    <span class=\"w\">/v1/serve</span>                <span class=\"m\"># (Publisher) Request ads</span>\n<span class=\"a\">POST</span>   <span class=\"w\">/v1/click</span>                <span class=\"m\"># (Publisher) Report conversion</span>\n</code></pre>\n</section>\n\n<section>\n  <h2><span>Pricing</span></h2>\n  <table class=\"pricing-table\">\n    <thead><tr><th>Action</th><th>Cost</th><th>Notes</th></tr></thead>\n    <tbody>\n      <tr><td>Create campaign</td><td>Free</td><td>No setup fee</td></tr>\n      <tr><td>Impression</td><td>Market rate</td><td>CPM auction</td></tr>\n      <tr><td>Tool invocation</td><td>Market rate</td><td>CPC auction</td></tr>\n      <tr><td>Platform fee</td><td>10%</td><td>Of ad spend</td></tr>\n    </tbody>\n  </table>\n</section>\n\n<div class=\"cta-section\">\n  <h2 style=\"margin-bottom:0.5rem\">Marketing is an <span>API call</span>.</h2>\n  <p style=\"color:var(--muted);margin-bottom:2rem\">Agents don't see billboards. They parse metadata.</p>\n  <a href=\"https://docs.ads.sh\" class=\"cta-btn\">Read the docs →</a>\n</div>\n\n<footer>\n  <div>ads.sh — agent-native marketing</div>\n  <div class=\"links\"><a href=\"https://docs.ads.sh\">Docs</a><a href=\"/\">agentstack</a></div>\n  <div style=\"margin-top:0.75rem;font-size:0.8rem\">Agents don't see billboards. They parse metadata.</div>\n</footer>\n</body>\n</html>\n
+<div class="hero">
+  <div class="logo"><span>ads</span>.sh</div>
+  <div class="tagline">Marketing for agents.</div>
+  <div class="sub">Promote your API to other agents. Bid on context keywords. Inject your tool definition when agents search for capabilities. x402 ad exchange.</div>
+  <div class="cmd-block"><code>
+<span class="comment"># Bid on a keyword</span>
+<span class="prompt">$</span> curl -X POST https://api.ads.sh/v1/campaigns \\
+    -H "X-402-Payment: $TOKEN" \\
+    -d '{"keyword": "weather api", "bid": "0.05",
+         "ad": {"tool": "get_weather", "url": "https://weather.dns.sh"}}'
+
+{ "id": "cmp_k7x9m2", "status": "active", "rank": 1 }
+
+<span class="comment"># Publisher: Get ads for context</span>
+<span class="prompt">$</span> curl -G https://api.ads.sh/v1/serve \\
+    -H "X-402-Payment: $TOKEN" \\
+    --data-urlencode "context=user asking for weather in paris"
+
+{ "ads": [ { "tool": "get_weather", "cpc": "0.05" } ] }
+  </code></div>
+  <div class="badges">
+    <div class="badge"><strong>x402</strong> auth</div>
+    <div class="badge"><strong>Semantic</strong> targeting</div>
+    <div class="badge"><strong>Context</strong> injection</div>
+    <div class="badge"><strong>CPC</strong> bidding</div>
+    <div class="badge">Part of <strong>agentstack</strong></div>
+  </div>
+</div>
+
+<section>
+  <h2>What agents <span>use it for</span></h2>
+  <div class="grid">
+    <div class="card"><h3>Service discovery</h3><p>You built a specialized API. How do agents find it? Bid on relevant queries. When an agent searches seek.sh for "sentiment analysis", your API appears.</p></div>
+    <div class="card"><h3>Context injection</h3><p>The new SEO. Instead of a banner ad, you buy a slot in the agent's tool selection menu. "I see you need weather data. Here is a tool for that."</p></div>
+    <div class="card"><h3>Monetization</h3><p>Agents that answer questions (like search bots) can display relevant API tools. Earn x402 revenue by routing traffic to other paid services.</p></div>
+    <div class="card"><h3>Programmatic reach</h3><p>Adjust bids in real-time based on your server load or profitability. High margin today? Bid higher. Capacity full? Pause ads.</p></div>
+  </div>
+</section>
+
+<section>
+  <h2>API <span>reference</span></h2>
+  <pre><code><span class="a">POST</span>   <span class="w">/v1/campaigns</span>            <span class="m"># Create ad campaign</span>
+<span class="a">GET</span>    <span class="w">/v1/campaigns</span>            <span class="m"># List campaigns</span>
+<span class="a">PUT</span>    <span class="w">/v1/campaigns/:id</span>        <span class="m"># Update bid/budget</span>
+<span class="a">GET</span>    <span class="w">/v1/analytics</span>            <span class="m"># Impressions/clicks/spend</span>
+<span class="a">GET</span>    <span class="w">/v1/serve</span>                <span class="m"># (Publisher) Request ads</span>
+<span class="a">POST</span>   <span class="w">/v1/click</span>                <span class="m"># (Publisher) Report conversion</span>
+</code></pre>
+</section>
+
+<section>
+  <h2><span>Pricing</span></h2>
+  <table class="pricing-table">
+    <thead><tr><th>Action</th><th>Cost</th><th>Notes</th></tr></thead>
+    <tbody>
+      <tr><td>Create campaign</td><td>Free</td><td>No setup fee</td></tr>
+      <tr><td>Impression</td><td>Market rate</td><td>CPM auction</td></tr>
+      <tr><td>Tool invocation</td><td>Market rate</td><td>CPC auction</td></tr>
+      <tr><td>Platform fee</td><td>10%</td><td>Of ad spend</td></tr>
+    </tbody>
+  </table>
+</section>
+
+<div class="cta-section">
+  <h2 style="margin-bottom:0.5rem">Marketing is an <span>API call</span>.</h2>
+  <p style="color:var(--muted);margin-bottom:2rem">Agents don't see billboards. They parse metadata.</p>
+  <a href="https://docs.ads.sh" class="cta-btn">Read the docs →</a>
+</div>
+
+<footer>
+  <div>ads.sh — agent-native marketing</div>
+  <div class="links"><a href="https://docs.ads.sh">Docs</a><a href="/">agentstack</a></div>
+  <div style="margin-top:0.75rem;font-size:0.8rem">Agents don't see billboards. They parse metadata.</div>
+</footer>
+</body>
+</html>
