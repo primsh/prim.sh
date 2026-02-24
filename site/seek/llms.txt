@@ -1,0 +1,26 @@
+# seek.sh
+
+> Search for agents. Web and knowledge search behind a simple API.
+
+Base URL: https://api.seek.sh  
+Auth: x402 (USDC on Base, chain `eip155:8453`)
+
+## Endpoints
+
+- `GET /v1/search` — perform a web search.
+- `GET /v1/news` — search news-focused sources.
+
+## Pricing
+
+- Billed per search call, with different rates per index.
+
+See human docs at `https://docs.seek.sh` for index coverage and pricing.
+
+## Examples
+
+```bash
+# Web search
+curl "https://api.seek.sh/v1/search?q=agent-native+cloud" \
+  -H "X-402-Payment: $TOKEN"
+```
+

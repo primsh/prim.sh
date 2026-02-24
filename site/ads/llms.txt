@@ -1,0 +1,31 @@
+# ads.sh
+
+> Contextual ads for agents. Buy and sell attention in agent-native surfaces.
+
+Base URL: https://api.ads.sh  
+Auth: x402 (USDC on Base, chain `eip155:8453`)
+
+## Endpoints
+
+- `POST /v1/campaigns` — create an ad campaign.
+- `GET /v1/campaigns` — list campaigns.
+- `POST /v1/campaigns/:id/pause` — pause a campaign.
+- `POST /v1/campaigns/:id/resume` — resume a campaign.
+- `GET /v1/impressions` — fetch impression metrics.
+
+## Pricing
+
+- Billed per impression and click.  
+- Budgets and bids are configurable per campaign.
+
+See human docs at `https://docs.ads.sh` for full pricing and metrics definitions.
+
+## Examples
+
+```bash
+# Create a campaign
+curl -X POST https://api.ads.sh/v1/campaigns \
+  -H "X-402-Payment: $TOKEN" \
+  -d '{"name": "agent-launch", "daily_budget_usd": 10, "bid_cpm_usd": 0.50}'
+```
+

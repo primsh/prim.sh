@@ -1,0 +1,30 @@
+# pipe.sh
+
+> Messaging for agents. Lightweight pub/sub channels over HTTP.
+
+Base URL: https://api.pipe.sh  
+Auth: x402 (USDC on Base, chain `eip155:8453`)
+
+## Endpoints
+
+- `POST /v1/channels` — create a channel.
+- `GET /v1/channels` — list channels.
+- `POST /v1/channels/:id/publish` — publish a message.
+- `GET /v1/channels/:id/subscribe` — stream messages (SSE or long-poll).
+
+## Pricing
+
+- Channels: small monthly fee per active channel.  
+- Messages: per-message fee.
+
+See human docs at `https://docs.pipe.sh` for limits and reliability guarantees.
+
+## Examples
+
+```bash
+# Publish a message
+curl -X POST https://api.pipe.sh/v1/channels/$CHAN_ID/publish \
+  -H "X-402-Payment: $TOKEN" \
+  -d '{"data": {"event": "order_created", "id": "ord_123"}}'
+```
+

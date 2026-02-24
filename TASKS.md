@@ -15,7 +15,7 @@
 
 | ID | Task | Spec | Status |
 |----|------|------|--------|
-| P-1 | Write llms.txt (root) + per-primitive llms.txt files | `specs/llms-txt.md` | Open |
+| P-1 | Write llms.txt (root) + per-primitive llms.txt files | `specs/llms-txt.md` | Done |
 | P-2 | Add llms.txt routes to serve.py (or replace with smarter static server) | `specs/llms-txt.md` | Open |
 | P-3 | Set up monorepo structure (pnpm workspaces, shared x402 middleware package) | `specs/platform.md` | Done |
 | P-4 | Build shared x402 Hono middleware package | `specs/platform.md` | Open |
@@ -61,7 +61,7 @@
 
 ## Plan Docs
 
-- P-1: `tasks/active/p-1-llms-txt-catalog-2026-02-24.md`
+- P-1: `tasks/completed/p-1-llms-txt-catalog-2026-02-24.md`
 
 ## Backlog — Future Primitives
 
@@ -134,5 +134,7 @@ x402 uses [EIP-3009 (Transfer With Authorization)](https://github.com/coinbase/x
 ERC-8004 uses CAIP-10 wallet addresses as root identity. DIDs layer on top non-breaking: wallet address becomes `verificationMethod` in DID Document, `alsoKnownAs` bridges old→new. No smart contract changes. Current "wallet = identity" design is correct for v1. id.sh adds DID resolution later.
 
 ## Done
+
+- P-1 — llms.txt root + per-primitive files (2026-02-24)
 
 - S-6 — "This page is for humans. The API is for agents." (2026-02-24)

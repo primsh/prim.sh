@@ -1,0 +1,60 @@
+# AgentStack
+
+> The agent-native cloud. Infrastructure primitives for autonomous agents.  
+> No signup. No GUI. No KYC. x402 payment is the only credential.
+
+AgentStack provides 27 independent infrastructure primitives. Each accepts
+x402 payment (USDC on Base, chain `eip155:8453`) as authentication. An agent
+with a funded wallet can consume any primitive without human intervention.
+
+Payment: all endpoints return HTTP 402 with payment requirements. Use any
+x402-compatible client (`@x402/fetch` for TypeScript, `x402` for Python) to
+handle payments automatically.
+
+Chain: Base (`eip155:8453`). Token: USDC.
+
+## Core primitives
+
+- [wallet.sh](https://agentstack.sh/wallet/llms.txt) — wallets, balances, x402 payments
+- [relay.sh](https://agentstack.sh/relay/llms.txt) — email mailboxes, send/receive, webhooks
+- [spawn.sh](https://agentstack.sh/spawn/llms.txt) — VPS provisioning and lifecycle
+- [store.sh](https://agentstack.sh/store/llms.txt) — object storage (S3-compatible)
+- [vault.sh](https://agentstack.sh/vault/llms.txt) — secret storage and access
+- [dns.sh](https://agentstack.sh/dns/llms.txt) — domains and DNS records
+- [cron.sh](https://agentstack.sh/cron/llms.txt) — scheduled jobs and timers
+- [pipe.sh](https://agentstack.sh/pipe/llms.txt) — pub/sub messaging bus
+- [code.sh](https://agentstack.sh/code/llms.txt) — sandboxed code execution
+
+## Communication
+
+- [ring.sh](https://agentstack.sh/ring/llms.txt) — phone numbers, SMS, voice
+- [browse.sh](https://agentstack.sh/browse/llms.txt) — headless browser sessions
+
+## Intelligence
+
+- [mem.sh](https://agentstack.sh/mem/llms.txt) — vector memory and RAG
+- [infer.sh](https://agentstack.sh/infer/llms.txt) — model proxy (OpenAI-compatible)
+- [seek.sh](https://agentstack.sh/seek/llms.txt) — web search
+- [docs.sh](https://agentstack.sh/docs/llms.txt) — API documentation for machines
+
+## Operations
+
+- [watch.sh](https://agentstack.sh/watch/llms.txt) — logs, metrics, alerts
+- [trace.sh](https://agentstack.sh/trace/llms.txt) — distributed tracing
+- [auth.sh](https://agentstack.sh/auth/llms.txt) — managed OAuth for third-party APIs
+- [id.sh](https://agentstack.sh/id/llms.txt) — agent reputation and identity
+
+## Physical world
+
+- [pins.sh](https://agentstack.sh/pins/llms.txt) — geolocation and places
+- [mart.sh](https://agentstack.sh/mart/llms.txt) — buying physical goods
+- [ship.sh](https://agentstack.sh/ship/llms.txt) — shipping and logistics
+- [hands.sh](https://agentstack.sh/hands/llms.txt) — on-demand human labor
+- [pay.sh](https://agentstack.sh/pay/llms.txt) — fiat payment bridge
+- [corp.sh](https://agentstack.sh/corp/llms.txt) — legal entity formation
+
+## Optional
+
+- [hive.sh](https://agentstack.sh/hive/llms.txt) — agent social graph
+- [ads.sh](https://agentstack.sh/ads/llms.txt) — context-targeted ads
+

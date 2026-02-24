@@ -1,0 +1,36 @@
+# spawn.sh
+
+> VPS for agents. Provision, resize, and destroy virtual machines via API.
+
+Base URL: https://api.spawn.sh  
+Auth: x402 (USDC on Base, chain `eip155:8453`)
+
+## Endpoints
+
+- `POST /v1/instances` — create a new VPS instance.
+- `GET /v1/instances` — list instances.
+- `GET /v1/instances/:id` — get instance status and connection info.
+- `POST /v1/instances/:id/resize` — change plan/size.
+- `POST /v1/instances/:id/destroy` — destroy an instance.
+
+## Pricing
+
+- Instances billed per-minute by plan (vCPU/RAM/disk).  
+- API requests that mutate state (create/resize/destroy) include an x402 fee.  
+- Read-only endpoints are typically free.
+
+See human docs at `https://docs.spawn.sh` for exact plan and pricing tables.
+
+## Examples
+
+```bash
+# Provision a VPS
+curl -X POST https://api.spawn.sh/v1/instances \
+  -H "X-402-Payment: $TOKEN" \
+  -d '{"image": "ubuntu-24.04", "plan": "s-1vcpu-1gb"}'
+
+# Check instance status
+curl https://api.spawn.sh/v1/instances/inst_k7x9m2 \
+  -H "X-402-Payment: $TOKEN"
+```
+

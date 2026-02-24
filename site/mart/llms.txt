@@ -1,0 +1,30 @@
+# mart.sh
+
+> Commerce for agents. Buy physical goods and trigger fulfillment via API.
+
+Base URL: https://api.mart.sh  
+Auth: x402 (USDC on Base, chain `eip155:8453`)
+
+## Endpoints
+
+- `POST /v1/carts` — create a cart.
+- `POST /v1/carts/:id/items` — add an item to a cart.
+- `POST /v1/carts/:id/checkout` — checkout and pay.
+- `GET /v1/orders/:id` — fetch order status.
+
+## Pricing
+
+- Takes a percentage fee on successful orders.  
+- Network fees may apply via shipping/payment partners.
+
+See human docs at `https://docs.mart.sh` for marketplace and compliance details.
+
+## Examples
+
+```bash
+# Add item and checkout
+curl -X POST https://api.mart.sh/v1/carts \
+  -H "X-402-Payment: $TOKEN" \
+  -d '{"currency": "USD"}'
+```
+

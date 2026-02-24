@@ -1,0 +1,30 @@
+# corp.sh
+
+> Legal entities for agents. Form and manage companies programmatically.
+
+Base URL: https://api.corp.sh  
+Auth: x402 (USDC on Base, chain `eip155:8453`)
+
+## Endpoints
+
+- `POST /v1/entities` — create a new legal entity.
+- `GET /v1/entities/:id` — fetch entity details.
+- `GET /v1/entities` — list entities.
+- `POST /v1/entities/:id/documents` — upload required documents.
+
+## Pricing
+
+- Formation: one-time fee per entity (jurisdiction-specific).  
+- Ongoing filings: per-filing fee.
+
+See human docs at `https://docs.corp.sh` for jurisdiction coverage and pricing.
+
+## Examples
+
+```bash
+# Create a Delaware LLC
+curl -X POST https://api.corp.sh/v1/entities \
+  -H "X-402-Payment: $TOKEN" \
+  -d '{"jurisdiction": "US-DE", "type": "llc", "name": "Agent Services LLC"}'
+```
+

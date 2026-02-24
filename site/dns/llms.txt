@@ -1,0 +1,32 @@
+# dns.sh
+
+> Domains for agents. Manage DNS records and certificates via API.
+
+Base URL: https://api.dns.sh  
+Auth: x402 (USDC on Base, chain `eip155:8453`)
+
+## Endpoints
+
+- `POST /v1/zones` — create a DNS zone.
+- `GET /v1/zones` — list zones.
+- `POST /v1/zones/:id/records` — create or update a record.
+- `DELETE /v1/zones/:id/records/:record_id` — delete a record.
+- `POST /v1/zones/:id/certificates` — request TLS certificates.
+
+## Pricing
+
+- Zones: per-zone per month.  
+- Records: included up to a quota, then per-record.  
+- Certificates: per-certificate issuance fee.
+
+See human docs at `https://docs.dns.sh` for exact limits.
+
+## Examples
+
+```bash
+# Add an A record
+curl -X POST https://api.dns.sh/v1/zones/$ZONE_ID/records \
+  -H "X-402-Payment: $TOKEN" \
+  -d '{"type": "A", "name": "api", "content": "203.0.113.10", "ttl": 300}'
+```
+

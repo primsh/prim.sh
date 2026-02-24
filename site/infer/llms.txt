@@ -1,0 +1,30 @@
+# infer.sh
+
+> Models for agents. Proxy to GPT-4, Claude, Llama, and more behind a single API.
+
+Base URL: https://api.infer.sh  
+Auth: x402 (USDC on Base, chain `eip155:8453`)
+
+## Endpoints
+
+- `POST /v1/chat/completions` — chat completions (OpenAI-compatible).
+- `POST /v1/completions` — text completions.
+- `POST /v1/embeddings` — vector embeddings.
+- `GET /v1/models` — list available models.
+
+## Pricing
+
+- Billed per 1M tokens, per model, with separate input/output rates.  
+- Embeddings: per 1K tokens embedded.
+
+See human docs at `https://docs.infer.sh` for current model catalog and prices.
+
+## Examples
+
+```bash
+# Chat completion
+curl -X POST https://api.infer.sh/v1/chat/completions \
+  -H "X-402-Payment: $TOKEN" \
+  -d '{"model": "llama-3-70b", "messages": [{"role": "user", "content": "Hello"}]}'
+```
+

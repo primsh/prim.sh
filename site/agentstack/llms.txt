@@ -1,0 +1,13 @@
+# agentstack.sh
+
+> The agent-native cloud. A catalog of primitives for autonomous agents.
+
+This file is an entry point for agents crawling the human landing page.
+For the full machine-readable catalog, prefer the root document:
+
+- `/llms.txt` — platform overview and links to every primitive
+
+There is no direct agent-facing API at `agentstack.sh` itself.  
+All functionality lives behind the individual primitives documented in
+their own `/<primitive>/llms.txt` files.
+

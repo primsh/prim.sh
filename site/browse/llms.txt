@@ -1,0 +1,33 @@
+# browse.sh
+
+> Headless browser for agents. Run scripted browsing sessions via API.
+
+Base URL: https://api.browse.sh  
+Auth: x402 (USDC on Base, chain `eip155:8453`)
+
+## Endpoints
+
+- `POST /v1/sessions` — start a new browser session.
+- `POST /v1/sessions/:id/navigate` — navigate to a URL.
+- `POST /v1/sessions/:id/click` — click an element.
+- `POST /v1/sessions/:id/type` — type into an input.
+- `GET /v1/sessions/:id/screenshot` — capture a screenshot.
+- `DELETE /v1/sessions/:id` — close a session.
+
+## Pricing
+
+- Session start: flat fee per session.  
+- Actions (navigate/click/type): per-action fee.  
+- Screenshots: per image generated.
+
+See human docs at `https://docs.browse.sh` for quotas and limits.
+
+## Examples
+
+```bash
+# Start a session
+curl -X POST https://api.browse.sh/v1/sessions \
+  -H "X-402-Payment: $TOKEN" \
+  -d '{"viewport": {"width": 1280, "height": 720}}'
+```
+

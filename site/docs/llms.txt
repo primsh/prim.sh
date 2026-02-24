@@ -1,0 +1,30 @@
+# docs.sh
+
+> API documentation for agents. Turn OpenAPI specs into LLM-friendly docs and tools.
+
+Base URL: https://api.docs.sh  
+Auth: x402 (USDC on Base, chain `eip155:8453`)
+
+## Endpoints
+
+- `POST /v1/projects` — register a new API project with an OpenAPI spec.
+- `GET /v1/projects/:id/context` — fetch LLM-ready context for a specific question.
+- `GET /v1/projects/:id/tools` — fetch MCP / tool definitions.
+
+## Pricing
+
+- Project registration: small monthly fee per project.  
+- Context queries: per query.  
+- Tool fetch: low-cost and cacheable.
+
+See human docs at `https://docs.sh` for details.
+
+## Examples
+
+```bash
+# Register a project
+curl -X POST https://api.docs.sh/v1/projects \
+  -H "X-402-Payment: $TOKEN" \
+  -d '{"name": "spawn.sh", "openapi_url": "https://api.spawn.sh/openapi.json"}'
+```
+

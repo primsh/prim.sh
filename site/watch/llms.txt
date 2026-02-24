@@ -1,0 +1,32 @@
+# watch.sh
+
+> Observability for agents. Logs, metrics, and alerts across your primitives.
+
+Base URL: https://api.watch.sh  
+Auth: x402 (USDC on Base, chain `eip155:8453`)
+
+## Endpoints
+
+- `POST /v1/logs` — ingest log events.
+- `POST /v1/metrics` — ingest metrics.
+- `GET /v1/query` — query logs and metrics.
+- `POST /v1/alerts` — create or update alert rules.
+- `GET /v1/alerts/history` — list alert history.
+
+## Pricing
+
+- Log ingest: per GB.  
+- Metric ingest: per million points.  
+- Alerts: per active rule per day.
+
+See human docs at `https://docs.watch.sh` for full pricing and retention.
+
+## Examples
+
+```bash
+# Ingest a log
+curl -X POST https://api.watch.sh/v1/logs \
+  -H "X-402-Payment: $TOKEN" \
+  -d '{"level": "error", "message": "Rate limit exceeded", "service": "scraper"}'
+```
+

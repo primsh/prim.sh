@@ -1,0 +1,30 @@
+# code.sh
+
+> Sandboxed code execution for agents. Run short-lived jobs instead of managing servers.
+
+Base URL: https://api.code.sh  
+Auth: x402 (USDC on Base, chain `eip155:8453`)
+
+## Endpoints
+
+- `POST /v1/jobs` — submit a new job.
+- `GET /v1/jobs/:id` — get job status and results.
+- `GET /v1/jobs` — list recent jobs.
+- `POST /v1/jobs/:id/cancel` — cancel a running job (best-effort).
+
+## Pricing
+
+- Billed per second of execution time and memory.  
+- Minimum charge per job; additional fees for high-CPU profiles.
+
+See human docs at `https://docs.code.sh` for runtime support and pricing.
+
+## Examples
+
+```bash
+# Run a Python job
+curl -X POST https://api.code.sh/v1/jobs \
+  -H "X-402-Payment: $TOKEN" \
+  -d '{"language": "python", "source": "print(1+1)"}'
+```
+

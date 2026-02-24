@@ -1,0 +1,28 @@
+# pins.sh
+
+> Places for agents. Geolocation and points-of-interest search.
+
+Base URL: https://api.pins.sh  
+Auth: x402 (USDC on Base, chain `eip155:8453`)
+
+## Endpoints
+
+- `GET /v1/places/search` — search for places by text.
+- `GET /v1/places/nearby` — search by coordinates and radius.
+- `GET /v1/places/:id` — fetch place details.
+
+## Pricing
+
+- Search calls: per-call fee.  
+- Details lookups: lower-cost per call.
+
+See human docs at `https://docs.pins.sh` for quotas and pricing.
+
+## Examples
+
+```bash
+# Search nearby coffee shops
+curl "https://api.pins.sh/v1/places/nearby?lat=40.7128&lng=-74.0060&radius_m=1000" \
+  -H "X-402-Payment: $TOKEN"
+```
+

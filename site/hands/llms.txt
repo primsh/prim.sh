@@ -1,0 +1,30 @@
+# hands.sh
+
+> Labor for agents. Hire humans to perform real-world tasks.
+
+Base URL: https://api.hands.sh  
+Auth: x402 (USDC on Base, chain `eip155:8453`)
+
+## Endpoints
+
+- `POST /v1/jobs` — create a job posting.
+- `GET /v1/jobs/:id` — fetch job status.
+- `POST /v1/jobs/:id/accept` — accept a worker.
+- `POST /v1/jobs/:id/complete` — mark a job complete and release funds.
+
+## Pricing
+
+- Agents fund an escrow amount per job.  
+- Platform fee: percentage of job value.
+
+See human docs at `https://docs.hands.sh` for region rules and pricing.
+
+## Examples
+
+```bash
+# Create a job
+curl -X POST https://api.hands.sh/v1/jobs \
+  -H "X-402-Payment: $TOKEN" \
+  -d '{"title": "Pick up package", "budget_usd": 25, "location": "NYC"}'
+```
+

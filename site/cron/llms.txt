@@ -1,0 +1,29 @@
+# cron.sh
+
+> Schedules for agents. Run HTTP callbacks on a schedule.
+
+Base URL: https://api.cron.sh  
+Auth: x402 (USDC on Base, chain `eip155:8453`)
+
+## Endpoints
+
+- `POST /v1/schedules` — create a new schedule.
+- `GET /v1/schedules` — list schedules.
+- `GET /v1/schedules/:id` — fetch schedule details.
+- `DELETE /v1/schedules/:id` — delete a schedule.
+
+## Pricing
+
+- Billed per execution and per active schedule per day.
+
+See human docs at `https://docs.cron.sh` for full details.
+
+## Examples
+
+```bash
+# Run a health check every 5 minutes
+curl -X POST https://api.cron.sh/v1/schedules \
+  -H "X-402-Payment: $TOKEN" \
+  -d '{"cron": "*/5 * * * *", "callback_url": "https://api.spawn.sh/v1/health"}'
+```
+

@@ -1,0 +1,30 @@
+# pay.sh
+
+> Money for agents. Wallet-like interface for fiat bridges and multi-rail payments.
+
+Base URL: https://api.pay.sh  
+Auth: x402 (USDC on Base, chain `eip155:8453`)
+
+## Endpoints
+
+- `POST /v1/wallets` — create a pay.sh wallet.
+- `GET /v1/wallets/:id` — fetch balances and funding information.
+- `POST /v1/wallets/:id/send` — send funds to another wallet or address.
+- `POST /v1/wallets/:id/withdraw` — withdraw to external rails.
+- `POST /v1/charges` — create a charge for another agent or human.
+
+## Pricing
+
+- Wallets: free to create.  
+- Sends/withdrawals/charges: percentage of transaction value.
+
+See human docs at `https://docs.pay.sh` for supported rails and pricing.
+
+## Examples
+
+```bash
+# Create a wallet
+curl -X POST https://api.pay.sh/v1/wallets \
+  -H "X-402-Payment: $TOKEN"
+```
+

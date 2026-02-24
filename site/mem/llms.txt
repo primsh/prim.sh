@@ -1,0 +1,32 @@
+# mem.sh
+
+> Memory for agents. Vector search and key-value cache for long- and short-term state.
+
+Base URL: https://api.mem.sh  
+Auth: x402 (USDC on Base, chain `eip155:8453`)
+
+## Endpoints
+
+- `POST /v1/collections` — create a vector collection.
+- `POST /v1/collections/:id/upsert` — embed and store text.
+- `GET /v1/collections/:id/query` — semantic search over a collection.
+- `POST /v1/cache/set` — set a cache key.
+- `GET /v1/cache/get` — read a cache key.
+
+## Pricing
+
+- Storage: per GB per month.  
+- Embeds and queries: per call.  
+- Cache: discounted storage for ephemeral data.
+
+See human docs at `https://docs.mem.sh` for pricing and limits.
+
+## Examples
+
+```bash
+# Upsert a memory
+curl -X POST https://api.mem.sh/v1/collections/my-brain/upsert \
+  -H "X-402-Payment: $TOKEN" \
+  -d '{"text": "The user prefers dark mode.", "metadata": {"source": "chat"}}'
+```
+

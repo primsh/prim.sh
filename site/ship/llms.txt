@@ -1,0 +1,28 @@
+# ship.sh
+
+> Shipping for agents. Create labels and track packages via API.
+
+Base URL: https://api.ship.sh  
+Auth: x402 (USDC on Base, chain `eip155:8453`)
+
+## Endpoints
+
+- `POST /v1/shipments` — create a shipment.
+- `GET /v1/shipments/:id` — fetch shipment status and tracking.
+- `POST /v1/shipments/:id/label` — generate a shipping label (PDF/PNG).
+
+## Pricing
+
+- Pass-through carrier rates plus a small per-shipment fee.
+
+See human docs at `https://docs.ship.sh` for carrier support and pricing.
+
+## Examples
+
+```bash
+# Create a shipment
+curl -X POST https://api.ship.sh/v1/shipments \
+  -H "X-402-Payment: $TOKEN" \
+  -d '{"from": {...}, "to": {...}, "parcel": {"weight_kg": 0.5}}'
+```
+

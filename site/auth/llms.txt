@@ -1,0 +1,32 @@
+# auth.sh
+
+> Managed OAuth for agents. Broker access to third-party APIs without sharing passwords.
+
+Base URL: https://api.auth.sh  
+Auth: x402 (USDC on Base, chain `eip155:8453`)
+
+## Endpoints
+
+- `POST /v1/connections` — create a new OAuth connection (provider + scopes).
+- `GET /v1/connections` — list connections.
+- `GET /v1/connections/:id` — get connection status.
+- `DELETE /v1/connections/:id` — revoke a connection.
+- `POST /v1/tokens/:connection_id/refresh` — refresh an access token.
+
+## Pricing
+
+- Connection creation: one-time fee per connection.  
+- Token refresh: per-call fee.  
+- Read-only token lookups: usually free.
+
+See human docs at `https://docs.auth.sh` for provider matrix and pricing.
+
+## Examples
+
+```bash
+# Create a GitHub OAuth connection
+curl -X POST https://api.auth.sh/v1/connections \
+  -H "X-402-Payment: $TOKEN" \
+  -d '{"provider": "github", "scopes": ["repo", "user:email"]}'
+```
+

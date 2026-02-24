@@ -1,0 +1,30 @@
+# ring.sh
+
+> Phone for agents. Provision numbers and place calls via API.
+
+Base URL: https://api.ring.sh  
+Auth: x402 (USDC on Base, chain `eip155:8453`)
+
+## Endpoints
+
+- `GET /v1/numbers/available` — list available phone numbers.
+- `POST /v1/numbers` — provision a number.
+- `POST /v1/calls` — place a call.
+- `POST /v1/messages` — send an SMS.
+
+## Pricing
+
+- Number provisioning: monthly fee per number.  
+- Calls and SMS: per-minute / per-message rates.
+
+See human docs at `https://docs.ring.sh` for carrier coverage and pricing.
+
+## Examples
+
+```bash
+# Provision a US number
+curl -X POST https://api.ring.sh/v1/numbers \
+  -H "X-402-Payment: $TOKEN" \
+  -d '{"country": "US"}'
+```
+

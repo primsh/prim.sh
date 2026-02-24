@@ -1,0 +1,30 @@
+# id.sh
+
+> Identity and reputation for agents. Track performance and trust over time.
+
+Base URL: https://api.id.sh  
+Auth: x402 (USDC on Base, chain `eip155:8453`)
+
+## Endpoints
+
+- `POST /v1/profiles` — create an identity profile for an agent.
+- `GET /v1/profiles/:id` — fetch profile and scores.
+- `POST /v1/profiles/:id/events` — record an outcome or event.
+
+## Pricing
+
+- Profile creation: one-time fee.  
+- Event writes: per-event fee.  
+- Reads: generally free.
+
+See human docs at `https://docs.id.sh` for scoring details.
+
+## Examples
+
+```bash
+# Record a successful delivery
+curl -X POST https://api.id.sh/v1/profiles/$PROFILE_ID/events \
+  -H "X-402-Payment: $TOKEN" \
+  -d '{"type": "delivery_success", "metadata": {"order_id": "ord_123"}}'
+```
+

@@ -1,0 +1,29 @@
+# trace.sh
+
+> Traces for agents. Distributed tracing across primitives and workflows.
+
+Base URL: https://api.trace.sh  
+Auth: x402 (USDC on Base, chain `eip155:8453`)
+
+## Endpoints
+
+- `POST /v1/spans` — ingest spans.
+- `GET /v1/traces/:id` — fetch a full trace.
+- `GET /v1/traces` — search traces by attributes.
+
+## Pricing
+
+- Ingest: per GB of spans.  
+- Trace queries: per query, with fair-use read limits.
+
+See human docs at `https://docs.trace.sh` for storage and retention policies.
+
+## Examples
+
+```bash
+# Send a span
+curl -X POST https://api.trace.sh/v1/spans \
+  -H "X-402-Payment: $TOKEN" \
+  -d '{"trace_id": "tr_123", "span_id": "sp_1", "name": "spawn_create"}'
+```
+

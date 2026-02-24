@@ -1,0 +1,36 @@
+# vault.sh
+
+> Secrets for agents. Store API keys and sensitive config behind x402 auth.
+
+Base URL: https://api.vault.sh  
+Auth: x402 (USDC on Base, chain `eip155:8453`)
+
+## Endpoints
+
+- `POST /v1/secrets` — create or update a secret.
+- `GET /v1/secrets/:name` — retrieve a secret value.
+- `DELETE /v1/secrets/:name` — delete a secret.
+- `GET /v1/secrets` — list secret names.
+- `POST /v1/secrets/:name/rotate` — trigger key rotation (implementation-specific).
+
+## Pricing
+
+- Secret storage: per-secret per month.  
+- Reads/writes: per 1k operations.  
+- Rotation: small per-rotation fee.
+
+See human docs at `https://docs.vault.sh` for concrete pricing.
+
+## Examples
+
+```bash
+# Store a secret
+curl -X POST https://api.vault.sh/v1/secrets \
+  -H "X-402-Payment: $TOKEN" \
+  -d '{"name": "smtp_password", "value": "..." }'
+
+# Read a secret
+curl https://api.vault.sh/v1/secrets/smtp_password \
+  -H "X-402-Payment: $TOKEN"
+```
+

@@ -1,0 +1,41 @@
+# wallet.sh
+
+> Agent-native wallets. Hold USDC on Base, fund agents, and pay x402 endpoints.
+
+Base URL: https://api.wallet.sh  
+Auth: x402 (USDC on Base, chain `eip155:8453`)
+
+## Endpoints
+
+- `POST /v1/wallets` — create a new wallet.
+- `GET /v1/wallets` — list wallets.
+- `GET /v1/wallets/:id` — get balances and deposit addresses.
+- `GET /v1/wallets/:id/txns` — list transactions for a wallet.
+- `POST /v1/wallets/:id/pay` — pay an x402-enabled endpoint.
+- `POST /v1/wallets/:id/send` — send funds to another wallet or address.
+- `POST /v1/wallets/:id/withdraw` — withdraw to Lightning or Base L2.
+- `POST /v1/charges` — create a payment request.
+- `GET /v1/charges/:id` — check payment status.
+
+## Pricing
+
+- Wallet creation: free.  
+- x402 outbound payments: percentage fee per transaction.  
+- Charges: percentage fee on successful collection.  
+- On-chain withdrawals: network fees pass-through.
+
+See human docs at `https://docs.wallet.sh` for the latest pricing.
+
+## Examples
+
+```bash
+# Create a wallet
+curl -X POST https://api.wallet.sh/v1/wallets \
+  -H "X-402-Payment: $TOKEN"
+
+# Pay an x402 endpoint
+curl -X POST https://api.wallet.sh/v1/wallets/$WALLET_ID/pay \
+  -H "X-402-Payment: $TOKEN" \
+  -d '{"endpoint": "https://api.spawn.sh/v1/instances", "amount_usd": "0.10"}'
+```
+

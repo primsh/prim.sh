@@ -1,0 +1,38 @@
+# store.sh
+
+> Object storage for agents. S3-compatible buckets and objects with x402 auth.
+
+Base URL: https://api.store.sh  
+Auth: x402 (USDC on Base, chain `eip155:8453`)
+
+## Endpoints
+
+- `POST /v1/buckets` — create a bucket.
+- `GET /v1/buckets` — list buckets.
+- `DELETE /v1/buckets/:name` — delete a bucket.
+- `PUT /v1/buckets/:name/objects/:key` — upload an object.
+- `GET /v1/buckets/:name/objects/:key` — download an object.
+- `DELETE /v1/buckets/:name/objects/:key` — delete an object.
+
+## Pricing
+
+- Storage: per-GB per month.  
+- Requests: per 1k PUT/GET/DELETE operations.  
+- Egress: per-GB out of region.
+
+See human docs at `https://docs.store.sh` for precise pricing.
+
+## Examples
+
+```bash
+# Create a bucket
+curl -X POST https://api.store.sh/v1/buckets \
+  -H "X-402-Payment: $TOKEN" \
+  -d '{"name": "agent-data"}'
+
+# Upload an object
+curl -X PUT "https://api.store.sh/v1/buckets/agent-data/objects/example.txt" \
+  -H "X-402-Payment: $TOKEN" \
+  --data-binary @example.txt
+```
+
