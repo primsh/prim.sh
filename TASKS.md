@@ -6,9 +6,9 @@
 |----|------|--------|
 | S-1 | Fix "Fourteen primitives" copy → "Nineteen" (manifesto x2 + CTA in `agentstack/index.html`) | Done |
 | S-2 | Fix `.c` CSS class collision in `agentstack/index.html` (coral vs comment gray) | Done |
-| S-3 | Add missing routes to `serve.py` (mem, infer, watch + new primitives: browse, auth, code, trace) | Open |
-| S-4 | Create landing pages for new primitives (browse, auth, code, trace) | Open |
-| S-5 | Update landing page hero count to 26 primitives, add new primitive cards | Open |
+| S-3 | Add missing routes to `serve.py` (mem, infer, watch + new primitives: browse, auth, code, trace) | Done |
+| S-4 | Create landing pages for new primitives (browse, auth, code, trace) | Done |
+| S-5 | Update landing page hero count to 26 primitives, add new primitive cards | Done |
 | S-6 | Add "This page is for humans. The API is for agents." line to all landing pages | Open |
 
 ## Phase 1 — Platform Foundation
@@ -86,6 +86,7 @@
 | ship.sh | EasyPost or Shippo | |
 | hands.sh | Custom gig platform | Heaviest regulatory burden |
 | pay.sh | Stripe + x402 bridge | Fiat payment bridge |
+| borrow.sh | Custom (on-chain escrow + interest) | Agent-to-agent USDC lending. Needs wallet.sh + id.sh |
 | corp.sh | Stripe Atlas API or custom | Legal complexity |
 
 ## Done
