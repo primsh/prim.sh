@@ -5,6 +5,7 @@ import socketserver
 BASE = os.path.dirname(os.path.abspath(__file__))
 ROUTES = {
     "/": os.path.join(BASE, "agentstack", "index.html"),
+    "/wallet": os.path.join(BASE, "wallet", "index.html"),
     "/spawn": os.path.join(BASE, "spawn", "index.html"),
     "/store": os.path.join(BASE, "store", "index.html"),
     "/vault": os.path.join(BASE, "vault", "index.html"),
@@ -14,6 +15,13 @@ ROUTES = {
     "/cron": os.path.join(BASE, "cron", "index.html"),
     "/pipe": os.path.join(BASE, "pipe", "index.html"),
     "/pay": os.path.join(BASE, "pay", "index.html"),
+    "/mem": os.path.join(BASE, "mem", "index.html"),
+    "/infer": os.path.join(BASE, "infer", "index.html"),
+    "/watch": os.path.join(BASE, "watch", "index.html"),
+    "/browse": os.path.join(BASE, "browse", "index.html"),
+    "/auth": os.path.join(BASE, "auth", "index.html"),
+    "/code": os.path.join(BASE, "code", "index.html"),
+    "/trace": os.path.join(BASE, "trace", "index.html"),
     "/docs": os.path.join(BASE, "docs", "index.html"),
     "/pins": os.path.join(BASE, "pins", "index.html"),
     "/seek": os.path.join(BASE, "seek", "index.html"),

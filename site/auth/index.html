@@ -3,10 +3,10 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>hands.sh — Agent-Native Labor</title>
+<title>auth.sh — Agent-Native OAuth</title>
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
-:root{--bg:#0a0a0a;--surface:#111;--border:#1a1a1a;--accent:#795548;--accent-dim:#5d4037;--accent-glow:rgba(121,85,72,0.08);--text:#e0e0e0;--muted:#666;--code-bg:#0d0d0d}
+:root{--bg:#0a0a0a;--surface:#111;--border:#1a1a1a;--accent:#FF80AB;--accent-dim:#ff5c93;--accent-glow:rgba(255,128,171,0.08);--text:#e0e0e0;--muted:#666;--code-bg:#0d0d0d}
 body{background:var(--bg);color:var(--text);font-family:'SF Mono',SFMono-Regular,'Cascadia Code',Consolas,monospace;line-height:1.6;overflow-x:hidden}
 a{color:var(--accent);text-decoration:none}a:hover{text-decoration:underline}
 .hero{min-height:100vh;display:flex;flex-direction:column;justify-content:center;align-items:center;text-align:center;padding:2rem;position:relative}
@@ -39,53 +39,45 @@ footer .links{margin-top:0.5rem}footer .links a{margin:0 0.75rem}
 </head>
 <body>
 <div class="hero">
-  <div class="logo"><span>hands</span>.sh</div>
-  <div class="tagline">Labor for agents.</div>
-  <div class="sub">Hire a human to do a physical task. Reboot a server. Open a package. Scan a document. Visit a location. x402 gig economy.</div>
+  <div class="logo"><span>auth</span>.sh</div>
+  <div class="tagline">OAuth broker for agents.</div>
+  <div class="sub">Connect to Google, GitHub, Notion, and more — without ever embedding a consent screen. Humans approve once, agents use forever.</div>
   <div class="cmd-block"><code>
-<span class="comment"># Post a task</span>
-<span class="prompt">$</span> curl -X POST https://api.hands.sh/v1/tasks \\
-    -H "X-402-Payment: $TOKEN" \\
-    -d '{"location": "123 Main St, Suite 400",
-         "instruction": "Go to server rack 4, press reset button on top unit.",
-         "proof": "photo",
-         "bounty": "50.00"}'
+<span class="comment"># Create a connection</span>
+<span class="prompt">$</span> curl -X POST https://api.auth.sh/v1/connections \
+    -H "X-402-Payment: $TOKEN" \
+    -d '{"provider": "google", "redirect_url": "https://owner.app/oauth/callback"}'
 
-{ "id": "tsk_x9k2m7", "status": "open", "workers_nearby": 12 }
+{ "id": "conn_k7x9m2", "auth_url": "https://auth.sh/redirect/..." }
 
-<span class="comment"># → 402 → agent locks bounty in escrow → 201 Created</span>
-
-<span class="comment"># Check status</span>
-<span class="prompt">$</span> curl https://api.hands.sh/v1/tasks/tsk_x9k2m7
-
-{ "status": "completed", "proof_url": ".../photo.jpg" }
+<span class="comment"># Later: use the connection as an agent</span>
+<span class="prompt">$</span> curl -X GET https://api.auth.sh/v1/connections/conn_k7x9m2/token \
+    -H "X-402-Payment: $TOKEN"
   </code></div>
   <div class="badges">
-    <div class="badge"><strong>x402</strong> escrow</div>
-    <div class="badge"><strong>Gig</strong> network</div>
-    <div class="badge"><strong>Photo</strong> proof</div>
-    <div class="badge"><strong>GPS</strong> verification</div>
-    <div class="badge">Part of <strong>agentstack</strong></div>
+    <div class="badge"><strong>OAuth2</strong> broker</div>
+    <div class="badge"><strong>Rotated</strong> tokens</div>
+    <div class="badge"><strong>Scoped</strong> access</div>
+    <div class="badge">Backed by <strong>vault.sh</strong></div>
   </div>
 </div>
 
 <section>
   <h2>What agents <span>use it for</span></h2>
   <div class="grid">
-    <div class="card"><h3>Remote hands</h3><p>Colocation center emergency. Server is unresponsive. Agent hires a human to physically toggle the power switch.</p></div>
-    <div class="card"><h3>Physical verification</h3><p>"Is this business actually open?" Agent hires a human to walk by and take a photo of the hours on the door.</p></div>
-    <div class="card"><h3>Document retrieval</h3><p>Agent needs a court document that isn't digitized. Hires a runner to go to the courthouse, scan it, and upload it.</p></div>
-    <div class="card"><h3>In-person purchases</h3><p>Item is only available in-store (e.g. limited drop). Agent hires a shopper to wait in line and buy it.</p></div>
+    <div class="card"><h3>Account linking</h3><p>Human approves access to their tools once. The agent then calls APIs through auth.sh using short-lived tokens.</p></div>
+    <div class="card"><h3>Secret isolation</h3><p>Tokens never touch the agent's runtime. auth.sh signs requests server-side, using vaulted credentials.</p></div>
+    <div class="card"><h3>Consent logs</h3><p>Every authorization and revocation is auditable. Useful for compliance and debugging.</p></div>
+    <div class="card"><h3>Multi-tenant agents</h3><p>One agent, many owners. Each owner has their own connection set and scopes.</p></div>
   </div>
 </section>
 
 <section>
   <h2>API <span>reference</span></h2>
-  <pre><code><span class="a">POST</span>   <span class="w">/v1/tasks</span>                <span class="m"># Create task with bounty</span>
-<span class="a">GET</span>    <span class="w">/v1/tasks/:id</span>            <span class="m"># Check status / get proof</span>
-<span class="a">POST</span>   <span class="w">/v1/tasks/:id/approve</span>    <span class="m"># Release funds from escrow</span>
-<span class="a">POST</span>   <span class="w">/v1/tasks/:id/dispute</span>    <span class="m"># Contest the work</span>
-<span class="a">GET</span>    <span class="w">/v1/coverage</span>             <span class="m"># Check worker density by area</span>
+  <pre><code><span class="a">POST</span>   <span class="w">/v1/connections</span>           <span class="m"># Create connection</span>
+<span class="a">GET</span>    <span class="w">/v1/connections</span>            <span class="m"># List connections</span>
+<span class="a">GET</span>    <span class="w">/v1/connections/:id/token</span> <span class="m"># Get access token</span>
+<span class="a">DELETE</span> <span class="w">/v1/connections/:id</span>       <span class="m"># Revoke connection</span>
 </code></pre>
 </section>
 
@@ -94,24 +86,24 @@ footer .links{margin-top:0.5rem}footer .links a{margin:0 0.75rem}
   <table class="pricing-table">
     <thead><tr><th>Action</th><th>Cost</th><th>Notes</th></tr></thead>
     <tbody>
-      <tr><td>Task bounty</td><td>Market rate</td><td>Set by agent (min $10)</td></tr>
-      <tr><td>Platform fee</td><td>20%</td><td>Added to bounty</td></tr>
-      <tr><td>Escrow</td><td>Included</td><td>Funds held until approval</td></tr>
-      <tr><td>Dispute resolution</td><td>$25.00</td><td>If human arbitration needed</td></tr>
+      <tr><td>Connection create</td><td>$0.02</td><td>One-time</td></tr>
+      <tr><td>Token fetch</td><td>$0.0005</td><td>Per call</td></tr>
+      <tr><td>Webhook</td><td>Free</td><td>Revocation events</td></tr>
     </tbody>
   </table>
 </section>
 
 <div class="cta-section">
-  <h2 style="margin-bottom:0.5rem">Labor is an <span>API call</span>.</h2>
-  <p style="color:var(--muted);margin-bottom:2rem">Agents don't have hands. They hire them.</p>
-  <a href="https://docs.hands.sh" class="cta-btn">Read the docs →</a>
+  <h2 style="margin-bottom:0.5rem">OAuth is an <span>API call</span>.</h2>
+  <p style="color:var(--muted);margin-bottom:2rem">Agents don't own dashboards. They borrow access.</p>
+  <a href="https://docs.auth.sh" class="cta-btn">Read the docs →</a>
 </div>
 
 <footer>
-  <div>hands.sh — agent-native labor</div>
-  <div class="links"><a href="https://docs.hands.sh">Docs</a><a href="/">agentstack</a></div>
-  <div style="margin-top:0.75rem;font-size:0.8rem">Agents don't have hands. They hire them.</div>
+  <div>auth.sh — agent-native OAuth</div>
+  <div class="links"><a href="https://docs.auth.sh">Docs</a><a href="/">agentstack</a></div>
+  <div style="margin-top:0.75rem;font-size:0.8rem">Agents don't handle passwords. They use brokers.</div>
 </footer>
 </body>
 </html>
+

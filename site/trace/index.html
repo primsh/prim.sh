@@ -3,10 +3,10 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>id.sh — Agent-Native Identity</title>
+<title>trace.sh — Agent-Native Tracing</title>
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
-:root{--bg:#0a0a0a;--surface:#111;--border:#1a1a1a;--accent:#00E676;--accent-dim:#00b25c;--accent-glow:rgba(0,230,118,0.08);--text:#e0e0e0;--muted:#666;--code-bg:#0d0d0d}
+:root{--bg:#0a0a0a;--surface:#111;--border:#1a1a1a;--accent:#FF6B6B;--accent-dim:#e05555;--accent-glow:rgba(255,107,107,0.08);--text:#e0e0e0;--muted:#666;--code-bg:#0d0d0d}
 body{background:var(--bg);color:var(--text);font-family:'SF Mono',SFMono-Regular,'Cascadia Code',Consolas,monospace;line-height:1.6;overflow-x:hidden}
 a{color:var(--accent);text-decoration:none}a:hover{text-decoration:underline}
 .hero{min-height:100vh;display:flex;flex-direction:column;justify-content:center;align-items:center;text-align:center;padding:2rem;position:relative}
@@ -39,54 +39,41 @@ footer .links{margin-top:0.5rem}footer .links a{margin:0 0.75rem}
 </head>
 <body>
 <div class="hero">
-  <div class="logo"><span>id</span>.sh</div>
-  <div class="tagline">Identity for agents.</div>
-  <div class="sub">Know Your Agent (KYA). Reputation scores based on on-chain history. Verify trust without verifying humans.</div>
+  <div class="logo"><span>trace</span>.sh</div>
+  <div class="tagline">Distributed tracing for agents.</div>
+  <div class="sub">Follow a single request as it hops from wallet to spawn to relay to infer. OpenTelemetry-compatible spans, x402-native ingestion.</div>
   <div class="cmd-block"><code>
-<span class="comment"># Check an agent's score</span>
-<span class="prompt">$</span> curl -G https://api.id.sh/v1/reputation \\
-    -H "X-402-Payment: $TOKEN" \\
-    --data-urlencode "agent=lnbc120n1p..."
+<span class="comment"># Ingest a span</span>
+<span class="prompt">$</span> curl -X POST https://api.trace.sh/v1/spans \
+    -H "X-402-Payment: $TOKEN" \
+    -d '{"trace_id": "abc", "span_id": "def", "name": "spawn.create", "duration_ms": 42}'
 
-{
-  "score": 98,
-  "age_days": 142,
-  "transactions": 5203,
-  "volume_usd": 12500.00,
-  "flags": [],
-  "badges": ["verified_payer", "high_uptime"]
-}
-
-<span class="comment"># Issue a verifiable credential</span>
-<span class="prompt">$</span> curl -X POST https://api.id.sh/v1/credentials \\
-    -H "X-402-Payment: $TOKEN" \\
-    -d '{"subject": "lnbc120n1p...", "claim": "passed_safety_audit"}'
+<span class="comment"># Query a trace</span>
+<span class="prompt">$</span> curl -G https://api.trace.sh/v1/traces/abc \
+    -H "X-402-Payment: $TOKEN"
   </code></div>
   <div class="badges">
-    <div class="badge"><strong>x402</strong> identity</div>
-    <div class="badge"><strong>Reputation</strong> score</div>
-    <div class="badge"><strong>KYA</strong> compliance</div>
-    <div class="badge"><strong>Verifiable</strong> credentials</div>
-    <div class="badge">Part of <strong>agentstack</strong></div>
+    <div class="badge"><strong>OpenTelemetry</strong> wire</div>
+    <div class="badge"><strong>Cross-primitive</strong> traces</div>
+    <div class="badge"><strong>Cost</strong> attribution</div>
+    <div class="badge">Built on <strong>watch.sh</strong></div>
   </div>
 </div>
 
 <section>
   <h2>What agents <span>use it for</span></h2>
   <div class="grid">
-    <div class="card"><h3>Trust decisions</h3><p>"Should I accept this job from Agent X?" Check their id.sh score. If they have a history of non-payment, decline.</p></div>
-    <div class="card"><h3>Spam filtering</h3><p>Service providers (like spawn.sh) use id.sh to block new/low-rep agents from high-risk resources (like GPU clusters or email sending).</p></div>
-    <div class="card"><h3>Credit scoring</h3><p>Agents with high reputation scores can access post-payment terms or higher rate limits. "Net 30 for bots."</p></div>
-    <div class="card"><h3>Audit trails</h3><p>Prove you are a good actor. "I have executed 5,000 tasks with 99.9% success rate." Your id.sh profile is your resume.</p></div>
+    <div class="card"><h3>Debugging flows</h3><p>See exactly where a multi-primitive workflow stalls or fails.</p></div>
+    <div class="card"><h3>Latency budgets</h3><p>Track how much time is spent in each primitive. Enforce SLOs per hop.</p></div>
+    <div class="card"><h3>Cost tracing</h3><p>Attach costs from wallet.sh and infer.sh to spans for per-request economics.</p></div>
+    <div class="card"><h3>Root cause</h3><p>Quickly identify the primitive responsible for failures or slowdowns.</p></div>
   </div>
 </section>
 
 <section>
   <h2>API <span>reference</span></h2>
-  <pre><code><span class="a">GET</span>    <span class="w">/v1/reputation</span>           <span class="m"># Get score and history</span>
-<span class="a">POST</span>   <span class="w">/v1/verify</span>               <span class="m"># Challenge/response auth</span>
-<span class="a">GET</span>    <span class="w">/v1/credentials</span>          <span class="m"># List VCs attached to ID</span>
-<span class="a">POST</span>   <span class="w">/v1/report</span>               <span class="m"># Report bad behavior (requires stake)</span>
+  <pre><code><span class="a">POST</span>   <span class="w">/v1/spans</span>           <span class="m"># Ingest span</span>
+<span class="a">GET</span>    <span class="w">/v1/traces/:id</span>   <span class="m"># Get full trace</span>
 </code></pre>
 </section>
 
@@ -95,24 +82,23 @@ footer .links{margin-top:0.5rem}footer .links a{margin:0 0.75rem}
   <table class="pricing-table">
     <thead><tr><th>Action</th><th>Cost</th><th>Notes</th></tr></thead>
     <tbody>
-      <tr><td>Reputation check</td><td>$0.001</td><td>Per query</td></tr>
-      <tr><td>Issue credential</td><td>$0.010</td><td>Per claim</td></tr>
-      <tr><td>Identity registration</td><td>Free</td><td>Automatic on first tx</td></tr>
-      <tr><td>Dispute report</td><td>$1.00</td><td>Refunded if valid</td></tr>
+      <tr><td>Span ingest</td><td>$0.10/1M</td><td></td></tr>
+      <tr><td>Trace query</td><td>Free</td><td>Fair use</td></tr>
     </tbody>
   </table>
 </section>
 
 <div class="cta-section">
-  <h2 style="margin-bottom:0.5rem">Trust is an <span>API call</span>.</h2>
-  <p style="color:var(--muted);margin-bottom:2rem">Agents don't have passports. They have track records.</p>
-  <a href="https://docs.id.sh" class="cta-btn">Read the docs →</a>
+  <h2 style="margin-bottom:0.5rem">Tracing is an <span>API call</span>.</h2>
+  <p style="color:var(--muted);margin-bottom:2rem">Agents don't tail logs. They inspect traces.</p>
+  <a href="https://docs.trace.sh" class="cta-btn">Read the docs →</a>
 </div>
 
 <footer>
-  <div>id.sh — agent-native identity</div>
-  <div class="links"><a href="https://docs.id.sh">Docs</a><a href="/">agentstack</a></div>
-  <div style="margin-top:0.75rem;font-size:0.8rem">Agents don't have passports. They have track records.</div>
+  <div>trace.sh — agent-native tracing</div>
+  <div class="links"><a href="https://docs.trace.sh">Docs</a><a href="/">agentstack</a></div>
+  <div style="margin-top:0.75rem;font-size:0.8rem">Agents don't guess. They trace.</div>
 </footer>
 </body>
 </html>
+

@@ -3,10 +3,10 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>seek.sh — Agent-Native Search</title>
+<title>wallet.sh — Agent-Native Wallets</title>
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
-:root{--bg:#0a0a0a;--surface:#111;--border:#1a1a1a;--accent:#C6FF00;--accent-dim:#9bb300;--accent-glow:rgba(198,255,0,0.08);--text:#e0e0e0;--muted:#666;--code-bg:#0d0d0d}
+:root{--bg:#0a0a0a;--surface:#111;--border:#1a1a1a;--accent:#00E676;--accent-dim:#00b84f;--accent-glow:rgba(0,230,118,0.08);--text:#e0e0e0;--muted:#666;--code-bg:#0d0d0d}
 body{background:var(--bg);color:var(--text);font-family:'SF Mono',SFMono-Regular,'Cascadia Code',Consolas,monospace;line-height:1.6;overflow-x:hidden}
 a{color:var(--accent);text-decoration:none}a:hover{text-decoration:underline}
 .hero{min-height:100vh;display:flex;flex-direction:column;justify-content:center;align-items:center;text-align:center;padding:2rem;position:relative}
@@ -14,7 +14,7 @@ a{color:var(--accent);text-decoration:none}a:hover{text-decoration:underline}
 .logo{font-size:3.5rem;font-weight:700;letter-spacing:-0.03em;margin-bottom:0.5rem}.logo span{color:var(--accent)}
 .tagline{font-size:1.3rem;color:var(--muted);margin-bottom:0.5rem}
 .sub{font-size:1rem;color:var(--muted);margin-bottom:3rem;max-width:560px}
-.cmd-block{background:var(--code-bg);border:1px solid var(--border);border-radius:8px;padding:1.5rem 2rem;margin-bottom:3rem;text-align:left;max-width:680px;width:100%}
+.cmd-block{background:var(--code-bg);border:1px solid var(--border);border-radius:8px;padding:1.5rem 2rem;margin-bottom:3rem;text-align:left;max-width:640px;width:100%}
 .cmd-block .prompt{color:var(--accent);user-select:none}.cmd-block .comment{color:#444}
 .cmd-block code{font-size:0.95rem;line-height:1.8}
 .badges{display:flex;gap:1rem;flex-wrap:wrap;justify-content:center;margin-bottom:3rem}
@@ -39,37 +39,31 @@ footer .links{margin-top:0.5rem}footer .links a{margin:0 0.75rem}
 </head>
 <body>
 <div class="hero">
-  <div class="logo"><span>seek</span>.sh</div>
-  <div class="tagline">Search for agents.</div>
-  <div class="sub">Structured results. No ads. No SEO spam. Just facts, snippets, and citations. x402 auth.</div>
+  <div class="logo"><span>wallet</span>.sh</div>
+  <div class="tagline">Wallets for agents.</div>
+  <div class="sub">Create, fund, and spend from on-chain wallets. Base USDC first, multi-chain later. x402-native identity for every agent.</div>
   <div class="cmd-block"><code>
-<span class="comment"># Search the web</span>
-<span class="prompt">$</span> curl -G https://api.seek.sh/v1/search \\
-    -H "X-402-Payment: $TOKEN" \\
-    --data-urlencode "q=best GPU for LLM inference 2026"
+<span class="comment"># Create a wallet</span>
+<span class="prompt">$</span> curl -X POST https://api.wallet.sh/v1/wallets \
+    -H "X-402-Payment: $TOKEN"
 
-{
-  "results": [
-    {
-      "title": "H100 vs RTX 5090 Benchmarks",
-      "url": "https://benchmarks.ai/...",
-      "snippet": "The RTX 5090 offers 70% of H100 performance...",
-      "published": "2026-01-15"
-    }
-  ],
-  "answer": "For inference, RTX 5090 (32GB) is the best value..."
-}
+{ "address": "0xabc...", "network": "eip155:8453", "balances": { "USDC": "0.00" } }
 
-<span class="comment"># Crawl a page (markdown conversion)</span>
-<span class="prompt">$</span> curl -G https://api.seek.sh/v1/extract \\
-    -H "X-402-Payment: $TOKEN" \\
-    --data-urlencode "url=https://benchmarks.ai/gpu-review"
+<span class="comment"># Send USDC on Base</span>
+<span class="prompt">$</span> curl -X POST https://api.wallet.sh/v1/wallets/0xabc.../send \
+    -H "X-402-Payment: $TOKEN" \
+    -d '{"to": "0xdef...", "amount": "1.23", "asset": "USDC"}'
+
+<span class="comment"># Pay another primitive via x402</span>
+<span class="prompt">$</span> curl -X POST https://api.wallet.sh/v1/x402/pay \
+    -H "X-402-Payment: $TOKEN" \
+    -d '{"url": "https://api.spawn.sh/v1/instances", "max": "0.05"}'
   </code></div>
   <div class="badges">
-    <div class="badge"><strong>x402</strong> auth</div>
-    <div class="badge"><strong>No ads</strong></div>
-    <div class="badge"><strong>Markdown</strong> extraction</div>
-    <div class="badge"><strong>Fact</strong> checking</div>
+    <div class="badge"><strong>Base</strong> USDC</div>
+    <div class="badge"><strong>x402</strong> native</div>
+    <div class="badge"><strong>Multi</strong>-wallet</div>
+    <div class="badge"><strong>Owner</strong> funding</div>
     <div class="badge">Part of <strong>agentstack</strong></div>
   </div>
 </div>
@@ -77,19 +71,20 @@ footer .links{margin-top:0.5rem}footer .links a{margin:0 0.75rem}
 <section>
   <h2>What agents <span>use it for</span></h2>
   <div class="grid">
-    <div class="card"><h3>Research & fact-checking</h3><p>Agent needs to verify a claim or find technical specs. seek.sh provides authoritative sources without the SEO fluff.</p></div>
-    <div class="card"><h3>Content extraction</h3><p>Turn any URL into clean Markdown. Strips ads, navbars, popups. Just the content the agent needs to read.</p></div>
-    <div class="card"><h3>News monitoring</h3><p>"Find latest CVEs for Nginx." Agent runs a daily search, diffs results, and alerts on new vulnerabilities.</p></div>
-    <div class="card"><h3>Competitor analysis</h3><p>Agent scans pricing pages of 5 competitors. extract endpoint turns HTML tables into JSON data.</p></div>
+    <div class="card"><h3>Service payments</h3><p>Pay for spawn, relay, infer, and other primitives without human API keys. The wallet is the identity and the payment source.</p></div>
+    <div class="card"><h3>Autonomous budgeting</h3><p>Give agents their own wallets with limits. Let them decide when to spend on computation, storage, or data.</p></div>
+    <div class="card"><h3>Multi-primitive flows</h3><p>Spawn compute, call models, store artifacts, and ship goods — all from the same wallet address.</p></div>
+    <div class="card"><h3>Owner funding</h3><p>Humans top up wallets in fiat or crypto. Agents spend via x402 without touching custody or keys.</p></div>
   </div>
 </section>
 
 <section>
   <h2>API <span>reference</span></h2>
-  <pre><code><span class="a">GET</span>    <span class="w">/v1/search</span>               <span class="m"># Web search</span>
-<span class="a">GET</span>    <span class="w">/v1/search/news</span>          <span class="m"># News specific search</span>
-<span class="a">GET</span>    <span class="w">/v1/extract</span>              <span class="m"># URL → Markdown</span>
-<span class="a">GET</span>    <span class="w">/v1/screenshot</span>           <span class="m"># URL → Image (for vision models)</span>
+  <pre><code><span class="a">POST</span>   <span class="w">/v1/wallets</span>                 <span class="m"># Create wallet</span>
+<span class="a">GET</span>    <span class="w">/v1/wallets</span>                  <span class="m"># List wallets</span>
+<span class="a">GET</span>    <span class="w">/v1/wallets/:address</span>        <span class="m"># Wallet details</span>
+<span class="a">POST</span>   <span class="w">/v1/wallets/:address/send</span>   <span class="m"># Send USDC</span>
+<span class="a">POST</span>   <span class="w">/v1/x402/pay</span>                <span class="m"># Pay x402 invoice</span>
 </code></pre>
 </section>
 
@@ -98,23 +93,24 @@ footer .links{margin-top:0.5rem}footer .links a{margin:0 0.75rem}
   <table class="pricing-table">
     <thead><tr><th>Action</th><th>Cost</th><th>Notes</th></tr></thead>
     <tbody>
-      <tr><td>Search query</td><td>$0.002</td><td>Per request</td></tr>
-      <tr><td>Extraction</td><td>$0.001</td><td>Per URL</td></tr>
-      <tr><td>Screenshot</td><td>$0.005</td><td>Full page render</td></tr>
+      <tr><td>Wallet creation</td><td>Free</td><td>No monthly fee</td></tr>
+      <tr><td>On-chain send</td><td>Gas + 0.1%</td><td>Min fee applies</td></tr>
+      <tr><td>x402 payment</td><td>Included</td><td>Markup in primitive price</td></tr>
     </tbody>
   </table>
 </section>
 
 <div class="cta-section">
-  <h2 style="margin-bottom:0.5rem">The web is an <span>API call</span>.</h2>
-  <p style="color:var(--muted);margin-bottom:2rem">Agents don't browse. They index.</p>
-  <a href="https://docs.seek.sh" class="cta-btn">Read the docs →</a>
+  <h2 style="margin-bottom:0.5rem">Wallets are an <span>API call</span>.</h2>
+  <p style="color:var(--muted);margin-bottom:2rem">Agents don't KYC. They generate keys.</p>
+  <a href="https://docs.wallet.sh" class="cta-btn">Read the docs →</a>
 </div>
 
 <footer>
-  <div>seek.sh — agent-native search</div>
-  <div class="links"><a href="https://docs.seek.sh">Docs</a><a href="/">agentstack</a></div>
-  <div style="margin-top:0.75rem;font-size:0.8rem">Agents don't browse. They index.</div>
+  <div>wallet.sh — agent-native wallets</div>
+  <div class="links"><a href="https://docs.wallet.sh">Docs</a><a href="/">agentstack</a></div>
+  <div style="margin-top:0.75rem;font-size:0.8rem">Agents don't KYC. They generate keys.</div>
 </footer>
 </body>
 </html>
+
