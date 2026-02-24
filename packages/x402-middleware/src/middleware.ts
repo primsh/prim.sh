@@ -1,32 +1,25 @@
 import type { MiddlewareHandler } from "hono";
 import { paymentMiddlewareFromConfig } from "@x402/hono";
 import { HTTPFacilitatorClient, decodePaymentSignatureHeader } from "@x402/core/http";
+import type { FacilitatorClient, RouteConfig } from "@x402/core/server";
+import type { SchemeRegistration } from "@x402/hono";
+import type { Network } from "@x402/core/types";
 import { ExactEvmScheme } from "@x402/evm/exact/server";
 import type {
   AgentStackMiddlewareOptions,
   AgentStackRouteConfig,
-  RouteConfig,
+  RouteConfig as AgentStackRouteConfigEntry,
 } from "./types.ts";
 
-const DEFAULT_NETWORK = "eip155:8453";
+const DEFAULT_NETWORK: Network = "eip155:8453";
 const DEFAULT_FACILITATOR_URL = "https://x402.org/facilitator";
 const WALLET_ADDRESS_KEY = "walletAddress";
 
-interface NormalizedRouteConfig {
-  accepts: {
-    scheme: "exact";
-    network: string;
-    payTo: string;
-    price: string;
-  };
-  description?: string;
-}
-
 function normalizeRouteConfigEntry(
   pattern: string,
-  value: string | RouteConfig,
-  options: { payTo: string; network: string },
-): [string, NormalizedRouteConfig] {
+  value: string | AgentStackRouteConfigEntry,
+  options: { payTo: string; network: Network },
+): [string, RouteConfig] {
   const price = typeof value === "string" ? value : value.price;
 
   if (!price) {
@@ -53,11 +46,11 @@ export function createAgentStackMiddleware(
   options: AgentStackMiddlewareOptions,
   routes: AgentStackRouteConfig,
 ): MiddlewareHandler {
-  const network = options.network ?? DEFAULT_NETWORK;
+  const network: Network = (options.network ?? DEFAULT_NETWORK) as Network;
   const facilitatorUrl = options.facilitatorUrl ?? DEFAULT_FACILITATOR_URL;
   const freeRoutes = new Set(options.freeRoutes ?? []);
 
-  const effectiveRoutes: Record<string, NormalizedRouteConfig> = {};
+  const effectiveRoutes: Record<string, RouteConfig> = {};
 
   for (const [pattern, value] of Object.entries(routes)) {
     if (freeRoutes.has(pattern)) {
@@ -74,10 +67,7 @@ export function createAgentStackMiddleware(
 
   const identity: MiddlewareHandler = async (c, next) => {
     const header =
-      c.req.header("PAYMENT-SIGNATURE") ??
-      c.req.header("payment-signature") ??
-      c.req.header("X-PAYMENT") ??
-      c.req.header("x-payment");
+      c.req.header("payment-signature") ?? c.req.header("x-payment");
 
     if (header) {
       try {
@@ -107,10 +97,16 @@ export function createAgentStackMiddleware(
     return identity;
   }
 
+  const facilitatorClient: FacilitatorClient = new HTTPFacilitatorClient({
+    url: facilitatorUrl,
+  });
+  const schemes: SchemeRegistration[] = [
+    { network, server: new ExactEvmScheme() },
+  ];
   const payment = paymentMiddlewareFromConfig(
-    effectiveRoutes as never,
-    new HTTPFacilitatorClient({ url: facilitatorUrl }) as never,
-    [{ network, server: new ExactEvmScheme() }] as never,
+    effectiveRoutes,
+    facilitatorClient,
+    schemes,
   );
 
   return async (c, next) => {

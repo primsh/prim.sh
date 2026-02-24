@@ -44,67 +44,37 @@ function createApp() {
   return app;
 }
 
-const originalFetch = globalThis.fetch;
+const mockFetch = vi.fn(async (input: RequestInfo | URL) => {
+  const url =
+    typeof input === "string"
+      ? input
+      : input instanceof Request
+        ? input.url
+        : input.toString();
+  if (url.endsWith("/supported")) {
+    return new Response(
+      JSON.stringify({
+        kinds: [
+          { x402Version: 2, scheme: "exact", network: TEST_NETWORK },
+        ],
+        extensions: [],
+        signers: {},
+      }),
+      { status: 200, headers: { "Content-Type": "application/json" } },
+    );
+  }
+  return new Response(JSON.stringify({ ok: true }), {
+    status: 200,
+    headers: { "Content-Type": "application/json" },
+  });
+});
 
 beforeAll(() => {
-  globalThis.fetch = vi.fn(async (input: RequestInfo | URL) => {
-    const url = typeof input === "string" ? input : input.toString();
-
-    if (url.endsWith("/supported")) {
-      return new Response(
-        JSON.stringify({
-          kinds: [
-            {
-              x402Version: 2,
-              scheme: "exact",
-              network: TEST_NETWORK,
-            },
-          ],
-          extensions: [],
-          signers: {},
-        }),
-        {
-          status: 200,
-          headers: { "Content-Type": "application/json" },
-        },
-      );
-    }
-
-    if (url.includes("/verify")) {
-      return new Response(
-        JSON.stringify({
-          isValid: false,
-          invalidReason: "no-payment",
-        }),
-        {
-          status: 402,
-          headers: { "Content-Type": "application/json" },
-        },
-      );
-    }
-
-    if (url.includes("/settle")) {
-      return new Response(
-        JSON.stringify({
-          success: false,
-          errorReason: "no-payment",
-        }),
-        {
-          status: 402,
-          headers: { "Content-Type": "application/json" },
-        },
-      );
-    }
-
-    return new Response(JSON.stringify({ ok: true }), {
-      status: 200,
-      headers: { "Content-Type": "application/json" },
-    });
-  }) as typeof fetch;
+  vi.stubGlobal("fetch", mockFetch);
 });
 
 afterAll(() => {
-  globalThis.fetch = originalFetch;
+  vi.unstubAllGlobals();
 });
 
 describe("AgentStack x402 middleware", () => {
@@ -119,19 +89,15 @@ describe("AgentStack x402 middleware", () => {
     expect(body.walletAddress).toBeUndefined();
   });
 
-  it("returns Payment-Required header for paid route without payment header", async () => {
+  it("returns 402 and Payment-Required header for paid route without payment header", async () => {
     const app = createApp();
 
     const res = await app.request("/paid", { method: "GET" });
 
-    // Depending on facilitator initialization, this may be 402 or 500, but
-    // Payment-Required header must be present and correctly encoded.
+    expect(res.status).toBe(402);
     const header = res.headers.get("PAYMENT-REQUIRED");
     expect(header).toBeTruthy();
-
-    if (!header) {
-      return;
-    }
+    if (!header) return;
 
     const decoded = decodePaymentRequiredHeader(header);
 
