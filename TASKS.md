@@ -62,6 +62,7 @@
 ## Plan Docs
 
 - P-1: `tasks/completed/p-1-llms-txt-catalog-2026-02-24.md`
+- P-4: `tasks/active/p-4-x402-hono-middleware-2026-02-24.md`
 
 ## Backlog — Future Primitives
 
