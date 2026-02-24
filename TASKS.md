@@ -4,7 +4,7 @@
 
 | ID | Task | Status |
 |----|------|--------|
-| S-1 | Fix "Fourteen primitives" copy → "Nineteen" (manifesto x2 + CTA in `agentstack/index.html`) | Open |
+| S-1 | Fix "Fourteen primitives" copy → "Nineteen" (manifesto x2 + CTA in `agentstack/index.html`) | Done |
 | S-2 | Fix `.c` CSS class collision in `agentstack/index.html` (coral vs comment gray) | Open |
 | S-3 | Add missing routes to `serve.py` (mem, infer, watch + new primitives: browse, auth, code, trace) | Open |
 | S-4 | Create landing pages for new primitives (browse, auth, code, trace) | Open |
