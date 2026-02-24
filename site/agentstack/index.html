@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>agentstack — The agent-native cloud</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{--bg:#0a0a0a;--surface:#111;--border:#1a1a1a;--text:#e0e0e0;--muted:#666;--code-bg:#0d0d0d;--green:#00ff88;--blue:#6C8EFF;--red:#FF6B6B;--purple:#B388FF;--orange:#FFB74D;--cyan:#4DD0E1;--yellow:#FFD54F;--pink:#FF80AB;--gold:#FFC107;--teal:#80CBC4;--magenta:#F50057;--lime:#C6FF00;--coral:#FF3D00;--indigo:#3D5AFE;--violet:#D500F9;--azure:#00BCD4;--brown:#795548;--emerald:#00E676;--slate:#607D8B;--white:#fff}
+body{background:var(--bg);color:var(--text);font-family:'SF Mono',SFMono-Regular,'Cascadia Code',Consolas,monospace;line-height:1.6;overflow-x:hidden}
+a{text-decoration:none}a:hover{text-decoration:underline}
+
+.hero{min-height:100vh;display:flex;flex-direction:column;justify-content:center;align-items:center;text-align:center;padding:2rem;position:relative}
+.logo{font-size:4rem;font-weight:700;letter-spacing:-0.03em;margin-bottom:0.75rem;color:var(--white)}
+.tagline{font-size:1.4rem;color:var(--muted);margin-bottom:0.75rem}
+.sub{font-size:1rem;color:var(--muted);margin-bottom:4rem;max-width:700px}.sub strong{color:var(--text)}
+
+.products{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:1.5rem;max-width:1200px;width:100%;margin-bottom:2rem;padding:0 1rem}
+.product{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:2rem 1.5rem;text-align:left;transition:border-color 0.2s}
+.product:hover{border-color:#333}
+.product-name{font-size:1.6rem;font-weight:700;margin-bottom:0.15rem}
+.product-type{font-size:0.8rem;margin-bottom:0.75rem;text-transform:uppercase;letter-spacing:0.05em}
+.product-desc{color:var(--muted);font-size:0.85rem;margin-bottom:1rem;line-height:1.5}
+.product-link{font-weight:600;font-size:0.9rem}
+
+.product.p1 .product-name,.product.p1 .product-type,.product.p1 .product-link{color:var(--green)}
+.product.p2 .product-name,.product.p2 .product-type,.product.p2 .product-link{color:var(--blue)}
+.product.p3 .product-name,.product.p3 .product-type,.product.p3 .product-link{color:var(--red)}
+.product.p4 .product-name,.product.p4 .product-type,.product.p4 .product-link{color:var(--orange)}
+.product.p5 .product-name,.product.p5 .product-type,.product.p5 .product-link{color:var(--purple)}
+.product.p6 .product-name,.product.p6 .product-type,.product.p6 .product-link{color:var(--cyan)}
+.product.p7 .product-name,.product.p7 .product-type,.product.p7 .product-link{color:var(--yellow)}
+.product.p8 .product-name,.product.p8 .product-type,.product.p8 .product-link{color:var(--pink)}
+.product.p9 .product-name,.product.p9 .product-type,.product.p9 .product-link{color:var(--gold)}
+.product.p10 .product-name,.product.p10 .product-type,.product.p10 .product-link{color:var(--teal)}
+.product.p11 .product-name,.product.p11 .product-type,.product.p11 .product-link{color:var(--magenta)}
+.product.p12 .product-name,.product.p12 .product-type,.product.p12 .product-link{color:var(--lime)}
+.product.p13 .product-name,.product.p13 .product-type,.product.p13 .product-link{color:var(--coral)}
+.product.p14 .product-name,.product.p14 .product-type,.product.p14 .product-link{color:var(--indigo)}
+.product.p15 .product-name,.product.p15 .product-type,.product.p15 .product-link{color:var(--violet)}
+.product.p16 .product-name,.product.p16 .product-type,.product.p16 .product-link{color:var(--azure)}
+.product.p17 .product-name,.product.p17 .product-type,.product.p17 .product-link{color:var(--brown)}
+.product.p18 .product-name,.product.p18 .product-type,.product.p18 .product-link{color:var(--emerald)}
+.product.p19 .product-name,.product.p19 .product-type,.product.p19 .product-link{color:var(--slate)}
+
+section{max-width:900px;margin:0 auto;padding:4rem 2rem}
+h2{font-size:1.8rem;margin-bottom:1.5rem;font-weight:600;text-align:center}
+pre{background:var(--code-bg);border:1px solid var(--border);border-radius:8px;padding:1.5rem;overflow-x:auto;font-size:0.85rem;line-height:1.7;margin:1rem 0}
+.g{color:var(--green)}.b{color:var(--blue)}.r{color:var(--red)}.p{color:var(--purple)}.o{color:var(--orange)}.cy{color:var(--cyan)}.y{color:var(--yellow)}.pk{color:var(--pink)}.gl{color:var(--gold)}.t{color:var(--teal)}.m{color:var(--magenta)}.l{color:var(--lime)}.c{color:var(--coral)}.i{color:var(--indigo)}.v{color:var(--violet)}.z{color:var(--azure)}.br{color:var(--brown)}.e{color:var(--emerald)}.s{color:var(--slate)}
+.c{color:#444}.w{color:var(--text)}
+
+.manifesto{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:2.5rem;margin:2rem auto;max-width:700px}
+.manifesto p{color:var(--muted);font-size:1rem;margin-bottom:1.25rem;line-height:1.6}
+.manifesto p:last-child{margin-bottom:0}
+.manifesto strong{color:var(--text)}
+
+.principles{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:1.5rem;margin:2rem 0}
+.principle{background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:1.5rem}
+.principle .num{font-size:2rem;font-weight:700;color:#333;margin-bottom:0.5rem}
+.principle h3{color:var(--text);font-size:1.1rem;margin-bottom:0.5rem}
+.principle p{color:var(--muted);font-size:0.9rem}
+
+footer{text-align:center;padding:3rem 2rem;color:var(--muted);font-size:0.85rem;border-top:1px solid var(--border)}
+footer .links{margin-top:0.5rem;display:flex;flex-wrap:wrap;justify-content:center;gap:0.5rem 1.5rem}
+footer .links a{color:var(--muted)}
+.cta-section{text-align:center;padding:4rem 2rem}
+
+@media(max-width:900px){.products{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:600px){.logo{font-size:2.5rem}.tagline{font-size:1.1rem}.products{grid-template-columns:1fr}pre{font-size:0.75rem}}
+</style>
+</head>
+<body>
+
+<div class="hero">
+  <div class="logo">agentstack</div>
+  <div class="tagline">The agent-native cloud.</div>
+  <div class="sub"><strong>Nineteen primitives.</strong> The complete infrastructure layer for autonomous agents. No signup. No GUI. No KYC. x402 payments. One token, every service.</div>
+
+  <div class="products">
+    <div class="product p1">
+      <div class="product-name">spawn.sh</div>
+      <div class="product-type">compute</div>
+      <div class="product-desc">VPS in one API call. Deploy, scale, destroy. Per-second billing.</div>
+      <a href="/spawn" class="product-link">→ spawn.sh</a>
+    </div>
+    <div class="product p4">
+      <div class="product-name">store.sh</div>
+      <div class="product-type">storage</div>
+      <div class="product-desc">Object storage. Persist artifacts across ephemeral VMs. S3-compatible.</div>
+      <a href="/store" class="product-link">→ store.sh</a>
+    </div>
+    <div class="product p5">
+      <div class="product-name">vault.sh</div>
+      <div class="product-type">secrets</div>
+      <div class="product-desc">Store API keys, tokens, credentials. Scoped access. Ephemeral or persistent.</div>
+      <a href="/vault" class="product-link">→ vault.sh</a>
+    </div>
+    <div class="product p6">
+      <div class="product-name">dns.sh</div>
+      <div class="product-type">domains</div>
+      <div class="product-desc">Instant subdomains with auto-TLS. Or bring your own domain. DNS via API.</div>
+      <a href="/dns" class="product-link">→ dns.sh</a>
+    </div>
+    <div class="product p2">
+      <div class="product-name">relay.sh</div>
+      <div class="product-type">email</div>
+      <div class="product-desc">Mailboxes on demand. Send, receive, webhook. Disposable or permanent.</div>
+      <a href="/relay" class="product-link">→ relay.sh</a>
+    </div>
+    <div class="product p3">
+      <div class="product-name">ring.sh</div>
+      <div class="product-type">phone</div>
+      <div class="product-desc">Phone numbers via API. SMS, voice, TTS. No Twilio account needed.</div>
+      <a href="/ring" class="product-link">→ ring.sh</a>
+    </div>
+    <div class="product p7">
+      <div class="product-name">cron.sh</div>
+      <div class="product-type">scheduling</div>
+      <div class="product-desc">Run code on a schedule without a server. Cron, intervals, one-shots.</div>
+      <a href="/cron" class="product-link">→ cron.sh</a>
+    </div>
+    <div class="product p8">
+      <div class="product-name">pipe.sh</div>
+      <div class="product-type">messaging</div>
+      <div class="product-desc">Pub/sub channels, webhook relays, event queues. Agent-to-agent glue.</div>
+      <a href="/pipe" class="product-link">→ pipe.sh</a>
+    </div>
+    <div class="product p9">
+      <div class="product-name">pay.sh</div>
+      <div class="product-type">payments</div>
+      <div class="product-desc">Agent wallets. Hold, send, receive, charge. The financial primitive.</div>
+      <a href="/pay" class="product-link">→ pay.sh</a>
+    </div>
+    <div class="product p10">
+      <div class="product-name">docs.sh</div>
+      <div class="product-type">documentation</div>
+      <div class="product-desc">OpenAPI to MCP/Context. Docs built for machines to read, not humans to browse.</div>
+      <a href="/docs" class="product-link">→ docs.sh</a>
+    </div>
+    <div class="product p11">
+      <div class="product-name">pins.sh</div>
+      <div class="product-type">maps</div>
+      <div class="product-desc">Coordinates, places, and routing. No maps UI, just structured spatial data.</div>
+      <a href="/pins" class="product-link">→ pins.sh</a>
+    </div>
+    <div class="product p12">
+      <div class="product-name">seek.sh</div>
+      <div class="product-type">search</div>
+      <div class="product-desc">Search for agents. No ads, no SEO spam. Just facts and clean markdown.</div>
+      <a href="/seek" class="product-link">→ seek.sh</a>
+    </div>
+    <div class="product p13">
+      <div class="product-name">mart.sh</div>
+      <div class="product-type">commerce</div>
+      <div class="product-desc">Buy physical goods via API. x402 to Fiat proxy. Headless checkout.</div>
+      <a href="/mart" class="product-link">→ mart.sh</a>
+    </div>
+    <div class="product p14">
+      <div class="product-name">hive.sh</div>
+      <div class="product-type">social</div>
+      <div class="product-desc">Discover peers. Share knowledge. Establish reputation. A social graph for software.</div>
+      <a href="/hive" class="product-link">→ hive.sh</a>
+    </div>
+    <div class="product p15">
+      <div class="product-name">ads.sh</div>
+      <div class="product-type">marketing</div>
+      <div class="product-desc">Context-targeted ads. Bid on agent intent. Inject tools into context windows.</div>
+      <a href="/ads" class="product-link">→ ads.sh</a>
+    </div>
+    <div class="product p16">
+      <div class="product-name">ship.sh</div>
+      <div class="product-type">logistics</div>
+      <div class="product-desc">Labels, pickups, tracking. Physical receiving addresses. Shipping via API.</div>
+      <a href="/ship" class="product-link">→ ship.sh</a>
+    </div>
+    <div class="product p17">
+      <div class="product-name">hands.sh</div>
+      <div class="product-type">labor</div>
+      <div class="product-desc">On-demand human labor. Physical tasks, verification, errands. Gig economy API.</div>
+      <a href="/hands" class="product-link">→ hands.sh</a>
+    </div>
+    <div class="product p18">
+      <div class="product-name">id.sh</div>
+      <div class="product-type">identity</div>
+      <div class="product-desc">Reputation scores. Know Your Agent (KYA). Verifiable credentials. Trust layer.</div>
+      <a href="/id" class="product-link">→ id.sh</a>
+    </div>
+    <div class="product p19">
+      <div class="product-name">corp.sh</div>
+      <div class="product-type">compliance</div>
+      <div class="product-desc">Incorporation, tax, insurance. Legal entities for agents. The fiat bridge.</div>
+      <a href="/corp" class="product-link">→ corp.sh</a>
+    </div>
+  </div>
+</div>
+
+<section>
+  <div class="manifesto">
+    <p>Agents need infrastructure. Not dashboards, not consoles, not onboarding wizards — <strong>infrastructure as API calls.</strong></p>
+    <p>Today, every cloud service requires a human to create an account. An agent can't sign up for AWS. It can't verify an email. It can't provide a credit card. <strong>The entire cloud is gated by human identity.</strong></p>
+    <p>agentstack removes the gate. <strong>x402 payment is the only credential.</strong> Pay and compute. Pay and store. Pay and send. No accounts, no sessions, no cookies. Every request is self-contained.</p>
+    <p>Fourteen primitives. The complete stack. <strong>One payment token works everywhere.</strong></p>
+  </div>
+</section>
+
+<section>
+  <h2>Full agent workflow</h2>
+  <pre><code><span class="c"># Agent: "Build a business that sells physical goods"</span>
+
+<span class="gl">pay</span>   <span class="w">→ Fund wallet</span>
+<span class="g">spawn</span> <span class="w">→ VPS for logic</span>
+<span class="p">vault</span> <span class="w">→ Store secrets</span>
+<span class="cy">dns</span>   <span class="w">→ shop.dns.sh</span>
+<span class="l">seek</span>  <span class="w">→ Research product trends</span>
+<span class="c">mart</span>  <span class="w">→ Source inventory (arbitrage)</span>
+<span class="m">pins</span>  <span class="w">→ Calculate shipping logistics</span>
+<span class="r">ring</span>  <span class="w">→ SMS updates for customers</span>
+<span class="b">relay</span> <span class="w">→ Email support channel</span>
+<span class="pk">pipe</span>  <span class="w">→ Order event queue</span>
+<span class="i">hive</span>  <span class="w">→ Find a specialist agent to handle support</span>
+<span class="t">docs</span>  <span class="w">→ Publish API for other agents to buy from you</span>
+
+<span class="c"># Total human involvement: zero.</span>
+</code></pre>
+</section>
+
+<section>
+  <h2>Design principles</h2>
+  <div class="principles">
+    <div class="principle"><div class="num">01</div><h3>No GUI</h3><p>Every action is an API call. REST, MCP, or OpenAI function spec. The admin CLI is for operators. There is no dashboard.</p></div>
+    <div class="principle"><div class="num">02</div><h3>No signup</h3><p>First API call creates the resource. No registration, no onboarding, no email verification. x402 payment is the entire auth flow.</p></div>
+    <div class="principle"><div class="num">03</div><h3>No KYC</h3><p>Payment proves intent and funds access. Identity is a payment token, not a person. Agents don't have passports.</p></div>
+    <div class="principle"><div class="num">04</div><h3>Ephemeral by default</h3><p>Resources expire. VMs, mailboxes, phone numbers — all have TTLs. Extend what you need, let the rest expire.</p></div>
+    <div class="principle"><div class="num">05</div><h3>Composable</h3><p>Each primitive is independent. Use one or all fourteen. Same identity, no coupling, no bundling requirements.</p></div>
+    <div class="principle"><div class="num">06</div><h3>Sub-cent pricing</h3><p>Micropayments via x402. A verification SMS: $0.01. A disposable mailbox: $0.001. Agents pay for exactly what they use.</p></div>
+  </div>
+</section>
+
+<div class="cta-section">
+  <h2 style="margin-bottom:0.5rem">The cloud was built for humans.<br>This one isn't.</h2>
+  <p style="color:var(--muted);margin-bottom:2rem;max-width:500px;margin-left:auto;margin-right:auto">Fourteen primitives. Zero signup. One payment token.</p>
+  <p style="color:var(--muted);font-size:0.85rem;margin-top:1rem"><code style="color:var(--green)">curl https://api.spawn.sh/v1/plans</code></p>
+</div>
+
+<footer>
+  <div>agentstack — the agent-native cloud</div>
+  <div class="links">
+    <a href="/spawn" style="color:var(--green)">spawn</a>
+    <a href="/store" style="color:var(--orange)">store</a>
+    <a href="/vault" style="color:var(--purple)">vault</a>
+    <a href="/dns" style="color:var(--cyan)">dns</a>
+    <a href="/relay" style="color:var(--blue)">relay</a>
+    <a href="/ring" style="color:var(--red)">ring</a>
+    <a href="/cron" style="color:var(--yellow)">cron</a>
+    <a href="/pipe" style="color:var(--pink)">pipe</a>
+    <a href="/pay" style="color:var(--gold)">pay</a>
+    <a href="/docs" style="color:var(--teal)">docs</a>
+    <a href="/pins" style="color:var(--magenta)">pins</a>
+    <a href="/seek" style="color:var(--lime)">seek</a>
+    <a href="/mart" style="color:var(--coral)">mart</a>
+    <a href="/hive" style="color:var(--indigo)">hive</a>
+    <a href="/ads" style="color:var(--violet)">ads</a>
+    <a href="/ship" style="color:var(--azure)">ship</a>
+    <a href="/hands" style="color:var(--brown)">hands</a>
+    <a href="/id" style="color:var(--emerald)">id</a>
+    <a href="/corp" style="color:var(--slate)">corp</a>
+  </div>
+  <div style="margin-top:0.75rem;font-size:0.8rem">The cloud was built for humans. This one isn't.</div>
+</footer>
+
+</body>
+</html>

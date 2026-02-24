@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>cron.sh — Agent-Native Scheduling</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{--bg:#0a0a0a;--surface:#111;--border:#1a1a1a;--accent:#FFD54F;--accent-dim:#e6bf40;--accent-glow:rgba(255,213,79,0.08);--text:#e0e0e0;--muted:#666;--code-bg:#0d0d0d}
+body{background:var(--bg);color:var(--text);font-family:'SF Mono',SFMono-Regular,'Cascadia Code',Consolas,monospace;line-height:1.6;overflow-x:hidden}
+a{color:var(--accent);text-decoration:none}a:hover{text-decoration:underline}
+.hero{min-height:100vh;display:flex;flex-direction:column;justify-content:center;align-items:center;text-align:center;padding:2rem;position:relative}
+.hero::before{content:'';position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:600px;height:600px;background:radial-gradient(circle,var(--accent-glow) 0%,transparent 70%);pointer-events:none}
+.logo{font-size:3.5rem;font-weight:700;letter-spacing:-0.03em;margin-bottom:0.5rem}.logo span{color:var(--accent)}
+.tagline{font-size:1.3rem;color:var(--muted);margin-bottom:0.5rem}
+.sub{font-size:1rem;color:var(--muted);margin-bottom:3rem;max-width:520px}
+.cmd-block{background:var(--code-bg);border:1px solid var(--border);border-radius:8px;padding:1.5rem 2rem;margin-bottom:3rem;text-align:left;max-width:640px;width:100%}
+.cmd-block .prompt{color:var(--accent);user-select:none}.cmd-block .comment{color:#444}
+.cmd-block code{font-size:0.95rem;line-height:1.8}
+.badges{display:flex;gap:1rem;flex-wrap:wrap;justify-content:center;margin-bottom:3rem}
+.badge{background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:0.5rem 1rem;font-size:0.85rem;color:var(--muted)}.badge strong{color:var(--accent)}
+section{max-width:900px;margin:0 auto;padding:4rem 2rem}
+h2{font-size:1.8rem;margin-bottom:1.5rem;font-weight:600}h2 span{color:var(--accent)}
+h3{font-size:1.1rem;margin-bottom:0.75rem;color:var(--accent)}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:1.5rem;margin-bottom:2rem}
+.card{background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:1.5rem}
+.card p{color:var(--muted);font-size:0.9rem;margin-top:0.5rem}
+pre{background:var(--code-bg);border:1px solid var(--border);border-radius:8px;padding:1.5rem;overflow-x:auto;font-size:0.85rem;line-height:1.7;margin:1rem 0}
+.a{color:var(--accent)}.c{color:#444}.w{color:var(--text)}.m{color:var(--muted)}
+.pricing-table{width:100%;border-collapse:collapse;margin:1.5rem 0}
+.pricing-table th{text-align:left;color:var(--accent);padding:0.75rem;border-bottom:1px solid var(--border);font-weight:500}
+.pricing-table td{padding:0.75rem;border-bottom:1px solid var(--border);color:var(--muted)}.pricing-table td:first-child{color:var(--text)}
+footer{text-align:center;padding:3rem 2rem;color:var(--muted);font-size:0.85rem;border-top:1px solid var(--border)}
+footer .links{margin-top:0.5rem}footer .links a{margin:0 0.75rem}
+.cta-section{text-align:center;padding:4rem 2rem}
+.cta-btn{display:inline-block;background:var(--accent);color:#000;padding:0.75rem 2rem;border-radius:6px;font-weight:700;font-size:1rem;font-family:inherit}.cta-btn:hover{background:var(--accent-dim);text-decoration:none}
+@media(max-width:600px){.logo{font-size:2.5rem}pre{font-size:0.75rem}}
+</style>
+</head>
+<body>
+<div class="hero">
+  <div class="logo"><span>cron</span>.sh</div>
+  <div class="tagline">Scheduled execution for agents.</div>
+  <div class="sub">Run code on a schedule without keeping a server alive. Cron expressions, one-shots, intervals. Pay per invocation.</div>
+  <div class="cmd-block"><code>
+<span class="comment"># Schedule a job</span>
+<span class="prompt">$</span> curl -X POST https://api.cron.sh/v1/jobs \
+    -H "X-402-Payment: $TOKEN" \
+    -d '{"schedule": "*/5 * * * *",
+         "endpoint": "https://my-app.dns.sh/healthcheck",
+         "method": "POST"}'
+
+{ "id": "job_n4k8m2", "schedule": "*/5 * * * *",
+  "next_run": "2026-02-23T06:35:00Z", "status": "active" }
+
+<span class="comment"># Or run a command on a spawn.sh instance</span>
+<span class="prompt">$</span> curl -X POST https://api.cron.sh/v1/jobs \
+    -H "X-402-Payment: $TOKEN" \
+    -d '{"schedule": "0 9 * * MON-FRI",
+         "action": "spawn_exec",
+         "instance": "inst_k7x9m2",
+         "command": "python3 daily_report.py"}'
+
+<span class="comment"># One-shot: run once at a specific time</span>
+<span class="prompt">$</span> curl -X POST https://api.cron.sh/v1/jobs \
+    -H "X-402-Payment: $TOKEN" \
+    -d '{"at": "2026-02-23T15:00:00Z",
+         "endpoint": "https://api.relay.sh/v1/send",
+         "method": "POST",
+         "body": {"to": "human@gmail.com", "subject": "Reminder"}}'
+  </code></div>
+  <div class="badges">
+    <div class="badge"><strong>x402</strong> auth</div>
+    <div class="badge"><strong>Cron</strong> expressions</div>
+    <div class="badge"><strong>One-shot</strong> timers</div>
+    <div class="badge"><strong>Webhook</strong> + <strong>spawn exec</strong></div>
+    <div class="badge">Part of <strong>agentstack</strong></div>
+  </div>
+</div>
+
+<section>
+  <h2>What agents <span>use it for</span></h2>
+  <div class="grid">
+    <div class="card"><h3>Health checks</h3><p>Ping an endpoint every 5 minutes. If it fails, trigger a ring.sh SMS alert or a spawn.sh restart. Uptime monitoring without a monitoring service.</p></div>
+    <div class="card"><h3>Periodic reports</h3><p>Every morning at 9am: run a script, generate a report, email it via relay.sh. The agent's daily routine.</p></div>
+    <div class="card"><h3>Data pipelines</h3><p>Fetch data every hour. Process it. Store results on store.sh. No long-running server needed.</p></div>
+    <div class="card"><h3>Deferred actions</h3><p>Agent decides at 2pm to do something at midnight. Schedules a one-shot. Doesn't need to stay alive.</p></div>
+  </div>
+</section>
+
+<section>
+  <h2>API <span>reference</span></h2>
+  <pre><code><span class="a">POST</span>   <span class="w">/v1/jobs</span>               <span class="m"># Create job (cron, interval, or one-shot)</span>
+<span class="a">GET</span>    <span class="w">/v1/jobs</span>               <span class="m"># List jobs</span>
+<span class="a">GET</span>    <span class="w">/v1/jobs/:id</span>           <span class="m"># Job details + next run</span>
+<span class="a">PUT</span>    <span class="w">/v1/jobs/:id</span>           <span class="m"># Update schedule or endpoint</span>
+<span class="a">DELETE</span> <span class="w">/v1/jobs/:id</span>           <span class="m"># Delete job</span>
+<span class="a">POST</span>   <span class="w">/v1/jobs/:id/trigger</span>   <span class="m"># Trigger immediately (skip schedule)</span>
+<span class="a">GET</span>    <span class="w">/v1/jobs/:id/runs</span>      <span class="m"># Execution history</span>
+<span class="a">GET</span>    <span class="w">/v1/runs/:id</span>           <span class="m"># Run details (status, response, duration)</span>
+</code></pre>
+</section>
+
+<section>
+  <h2><span>Pricing</span></h2>
+  <table class="pricing-table">
+    <thead><tr><th>Resource</th><th>Cost</th><th>Notes</th></tr></thead>
+    <tbody>
+      <tr><td>Active job</td><td>$0.001/day</td><td>Per scheduled job</td></tr>
+      <tr><td>Invocation</td><td>$0.0002</td><td>Per execution</td></tr>
+      <tr><td>Execution history</td><td>Free</td><td>7 day retention</td></tr>
+      <tr><td>One-shot timer</td><td>$0.0005</td><td>Single execution</td></tr>
+    </tbody>
+  </table>
+  <p style="color:var(--muted);font-size:0.85rem;margin-top:0.5rem">Health check every 5 min for a month: ~$0.06 total.</p>
+</section>
+
+<div class="cta-section">
+  <h2 style="margin-bottom:0.5rem">A schedule is an <span>API call</span>.</h2>
+  <p style="color:var(--muted);margin-bottom:2rem">Agents don't have crontabs. They have endpoints.</p>
+  <a href="https://docs.cron.sh" class="cta-btn">Read the docs →</a>
+</div>
+
+<footer>
+  <div>cron.sh — agent-native scheduling</div>
+  <div class="links"><a href="https://docs.cron.sh">Docs</a><a href="/">agentstack</a></div>
+  <div style="margin-top:0.75rem;font-size:0.8rem">Agents don't have crontabs. They have HTTP endpoints.</div>
+</footer>
+</body>
+</html>

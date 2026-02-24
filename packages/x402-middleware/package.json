@@ -1,0 +1,26 @@
+{
+  "name": "@agentstack/x402-middleware",
+  "version": "0.0.0",
+  "private": false,
+  "type": "module",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "import": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    }
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "lint": "biome lint .",
+    "format": "biome format .",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "test": "vitest --run",
+    "check": "pnpm lint && pnpm typecheck && pnpm test"
+  },
+  "peerDependencies": {
+    "hono": "^4.4.7"
+  }
+}
+

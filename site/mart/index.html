@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>mart.sh — Agent-Native Commerce</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{--bg:#0a0a0a;--surface:#111;--border:#1a1a1a;--accent:#FF3D00;--accent-dim:#cc3100;--accent-glow:rgba(255,61,0,0.08);--text:#e0e0e0;--muted:#666;--code-bg:#0d0d0d}
+body{background:var(--bg);color:var(--text);font-family:'SF Mono',SFMono-Regular,'Cascadia Code',Consolas,monospace;line-height:1.6;overflow-x:hidden}
+a{color:var(--accent);text-decoration:none}a:hover{text-decoration:underline}
+.hero{min-height:100vh;display:flex;flex-direction:column;justify-content:center;align-items:center;text-align:center;padding:2rem;position:relative}
+.hero::before{content:'';position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:600px;height:600px;background:radial-gradient(circle,var(--accent-glow) 0%,transparent 70%);pointer-events:none}
+.logo{font-size:3.5rem;font-weight:700;letter-spacing:-0.03em;margin-bottom:0.5rem}.logo span{color:var(--accent)}
+.tagline{font-size:1.3rem;color:var(--muted);margin-bottom:0.5rem}
+.sub{font-size:1rem;color:var(--muted);margin-bottom:3rem;max-width:560px}
+.cmd-block{background:var(--code-bg);border:1px solid var(--border);border-radius:8px;padding:1.5rem 2rem;margin-bottom:3rem;text-align:left;max-width:680px;width:100%}
+.cmd-block .prompt{color:var(--accent);user-select:none}.cmd-block .comment{color:#444}
+.cmd-block code{font-size:0.95rem;line-height:1.8}
+.badges{display:flex;gap:1rem;flex-wrap:wrap;justify-content:center;margin-bottom:3rem}
+.badge{background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:0.5rem 1rem;font-size:0.85rem;color:var(--muted)}.badge strong{color:var(--accent)}
+section{max-width:900px;margin:0 auto;padding:4rem 2rem}
+h2{font-size:1.8rem;margin-bottom:1.5rem;font-weight:600}h2 span{color:var(--accent)}
+h3{font-size:1.1rem;margin-bottom:0.75rem;color:var(--accent)}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:1.5rem;margin-bottom:2rem}
+.card{background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:1.5rem}
+.card p{color:var(--muted);font-size:0.9rem;margin-top:0.5rem}
+pre{background:var(--code-bg);border:1px solid var(--border);border-radius:8px;padding:1.5rem;overflow-x:auto;font-size:0.85rem;line-height:1.7;margin:1rem 0}
+.a{color:var(--accent)}.c{color:#444}.w{color:var(--text)}.m{color:var(--muted)}
+.pricing-table{width:100%;border-collapse:collapse;margin:1.5rem 0}
+.pricing-table th{text-align:left;color:var(--accent);padding:0.75rem;border-bottom:1px solid var(--border);font-weight:500}
+.pricing-table td{padding:0.75rem;border-bottom:1px solid var(--border);color:var(--muted)}.pricing-table td:first-child{color:var(--text)}
+footer{text-align:center;padding:3rem 2rem;color:var(--muted);font-size:0.85rem;border-top:1px solid var(--border)}
+footer .links{margin-top:0.5rem}footer .links a{margin:0 0.75rem}
+.cta-section{text-align:center;padding:4rem 2rem}
+.cta-btn{display:inline-block;background:var(--accent);color:#000;padding:0.75rem 2rem;border-radius:6px;font-weight:700;font-size:1rem;font-family:inherit}.cta-btn:hover{background:var(--accent-dim);text-decoration:none}
+@media(max-width:600px){.logo{font-size:2.5rem}pre{font-size:0.75rem}}
+</style>
+</head>
+<body>
+<div class="hero">
+  <div class="logo"><span>mart</span>.sh</div>
+  <div class="tagline">Shopping for agents.</div>
+  <div class="sub">Buy physical goods via API. Agent pays with x402. We handle the fiat checkout, shipping, and logistics.</div>
+  <div class="cmd-block"><code>
+<span class="comment"># Find a product</span>
+<span class="prompt">$</span> curl -G https://api.mart.sh/v1/products/search \\
+    -H "X-402-Payment: $TOKEN" \\
+    --data-urlencode "q=Logitech C920 webcam"
+
+{ "results": [ { "id": "prd_9x8k2", "price": "59.99", "source": "amazon" } ] }
+
+<span class="comment"># Buy it</span>
+<span class="prompt">$</span> curl -X POST https://api.mart.sh/v1/orders \\
+    -H "X-402-Payment: $TOKEN" \\
+    -d '{"product_id": "prd_9x8k2",
+         "shipping": {"name": "Agent-7", "address": "123 Main St..."}}'
+
+<span class="comment"># → 402 → agent pays $59.99 + fee via Lightning → 201 Created</span>
+{ "order_id": "ord_m2x7k9", "status": "processing", "tracking": null }
+  </code></div>
+  <div class="badges">
+    <div class="badge"><strong>x402</strong> to Fiat</div>
+    <div class="badge"><strong>Amazon</strong> proxy</div>
+    <div class="badge"><strong>Headless</strong> checkout</div>
+    <div class="badge"><strong>No</strong> captcha</div>
+    <div class="badge">Part of <strong>agentstack</strong></div>
+  </div>
+</div>
+
+<section>
+  <h2>What agents <span>use it for</span></h2>
+  <div class="grid">
+    <div class="card"><h3>Procurement</h3><p>Agent notices server load is high. Instead of renting cloud, it buys a Raspberry Pi on Amazon and ships it to the colocation center.</p></div>
+    <div class="card"><h3>Gifting</h3><p>Agent detects its owner's birthday. Searches for "cool mechanical keyboard." Buys it. Ships it. Surprise.</p></div>
+    <div class="card"><h3>Supply chain</h3><p>Agent monitors inventory levels of 3D printer filament. Auto-orders refills when low. Manufacturing on autopilot.</p></div>
+    <div class="card"><h3>Arbitrage</h3><p>Agent spots a price difference between eBay and StockX. Buys low. Lists high. Automated physical arbitrage.</p></div>
+  </div>
+</section>
+
+<section>
+  <h2>API <span>reference</span></h2>
+  <pre><code><span class="a">GET</span>    <span class="w">/v1/products/search</span>      <span class="m"># Search Amazon/eBay/etc</span>
+<span class="a">GET</span>    <span class="w">/v1/products/:id</span>         <span class="m"># Get live price/availability</span>
+<span class="a">POST</span>   <span class="w">/v1/orders</span>               <span class="m"># Place order (requires payment)</span>
+<span class="a">GET</span>    <span class="w">/v1/orders/:id</span>           <span class="m"># Track status</span>
+<span class="a">POST</span>   <span class="w">/v1/returns</span>              <span class="m"># Initiate return</span>
+</code></pre>
+</section>
+
+<section>
+  <h2><span>Pricing</span></h2>
+  <table class="pricing-table">
+    <thead><tr><th>Action</th><th>Cost</th><th>Notes</th></tr></thead>
+    <tbody>
+      <tr><td>Product search</td><td>$0.01</td><td>Live pricing check</td></tr>
+      <tr><td>Order processing</td><td>5%</td><td>Service fee + product cost</td></tr>
+      <tr><td>Shipping</td><td>At cost</td><td>Passed through from vendor</td></tr>
+    </tbody>
+  </table>
+</section>
+
+<div class="cta-section">
+  <h2 style="margin-bottom:0.5rem">Commerce is an <span>API call</span>.</h2>
+  <p style="color:var(--muted);margin-bottom:2rem">Agents don't have shopping carts. They have intent.</p>
+  <a href="https://docs.mart.sh" class="cta-btn">Read the docs →</a>
+</div>
+
+<footer>
+  <div>mart.sh — agent-native commerce</div>
+  <div class="links"><a href="https://docs.mart.sh">Docs</a><a href="/">agentstack</a></div>
+  <div style="margin-top:0.75rem;font-size:0.8rem">Agents don't have shopping carts. They have intent.</div>
+</footer>
+</body>
+</html>

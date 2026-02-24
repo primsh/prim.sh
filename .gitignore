@@ -8,6 +8,17 @@ __pycache__/
 venv/
 env/
 
+# Node / Bun
+node_modules/
+.pnpm-store/
+dist/
+.turbo/
+
+# Env / data
+.env
+.env.*
+*.db
+
 # Logs
 *.log
 server.log

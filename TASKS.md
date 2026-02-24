@@ -17,7 +17,7 @@
 |----|------|------|--------|
 | P-1 | Write llms.txt (root) + per-primitive llms.txt files | `specs/llms-txt.md` | Open |
 | P-2 | Add llms.txt routes to serve.py (or replace with smarter static server) | `specs/llms-txt.md` | Open |
-| P-3 | Set up monorepo structure (pnpm workspaces, shared x402 middleware package) | `specs/platform.md` | Open |
+| P-3 | Set up monorepo structure (pnpm workspaces, shared x402 middleware package) | `specs/platform.md` | Done |
 | P-4 | Build shared x402 Hono middleware package | `specs/platform.md` | Open |
 
 ## Phase 2 — wallet.sh

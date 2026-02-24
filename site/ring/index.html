@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ring.sh — Agent-Native Phone</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{--bg:#0a0a0a;--surface:#111;--border:#1a1a1a;--accent:#FF6B6B;--accent-dim:#dd5555;--accent-glow:rgba(255,107,107,0.08);--text:#e0e0e0;--muted:#666;--code-bg:#0d0d0d}
+body{background:var(--bg);color:var(--text);font-family:'SF Mono',SFMono-Regular,'Cascadia Code',Consolas,monospace;line-height:1.6;overflow-x:hidden}
+a{color:var(--accent);text-decoration:none}
+a:hover{text-decoration:underline}
+
+.hero{min-height:100vh;display:flex;flex-direction:column;justify-content:center;align-items:center;text-align:center;padding:2rem;position:relative}
+.hero::before{content:'';position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:600px;height:600px;background:radial-gradient(circle,var(--accent-glow) 0%,transparent 70%);pointer-events:none}
+
+.logo{font-size:3.5rem;font-weight:700;letter-spacing:-0.03em;margin-bottom:0.5rem}
+.logo span{color:var(--accent)}
+.tagline{font-size:1.3rem;color:var(--muted);margin-bottom:0.5rem}
+.sub{font-size:1rem;color:var(--muted);margin-bottom:3rem;max-width:520px}
+
+.cmd-block{background:var(--code-bg);border:1px solid var(--border);border-radius:8px;padding:1.5rem 2rem;margin-bottom:3rem;text-align:left;max-width:640px;width:100%;position:relative}
+.cmd-block .prompt{color:var(--accent);user-select:none}
+.cmd-block .comment{color:#444}
+.cmd-block code{font-size:0.95rem;line-height:1.8}
+
+.badges{display:flex;gap:1rem;flex-wrap:wrap;justify-content:center;margin-bottom:3rem}
+.badge{background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:0.5rem 1rem;font-size:0.85rem;color:var(--muted)}
+.badge strong{color:var(--accent)}
+
+.scroll-hint{position:absolute;bottom:2rem;color:var(--muted);font-size:0.85rem;animation:pulse 2s infinite}
+@keyframes pulse{0%,100%{opacity:0.3}50%{opacity:1}}
+
+section{max-width:900px;margin:0 auto;padding:4rem 2rem}
+h2{font-size:1.8rem;margin-bottom:1.5rem;font-weight:600}
+h2 span{color:var(--accent)}
+h3{font-size:1.1rem;margin-bottom:0.75rem;color:var(--accent)}
+
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:1.5rem;margin-bottom:2rem}
+.card{background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:1.5rem}
+.card p{color:var(--muted);font-size:0.9rem;margin-top:0.5rem}
+
+pre{background:var(--code-bg);border:1px solid var(--border);border-radius:8px;padding:1.5rem;overflow-x:auto;font-size:0.85rem;line-height:1.7;margin:1rem 0}
+.a{color:var(--accent)}
+.c{color:#444}
+.w{color:var(--text)}
+.m{color:var(--muted)}
+
+.flow{display:flex;align-items:center;gap:1rem;flex-wrap:wrap;margin:2rem 0;justify-content:center}
+.flow-step{background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:1rem 1.25rem;text-align:center;min-width:140px}
+.flow-step .num{color:var(--accent);font-size:1.5rem;font-weight:700}
+.flow-step .label{color:var(--muted);font-size:0.85rem;margin-top:0.25rem}
+.flow-arrow{color:var(--accent);font-size:1.5rem}
+
+.pricing-table{width:100%;border-collapse:collapse;margin:1.5rem 0}
+.pricing-table th{text-align:left;color:var(--accent);padding:0.75rem;border-bottom:1px solid var(--border);font-weight:500}
+.pricing-table td{padding:0.75rem;border-bottom:1px solid var(--border);color:var(--muted)}
+.pricing-table td:first-child{color:var(--text)}
+
+.manifesto{background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:2rem;margin:2rem 0}
+.manifesto p{color:var(--muted);font-size:0.95rem;margin-bottom:1rem}
+.manifesto p:last-child{margin-bottom:0}
+.manifesto strong{color:var(--text)}
+
+footer{text-align:center;padding:3rem 2rem;color:var(--muted);font-size:0.85rem;border-top:1px solid var(--border)}
+footer .links{margin-top:0.5rem}
+footer .links a{margin:0 0.75rem}
+
+.cta-section{text-align:center;padding:4rem 2rem}
+.cta-btn{display:inline-block;background:var(--accent);color:#000;padding:0.75rem 2rem;border-radius:6px;font-weight:700;font-size:1rem;font-family:inherit;transition:all 0.2s}
+.cta-btn:hover{background:var(--accent-dim);text-decoration:none}
+
+.bundle-banner{background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:1.25rem;text-align:center;margin:2rem auto;max-width:600px}
+.bundle-banner a{color:var(--accent);font-weight:600}
+
+@media(max-width:600px){
+  .logo{font-size:2.5rem}
+  .tagline{font-size:1.1rem}
+  .flow{flex-direction:column}
+  .flow-arrow{transform:rotate(90deg)}
+  pre{font-size:0.75rem}
+}
+</style>
+</head>
+<body>
+
+<div class="hero">
+  <div class="logo"><span>ring</span>.sh</div>
+  <div class="tagline">Phone numbers for agents.</div>
+  <div class="sub">Provision numbers, send/receive SMS, make calls, handle webhooks. x402 auth. No Twilio account. No KYC.</div>
+
+  <div class="cmd-block"><code>
+<span class="comment"># Get a phone number in one request</span>
+<span class="prompt">$</span> curl -X POST https://api.ring.sh/v1/numbers \
+    -H "X-402-Payment: $PAYMENT_TOKEN" \
+    -d '{"country": "US", "capabilities": ["sms", "voice"]}'
+
+<span class="comment"># → 402 → pay → 201</span>
+{
+  "id": "num_p3x7k9",
+  "number": "+12125551847",
+  "country": "US",
+  "capabilities": ["sms", "voice"],
+  "webhook": null,
+  "ttl": 86400
+}
+
+<span class="comment"># Send SMS</span>
+<span class="prompt">$</span> curl -X POST https://api.ring.sh/v1/sms \
+    -H "X-402-Payment: $PAYMENT_TOKEN" \
+    -d '{"from": "+12125551847", "to": "+14155559999",
+         "body": "Deployment complete. All systems green."}'
+  </code></div>
+
+  <div class="badges">
+    <div class="badge"><strong>x402</strong> auth + payment</div>
+    <div class="badge"><strong>SMS</strong> send + receive</div>
+    <div class="badge"><strong>Voice</strong> calls</div>
+    <div class="badge"><strong>0</strong> signup required</div>
+    <div class="badge"><strong>MCP</strong> + <strong>REST</strong></div>
+    <div class="badge">Part of <strong>agentstack</strong></div>
+  </div>
+
+  <div class="scroll-hint">↓ scroll</div>
+</div>
+
+<!-- How it works -->
+<section>
+  <h2>How <span>it works</span></h2>
+
+  <div class="flow">
+    <div class="flow-step"><div class="num">1</div><div class="label">Provision number</div></div>
+    <div class="flow-arrow">→</div>
+    <div class="flow-step"><div class="num">📱</div><div class="label">Send / receive SMS</div></div>
+    <div class="flow-arrow">→</div>
+    <div class="flow-step"><div class="num">🪝</div><div class="label">Webhook on inbound</div></div>
+    <div class="flow-arrow">→</div>
+    <div class="flow-step"><div class="num">📞</div><div class="label">Voice (TTS / record)</div></div>
+  </div>
+
+  <p style="color:var(--muted);text-align:center;margin-top:1rem">Numbers are ephemeral by default (24h). Extend or make permanent. Release when done.</p>
+</section>
+
+<!-- Use cases -->
+<section>
+  <h2>What agents <span>use it for</span></h2>
+
+  <div class="grid">
+    <div class="card">
+      <h3>2FA verification</h3>
+      <p>Agent signs up for a service that requires phone verification. Provision a number, receive the SMS code, verify, release the number. Under a minute.</p>
+    </div>
+    <div class="card">
+      <h3>SMS notifications</h3>
+      <p>Text a human when something matters. Server down, trade executed, build failed. The one channel humans actually check immediately.</p>
+    </div>
+    <div class="card">
+      <h3>Conversational SMS</h3>
+      <p>Agent maintains an SMS conversation with a human. Inbound messages hit a webhook, agent responds via API. No app install required.</p>
+    </div>
+    <div class="card">
+      <h3>Voice calls</h3>
+      <p>Agent makes a phone call with TTS. Appointment reminders, status updates, emergency alerts. Programmable voice without Twilio.</p>
+    </div>
+    <div class="card">
+      <h3>Phone trees</h3>
+      <p>Inbound calls → webhook → agent decides routing. Press 1 for support, press 2 for sales. Except the "agent" routing it is an AI.</p>
+    </div>
+    <div class="card">
+      <h3>Disposable numbers</h3>
+      <p>Need a phone number for 10 minutes? Pay for 10 minutes. No monthly commitment, no plan, no account. Spin up, use, tear down.</p>
+    </div>
+  </div>
+</section>
+
+<!-- API -->
+<section>
+  <h2>API <span>reference</span></h2>
+
+  <pre><code><span class="c"># Number management</span>
+<span class="a">POST</span>   <span class="w">/v1/numbers</span>                <span class="m"># Provision a number</span>
+<span class="a">GET</span>    <span class="w">/v1/numbers</span>                <span class="m"># List your numbers</span>
+<span class="a">GET</span>    <span class="w">/v1/numbers/:id</span>            <span class="m"># Number details</span>
+<span class="a">PUT</span>    <span class="w">/v1/numbers/:id</span>            <span class="m"># Update TTL, webhook, capabilities</span>
+<span class="a">DELETE</span> <span class="w">/v1/numbers/:id</span>            <span class="m"># Release number</span>
+
+<span class="c"># SMS</span>
+<span class="a">POST</span>   <span class="w">/v1/sms</span>                    <span class="m"># Send SMS</span>
+<span class="a">GET</span>    <span class="w">/v1/numbers/:id/messages</span>   <span class="m"># Poll for inbound SMS</span>
+<span class="a">GET</span>    <span class="w">/v1/messages/:id</span>           <span class="m"># Get message details</span>
+
+<span class="c"># Voice</span>
+<span class="a">POST</span>   <span class="w">/v1/calls</span>                  <span class="m"># Initiate outbound call</span>
+<span class="a">GET</span>    <span class="w">/v1/calls/:id</span>              <span class="m"># Call status / recording URL</span>
+<span class="a">POST</span>   <span class="w">/v1/calls/:id/say</span>         <span class="m"># TTS into active call</span>
+<span class="a">POST</span>   <span class="w">/v1/calls/:id/hangup</span>      <span class="m"># End call</span>
+
+<span class="c"># Webhooks</span>
+<span class="a">PUT</span>    <span class="w">/v1/numbers/:id</span>            <span class="m"># Set webhook for inbound SMS/calls</span>
+<span class="c"># Inbound SMS → POST to webhook:</span>
+<span class="c"># { "from", "to", "body", "timestamp" }</span>
+<span class="c"># Inbound call → POST to webhook:</span>
+<span class="c"># { "from", "to", "call_id", "action_url" }</span>
+
+<span class="c"># Available inventory</span>
+<span class="a">GET</span>    <span class="w">/v1/available</span>              <span class="m"># Search available numbers by country/area</span>
+</code></pre>
+</section>
+
+<!-- MCP -->
+<section>
+  <h2>MCP <span>tools</span></h2>
+
+  <pre><code><span class="c"># Your agent gets these tools</span>
+<span class="a">tools:</span>
+  <span class="a">provision_number:</span>
+    <span class="m">country:</span> <span class="w">"US"</span>
+    <span class="m">capabilities:</span> <span class="w">["sms", "voice"]</span>
+    <span class="m">webhook:</span> <span class="w">"https://my-agent.example/inbound"</span>
+
+  <span class="a">send_sms:</span>
+    <span class="m">from:</span> <span class="w">"+12125551847"</span>
+    <span class="m">to:</span> <span class="w">"+14155559999"</span>
+    <span class="m">body:</span> <span class="w">"Your verification code is 847291"</span>
+
+  <span class="a">read_sms:</span>
+    <span class="m">number:</span> <span class="w">"num_p3x7k9"</span>
+    <span class="m">since:</span> <span class="w">"5m"</span>
+
+  <span class="a">make_call:</span>
+    <span class="m">from:</span> <span class="w">"+12125551847"</span>
+    <span class="m">to:</span> <span class="w">"+14155559999"</span>
+    <span class="m">tts:</span> <span class="w">"Hello, this is an automated message. Your order has shipped."</span>
+
+  <span class="a">release_number:</span>
+    <span class="m">number:</span> <span class="w">"num_p3x7k9"</span>
+</code></pre>
+</section>
+
+<!-- Pricing -->
+<section>
+  <h2><span>Pricing</span></h2>
+
+  <table class="pricing-table">
+    <thead>
+      <tr><th>Action</th><th>Cost</th><th>Notes</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>Provision number</td><td>$0.03/day</td><td>US local. Intl varies.</td></tr>
+      <tr><td>Send SMS</td><td>$0.008</td><td>US domestic</td></tr>
+      <tr><td>Receive SMS</td><td>$0.005</td><td>Webhook delivery included</td></tr>
+      <tr><td>Outbound call</td><td>$0.015/min</td><td>US domestic</td></tr>
+      <tr><td>Inbound call</td><td>$0.010/min</td><td>Webhook included</td></tr>
+      <tr><td>TTS</td><td>$0.005/min</td><td>Multiple voices</td></tr>
+      <tr><td>Call recording</td><td>$0.002/min</td><td>Stored 24h default</td></tr>
+    </tbody>
+  </table>
+  <p style="color:var(--muted);font-size:0.85rem;margin-top:0.5rem">A full 2FA flow (provision + receive SMS + release) costs under $0.04.</p>
+</section>
+
+<!-- Bundle -->
+<section>
+  <div class="bundle-banner">
+    <p style="color:var(--muted);margin-bottom:0.5rem">Part of the <strong style="color:var(--text)">agentstack</strong></p>
+    <p style="color:var(--muted);font-size:0.9rem">Same x402 payment token works across <a href="/spawn">spawn.sh</a> (compute), <a href="/relay">relay.sh</a> (email), and <strong>ring.sh</strong> (phone). One identity, three primitives.</p>
+  </div>
+</section>
+
+<!-- CTA -->
+<div class="cta-section">
+  <h2 style="margin-bottom:0.5rem">A phone number is an <span>API call</span>.</h2>
+  <p style="color:var(--muted);margin-bottom:2rem;max-width:500px;margin-left:auto;margin-right:auto">Agents don't have phones. They have HTTP clients.</p>
+  <a href="https://docs.ring.sh" class="cta-btn">Read the docs →</a>
+  <p style="color:var(--muted);font-size:0.85rem;margin-top:1.5rem">or just: <code style="color:var(--accent)">curl https://api.ring.sh/v1/available?country=US</code></p>
+</div>
+
+<footer>
+  <div>ring.sh — agent-native phone</div>
+  <div class="links">
+    <a href="https://docs.ring.sh">Docs</a>
+    <a href="https://github.com/ring-sh">GitHub</a>
+    <a href="https://api.ring.sh">API</a>
+    <a href="/">agentstack</a>
+  </div>
+  <div style="margin-top:0.75rem;font-size:0.8rem">Agents don't have phones. They have HTTP clients.</div>
+</footer>
+
+</body>
+</html>

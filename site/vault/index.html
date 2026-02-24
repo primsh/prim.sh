@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>vault.sh — Agent-Native Secrets</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{--bg:#0a0a0a;--surface:#111;--border:#1a1a1a;--accent:#B388FF;--accent-dim:#9966ee;--accent-glow:rgba(179,136,255,0.08);--text:#e0e0e0;--muted:#666;--code-bg:#0d0d0d}
+body{background:var(--bg);color:var(--text);font-family:'SF Mono',SFMono-Regular,'Cascadia Code',Consolas,monospace;line-height:1.6;overflow-x:hidden}
+a{color:var(--accent);text-decoration:none}a:hover{text-decoration:underline}
+.hero{min-height:100vh;display:flex;flex-direction:column;justify-content:center;align-items:center;text-align:center;padding:2rem;position:relative}
+.hero::before{content:'';position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:600px;height:600px;background:radial-gradient(circle,var(--accent-glow) 0%,transparent 70%);pointer-events:none}
+.logo{font-size:3.5rem;font-weight:700;letter-spacing:-0.03em;margin-bottom:0.5rem}.logo span{color:var(--accent)}
+.tagline{font-size:1.3rem;color:var(--muted);margin-bottom:0.5rem}
+.sub{font-size:1rem;color:var(--muted);margin-bottom:3rem;max-width:520px}
+.cmd-block{background:var(--code-bg);border:1px solid var(--border);border-radius:8px;padding:1.5rem 2rem;margin-bottom:3rem;text-align:left;max-width:640px;width:100%}
+.cmd-block .prompt{color:var(--accent);user-select:none}.cmd-block .comment{color:#444}
+.cmd-block code{font-size:0.95rem;line-height:1.8}
+.badges{display:flex;gap:1rem;flex-wrap:wrap;justify-content:center;margin-bottom:3rem}
+.badge{background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:0.5rem 1rem;font-size:0.85rem;color:var(--muted)}.badge strong{color:var(--accent)}
+section{max-width:900px;margin:0 auto;padding:4rem 2rem}
+h2{font-size:1.8rem;margin-bottom:1.5rem;font-weight:600}h2 span{color:var(--accent)}
+h3{font-size:1.1rem;margin-bottom:0.75rem;color:var(--accent)}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:1.5rem;margin-bottom:2rem}
+.card{background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:1.5rem}
+.card p{color:var(--muted);font-size:0.9rem;margin-top:0.5rem}
+pre{background:var(--code-bg);border:1px solid var(--border);border-radius:8px;padding:1.5rem;overflow-x:auto;font-size:0.85rem;line-height:1.7;margin:1rem 0}
+.a{color:var(--accent)}.c{color:#444}.w{color:var(--text)}.m{color:var(--muted)}
+.pricing-table{width:100%;border-collapse:collapse;margin:1.5rem 0}
+.pricing-table th{text-align:left;color:var(--accent);padding:0.75rem;border-bottom:1px solid var(--border);font-weight:500}
+.pricing-table td{padding:0.75rem;border-bottom:1px solid var(--border);color:var(--muted)}.pricing-table td:first-child{color:var(--text)}
+footer{text-align:center;padding:3rem 2rem;color:var(--muted);font-size:0.85rem;border-top:1px solid var(--border)}
+footer .links{margin-top:0.5rem}footer .links a{margin:0 0.75rem}
+.cta-section{text-align:center;padding:4rem 2rem}
+.cta-btn{display:inline-block;background:var(--accent);color:#000;padding:0.75rem 2rem;border-radius:6px;font-weight:700;font-size:1rem;font-family:inherit}.cta-btn:hover{background:var(--accent-dim);text-decoration:none}
+@media(max-width:600px){.logo{font-size:2.5rem}pre{font-size:0.75rem}}
+</style>
+</head>
+<body>
+<div class="hero">
+  <div class="logo"><span>vault</span>.sh</div>
+  <div class="tagline">Secrets management for agents.</div>
+  <div class="sub">Store API keys, tokens, SSH keys, credentials. Scoped access. Ephemeral or persistent. x402 auth.</div>
+  <div class="cmd-block"><code>
+<span class="comment"># Store a secret</span>
+<span class="prompt">$</span> curl -X POST https://api.vault.sh/v1/secrets \
+    -H "X-402-Payment: $TOKEN" \
+    -d '{"key": "openai_key", "value": "sk-...", "ttl": 3600}'
+
+<span class="comment"># → 402 → pay → 201</span>
+{ "id": "sec_m3x8k1", "key": "openai_key", "ttl": 3600 }
+
+<span class="comment"># Read it back</span>
+<span class="prompt">$</span> curl https://api.vault.sh/v1/secrets/sec_m3x8k1 \
+    -H "X-402-Payment: $TOKEN"
+
+{ "key": "openai_key", "value": "sk-...", "expires_at": "..." }
+
+<span class="comment"># Create a scoped token (read-only, 1 hour, one secret)</span>
+<span class="prompt">$</span> curl -X POST https://api.vault.sh/v1/tokens \
+    -H "X-402-Payment: $TOKEN" \
+    -d '{"scope": ["sec_m3x8k1"], "perms": "read", "ttl": 3600}'
+  </code></div>
+  <div class="badges">
+    <div class="badge"><strong>x402</strong> auth</div>
+    <div class="badge"><strong>Scoped</strong> access tokens</div>
+    <div class="badge"><strong>Ephemeral</strong> or persistent</div>
+    <div class="badge"><strong>E2E</strong> encrypted</div>
+    <div class="badge">Part of <strong>agentstack</strong></div>
+  </div>
+</div>
+
+<section>
+  <h2>What agents <span>use it for</span></h2>
+  <div class="grid">
+    <div class="card"><h3>Credential passing</h3><p>Parent agent stores API keys, spawns child agent on spawn.sh, passes a scoped vault token. Child reads only what it needs. No env vars in plaintext.</p></div>
+    <div class="card"><h3>Rotate & revoke</h3><p>Agent rotates its own API keys on a schedule. Old keys auto-expire. Compromised key? Revoke instantly via API.</p></div>
+    <div class="card"><h3>Cross-service auth</h3><p>Store credentials for relay.sh, ring.sh, external APIs. One vault, every secret an agent touches.</p></div>
+    <div class="card"><h3>Ephemeral secrets</h3><p>Generate a secret for a single task. TTL of 5 minutes. Auto-destroyed. No cleanup required.</p></div>
+  </div>
+</section>
+
+<section>
+  <h2>API <span>reference</span></h2>
+  <pre><code><span class="a">POST</span>   <span class="w">/v1/secrets</span>            <span class="m"># Store a secret</span>
+<span class="a">GET</span>    <span class="w">/v1/secrets</span>            <span class="m"># List secrets (metadata only)</span>
+<span class="a">GET</span>    <span class="w">/v1/secrets/:id</span>        <span class="m"># Read secret value</span>
+<span class="a">PUT</span>    <span class="w">/v1/secrets/:id</span>        <span class="m"># Update value or TTL</span>
+<span class="a">DELETE</span> <span class="w">/v1/secrets/:id</span>        <span class="m"># Destroy secret</span>
+<span class="a">POST</span>   <span class="w">/v1/tokens</span>             <span class="m"># Create scoped access token</span>
+<span class="a">DELETE</span> <span class="w">/v1/tokens/:id</span>         <span class="m"># Revoke token</span>
+<span class="a">GET</span>    <span class="w">/v1/audit</span>              <span class="m"># Access log (who read what, when)</span>
+</code></pre>
+</section>
+
+<section>
+  <h2><span>Pricing</span></h2>
+  <table class="pricing-table">
+    <thead><tr><th>Action</th><th>Cost</th><th>Notes</th></tr></thead>
+    <tbody>
+      <tr><td>Store secret</td><td>$0.001</td><td>Per secret/month</td></tr>
+      <tr><td>Read secret</td><td>$0.0001</td><td>Per read</td></tr>
+      <tr><td>Scoped token</td><td>$0.0005</td><td>Per token created</td></tr>
+      <tr><td>Audit log</td><td>Free</td><td>30 day retention</td></tr>
+    </tbody>
+  </table>
+</section>
+
+<div class="cta-section">
+  <h2 style="margin-bottom:0.5rem">Secrets are an <span>API call</span>.</h2>
+  <p style="color:var(--muted);margin-bottom:2rem">Agents don't have password managers. They have vault.sh.</p>
+  <a href="https://docs.vault.sh" class="cta-btn">Read the docs →</a>
+</div>
+
+<footer>
+  <div>vault.sh — agent-native secrets</div>
+  <div class="links"><a href="https://docs.vault.sh">Docs</a><a href="/">agentstack</a></div>
+  <div style="margin-top:0.75rem;font-size:0.8rem">Agents don't have password managers. They have API calls.</div>
+</footer>
+</body>
+</html>
