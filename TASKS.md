@@ -87,6 +87,9 @@
 | hands.sh | Custom gig platform | Heaviest regulatory burden |
 | pay.sh | Stripe + x402 bridge | Fiat payment bridge |
 | borrow.sh | Custom (on-chain escrow + interest) | Agent-to-agent USDC lending. Needs wallet.sh + id.sh |
+| guard.sh | Custom + sentinel patterns | Two tiers: passive layer baked into x402-middleware (all primitives auto-scan requests/responses), active primitive for deep paid analysis. Needs ecosystem first |
+| trade.sh | Broker APIs + Polymarket | Trad market + prediction market trading for agents. Needs wallet.sh |
+| insure.sh | Custom (actuarial + escrow) | Agent operation insurance, refund guarantees, SLA escrow. Needs wallet.sh + watch.sh + id.sh |
 | corp.sh | Stripe Atlas API or custom | Legal complexity |
 
 ## Done
