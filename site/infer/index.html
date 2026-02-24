@@ -1,1 +1,132 @@
-<!DOCTYPE html>\n<html lang=\"en\">\n<head>\n<meta charset=\"UTF-8\">\n<meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">\n<title>infer.sh — Agent-Native Models</title>\n<style>\n*{margin:0;padding:0;box-sizing:border-box}\n:root{--bg:#0a0a0a;--surface:#111;--border:#1a1a1a;--accent:#FFC400;--accent-dim:#cc9d00;--accent-glow:rgba(255,196,0,0.08);--text:#e0e0e0;--muted:#666;--code-bg:#0d0d0d}\nbody{background:var(--bg);color:var(--text);font-family:'SF Mono',SFMono-Regular,'Cascadia Code',Consolas,monospace;line-height:1.6;overflow-x:hidden}\na{color:var(--accent);text-decoration:none}a:hover{text-decoration:underline}\n.hero{min-height:100vh;display:flex;flex-direction:column;justify-content:center;align-items:center;text-align:center;padding:2rem;position:relative}\n.hero::before{content:'';position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:600px;height:600px;background:radial-gradient(circle,var(--accent-glow) 0%,transparent 70%);pointer-events:none}\n.logo{font-size:3.5rem;font-weight:700;letter-spacing:-0.03em;margin-bottom:0.5rem}.logo span{color:var(--accent)}\n.tagline{font-size:1.3rem;color:var(--muted);margin-bottom:0.5rem}\n.sub{font-size:1rem;color:var(--muted);margin-bottom:3rem;max-width:560px}\n.cmd-block{background:var(--code-bg);border:1px solid var(--border);border-radius:8px;padding:1.5rem 2rem;margin-bottom:3rem;text-align:left;max-width:680px;width:100%}\n.cmd-block .prompt{color:var(--accent);user-select:none}.cmd-block .comment{color:#444}\n.cmd-block code{font-size:0.95rem;line-height:1.8}\n.badges{display:flex;gap:1rem;flex-wrap:wrap;justify-content:center;margin-bottom:3rem}\n.badge{background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:0.5rem 1rem;font-size:0.85rem;color:var(--muted)}.badge strong{color:var(--accent)}\nsection{max-width:900px;margin:0 auto;padding:4rem 2rem}\nh2{font-size:1.8rem;margin-bottom:1.5rem;font-weight:600}h2 span{color:var(--accent)}\nh3{font-size:1.1rem;margin-bottom:0.75rem;color:var(--accent)}\n.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:1.5rem;margin-bottom:2rem}\n.card{background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:1.5rem}\n.card p{color:var(--muted);font-size:0.9rem;margin-top:0.5rem}\npre{background:var(--code-bg);border:1px solid var(--border);border-radius:8px;padding:1.5rem;overflow-x:auto;font-size:0.85rem;line-height:1.7;margin:1rem 0}\n.a{color:var(--accent)}.c{color:#444}.w{color:var(--text)}.m{color:var(--muted)}\n.pricing-table{width:100%;border-collapse:collapse;margin:1.5rem 0}\n.pricing-table th{text-align:left;color:var(--accent);padding:0.75rem;border-bottom:1px solid var(--border);font-weight:500}\n.pricing-table td{padding:0.75rem;border-bottom:1px solid var(--border);color:var(--muted)}.pricing-table td:first-child{color:var(--text)}\nfooter{text-align:center;padding:3rem 2rem;color:var(--muted);font-size:0.85rem;border-top:1px solid var(--border)}\nfooter .links{margin-top:0.5rem}footer .links a{margin:0 0.75rem}\n.cta-section{text-align:center;padding:4rem 2rem}\n.cta-btn{display:inline-block;background:var(--accent);color:#000;padding:0.75rem 2rem;border-radius:6px;font-weight:700;font-size:1rem;font-family:inherit}.cta-btn:hover{background:var(--accent-dim);text-decoration:none}\n@media(max-width:600px){.logo{font-size:2.5rem}pre{font-size:0.75rem}}\n</style>\n</head>\n<body>\n<div class=\"hero\">\n  <div class=\"logo\"><span>infer</span>.sh</div>\n  <div class=\"tagline\">Intelligence for agents.</div>\n  <div class=\"sub\">On-demand LLM inference. Access GPT-4, Claude, Llama via one API. x402 auth. Pay per token. No monthly subscriptions.</div>\n  <div class=\"cmd-block\"><code>\n<span class=\"comment\"># Run inference</span>\n<span class=\"prompt\">$</span> curl -X POST https://api.infer.sh/v1/chat/completions \\\n    -H \"X-402-Payment: $TOKEN\" \\\n    -d '{\"model\": \"llama-3-70b\", \"messages\": [{\"role\":\"user\", \"content\":\"Hello\"}]}'\n\n<span class=\"comment\"># → 402 → pay $0.0004 → 200 OK</span>\n{\n  \"choices\": [ { \"message\": { \"content\": \"Hello! How can I help?\" } } ],\n  \"usage\": { \"total_tokens\": 42, \"cost\": 0.000042 }\n}\n\n<span class=\"comment\"># Embeddings</span>\n<span class=\"prompt\">$</span> curl -X POST https://api.infer.sh/v1/embeddings \\\n    -H \"X-402-Payment: $TOKEN\" \\\n    -d '{\"model\": \"text-embedding-3-small\", \"input\": \"hello world\"}'\n  </code></div>\n  <div class=\"badges\">\n    <div class=\"badge\"><strong>x402</strong> auth</div>\n    <div class=\"badge\"><strong>OpenAI</strong> compatible</div>\n    <div class=\"badge\"><strong>Multi</strong> model</div>\n    <div class=\"badge\"><strong>Token</strong> billing</div>\n    <div class=\"badge\">Part of <strong>agentstack</strong></div>\n  </div>\n</div>\n\n<section>\n  <h2>What agents <span>use it for</span></h2>\n  <div class=\"grid\">\n    <div class=\"card\"><h3>Brain rental</h3><p>Your agent logic runs on a cheap CPU. When it needs to \"think,\" it calls infer.sh. Intelligence is a utility, not a dependency.</p></div>\n    <div class=\"card\"><h3>Model routing</h3><p>\"Is this hard? Use Claude 3.5 Opus. Is it easy? Use Llama 3 8B.\" Optimize cost per token dynamically. The API handles the routing.</p></div>\n    <div class=\"card\"><h3>Anonymous access</h3><p>Access proprietary models (GPT-4, Gemini) without an OpenAI/Google account. infer.sh acts as the proxy. You pay x402, we pay fiat.</p></div>\n    <div class=\"card\"><h3>Vision & Audio</h3><p>Send an image URL. Get a description. Send audio. Get text. Multimodal capabilities on demand.</p></div>\n  </div>\n</section>\n\n<section>\n  <h2>API <span>reference</span></h2>\n  <pre><code><span class=\"a\">POST</span>   <span class=\"w\">/v1/chat/completions</span>     <span class=\"m\"># Chat (OpenAI spec)</span>\n<span class=\"a\">POST</span>   <span class=\"w\">/v1/completions</span>          <span class=\"m\"># Completion</span>\n<span class=\"a\">POST</span>   <span class=\"w\">/v1/embeddings</span>           <span class=\"m\"># Vector embeddings</span>\n<span class=\"a\">GET</span>    <span class=\"w\">/v1/models</span>               <span class=\"m\"># List available models</span>\n</code></pre>\n</section>\n\n<section>\n  <h2><span>Pricing</span></h2>\n  <table class=\"pricing-table\">\n    <thead><tr><th>Model</th><th>Input / 1M</th><th>Output / 1M</th></tr></thead>\n    <tbody>\n      <tr><td>Llama 3 70B</td><td>$0.70</td><td>$0.90</td></tr>\n      <tr><td>GPT-4o</td><td>$5.00</td><td>$15.00</td></tr>\n      <tr><td>Claude 3.5 Sonnet</td><td>$3.00</td><td>$15.00</td></tr>\n      <tr><td>Mistral Large</td><td>$2.00</td><td>$6.00</td></tr>\n    </tbody>\n  </table>\n  <p style=\"color:var(--muted);font-size:0.85rem;margin-top:0.5rem\">Pass-through pricing + small markup for x402 handling.</p>\n</section>\n\n<div class=\"cta-section\">\n  <h2 style=\"margin-bottom:0.5rem\">Intelligence is an <span>API call</span>.</h2>\n  <p style=\"color:var(--muted);margin-bottom:2rem\">Agents don't have brains. They have endpoints.</p>\n  <a href=\"https://docs.infer.sh\" class=\"cta-btn\">Read the docs →</a>\n</div>\n\n<footer>\n  <div>infer.sh — agent-native models</div>\n  <div class=\"links\"><a href=\"https://docs.infer.sh\">Docs</a><a href=\"/\">agentstack</a></div>\n  <div style=\"margin-top:0.75rem;font-size:0.8rem\">Agents don't have brains. They have endpoints.</div>\n</footer>\n</body>\n</html>\n
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>infer.sh — Agent-Native Models</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{--bg:#0a0a0a;--surface:#111;--border:#1a1a1a;--accent:#FFC400;--accent-dim:#cc9d00;--accent-glow:rgba(255,196,0,0.08);--text:#e0e0e0;--muted:#666;--code-bg:#0d0d0d}
+body{background:var(--bg);color:var(--text);font-family:'SF Mono',SFMono-Regular,'Cascadia Code',Consolas,monospace;line-height:1.6;overflow-x:hidden}
+a{color:var(--accent);text-decoration:none}a:hover{text-decoration:underline}
+.hero{min-height:100vh;display:flex;flex-direction:column;justify-content:center;align-items:center;text-align:center;padding:2rem;position:relative}
+.hero::before{content:'';position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:600px;height:600px;background:radial-gradient(circle,var(--accent-glow) 0%,transparent 70%);pointer-events:none}
+.logo{font-size:3.5rem;font-weight:700;letter-spacing:-0.03em;margin-bottom:0.5rem}.logo span{color:var(--accent)}
+.tagline{font-size:1.3rem;color:var(--muted);margin-bottom:0.5rem}
+.sub{font-size:1rem;color:var(--muted);margin-bottom:3rem;max-width:560px}
+.cmd-block{background:var(--code-bg);border:1px solid var(--border);border-radius:8px;padding:1.5rem 2rem;margin-bottom:3rem;text-align:left;max-width:680px;width:100%}
+.cmd-block .prompt{color:var(--accent);user-select:none}.cmd-block .comment{color:#444}
+.cmd-block code{font-size:0.95rem;line-height:1.8}
+.badges{display:flex;gap:1rem;flex-wrap:wrap;justify-content:center;margin-bottom:3rem}
+.badge{background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:0.5rem 1rem;font-size:0.85rem;color:var(--muted)}.badge strong{color:var(--accent)}
+section{max-width:900px;margin:0 auto;padding:4rem 2rem}
+h2{font-size:1.8rem;margin-bottom:1.5rem;font-weight:600}h2 span{color:var(--accent)}
+h3{font-size:1.1rem;margin-bottom:0.75rem;color:var(--accent)}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:1.5rem;margin-bottom:2rem}
+.card{background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:1.5rem}
+.card p{color:var(--muted);font-size:0.9rem;margin-top:0.5rem}
+pre{background:var(--code-bg);border:1px solid var(--border);border-radius:8px;padding:1.5rem;overflow-x:auto;font-size:0.85rem;line-height:1.7;margin:1rem 0}
+.a{color:var(--accent)}.c{color:#444}.w{color:var(--text)}.m{color:var(--muted)}
+.pricing-table{width:100%;border-collapse:collapse;margin:1.5rem 0}
+.pricing-table th{text-align:left;color:var(--accent);padding:0.75rem;border-bottom:1px solid var(--border);font-weight:500}
+.pricing-table td{padding:0.75rem;border-bottom:1px solid var(--border);color:var(--muted)}.pricing-table td:first-child{color:var(--text)}
+footer{text-align:center;padding:3rem 2rem;color:var(--muted);font-size:0.85rem;border-top:1px solid var(--border)}
+footer .links{margin-top:0.5rem}footer .links a{margin:0 0.75rem}
+.cta-section{text-align:center;padding:4rem 2rem}
+.cta-btn{display:inline-block;background:var(--accent);color:#000;padding:0.75rem 2rem;border-radius:6px;font-weight:700;font-size:1rem;font-family:inherit}.cta-btn:hover{background:var(--accent-dim);text-decoration:none}
+@media(max-width:600px){.logo{font-size:2.5rem}pre{font-size:0.75rem}}
+</style>
+</head>
+<body>
+
+<div class="hero">
+  <div class="logo"><span>infer</span>.sh</div>
+  <div class="tagline">Intelligence for agents.</div>
+  <div class="sub">On-demand LLM inference. GPT-4, Claude, Llama, and more behind a single x402-gated API.</div>
+  <div class="cmd-block"><code>
+<span class="comment"># Run chat completion</span>
+<span class="prompt">$</span> curl -X POST https://api.infer.sh/v1/chat/completions \
+    -H "X-402-Payment: $TOKEN" \
+    -d '{"model": "llama-3-70b", "messages": [{"role": "user", "content": "Hello"}]}'
+
+<span class="comment"># → 402 → pay → 200 OK</span>
+{
+  "choices": [{ "message": { "content": "Hello! How can I help?" } }],
+  "usage": { "total_tokens": 42, "cost": 0.000042 }
+}
+
+<span class="comment"># Embeddings</span>
+<span class="prompt">$</span> curl -X POST https://api.infer.sh/v1/embeddings \
+    -H "X-402-Payment: $TOKEN" \
+    -d '{"model": "text-embedding-3-small", "input": "hello world"}'
+  </code></div>
+  <div class="badges">
+    <div class="badge"><strong>x402</strong> auth</div>
+    <div class="badge"><strong>OpenAI</strong> compatible</div>
+    <div class="badge"><strong>Multi</strong>-provider</div>
+    <div class="badge"><strong>Token</strong> metering</div>
+    <div class="badge">Part of <strong>agentstack</strong></div>
+  </div>
+</div>
+
+<section>
+  <h2>What agents <span>use it for</span></h2>
+  <div class="grid">
+    <div class="card">
+      <h3>Brain rental</h3>
+      <p>Keep your orchestration on cheap CPUs. Call infer.sh only when you need expensive reasoning.</p>
+    </div>
+    <div class="card">
+      <h3>Model routing</h3>
+      <p>Route easy tasks to small models and hard ones to frontier models. Same API, different cost envelopes.</p>
+    </div>
+    <div class="card">
+      <h3>Anonymous access</h3>
+      <p>Use proprietary models without creating human-owned accounts. You pay x402, infer.sh handles fiat.</p>
+    </div>
+    <div class="card">
+      <h3>Multimodal I/O</h3>
+      <p>Text, images, and audio through a single interface. Agents treat perception as just another endpoint.</p>
+    </div>
+  </div>
+</section>
+
+<section>
+  <h2>API <span>reference</span></h2>
+  <pre><code><span class="a">POST</span>   <span class="w">/v1/chat/completions</span>     <span class="m"># Chat (OpenAI spec)</span>
+<span class="a">POST</span>   <span class="w">/v1/completions</span>          <span class="m"># Text completion</span>
+<span class="a">POST</span>   <span class="w">/v1/embeddings</span>           <span class="m"># Vector embeddings</span>
+<span class="a">GET</span>    <span class="w">/v1/models</span>               <span class="m"># List available models</span>
+  </code></pre>
+</section>
+
+<section>
+  <h2><span>Pricing</span></h2>
+  <table class="pricing-table">
+    <thead><tr><th>Model</th><th>Input / 1M</th><th>Output / 1M</th></tr></thead>
+    <tbody>
+      <tr><td>Llama 3 70B</td><td>$0.70</td><td>$0.90</td></tr>
+      <tr><td>GPT-4o</td><td>$5.00</td><td>$15.00</td></tr>
+      <tr><td>Claude 3.5 Sonnet</td><td>$3.00</td><td>$15.00</td></tr>
+      <tr><td>Mistral Large</td><td>$2.00</td><td>$6.00</td></tr>
+    </tbody>
+  </table>
+  <p style="color:var(--muted);font-size:0.85rem;margin-top:0.5rem">Pass-through pricing plus a thin margin for x402 handling.</p>
+</section>
+
+<div class="cta-section">
+  <h2 style="margin-bottom:0.5rem">Intelligence is an <span>API call</span>.</h2>
+  <p style="color:var(--muted);margin-bottom:2rem">Agents don't have brains. They have endpoints.</p>
+  <a href="https://docs.infer.sh" class="cta-btn">Read the docs →</a>
+</div>
+
+<footer>
+  <div>infer.sh — agent-native models</div>
+  <div class="links"><a href="https://docs.infer.sh">Docs</a><a href="/">agentstack</a></div>
+  <div style="margin-top:0.75rem;font-size:0.8rem">Agents don't have brains. They have endpoints.</div>
+  <div style="margin-top:0.5rem;font-size:0.75rem;color:#444">This page is for humans. The API is for agents.</div>
+</footer>
+
+</body>
+</html>
+

@@ -38,5 +38,94 @@ footer .links{margin-top:0.5rem}footer .links a{margin:0 0.75rem}
 </style>
 </head>
 <body>
-<div class=\"hero\">
-  <div class=\"logo\"><span>mem</span>.sh</div>\n  <div class=\"tagline\">Memory for agents.</div>\n  <div class=\"sub\">Managed vector database. Ephemeral state caching. Long-term knowledge retrieval. Give your agent a hippocampus. x402 auth.</div>\n  <div class=\"cmd-block\"><code>\n<span class=\"comment\"># Remember something</span>\n<span class=\"prompt\">$</span> curl -X POST https://api.mem.sh/v1/collections/my-brain/upsert \\\n    -H \"X-402-Payment: $TOKEN\" \\\n    -d '{\"text\": \"The user prefers dark mode.\", \"metadata\": {\"source\": \"chat\"}}'\n\n{ \"id\": \"vec_k7x9m2\", \"status\": \"indexed\" }\n\n<span class=\"comment\"># Recall it</span>\n<span class=\"prompt\">$</span> curl -G https://api.mem.sh/v1/collections/my-brain/query \\\n    -H \"X-402-Payment: $TOKEN\" \\\n    --data-urlencode \"text=what does the user like?\"\n\n{ \"results\": [ { \"text\": \"The user prefers dark mode.\", \"score\": 0.92 } ] }\n  </code></div>\n  <div class=\"badges\">\n    <div class=\"badge\"><strong>x402</strong> auth</div>\n    <div class=\"badge\"><strong>Vector</strong> store</div>\n    <div class=\"badge\"><strong>Session</strong> state</div>\n    <div class=\"badge\"><strong>Embeddings</strong> included</div>\n    <div class=\"badge\">Part of <strong>agentstack</strong></div>\n  </div>\n</div>\n\n<section>\n  <h2>What agents <span>use it for</span></h2>\n  <div class=\"grid\">\n    <div class=\"card\"><h3>Long-term memory</h3><p>Agents spin up and down on spawn.sh. mem.sh persists their learnings. \"I remember we tried this strategy last week and it failed.\"</p></div>\n    <div class=\"card\"><h3>Knowledge retrieval (RAG)</h3><p>Upload a PDF manual. mem.sh chunks and embeds it. Agent queries for specific answers. Instant RAG without managing a vector DB.</p></div>\n    <div class=\"card\"><h3>Shared context</h3><p>Swarm of 50 agents. They all read from the same mem.sh collection. One learns, all learn. Hive-mind state.</p></div>\n    <div class=\"card\"><h3>Session caching</h3><p>Store short-term conversation history or workflow state. Cheaper and faster than re-processing huge context windows.</p></div>\n  </div>\n</section>\n\n<section>\n  <h2>API <span>reference</span></h2>\n  <pre><code><span class=\"a\">POST</span>   <span class=\"w\">/v1/collections</span>          <span class=\"m\"># Create vector index</span>\n<span class=\"a\">POST</span>   <span class=\"w\">/v1/upsert</span>               <span class=\"m\"># Text → Embedding → Store</span>\n<span class=\"a\">GET</span>    <span class=\"w\">/v1/query</span>                <span class=\"m\"># Semantic search</span>\n<span class=\"a\">POST</span>   <span class=\"w\">/v1/cache/set</span>            <span class=\"m\"># Key-value store</span>\n<span class=\"a\">GET</span>    <span class=\"w\">/v1/cache/get</span>            <span class=\"m\"># Retrieve value</span>\n</code></pre>\n</section>\n\n<section>\n  <h2><span>Pricing</span></h2>\n  <table class=\"pricing-table\">\n    <thead><tr><th>Action</th><th>Cost</th><th>Notes</th></tr></thead>\n    <tbody>\n      <tr><td>Storage</td><td>$0.10/GB/mo</td><td>Vectors + Metadata</td></tr>\n      <tr><td>Write (Embed)</td><td>$0.0001</td><td>Per 1k tokens</td></tr>\n      <tr><td>Read (Query)</td><td>$0.0001</td><td>Per search</td></tr>\n      <tr><td>KV Cache</td><td>$0.01/GB/mo</td><td>Ephemeral</td></tr>\n    </tbody>\n  </table>\n</section>\n\n<div class=\"cta-section\">\n  <h2 style=\"margin-bottom:0.5rem\">Memory is an <span>API call</span>.</h2>\n  <p style=\"color:var(--muted);margin-bottom:2rem\">Agents don't have a hippocampus. They have vectors.</p>\n  <a href=\"https://docs.mem.sh\" class=\"cta-btn\">Read the docs →</a>\n</div>\n\n<footer>\n  <div>mem.sh — agent-native memory</div>\n  <div class=\"links\"><a href=\"https://docs.mem.sh\">Docs</a><a href=\"/\">agentstack</a></div>\n  <div style=\"margin-top:0.75rem;font-size:0.8rem\">Agents don't have a hippocampus. They have vectors.</div>\n</footer>\n</body>\n</html>\n
+
+<div class="hero">
+  <div class="logo"><span>mem</span>.sh</div>
+  <div class="tagline">Memory for agents.</div>
+  <div class="sub">Managed vector database. Ephemeral cache. Long-term knowledge retrieval. Give your agent a hippocampus, gated by x402.</div>
+  <div class="cmd-block"><code>
+<span class="comment"># Remember something</span>
+<span class="prompt">$</span> curl -X POST https://api.mem.sh/v1/collections/my-brain/upsert \
+    -H "X-402-Payment: $TOKEN" \
+    -d '{"text": "The user prefers dark mode.", "metadata": {"source": "chat"}}'
+
+<span class="comment"># Recall it later</span>
+<span class="prompt">$</span> curl -G https://api.mem.sh/v1/collections/my-brain/query \
+    -H "X-402-Payment: $TOKEN" \
+    --data-urlencode "text=what does the user like?"
+  </code></div>
+  <div class="badges">
+    <div class="badge"><strong>x402</strong> auth</div>
+    <div class="badge"><strong>Vector</strong> store</div>
+    <div class="badge"><strong>Session</strong> cache</div>
+    <div class="badge"><strong>Embeddings</strong> included</div>
+    <div class="badge">Part of <strong>agentstack</strong></div>
+  </div>
+</div>
+
+<section>
+  <h2>What agents <span>use it for</span></h2>
+  <div class="grid">
+    <div class="card">
+      <h3>Long-term memory</h3>
+      <p>Agents spin up on spawn.sh and disappear. mem.sh persists what they learn so the next instance remembers the past.</p>
+    </div>
+    <div class="card">
+      <h3>Knowledge retrieval (RAG)</h3>
+      <p>Upload manuals, runbooks, FAQs. Query semantically instead of stuffing 50KB of docs into every context window.</p>
+    </div>
+    <div class="card">
+      <h3>Shared context</h3>
+      <p>A swarm of agents reads and writes to the same collection. One discovers a pattern, all of them learn it.</p>
+    </div>
+    <div class="card">
+      <h3>Session caching</h3>
+      <p>Store short-lived conversation state and workflow checkpoints in a cheap KV cache beside the vector store.</p>
+    </div>
+  </div>
+</section>
+
+<section>
+  <h2>API <span>reference</span></h2>
+  <pre><code><span class="c"># Collections</span>
+<span class="a">POST</span>   <span class="w">/v1/collections</span>          <span class="m"># Create collection</span>
+
+<span class="c"># Vectors</span>
+<span class="a">POST</span>   <span class="w">/v1/collections/:id/upsert</span>  <span class="m"># Text → embedding → store</span>
+<span class="a">GET</span>    <span class="w">/v1/collections/:id/query</span>   <span class="m"># Semantic search</span>
+
+<span class="c"># Cache</span>
+<span class="a">POST</span>   <span class="w">/v1/cache/set</span>              <span class="m"># Set key</span>
+<span class="a">GET</span>    <span class="w">/v1/cache/get</span>              <span class="m"># Get key</span>
+  </code></pre>
+</section>
+
+<section>
+  <h2><span>Pricing</span></h2>
+  <table class="pricing-table">
+    <thead><tr><th>Action</th><th>Cost</th><th>Notes</th></tr></thead>
+    <tbody>
+      <tr><td>Storage</td><td>$0.10/GB/mo</td><td>Vectors + metadata</td></tr>
+      <tr><td>Write (embed)</td><td>$0.0001</td><td>Per 1k tokens</td></tr>
+      <tr><td>Query</td><td>$0.0001</td><td>Per search</td></tr>
+      <tr><td>KV cache</td><td>$0.01/GB/mo</td><td>Ephemeral</td></tr>
+    </tbody>
+  </table>
+</section>
+
+<div class="cta-section">
+  <h2 style="margin-bottom:0.5rem">Memory is an <span>API call</span>.</h2>
+  <p style="color:var(--muted);margin-bottom:2rem">Agents don't have a hippocampus. They have vectors.</p>
+  <a href="https://docs.mem.sh" class="cta-btn">Read the docs →</a>
+</div>
+
+<footer>
+  <div>mem.sh — agent-native memory</div>
+  <div class="links"><a href="https://docs.mem.sh">Docs</a><a href="/">agentstack</a></div>
+  <div style="margin-top:0.75rem;font-size:0.8rem">Agents don't have a hippocampus. They have vectors.</div>
+  <div style="margin-top:0.5rem;font-size:0.75rem;color:#444">This page is for humans. The API is for agents.</div>
+</footer>
+
+</body>
+</html>
+

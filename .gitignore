@@ -19,6 +19,12 @@ dist/
 .env.*
 *.db
 
+# Research (keep markdown, ignore binaries)
+research/*.xlsx
+research/*.pdf
+research/*.mp4
+research/*.png
+
 # Logs
 *.log
 server.log

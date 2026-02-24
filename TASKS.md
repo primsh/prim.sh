@@ -9,7 +9,7 @@
 | S-3 | Add missing routes to `serve.py` (mem, infer, watch + new primitives: browse, auth, code, trace) | — | Done |
 | S-4 | Create landing pages for new primitives (browse, auth, code, trace) | — | Done |
 | S-5 | Update landing page hero count to 26 primitives, add new primitive cards | — | Done |
-| S-6 | Add "This page is for humans. The API is for agents." line to all landing pages | `tasks/active/s-6-human-page-notice-2026-02-24.md` | Open |
+| S-6 | Add "This page is for humans. The API is for agents." line to all landing pages | `tasks/completed/s-6-human-page-notice-2026-02-24.md` | Done |
 
 ## Phase 1 — Platform Foundation
 
@@ -130,4 +130,4 @@ ERC-8004 uses CAIP-10 wallet addresses as root identity. DIDs layer on top non-b
 
 ## Done
 
-(none yet)
+- S-6 — "This page is for humans. The API is for agents." (2026-02-24)
