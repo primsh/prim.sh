@@ -15,11 +15,12 @@
   },
   "dependencies": {
     "hono": "^4.4.7",
-    "@agentstack/x402-middleware": "workspace:*"
+    "@agentstack/x402-middleware": "workspace:*",
+    "viem": "^2.21.0"
   },
   "devDependencies": {
+    "@x402/core": "^2.4.0",
     "typescript": "^5.6.3",
     "vitest": "^1.6.1"
   }
 }
-

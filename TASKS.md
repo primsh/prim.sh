@@ -24,7 +24,7 @@
 
 | ID | Task | Spec | Status |
 |----|------|------|--------|
-| W-1 | Design wallet.sh API surface (finalize endpoints, request/response shapes) | `specs/wallet.md` | Open |
+| W-1 | Design wallet.sh API surface (finalize endpoints, request/response shapes) | `specs/wallet.md` | Done |
 | W-2 | Implement wallet creation (local keypair generation, encrypted keystore) | `specs/wallet.md` | Open |
 | W-3 | Implement balance queries (Base USDC via RPC) | `specs/wallet.md` | Open |
 | W-4 | Implement send (USDC transfer on Base) | `specs/wallet.md` | Open |
@@ -63,7 +63,7 @@
 
 - P-1: `tasks/completed/p-1-llms-txt-catalog-2026-02-24.md`
 - P-4: `tasks/active/p-4-x402-hono-middleware-2026-02-24.md`
-- W-1: `tasks/active/w-1-wallet-api-surface-2026-02-24.md`
+- W-1: `tasks/completed/w-1-wallet-api-surface-2026-02-24.md`
 
 ## Backlog — Future Primitives
 

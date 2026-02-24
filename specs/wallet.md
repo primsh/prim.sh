@@ -48,7 +48,7 @@ wallet.sh HTTP API (Hono + x402 middleware)
 Wallet Service
     ├── Wallet creation (local key generation or CDP)
     ├── Balance queries (Base RPC / multi-chain)
-    ├── Transaction execution (ethers.js v6)
+    ├── Transaction execution (viem)
     ├── x402 client (wraps @x402/fetch for outbound payments)
     ├── Budget policy engine (from Railgunner's privacy-policy pattern)
     └── Execution journal (from Railgunner, SQLite)
@@ -120,8 +120,11 @@ Returns:
       "address": "0xabc...",
       "chain": "eip155:8453",
       "balance": "0.00",
-      "funded": false
+      "funded": false,
+      "claimToken": "ctk_..."
     }
+    ↓
+Creator passes claimToken in X-Claim-Token header on first paid request to this wallet; that request's wallet address becomes the owner (createdBy). Token is single-use.
     ↓
 Agent (or owner) sends USDC to this address on Base
     ↓
@@ -159,6 +162,7 @@ Agent receives funds, continues operating
 
 | Decision | Choice | Rationale |
 |----------|--------|-----------|
+| Crypto library | **viem** | x402 ecosystem uses viem; same as @x402/evm for EIP-3009 signing. Single EVM stack. |
 | Key generation | Local (no CDP dependency) | Simpler. Agent owns its own keys. CDP is optional for managed wallets. |
 | Key storage | Encrypted keystore (AES-GCM, from Railgunner) | Battle-tested in Railgunner. No external KMS dependency. |
 | Primary chain | Base (eip155:8453) | x402 default. Sub-cent gas. USDC native. |
