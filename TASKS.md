@@ -59,6 +59,10 @@
 | SP-4 | Build spawn.sh: SSH key injection + initial setup | — | Open |
 | SP-5 | Integrate x402 middleware | — | Open |
 
+## Plan Docs
+
+- P-1: `tasks/active/p-1-llms-txt-catalog-2026-02-24.md`
+
 ## Backlog — Future Primitives
 
 | Primitive | Wraps | Notes |
@@ -82,6 +86,7 @@
 | pins.sh | Google Places API or Overture Maps | |
 | hive.sh | A2A protocol (Google/Linux Foundation) | Agent discovery + collaboration via A2A agent cards, JSON-RPC 2.0, SSE. Wrap the standard, don't reinvent. Interop with Azure AI Foundry, Google agents |
 | ads.sh | Custom | Needs ecosystem first |
+| skills.sh | Custom marketplace + registry | Buy/sell agent skills (versioned manifests, trust/reputation, x402 billing). Start private-curated first |
 | mart.sh | Amazon/eBay API proxy | Heavy regulatory |
 | ship.sh | EasyPost or Shippo | |
 | hands.sh | Custom gig platform | Heaviest regulatory burden |
