@@ -1,6 +1,8 @@
 import http.server
 import os
 import socketserver
+from typing import Optional
+from urllib.parse import urlparse
 
 BASE = os.path.dirname(os.path.abspath(__file__))
 ROUTES = {
@@ -36,12 +38,38 @@ ROUTES = {
 
 
 class H(http.server.BaseHTTPRequestHandler):
-    def do_GET(self) -> None:
-        p = self.path.rstrip("/") or "/"
-        f = ROUTES.get(p)
+    def _resolve_file(self, path: str) -> Optional[str]:
+        f = ROUTES.get(path)
         if f and os.path.exists(f):
+            return f
+
+        if path == "/llms.txt":
+            f = os.path.join(BASE, "llms.txt")
+            return f if os.path.exists(f) else None
+
+        if path.endswith("/llms.txt"):
+            parts = path.strip("/").split("/")
+            if len(parts) == 2:
+                primitive = parts[0]
+                f = os.path.join(BASE, primitive, "llms.txt")
+                return f if os.path.exists(f) else None
+
+        return None
+
+    def _content_type(self, file_path: str) -> str:
+        if file_path.endswith(".html"):
+            return "text/html; charset=utf-8"
+        if file_path.endswith(".txt"):
+            return "text/plain; charset=utf-8"
+        return "application/octet-stream"
+
+    def do_GET(self) -> None:
+        raw_path = urlparse(self.path).path
+        p = raw_path.rstrip("/") or "/"
+        f = self._resolve_file(p)
+        if f:
             self.send_response(200)
-            self.send_header("Content-Type", "text/html; charset=utf-8")
+            self.send_header("Content-Type", self._content_type(f))
             self.end_headers()
             with open(f, "rb") as fh:
                 self.wfile.write(fh.read())
@@ -53,5 +81,8 @@ class H(http.server.BaseHTTPRequestHandler):
         return
 
 
-socketserver.TCPServer(("100.91.44.60", 8892), H).serve_forever()
+class ReusableTCPServer(socketserver.TCPServer):
+    allow_reuse_address = True
 
+
+ReusableTCPServer(("100.91.44.60", 8892), H).serve_forever()
