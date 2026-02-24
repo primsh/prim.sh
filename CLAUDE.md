@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## What This Is
 
-**AgentStack** — the agent-native cloud. A collection of 26 independent infrastructure primitives where the customer is the agent, not the human. Every primitive accepts x402 payment (USDC on Base) as the sole authentication mechanism. No signup, no GUI, no KYC.
+**AgentStack** — the agent-native cloud. A collection of 27 independent infrastructure primitives where the customer is the agent, not the human. Every primitive accepts x402 payment (USDC on Base) as the sole authentication mechanism. No signup, no GUI, no KYC.
 
 The project has two layers:
 1. **Marketing site** — Static HTML landing pages (current state, `site/` equivalent)
@@ -51,7 +51,7 @@ agentstack/
 
 Landing pages are at root level (`spawn/index.html`, `relay/index.html`, etc.). `serve.py` is at root. No `packages/` dir yet. P-3 migrates to the structure above.
 
-## Primitives (26)
+## Primitives (27)
 
 Core: wallet, relay, spawn, store, vault, dns, cron, pipe, code
 Communication: ring, browse
