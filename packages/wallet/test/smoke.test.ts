@@ -6,4 +6,3 @@ describe("wallet.sh app", () => {
     expect(app).toBeDefined();
   });
 });
-

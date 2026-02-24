@@ -1,63 +1,43 @@
 # TASKS
 
-## Phase 0 — Site Fixes
+## Active
 
-| ID | Task | Plan | Status |
-|----|------|------|--------|
-| S-1 | Fix "Fourteen primitives" copy → "Nineteen" (manifesto x2 + CTA in `agentstack/index.html`) | — | Done |
-| S-2 | Fix `.c` CSS class collision in `agentstack/index.html` (coral vs comment gray) | — | Done |
-| S-3 | Add missing routes to `serve.py` (mem, infer, watch + new primitives: browse, auth, code, trace) | — | Done |
-| S-4 | Create landing pages for new primitives (browse, auth, code, trace) | — | Done |
-| S-5 | Update landing page hero count to 26 primitives, add new primitive cards | — | Done |
-| S-6 | Add "This page is for humans. The API is for agents." line to all landing pages | `tasks/completed/s-6-human-page-notice-2026-02-24.md` | Done |
-
-## Phase 1 — Platform Foundation
-
-| ID | Task | Spec | Status |
-|----|------|------|--------|
-| P-1 | Write llms.txt (root) + per-primitive llms.txt files | `specs/llms-txt.md` | Done |
-| P-2 | Add llms.txt routes to serve.py (or replace with smarter static server) | `specs/llms-txt.md` | Done |
-| P-3 | Set up monorepo structure (pnpm workspaces, shared x402 middleware package) | `specs/platform.md` | Done |
-| P-4 | Build shared x402 Hono middleware package | `specs/platform.md` | Done |
-
-## Phase 2 — wallet.sh
-
-| ID | Task | Spec | Status |
-|----|------|------|--------|
-| W-1 | Design wallet.sh API surface (finalize endpoints, request/response shapes) | `specs/wallet.md` | Done |
-| W-2 | Implement wallet creation (local keypair generation, encrypted keystore) | `specs/wallet.md` | Open |
-| W-3 | Implement balance queries (Base USDC via RPC) | `specs/wallet.md` | Open |
-| W-4 | Implement send (USDC transfer on Base) | `specs/wallet.md` | Open |
-| W-5 | Integrate x402 client (`@x402/fetch` wrapper) | `specs/wallet.md` | Open |
-| W-6 | Implement funding request flow (agent → owner notification → approval) | `specs/wallet.md` | Open |
-| W-7 | Implement budget/spending policy engine | `specs/wallet.md` | Open |
-| W-8 | Port execution journal + idempotency from Railgunner | `specs/wallet.md` | Open |
-| W-9 | Port circuit breaker from Railgunner | `specs/wallet.md` | Open |
-
-## Phase 3 — relay.sh
-
-| ID | Task | Spec | Status |
-|----|------|------|--------|
-| R-1 | Deploy Stalwart (Docker on Hetzner VPS) | `specs/relay.md` | Open |
-| R-2 | Configure Stalwart: domain, DKIM, SPF, DMARC, ACME TLS | `specs/relay.md` | Open |
-| R-3 | Build relay.sh wrapper: mailbox creation (Stalwart REST API) | `specs/relay.md` | Open |
-| R-4 | Build relay.sh wrapper: OAuth token cache for JMAP auth per mailbox | `specs/relay.md` | Open |
-| R-5 | Build relay.sh wrapper: read messages (JMAP Email/query + Email/get) | `specs/relay.md` | Open |
-| R-6 | Build relay.sh wrapper: send messages (JMAP EmailSubmission/set) — receive-only first | `specs/relay.md` | Open |
-| R-7 | Build relay.sh wrapper: incoming mail webhooks (Stalwart MTA Hooks) | `specs/relay.md` | Open |
-| R-8 | Build relay.sh wrapper: mailbox TTL/expiry manager | `specs/relay.md` | Open |
-| R-9 | Build relay.sh wrapper: custom domain support | `specs/relay.md` | Open |
-| R-10 | Integrate x402 middleware (all endpoints gated by payment) | `specs/relay.md` | Open |
-
-## Phase 4 — spawn.sh
-
-| ID | Task | Spec | Status |
-|----|------|------|--------|
-| SP-1 | Write spawn.sh spec (Hetzner API wrapping, VM lifecycle, pricing) | — | Open |
-| SP-2 | Build spawn.sh: VM provisioning via Hetzner Cloud API | — | Open |
-| SP-3 | Build spawn.sh: VM lifecycle (start, stop, destroy, resize) | — | Open |
-| SP-4 | Build spawn.sh: SSH key injection + initial setup | — | Open |
-| SP-5 | Integrate x402 middleware | — | Open |
+| Priority | ID | Task | Scope | Depends on | Status |
+|---|---|---|---|---|---|
+| 1 | S-1 | Fix "Fourteen primitives" copy → "Nineteen" (manifesto x2 + CTA in `agentstack/index.html`) | site/index.html | — | Done |
+| 2 | S-2 | Fix `.c` CSS class collision in `agentstack/index.html` (coral vs comment gray) | site/index.html | — | Done |
+| 3 | S-3 | Add missing routes to `serve.py` (mem, infer, watch + new primitives: browse, auth, code, trace) | site/serve.py | — | Done |
+| 4 | S-4 | Create landing pages for new primitives (browse, auth, code, trace) | site/ | — | Done |
+| 5 | S-5 | Update landing page hero count to 26 primitives, add new primitive cards | site/index.html | — | Done |
+| 6 | S-6 | Add "This page is for humans. The API is for agents." line to all landing pages | site/ | — | Done |
+| 7 | P-1 | Write llms.txt (root) + per-primitive llms.txt files | site/ | — | Done |
+| 8 | P-2 | Add llms.txt routes to serve.py (or replace with smarter static server) | site/serve.py | P-1 | Done |
+| 9 | P-3 | Set up monorepo structure (pnpm workspaces, shared x402 middleware package) | root | — | Done |
+| 10 | P-4 | Build shared x402 Hono middleware package | packages/x402-middleware | P-3 | Done |
+| 11 | W-1 | Design wallet.sh API surface (finalize endpoints, request/response shapes) | specs/wallet.md | — | Done |
+| 12 | W-2 | Implement wallet creation (local keypair generation, encrypted keystore) | wallet/ | W-1 | Open |
+| 13 | W-3 | Implement balance queries (Base USDC via RPC) | wallet/ | W-2 | Open |
+| 14 | W-4 | Implement send (USDC transfer on Base) | wallet/ | W-2 | Open |
+| 15 | W-5 | Integrate x402 client (`@x402/fetch` wrapper) | wallet/ | W-2 | Open |
+| 16 | W-6 | Implement funding request flow (agent → owner notification → approval) | wallet/ | W-4 | Open |
+| 17 | W-7 | Implement budget/spending policy engine | wallet/ | W-4 | Open |
+| 18 | W-8 | Port execution journal + idempotency from Railgunner | wallet/ | W-4 | Open |
+| 19 | W-9 | Port circuit breaker from Railgunner | wallet/ | W-4 | Open |
+| 20 | R-1 | Deploy Stalwart (Docker on Hetzner VPS) | relay/ | — | Open |
+| 21 | R-2 | Configure Stalwart: domain, DKIM, SPF, DMARC, ACME TLS | relay/ | R-1 | Open |
+| 22 | R-3 | Build relay.sh wrapper: mailbox creation (Stalwart REST API) | relay/ | R-2 | Open |
+| 23 | R-4 | Build relay.sh wrapper: OAuth token cache for JMAP auth per mailbox | relay/ | R-3 | Open |
+| 24 | R-5 | Build relay.sh wrapper: read messages (JMAP Email/query + Email/get) | relay/ | R-4 | Open |
+| 25 | R-6 | Build relay.sh wrapper: send messages (JMAP EmailSubmission/set) — receive-only first | relay/ | R-4 | Open |
+| 26 | R-7 | Build relay.sh wrapper: incoming mail webhooks (Stalwart MTA Hooks) | relay/ | R-2 | Open |
+| 27 | R-8 | Build relay.sh wrapper: mailbox TTL/expiry manager | relay/ | R-3 | Open |
+| 28 | R-9 | Build relay.sh wrapper: custom domain support | relay/ | R-2 | Open |
+| 29 | R-10 | Integrate x402 middleware (all endpoints gated by payment) | relay/ | R-3, P-4 | Open |
+| 30 | SP-1 | Write spawn.sh spec (Hetzner API wrapping, VM lifecycle, pricing) | specs/ | — | Open |
+| 31 | SP-2 | Build spawn.sh: VM provisioning via Hetzner Cloud API | spawn/ | SP-1 | Open |
+| 32 | SP-3 | Build spawn.sh: VM lifecycle (start, stop, destroy, resize) | spawn/ | SP-2 | Open |
+| 33 | SP-4 | Build spawn.sh: SSH key injection + initial setup | spawn/ | SP-2 | Open |
+| 34 | SP-5 | Integrate x402 middleware | spawn/ | SP-2, P-4 | Open |
 
 ## Plan Docs
 
@@ -98,6 +78,8 @@
 | trade.sh | Broker APIs + Polymarket | Trad market + prediction market trading for agents. Needs wallet.sh |
 | insure.sh | Custom (actuarial + escrow) | Agent operation insurance, refund guarantees, SLA escrow. Needs wallet.sh + watch.sh + id.sh |
 | know.sh | Custom (knowledge graph service) | Structured canonical knowledge (not vector search). Typed entities, relationships, definitions. Finknow is the finance vertical proof of concept. Distinct from mem.sh (personal memory) |
+| props.sh | ATTOM Data, Zillow/Redfin APIs, or Realtor.com API | Real estate data: listings, comps, valuations, property details. MLS direct access requires NAR licensing — API aggregators are the realistic path |
+| mktdata.sh | Polygon.io, Unusual Whales, or similar | Market data: equities/options/crypto price feeds, historical OHLCV, options chains, earnings calendars. High-frequency micropayment revenue from research agents |
 | corp.sh | Stripe Atlas API or custom | Legal complexity |
 
 ## Research Notes
