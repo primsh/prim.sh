@@ -1,16 +1,16 @@
-export interface X402Price {
-  amount: string;
-  currency: string;
+export interface RouteConfig {
+  price: string;
+  description?: string;
 }
 
-export interface X402RouteConfig {
-  path: string;
-  method: string;
-  price: X402Price;
+export type AgentStackRouteConfig = Record<string, string | RouteConfig>;
+
+export interface AgentStackMiddlewareOptions {
+  payTo: string;
+  network?: string;
+  facilitatorUrl?: string;
+  freeRoutes?: string[];
 }
 
-export interface X402MiddlewareOptions {
-  facilitatorUrl: string;
-  network: string;
-}
+export type { Network, PaymentPayload, PaymentRequired } from "@x402/core/types";
 
