@@ -64,13 +64,13 @@ describe("wallet.sh API stubs", () => {
     expect(body.createdAt).toBeDefined();
   });
 
-  it("GET /v1/wallets without payment does not return 200 (payment required)", async () => {
+  it("GET /v1/wallets without payment returns 402", async () => {
     const res = await app.request("/v1/wallets", { method: "GET" });
-    expect(res.status).not.toBe(200);
-    expect([402, 500]).toContain(res.status);
+    expect(res.status).toBe(402);
+    expect(res.headers.get("Payment-Required")).toBeTruthy();
   });
 
-  it("POST /v1/wallets/:address/send without payment does not return 200", async () => {
+  it("POST /v1/wallets/:address/send without payment returns 402", async () => {
     const res = await app.request("/v1/wallets/0x123/send", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -80,11 +80,11 @@ describe("wallet.sh API stubs", () => {
         idempotencyKey: "idk_1",
       }),
     });
-    expect(res.status).not.toBe(200);
-    expect([402, 500]).toContain(res.status);
+    expect(res.status).toBe(402);
+    expect(res.headers.get("Payment-Required")).toBeTruthy();
   });
 
-  it("stub route returns not_implemented error body when reached", async () => {
+  it("paid route with payment header returns 501 and not_implemented error", async () => {
     const paymentPayload = {
       x402Version: 2,
       scheme: "exact",
@@ -108,12 +108,10 @@ describe("wallet.sh API stubs", () => {
       headers: { "Payment-Signature": header },
     });
 
-    if (res.status === 501) {
-      const body = await res.json();
-      expect(body).toMatchObject({
-        error: { code: "not_implemented", message: expect.any(String) },
-      });
-    }
-    expect([501, 500]).toContain(res.status);
+    expect(res.status).toBe(501);
+    const body = await res.json();
+    expect(body).toMatchObject({
+      error: { code: "not_implemented", message: expect.any(String) },
+    });
   });
 });

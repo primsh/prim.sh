@@ -109,7 +109,7 @@ export interface SendResponse {
   amount: string;
   chain: string;
   status: TxStatus;
-  confirmedAt: string;
+  confirmedAt: string | null;
 }
 
 // ─── Swap (deferred, stub) ─────────────────────────────────────────────────
