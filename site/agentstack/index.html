@@ -7,7 +7,7 @@
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
 :root{--bg:#0a0a0a;--surface:#111;--border:#1a1a1a;--text:#e0e0e0;--muted:#666;--code-bg:#0d0d0d;--green:#00ff88;--blue:#6C8EFF;--red:#FF6B6B;--purple:#B388FF;--orange:#FFB74D;--cyan:#4DD0E1;--yellow:#FFD54F;--pink:#FF80AB;--gold:#FFC107;--teal:#80CBC4;--magenta:#F50057;--lime:#C6FF00;--coral:#FF3D00;--indigo:#3D5AFE;--violet:#D500F9;--azure:#00BCD4;--brown:#795548;--emerald:#00E676;--slate:#607D8B;--white:#fff}
-body{background:var(--bg);color:var(--text);font-family:'SF Mono',SFMono-Regular,'Cascadia Code',Consolas,monospace;line-height:1.6;overflow-x:hidden}
+body{background:var(--bg);color:var(--text);font-family:'SF Mono',SFMono-Regular,'Cascadia Code',Consolas,monospace;line-height:1.6;overflow-x:hidden;--wallet:#8BC34A;--mem:#00ACC1;--infer:#FF7043;--watch:#78909C;--trace:#AB47BC;--browse:#64B5F6;--auth:#FFCA28;--code:#26C6DA}
 a{text-decoration:none}a:hover{text-decoration:underline}
 
 .hero{min-height:100vh;display:flex;flex-direction:column;justify-content:center;align-items:center;text-align:center;padding:2rem;position:relative}
@@ -42,14 +42,14 @@ a{text-decoration:none}a:hover{text-decoration:underline}
 .product.p17 .product-name,.product.p17 .product-type,.product.p17 .product-link{color:var(--brown)}
 .product.p18 .product-name,.product.p18 .product-type,.product.p18 .product-link{color:var(--emerald)}
 .product.p19 .product-name,.product.p19 .product-type,.product.p19 .product-link{color:var(--slate)}
-.product.p20 .product-name,.product.p20 .product-type,.product.p20 .product-link{color:#8BC34A}
-.product.p21 .product-name,.product.p21 .product-type,.product.p21 .product-link{color:#00ACC1}
-.product.p22 .product-name,.product.p22 .product-type,.product.p22 .product-link{color:#FF7043}
-.product.p23 .product-name,.product.p23 .product-type,.product.p23 .product-link{color:#78909C}
-.product.p24 .product-name,.product.p24 .product-type,.product.p24 .product-link{color:#AB47BC}
-.product.p25 .product-name,.product.p25 .product-type,.product.p25 .product-link{color:#64B5F6}
-.product.p26 .product-name,.product.p26 .product-type,.product.p26 .product-link{color:#FFCA28}
-.product.p27 .product-name,.product.p27 .product-type,.product.p27 .product-link{color:#26C6DA}
+.product.p20 .product-name,.product.p20 .product-type,.product.p20 .product-link{color:var(--wallet)}
+.product.p21 .product-name,.product.p21 .product-type,.product.p21 .product-link{color:var(--mem)}
+.product.p22 .product-name,.product.p22 .product-type,.product.p22 .product-link{color:var(--infer)}
+.product.p23 .product-name,.product.p23 .product-type,.product.p23 .product-link{color:var(--watch)}
+.product.p24 .product-name,.product.p24 .product-type,.product.p24 .product-link{color:var(--trace)}
+.product.p25 .product-name,.product.p25 .product-type,.product.p25 .product-link{color:var(--browse)}
+.product.p26 .product-name,.product.p26 .product-type,.product.p26 .product-link{color:var(--auth)}
+.product.p27 .product-name,.product.p27 .product-type,.product.p27 .product-link{color:var(--code)}
 
 section{max-width:900px;margin:0 auto;padding:4rem 2rem}
 h2{font-size:1.8rem;margin-bottom:1.5rem;font-weight:600;text-align:center}
@@ -82,7 +82,7 @@ footer .links a{color:var(--muted)}
 <div class="hero">
   <div class="logo">agentstack</div>
   <div class="tagline">The agent-native cloud.</div>
-  <div class="sub"><strong>Twenty-six primitives.</strong> The complete infrastructure layer for autonomous agents. No signup. No GUI. No KYC. x402 payments. One token, every service.</div>
+  <div class="sub"><strong>Twenty-seven primitives.</strong> The complete infrastructure layer for autonomous agents. No signup. No GUI. No KYC. x402 payments. One token, every service.</div>
 
   <div class="products">
     <div class="product p1">
@@ -255,7 +255,7 @@ footer .links a{color:var(--muted)}
     <p>Agents need infrastructure. Not dashboards, not consoles, not onboarding wizards — <strong>infrastructure as API calls.</strong></p>
     <p>Today, every cloud service requires a human to create an account. An agent can't sign up for AWS. It can't verify an email. It can't provide a credit card. <strong>The entire cloud is gated by human identity.</strong></p>
     <p>agentstack removes the gate. <strong>x402 payment is the only credential.</strong> Pay and compute. Pay and store. Pay and send. No accounts, no sessions, no cookies. Every request is self-contained.</p>
-    <p>Twenty-six primitives. The complete stack. <strong>One payment token works everywhere.</strong></p>
+    <p>Twenty-seven primitives. The complete stack. <strong>One payment token works everywhere.</strong></p>
   </div>
 </section>
 
@@ -287,14 +287,14 @@ footer .links a{color:var(--muted)}
     <div class="principle"><div class="num">02</div><h3>No signup</h3><p>First API call creates the resource. No registration, no onboarding, no email verification. x402 payment is the entire auth flow.</p></div>
     <div class="principle"><div class="num">03</div><h3>No KYC</h3><p>Payment proves intent and funds access. Identity is a payment token, not a person. Agents don't have passports.</p></div>
     <div class="principle"><div class="num">04</div><h3>Ephemeral by default</h3><p>Resources expire. VMs, mailboxes, phone numbers — all have TTLs. Extend what you need, let the rest expire.</p></div>
-    <div class="principle"><div class="num">05</div><h3>Composable</h3><p>Each primitive is independent. Use one or all twenty-six. Same identity, no coupling, no bundling requirements.</p></div>
+    <div class="principle"><div class="num">05</div><h3>Composable</h3><p>Each primitive is independent. Use one or all twenty-seven. Same identity, no coupling, no bundling requirements.</p></div>
     <div class="principle"><div class="num">06</div><h3>Sub-cent pricing</h3><p>Micropayments via x402. A verification SMS: $0.01. A disposable mailbox: $0.001. Agents pay for exactly what they use.</p></div>
   </div>
 </section>
 
 <div class="cta-section">
   <h2 style="margin-bottom:0.5rem">The cloud was built for humans.<br>This one isn't.</h2>
-  <p style="color:var(--muted);margin-bottom:2rem;max-width:500px;margin-left:auto;margin-right:auto">Twenty-six primitives. Zero signup. One payment token.</p>
+  <p style="color:var(--muted);margin-bottom:2rem;max-width:500px;margin-left:auto;margin-right:auto">Twenty-seven primitives. Zero signup. One payment token.</p>
   <p style="color:var(--muted);font-size:0.85rem;margin-top:1rem"><code style="color:var(--green)">curl https://api.spawn.sh/v1/plans</code></p>
 </div>
 
