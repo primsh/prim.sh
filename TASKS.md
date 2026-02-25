@@ -85,7 +85,7 @@
 | 15 | P-6 | `prim` binary publishing + install scripts: `bun build --compile`, host binary, `curl prim.sh/install \| sh`, per-primitive install wrappers | packages/keystore, site/ | ST-6 | pending (→ L-11/L-12) |
 | 16 | E-1 | Set PTR record for mail server IP ([STALWART_HOST] → mail.relay.prim.sh) | deploy/email | — | done |
 | 17 | E-2 | Downgrade DMARC to `p=none` temporarily while domain reputation is zero | Cloudflare DNS | — | done |
-| 18 | E-3 | Register relay.prim.sh with Google Postmaster Tools (DNS TXT verification) | Cloudflare DNS, Google | E-1 | pending |
+| 18 | E-3 | Register relay.prim.sh with Google Postmaster Tools (DNS TXT verification) | Cloudflare DNS, Google | E-1 | done |
 | 19 | E-4 | Domain warmup: send low-volume emails to engaged recipients, ramp over weeks | deploy/email | E-2, E-3 | pending |
 | 20 | E-5 | Verify Gmail inbox delivery (not spam) after warmup + PTR + DMARC changes | deploy/email | E-4 | pending |
 | 21 | E-6 | Verify Apple Mail / iCloud delivery after warmup | deploy/email | E-4 | pending |
@@ -120,6 +120,7 @@
 - D-3→D-8: see same file (comprehensive plan covers all phases)
 - D-3: `tasks/active/d-3-domain-registration-2026-02-25.md`
 - D-6: `tasks/active/d-6-verification-endpoint-2026-02-25.md`
+- D-7: `tasks/active/d-7-auto-configure-ns-2026-02-25.md`
 - ST-1: `tasks/completed/st-1-bucket-crud-cloudflare-r2.md`
 - R-5: `tasks/completed/r-5-read-messages-jmap-2026-02-25.md`
 - ST-4: `tasks/completed/st-4-x402-middleware-store.md`
