@@ -1,6 +1,10 @@
 import { describe, expect, it, beforeAll, afterAll, vi } from "vitest";
 import { encodePaymentSignatureHeader } from "@x402/core/http";
 
+// Set up env before any imports that might initialize the DB or keystore
+process.env.WALLET_MASTER_KEY = "a".repeat(64);
+process.env.WALLET_DB_PATH = ":memory:";
+
 const PAY_TO = "0x0000000000000000000000000000000000000000";
 const NETWORK = "eip155:8453";
 
@@ -55,11 +59,11 @@ describe("wallet.sh API stubs", () => {
     expect(res.status).toBe(201);
     const body = await res.json();
     expect(body).toMatchObject({
-      address: expect.any(String),
+      address: expect.stringMatching(/^0x[0-9a-fA-F]{40}$/),
       chain: "eip155:8453",
       balance: "0.00",
       funded: false,
-      claimToken: "ctk_stub",
+      claimToken: expect.stringMatching(/^ctk_[0-9a-f]{64}$/),
     });
     expect(body.createdAt).toBeDefined();
   });

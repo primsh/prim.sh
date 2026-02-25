@@ -1,7 +1,8 @@
 import { Hono } from "hono";
+import type { MiddlewareHandler } from "hono";
 import { createAgentStackMiddleware } from "@agentstack/x402-middleware";
 import type {
-  WalletCreateResponse,
+  WalletCreateRequest,
   WalletListResponse,
   WalletDetailResponse,
   WalletDeactivateResponse,
@@ -16,6 +17,7 @@ import type {
   ResumeResponse,
   ApiError,
 } from "./api.ts";
+import { createWallet, listWallets, getWallet, deactivateWallet, claimWallet } from "./service.ts";
 
 const PAY_TO_ADDRESS = "0x0000000000000000000000000000000000000000";
 const NETWORK = "eip155:8453";
@@ -46,7 +48,16 @@ function notImplemented(): ApiError {
   };
 }
 
-const app = new Hono();
+function forbidden(message: string): ApiError {
+  return { error: { code: "forbidden", message } };
+}
+
+function notFound(message: string): ApiError {
+  return { error: { code: "not_found", message } };
+}
+
+type AppVariables = { walletAddress: string | undefined };
+const app = new Hono<{ Variables: AppVariables }>();
 
 app.use(
   "*",
@@ -64,32 +75,84 @@ app.get("/", (c) => {
   return c.json({ service: "wallet.sh", status: "ok" });
 });
 
-// POST /v1/wallets — Create wallet (FREE); returns 201 stub
-app.post("/v1/wallets", (c) => {
-  const stub: WalletCreateResponse = {
-    address: "0x0000000000000000000000000000000000000000",
-    chain: "eip155:8453",
-    balance: "0.00",
-    funded: false,
-    claimToken: "ctk_stub",
-    createdAt: new Date().toISOString(),
-  };
-  return c.json(stub, 201);
+// POST /v1/wallets — Create wallet (FREE)
+app.post("/v1/wallets", async (c) => {
+  let chain: string | undefined;
+  try {
+    const body = await c.req.json<WalletCreateRequest>();
+    chain = body.chain;
+  } catch {
+    // No body or invalid JSON — use default chain
+  }
+  const result = createWallet(chain);
+  return c.json(result, 201);
 });
+
+// Claim token middleware — runs before ownership-gated routes
+// Extracts X-Claim-Token and attempts to claim the wallet for the caller
+const claimMiddleware: MiddlewareHandler<{ Variables: AppVariables }> = async (c, next) => {
+  const claimToken = c.req.header("X-Claim-Token");
+  if (claimToken) {
+    const address = c.req.param("address") as string | undefined;
+    const caller = c.get("walletAddress");
+
+    if (address && caller) {
+      const claimed = claimWallet(address, claimToken, caller);
+      if (!claimed) {
+        return c.json(forbidden("Invalid claim token"), 403);
+      }
+    }
+  }
+  await next();
+};
 
 // GET /v1/wallets — List wallets
 app.get("/v1/wallets", (c) => {
-  return c.json(notImplemented() as unknown as WalletListResponse, 501);
+  const caller = c.get("walletAddress");
+  if (!caller) {
+    return c.json(forbidden("No wallet address in payment"), 403);
+  }
+
+  const limitParam = c.req.query("limit");
+  const limit = Math.min(Number(limitParam) || 20, 100);
+  const after = c.req.query("after");
+
+  const result = listWallets(caller, limit, after);
+  return c.json(result as WalletListResponse, 200);
 });
 
 // GET /v1/wallets/:address — Wallet detail
-app.get("/v1/wallets/:address", (c) => {
-  return c.json(notImplemented() as unknown as WalletDetailResponse, 501);
+app.get("/v1/wallets/:address", claimMiddleware, (c) => {
+  const address = c.req.param("address");
+  const caller = c.get("walletAddress");
+  if (!caller) {
+    return c.json(forbidden("No wallet address in payment"), 403);
+  }
+
+  const result = getWallet(address, caller);
+  if (!result.ok) {
+    const status = result.status;
+    if (status === 404) return c.json(notFound(result.message), 404);
+    return c.json(forbidden(result.message), 403);
+  }
+  return c.json(result.data as WalletDetailResponse, 200);
 });
 
 // DELETE /v1/wallets/:address — Deactivate
-app.delete("/v1/wallets/:address", (c) => {
-  return c.json(notImplemented() as unknown as WalletDeactivateResponse, 501);
+app.delete("/v1/wallets/:address", claimMiddleware, (c) => {
+  const address = c.req.param("address");
+  const caller = c.get("walletAddress");
+  if (!caller) {
+    return c.json(forbidden("No wallet address in payment"), 403);
+  }
+
+  const result = deactivateWallet(address, caller);
+  if (!result.ok) {
+    const status = result.status;
+    if (status === 404) return c.json(notFound(result.message), 404);
+    return c.json(forbidden(result.message), 403);
+  }
+  return c.json(result.data as WalletDeactivateResponse, 200);
 });
 
 // POST /v1/wallets/:address/send
