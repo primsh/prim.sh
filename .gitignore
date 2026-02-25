@@ -18,7 +18,12 @@ dist/
 .env
 .env.*
 !.env.example
+scripts/.env.*
+!scripts/.env.example
 *.db
+*.sqlite
+*.pem
+*.key
 
 # Logs
 *.log
