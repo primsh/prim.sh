@@ -146,3 +146,29 @@ export interface BatchRecordsResponse {
   updated: RecordResponse[];
   deleted: { id: string }[];
 }
+
+// ─── Mail setup types ──────────────────────────────────────────────────────
+
+export interface DkimKey {
+  selector: string;
+  public_key: string;
+}
+
+export interface MailSetupRequest {
+  mail_server: string;
+  mail_server_ip: string;
+  dkim?: {
+    rsa?: DkimKey;
+    ed25519?: DkimKey;
+  };
+}
+
+export interface MailSetupRecordResult {
+  type: RecordType;
+  name: string;
+  action: "created" | "updated";
+}
+
+export interface MailSetupResponse {
+  records: MailSetupRecordResult[];
+}

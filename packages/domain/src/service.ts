@@ -8,6 +8,7 @@ import {
   deleteZoneRow,
   insertRecord,
   getRecordById,
+  getRecordByCloudflareId,
   getRecordsByZone,
   updateRecordRow,
   deleteRecordRow,
@@ -22,8 +23,9 @@ import {
   updateDnsRecord as cfUpdateRecord,
   deleteDnsRecord as cfDeleteRecord,
   batchDnsRecords as cfBatchDnsRecords,
+  listDnsRecords as cfListDnsRecords,
 } from "./cloudflare.ts";
-import type { CfBatchResult } from "./cloudflare.ts";
+import type { CfBatchResult, CfDnsRecord } from "./cloudflare.ts";
 import type {
   ZoneResponse,
   ZoneListResponse,
@@ -37,6 +39,9 @@ import type {
   DomainSearchResponse,
   BatchRecordsRequest,
   BatchRecordsResponse,
+  MailSetupRequest,
+  MailSetupResponse,
+  MailSetupRecordResult,
 } from "./api.ts";
 import type { ZoneRow, RecordRow } from "./db.ts";
 import { getRegistrar } from "./namesilo.ts";
@@ -394,6 +399,154 @@ export async function deleteRecord(
   deleteRecordRow(recordId);
 
   return { ok: true, data: { status: "deleted" } };
+}
+
+// ─── Mail setup ───────────────────────────────────────────────────────────
+
+export async function mailSetup(
+  zoneId: string,
+  request: MailSetupRequest,
+  callerWallet: string,
+): Promise<ServiceResult<MailSetupResponse>> {
+  const check = checkZoneOwnership(zoneId, callerWallet);
+  if (!check.ok) return check;
+
+  if (!request.mail_server) {
+    return { ok: false, status: 400, code: "invalid_request", message: "mail_server is required" };
+  }
+  if (!request.mail_server_ip) {
+    return { ok: false, status: 400, code: "invalid_request", message: "mail_server_ip is required" };
+  }
+
+  const domain = check.row.domain;
+  const cfZoneId = check.row.cloudflare_id;
+  const { mail_server, mail_server_ip, dkim } = request;
+
+  // Build record descriptors
+  interface RecordSpec {
+    type: string;
+    name: string;
+    content: string;
+    ttl: number;
+    priority?: number;
+    matchFn: (r: CfDnsRecord) => boolean;
+  }
+
+  const specs: RecordSpec[] = [
+    {
+      type: "A",
+      name: `mail.${domain}`,
+      content: mail_server_ip,
+      ttl: 3600,
+      matchFn: (r) => r.type === "A" && r.name === `mail.${domain}`,
+    },
+    {
+      type: "MX",
+      name: domain,
+      content: mail_server,
+      ttl: 3600,
+      priority: 10,
+      matchFn: (r) => r.type === "MX" && r.name === domain && r.priority === 10,
+    },
+    {
+      type: "TXT",
+      name: domain,
+      content: `v=spf1 a:${mail_server} -all`,
+      ttl: 3600,
+      matchFn: (r) => r.type === "TXT" && r.name === domain && r.content.startsWith("v=spf1"),
+    },
+    {
+      type: "TXT",
+      name: `_dmarc.${domain}`,
+      content: `v=DMARC1; p=quarantine; rua=mailto:dmarc@${domain}; pct=100`,
+      ttl: 3600,
+      matchFn: (r) => r.type === "TXT" && r.name === `_dmarc.${domain}`,
+    },
+  ];
+
+  if (dkim?.rsa) {
+    specs.push({
+      type: "TXT",
+      name: `${dkim.rsa.selector}._domainkey.${domain}`,
+      content: `v=DKIM1; k=rsa; p=${dkim.rsa.public_key}`,
+      ttl: 3600,
+      matchFn: (r) => r.type === "TXT" && r.name === `${dkim!.rsa!.selector}._domainkey.${domain}`,
+    });
+  }
+
+  if (dkim?.ed25519) {
+    specs.push({
+      type: "TXT",
+      name: `${dkim.ed25519.selector}._domainkey.${domain}`,
+      content: `v=DKIM1; k=ed25519; p=${dkim.ed25519.public_key}`,
+      ttl: 3600,
+      matchFn: (r) => r.type === "TXT" && r.name === `${dkim!.ed25519!.selector}._domainkey.${domain}`,
+    });
+  }
+
+  const results: MailSetupRecordResult[] = [];
+
+  for (const spec of specs) {
+    try {
+      const existing = await cfListDnsRecords(cfZoneId, { type: spec.type, name: spec.name });
+      const match = existing.find(spec.matchFn);
+
+      if (match) {
+        // Update existing CF record
+        await cfUpdateRecord(cfZoneId, match.id, {
+          type: spec.type,
+          name: spec.name,
+          content: spec.content,
+          ttl: spec.ttl,
+          ...(spec.priority !== undefined ? { priority: spec.priority } : {}),
+        });
+
+        // Sync SQLite: update our row if we track this record
+        const primRow = getRecordByCloudflareId(match.id);
+        if (primRow) {
+          updateRecordRow(primRow.id, {
+            content: spec.content,
+            ttl: spec.ttl,
+            ...(spec.priority !== undefined ? { priority: spec.priority } : {}),
+          });
+        }
+
+        results.push({ type: spec.type as RecordType, name: spec.name, action: "updated" });
+      } else {
+        // Create new CF record
+        const cfRecord = await cfCreateRecord(cfZoneId, {
+          type: spec.type,
+          name: spec.name,
+          content: spec.content,
+          ttl: spec.ttl,
+          proxied: false,
+          ...(spec.priority !== undefined ? { priority: spec.priority } : {}),
+        });
+
+        const recordId = generateRecordId();
+        insertRecord({
+          id: recordId,
+          cloudflare_id: cfRecord.id,
+          zone_id: zoneId,
+          type: cfRecord.type as RecordType,
+          name: cfRecord.name,
+          content: cfRecord.content,
+          ttl: cfRecord.ttl,
+          proxied: cfRecord.proxied ?? false,
+          priority: cfRecord.priority ?? null,
+        });
+
+        results.push({ type: spec.type as RecordType, name: spec.name, action: "created" });
+      }
+    } catch (err) {
+      if (err instanceof CloudflareError) {
+        return { ok: false, status: err.statusCode, code: err.code, message: err.message };
+      }
+      throw err;
+    }
+  }
+
+  return { ok: true, data: { records: results } };
 }
 
 // ─── Batch record operations ──────────────────────────────────────────────

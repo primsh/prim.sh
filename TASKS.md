@@ -27,7 +27,7 @@
 | 21 | D-2 | Rename dns.sh → domain.sh, add domain search endpoint (registrar availability API) | packages/dns→domain | D-1 | done |
 | 22 | D-3 | Build domain.sh: domain registration endpoint (registrar purchase API) | packages/domain | D-2 | pending |
 | 23 | D-4 | Integrate x402 middleware | dns/ | D-1, P-4 | done |
-| 45 | D-5 | Build domain.sh: mail-setup convenience endpoint (MX+SPF+DMARC+DKIM in one call) | packages/domain | D-1 | pending |
+| 45 | D-5 | Build domain.sh: mail-setup convenience endpoint (MX+SPF+DMARC+DKIM in one call) | packages/domain | D-1 | done |
 | 46 | D-6 | Build domain.sh: verification endpoint (NS + record propagation checks) | packages/domain | D-1 | pending |
 | 47 | D-7 | Build domain.sh: auto-configure NS to Cloudflare after registration | packages/domain | D-3 | pending |
 | 48 | D-8 | Build domain.sh: batch record operations (atomic multi-record create/update/delete) | packages/domain | D-2 | done |

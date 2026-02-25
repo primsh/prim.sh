@@ -161,6 +161,11 @@ export function getRecordById(id: string): RecordRow | null {
   return db.query<RecordRow, [string]>("SELECT * FROM records WHERE id = ?").get(id) ?? null;
 }
 
+export function getRecordByCloudflareId(cfId: string): RecordRow | null {
+  const db = getDb();
+  return db.query<RecordRow, [string]>("SELECT * FROM records WHERE cloudflare_id = ?").get(cfId) ?? null;
+}
+
 export function getRecordsByZone(zoneId: string): RecordRow[] {
   const db = getDb();
   return db

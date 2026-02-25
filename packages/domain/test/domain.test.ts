@@ -43,6 +43,9 @@ function makeCfRecord(overrides: Partial<Record<string, unknown>> = {}): Record<
   };
 }
 
+// Configurable GET /dns_records response — set per-test for idempotency scenarios
+let cfDnsRecordsMock: Record<string, unknown>[] = [];
+
 // Mock fetch: intercepts Cloudflare API calls
 const mockFetch = vi.fn(async (input: RequestInfo | URL, _init?: RequestInit) => {
   const url =
@@ -52,6 +55,14 @@ const mockFetch = vi.fn(async (input: RequestInfo | URL, _init?: RequestInit) =>
         ? input.url
         : (input as URL).toString();
   const method = _init?.method ?? "GET";
+
+  // CF: GET /zones/:id/dns_records — list records (configurable per-test, default empty)
+  if (url.match(/\/client\/v4\/zones\/[^/]+\/dns_records(\?.*)?$/) && method === "GET") {
+    return new Response(
+      JSON.stringify({ success: true, errors: [], result: cfDnsRecordsMock }),
+      { status: 200, headers: { "Content-Type": "application/json" } },
+    );
+  }
 
   // CF: POST /zones — create zone
   if (url === "https://api.cloudflare.com/client/v4/zones" && method === "POST") {
@@ -161,6 +172,7 @@ import {
   deleteRecord,
   searchDomains,
   batchRecords,
+  mailSetup,
 } from "../src/service.ts";
 
 // ─── Fixtures ────────────────────────────────────────────────────────────
@@ -174,6 +186,7 @@ describe("domain.sh", () => {
   beforeEach(() => {
     resetDb();
     mockFetch.mockClear();
+    cfDnsRecordsMock = [];
   });
 
   afterEach(() => {
@@ -509,6 +522,224 @@ describe("domain.sh", () => {
       expect(result.ok).toBe(false);
       if (result.ok) return;
       expect(result.code).toBe("rate_limited");
+    });
+  });
+
+  // ─── Mail setup ───────────────────────────────────────────────────────
+
+  describe("mail setup", () => {
+    let zoneId: string;
+
+    beforeEach(async () => {
+      const result = await createZone({ domain: "example.com" }, CALLER);
+      if (!result.ok) throw new Error("Failed to create test zone");
+      zoneId = result.data.zone.id;
+    });
+
+    it("creates 4 records when no DKIM provided", async () => {
+      const result = await mailSetup(
+        zoneId,
+        { mail_server: "mail.example.com", mail_server_ip: "1.2.3.4" },
+        CALLER,
+      );
+      expect(result.ok).toBe(true);
+      if (!result.ok) return;
+      expect(result.data.records).toHaveLength(4);
+      expect(result.data.records.every((r) => r.action === "created")).toBe(true);
+    });
+
+    it("creates 6 records when both DKIM keys provided", async () => {
+      const result = await mailSetup(
+        zoneId,
+        {
+          mail_server: "mail.example.com",
+          mail_server_ip: "1.2.3.4",
+          dkim: {
+            rsa: { selector: "rsa", public_key: "MIIBIjAN..." },
+            ed25519: { selector: "ed", public_key: "HAa8Xaz..." },
+          },
+        },
+        CALLER,
+      );
+      expect(result.ok).toBe(true);
+      if (!result.ok) return;
+      expect(result.data.records).toHaveLength(6);
+    });
+
+    it("creates 5 records with RSA DKIM only", async () => {
+      const result = await mailSetup(
+        zoneId,
+        {
+          mail_server: "mail.example.com",
+          mail_server_ip: "1.2.3.4",
+          dkim: { rsa: { selector: "rsa", public_key: "MIIBIjAN..." } },
+        },
+        CALLER,
+      );
+      expect(result.ok).toBe(true);
+      if (!result.ok) return;
+      expect(result.data.records).toHaveLength(5);
+    });
+
+    it("creates 5 records with Ed25519 DKIM only", async () => {
+      const result = await mailSetup(
+        zoneId,
+        {
+          mail_server: "mail.example.com",
+          mail_server_ip: "1.2.3.4",
+          dkim: { ed25519: { selector: "ed", public_key: "HAa8Xaz..." } },
+        },
+        CALLER,
+      );
+      expect(result.ok).toBe(true);
+      if (!result.ok) return;
+      expect(result.data.records).toHaveLength(5);
+    });
+
+    it("record names use correct FQDNs", async () => {
+      const result = await mailSetup(
+        zoneId,
+        {
+          mail_server: "mail.example.com",
+          mail_server_ip: "1.2.3.4",
+          dkim: { rsa: { selector: "rsa", public_key: "pubkey" } },
+        },
+        CALLER,
+      );
+      expect(result.ok).toBe(true);
+      if (!result.ok) return;
+      const names = result.data.records.map((r) => r.name);
+      expect(names).toContain("mail.example.com");   // A record
+      expect(names).toContain("example.com");         // MX + SPF
+      expect(names).toContain("_dmarc.example.com");  // DMARC
+      expect(names).toContain("rsa._domainkey.example.com"); // DKIM
+    });
+
+    it("idempotent — updates existing A record instead of creating", async () => {
+      // All GETs return an existing A record; only the A matchFn matches it
+      cfDnsRecordsMock = [makeCfRecord({ id: "cf-existing-a", type: "A", name: "mail.example.com", content: "9.9.9.9" })];
+
+      const result = await mailSetup(
+        zoneId,
+        { mail_server: "mail.example.com", mail_server_ip: "1.2.3.4" },
+        CALLER,
+      );
+      expect(result.ok).toBe(true);
+      if (!result.ok) return;
+      const a = result.data.records.find((r) => r.name === "mail.example.com");
+      expect(a?.action).toBe("updated");
+      // Other records are created (their matchFns don't match an A record)
+      const others = result.data.records.filter((r) => r.name !== "mail.example.com");
+      expect(others.every((r) => r.action === "created")).toBe(true);
+    });
+
+    it("idempotent — updates existing SPF without touching other TXT records", async () => {
+      // All GETs return SPF + unrelated TXT; only the SPF matchFn matches
+      cfDnsRecordsMock = [
+        makeCfRecord({ id: "cf-spf-01", type: "TXT", name: "example.com", content: "v=spf1 a:old.server.com -all" }),
+        makeCfRecord({ id: "cf-verify-01", type: "TXT", name: "example.com", content: "google-site-verification=abc123" }),
+      ];
+
+      const result = await mailSetup(
+        zoneId,
+        { mail_server: "mail.example.com", mail_server_ip: "1.2.3.4" },
+        CALLER,
+      );
+      expect(result.ok).toBe(true);
+      if (!result.ok) return;
+
+      // SPF record should be updated
+      const spf = result.data.records.find((r) => r.name === "example.com" && r.type === "TXT");
+      expect(spf?.action).toBe("updated");
+
+      // Only one PUT (for SPF); the unrelated TXT is left untouched
+      const putCalls = mockFetch.mock.calls.filter(
+        ([_url, init]) => init?.method === "PUT",
+      );
+      expect(putCalls).toHaveLength(1);
+    });
+
+    it("idempotent — does not match unrelated TXT as SPF", async () => {
+      // All GETs return only an unrelated TXT — SPF matchFn won't match it
+      cfDnsRecordsMock = [
+        makeCfRecord({ id: "cf-verify-01", type: "TXT", name: "example.com", content: "google-site-verification=abc123" }),
+      ];
+
+      const result = await mailSetup(
+        zoneId,
+        { mail_server: "mail.example.com", mail_server_ip: "1.2.3.4" },
+        CALLER,
+      );
+      expect(result.ok).toBe(true);
+      if (!result.ok) return;
+
+      // SPF should be created (not update the unrelated TXT)
+      const spf = result.data.records.find((r) => r.name === "example.com" && r.type === "TXT");
+      expect(spf?.action).toBe("created");
+    });
+
+    it("returns 400 when mail_server_ip is missing", async () => {
+      const result = await mailSetup(
+        zoneId,
+        { mail_server: "mail.example.com", mail_server_ip: "" },
+        CALLER,
+      );
+      expect(result.ok).toBe(false);
+      if (result.ok) return;
+      expect(result.status).toBe(400);
+      expect(result.message).toContain("mail_server_ip");
+    });
+
+    it("returns 400 when mail_server is missing", async () => {
+      const result = await mailSetup(
+        zoneId,
+        { mail_server: "", mail_server_ip: "1.2.3.4" },
+        CALLER,
+      );
+      expect(result.ok).toBe(false);
+      if (result.ok) return;
+      expect(result.status).toBe(400);
+      expect(result.message).toContain("mail_server");
+    });
+
+    it("non-owner gets 403", async () => {
+      const result = await mailSetup(
+        zoneId,
+        { mail_server: "mail.example.com", mail_server_ip: "1.2.3.4" },
+        OTHER,
+      );
+      expect(result.ok).toBe(false);
+      if (result.ok) return;
+      expect(result.status).toBe(403);
+    });
+
+    it("nonexistent zone returns 404", async () => {
+      const result = await mailSetup(
+        "z_nonexistent",
+        { mail_server: "mail.example.com", mail_server_ip: "1.2.3.4" },
+        CALLER,
+      );
+      expect(result.ok).toBe(false);
+      if (result.ok) return;
+      expect(result.status).toBe(404);
+    });
+
+    it("CF error propagates", async () => {
+      mockFetch.mockImplementationOnce(async () =>
+        new Response(
+          JSON.stringify({ success: false, errors: [{ code: 9109, message: "Invalid record type" }] }),
+          { status: 400, headers: { "Content-Type": "application/json" } },
+        ),
+      );
+
+      const result = await mailSetup(
+        zoneId,
+        { mail_server: "mail.example.com", mail_server_ip: "1.2.3.4" },
+        CALLER,
+      );
+      expect(result.ok).toBe(false);
+      if (result.ok) return;
+      expect(result.status).toBe(400);
     });
   });
 
