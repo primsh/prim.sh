@@ -39,7 +39,8 @@
 | 30 | R-7 | Build relay.sh wrapper: incoming mail webhooks (Stalwart MTA Hooks) | relay/ | R-2 | done |
 | 31 | R-8 | Build relay.sh wrapper: mailbox TTL/expiry manager | relay/ | R-3 | done |
 | 32 | R-9 | Build relay.sh wrapper: custom domain support | relay/ | R-2, D-1 | pending |
-| 33 | R-10 | Integrate x402 middleware (all endpoints gated by payment) | relay/ | R-3, P-4 | pending |
+| 33 | R-11 | Local smoke test: SSH tunnel to Stalwart, run relay.sh, test full flow (create mailbox → send → read → webhook) | relay/ | R-6 | pending |
+| 34 | R-10 | Integrate x402 middleware (all endpoints gated by payment) | relay/ | R-3, P-4 | pending |
 | 34 | SP-1 | Write spawn.sh spec (Hetzner API wrapping, VM lifecycle, pricing) | specs/ | — | done |
 | 35 | SP-2 | Build spawn.sh: VM provisioning via Hetzner Cloud API | spawn/ | SP-1 | done |
 | 36 | SP-3 | Build spawn.sh: VM lifecycle (start, stop, destroy, resize) | spawn/ | SP-2 | done |
@@ -55,7 +56,7 @@
 | 6 | TK-2 | Build token.sh: mint + supply (POST /mint, GET /supply, ownership + cap enforcement, tests) | packages/token | TK-1 | done |
 | 7 | TK-4 | Evaluate wrapping Thirdweb/Zora vs custom factory; fix TS bugs (stale cap check, missing tx confirmation); testnet validation | packages/token | TK-2 | pending |
 | 8 | TK-3 | Build token.sh: Uniswap pool creation (liquidity coordination with wallet.sh) | packages/token | TK-4 | pending |
-| 8 | P-5 | Testnet integration testing: env-configurable network (`PRIM_NETWORK`), Base Sepolia x402 end-to-end, wallet.sh ↔ store.sh | cross-cutting | ST-4, W-5 | pending |
+| 8 | ST-5 | Testnet integration testing: env-configurable network (`PRIM_NETWORK`), Base Sepolia x402 end-to-end, wallet.sh ↔ store.sh | cross-cutting | ST-4, W-5 | pending |
 
 ## Plan Docs
 
@@ -90,7 +91,7 @@
 - ST-3: `tasks/completed/st-3-storage-quota-usage.md`
 - TK-1/TK-2: implemented directly (no plan doc — plan provided in prompt)
 - TK-4: `tasks/active/tk-4-factory-contract-testnet.md`
-- P-5: `tasks/active/p-5-testnet-integration-testing.md`
+- ST-5: `tasks/active/st-5-testnet-integration-testing.md`
 - Umbrella: `tasks/active/batch-execution-umbrella-2026-02-24.md`
 
 ## Backlog — Future Primitives
