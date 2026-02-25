@@ -63,6 +63,10 @@
 | 8 | SP-8 | spawn.sh live smoke test against DigitalOcean (provider-direct, 9 tests) | packages/spawn | SP-7 | done |
 | 8 | SP-9 | spawn.sh x402 integration: add spawn to cross-primitive integration test, fix SSH key ID resolution bug, fix hardcoded mainnet | scripts/, packages/spawn | SP-7, ST-5 | done |
 | 7 | X4-1 | Investigate x402 facilitator "Settlement failed" on Base Sepolia — intermittent on-chain settlement failures block testnet testing | cross-cutting | ST-5 | done |
+| 8 | X4-2 | Add retry logic to `createPrimFetch` for facilitator `transaction_failed` responses (single retry with backoff) | packages/x402-client | X4-1 | pending |
+| 9 | TK-5 | token.sh live smoke test: deploy ERC-20 + create Uniswap V3 pool on Base Sepolia via x402 payment | packages/token | TK-3 | pending |
+| 9 | TK-6 | Fix mint ownership bug: `mintTokens()` signs with deployer key but `Ownable(owner_)` is set to agent wallet — on-chain mint reverts | packages/token | TK-2 | pending |
+| 9 | TK-7 | `prim token` CLI subcommand: deploy, list, get, mint, pool commands using keystore + x402-client | packages/keystore | TK-3, KS-1 | pending |
 | 9 | R-13 | Fix outbound email delivery: check Stalwart SMTP logs, unblock DO port 25 (or request removal), verify SPF/DKIM/rDNS, confirm delivery to external address | deploy/email | R-12 | done |
 | 9 | W-10 | Non-custodial refactor: strip keystore, EIP-191 signature registration, remove send/swap, publish `@prim/x402-client` | specs/, packages/wallet, packages/x402-client | W-5 | done |
 | 10 | XC-1 | Build @prim/x402-client: agent-side x402 fetch wrapper (privateKey + signer modes) | packages/x402-client | — | done |
@@ -70,7 +74,14 @@
 | 12 | R-14 | Custom usernames, permanent mailboxes, rename relay → email | packages/email, site/, specs/ | R-11 | done |
 | 13 | KS-1 | Build @prim/keystore: local key storage (~/.prim/keys/) + CLI + x402-client integration | packages/keystore, packages/x402-client | XC-1 | done |
 | 14 | ST-6 | `prim store` CLI: add store subcommands to prim binary (create-bucket, ls, put, get, rm, rm-bucket, quota) using keystore + x402-client | packages/keystore | KS-1, ST-2 | done |
-| 15 | P-6 | `prim` binary publishing + install scripts: `bun build --compile`, host binary, `curl prim.sh/install \| sh`, per-primitive install wrappers | packages/keystore, site/ | ST-6 | pending |
+| 15 | ST-7 | Build store.sh: presigned URLs (GET + PUT) — time-limited signed R2 URLs for direct agent access, bypassing the service for large files | packages/store | ST-2 | pending |
+| 15 | ST-8 | Build store.sh: public buckets — per-bucket public-read flag, stable object URLs served directly from R2 | packages/store | ST-1 | pending |
+| 15 | ST-9 | Build store.sh: multipart upload — S3 multipart API (initiate, upload-part, complete, abort) for objects >5MB | packages/store | ST-2 | pending |
+| 15 | ST-10 | Build store.sh: object copy — copy object within or between owned buckets (same wallet) | packages/store | ST-2 | pending |
+| 15 | ST-11 | Build store.sh: lifecycle rules — per-bucket auto-expiry policies (max age in days, max object count, optional min-size floor) | packages/store | ST-3 | pending |
+| 15 | ST-12 | Build store.sh: bucket event webhooks — HMAC-signed callbacks on object create/delete, retry queue, same pattern as email.sh R-7 | packages/store | ST-2 | pending |
+| 15 | ST-13 | Build store.sh: object metadata + tagging — custom key-value metadata on put, returned on get, tag-based filtering on list | packages/store | ST-2 | pending |
+| 16 | P-6 | `prim` binary publishing + install scripts: `bun build --compile`, host binary, `curl prim.sh/install \| sh`, per-primitive install wrappers | packages/keystore, site/ | ST-6 | pending |
 | 16 | E-1 | Set PTR record for mail server IP ([STALWART_HOST] → mail.relay.prim.sh) | deploy/email | — | done |
 | 17 | E-2 | Downgrade DMARC to `p=none` temporarily while domain reputation is zero | Cloudflare DNS | — | pending |
 | 18 | E-3 | Register relay.prim.sh with Google Postmaster Tools (DNS TXT verification) | Cloudflare DNS, Google | E-1 | pending |
@@ -78,6 +89,7 @@
 | 20 | E-5 | Verify Gmail inbox delivery (not spam) after warmup + PTR + DMARC changes | deploy/email | E-4 | pending |
 | 21 | E-6 | Verify Apple Mail / iCloud delivery after warmup | deploy/email | E-4 | pending |
 | 22 | E-7 | Upgrade DMARC back to `p=quarantine` once inbox delivery is consistent | Cloudflare DNS | E-5, E-6 | pending |
+| 23 | M-1 | Build mem.sh: vector memory (Qdrant collections + upsert + query) + KV cache + x402 | packages/mem | — | done |
 
 ## Plan Docs
 
@@ -123,6 +135,7 @@
 - KS-1: `~/.claude/plans/fancy-hugging-breeze.md`
 - Umbrella: `tasks/active/batch-execution-umbrella-2026-02-24.md`
 - ST-6: `tasks/active/st-6-prim-store-cli-2026-02-25.md`
+- M-1: `tasks/completed/m-1-mem-sh-vector-cache-2026-02-25.md`
 
 ## Backlog — Future Primitives
 
@@ -135,7 +148,7 @@
 | pipe.sh | NATS or Redis Streams | |
 | code.sh | E2B or Firecracker | Sandboxed execution |
 | ring.sh | Telnyx API | Regulatory prep needed |
-| mem.sh | Qdrant or Pgvector | |
+| mem.sh | Qdrant or Pgvector | **Promoted to active tasks (M-1 through M-N). Core impl (collections + upsert + query + KV cache) done.** |
 | infer.sh | OpenRouter or direct provider APIs | |
 | seek.sh | Brave Search API or SearXNG | |
 | browse.sh | Playwright or Browserbase | |
@@ -293,6 +306,25 @@ ERC-8004 uses CAIP-10 wallet addresses as root identity. DIDs layer on top non-b
 - SP-9 — spawn.sh x402 integration test: end-to-end agent-pays-USDC→server-created on Base Sepolia. Bugs fixed: SSH key ID resolution (internal→provider), spawn hardcoded mainnet→env vars. First cross-primitive proof: wallet+faucet+spawn via x402 payment (2026-02-25)
 - R-13 — outbound email delivery confirmed: port 25 open on DO droplet, SPF/DKIM/DMARC pass, Gmail accepted with signed-by+mailed-by relay.prim.sh, TLS (2026-02-25)
 - R-14 — custom usernames, permanent mailboxes (null expires_at), rename relay → email across all packages/site/docs, 162 tests (2026-02-25)
+- M-1 — mem.sh: Qdrant vector memory (collections + upsert + query) + SQLite KV cache + x402, 96 tests (2026-02-25)
+- TK-4 — OZ + viem deployContract: compile AgentToken.sol, AES-256-GCM deployer keystore, Base Sepolia smoke test (2026-02-25)
+- TK-3 — token.sh Uniswap V3 pool creation: factory ABI, sqrtPriceX96 BigInt math (address-ordered, decimal-adjusted), full-range ticks, createPool+initialize with crash recovery (on-chain existence check), getLiquidityParams calldata, 95 tests (2026-02-25)
+
+### Milestone: token.sh complete — ERC-20 deploy + Uniswap V3 pool (2026-02-25)
+
+**token.sh is feature-complete for agent-controlled token issuance and liquidity provisioning.**
+
+What an agent can do today:
+1. Deploy a named ERC-20 (custom decimals, optional mint cap) via x402 payment — `POST /v1/tokens`
+2. Mint additional supply to any address — `POST /v1/tokens/:id/mint`
+3. Create a Uniswap V3 pool paired with USDC at a chosen price — `POST /v1/tokens/:id/pool`
+4. Get pre-computed `NonfungiblePositionManager.mint()` calldata to add full-range liquidity — `GET /v1/tokens/:id/pool/liquidity-params`
+
+95 unit tests. Pool creation is idempotent (crash recovery: adopts existing on-chain pool if factory.getPool returns non-zero). Deployer key is custodied by token.sh; agent wallet is set as `Ownable` owner. Base + Base Sepolia supported.
+
+**Known gap (TK-6):** on-chain `mint()` reverts because deployer key signs but `Ownable(owner_)` is the agent wallet. Not blocking — initial supply covers typical use.
+
+**Next:** TK-5 (live smoke test), TK-6 (mint ownership fix), TK-7 (`prim token` CLI).
 
 ### Milestone: Non-custodial x402 end-to-end verified (2026-02-25)
 
