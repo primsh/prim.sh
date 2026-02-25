@@ -54,6 +54,7 @@
 | 5 | TK-1 | Build token.sh: scaffold + deploy + query (package, db, deployer keystore, factory ABI, CREATE2, service, routes, tests) | packages/token | P-4 | done |
 | 6 | TK-2 | Build token.sh: mint + supply (POST /mint, GET /supply, ownership + cap enforcement, tests) | packages/token | TK-1 | done |
 | 7 | TK-3 | Build token.sh: Uniswap pool creation (liquidity coordination with wallet.sh) | packages/token | TK-2 | pending |
+| 8 | P-5 | Testnet integration testing: env-configurable network (`PRIM_NETWORK`), Base Sepolia x402 end-to-end, wallet.sh ↔ store.sh | cross-cutting | ST-4, W-5 | pending |
 
 ## Plan Docs
 
@@ -87,6 +88,7 @@
 - R-8: `tasks/active/r-8-mailbox-ttl-expiry.md`
 - ST-3: `tasks/completed/st-3-storage-quota-usage.md`
 - TK-1/TK-2: implemented directly (no plan doc — plan provided in prompt)
+- P-5: `tasks/active/p-5-testnet-integration-testing.md`
 - Umbrella: `tasks/active/batch-execution-umbrella-2026-02-24.md`
 
 ## Backlog — Future Primitives
