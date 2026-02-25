@@ -72,7 +72,7 @@
 - SP-3/SP-4: `tasks/completed/sp-3-sp-4-lifecycle-ssh-2026-02-24.md`
 - D-1: `tasks/completed/d-1-dns-zone-record-crud-2026-02-24.md`
 - SP-6: `tasks/completed/sp-6-provider-abstraction-2026-02-24.md`
-- R-2: `tasks/active/r-2-stalwart-domain-tls-2026-02-24.md`
+- R-2: `tasks/completed/r-2-stalwart-domain-tls-2026-02-24.md`
 - D-2→D-7: `tasks/active/d-2-domain-sh-rename-search-2026-02-25.md`
 - ST-1: `tasks/active/st-1-bucket-crud-cloudflare-r2.md`
 - Umbrella: `tasks/active/batch-execution-umbrella-2026-02-24.md`
@@ -83,7 +83,7 @@
 |-----------|-------|-------|
 | store.sh | Hetzner Object Storage or Cloudflare R2 | S3-compatible API |
 | vault.sh | HashiCorp Vault or custom (Stalwart-style encrypted store) | |
-| dns.sh | Cloudflare DNS API | **Promoted to active tasks (D-1 through D-4)** |
+| domain.sh (was dns.sh) | Cloudflare DNS + registrar APIs | **Promoted to active tasks (D-1 through D-7). Expanding from DNS-only to full domain lifecycle.** |
 | cron.sh | Custom (lightweight job scheduler) | |
 | pipe.sh | NATS or Redis Streams | |
 | code.sh | E2B or Firecracker | Sandboxed execution |
@@ -174,6 +174,27 @@ x402 uses [EIP-3009 (Transfer With Authorization)](https://github.com/coinbase/x
 
 Cloudflare (DNS + R2 storage) and DigitalOcean (compute). Full ADR: `specs/provider-strategy.md`
 
+### Project rename: AgentStack → Prim (2026-02-25)
+
+"AgentStack" name is taken (existing open-source AI agent framework, Teradata product). Registered `prim.sh` — "primitive shell." Each primitive is a subdomain: `relay.prim.sh`, `wallet.prim.sh`, `spawn.prim.sh`, `domain.prim.sh`.
+
+- **Domain:** `prim.sh` via Namecheap ($34.98/yr), DNS on Cloudflare
+- **X handle:** `@useprim`
+- **Registrar:** Namecheap (no API access until $50 spend — use GUI for now)
+- **DNS provider:** Cloudflare (zone ID: `a16698041d45830e33b6f82b6f524e30`)
+
+### Stalwart mail server reference (2026-02-25)
+
+Stalwart runs on DigitalOcean Droplet `[STALWART_HOST]`. Configured for `relay.prim.sh`.
+
+- **Admin access:** SSH tunnel only (`ssh -L 8080:localhost:8080 root@[STALWART_HOST]`), Basic auth `admin:[REDACTED]`
+- **API key for wrapper:** Basic auth `relay-wrapper:[REDACTED]`
+- **Settings API format:** `POST /api/settings` with body `[{"type":"insert","prefix":null,"values":[["key","value"]],"assert_empty":false}]` or `[{"type":"clear","prefix":"key.prefix."}]`
+- **DKIM:** Dual signing (RSA-2048 selector `rsa`, Ed25519 selector `ed`), keys generated via `POST /api/dkim`
+- **DNS records:** `GET /api/dns/records/{domain}` returns recommended DNS records
+- **Config reload:** `GET /api/reload` (no restart needed)
+- **Domain principal:** `POST /api/principal` with `{"type":"domain","name":"relay.prim.sh"}`
+
 ### Wallet-first identity upgrade path (2026-02-24)
 ERC-8004 uses CAIP-10 wallet addresses as root identity. DIDs layer on top non-breaking: wallet address becomes `verificationMethod` in DID Document, `alsoKnownAs` bridges old→new. No smart contract changes. Current "wallet = identity" design is correct for v1. id.sh adds DID resolution later.
 
@@ -202,8 +223,9 @@ ERC-8004 uses CAIP-10 wallet addresses as root identity. DIDs layer on top non-b
 - SP-6 — provider abstraction: CloudProvider interface, Hetzner implementation, provider registry (2026-02-24)
 - S-6 — "This page is for humans. The API is for agents." (2026-02-24)
 - R-1 — Stalwart Docker Compose on DigitalOcean Droplet ([STALWART_HOST]) (2026-02-24)
+- R-2 — prim.sh domain, Stalwart config, DKIM, SPF, DMARC, ACME TLS, admin lockdown (2026-02-25)
 
-### R-2 progress (2026-02-25)
+### R-2 completion details (2026-02-25)
 
 **Domain:** `prim.sh` registered via Namecheap ($34.98/yr). Project renamed from "AgentStack" to **Prim** ("primitive shell"). Each primitive is a subdomain: `relay.prim.sh`, `wallet.prim.sh`, `spawn.prim.sh`.
 
