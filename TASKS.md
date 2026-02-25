@@ -162,32 +162,7 @@ x402 uses [EIP-3009 (Transfer With Authorization)](https://github.com/coinbase/x
 
 ### Provider strategy — two-provider model (2026-02-24)
 
-**Problem:** Which cloud providers should AgentStack use? Evaluated AWS, GCP, Azure, DigitalOcean, Vultr, Linode, Hetzner, and Cloudflare across VPS, DNS, object storage, reseller TOS, and API quality.
-
-**Key findings:**
-- Only 3 of 27 primitives bind to a cloud provider API: spawn.sh (VPS), dns.sh (DNS), store.sh (object storage). Everything else either wraps a third-party service (Telnyx, Stripe, Brave, etc.) or just needs a VPS to run Bun.
-- Hyperscalers (AWS/GCP/Azure) charge for DNS per zone ($0.20-0.50/mo), have complex APIs, and are overkill for v1. Reserve as SP-6 provider options for enterprise agents.
-- Hetzner TOS prohibits reselling without written consent — compliance risk for spawn.sh.
-- Cloudflare DNS is best-in-class: free, batch operations (atomic multi-record create), DNSSEC, most mature API. Neither DO nor Vultr has batch ops.
-- DigitalOcean has the clearest reseller program (Partner Pod: 5%/15%/25% tiered discounts) and free DNS, but DNS lacks DNSSEC and batch operations.
-- Vultr is cheapest ($2.50/mo VPS) with 32 regions and DNSSEC, but partner program is opaque ("acceptance alone does not authorize resale").
-
-**Decision:**
-
-| Provider | Service | Primitives | Cost |
-|----------|---------|------------|------|
-| Cloudflare | DNS API | dns.sh | Free |
-| Cloudflare | R2 Object Storage | store.sh | Free first 10GB, $0.015/GB/mo after, no egress |
-| DigitalOcean | Droplets | spawn.sh (launch provider) | $4/mo smallest, 5-25% partner discount |
-| DigitalOcean | Droplets | AgentStack's own infra | 1-2 Droplets, $6-24/mo each |
-
-**Total fixed cost**: ~$12-48/mo (1-2 DO Droplets for all Bun services). DNS and R2 free at low volume.
-
-**Rationale:**
-- Two providers, clean separation: Cloudflare handles DNS + storage (free), DO handles compute (reseller-friendly).
-- spawn.sh launch provider changes from Hetzner → DO, resolving TOS risk. Hetzner stays as SP-6 option.
-- Cloudflare's batch DNS API is non-negotiable for D-2 mail-setup (5 records atomically in one call).
-- DO Partner Pod at Registered tier (5% discount) requires only $200 MRR from new customers. Strategic tier (25%) at $1M+ ARR.
+Cloudflare (DNS + R2 storage) and DigitalOcean (compute). Full ADR: `specs/provider-strategy.md`
 
 ### Wallet-first identity upgrade path (2026-02-24)
 ERC-8004 uses CAIP-10 wallet addresses as root identity. DIDs layer on top non-breaking: wallet address becomes `verificationMethod` in DID Document, `alsoKnownAs` bridges old→new. No smart contract changes. Current "wallet = identity" design is correct for v1. id.sh adds DID resolution later.
