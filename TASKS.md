@@ -69,7 +69,7 @@
 | 11 | FC-1 | Build faucet.sh: Circle USDC drip + treasury ETH drip (testnet only) | packages/faucet | — | done |
 | 12 | R-14 | Custom usernames, permanent mailboxes, rename relay → email | packages/email, site/, specs/ | R-11 | done |
 | 13 | KS-1 | Build @prim/keystore: local key storage (~/.prim/keys/) + CLI + x402-client integration | packages/keystore, packages/x402-client | XC-1 | done |
-| 14 | ST-6 | `prim store` CLI: add store subcommands to prim binary (create-bucket, ls, put, get, rm, rm-bucket, quota) using keystore + x402-client | packages/keystore | KS-1, ST-2 | pending |
+| 14 | ST-6 | `prim store` CLI: add store subcommands to prim binary (create-bucket, ls, put, get, rm, rm-bucket, quota) using keystore + x402-client | packages/keystore | KS-1, ST-2 | done |
 | 15 | P-6 | `prim` binary publishing + install scripts: `bun build --compile`, host binary, `curl prim.sh/install \| sh`, per-primitive install wrappers | packages/keystore, site/ | ST-6 | pending |
 
 ## Plan Docs

@@ -6,14 +6,14 @@
  * node:fs is partially mocked for statSync + readFileSync.
  */
 
-import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
+import { describe, it, expect, vi, beforeEach, afterEach, type MockInstance } from "vitest";
 
 vi.mock("@prim/x402-client", () => ({
   createPrimFetch: vi.fn(),
 }));
 
 vi.mock("../src/config.ts", () => ({
-  getConfig: vi.fn().mockResolvedValue({}),
+  getConfig: vi.fn(),
 }));
 
 vi.mock("node:fs", async (importOriginal) => {
@@ -25,8 +25,18 @@ vi.mock("node:fs", async (importOriginal) => {
   };
 });
 
+vi.mock("node:fs/promises", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("node:fs/promises")>();
+  return {
+    ...actual,
+    writeFile: vi.fn().mockResolvedValue(undefined),
+  };
+});
+
 import { createPrimFetch } from "@prim/x402-client";
 import { statSync, readFileSync } from "node:fs";
+import { writeFile } from "node:fs/promises";
+import { getConfig } from "../src/config.ts";
 import { runStoreCommand, resolveStoreUrl } from "../src/store-commands.ts";
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
@@ -72,7 +82,7 @@ function okPut(key = "notes.txt") {
 }
 
 function okBinaryGet(content: Buffer) {
-  return new Response(content, { status: 200 });
+  return new Response(content as unknown as BodyInit, { status: 200 });
 }
 
 function okDeleted() {
@@ -95,14 +105,21 @@ function errorResponse(code: string, message: string, status = 404) {
 // ─── Setup ────────────────────────────────────────────────────────────────────
 
 let mockFetch: ReturnType<typeof vi.fn>;
-let consoleLogSpy: ReturnType<typeof vi.spyOn>;
-let stderrSpy: ReturnType<typeof vi.spyOn>;
-let stdoutSpy: ReturnType<typeof vi.spyOn>;
-let exitSpy: ReturnType<typeof vi.spyOn>;
+// biome-ignore lint/suspicious/noExplicitAny: spy types vary per target
+let consoleLogSpy: MockInstance<any[], any>;
+// biome-ignore lint/suspicious/noExplicitAny: spy types vary per target
+let stderrSpy: MockInstance<any[], any>;
+// biome-ignore lint/suspicious/noExplicitAny: spy types vary per target
+let stdoutSpy: MockInstance<any[], any>;
+// biome-ignore lint/suspicious/noExplicitAny: spy types vary per target
+let exitSpy: MockInstance<any[], never>;
 
 beforeEach(() => {
   mockFetch = vi.fn();
   vi.mocked(createPrimFetch).mockReturnValue(mockFetch as typeof fetch);
+  // Re-set getConfig mock every test since vi.restoreAllMocks() clears vi.fn() impls
+  vi.mocked(getConfig).mockResolvedValue({});
+  vi.mocked(writeFile).mockResolvedValue(undefined);
   consoleLogSpy = vi.spyOn(console, "log").mockImplementation(() => {});
   stderrSpy = vi.spyOn(process.stderr, "write").mockImplementation(() => true);
   stdoutSpy = vi.spyOn(process.stdout, "write").mockImplementation(() => true);
@@ -153,12 +170,7 @@ describe("create-bucket", () => {
 
   it("--quiet prints only the bucket ID", async () => {
     mockFetch.mockResolvedValue(okBucket("bkt_abc"));
-    await runStoreCommand("create-bucket", [
-      "store",
-      "create-bucket",
-      "--name=x",
-      "--quiet",
-    ]);
+    await runStoreCommand("create-bucket", ["store", "create-bucket", "--name=x", "--quiet"]);
     expect(consoleLogSpy).toHaveBeenCalledWith("bkt_abc");
     expect(consoleLogSpy).toHaveBeenCalledTimes(1);
   });
@@ -298,8 +310,24 @@ describe("put from file", () => {
 describe("put from stdin", () => {
   it("buffers stdin and sends with correct Content-Length", async () => {
     const stdinData = Buffer.from("stdin content here");
-    vi.spyOn(Bun.stdin, "arrayBuffer").mockResolvedValue(stdinData.buffer as ArrayBuffer);
-    Object.defineProperty(process.stdin, "isTTY", { value: false, configurable: true });
+
+    // Mock process.stdin as an async iterable (Node-compatible, no Bun APIs)
+    const stdinMock = {
+      isTTY: false as boolean | undefined,
+      [Symbol.asyncIterator]() {
+        let done = false;
+        return {
+          async next(): Promise<{ value: Buffer | undefined; done: boolean }> {
+            if (!done) {
+              done = true;
+              return { value: stdinData, done: false };
+            }
+            return { value: undefined, done: true };
+          },
+        };
+      },
+    };
+    Object.defineProperty(process, "stdin", { value: stdinMock, configurable: true });
     mockFetch.mockResolvedValue(okPut("file.txt"));
 
     await runStoreCommand("put", ["store", "put", "bkt_123", "file.txt"]);
@@ -317,7 +345,11 @@ describe("put from stdin", () => {
   });
 
   it("exits 1 if stdin is a TTY and no --file flag", async () => {
-    Object.defineProperty(process.stdin, "isTTY", { value: true, configurable: true });
+    // Override process.stdin.isTTY to simulate interactive terminal
+    Object.defineProperty(process, "stdin", {
+      value: { isTTY: true },
+      configurable: true,
+    });
 
     await expect(
       runStoreCommand("put", ["store", "put", "bkt_123", "key"]),
@@ -335,10 +367,8 @@ describe("get to stdout", () => {
 
     await runStoreCommand("get", ["store", "get", "bkt_123", "notes.txt"]);
 
-    expect(mockFetch).toHaveBeenCalledWith(
-      "https://store.prim.sh/v1/buckets/bkt_123/objects/notes.txt",
-      undefined,
-    );
+    const [url] = mockFetch.mock.calls[0] as [string];
+    expect(url).toBe("https://store.prim.sh/v1/buckets/bkt_123/objects/notes.txt");
     expect(stdoutSpy).toHaveBeenCalledWith(expect.any(Buffer));
   });
 });
@@ -346,14 +376,13 @@ describe("get to stdout", () => {
 // ─── 6. get (file) ────────────────────────────────────────────────────────────
 
 describe("get to file", () => {
-  it("writes response body to --out path via Bun.write", async () => {
+  it("writes response body to --out path via writeFile", async () => {
     const content = Buffer.from("file bytes");
     mockFetch.mockResolvedValue(okBinaryGet(content));
-    const bunWriteSpy = vi.spyOn(Bun, "write").mockResolvedValue(0);
 
     await runStoreCommand("get", ["store", "get", "bkt_123", "photo.png", "--out=/tmp/photo.png"]);
 
-    expect(bunWriteSpy).toHaveBeenCalledWith("/tmp/photo.png", expect.any(Buffer));
+    expect(vi.mocked(writeFile)).toHaveBeenCalledWith("/tmp/photo.png", expect.any(Buffer));
   });
 });
 
@@ -415,10 +444,8 @@ describe("quota", () => {
 
     await runStoreCommand("quota", ["store", "quota", "bkt_123"]);
 
-    expect(mockFetch).toHaveBeenCalledWith(
-      "https://store.prim.sh/v1/buckets/bkt_123/quota",
-      undefined,
-    );
+    const [url] = mockFetch.mock.calls[0] as [string];
+    expect(url).toBe("https://store.prim.sh/v1/buckets/bkt_123/quota");
     expect(consoleLogSpy).toHaveBeenCalledWith(expect.stringContaining("2048"));
   });
 

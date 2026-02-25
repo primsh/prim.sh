@@ -16,6 +16,7 @@
   },
   "dependencies": {
     "@agentstack/x402-middleware": "workspace:*",
+    "@prim/x402-client": "workspace:*",
     "viem": "^2.21.0"
   },
   "devDependencies": {
