@@ -10,7 +10,8 @@
     "lint": "biome lint .",
     "format": "biome format .",
     "typecheck": "tsc -p tsconfig.json --noEmit",
-    "test": "vitest --run",
+    "test": "vitest --run --exclude test/smoke-live.test.ts",
+    "test:smoke": "vitest --run test/smoke-live.test.ts",
     "check": "pnpm lint && pnpm typecheck && pnpm test"
   },
   "dependencies": {
