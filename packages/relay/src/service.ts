@@ -12,13 +12,18 @@ import {
   deletePrincipal,
 } from "./stalwart.ts";
 import { encryptPassword } from "./crypto.ts";
-import { discoverSession, buildBasicAuth, JmapError } from "./jmap.ts";
+import { discoverSession, buildBasicAuth, JmapError, queryEmails, getEmail } from "./jmap.ts";
+import { getJmapContext } from "./context.ts";
 import type {
   ServiceResult,
   MailboxResponse,
   MailboxListResponse,
   CreateMailboxRequest,
   DeleteMailboxResponse,
+  EmailMessage,
+  EmailDetail,
+  EmailListResponse,
+  EmailAddress,
 } from "./api.ts";
 import type { MailboxRow } from "./db.ts";
 
@@ -227,4 +232,105 @@ export async function deleteMailbox(
   deleteMailboxRow(id);
 
   return { ok: true, data: { id, deleted: true } };
+}
+
+// ─── Email reading (R-5) ──────────────────────────────────────────────
+
+type FolderName = "inbox" | "drafts" | "sent" | "all";
+
+function flattenAddress(addrs: { name: string | null; email: string }[]): EmailAddress {
+  if (!addrs || addrs.length === 0) return { name: null, email: "" };
+  return { name: addrs[0].name ?? null, email: addrs[0].email };
+}
+
+function flattenAddresses(addrs: { name: string | null; email: string }[]): EmailAddress[] {
+  if (!addrs) return [];
+  return addrs.map((a) => ({ name: a.name ?? null, email: a.email }));
+}
+
+export async function listMessages(
+  mailboxId: string,
+  callerWallet: string,
+  opts: { limit?: number; position?: number; folder?: FolderName },
+): Promise<ServiceResult<EmailListResponse>> {
+  const ctxResult = await getJmapContext(mailboxId, callerWallet);
+  if (!ctxResult.ok) return ctxResult;
+  const ctx = ctxResult.data;
+
+  const folder = opts.folder ?? "inbox";
+  let jmapMailboxId: string | undefined;
+  if (folder === "inbox") jmapMailboxId = ctx.inboxId;
+  else if (folder === "drafts") jmapMailboxId = ctx.draftsId || undefined;
+  else if (folder === "sent") jmapMailboxId = ctx.sentId || undefined;
+  // folder === "all" → undefined (no filter)
+
+  const limit = Math.max(1, Math.min(opts.limit ?? 20, 100));
+  const position = Math.max(0, opts.position ?? 0);
+
+  try {
+    const result = await queryEmails(ctx, { mailboxId: jmapMailboxId, limit, position });
+    const messages: EmailMessage[] = result.messages.map((m) => ({
+      id: m.id,
+      from: flattenAddress(m.from),
+      to: flattenAddresses(m.to),
+      subject: m.subject,
+      receivedAt: m.receivedAt,
+      size: m.size,
+      hasAttachment: m.hasAttachment,
+      preview: m.preview,
+    }));
+    return { ok: true, data: { messages, total: result.total, position: result.position } };
+  } catch (err) {
+    if (err instanceof JmapError) {
+      return { ok: false, status: err.statusCode, code: err.code, message: err.message };
+    }
+    throw err;
+  }
+}
+
+export async function getMessage(
+  mailboxId: string,
+  callerWallet: string,
+  messageId: string,
+): Promise<ServiceResult<EmailDetail>> {
+  const ctxResult = await getJmapContext(mailboxId, callerWallet);
+  if (!ctxResult.ok) return ctxResult;
+  const ctx = ctxResult.data;
+
+  try {
+    const email = await getEmail(ctx, messageId);
+    const bodyValues = email.bodyValues ?? {};
+
+    let textBody: string | null = null;
+    if (email.textBody?.length > 0) {
+      const partId = email.textBody[0].partId;
+      textBody = bodyValues[partId]?.value ?? null;
+    }
+
+    let htmlBody: string | null = null;
+    if (email.htmlBody?.length > 0) {
+      const partId = email.htmlBody[0].partId;
+      htmlBody = bodyValues[partId]?.value ?? null;
+    }
+
+    const detail: EmailDetail = {
+      id: email.id,
+      from: flattenAddress(email.from),
+      to: flattenAddresses(email.to),
+      cc: flattenAddresses(email.cc ?? []),
+      subject: email.subject ?? "",
+      receivedAt: email.receivedAt ?? "",
+      size: email.size ?? 0,
+      hasAttachment: email.hasAttachment ?? false,
+      preview: email.preview ?? "",
+      textBody,
+      htmlBody,
+    };
+    return { ok: true, data: detail };
+  } catch (err) {
+    if (err instanceof JmapError) {
+      return { ok: false, status: err.statusCode, code: err.code, message: err.message };
+    }
+    throw err;
+  }
 }

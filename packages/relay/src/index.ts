@@ -5,12 +5,16 @@ import type {
   MailboxResponse,
   MailboxListResponse,
   DeleteMailboxResponse,
+  EmailListResponse,
+  EmailDetail,
 } from "./api.ts";
 import {
   createMailbox,
   listMailboxes,
   getMailbox,
   deleteMailbox,
+  listMessages,
+  getMessage,
 } from "./service.ts";
 
 function forbidden(message: string): ApiError {
@@ -27,6 +31,10 @@ function invalidRequest(message: string): ApiError {
 
 function stalwartError(message: string): ApiError {
   return { error: { code: "stalwart_error", message } };
+}
+
+function serviceError(code: string, message: string): ApiError {
+  return { error: { code, message } };
 }
 
 type AppVariables = { walletAddress: string | undefined };
@@ -91,6 +99,39 @@ app.delete("/v1/mailboxes/:id", async (c) => {
     return c.json(stalwartError(result.message), result.status as 502);
   }
   return c.json(result.data as DeleteMailboxResponse, 200);
+});
+
+// GET /v1/mailboxes/:id/messages — List messages
+app.get("/v1/mailboxes/:id/messages", async (c) => {
+  const caller = c.get("walletAddress");
+  if (!caller) return c.json(forbidden("No wallet address in payment"), 403);
+
+  const limit = Math.min(Math.max(Number(c.req.query("limit")) || 20, 1), 100);
+  const position = Math.max(Number(c.req.query("position")) || 0, 0);
+  const folder = (c.req.query("folder") ?? "inbox") as "inbox" | "drafts" | "sent" | "all";
+  if (!["inbox", "drafts", "sent", "all"].includes(folder)) {
+    return c.json(invalidRequest("folder must be inbox, drafts, sent, or all"), 400);
+  }
+
+  const result = await listMessages(c.req.param("id"), caller, { limit, position, folder });
+  if (!result.ok) {
+    if (result.code === "not_found") return c.json(notFound(result.message), 404);
+    return c.json(serviceError(result.code, result.message), result.status as 502);
+  }
+  return c.json(result.data as EmailListResponse, 200);
+});
+
+// GET /v1/mailboxes/:id/messages/:msgId — Get single message
+app.get("/v1/mailboxes/:id/messages/:msgId", async (c) => {
+  const caller = c.get("walletAddress");
+  if (!caller) return c.json(forbidden("No wallet address in payment"), 403);
+
+  const result = await getMessage(c.req.param("id"), caller, c.req.param("msgId"));
+  if (!result.ok) {
+    if (result.code === "not_found") return c.json(notFound(result.message), 404);
+    return c.json(serviceError(result.code, result.message), result.status as 502);
+  }
+  return c.json(result.data as EmailDetail, 200);
 });
 
 export default app;

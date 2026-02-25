@@ -17,6 +17,7 @@ export const ERROR_CODES = [
   "invalid_request",
   "stalwart_error",
   "conflict",
+  "jmap_error",
 ] as const;
 
 export type ErrorCode = (typeof ERROR_CODES)[number];
@@ -55,6 +56,36 @@ export interface MailboxListResponse {
 export interface DeleteMailboxResponse {
   id: string;
   deleted: true;
+}
+
+// ─── Email types (R-5) ─────────────────────────────────────────────────
+
+export interface EmailAddress {
+  name: string | null;
+  email: string;
+}
+
+export interface EmailMessage {
+  id: string;
+  from: EmailAddress;
+  to: EmailAddress[];
+  subject: string;
+  receivedAt: string;
+  size: number;
+  hasAttachment: boolean;
+  preview: string;
+}
+
+export interface EmailDetail extends EmailMessage {
+  cc: EmailAddress[];
+  textBody: string | null;
+  htmlBody: string | null;
+}
+
+export interface EmailListResponse {
+  messages: EmailMessage[];
+  total: number;
+  position: number;
 }
 
 // ─── JMAP context (used by R-5/R-6) ────────────────────────────────────

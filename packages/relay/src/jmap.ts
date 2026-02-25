@@ -54,6 +54,43 @@ interface JmapMethodResponse {
   methodResponses: [string, Record<string, unknown>, string][];
 }
 
+// ─── Email query types (R-5) ──────────────────────────────────────────
+
+export interface JmapEmailAddress {
+  name: string | null;
+  email: string;
+}
+
+export interface JmapEmail {
+  id: string;
+  from: JmapEmailAddress[];
+  to: JmapEmailAddress[];
+  subject: string;
+  receivedAt: string;
+  size: number;
+  hasAttachment: boolean;
+  preview: string;
+}
+
+export interface JmapEmailDetail extends JmapEmail {
+  cc: JmapEmailAddress[];
+  textBody: { partId: string }[];
+  htmlBody: { partId: string }[];
+  bodyValues: Record<string, { value: string }>;
+}
+
+export interface QueryOpts {
+  mailboxId?: string;
+  limit: number;
+  position: number;
+}
+
+export interface QueryResult {
+  messages: JmapEmail[];
+  total: number;
+  position: number;
+}
+
 export async function discoverSession(
   authHeader: string,
   baseUrl?: string,
@@ -148,4 +185,174 @@ export async function discoverSession(
     draftsId: drafts?.id ?? "",
     sentId: sent?.id ?? "",
   };
+}
+
+// ─── Email query/get (R-5) ────────────────────────────────────────────
+
+interface JmapContextLike {
+  apiUrl: string;
+  accountId: string;
+  authHeader: string;
+}
+
+async function jmapCall(
+  ctx: JmapContextLike,
+  methodCalls: unknown[],
+): Promise<JmapMethodResponse> {
+  const res = await fetch(ctx.apiUrl, {
+    method: "POST",
+    headers: {
+      Authorization: ctx.authHeader,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      using: ["urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail"],
+      methodCalls,
+    }),
+  });
+
+  if (!res.ok) {
+    throw new JmapError(
+      res.status,
+      res.status === 401 ? "forbidden" : "jmap_error",
+      `JMAP request failed: ${res.status}`,
+    );
+  }
+
+  return (await res.json()) as JmapMethodResponse;
+}
+
+function checkMethodError(response: [string, Record<string, unknown>, string]): void {
+  if (response[0] === "error") {
+    const detail = response[1];
+    throw new JmapError(
+      500,
+      "jmap_error",
+      `JMAP method error: ${detail.type ?? "unknown"}`,
+    );
+  }
+}
+
+export async function queryEmails(
+  ctx: JmapContextLike,
+  opts: QueryOpts,
+): Promise<QueryResult> {
+  const filter: Record<string, string> = {};
+  if (opts.mailboxId) {
+    filter.inMailbox = opts.mailboxId;
+  }
+
+  const batch = await jmapCall(ctx, [
+    [
+      "Email/query",
+      {
+        accountId: ctx.accountId,
+        filter,
+        sort: [{ property: "receivedAt", isAscending: false }],
+        limit: opts.limit,
+        position: opts.position,
+      },
+      "q",
+    ],
+    [
+      "Email/get",
+      {
+        accountId: ctx.accountId,
+        "#ids": { resultOf: "q", name: "Email/query", path: "/ids" },
+        properties: [
+          "id",
+          "from",
+          "to",
+          "subject",
+          "receivedAt",
+          "size",
+          "hasAttachment",
+          "preview",
+        ],
+      },
+      "e",
+    ],
+  ]);
+
+  // Check for error responses first (JMAP returns "error" as method name on failure)
+  for (const response of batch.methodResponses) {
+    checkMethodError(response);
+  }
+
+  const queryResponse = batch.methodResponses.find(([name]) => name === "Email/query");
+  if (!queryResponse) {
+    throw new JmapError(500, "jmap_error", "Email/query response missing");
+  }
+
+  const getResponse = batch.methodResponses.find(([name]) => name === "Email/get");
+  if (!getResponse) {
+    throw new JmapError(500, "jmap_error", "Email/get response missing");
+  }
+
+  const total = (queryResponse[1].total as number) ?? 0;
+  const position = (queryResponse[1].position as number) ?? 0;
+  const messages = ((getResponse[1].list ?? []) as JmapEmail[]).map((m) => ({
+    id: m.id,
+    from: m.from ?? [],
+    to: m.to ?? [],
+    subject: m.subject ?? "",
+    receivedAt: m.receivedAt ?? "",
+    size: m.size ?? 0,
+    hasAttachment: m.hasAttachment ?? false,
+    preview: m.preview ?? "",
+  }));
+
+  return { messages, total, position };
+}
+
+export async function getEmail(
+  ctx: JmapContextLike,
+  emailId: string,
+): Promise<JmapEmailDetail> {
+  const batch = await jmapCall(ctx, [
+    [
+      "Email/get",
+      {
+        accountId: ctx.accountId,
+        ids: [emailId],
+        properties: [
+          "id",
+          "from",
+          "to",
+          "cc",
+          "subject",
+          "receivedAt",
+          "size",
+          "hasAttachment",
+          "preview",
+          "textBody",
+          "htmlBody",
+          "bodyValues",
+        ],
+        fetchAllBodyValues: true,
+      },
+      "e",
+    ],
+  ]);
+
+  for (const response of batch.methodResponses) {
+    checkMethodError(response);
+  }
+
+  const getResponse = batch.methodResponses.find(([name]) => name === "Email/get");
+  if (!getResponse) {
+    throw new JmapError(500, "jmap_error", "Email/get response missing");
+  }
+
+  const notFound = (getResponse[1].notFound as string[]) ?? [];
+  if (notFound.includes(emailId)) {
+    throw new JmapError(404, "not_found", "Message not found");
+  }
+
+  const list = (getResponse[1].list ?? []) as JmapEmailDetail[];
+  if (list.length === 0) {
+    throw new JmapError(404, "not_found", "Message not found");
+  }
+
+  return list[0];
 }

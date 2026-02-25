@@ -19,8 +19,8 @@ vi.mock("../src/crypto", () => ({
   encryptPassword: vi.fn((p: string) => `encrypted:${p}`),
 }));
 
-vi.mock("../src/jmap", () => ({
-  JmapError: class JmapError extends Error {
+vi.mock("../src/jmap", () => {
+  class JmapError extends Error {
     statusCode: number;
     code: string;
     constructor(statusCode: number, code: string, message: string) {
@@ -29,16 +29,25 @@ vi.mock("../src/jmap", () => ({
       this.statusCode = statusCode;
       this.code = code;
     }
-  },
-  discoverSession: vi.fn().mockResolvedValue({
-    apiUrl: "https://mail.relay.prim.sh/jmap/",
-    accountId: "acc_1",
-    identityId: "id_1",
-    inboxId: "mb_inbox",
-    draftsId: "mb_drafts",
-    sentId: "mb_sent",
-  }),
-  buildBasicAuth: vi.fn(() => "Basic mock"),
+  }
+  return {
+    JmapError,
+    discoverSession: vi.fn().mockResolvedValue({
+      apiUrl: "https://mail.relay.prim.sh/jmap/",
+      accountId: "acc_1",
+      identityId: "id_1",
+      inboxId: "mb_inbox",
+      draftsId: "mb_drafts",
+      sentId: "mb_sent",
+    }),
+    buildBasicAuth: vi.fn(() => "Basic mock"),
+    queryEmails: vi.fn(),
+    getEmail: vi.fn(),
+  };
+});
+
+vi.mock("../src/context", () => ({
+  getJmapContext: vi.fn(),
 }));
 
 vi.mock("../src/db", () => {
@@ -64,8 +73,10 @@ vi.mock("../src/db", () => {
   };
 });
 
-import { createMailbox, listMailboxes, getMailbox, deleteMailbox } from "../src/service";
+import { createMailbox, listMailboxes, getMailbox, deleteMailbox, listMessages, getMessage } from "../src/service";
 import { createPrincipal, deletePrincipal, StalwartError } from "../src/stalwart";
+import { JmapError, queryEmails, getEmail } from "../src/jmap";
+import { getJmapContext } from "../src/context";
 import * as dbMock from "../src/db";
 
 const WALLET_A = "0xaaa";
@@ -276,6 +287,218 @@ describe("relay service", () => {
       expect(result.ok).toBe(false);
       if (!result.ok) {
         expect(result.code).toBe("stalwart_error");
+      }
+    });
+  });
+
+  describe("listMessages", () => {
+    const MOCK_CTX = {
+      apiUrl: "https://mail.relay.prim.sh/jmap/",
+      accountId: "acc_1",
+      identityId: "id_1",
+      inboxId: "mb_inbox",
+      draftsId: "mb_drafts",
+      sentId: "mb_sent",
+      authHeader: "Basic mock",
+    };
+
+    it("returns messages for valid mailbox and wallet", async () => {
+      (getJmapContext as ReturnType<typeof vi.fn>).mockResolvedValue({
+        ok: true,
+        data: MOCK_CTX,
+      });
+      (queryEmails as ReturnType<typeof vi.fn>).mockResolvedValue({
+        messages: [
+          {
+            id: "e1",
+            from: [{ name: "Alice", email: "[email protected]" }],
+            to: [{ name: null, email: "[email protected]" }],
+            subject: "Hello",
+            receivedAt: "2026-02-25T10:00:00Z",
+            size: 1234,
+            hasAttachment: false,
+            preview: "Hey...",
+          },
+        ],
+        total: 1,
+        position: 0,
+      });
+
+      const result = await listMessages("mbx_test", WALLET_A, {});
+
+      expect(result.ok).toBe(true);
+      if (!result.ok) return;
+      expect(result.data.messages).toHaveLength(1);
+      expect(result.data.messages[0].from.email).toBe("[email protected]");
+      expect(result.data.total).toBe(1);
+    });
+
+    it("returns not_found for wrong wallet", async () => {
+      (getJmapContext as ReturnType<typeof vi.fn>).mockResolvedValue({
+        ok: false,
+        status: 404,
+        code: "not_found",
+        message: "Mailbox not found",
+      });
+
+      const result = await listMessages("mbx_test", WALLET_B, {});
+
+      expect(result.ok).toBe(false);
+      if (!result.ok) {
+        expect(result.code).toBe("not_found");
+      }
+    });
+
+    it("passes sentId when folder=sent", async () => {
+      (getJmapContext as ReturnType<typeof vi.fn>).mockResolvedValue({
+        ok: true,
+        data: MOCK_CTX,
+      });
+      (queryEmails as ReturnType<typeof vi.fn>).mockResolvedValue({
+        messages: [],
+        total: 0,
+        position: 0,
+      });
+
+      await listMessages("mbx_test", WALLET_A, { folder: "sent" });
+
+      expect(queryEmails).toHaveBeenCalledWith(
+        MOCK_CTX,
+        expect.objectContaining({ mailboxId: "mb_sent" }),
+      );
+    });
+
+    it("omits mailboxId when folder=all", async () => {
+      (getJmapContext as ReturnType<typeof vi.fn>).mockResolvedValue({
+        ok: true,
+        data: MOCK_CTX,
+      });
+      (queryEmails as ReturnType<typeof vi.fn>).mockResolvedValue({
+        messages: [],
+        total: 0,
+        position: 0,
+      });
+
+      await listMessages("mbx_test", WALLET_A, { folder: "all" });
+
+      expect(queryEmails).toHaveBeenCalledWith(
+        MOCK_CTX,
+        expect.objectContaining({ mailboxId: undefined }),
+      );
+    });
+
+    it("clamps limit to 100", async () => {
+      (getJmapContext as ReturnType<typeof vi.fn>).mockResolvedValue({
+        ok: true,
+        data: MOCK_CTX,
+      });
+      (queryEmails as ReturnType<typeof vi.fn>).mockResolvedValue({
+        messages: [],
+        total: 0,
+        position: 0,
+      });
+
+      await listMessages("mbx_test", WALLET_A, { limit: 200 });
+
+      expect(queryEmails).toHaveBeenCalledWith(
+        MOCK_CTX,
+        expect.objectContaining({ limit: 100 }),
+      );
+    });
+
+    it("returns jmap_error on JMAP failure", async () => {
+      (getJmapContext as ReturnType<typeof vi.fn>).mockResolvedValue({
+        ok: true,
+        data: MOCK_CTX,
+      });
+      (queryEmails as ReturnType<typeof vi.fn>).mockRejectedValue(
+        new JmapError(500, "jmap_error", "Server error"),
+      );
+
+      const result = await listMessages("mbx_test", WALLET_A, {});
+
+      expect(result.ok).toBe(false);
+      if (!result.ok) {
+        expect(result.code).toBe("jmap_error");
+      }
+    });
+  });
+
+  describe("getMessage", () => {
+    const MOCK_CTX = {
+      apiUrl: "https://mail.relay.prim.sh/jmap/",
+      accountId: "acc_1",
+      identityId: "id_1",
+      inboxId: "mb_inbox",
+      draftsId: "mb_drafts",
+      sentId: "mb_sent",
+      authHeader: "Basic mock",
+    };
+
+    it("returns full message with body", async () => {
+      (getJmapContext as ReturnType<typeof vi.fn>).mockResolvedValue({
+        ok: true,
+        data: MOCK_CTX,
+      });
+      (getEmail as ReturnType<typeof vi.fn>).mockResolvedValue({
+        id: "e1",
+        from: [{ name: "Alice", email: "[email protected]" }],
+        to: [{ name: null, email: "[email protected]" }],
+        cc: [],
+        subject: "Hello",
+        receivedAt: "2026-02-25T10:00:00Z",
+        size: 1234,
+        hasAttachment: false,
+        preview: "Hey...",
+        textBody: [{ partId: "1" }],
+        htmlBody: [{ partId: "2" }],
+        bodyValues: {
+          "1": { value: "Hey there" },
+          "2": { value: "<p>Hey there</p>" },
+        },
+      });
+
+      const result = await getMessage("mbx_test", WALLET_A, "e1");
+
+      expect(result.ok).toBe(true);
+      if (!result.ok) return;
+      expect(result.data.id).toBe("e1");
+      expect(result.data.textBody).toBe("Hey there");
+      expect(result.data.htmlBody).toBe("<p>Hey there</p>");
+      expect(result.data.from.email).toBe("[email protected]");
+      expect(result.data.cc).toEqual([]);
+    });
+
+    it("returns not_found for wrong wallet", async () => {
+      (getJmapContext as ReturnType<typeof vi.fn>).mockResolvedValue({
+        ok: false,
+        status: 404,
+        code: "not_found",
+        message: "Mailbox not found",
+      });
+
+      const result = await getMessage("mbx_test", WALLET_B, "e1");
+
+      expect(result.ok).toBe(false);
+      if (!result.ok) {
+        expect(result.code).toBe("not_found");
+      }
+    });
+
+    it("returns not_found when message does not exist", async () => {
+      (getJmapContext as ReturnType<typeof vi.fn>).mockResolvedValue({
+        ok: true,
+        data: MOCK_CTX,
+      });
+      (getEmail as ReturnType<typeof vi.fn>).mockRejectedValue(
+        new JmapError(404, "not_found", "Message not found"),
+      );
+
+      const result = await getMessage("mbx_test", WALLET_A, "e_missing");
+
+      expect(result.ok).toBe(false);
+      if (!result.ok) {
+        expect(result.code).toBe("not_found");
       }
     });
   });
