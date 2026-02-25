@@ -31,7 +31,7 @@
 | 46 | D-6 | Build domain.sh: verification endpoint (NS + record propagation checks) | packages/domain | D-1 | pending |
 | 47 | D-7 | Build domain.sh: auto-configure NS to Cloudflare after registration | packages/domain | D-3 | pending |
 | 24 | R-1 | Deploy Stalwart (Docker on DigitalOcean Droplet) | relay/ | DO account | done |
-| 25 | R-2 | Configure Stalwart: domain, DKIM, SPF, DMARC, ACME TLS | relay/ | R-1, D-1 | in progress |
+| 25 | R-2 | Configure Stalwart: domain, DKIM, SPF, DMARC, ACME TLS | relay/ | R-1, D-1 | done |
 | 26 | R-3 | Build relay.sh wrapper: mailbox creation (Stalwart REST API) | relay/ | R-2 | pending |
 | 27 | R-4 | Build relay.sh wrapper: OAuth token cache for JMAP auth per mailbox | relay/ | R-3 | pending |
 | 28 | R-5 | Build relay.sh wrapper: read messages (JMAP Email/query + Email/get) | relay/ | R-4 | pending |
@@ -216,7 +216,8 @@ ERC-8004 uses CAIP-10 wallet addresses as root identity. DIDs layer on top non-b
 - UFW firewall: 22/25/443/465/587/993 open, 8080 denied
 - Admin lockdown verified: 8080 unreachable from internet, works via SSH/localhost
 
-**Waiting on:**
-- NS propagation (`.sh` registry → Cloudflare)
-- ACME cert auto-issuance (after DNS resolves)
-- Final verification (dig, TLS, inbound email test)
+**Verified (2026-02-25):**
+- NS propagated to Cloudflare
+- Let's Encrypt TLS cert issued (CN=mail.relay.prim.sh, expires 2026-05-26)
+- SMTP STARTTLS on 587 working
+- Admin port 8080 unreachable from internet
