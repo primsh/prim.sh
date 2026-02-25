@@ -177,4 +177,4 @@ Agent receives funds, continues operating
 2. **Multi-agent wallets** — Can multiple agents share a wallet? Or does each agent get its own? Leaning toward 1:1 for simplicity.
 3. **Owner authentication** — The fund-request approval flow requires the owner to authenticate. How? x402 payment from the owner's wallet? Signed message? API key?
 4. **Regulatory** — wallet.sh is not a custodial service if the agent holds its own keys. But the fund-request flow (where wallet.sh transfers from owner to agent) could look like money transmission. Need to verify.
-5. **Railgunner as dependency** — Import railgunner as a library for its keystore/journal/circuit-breaker? Or copy the patterns into wallet.sh? Leaning toward copy — keeps wallet.sh self-contained.
+5. **Keystore/journal/circuit-breaker** — Self-contained implementation within wallet.sh.

@@ -165,5 +165,5 @@ agentstack/
 ## Open Questions
 
 1. **Single VPS vs multi-service?** Start with all primitives on one box behind a reverse proxy. Split when scale demands it.
-2. **Railgunner integration depth?** wallet.sh can import railgunner as a library (for Polygon/Railgun features) while adding Base/x402 support natively. Or wallet.sh can be a clean rewrite that borrows patterns from railgunner.
+2. **Wallet patterns** — wallet.sh adapts keystore/journal/circuit-breaker patterns. Clean implementation, self-contained.
 3. **Facilitator self-hosting?** Coinbase's facilitator is free for 1k tx/month. At scale, self-hosting a facilitator removes the dependency and the per-tx fee.

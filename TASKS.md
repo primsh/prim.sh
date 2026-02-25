@@ -150,9 +150,9 @@ Plan doc: `tasks/active/v1-launch-plan-2026-02-25.md`
 
 | ID | Task | Owner | Depends on | Status |
 |---|---|---|---|---|
-| L-1 | Redact secrets from TASKS.md + task files (Stalwart creds, server IP) | Claude | — | pending |
-| L-2 | Rename all packages `@agentstack/*` + `@prim/*` → `@primsh/*` (12 packages + all imports) | Claude | — | pending |
-| L-3 | Audit .gitignore + CLAUDE.md for public readiness | Claude | — | pending |
+| L-1 | Redact secrets from TASKS.md + task files (Stalwart creds, server IP) | Claude | — | done |
+| L-2 | Rename all packages `@agentstack/*` + `@prim/*` → `@primsh/*` (12 packages + all imports) | Claude | — | done |
+| L-3 | Audit .gitignore + CLAUDE.md for public readiness | Claude | — | done |
 
 ### Wave 1: Foundation
 
@@ -375,10 +375,10 @@ What an agent can do today:
 **8/8 store.sh integration test steps pass on Base Sepolia.** Full non-custodial payment pipeline:
 1. Agent generates private key locally
 2. Registers wallet with wallet.sh via EIP-191 signature
-3. Signs x402 payments client-side via `@prim/x402-client`
+3. Signs x402 payments client-side via `@primsh/x402-client`
 4. store.sh accepts payments (facilitator settles on-chain), executes CRUD against real Cloudflare R2
 
-Test wallet `[REDACTED_WALLET]` — ~119 USDC remaining. Cost: ~$0.07/run (6 store operations). Run: `set -a && source scripts/.env.testnet && set +a && bun run scripts/integration-test.ts`
+Test wallet address and balance in `scripts/.env.testnet`. Cost: ~$0.07/run (6 store operations). Run: `set -a && source scripts/.env.testnet && set +a && bun run scripts/integration-test.ts`
 
 ### R-2 completion details (2026-02-25)
 

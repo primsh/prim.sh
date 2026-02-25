@@ -31,10 +31,10 @@ python serve.py                           # Serves locally
 ```
 agentstack/
 ├── packages/
-│   ├── x402-middleware/      # @agentstack/x402-middleware (shared)
-│   ├── wallet/               # @agentstack/wallet (wallet.sh)
-│   ├── email/                # @agentstack/email (email.sh)
-│   └── spawn/                # @agentstack/spawn (spawn.sh)
+│   ├── x402-middleware/      # @primsh/x402-middleware (shared)
+│   ├── wallet/               # @primsh/wallet (wallet.sh)
+│   ├── email/                # @primsh/email (email.sh)
+│   └── spawn/                # @primsh/spawn (spawn.sh)
 ├── site/                     # Landing pages (HTML, moved from root)
 │   ├── serve.py              # Dev server
 │   └── <primitive>/index.html
@@ -65,15 +65,15 @@ Social: hive, ads
 - **TypeScript + Bun** — Bun runs TS natively, no build step. `bun run src/index.ts` just works.
 - **Hono** — Web framework. Lightweight, middleware-friendly. x402 has first-party Hono middleware.
 - **pnpm workspaces** — Monorepo. Each primitive is `packages/<name>/`.
-- **Biome** — Lint + format (matches Railgunner conventions).
+- **Biome** — Lint + format.
 - **vitest** — Test runner.
 - **x402** — Payment protocol (Coinbase). USDC on Base chain. Sub-cent gas.
 
 ## Key Architecture Decisions
 
 - **x402 payment** is the auth layer. Every endpoint returns 402 → agent pays → gets resource.
-- **Each primitive is independent.** No shared DB. Shared `@agentstack/x402-middleware` package only.
-- **wallet.sh** is the keystone — adapts patterns from `~/Developer/railgunner` (encrypted keystore, execution journal, circuit breaker).
+- **Each primitive is independent.** No shared DB. Shared `@primsh/x402-middleware` package only.
+- **wallet.sh** is the keystone — encrypted keystore, execution journal, circuit breaker.
 - **email.sh** wraps Stalwart Mail Server (Rust, JMAP + REST API).
 - **spawn.sh** wraps Hetzner Cloud API.
 
@@ -92,6 +92,3 @@ Dark-mode, monospace, CSS custom properties:
 - Each primitive sets `--accent` to its unique color
 - Color utility classes: `.g` green, `.b` blue, `.r` red, `.p` purple, `.o` orange, `.cy` cyan, `.y` yellow, `.pk` pink, `.gl` gold, `.t` teal, `.m` magenta, `.l` lime, `.c` coral, `.i` indigo, `.v` violet, `.z` azure, `.br` brown, `.e` emerald, `.s` slate, `.w` text
 
-## Related Projects
-
-- **railgunner** (`~/Developer/railgunner`) — Polygon wallet ops tool. Source of wallet.sh patterns (keystore, journal, circuit breaker). JS/Node, ~5.8k LOC.
