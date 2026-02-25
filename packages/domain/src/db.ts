@@ -1,5 +1,31 @@
 import { Database } from "bun:sqlite";
 
+export interface QuoteRow {
+  id: string;
+  domain: string;
+  years: number;
+  registrar_cost_cents: number;
+  margin_cents: number;
+  total_cents: number;
+  caller_wallet: string;
+  created_at: number;
+  expires_at: number;
+}
+
+export interface RegistrationRow {
+  id: string;
+  domain: string;
+  quote_id: string;
+  recovery_token: string | null;
+  namesilo_order_id: string | null;
+  zone_id: string | null;
+  ns_configured: number; // 0 or 1
+  owner_wallet: string;
+  total_cents: number;
+  created_at: number;
+  updated_at: number;
+}
+
 export interface ZoneRow {
   id: string;
   cloudflare_id: string;
@@ -66,6 +92,39 @@ export function getDb(): Database {
   `);
 
   _db.run("CREATE INDEX IF NOT EXISTS idx_records_zone_id ON records(zone_id)");
+
+  _db.run(`
+    CREATE TABLE IF NOT EXISTS quotes (
+      id                    TEXT PRIMARY KEY,
+      domain                TEXT NOT NULL,
+      years                 INTEGER NOT NULL DEFAULT 1,
+      registrar_cost_cents  INTEGER NOT NULL,
+      margin_cents          INTEGER NOT NULL,
+      total_cents           INTEGER NOT NULL,
+      caller_wallet         TEXT NOT NULL,
+      created_at            INTEGER NOT NULL,
+      expires_at            INTEGER NOT NULL
+    )
+  `);
+
+  _db.run(`
+    CREATE TABLE IF NOT EXISTS registrations (
+      id                 TEXT PRIMARY KEY,
+      domain             TEXT NOT NULL UNIQUE,
+      quote_id           TEXT NOT NULL,
+      recovery_token     TEXT UNIQUE,
+      namesilo_order_id  TEXT,
+      zone_id            TEXT,
+      ns_configured      INTEGER NOT NULL DEFAULT 0,
+      owner_wallet       TEXT NOT NULL,
+      total_cents        INTEGER NOT NULL,
+      created_at         INTEGER NOT NULL,
+      updated_at         INTEGER NOT NULL
+    )
+  `);
+
+  _db.run("CREATE INDEX IF NOT EXISTS idx_registrations_recovery_token ON registrations(recovery_token)");
+  _db.run("CREATE INDEX IF NOT EXISTS idx_registrations_owner ON registrations(owner_wallet)");
 
   return _db;
 }
@@ -207,4 +266,84 @@ export function deleteRecordRow(id: string): void {
 export function deleteRecordsByZone(zoneId: string): void {
   const db = getDb();
   db.query("DELETE FROM records WHERE zone_id = ?").run(zoneId);
+}
+
+// ─── Quote queries ───────────────────────────────────────────────────────
+
+export function insertQuote(params: {
+  id: string;
+  domain: string;
+  years: number;
+  registrar_cost_cents: number;
+  margin_cents: number;
+  total_cents: number;
+  caller_wallet: string;
+  expires_at: number;
+}): void {
+  const db = getDb();
+  const now = Date.now();
+  db.query(
+    `INSERT INTO quotes (id, domain, years, registrar_cost_cents, margin_cents, total_cents, caller_wallet, created_at, expires_at)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+  ).run(params.id, params.domain, params.years, params.registrar_cost_cents, params.margin_cents, params.total_cents, params.caller_wallet, now, params.expires_at);
+}
+
+export function getQuoteById(id: string): QuoteRow | null {
+  const db = getDb();
+  return db.query<QuoteRow, [string]>("SELECT * FROM quotes WHERE id = ?").get(id) ?? null;
+}
+
+// ─── Registration queries ─────────────────────────────────────────────────
+
+export function insertRegistration(params: {
+  id: string;
+  domain: string;
+  quote_id: string;
+  recovery_token: string | null;
+  namesilo_order_id: string | null;
+  zone_id: string | null;
+  ns_configured: boolean;
+  owner_wallet: string;
+  total_cents: number;
+}): void {
+  const db = getDb();
+  const now = Date.now();
+  db.query(
+    `INSERT INTO registrations (id, domain, quote_id, recovery_token, namesilo_order_id, zone_id, ns_configured, owner_wallet, total_cents, created_at, updated_at)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+  ).run(
+    params.id, params.domain, params.quote_id, params.recovery_token,
+    params.namesilo_order_id, params.zone_id, params.ns_configured ? 1 : 0,
+    params.owner_wallet, params.total_cents, now, now,
+  );
+}
+
+export function getRegistrationByRecoveryToken(token: string): RegistrationRow | null {
+  const db = getDb();
+  return db.query<RegistrationRow, [string]>("SELECT * FROM registrations WHERE recovery_token = ?").get(token) ?? null;
+}
+
+export function getRegistrationByDomain(domain: string): RegistrationRow | null {
+  const db = getDb();
+  return db.query<RegistrationRow, [string]>("SELECT * FROM registrations WHERE domain = ?").get(domain) ?? null;
+}
+
+export function updateRegistration(id: string, params: {
+  zone_id?: string | null;
+  ns_configured?: boolean;
+  recovery_token?: string | null;
+  namesilo_order_id?: string | null;
+}): void {
+  const db = getDb();
+  const now = Date.now();
+  const sets: string[] = ["updated_at = ?"];
+  const values: unknown[] = [now];
+
+  if (params.zone_id !== undefined) { sets.push("zone_id = ?"); values.push(params.zone_id); }
+  if (params.ns_configured !== undefined) { sets.push("ns_configured = ?"); values.push(params.ns_configured ? 1 : 0); }
+  if (params.recovery_token !== undefined) { sets.push("recovery_token = ?"); values.push(params.recovery_token); }
+  if (params.namesilo_order_id !== undefined) { sets.push("namesilo_order_id = ?"); values.push(params.namesilo_order_id); }
+
+  values.push(id);
+  db.query(`UPDATE registrations SET ${sets.join(", ")} WHERE id = ?`).run(...values);
 }

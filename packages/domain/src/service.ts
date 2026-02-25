@@ -14,6 +14,12 @@ import {
   deleteRecordRow,
   deleteRecordsByZone,
   runInTransaction,
+  insertQuote,
+  getQuoteById,
+  insertRegistration,
+  getRegistrationByRecoveryToken,
+  getRegistrationByDomain,
+  updateRegistration,
 } from "./db.ts";
 import {
   CloudflareError,
@@ -43,9 +49,14 @@ import type {
   MailSetupResponse,
   MailSetupRecordResult,
   VerifyResponse,
+  QuoteRequest,
+  QuoteResponse,
+  RegisterResponse,
+  RecoverResponse,
+  ConfigureNsResponse,
 } from "./api.ts";
 import type { ZoneRow, RecordRow } from "./db.ts";
-import { getRegistrar } from "./namesilo.ts";
+import { getRegistrar, NameSiloError } from "./namesilo.ts";
 import { verifyNameservers, verifyRecords } from "./dns-verify.ts";
 
 // ─── Constants ───────────────────────────────────────────────────────────
@@ -707,6 +718,322 @@ export async function batchRecords(
       updated: updatedRows.map(rowToRecordResponse),
       deleted: deleteRows.map(({ primId }) => ({ id: primId })),
     },
+  };
+}
+
+// ─── Money helpers ────────────────────────────────────────────────────────
+
+export function usdToCents(usd: number): number {
+  return Math.round(usd * 100);
+}
+
+export function centsToAtomicUsdc(cents: number): string {
+  return String(BigInt(cents) * 10000n);
+}
+
+export function centsToUsd(cents: number): number {
+  return cents / 100;
+}
+
+const MARGIN_RATE = Number(process.env.DOMAIN_MARGIN_RATE ?? "0.15");
+const MARGIN_MIN_CENTS = Number(process.env.DOMAIN_MARGIN_MIN_CENTS ?? "100");
+const QUOTE_TTL_MS = 15 * 60 * 1000; // 15 minutes
+
+function generateQuoteId(): string {
+  return `q_${randomBytes(4).toString("hex")}`;
+}
+
+function generateRegistrationId(): string {
+  return `reg_${randomBytes(4).toString("hex")}`;
+}
+
+function generateRecoveryToken(): string {
+  return `rt_${randomBytes(8).toString("hex")}`;
+}
+
+// ─── Quote domain ─────────────────────────────────────────────────────────
+
+export async function quoteDomain(
+  request: QuoteRequest,
+  callerWallet: string,
+): Promise<ServiceResult<QuoteResponse>> {
+  if (!isValidDomain(request.domain)) {
+    return { ok: false, status: 400, code: "invalid_request", message: "Invalid domain format" };
+  }
+
+  const registrar = getRegistrar();
+  if (!registrar) {
+    return { ok: false, status: 503, code: "registrar_unavailable" as string, message: "NAMESILO_API_KEY is not configured" };
+  }
+
+  const years = request.years ?? 1;
+  const results = await registrar.search([request.domain]);
+  const info = results[0];
+
+  if (!info?.available || !info.price) {
+    return { ok: false, status: 400, code: "domain_taken", message: "Domain is not available for registration" };
+  }
+
+  const registrarCostCents = usdToCents(info.price.register);
+  const marginCents = Math.max(MARGIN_MIN_CENTS, Math.round(registrarCostCents * MARGIN_RATE));
+  const totalCents = registrarCostCents + marginCents;
+
+  const quoteId = generateQuoteId();
+  const expiresAt = Date.now() + QUOTE_TTL_MS;
+
+  insertQuote({
+    id: quoteId,
+    domain: request.domain,
+    years,
+    registrar_cost_cents: registrarCostCents,
+    margin_cents: marginCents,
+    total_cents: totalCents,
+    caller_wallet: callerWallet,
+    expires_at: expiresAt,
+  });
+
+  return {
+    ok: true,
+    data: {
+      quote_id: quoteId,
+      domain: request.domain,
+      available: true,
+      years,
+      registrar_cost_usd: centsToUsd(registrarCostCents),
+      total_cost_usd: centsToUsd(totalCents),
+      currency: "USD",
+      expires_at: new Date(expiresAt).toISOString(),
+    },
+  };
+}
+
+// ─── Register domain ──────────────────────────────────────────────────────
+
+export async function registerDomain(
+  quoteId: string,
+  callerWallet: string,
+): Promise<ServiceResult<RegisterResponse>> {
+  const quote = getQuoteById(quoteId);
+  if (!quote) {
+    return { ok: false, status: 404, code: "not_found", message: "Quote not found" };
+  }
+  if (quote.expires_at < Date.now()) {
+    return { ok: false, status: 410, code: "quote_expired", message: "Quote has expired — request a new one" };
+  }
+
+  const existing = getRegistrationByDomain(quote.domain);
+  if (existing) {
+    return { ok: false, status: 409, code: "domain_taken" as string, message: "Domain is already registered" };
+  }
+
+  const registrar = getRegistrar();
+  if (!registrar) {
+    return { ok: false, status: 503, code: "registrar_unavailable" as string, message: "NAMESILO_API_KEY is not configured" };
+  }
+
+  // Step 1: NameSilo purchase
+  let orderId: string;
+  try {
+    const result = await registrar.register(quote.domain, quote.years);
+    orderId = result.orderId;
+  } catch (err) {
+    if (err instanceof NameSiloError) {
+      const code = err.code === 261 ? "domain_taken" : "registrar_error";
+      const status = err.code === 261 ? 400 : 502;
+      return { ok: false, status, code, message: err.message };
+    }
+    throw err;
+  }
+
+  const regId = generateRegistrationId();
+  const recoveryToken = generateRecoveryToken();
+
+  // Step 2: Insert registration immediately (money is spent)
+  insertRegistration({
+    id: regId,
+    domain: quote.domain,
+    quote_id: quoteId,
+    recovery_token: recoveryToken,
+    namesilo_order_id: orderId,
+    zone_id: null,
+    ns_configured: false,
+    owner_wallet: callerWallet,
+    total_cents: quote.total_cents,
+  });
+
+  // Step 3: Cloudflare zone creation
+  let cfZone: Awaited<ReturnType<typeof cfCreateZone>> | null = null;
+  try {
+    cfZone = await cfCreateZone(quote.domain);
+    const zoneId = generateZoneId();
+    insertZone({
+      id: zoneId,
+      cloudflare_id: cfZone.id,
+      domain: quote.domain,
+      owner_wallet: callerWallet,
+      status: cfZone.status,
+      nameservers: cfZone.name_servers ?? [],
+    });
+    updateRegistration(regId, { zone_id: zoneId });
+  } catch {
+    // CF failed — return 201 with recovery_token
+    return {
+      ok: true,
+      data: {
+        domain: quote.domain,
+        registered: true,
+        zone_id: null,
+        nameservers: null,
+        order_amount_usd: centsToUsd(quote.total_cents),
+        ns_configured: false,
+        recovery_token: recoveryToken,
+      },
+    };
+  }
+
+  // Get the zone we just created to fetch its prim ID and NS
+  const zoneRow = getZoneByDomain(quote.domain);
+  const nameservers: string[] = zoneRow ? (JSON.parse(zoneRow.nameservers) as string[]) : (cfZone.name_servers ?? []);
+
+  // Step 4: Set Cloudflare nameservers at registrar
+  let nsConfigured = false;
+  try {
+    await registrar.setNameservers(quote.domain, nameservers);
+    nsConfigured = true;
+    updateRegistration(regId, { ns_configured: true, recovery_token: null });
+  } catch {
+    // NS failed — zone exists, no recovery_token needed (configure-ns handles retry)
+    updateRegistration(regId, { recovery_token: null });
+  }
+
+  return {
+    ok: true,
+    data: {
+      domain: quote.domain,
+      registered: true,
+      zone_id: zoneRow?.id ?? null,
+      nameservers,
+      order_amount_usd: centsToUsd(quote.total_cents),
+      ns_configured: nsConfigured,
+      recovery_token: null,
+    },
+  };
+}
+
+// ─── Recover registration ─────────────────────────────────────────────────
+
+export async function recoverRegistration(
+  recoveryToken: string,
+  callerWallet: string,
+): Promise<ServiceResult<RecoverResponse>> {
+  const reg = getRegistrationByRecoveryToken(recoveryToken);
+  if (!reg) {
+    return { ok: false, status: 404, code: "not_found", message: "Recovery token not found" };
+  }
+  if (reg.owner_wallet !== callerWallet) {
+    return { ok: false, status: 403, code: "forbidden", message: "Forbidden" };
+  }
+
+  const registrar = getRegistrar();
+
+  // If zone doesn't exist yet, create it
+  let zoneId = reg.zone_id;
+  let nameservers: string[] = [];
+
+  if (!zoneId) {
+    try {
+      const cfZone = await cfCreateZone(reg.domain);
+      const newZoneId = generateZoneId();
+      insertZone({
+        id: newZoneId,
+        cloudflare_id: cfZone.id,
+        domain: reg.domain,
+        owner_wallet: reg.owner_wallet,
+        status: cfZone.status,
+        nameservers: cfZone.name_servers ?? [],
+      });
+      zoneId = newZoneId;
+      nameservers = cfZone.name_servers ?? [];
+      updateRegistration(reg.id, { zone_id: zoneId });
+    } catch (err) {
+      if (err instanceof CloudflareError) {
+        return { ok: false, status: err.statusCode, code: err.code, message: err.message };
+      }
+      throw err;
+    }
+  } else {
+    const zoneRow = getZoneById(zoneId);
+    nameservers = zoneRow ? (JSON.parse(zoneRow.nameservers) as string[]) : [];
+  }
+
+  // Set nameservers at registrar
+  let nsConfigured = reg.ns_configured === 1;
+  if (!nsConfigured && registrar) {
+    try {
+      await registrar.setNameservers(reg.domain, nameservers);
+      nsConfigured = true;
+      updateRegistration(reg.id, { ns_configured: true, recovery_token: null });
+    } catch {
+      updateRegistration(reg.id, { recovery_token: null });
+    }
+  } else if (nsConfigured) {
+    updateRegistration(reg.id, { recovery_token: null });
+  }
+
+  return {
+    ok: true,
+    data: {
+      domain: reg.domain,
+      zone_id: zoneId,
+      nameservers,
+      ns_configured: nsConfigured,
+    },
+  };
+}
+
+// ─── Configure nameservers ────────────────────────────────────────────────
+
+export async function configureNs(
+  domain: string,
+  callerWallet: string,
+): Promise<ServiceResult<ConfigureNsResponse>> {
+  const reg = getRegistrationByDomain(domain);
+  if (!reg) {
+    return { ok: false, status: 404, code: "not_found", message: "Registration not found" };
+  }
+  if (reg.owner_wallet !== callerWallet) {
+    return { ok: false, status: 403, code: "forbidden", message: "Forbidden" };
+  }
+
+  if (!reg.zone_id) {
+    return { ok: false, status: 400, code: "invalid_request", message: "Zone not yet created — use /recover first" };
+  }
+
+  const zoneRow = getZoneById(reg.zone_id);
+  if (!zoneRow) {
+    return { ok: false, status: 404, code: "not_found", message: "Zone not found" };
+  }
+
+  const nameservers: string[] = JSON.parse(zoneRow.nameservers) as string[];
+  const registrar = getRegistrar();
+  if (!registrar) {
+    return { ok: false, status: 503, code: "registrar_unavailable" as string, message: "NAMESILO_API_KEY is not configured" };
+  }
+
+  try {
+    await registrar.setNameservers(domain, nameservers);
+  } catch (err) {
+    if (err instanceof NameSiloError) {
+      return { ok: false, status: 502, code: "registrar_error", message: err.message };
+    }
+    throw err;
+  }
+
+  updateRegistration(reg.id, { ns_configured: true });
+
+  return {
+    ok: true,
+    data: { domain, nameservers, ns_configured: true },
   };
 }
 

@@ -18,6 +18,9 @@ export const ERROR_CODES = [
   "cloudflare_error",
   "rate_limited",
   "domain_taken",
+  "quote_expired",
+  "registrar_error",
+  "registration_failed",
 ] as const;
 
 export type ErrorCode = (typeof ERROR_CODES)[number];
@@ -145,6 +148,55 @@ export interface BatchRecordsResponse {
   created: RecordResponse[];
   updated: RecordResponse[];
   deleted: { id: string }[];
+}
+
+// ─── Quote / Register / Recover types ────────────────────────────────────
+
+export interface QuoteRequest {
+  domain: string;
+  years?: number;
+}
+
+export interface QuoteResponse {
+  quote_id: string;
+  domain: string;
+  available: true;
+  years: number;
+  registrar_cost_usd: number;
+  total_cost_usd: number;
+  currency: string;
+  expires_at: string; // ISO 8601
+}
+
+export interface RegisterRequest {
+  quote_id: string;
+}
+
+export interface RegisterResponse {
+  domain: string;
+  registered: true;
+  zone_id: string | null;
+  nameservers: string[] | null;
+  order_amount_usd: number;
+  ns_configured: boolean;
+  recovery_token: string | null;
+}
+
+export interface RecoverRequest {
+  recovery_token: string;
+}
+
+export interface RecoverResponse {
+  domain: string;
+  zone_id: string;
+  nameservers: string[];
+  ns_configured: boolean;
+}
+
+export interface ConfigureNsResponse {
+  domain: string;
+  nameservers: string[];
+  ns_configured: true;
 }
 
 // ─── Verify types ──────────────────────────────────────────────────────────

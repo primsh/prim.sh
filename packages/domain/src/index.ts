@@ -1,5 +1,6 @@
 import { Hono } from "hono";
-import { createAgentStackMiddleware } from "@agentstack/x402-middleware";
+import { createAgentStackMiddleware, getNetworkConfig } from "@agentstack/x402-middleware";
+import { HTTPFacilitatorClient, encodePaymentRequiredHeader, decodePaymentSignatureHeader } from "@x402/core/http";
 import type {
   ApiError,
   CreateZoneRequest,
@@ -16,6 +17,12 @@ import type {
   MailSetupRequest,
   MailSetupResponse,
   VerifyResponse,
+  QuoteRequest,
+  QuoteResponse,
+  RegisterResponse,
+  RecoverRequest,
+  RecoverResponse,
+  ConfigureNsResponse,
 } from "./api.ts";
 import {
   createZone,
@@ -31,13 +38,23 @@ import {
   batchRecords,
   mailSetup,
   verifyZone,
+  quoteDomain,
+  registerDomain,
+  recoverRegistration,
+  configureNs,
+  centsToAtomicUsdc,
 } from "./service.ts";
+import { getQuoteById } from "./db.ts";
 
-const PAY_TO_ADDRESS = "0x0000000000000000000000000000000000000000";
-const NETWORK = "eip155:8453";
+const PAY_TO_ADDRESS = process.env.PRIM_PAY_TO ?? "0x0000000000000000000000000000000000000000";
+const NETWORK = process.env.PRIM_NETWORK ?? "eip155:8453";
+
+const FACILITATOR_URL = process.env.FACILITATOR_URL ?? "https://facilitator.payai.network";
+const facilitatorClient = new HTTPFacilitatorClient({ url: FACILITATOR_URL });
 
 const DOMAIN_ROUTES = {
   "GET /v1/domains/search": "$0.001",
+  "POST /v1/domains/quote": "$0.001",
   "POST /v1/zones": "$0.05",
   "GET /v1/zones": "$0.001",
   "GET /v1/zones/[id]": "$0.001",
@@ -90,6 +107,171 @@ app.use(
 // GET / — health check (free)
 app.get("/", (c) => {
   return c.json({ service: "domain.sh", status: "ok" });
+});
+
+// POST /v1/domains/quote — Get a time-limited price quote for domain registration
+app.post("/v1/domains/quote", async (c) => {
+  const caller = c.get("walletAddress");
+  if (!caller) return c.json(forbidden("No wallet address in payment"), 403);
+
+  let body: QuoteRequest;
+  try {
+    body = await c.req.json<QuoteRequest>();
+  } catch {
+    return c.json(invalidRequest("Invalid JSON body"), 400);
+  }
+
+  const result = await quoteDomain(body, caller);
+  if (!result.ok) {
+    if (result.status === 400) return c.json(invalidRequest(result.message), 400);
+    if (result.status === 503) return c.json(serviceUnavailable(result.message), 503);
+    return c.json(invalidRequest(result.message), 400);
+  }
+  return c.json(result.data as QuoteResponse, 200);
+});
+
+// POST /v1/domains/register — Register a domain (dynamic x402 pricing from quote)
+// Bypasses x402 middleware — implements payment protocol directly.
+app.post("/v1/domains/register", async (c) => {
+  let body: { quote_id?: string };
+  try {
+    body = await c.req.json<{ quote_id?: string }>();
+  } catch {
+    return c.json(invalidRequest("Invalid JSON body"), 400);
+  }
+
+  const quoteId = body.quote_id;
+  if (!quoteId) return c.json(invalidRequest("quote_id is required"), 400);
+
+  const quote = getQuoteById(quoteId);
+  if (!quote) return c.json({ error: { code: "not_found", message: "Quote not found" } }, 404);
+  if (quote.expires_at < Date.now()) return c.json({ error: { code: "quote_expired", message: "Quote has expired" } }, 410);
+
+  // Build expected payment amount from quote
+  const amount = centsToAtomicUsdc(quote.total_cents);
+  const networkConfig = getNetworkConfig(NETWORK);
+
+  const paymentHeader = c.req.header("payment-signature") ?? c.req.header("x-payment");
+
+  if (!paymentHeader) {
+    const paymentRequired = {
+      x402Version: 2,
+      accepts: [{
+        scheme: "exact" as const,
+        network: NETWORK,
+        amount,
+        payTo: PAY_TO_ADDRESS,
+        asset: networkConfig.usdcAddress,
+        maxTimeoutSeconds: 3600,
+        extra: {},
+      }],
+      resource: {
+        url: `${c.req.url}`,
+        description: `Domain registration: ${quote.domain}`,
+        mimeType: "application/json",
+      },
+    };
+    const encoded = encodePaymentRequiredHeader(paymentRequired as Parameters<typeof encodePaymentRequiredHeader>[0]);
+    return new Response(JSON.stringify({ error: { code: "payment_required", message: "Payment required" } }), {
+      status: 402,
+      headers: {
+        "Content-Type": "application/json",
+        "payment-required": encoded,
+      },
+    });
+  }
+
+  // Decode and verify payment amount
+  let paymentPayload: ReturnType<typeof decodePaymentSignatureHeader>;
+  try {
+    paymentPayload = decodePaymentSignatureHeader(paymentHeader);
+  } catch {
+    return c.json(invalidRequest("Invalid payment header"), 400);
+  }
+
+  // Verify the signed amount matches our expected amount
+  const paymentRequirements = {
+    scheme: "exact" as const,
+    network: NETWORK,
+    amount,
+    payTo: PAY_TO_ADDRESS,
+    asset: networkConfig.usdcAddress,
+    maxTimeoutSeconds: 3600,
+    extra: {},
+  };
+
+  // Settle payment via facilitator
+  let settleResult: Awaited<ReturnType<typeof facilitatorClient.settle>>;
+  try {
+    settleResult = await facilitatorClient.settle(
+      paymentPayload,
+      paymentRequirements as Parameters<typeof facilitatorClient.settle>[1],
+    );
+  } catch (err) {
+    return c.json({ error: { code: "payment_failed", message: `Payment settlement failed: ${String(err)}` } }, 502);
+  }
+
+  if (!settleResult.success) {
+    return c.json({ error: { code: "payment_failed", message: "Payment settlement failed" } }, 502);
+  }
+
+  // Extract payer wallet from payment header
+  let callerWallet: string | undefined;
+  try {
+    const decoded = paymentPayload as { payload?: { authorization?: { from?: string } }; authorization?: { from?: string }; from?: string };
+    callerWallet = decoded.payload?.authorization?.from ?? decoded.authorization?.from ?? decoded.from;
+  } catch {
+    callerWallet = undefined;
+  }
+  if (!callerWallet) return c.json(forbidden("Could not determine payer wallet"), 403);
+
+  const result = await registerDomain(quoteId, callerWallet);
+  if (!result.ok) {
+    return c.json({ error: { code: result.code, message: result.message } }, result.status as 400 | 404 | 410 | 502 | 503);
+  }
+  return c.json(result.data as RegisterResponse, 201);
+});
+
+// POST /v1/domains/recover — Retry Cloudflare setup after NameSilo succeeded
+// Free route — recovery_token is sufficient auth.
+app.post("/v1/domains/recover", async (c) => {
+  let body: RecoverRequest;
+  try {
+    body = await c.req.json<RecoverRequest>();
+  } catch {
+    return c.json(invalidRequest("Invalid JSON body"), 400);
+  }
+
+  if (!body.recovery_token) return c.json(invalidRequest("recovery_token is required"), 400);
+
+  // Wallet from payment-signature header (set by middleware's extractWalletAddress)
+  const caller = c.get("walletAddress");
+  if (!caller) return c.json(forbidden("No wallet address — include payment-signature header"), 403);
+
+  const result = await recoverRegistration(body.recovery_token, caller);
+  if (!result.ok) {
+    if (result.status === 404) return c.json({ error: { code: result.code, message: result.message } }, 404);
+    if (result.status === 403) return c.json(forbidden(result.message), 403);
+    return c.json({ error: { code: result.code, message: result.message } }, result.status as 400 | 502);
+  }
+  return c.json(result.data as RecoverResponse, 200);
+});
+
+// POST /v1/domains/:domain/configure-ns — Retry nameserver change at registrar
+// Free route — wallet ownership of registration required.
+app.post("/v1/domains/:domain/configure-ns", async (c) => {
+  const caller = c.get("walletAddress");
+  if (!caller) return c.json(forbidden("No wallet address — include payment-signature header"), 403);
+
+  const domain = c.req.param("domain");
+  const result = await configureNs(domain, caller);
+  if (!result.ok) {
+    if (result.status === 404) return c.json({ error: { code: result.code, message: result.message } }, 404);
+    if (result.status === 403) return c.json(forbidden(result.message), 403);
+    if (result.status === 400) return c.json(invalidRequest(result.message), 400);
+    return c.json({ error: { code: result.code, message: result.message } }, result.status as 502 | 503);
+  }
+  return c.json(result.data as ConfigureNsResponse, 200);
 });
 
 // GET /v1/domains/search — Check availability + pricing for domains

@@ -7,7 +7,7 @@
  * IMPORTANT: env vars must be set before any module import that touches db/cloudflare.
  */
 
-import { describe, expect, it, beforeEach, afterEach, vi, type MockInstance } from "vitest";
+import { describe, expect, it, beforeEach, afterEach, vi } from "vitest";
 
 // Set env before imports
 process.env.DOMAIN_DB_PATH = ":memory:";
@@ -150,6 +150,46 @@ const mockFetch = vi.fn(async (input: RequestInfo | URL, _init?: RequestInit) =>
     );
   }
 
+  // NameSilo: checkRegisterAvailability — default: available at $9.95
+  if (url.includes("namesilo.com") && url.includes("checkRegisterAvailability")) {
+    const urlObj = new URL(url);
+    const domains = urlObj.searchParams.get("domains")?.split(",") ?? [];
+    return new Response(
+      JSON.stringify({
+        request: { operation: "checkRegisterAvailability", ip: "1.2.3.4" },
+        reply: {
+          code: 300,
+          detail: "success",
+          available: domains.map((d) => ({ domain: d, available: "yes", price: "9.95", premium: "0" })),
+          unavailable: { domain: [] },
+        },
+      }),
+      { status: 200, headers: { "Content-Type": "application/json" } },
+    );
+  }
+
+  // NameSilo: registerDomain — default: success
+  if (url.includes("namesilo.com") && url.includes("registerDomain")) {
+    return new Response(
+      JSON.stringify({
+        request: { operation: "registerDomain", ip: "1.2.3.4" },
+        reply: { code: 300, detail: "success", order_amount: "9.95" },
+      }),
+      { status: 200, headers: { "Content-Type": "application/json" } },
+    );
+  }
+
+  // NameSilo: changeNameServers — default: success
+  if (url.includes("namesilo.com") && url.includes("changeNameServers")) {
+    return new Response(
+      JSON.stringify({
+        request: { operation: "changeNameServers", ip: "1.2.3.4" },
+        reply: { code: 300, detail: "success" },
+      }),
+      { status: 200, headers: { "Content-Type": "application/json" } },
+    );
+  }
+
   return new Response(JSON.stringify({ ok: true }), {
     status: 200,
     headers: { "Content-Type": "application/json" },
@@ -162,14 +202,14 @@ vi.stubGlobal("fetch", mockFetch);
 
 // Per-method return values, configurable per-test
 const dnsResolverMock = {
-  resolve4: vi.fn<() => Promise<string[]>>(),
-  resolve6: vi.fn<() => Promise<string[]>>(),
-  resolveCname: vi.fn<() => Promise<string[]>>(),
-  resolveMx: vi.fn<() => Promise<{ priority: number; exchange: string }[]>>(),
-  resolveTxt: vi.fn<() => Promise<string[][]>>(),
-  resolveNs: vi.fn<() => Promise<string[]>>(),
-  resolveSrv: vi.fn<() => Promise<{ name: string; port: number; priority: number; weight: number }[]>>(),
-  resolveCaa: vi.fn<() => Promise<unknown[]>>(),
+  resolve4: vi.fn(),
+  resolve6: vi.fn(),
+  resolveCname: vi.fn(),
+  resolveMx: vi.fn(),
+  resolveTxt: vi.fn(),
+  resolveNs: vi.fn(),
+  resolveSrv: vi.fn(),
+  resolveCaa: vi.fn(),
   setServers: vi.fn(),
 };
 
@@ -178,7 +218,7 @@ vi.mock("node:dns/promises", () => ({
 }));
 
 // Import after env + fetch stub
-import { resetDb, getZoneById, getRecordById, getRecordsByZone } from "../src/db.ts";
+import { resetDb, getZoneById, getRecordById, getRecordsByZone, getRegistrationByDomain } from "../src/db.ts";
 import {
   createZone,
   listZones,
@@ -193,6 +233,13 @@ import {
   batchRecords,
   mailSetup,
   verifyZone,
+  quoteDomain,
+  registerDomain,
+  recoverRegistration,
+  configureNs,
+  usdToCents,
+  centsToAtomicUsdc,
+  centsToUsd,
 } from "../src/service.ts";
 
 // ─── Fixtures ────────────────────────────────────────────────────────────
@@ -208,7 +255,8 @@ describe("domain.sh", () => {
     mockFetch.mockClear();
     cfDnsRecordsMock = [];
     // Reset DNS resolver mocks
-    Object.values(dnsResolverMock).forEach((m) => (m as MockInstance).mockReset());
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    Object.values(dnsResolverMock).forEach((m) => (m as any).mockReset());
   });
 
   afterEach(() => {
@@ -1242,6 +1290,367 @@ describe("domain.sh", () => {
       if (!result.ok) return;
       expect(result.data.records[0].actual).toBe("error:ns_unresolvable");
       expect(result.data.records[0].propagated).toBe(false);
+    });
+  });
+
+  // ─── Monetary conversions ─────────────────────────────────────────────
+
+  describe("monetary conversions", () => {
+    it("usdToCents(34.98) === 3498", () => { expect(usdToCents(34.98)).toBe(3498); });
+    it("usdToCents(0.99) === 99", () => { expect(usdToCents(0.99)).toBe(99); });
+    it("centsToAtomicUsdc(3498) === '34980000'", () => { expect(centsToAtomicUsdc(3498)).toBe("34980000"); });
+    it("centsToAtomicUsdc(99) === '990000'", () => { expect(centsToAtomicUsdc(99)).toBe("990000"); });
+    it("centsToUsd(3498) === 34.98", () => { expect(centsToUsd(3498)).toBe(34.98); });
+  });
+
+  // ─── NameSiloError code field ─────────────────────────────────────────
+
+  describe("NameSiloError", () => {
+    it("carries code when provided", async () => {
+      const { NameSiloError } = await import("../src/namesilo.ts");
+      const err = new NameSiloError("msg", 261);
+      expect(err.code).toBe(261);
+    });
+
+    it("code is undefined when omitted", async () => {
+      const { NameSiloError } = await import("../src/namesilo.ts");
+      const err = new NameSiloError("msg");
+      expect(err.code).toBeUndefined();
+    });
+  });
+
+  // ─── Quote domain ─────────────────────────────────────────────────────
+
+  describe("quote domain", () => {
+    beforeEach(() => {
+      process.env.NAMESILO_API_KEY = "test-ns-key";
+    });
+
+    afterEach(() => {
+      process.env.NAMESILO_API_KEY = "";
+    });
+
+    it("returns quote_id with q_ prefix and pricing", async () => {
+      const result = await quoteDomain({ domain: "example.com" }, CALLER);
+      expect(result.ok).toBe(true);
+      if (!result.ok) return;
+      expect(result.data.quote_id).toMatch(/^q_/);
+      expect(result.data.domain).toBe("example.com");
+      expect(result.data.available).toBe(true);
+      expect(result.data.total_cost_usd).toBeGreaterThan(result.data.registrar_cost_usd);
+      expect(result.data.currency).toBe("USD");
+      // expires_at is ~15 min from now
+      const exp = new Date(result.data.expires_at).getTime();
+      expect(exp - Date.now()).toBeGreaterThan(14 * 60 * 1000);
+    });
+
+    it("applies margin: total > registrar_cost", async () => {
+      const result = await quoteDomain({ domain: "example.com" }, CALLER);
+      expect(result.ok).toBe(true);
+      if (!result.ok) return;
+      expect(result.data.total_cost_usd).toBeGreaterThan(result.data.registrar_cost_usd);
+    });
+
+    it("returns 503 when NAMESILO_API_KEY is not set", async () => {
+      process.env.NAMESILO_API_KEY = "";
+      const result = await quoteDomain({ domain: "example.com" }, CALLER);
+      expect(result.ok).toBe(false);
+      if (result.ok) return;
+      expect(result.status).toBe(503);
+    });
+
+    it("returns 400 for invalid domain", async () => {
+      const result = await quoteDomain({ domain: "not-a-domain" }, CALLER);
+      expect(result.ok).toBe(false);
+      if (result.ok) return;
+      expect(result.status).toBe(400);
+    });
+
+    it("returns 400 for unavailable domain", async () => {
+      // Mock NameSilo returning domain as unavailable
+      mockFetch.mockImplementationOnce(async () =>
+        new Response(
+          JSON.stringify({
+            request: { operation: "checkRegisterAvailability", ip: "1.2.3.4" },
+            reply: {
+              code: 300,
+              detail: "success",
+              available: [],
+              unavailable: { domain: ["taken.com"] },
+            },
+          }),
+          { status: 200, headers: { "Content-Type": "application/json" } },
+        ),
+      );
+      const result = await quoteDomain({ domain: "taken.com" }, CALLER);
+      expect(result.ok).toBe(false);
+      if (result.ok) return;
+      expect(result.status).toBe(400);
+      expect(result.code).toBe("domain_taken");
+    });
+  });
+
+  // ─── Register domain ──────────────────────────────────────────────────
+
+  describe("register domain", () => {
+    let quoteId: string;
+
+    beforeEach(async () => {
+      process.env.NAMESILO_API_KEY = "test-ns-key";
+      const q = await quoteDomain({ domain: "example.com" }, CALLER);
+      if (!q.ok) throw new Error("Failed to create quote");
+      quoteId = q.data.quote_id;
+    });
+
+    afterEach(() => {
+      process.env.NAMESILO_API_KEY = "";
+    });
+
+    it("full success: registered=true, zone_id set, ns_configured=true, recovery_token=null", async () => {
+      const result = await registerDomain(quoteId, CALLER);
+      expect(result.ok).toBe(true);
+      if (!result.ok) return;
+      expect(result.data.registered).toBe(true);
+      expect(result.data.zone_id).toMatch(/^z_/);
+      expect(result.data.ns_configured).toBe(true);
+      expect(result.data.recovery_token).toBeNull();
+      expect(result.data.nameservers).toHaveLength(2);
+    });
+
+    it("persists registration row to DB", async () => {
+      await registerDomain(quoteId, CALLER);
+      const reg = getRegistrationByDomain("example.com");
+      expect(reg).not.toBeNull();
+      expect(reg?.namesilo_order_id).toBeTruthy();
+      expect(reg?.owner_wallet).toBe(CALLER);
+    });
+
+    it("returns 404 for unknown quote_id", async () => {
+      const result = await registerDomain("q_nonexistent", CALLER);
+      expect(result.ok).toBe(false);
+      if (result.ok) return;
+      expect(result.status).toBe(404);
+    });
+
+    it("returns 410 for expired quote", async () => {
+      // Manually expire the quote by creating one with expired timestamp
+      const { insertQuote } = await import("../src/db.ts");
+      insertQuote({
+        id: "q_expired",
+        domain: "expired.com",
+        years: 1,
+        registrar_cost_cents: 995,
+        margin_cents: 100,
+        total_cents: 1095,
+        caller_wallet: CALLER,
+        expires_at: Date.now() - 1000, // expired 1 second ago
+      });
+      const result = await registerDomain("q_expired", CALLER);
+      expect(result.ok).toBe(false);
+      if (result.ok) return;
+      expect(result.status).toBe(410);
+      expect(result.code).toBe("quote_expired");
+    });
+
+    it("returns 400 (domain_taken) when NameSilo returns code 261", async () => {
+      mockFetch.mockImplementationOnce(async () =>
+        new Response(
+          JSON.stringify({
+            request: { operation: "registerDomain", ip: "1.2.3.4" },
+            reply: { code: 261, detail: "Domain not available for registration" },
+          }),
+          { status: 200, headers: { "Content-Type": "application/json" } },
+        ),
+      );
+      const result = await registerDomain(quoteId, CALLER);
+      expect(result.ok).toBe(false);
+      if (result.ok) return;
+      expect(result.status).toBe(400);
+      expect(result.code).toBe("domain_taken");
+    });
+
+    it("partial: CF fails after NameSilo success → 201 with recovery_token", async () => {
+      // NameSilo register succeeds (default mock), CF zone creation fails
+      mockFetch.mockImplementationOnce(async () =>
+        // NameSilo register — success
+        new Response(
+          JSON.stringify({ request: { operation: "registerDomain", ip: "1.2.3.4" }, reply: { code: 300, detail: "success" } }),
+          { status: 200, headers: { "Content-Type": "application/json" } },
+        ),
+      ).mockImplementationOnce(async () =>
+        // CF POST /zones — error
+        new Response(
+          JSON.stringify({ success: false, errors: [{ code: 1000, message: "CF error" }] }),
+          { status: 500, headers: { "Content-Type": "application/json" } },
+        ),
+      );
+      const result = await registerDomain(quoteId, CALLER);
+      expect(result.ok).toBe(true);
+      if (!result.ok) return;
+      expect(result.data.zone_id).toBeNull();
+      expect(result.data.recovery_token).toMatch(/^rt_/);
+      expect(result.data.ns_configured).toBe(false);
+    });
+
+    it("partial: NS fails after CF success → 201, ns_configured=false, recovery_token=null", async () => {
+      // NameSilo register succeeds, CF zone creation succeeds (defaults), NS change fails
+      mockFetch
+        .mockImplementationOnce(async (input: RequestInfo | URL) => {
+          // NameSilo registerDomain
+          const u = typeof input === "string" ? input : (input as URL).toString();
+          if (u.includes("namesilo") && u.includes("registerDomain")) {
+            return new Response(
+              JSON.stringify({ request: { operation: "registerDomain", ip: "1.2.3.4" }, reply: { code: 300, detail: "success" } }),
+              { status: 200, headers: { "Content-Type": "application/json" } },
+            );
+          }
+          return new Response(JSON.stringify({ success: true, errors: [], result: { id: "cf-zone-001", name: "example.com", status: "pending", name_servers: ["ns1.cloudflare.com", "ns2.cloudflare.com"] } }), { status: 200, headers: { "Content-Type": "application/json" } });
+        })
+        .mockImplementationOnce(async () =>
+          // CF POST /zones — success
+          new Response(
+            JSON.stringify({ success: true, errors: [], result: { id: "cf-zone-001", name: "example.com", status: "pending", name_servers: ["ns1.cloudflare.com", "ns2.cloudflare.com"] } }),
+            { status: 200, headers: { "Content-Type": "application/json" } },
+          ),
+        )
+        .mockImplementationOnce(async () =>
+          // NameSilo changeNameServers — fails
+          new Response(
+            JSON.stringify({ request: { operation: "changeNameServers", ip: "1.2.3.4" }, reply: { code: 999, detail: "NS error" } }),
+            { status: 200, headers: { "Content-Type": "application/json" } },
+          ),
+        );
+      const result = await registerDomain(quoteId, CALLER);
+      expect(result.ok).toBe(true);
+      if (!result.ok) return;
+      expect(result.data.zone_id).toMatch(/^z_/);
+      expect(result.data.ns_configured).toBe(false);
+      expect(result.data.recovery_token).toBeNull();
+    });
+  });
+
+  // ─── Recover registration ─────────────────────────────────────────────
+
+  describe("recover registration", () => {
+    let recoveryToken: string;
+
+    beforeEach(async () => {
+      process.env.NAMESILO_API_KEY = "test-ns-key";
+      // Create a quote
+      const q = await quoteDomain({ domain: "example.com" }, CALLER);
+      if (!q.ok) throw new Error("Failed to create quote");
+      // Simulate NameSilo success + CF failure → leaves recovery_token
+      const { NameSiloError } = await import("../src/namesilo.ts");
+      mockFetch.mockImplementationOnce(async () =>
+        new Response(
+          JSON.stringify({ request: { operation: "registerDomain", ip: "1.2.3.4" }, reply: { code: 300, detail: "success" } }),
+          { status: 200, headers: { "Content-Type": "application/json" } },
+        ),
+      ).mockImplementationOnce(async () =>
+        new Response(
+          JSON.stringify({ success: false, errors: [{ code: 1000, message: "CF down" }] }),
+          { status: 500, headers: { "Content-Type": "application/json" } },
+        ),
+      );
+      const reg = await registerDomain(q.data.quote_id, CALLER);
+      if (!reg.ok) throw new Error("Failed to register");
+      recoveryToken = reg.data.recovery_token!;
+    });
+
+    afterEach(() => {
+      process.env.NAMESILO_API_KEY = "";
+    });
+
+    it("successful recovery creates zone and sets ns_configured", async () => {
+      const result = await recoverRegistration(recoveryToken, CALLER);
+      expect(result.ok).toBe(true);
+      if (!result.ok) return;
+      expect(result.data.zone_id).toMatch(/^z_/);
+      expect(result.data.nameservers).toHaveLength(2);
+    });
+
+    it("clears recovery_token after success", async () => {
+      await recoverRegistration(recoveryToken, CALLER);
+      const reg = getRegistrationByDomain("example.com");
+      expect(reg?.recovery_token).toBeNull();
+    });
+
+    it("returns 404 for invalid token", async () => {
+      const result = await recoverRegistration("rt_nonexistent", CALLER);
+      expect(result.ok).toBe(false);
+      if (result.ok) return;
+      expect(result.status).toBe(404);
+    });
+
+    it("returns 403 for wrong wallet", async () => {
+      const result = await recoverRegistration(recoveryToken, OTHER);
+      expect(result.ok).toBe(false);
+      if (result.ok) return;
+      expect(result.status).toBe(403);
+    });
+  });
+
+  // ─── Configure NS ─────────────────────────────────────────────────────
+
+  describe("configure NS", () => {
+    beforeEach(async () => {
+      process.env.NAMESILO_API_KEY = "test-ns-key";
+      // Fully register (NameSilo + CF ok, NS fails) to get a zone with ns_configured=false
+      const q = await quoteDomain({ domain: "example.com" }, CALLER);
+      if (!q.ok) throw new Error("Failed to create quote");
+      // Intercept the NS change to fail
+      const origMockImpl = mockFetch.getMockImplementation();
+      mockFetch.mockImplementationOnce(async () =>
+        new Response(
+          JSON.stringify({ request: { operation: "registerDomain", ip: "1.2.3.4" }, reply: { code: 300, detail: "success" } }),
+          { status: 200, headers: { "Content-Type": "application/json" } },
+        ),
+      ).mockImplementationOnce(async () =>
+        // CF zone — success
+        new Response(
+          JSON.stringify({ success: true, errors: [], result: makeCfZone({ name: "example.com" }) }),
+          { status: 200, headers: { "Content-Type": "application/json" } },
+        ),
+      ).mockImplementationOnce(async () =>
+        // NS change — fail
+        new Response(
+          JSON.stringify({ request: { operation: "changeNameServers", ip: "1.2.3.4" }, reply: { code: 999, detail: "NS error" } }),
+          { status: 200, headers: { "Content-Type": "application/json" } },
+        ),
+      );
+      await registerDomain(q.data.quote_id, CALLER);
+    });
+
+    afterEach(() => {
+      process.env.NAMESILO_API_KEY = "";
+    });
+
+    it("successfully configures NS and sets ns_configured=true", async () => {
+      const result = await configureNs("example.com", CALLER);
+      expect(result.ok).toBe(true);
+      if (!result.ok) return;
+      expect(result.data.ns_configured).toBe(true);
+      expect(result.data.nameservers).toBeDefined();
+    });
+
+    it("persists ns_configured=true to DB", async () => {
+      await configureNs("example.com", CALLER);
+      const reg = getRegistrationByDomain("example.com");
+      expect(reg?.ns_configured).toBe(1);
+    });
+
+    it("returns 403 for wrong wallet", async () => {
+      const result = await configureNs("example.com", OTHER);
+      expect(result.ok).toBe(false);
+      if (result.ok) return;
+      expect(result.status).toBe(403);
+    });
+
+    it("returns 404 for unregistered domain", async () => {
+      const result = await configureNs("notregistered.com", CALLER);
+      expect(result.ok).toBe(false);
+      if (result.ok) return;
+      expect(result.status).toBe(404);
     });
   });
 

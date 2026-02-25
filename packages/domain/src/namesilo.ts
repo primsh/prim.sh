@@ -33,9 +33,11 @@ function getApiKey(): string {
 // ─── Error class ──────────────────────────────────────────────────────────
 
 export class NameSiloError extends Error {
-  constructor(message: string) {
+  public readonly code: number | undefined;
+  constructor(message: string, code?: number) {
     super(message);
     this.name = "NameSiloError";
+    this.code = code;
   }
 }
 
@@ -183,6 +185,7 @@ export class NameSiloClient implements RegistrarProvider {
     if (!isSuccess(body.reply.code)) {
       throw new NameSiloError(
         `NameSilo registerDomain failed (code ${body.reply.code}): ${body.reply.detail}`,
+        body.reply.code,
       );
     }
 
