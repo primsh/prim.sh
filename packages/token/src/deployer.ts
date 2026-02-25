@@ -66,6 +66,20 @@ export function getChain(): Chain {
   throw new Error(`Unsupported BASE_CHAIN_ID: ${chainId}. Supported: 8453 (Base), 84532 (Base Sepolia)`);
 }
 
+/**
+ * Assert that the RPC's reported chain ID matches our configured chain.
+ * Call before any write tx to catch mismatched BASE_RPC_URL / BASE_CHAIN_ID early.
+ */
+export async function assertChainId(publicClient: ReturnType<typeof createPublicClient>): Promise<void> {
+  const expectedId = getChain().id;
+  const actualId = await publicClient.getChainId();
+  if (actualId !== expectedId) {
+    throw new Error(
+      `Chain ID mismatch: RPC reports ${actualId}, configured BASE_CHAIN_ID=${expectedId}. Check BASE_RPC_URL and BASE_CHAIN_ID env vars.`,
+    );
+  }
+}
+
 export function getDeployerClient(): WalletClient<Transport, Chain, Account> {
   const encryptedKey = process.env.TOKEN_DEPLOYER_ENCRYPTED_KEY;
   if (!encryptedKey) {

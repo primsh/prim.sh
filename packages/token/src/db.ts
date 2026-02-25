@@ -57,33 +57,40 @@ export function getDb(): Database {
 
   // Migration: drop factory_address column if present (requires table-rebuild on SQLite)
   if (cols.includes("factory_address")) {
-    _db.run(`
-      CREATE TABLE deployments_v2 (
-        id               TEXT PRIMARY KEY,
-        contract_address  TEXT UNIQUE,
-        owner_wallet      TEXT NOT NULL,
-        name              TEXT NOT NULL,
-        symbol            TEXT NOT NULL,
-        decimals          INTEGER NOT NULL DEFAULT 18,
-        initial_supply    TEXT NOT NULL,
-        total_minted      TEXT NOT NULL DEFAULT '0',
-        mintable          INTEGER NOT NULL DEFAULT 0,
-        max_supply        TEXT,
-        tx_hash           TEXT NOT NULL,
-        deploy_status     TEXT NOT NULL DEFAULT 'pending',
-        created_at        INTEGER NOT NULL,
-        updated_at        INTEGER NOT NULL
-      )
-    `);
-    _db.run(`
-      INSERT INTO deployments_v2
-        SELECT id, contract_address, owner_wallet, name, symbol, decimals,
-               initial_supply, '0', mintable, max_supply, tx_hash,
-               deploy_status, created_at, updated_at
-        FROM deployments
-    `);
-    _db.run("DROP TABLE deployments");
-    _db.run("ALTER TABLE deployments_v2 RENAME TO deployments");
+    _db.run("BEGIN");
+    try {
+      _db.run(`
+        CREATE TABLE deployments_v2 (
+          id               TEXT PRIMARY KEY,
+          contract_address  TEXT UNIQUE,
+          owner_wallet      TEXT NOT NULL,
+          name              TEXT NOT NULL,
+          symbol            TEXT NOT NULL,
+          decimals          INTEGER NOT NULL DEFAULT 18,
+          initial_supply    TEXT NOT NULL,
+          total_minted      TEXT NOT NULL DEFAULT '0',
+          mintable          INTEGER NOT NULL DEFAULT 0,
+          max_supply        TEXT,
+          tx_hash           TEXT NOT NULL,
+          deploy_status     TEXT NOT NULL DEFAULT 'pending',
+          created_at        INTEGER NOT NULL,
+          updated_at        INTEGER NOT NULL
+        )
+      `);
+      _db.run(`
+        INSERT INTO deployments_v2
+          SELECT id, contract_address, owner_wallet, name, symbol, decimals,
+                 initial_supply, '0', mintable, max_supply, tx_hash,
+                 deploy_status, created_at, updated_at
+          FROM deployments
+      `);
+      _db.run("DROP TABLE deployments");
+      _db.run("ALTER TABLE deployments_v2 RENAME TO deployments");
+      _db.run("COMMIT");
+    } catch (err) {
+      _db.run("ROLLBACK");
+      throw err;
+    }
   }
 
   _db.run("CREATE INDEX IF NOT EXISTS idx_deployments_owner_wallet ON deployments(owner_wallet)");

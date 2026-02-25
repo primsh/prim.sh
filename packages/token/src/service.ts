@@ -9,7 +9,7 @@ import {
   incrementTotalMinted,
 } from "./db.ts";
 import type { DeploymentRow } from "./db.ts";
-import { getDeployerClient, getPublicClient } from "./deployer.ts";
+import { getDeployerClient, getPublicClient, assertChainId } from "./deployer.ts";
 import { AGENT_TOKEN_ABI, AGENT_TOKEN_BYTECODE, ERC20_ABI } from "./contracts.ts";
 import type {
   CreateTokenRequest,
@@ -146,10 +146,12 @@ export async function deployToken(
   const initialSupplyWei = parseUnits(request.initialSupply, decimals);
   const maxSupplyWei = maxSupply !== null ? parseUnits(maxSupply, decimals) : 0n;
 
+  const publicClient = getPublicClient();
   const client = getDeployerClient();
 
   let txHash: string;
   try {
+    await assertChainId(publicClient);
     txHash = await client.deployContract({
       abi: AGENT_TOKEN_ABI,
       bytecode: AGENT_TOKEN_BYTECODE,
@@ -186,7 +188,6 @@ export async function deployToken(
 
   // Wait for receipt and update deploy_status (30s timeout)
   try {
-    const publicClient = getPublicClient();
     const receipt = await publicClient.waitForTransactionReceipt({
       hash: txHash as `0x${string}`,
       timeout: 30_000,
@@ -299,11 +300,13 @@ export async function mintTokens(
     };
   }
 
+  const publicClientForMint = getPublicClient();
   const client = getDeployerClient();
   const amountWei = parseUnits(request.amount, row.decimals);
 
   let txHash: string;
   try {
+    await assertChainId(publicClientForMint);
     txHash = await client.writeContract({
       address: row.contract_address as Address,
       abi: ERC20_ABI,
@@ -317,8 +320,7 @@ export async function mintTokens(
 
   // Wait for mint receipt and increment total_minted on success
   try {
-    const publicClient = getPublicClient();
-    const receipt = await publicClient.waitForTransactionReceipt({
+    const receipt = await publicClientForMint.waitForTransactionReceipt({
       hash: txHash as `0x${string}`,
       timeout: 30_000,
     });

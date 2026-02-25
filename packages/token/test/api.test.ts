@@ -57,6 +57,7 @@ vi.mock("viem", async (importOriginal) => {
     createPublicClient: vi.fn(() => ({
       readContract: (...args: unknown[]) => readContractMock(args[0]),
       waitForTransactionReceipt: (...args: unknown[]) => waitForTransactionReceiptMock(args[0]),
+      getChainId: async () => 8453,
     })),
   };
 });
