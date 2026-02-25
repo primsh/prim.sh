@@ -102,7 +102,7 @@ describe("stalwart client", () => {
 
   describe("error mapping", () => {
     it("maps 404 to not_found", async () => {
-      expect.assertions(2);
+      expect.assertions(3);
       globalThis.fetch = vi.fn().mockResolvedValue({
         ok: false,
         status: 404,
@@ -112,6 +112,7 @@ describe("stalwart client", () => {
       try {
         await getPrincipal("missing");
       } catch (err) {
+        expect(err).toBeInstanceOf(StalwartError);
         expect((err as StalwartError).code).toBe("not_found");
         expect((err as StalwartError).statusCode).toBe(404);
       }
