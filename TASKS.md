@@ -51,6 +51,9 @@
 | 2 | ST-2 | Build store.sh: object CRUD via S3-compatible API (put, get, delete, list within owned buckets) | packages/store | ST-1 | done |
 | 3 | ST-3 | Build store.sh: storage quota + usage tracking (per-bucket limits, metering) | packages/store | ST-1 | done |
 | 4 | ST-4 | Integrate x402 middleware for store.sh | packages/store | ST-1, P-4 | done |
+| 5 | TK-1 | Build token.sh: scaffold + deploy + query (package, db, deployer keystore, factory ABI, CREATE2, service, routes, tests) | packages/token | P-4 | done |
+| 6 | TK-2 | Build token.sh: mint + supply (POST /mint, GET /supply, ownership + cap enforcement, tests) | packages/token | TK-1 | done |
+| 7 | TK-3 | Build token.sh: Uniswap pool creation (liquidity coordination with wallet.sh) | packages/token | TK-2 | pending |
 
 ## Plan Docs
 
@@ -83,6 +86,7 @@
 - R-7: `tasks/active/r-7-incoming-webhooks-mta-hooks.md`
 - R-8: `tasks/active/r-8-mailbox-ttl-expiry.md`
 - ST-3: `tasks/completed/st-3-storage-quota-usage.md`
+- TK-1/TK-2: implemented directly (no plan doc — plan provided in prompt)
 - Umbrella: `tasks/active/batch-execution-umbrella-2026-02-24.md`
 
 ## Backlog — Future Primitives
@@ -239,6 +243,8 @@ ERC-8004 uses CAIP-10 wallet addresses as root identity. DIDs layer on top non-b
 - ST-2 — store.sh object CRUD: S3-compatible API via aws4fetch, put/get/delete/list, streaming download, 54 tests (2026-02-25)
 - ST-3 — store.sh quota + usage: per-bucket quotas, synchronous enforcement, headObject for overwrite/delete tracking, reconciliation, 78 tests (2026-02-25)
 - ST-4 — x402 middleware already integrated in ST-1/ST-2 (2026-02-25)
+- TK-1 — token.sh scaffold + deploy + query: factory ABI, CREATE2 salt, AES-256-GCM deployer keystore, SQLite deployments, 58 tests (2026-02-25)
+- TK-2 — token.sh mint + supply: mintable/not_mintable/forbidden/exceeds_max_supply decision table, on-chain totalSupply reads, 58 tests (2026-02-25)
 
 ### R-2 completion details (2026-02-25)
 
