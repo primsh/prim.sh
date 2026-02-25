@@ -38,6 +38,12 @@ vi.mock("viem", async (importOriginal) => {
   };
 });
 
+// Mock @prim/keystore — configured per-test via vi.mocked(loadAccount)
+const mockLoadAccount = vi.fn();
+vi.mock("@prim/keystore", () => ({
+  loadAccount: mockLoadAccount,
+}));
+
 // ── Import modules after mocks ────────────────────────────────────────────────
 
 const { createPrimFetch, parseUsdc } = await import("../src/client.ts");
@@ -49,7 +55,9 @@ const TEST_PRIVATE_KEY =
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
-function makePaymentRequiredHeader(amount = "0.01"): string {
+// Amounts are in atomic units (micro-USDC, 6 decimals) matching x402 protocol.
+// e.g. "10000" = 0.01 USDC, "5000000" = 5.00 USDC, "1000000" = 1.00 USDC
+function makePaymentRequiredHeader(amount = "10000"): string {
   const paymentRequired = {
     x402Version: 2,
     error: undefined,
@@ -74,7 +82,7 @@ function makePaymentRequiredHeader(amount = "0.01"): string {
   return encodePaymentRequiredHeader(paymentRequired as any);
 }
 
-function make402Response(amount = "0.01"): Response {
+function make402Response(amount = "10000"): Response {
   return new Response("Payment Required", {
     status: 402,
     headers: {
@@ -182,7 +190,7 @@ describe("createPrimFetch", () => {
   });
 
   it("price exceeds maxPayment: throws with descriptive message", async () => {
-    const mockFetch = vi.fn().mockResolvedValueOnce(make402Response("5.00"));
+    const mockFetch = vi.fn().mockResolvedValueOnce(make402Response("5000000"));
     vi.stubGlobal("fetch", mockFetch);
 
     const primFetch = createPrimFetch({ privateKey: TEST_PRIVATE_KEY, maxPayment: "1.00" });
@@ -194,7 +202,7 @@ describe("createPrimFetch", () => {
   it("price at maxPayment cap: does not throw", async () => {
     const mockFetch = vi
       .fn()
-      .mockResolvedValueOnce(make402Response("1.00"))
+      .mockResolvedValueOnce(make402Response("1000000"))
       .mockResolvedValueOnce(make200Response());
     vi.stubGlobal("fetch", mockFetch);
 
@@ -257,10 +265,48 @@ describe("createPrimFetch", () => {
     vi.unstubAllGlobals();
   });
 
-  it("neither key nor signer: throws error", () => {
-    expect(() => createPrimFetch({})).toThrow(
-      "createPrimFetch requires either privateKey or signer",
-    );
+  it("no credentials: throws error", () => {
+    // No signer, no privateKey, no keystore, no AGENT_PRIVATE_KEY env
+    const saved = process.env.AGENT_PRIVATE_KEY;
+    // biome-ignore lint/performance/noDelete: env var must be absent (not "undefined" string)
+    delete process.env.AGENT_PRIVATE_KEY;
+    expect(() => createPrimFetch({})).toThrow("createPrimFetch requires");
+    if (saved !== undefined) process.env.AGENT_PRIVATE_KEY = saved;
+  });
+
+  it("AGENT_PRIVATE_KEY env: falls back to env var", async () => {
+    const mockFetch = vi.fn().mockResolvedValueOnce(make200Response());
+    vi.stubGlobal("fetch", mockFetch);
+
+    process.env.AGENT_PRIVATE_KEY = TEST_PRIVATE_KEY;
+    const primFetch = createPrimFetch({});
+    const res = await primFetch("https://example.com/resource");
+
+    expect(res.status).toBe(200);
+    // biome-ignore lint/performance/noDelete: env var must be absent (not "undefined" string)
+    delete process.env.AGENT_PRIVATE_KEY;
+
+    vi.unstubAllGlobals();
+  });
+
+  it("keystore mode: loads account from keystore", async () => {
+    const { privateKeyToAccount } = await import("viem/accounts");
+    const mockAccount = privateKeyToAccount(TEST_PRIVATE_KEY);
+    mockLoadAccount.mockResolvedValue(mockAccount);
+
+    const mockFetch = vi
+      .fn()
+      .mockResolvedValueOnce(make402Response())
+      .mockResolvedValueOnce(make200Response());
+    vi.stubGlobal("fetch", mockFetch);
+
+    const primFetch = createPrimFetch({ keystore: true });
+    const res = await primFetch("https://example.com/resource");
+
+    expect(res.status).toBe(200);
+    expect(mockLoadAccount).toHaveBeenCalledWith(undefined, { passphrase: undefined });
+
+    vi.unstubAllGlobals();
   });
 
   it("custom network: uses specified network config", async () => {

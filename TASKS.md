@@ -60,11 +60,15 @@
 | 7 | TK-4 | OZ + viem deployContract: compile AgentToken.sol, replace factory, fix TS bugs (stale cap, missing receipt), Base Sepolia smoke test | packages/token | TK-2 | done |
 | 8 | TK-3 | Build token.sh: Uniswap pool creation (liquidity coordination with wallet.sh) | packages/token | TK-4 | pending |
 | 8 | ST-5 | Testnet integration testing: env-configurable network (`PRIM_NETWORK`), Base Sepolia x402 end-to-end, wallet.sh ↔ store.sh | cross-cutting | ST-4, W-5 | done |
+| 8 | SP-8 | spawn.sh live smoke test against DigitalOcean (provider-direct, 9 tests) | packages/spawn | SP-7 | done |
+| 8 | SP-9 | spawn.sh x402 integration: add spawn to cross-primitive integration test, fix SSH key ID resolution bug, fix hardcoded mainnet | scripts/, packages/spawn | SP-7, ST-5 | done |
+| 7 | X4-1 | Investigate x402 facilitator "Settlement failed" on Base Sepolia — intermittent on-chain settlement failures block testnet testing | cross-cutting | ST-5 | pending |
 | 9 | R-13 | Fix outbound email delivery: check Stalwart SMTP logs, unblock DO port 25 (or request removal), verify SPF/DKIM/rDNS, confirm delivery to external address | deploy/email | R-12 | done |
 | 9 | W-10 | Non-custodial refactor: strip keystore, EIP-191 signature registration, remove send/swap, publish `@prim/x402-client` | specs/, packages/wallet, packages/x402-client | W-5 | done |
 | 10 | XC-1 | Build @prim/x402-client: agent-side x402 fetch wrapper (privateKey + signer modes) | packages/x402-client | — | done |
 | 11 | FC-1 | Build faucet.sh: Circle USDC drip + treasury ETH drip (testnet only) | packages/faucet | — | done |
 | 12 | R-14 | Custom usernames, permanent mailboxes, rename relay → email | packages/email, site/, specs/ | R-11 | done |
+| 13 | KS-1 | Build @prim/keystore: local key storage (~/.prim/keys/) + CLI + x402-client integration | packages/keystore, packages/x402-client | XC-1 | done |
 
 ## Plan Docs
 
@@ -106,6 +110,7 @@
 - ST-5: `tasks/completed/st-5-testnet-integration-testing.md`
 - R-11: `tasks/completed/r-11-local-smoke-test.md`
 - R-14: plan provided in prompt (no plan doc)
+- KS-1: `~/.claude/plans/fancy-hugging-breeze.md`
 - Umbrella: `tasks/active/batch-execution-umbrella-2026-02-24.md`
 
 ## Backlog — Future Primitives
@@ -273,8 +278,20 @@ ERC-8004 uses CAIP-10 wallet addresses as root identity. DIDs layer on top non-b
 - W-10 — non-custodial refactor: strip keystore+encrypted_key, EIP-191 signature registration, remove send/swap/history, fund-request approve returns address+amount (non-custodial), ADR at specs/adr-wallet-custody.md, 82 wallet tests (2026-02-25)
 - XC-1 — @prim/x402-client: agent-side x402 fetch wrapper, privateKey+signer modes, max payment cap, auto-detect network, 14 tests (2026-02-25)
 - FC-1 — faucet.sh: Circle USDC drip + treasury ETH drip, testnet-only guard, in-memory rate limiting, 18 tests (2026-02-25)
+- SP-8 — spawn.sh DO live smoke test: 9 tests against real DO API (create/poll/reboot/delete droplet + SSH key CRUD), provider-direct (2026-02-25)
+- SP-9 — spawn.sh x402 integration test: end-to-end agent-pays-USDC→server-created on Base Sepolia. Bugs fixed: SSH key ID resolution (internal→provider), spawn hardcoded mainnet→env vars. First cross-primitive proof: wallet+faucet+spawn via x402 payment (2026-02-25)
 - R-13 — outbound email delivery confirmed: port 25 open on DO droplet, SPF/DKIM/DMARC pass, Gmail accepted with signed-by+mailed-by relay.prim.sh, TLS (2026-02-25)
 - R-14 — custom usernames, permanent mailboxes (null expires_at), rename relay → email across all packages/site/docs, 162 tests (2026-02-25)
+
+### Milestone: Non-custodial x402 end-to-end verified (2026-02-25)
+
+**8/8 store.sh integration test steps pass on Base Sepolia.** Full non-custodial payment pipeline:
+1. Agent generates private key locally
+2. Registers wallet with wallet.sh via EIP-191 signature
+3. Signs x402 payments client-side via `@prim/x402-client`
+4. store.sh accepts payments (facilitator settles on-chain), executes CRUD against real Cloudflare R2
+
+Test wallet `[REDACTED_WALLET]` — ~119 USDC remaining. Cost: ~$0.07/run (6 store operations). Run: `set -a && source scripts/.env.testnet && set +a && bun run scripts/integration-test.ts`
 
 ### R-2 completion details (2026-02-25)
 

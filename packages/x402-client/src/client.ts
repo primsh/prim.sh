@@ -23,10 +23,19 @@ export function parseUsdc(amount: string): bigint {
   return BigInt(whole ?? "0") * 1_000_000n + BigInt(fracPadded);
 }
 
-function resolveAccount(config: CreatePrimFetchConfig): LocalAccount {
-  if (config.signer) return config.signer;
-  if (config.privateKey) return privateKeyToAccount(config.privateKey);
-  throw new Error("createPrimFetch requires either privateKey or signer");
+/** Formats atomic USDC (6 decimals) back to human-readable string. */
+function formatUsdc(atomic: bigint): string {
+  const whole = atomic / 1_000_000n;
+  const frac = atomic % 1_000_000n;
+  return `${whole}.${frac.toString().padStart(6, "0")}`;
+}
+
+async function resolveKeystoreAccount(
+  keystore: NonNullable<CreatePrimFetchConfig["keystore"]>,
+): Promise<LocalAccount> {
+  const { loadAccount } = await import("@prim/keystore");
+  const opts = keystore === true ? {} : (keystore as { address?: string; passphrase?: string });
+  return loadAccount(opts.address, { passphrase: opts.passphrase });
 }
 
 function buildHttpClient(account: LocalAccount, network?: string): x402HTTPClient {
@@ -81,10 +90,54 @@ function buildHttpClient(account: LocalAccount, network?: string): x402HTTPClien
  * 6. Retry with Payment-Signature header
  * 7. Return retry response (no second retry)
  */
+/**
+ * Creates a fetch-compatible function that auto-handles x402 402 payment-required responses.
+ *
+ * Key resolution order:
+ * 1. signer (viem LocalAccount)
+ * 2. privateKey (hex string)
+ * 3. keystore (load from ~/.prim/keys/ — lazy, async)
+ * 4. AGENT_PRIVATE_KEY env var
+ * 5. throw
+ *
+ * Flow:
+ * 1. Make initial request
+ * 2. If not 402, return immediately
+ * 3. Parse Payment-Required header
+ * 4. Check price against maxPayment cap
+ * 5. Sign EIP-3009 payment via x402 client
+ * 6. Retry with Payment-Signature header
+ * 7. Return retry response (no second retry)
+ */
 export function createPrimFetch(config: CreatePrimFetchConfig): typeof fetch {
-  const account = resolveAccount(config);
   const maxPayment = config.maxPayment ?? "1.00";
-  const httpClient = buildHttpClient(account, config.network);
+
+  // Resolve sync account eagerly (signer, privateKey, AGENT_PRIVATE_KEY)
+  let syncAccount: LocalAccount | null = null;
+  if (config.signer) {
+    syncAccount = config.signer;
+  } else if (config.privateKey) {
+    syncAccount = privateKeyToAccount(config.privateKey);
+  } else if (!config.keystore && process.env.AGENT_PRIVATE_KEY) {
+    syncAccount = privateKeyToAccount(process.env.AGENT_PRIVATE_KEY as `0x${string}`);
+  } else if (!config.keystore) {
+    throw new Error("createPrimFetch requires either privateKey, signer, or keystore");
+  }
+
+  // Build http client eagerly for sync accounts; lazy for keystore
+  const syncHttpClient = syncAccount ? buildHttpClient(syncAccount, config.network) : null;
+  let keystoreClientPromise: Promise<x402HTTPClient> | null = null;
+
+  async function getHttpClient(): Promise<x402HTTPClient> {
+    if (syncHttpClient) return syncHttpClient;
+    if (!keystoreClientPromise) {
+      // biome-ignore lint/style/noNonNullAssertion: keystore is guaranteed set when syncHttpClient is null
+      keystoreClientPromise = resolveKeystoreAccount(config.keystore!).then((account) =>
+        buildHttpClient(account, config.network),
+      );
+    }
+    return keystoreClientPromise;
+  }
 
   return async (input: RequestInfo | URL, init?: RequestInit): Promise<Response> => {
     // Step 1: Initial request
@@ -106,18 +159,22 @@ export function createPrimFetch(config: CreatePrimFetchConfig): typeof fetch {
     const paymentRequired = decodePaymentRequiredHeader(paymentRequiredHeader);
 
     // Step 3: Check price against maxPayment cap
+    // x402 protocol returns amount in atomic units (micro-USDC, 6 decimals).
+    // e.g. "$0.05" route price → "50000" in header. maxPayment is human-readable.
     const requirements = paymentRequired.accepts[0];
     if (requirements) {
-      const price = parseUsdc(requirements.amount);
-      const cap = parseUsdc(maxPayment);
-      if (price > cap) {
+      const priceAtomic = BigInt(requirements.amount);
+      const capAtomic = parseUsdc(maxPayment);
+      if (priceAtomic > capAtomic) {
+        const priceHuman = formatUsdc(priceAtomic);
         throw new Error(
-          `Payment of ${requirements.amount} USDC exceeds maxPayment cap of ${maxPayment} USDC`,
+          `Payment of ${priceHuman} USDC exceeds maxPayment cap of ${maxPayment} USDC`,
         );
       }
     }
 
     // Step 4: Sign payment
+    const httpClient = await getHttpClient();
     const paymentPayload = await httpClient.createPaymentPayload(paymentRequired);
 
     // Step 5: Encode and retry
