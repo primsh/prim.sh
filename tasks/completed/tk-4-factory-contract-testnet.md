@@ -80,7 +80,12 @@ constructor(name, symbol, decimals_, initialSupply, mintable_, maxSupply_, owner
 - Updates status to `confirmed` / `failed`
 - Populates `contract_address`
 
-**Fix:** After deploy tx, call `waitForTransactionReceipt` (with 30s timeout), parse the receipt to extract contract address (`receipt.contractAddress` — viem provides this for deploy txs), then `updateDeploymentStatus(id, "confirmed", contractAddress)`. On revert, set `"failed"`. On timeout, leave `"pending"` (caller retries GET).
+**Fix:** After deploy tx, call `waitForTransactionReceipt` (with 30s timeout) and explicitly check the receipt:
+- `receipt.status === "success"` AND `receipt.contractAddress !== null` → `updateDeploymentStatus(id, "confirmed", contractAddress)`
+- `receipt.status === "reverted"` OR `receipt.contractAddress === null` → `updateDeploymentStatus(id, "failed")`
+- On timeout → leave `"pending"` (caller retries GET)
+
+Do not rely solely on exception catching — `waitForTransactionReceipt` returns reverted receipts without throwing.
 
 ## Phases
 
@@ -156,18 +161,18 @@ This enables future verification and Basescan source verification without keepin
    - Add `incrementTotalMinted(id, amount)` function
    - Remove `factory_address` from `DeploymentRow` and schema
 
-4. **Fix `service.ts` `mintTokens()` (Bug 1):**
+5. **Fix `service.ts` `mintTokens()` (Bug 1):**
    - Read `total_minted` from row
    - Cap check: `BigInt(initial_supply) + BigInt(total_minted) + amountWei > BigInt(max_supply)` (use BigInt, not Number — avoids precision loss on large supplies)
    - After successful mint tx, call `waitForTransactionReceipt`, then `incrementTotalMinted(id, amount)`
 
-5. **Update `api.ts` `TokenResponse`:**
+6. **Update `api.ts` `TokenResponse`:**
    - Remove `factoryAddress` field
    - Add `totalMinted` field (optional, for mintable tokens)
 
-6. **Update `rowToTokenResponse()`** to reflect schema changes
+7. **Update `rowToTokenResponse()`** to reflect schema changes
 
-7. **New unit tests** (additions to existing test file):
+8. **New unit tests** (additions to existing test file):
    - Mint cap tracks cumulative mints:
      - `assert` mint #1 succeeds when `initial_supply + total_minted + amount <= max_supply`
      - `assert` mint #2 fails when cumulative would exceed max_supply (the Bug 1 case)

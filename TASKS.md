@@ -57,7 +57,7 @@
 | 4 | ST-4 | Integrate x402 middleware for store.sh | packages/store | ST-1, P-4 | done |
 | 5 | TK-1 | Build token.sh: scaffold + deploy + query (package, db, deployer keystore, factory ABI, CREATE2, service, routes, tests) | packages/token | P-4 | done |
 | 6 | TK-2 | Build token.sh: mint + supply (POST /mint, GET /supply, ownership + cap enforcement, tests) | packages/token | TK-1 | done |
-| 7 | TK-4 | Evaluate wrapping Thirdweb/Zora vs custom factory; fix TS bugs (stale cap check, missing tx confirmation); testnet validation | packages/token | TK-2 | pending |
+| 7 | TK-4 | OZ + viem deployContract: compile AgentToken.sol, replace factory, fix TS bugs (stale cap, missing receipt), Base Sepolia smoke test | packages/token | TK-2 | done |
 | 8 | TK-3 | Build token.sh: Uniswap pool creation (liquidity coordination with wallet.sh) | packages/token | TK-4 | pending |
 | 8 | ST-5 | Testnet integration testing: env-configurable network (`PRIM_NETWORK`), Base Sepolia x402 end-to-end, wallet.sh ↔ store.sh | cross-cutting | ST-4, W-5 | done |
 | 9 | R-13 | Fix outbound email delivery: check Stalwart SMTP logs, unblock DO port 25 (or request removal), verify SPF/DKIM/rDNS, confirm delivery to external address | deploy/email | R-12 | done |

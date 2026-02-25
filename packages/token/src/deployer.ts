@@ -1,7 +1,7 @@
 import { createCipheriv, createDecipheriv, randomBytes } from "node:crypto";
-import { createWalletClient, http } from "viem";
+import { createWalletClient, createPublicClient, http } from "viem";
 import { privateKeyToAccount } from "viem/accounts";
-import { base } from "viem/chains";
+import { base, baseSepolia } from "viem/chains";
 import type { Hex, WalletClient, Transport, Chain, Account } from "viem";
 
 interface EncryptedKeyBlob {
@@ -58,6 +58,14 @@ export function decryptPrivateKey(blobJson: string): Hex {
   return decrypted.toString("utf8") as Hex;
 }
 
+/** Returns the configured viem chain. BASE_CHAIN_ID=84532 → Base Sepolia, default 8453 → Base mainnet. */
+export function getChain(): Chain {
+  const chainId = Number(process.env.BASE_CHAIN_ID ?? "8453");
+  if (chainId === 84532) return baseSepolia;
+  if (chainId === 8453) return base;
+  throw new Error(`Unsupported BASE_CHAIN_ID: ${chainId}. Supported: 8453 (Base), 84532 (Base Sepolia)`);
+}
+
 export function getDeployerClient(): WalletClient<Transport, Chain, Account> {
   const encryptedKey = process.env.TOKEN_DEPLOYER_ENCRYPTED_KEY;
   if (!encryptedKey) {
@@ -66,10 +74,17 @@ export function getDeployerClient(): WalletClient<Transport, Chain, Account> {
 
   const privateKey = decryptPrivateKey(encryptedKey);
   const rpcUrl = process.env.BASE_RPC_URL ?? "https://mainnet.base.org";
+  const chain = getChain();
 
   return createWalletClient({
     account: privateKeyToAccount(privateKey),
-    chain: base,
+    chain,
     transport: http(rpcUrl),
   });
+}
+
+export function getPublicClient() {
+  const rpcUrl = process.env.BASE_RPC_URL ?? "https://mainnet.base.org";
+  const chain = getChain();
+  return createPublicClient({ chain, transport: http(rpcUrl) });
 }

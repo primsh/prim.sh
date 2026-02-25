@@ -13,10 +13,6 @@ import {
   mintTokens,
   getSupply,
 } from "./service.ts";
-import { getFactoryAddress } from "./factory.ts";
-
-// Fail fast if factory address is not configured
-getFactoryAddress();
 
 const PAY_TO_ADDRESS = "0x0000000000000000000000000000000000000000";
 const NETWORK = "eip155:8453";

@@ -9,8 +9,8 @@ import { describe, expect, it, beforeEach, afterEach, vi } from "vitest";
 // ─── Env setup (before imports) ──────────────────────────────────────────
 
 process.env.TOKEN_DB_PATH = ":memory:";
-process.env.TOKEN_FACTORY_ADDRESS = "0xFACT000000000000000000000000000000000001";
 process.env.TOKEN_MASTER_KEY = "a".repeat(64);
+process.env.BASE_CHAIN_ID = "8453";
 
 // Generate a valid encrypted key for the deployer
 import { createCipheriv } from "node:crypto";
@@ -31,21 +31,32 @@ function makeEncryptedKey(): string {
 
 process.env.TOKEN_DEPLOYER_ENCRYPTED_KEY = makeEncryptedKey();
 
-// ─── Mock viem (intercept writeContract / readContract) ──────────────────
+// ─── Mock viem (intercept deployContract / writeContract / readContract) ──────────────────
 
-const writeContractMock = vi.fn(async (_args?: unknown) => "0xTXHASH_DEPLOY_000000000000000000000000000000000000000000000000000000");
-const readContractMock = vi.fn(async (_args?: unknown) => 100000000000000000000000000n); // 100M with 18 decimals
+// biome-ignore lint/suspicious/noExplicitAny: mock needs flexible return types
+const deployContractMock = vi.fn<any[], any>(async (_args?: unknown) => "0xTXHASH_DEPLOY_000000000000000000000000000000000000000000000000000000" as `0x${string}`);
+// biome-ignore lint/suspicious/noExplicitAny: mock needs flexible return types
+const writeContractMock = vi.fn<any[], any>(async (_args?: unknown) => "0xTXHASH_MINT_000000000000000000000000000000000000000000000000000000" as `0x${string}`);
+// biome-ignore lint/suspicious/noExplicitAny: mock needs flexible return types
+const readContractMock = vi.fn<any[], any>(async (_args?: unknown) => 100000000000000000000000000n); // 100M with 18 decimals
+// biome-ignore lint/suspicious/noExplicitAny: mock needs flexible return types
+const waitForTransactionReceiptMock = vi.fn<any[], any>(async (_args?: unknown) => ({
+  status: "success" as const,
+  contractAddress: "0xTOKEN_DEPLOYED_CONTRACT0000000000000001" as `0x${string}`,
+}));
 
 vi.mock("viem", async (importOriginal) => {
   const actual = await importOriginal<typeof import("viem")>();
   return {
     ...actual,
     createWalletClient: vi.fn(() => ({
+      deployContract: (...args: unknown[]) => deployContractMock(args[0]),
       writeContract: (...args: unknown[]) => writeContractMock(args[0]),
       account: { address: "0xDEPLOYER0000000000000000000000000000001" },
     })),
     createPublicClient: vi.fn(() => ({
       readContract: (...args: unknown[]) => readContractMock(args[0]),
+      waitForTransactionReceipt: (...args: unknown[]) => waitForTransactionReceiptMock(args[0]),
     })),
   };
 });
@@ -64,6 +75,7 @@ vi.mock("viem/accounts", () => ({
 
 vi.mock("viem/chains", () => ({
   base: { id: 8453, name: "Base", network: "base" },
+  baseSepolia: { id: 84532, name: "Base Sepolia", network: "base-sepolia" },
 }));
 
 // ─── Import after env + mocks ────────────────────────────────────────────
@@ -105,12 +117,21 @@ const MINTABLE_REQUEST = {
 describe("token.sh", () => {
   beforeEach(() => {
     resetDb();
+    deployContractMock.mockClear();
     writeContractMock.mockClear();
     readContractMock.mockClear();
-    writeContractMock.mockResolvedValue(
+    waitForTransactionReceiptMock.mockClear();
+    deployContractMock.mockResolvedValue(
       "0xTXHASH_DEPLOY_000000000000000000000000000000000000000000000000000000",
     );
+    writeContractMock.mockResolvedValue(
+      "0xTXHASH_MINT_000000000000000000000000000000000000000000000000000000",
+    );
     readContractMock.mockResolvedValue(100000000000000000000000000n);
+    waitForTransactionReceiptMock.mockResolvedValue({
+      status: "success",
+      contractAddress: "0xTOKEN_DEPLOYED_CONTRACT0000000000000001",
+    });
   });
 
   afterEach(() => {
@@ -240,7 +261,7 @@ describe("token.sh", () => {
   // ─── Deploy ──────────────────────────────────────────────────────────
 
   describe("deployToken", () => {
-    it("deploy — returns token with pending status", async () => {
+    it("deploy — returns token with confirmed status when receipt succeeds", async () => {
       const result = await deployToken(VALID_REQUEST, CALLER);
       expect(result.ok).toBe(true);
       if (!result.ok) return;
@@ -248,10 +269,29 @@ describe("token.sh", () => {
       expect(result.data.token.name).toBe("Kelly Claude Token");
       expect(result.data.token.symbol).toBe("KELLYCLAUDE");
       expect(result.data.token.ownerWallet).toBe(CALLER);
-      expect(result.data.token.deployStatus).toBe("pending");
+      expect(result.data.token.deployStatus).toBe("confirmed");
+      expect(result.data.token.contractAddress).toBe("0xTOKEN_DEPLOYED_CONTRACT0000000000000001");
       expect(result.data.token.decimals).toBe(18);
       expect(result.data.token.mintable).toBe(false);
       expect(result.data.token.maxSupply).toBeNull();
+      expect(result.data.token.totalMinted).toBe("0");
+    });
+
+    it("deploy — returns pending when receipt times out", async () => {
+      waitForTransactionReceiptMock.mockRejectedValueOnce(new Error("Timed out"));
+      const result = await deployToken(VALID_REQUEST, CALLER);
+      expect(result.ok).toBe(true);
+      if (!result.ok) return;
+      expect(result.data.token.deployStatus).toBe("pending");
+      expect(result.data.token.contractAddress).toBeNull();
+    });
+
+    it("deploy — status becomes failed when receipt is reverted", async () => {
+      waitForTransactionReceiptMock.mockResolvedValueOnce({ status: "reverted", contractAddress: null });
+      const result = await deployToken(VALID_REQUEST, CALLER);
+      expect(result.ok).toBe(true);
+      if (!result.ok) return;
+      expect(result.data.token.deployStatus).toBe("failed");
     });
 
     it("deploy — persists to DB", async () => {
@@ -263,14 +303,16 @@ describe("token.sh", () => {
       expect(row?.name).toBe("Kelly Claude Token");
       expect(row?.symbol).toBe("KELLYCLAUDE");
       expect(row?.owner_wallet).toBe(CALLER);
+      expect(row?.total_minted).toBe("0");
     });
 
-    it("deploy — calls writeContract on factory", async () => {
+    it("deploy — calls deployContract (not factory writeContract)", async () => {
       await deployToken(VALID_REQUEST, CALLER);
-      expect(writeContractMock).toHaveBeenCalledTimes(1);
-      const args = writeContractMock.mock.calls[0][0] as Record<string, unknown>;
-      expect(args.address).toBe(process.env.TOKEN_FACTORY_ADDRESS);
-      expect(args.functionName).toBe("deploy");
+      expect(deployContractMock).toHaveBeenCalledTimes(1);
+      expect(writeContractMock).not.toHaveBeenCalled();
+      const args = deployContractMock.mock.calls[0][0] as Record<string, unknown>;
+      expect(args.bytecode).toBeDefined();
+      expect(args.abi).toBeDefined();
     });
 
     it("deploy — mintable token stores maxSupply", async () => {
@@ -297,7 +339,7 @@ describe("token.sh", () => {
     });
 
     it("deploy — RPC error returns 502", async () => {
-      writeContractMock.mockRejectedValueOnce(new Error("gas estimation failed"));
+      deployContractMock.mockRejectedValueOnce(new Error("gas estimation failed"));
       const result = await deployToken(VALID_REQUEST, CALLER);
       expect(result.ok).toBe(false);
       if (result.ok) return;
@@ -319,6 +361,24 @@ describe("token.sh", () => {
       expect(result.ok).toBe(true);
       if (!result.ok) return;
       expect(result.data.token.decimals).toBe(18);
+    });
+
+    it("deploy — duplicate (same owner+name+symbol) creates separate token", async () => {
+      const r1 = await deployToken(VALID_REQUEST, CALLER);
+      const r2 = await deployToken(VALID_REQUEST, CALLER);
+      expect(r1.ok).toBe(true);
+      expect(r2.ok).toBe(true);
+      if (!r1.ok || !r2.ok) return;
+      expect(r1.data.token.id).not.toBe(r2.data.token.id);
+    });
+
+    it("deploy — large supply values use BigInt (no precision loss)", async () => {
+      // 2^53 + 1 = 9007199254740993 — exceeds Number.MAX_SAFE_INTEGER
+      const largeSupply = "9007199254740993";
+      const result = await deployToken({ ...VALID_REQUEST, initialSupply: largeSupply }, CALLER);
+      expect(result.ok).toBe(true);
+      if (!result.ok) return;
+      expect(result.data.token.initialSupply).toBe(largeSupply);
     });
   });
 
@@ -411,6 +471,11 @@ describe("token.sh", () => {
     // mintable=true, caller==owner, exceeds cap → 422 exceeds_max_supply
     // mintable=true, caller==owner, within cap  → 200 tx submitted
 
+    beforeEach(() => {
+      // For mint tests, receipt has no contractAddress (it's a call, not a deploy)
+      waitForTransactionReceiptMock.mockResolvedValue({ status: "success", contractAddress: null });
+    });
+
     it("not mintable → 400 not_mintable", async () => {
       const tokenId = await deployNonMintable();
       const result = await mintTokens(tokenId, { to: CALLER, amount: "1000" }, CALLER);
@@ -459,6 +524,47 @@ describe("token.sh", () => {
       expect(args.functionName).toBe("mint");
     });
 
+    it("cumulative mint cap: second mint fails when total would exceed maxSupply (Bug 1 fix)", async () => {
+      const tokenId = await deployMintable();
+      // maxSupply=10000000, initialSupply=1000000
+      // Mint 8000000 → total=9000000 (within cap)
+      const r1 = await mintTokens(tokenId, { to: CALLER, amount: "8000000" }, CALLER);
+      expect(r1.ok).toBe(true);
+      // Now total_minted=8000000. initialSupply + total_minted = 9000000.
+      // Mint 1500000 → 9000000 + 1500000 = 10500000 > 10000000 → should fail
+      const r2 = await mintTokens(tokenId, { to: CALLER, amount: "1500000" }, CALLER);
+      expect(r2.ok).toBe(false);
+      if (r2.ok) return;
+      expect(r2.status).toBe(422);
+      expect(r2.code).toBe("exceeds_max_supply");
+    });
+
+    it("cumulative mint cap: second mint succeeds when total stays within maxSupply", async () => {
+      const tokenId = await deployMintable();
+      // maxSupply=10000000, initialSupply=1000000
+      // Mint 4000000 → total=5000000 (within cap)
+      const r1 = await mintTokens(tokenId, { to: CALLER, amount: "4000000" }, CALLER);
+      expect(r1.ok).toBe(true);
+      // Mint 4000000 → 5000000 + 4000000 = 9000000 ≤ 10000000 → should pass
+      const r2 = await mintTokens(tokenId, { to: CALLER, amount: "4000000" }, CALLER);
+      expect(r2.ok).toBe(true);
+    });
+
+    it("total_minted incremented after successful mint", async () => {
+      const tokenId = await deployMintable();
+      await mintTokens(tokenId, { to: CALLER, amount: "500000" }, CALLER);
+      const row = getDeploymentById(tokenId);
+      expect(row?.total_minted).toBe("500000");
+    });
+
+    it("total_minted not incremented when mint tx reverts", async () => {
+      const tokenId = await deployMintable();
+      waitForTransactionReceiptMock.mockResolvedValueOnce({ status: "reverted", contractAddress: null });
+      await mintTokens(tokenId, { to: CALLER, amount: "500000" }, CALLER);
+      const row = getDeploymentById(tokenId);
+      expect(row?.total_minted).toBe("0");
+    });
+
     it("nonexistent token → 404", async () => {
       const result = await mintTokens("tk_nonexist", { to: CALLER, amount: "1000" }, CALLER);
       expect(result.ok).toBe(false);
@@ -470,8 +576,17 @@ describe("token.sh", () => {
       // Deploy but don't confirm (contract_address stays null)
       const deployed = await deployToken(MINTABLE_REQUEST, CALLER);
       if (!deployed.ok) throw new Error("Setup failed");
+      // Reset to pending to simulate timeout scenario
+      updateDeploymentStatus(deployed.data.token.id, "pending");
+      // Manually clear contract_address by directly re-checking
+      // The deployed token's contract_address gets set by receipt mock,
+      // so we need to deploy with a timed-out receipt for this test
+      resetDb();
+      waitForTransactionReceiptMock.mockRejectedValueOnce(new Error("Timed out"));
+      const deployResult = await deployToken(MINTABLE_REQUEST, CALLER);
+      if (!deployResult.ok) throw new Error("Deploy failed");
       const result = await mintTokens(
-        deployed.data.token.id,
+        deployResult.data.token.id,
         { to: CALLER, amount: "1000" },
         CALLER,
       );
@@ -552,6 +667,7 @@ describe("token.sh", () => {
     });
 
     it("pending deploy → 400", async () => {
+      waitForTransactionReceiptMock.mockRejectedValueOnce(new Error("Timed out"));
       const deployed = await deployToken(VALID_REQUEST, CALLER);
       if (!deployed.ok) return;
       const result = await getSupply(deployed.data.token.id, CALLER);
@@ -569,38 +685,6 @@ describe("token.sh", () => {
       if (result.ok) return;
       expect(result.status).toBe(502);
       expect(result.code).toBe("rpc_error");
-    });
-  });
-
-  // ─── CREATE2 salt ────────────────────────────────────────────────────
-
-  describe("CREATE2 salt", () => {
-    it("same inputs produce same salt", async () => {
-      const { computeDeploySalt } = await import("../src/factory.ts");
-      const salt1 = computeDeploySalt(CALLER as `0x${string}`, "Test", "TST");
-      const salt2 = computeDeploySalt(CALLER as `0x${string}`, "Test", "TST");
-      expect(salt1).toBe(salt2);
-    });
-
-    it("different owner produces different salt", async () => {
-      const { computeDeploySalt } = await import("../src/factory.ts");
-      const salt1 = computeDeploySalt(CALLER as `0x${string}`, "Test", "TST");
-      const salt2 = computeDeploySalt(OTHER as `0x${string}`, "Test", "TST");
-      expect(salt1).not.toBe(salt2);
-    });
-
-    it("different name produces different salt", async () => {
-      const { computeDeploySalt } = await import("../src/factory.ts");
-      const salt1 = computeDeploySalt(CALLER as `0x${string}`, "Test", "TST");
-      const salt2 = computeDeploySalt(CALLER as `0x${string}`, "Other", "TST");
-      expect(salt1).not.toBe(salt2);
-    });
-
-    it("different symbol produces different salt", async () => {
-      const { computeDeploySalt } = await import("../src/factory.ts");
-      const salt1 = computeDeploySalt(CALLER as `0x${string}`, "Test", "TST");
-      const salt2 = computeDeploySalt(CALLER as `0x${string}`, "Test", "OTH");
-      expect(salt1).not.toBe(salt2);
     });
   });
 
@@ -627,23 +711,29 @@ describe("token.sh", () => {
     });
   });
 
-  // ─── Factory address validation ─────────────────────────────────────
+  // ─── Chain configuration ─────────────────────────────────────────────
 
-  describe("factory address", () => {
-    it("getFactoryAddress returns configured address", async () => {
-      const { getFactoryAddress } = await import("../src/factory.ts");
-      expect(getFactoryAddress()).toBe("0xFACT000000000000000000000000000000000001");
+  describe("getChain", () => {
+    it("BASE_CHAIN_ID=8453 returns base", async () => {
+      process.env.BASE_CHAIN_ID = "8453";
+      const { getChain } = await import("../src/deployer.ts");
+      const chain = getChain();
+      expect(chain.id).toBe(8453);
     });
 
-    it("missing TOKEN_FACTORY_ADDRESS throws", async () => {
-      const orig = process.env.TOKEN_FACTORY_ADDRESS;
-      process.env.TOKEN_FACTORY_ADDRESS = "";
-      try {
-        const { getFactoryAddress } = await import("../src/factory.ts");
-        expect(() => getFactoryAddress()).toThrow("TOKEN_FACTORY_ADDRESS is required");
-      } finally {
-        process.env.TOKEN_FACTORY_ADDRESS = orig;
-      }
+    it("BASE_CHAIN_ID=84532 returns baseSepolia", async () => {
+      process.env.BASE_CHAIN_ID = "84532";
+      const { getChain } = await import("../src/deployer.ts");
+      const chain = getChain();
+      expect(chain.id).toBe(84532);
+      process.env.BASE_CHAIN_ID = "8453";
+    });
+
+    it("unsupported chain ID throws", async () => {
+      process.env.BASE_CHAIN_ID = "1";
+      const { getChain } = await import("../src/deployer.ts");
+      expect(() => getChain()).toThrow("Unsupported BASE_CHAIN_ID");
+      process.env.BASE_CHAIN_ID = "8453";
     });
   });
 });

@@ -1,16 +1,16 @@
 import { randomBytes } from "node:crypto";
-import { createPublicClient, http, parseUnits, isAddress, formatUnits } from "viem";
-import { base } from "viem/chains";
+import { parseUnits, isAddress, formatUnits } from "viem";
 import type { Address } from "viem";
 import {
   insertDeployment,
   getDeploymentById,
   getDeploymentsByOwner,
   updateDeploymentStatus,
+  incrementTotalMinted,
 } from "./db.ts";
 import type { DeploymentRow } from "./db.ts";
-import { getDeployerClient } from "./deployer.ts";
-import { FACTORY_ABI, ERC20_ABI, getFactoryAddress, computeDeploySalt } from "./factory.ts";
+import { getDeployerClient, getPublicClient } from "./deployer.ts";
+import { AGENT_TOKEN_ABI, AGENT_TOKEN_BYTECODE, ERC20_ABI } from "./contracts.ts";
 import type {
   CreateTokenRequest,
   TokenResponse,
@@ -31,23 +31,18 @@ function rowToTokenResponse(row: DeploymentRow): TokenResponse {
   return {
     id: row.id,
     contractAddress: row.contract_address,
-    factoryAddress: row.factory_address,
     ownerWallet: row.owner_wallet,
     name: row.name,
     symbol: row.symbol,
     decimals: row.decimals,
     initialSupply: row.initial_supply,
+    totalMinted: row.total_minted,
     mintable: row.mintable === 1,
     maxSupply: row.max_supply,
     txHash: row.tx_hash,
     deployStatus: row.deploy_status as "pending" | "confirmed" | "failed",
     createdAt: new Date(row.created_at).toISOString(),
   };
-}
-
-function getPublicClient() {
-  const rpcUrl = process.env.BASE_RPC_URL ?? "https://mainnet.base.org";
-  return createPublicClient({ chain: base, transport: http(rpcUrl) });
 }
 
 // ─── Validation ──────────────────────────────────────────────────────────
@@ -147,24 +142,22 @@ export async function deployToken(
   const decimals = request.decimals ?? 18;
   const mintable = request.mintable ?? false;
   const maxSupply = mintable ? (request.maxSupply as string) : null;
-  const factoryAddress = getFactoryAddress();
 
-  const totalSupplyWei = parseUnits(request.initialSupply, decimals);
+  const initialSupplyWei = parseUnits(request.initialSupply, decimals);
   const maxSupplyWei = maxSupply !== null ? parseUnits(maxSupply, decimals) : 0n;
 
   const client = getDeployerClient();
 
   let txHash: string;
   try {
-    txHash = await client.writeContract({
-      address: factoryAddress,
-      abi: FACTORY_ABI,
-      functionName: "deploy",
+    txHash = await client.deployContract({
+      abi: AGENT_TOKEN_ABI,
+      bytecode: AGENT_TOKEN_BYTECODE,
       args: [
         request.name,
         request.symbol,
         decimals,
-        totalSupplyWei,
+        initialSupplyWei,
         mintable,
         maxSupplyWei,
         callerWallet as Address,
@@ -177,13 +170,9 @@ export async function deployToken(
 
   const tokenId = generateTokenId();
 
-  // Compute predicted contract address from CREATE2 salt
-  const salt = computeDeploySalt(callerWallet as Address, request.name, request.symbol);
-
   insertDeployment({
     id: tokenId,
     contract_address: null,
-    factory_address: factoryAddress,
     owner_wallet: callerWallet,
     name: request.name,
     symbol: request.symbol,
@@ -194,6 +183,23 @@ export async function deployToken(
     tx_hash: txHash,
     deploy_status: "pending",
   });
+
+  // Wait for receipt and update deploy_status (30s timeout)
+  try {
+    const publicClient = getPublicClient();
+    const receipt = await publicClient.waitForTransactionReceipt({
+      hash: txHash as `0x${string}`,
+      timeout: 30_000,
+    });
+
+    if (receipt.status === "reverted" || receipt.contractAddress === null) {
+      updateDeploymentStatus(tokenId, "failed");
+    } else {
+      updateDeploymentStatus(tokenId, "confirmed", receipt.contractAddress);
+    }
+  } catch {
+    // Timeout or RPC error — leave as "pending", caller polls GET
+  }
 
   const row = getDeploymentById(tokenId);
   if (!row) throw new Error("Failed to retrieve deployment after insert");
@@ -264,11 +270,17 @@ export async function mintTokens(
     };
   }
 
-  // max supply cap check
+  // max supply cap check — uses cumulative total_minted (Bug 1 fix)
+  // cap truth table:
+  //   mintable=true, maxSupply=0 → uncapped (any amount passes)
+  //   mintable=true, maxSupply>0 → initial_supply + total_minted + amount <= maxSupply required
   if (row.max_supply !== null) {
-    const currentSupply = Number(row.initial_supply);
-    const maxSupply = Number(row.max_supply);
-    if (currentSupply + amountNum > maxSupply) {
+    const amountWeiForCheck = parseUnits(request.amount, row.decimals);
+    const initialSupplyWei = parseUnits(row.initial_supply, row.decimals);
+    const totalMintedWei = parseUnits(row.total_minted || "0", row.decimals);
+    const maxSupplyWei = parseUnits(row.max_supply, row.decimals);
+
+    if (initialSupplyWei + totalMintedWei + amountWeiForCheck > maxSupplyWei) {
       return {
         ok: false,
         status: 422,
@@ -301,6 +313,20 @@ export async function mintTokens(
   } catch (err) {
     const errMsg = err instanceof Error ? err.message : String(err);
     return { ok: false, status: 502, code: "rpc_error", message: `Mint failed: ${errMsg}` };
+  }
+
+  // Wait for mint receipt and increment total_minted on success
+  try {
+    const publicClient = getPublicClient();
+    const receipt = await publicClient.waitForTransactionReceipt({
+      hash: txHash as `0x${string}`,
+      timeout: 30_000,
+    });
+    if (receipt.status === "success") {
+      incrementTotalMinted(tokenId, request.amount);
+    }
+  } catch {
+    // Timeout — leave total_minted unchanged; on-chain is source of truth
   }
 
   return {

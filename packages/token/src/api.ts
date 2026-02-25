@@ -42,12 +42,12 @@ export interface CreateTokenRequest {
 export interface TokenResponse {
   id: string;
   contractAddress: string | null;
-  factoryAddress: string;
   ownerWallet: string;
   name: string;
   symbol: string;
   decimals: number;
   initialSupply: string;
+  totalMinted: string;
   mintable: boolean;
   maxSupply: string | null;
   txHash: string;
