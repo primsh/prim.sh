@@ -65,36 +65,37 @@ export function createAgentStackMiddleware(
     effectiveRoutes[routeKey] = config;
   }
 
-  const identity: MiddlewareHandler = async (c, next) => {
+  function extractWalletAddress(c: Parameters<MiddlewareHandler>[0]) {
     const header =
       c.req.header("payment-signature") ?? c.req.header("x-payment");
 
-    if (header) {
-      try {
-        const decoded = decodePaymentSignatureHeader(header) as {
-          payload?: { authorization?: { from?: string } };
-          authorization?: { from?: string };
-          from?: string;
-        };
+    if (!header) return;
 
-        const from =
-          decoded.payload?.authorization?.from ??
-          decoded.authorization?.from ??
-          decoded.from;
+    try {
+      const decoded = decodePaymentSignatureHeader(header) as {
+        payload?: { authorization?: { from?: string } };
+        authorization?: { from?: string };
+        from?: string;
+      };
 
-        if (typeof from === "string") {
-          c.set(WALLET_ADDRESS_KEY, from);
-        }
-      } catch {
-        // Malformed payment header — ignore and proceed without walletAddress
+      const from =
+        decoded.payload?.authorization?.from ??
+        decoded.authorization?.from ??
+        decoded.from;
+
+      if (typeof from === "string") {
+        c.set(WALLET_ADDRESS_KEY, from);
       }
+    } catch {
+      // Malformed payment header — ignore and proceed without walletAddress
     }
-
-    await next();
-  };
+  }
 
   if (Object.keys(effectiveRoutes).length === 0) {
-    return identity;
+    return async (c: Parameters<MiddlewareHandler>[0], next: Parameters<MiddlewareHandler>[1]) => {
+      extractWalletAddress(c);
+      await next();
+    };
   }
 
   const facilitatorClient: FacilitatorClient = new HTTPFacilitatorClient({
@@ -110,9 +111,8 @@ export function createAgentStackMiddleware(
   );
 
   return async (c, next) => {
-    await identity(c, async () => {
-      await payment(c, next);
-    });
+    extractWalletAddress(c);
+    return payment(c, next);
   };
 }
 

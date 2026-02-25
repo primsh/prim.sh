@@ -84,7 +84,7 @@ describe("wallet.sh API stubs", () => {
     expect(res.headers.get("Payment-Required")).toBeTruthy();
   });
 
-  it("paid route with payment header returns 501 and not_implemented error", async () => {
+  it("paid route with invalid payment signature returns 402", async () => {
     const paymentPayload = {
       x402Version: 2,
       scheme: "exact",
@@ -108,10 +108,6 @@ describe("wallet.sh API stubs", () => {
       headers: { "Payment-Signature": header },
     });
 
-    expect(res.status).toBe(501);
-    const body = await res.json();
-    expect(body).toMatchObject({
-      error: { code: "not_implemented", message: expect.any(String) },
-    });
+    expect(res.status).toBe(402);
   });
 });
