@@ -1,6 +1,6 @@
 import { Hono } from "hono";
 import type { ContentfulStatusCode } from "hono/utils/http-status";
-import { createAgentStackMiddleware } from "@primsh/x402-middleware";
+import { createAgentStackMiddleware, getNetworkConfig } from "@primsh/x402-middleware";
 import type {
   ApiError,
   CreateTokenRequest,
@@ -18,8 +18,9 @@ import {
   getLiquidityParams,
 } from "./service.ts";
 
-const PAY_TO_ADDRESS = "0x0000000000000000000000000000000000000000";
-const NETWORK = "eip155:8453";
+const networkConfig = getNetworkConfig();
+const PAY_TO_ADDRESS = process.env.PRIM_PAY_TO ?? "0x0000000000000000000000000000000000000000";
+const NETWORK = networkConfig.network;
 
 const TOKEN_ROUTES = {
   "POST /v1/tokens": "$1.00",

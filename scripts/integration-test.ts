@@ -29,10 +29,12 @@ const WALLET_PORT = Number(process.env.WALLET_PORT ?? "3001");
 const FAUCET_PORT = Number(process.env.FAUCET_PORT ?? "3003");
 const STORE_PORT = Number(process.env.STORE_PORT ?? "3002");
 const SPAWN_PORT = Number(process.env.SPAWN_PORT ?? "3004");
+const TOKEN_PORT = Number(process.env.TOKEN_PORT ?? "3005");
 const WALLET_URL = `http://localhost:${WALLET_PORT}`;
 const FAUCET_URL = `http://localhost:${FAUCET_PORT}`;
 const STORE_URL = `http://localhost:${STORE_PORT}`;
 const SPAWN_URL = `http://localhost:${SPAWN_PORT}`;
+const TOKEN_URL = `http://localhost:${TOKEN_PORT}`;
 
 // ─── Preflight checks ───────────────────────────────────────────────────
 
@@ -55,6 +57,11 @@ if (network !== "eip155:84532") {
 }
 
 const HAS_DO_TOKEN = !!process.env.DO_API_TOKEN;
+const HAS_TOKEN_DEPLOYER = !!(
+  process.env.TOKEN_MASTER_KEY &&
+  process.env.TOKEN_DEPLOYER_ENCRYPTED_KEY &&
+  process.env.BASE_RPC_URL
+);
 
 if (DRY_RUN) {
   console.log("✓ Dry-run mode. wallet.sh + faucet.sh will start.");
@@ -66,6 +73,9 @@ if (DRY_RUN) {
   requireEnv("R2_SECRET_ACCESS_KEY");
   if (!HAS_DO_TOKEN) {
     console.log("  ⚠ DO_API_TOKEN not set — spawn.sh tests will be skipped");
+  }
+  if (!HAS_TOKEN_DEPLOYER) {
+    console.log("  ⚠ TOKEN_MASTER_KEY/TOKEN_DEPLOYER_ENCRYPTED_KEY/BASE_RPC_URL not set — token.sh tests will be skipped");
   }
   console.log("✓ All env vars present. Network: Base Sepolia (eip155:84532)");
 }
@@ -130,6 +140,7 @@ function cleanup() {
 let testBucketId: string | null = null;
 let testServerId: string | null = null;
 let testSshKeyId: string | null = null;
+let testTokenId: string | null = null;
 let walletAddress: string | null = null;
 let agentPrivateKey: `0x${string}` | null = null;
 const steps: { name: string; passed: boolean; error?: string }[] = [];
@@ -162,6 +173,9 @@ async function main() {
     await startService("store.sh", "packages/store/src/index.ts", STORE_PORT);
     if (HAS_DO_TOKEN) {
       await startService("spawn.sh", "packages/spawn/src/index.ts", SPAWN_PORT);
+    }
+    if (HAS_TOKEN_DEPLOYER) {
+      await startService("token.sh", "packages/token/src/index.ts", TOKEN_PORT);
     }
   }
 
@@ -441,6 +455,87 @@ async function main() {
     }
   }
   } // else (HAS_DO_TOKEN)
+
+  // ─── token.sh tests (requires TOKEN_MASTER_KEY + TOKEN_DEPLOYER_ENCRYPTED_KEY + BASE_RPC_URL) ──
+
+  if (!HAS_TOKEN_DEPLOYER) {
+    console.log("\n  Skipping token.sh tests — no TOKEN_MASTER_KEY/TOKEN_DEPLOYER_ENCRYPTED_KEY/BASE_RPC_URL");
+  } else {
+  console.log("\n─── token.sh x402 integration ──────────────────────────────\n");
+
+  {
+    // 16. Deploy ERC-20 via x402
+    await step("Deploy ERC-20 via x402", async () => {
+      const res = await primFetch(`${TOKEN_URL}/v1/tokens`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name: `IntegToken ${Date.now()}`,
+          symbol: "ITST",
+          decimals: 18,
+          initialSupply: "1000000",
+        }),
+      });
+      if (!res.ok) throw new Error(`POST /v1/tokens → ${res.status}: ${await res.text()}`);
+      const data = (await res.json()) as { token: { id: string; deployStatus: string; contractAddress: string | null } };
+      testTokenId = data.token.id;
+      console.log(`(id: ${testTokenId}, status: ${data.token.deployStatus})`);
+    });
+
+    if (testTokenId) {
+      // 17. Poll until confirmed
+      await step("Poll token until confirmed (up to 120s)", async () => {
+        const deadline = Date.now() + 120_000;
+        while (Date.now() < deadline) {
+          const res = await primFetch(`${TOKEN_URL}/v1/tokens/${testTokenId}`);
+          if (!res.ok) throw new Error(`GET /v1/tokens/:id → ${res.status}: ${await res.text()}`);
+          const data = (await res.json()) as { token: { deployStatus: string; contractAddress: string | null } };
+          if (data.token.deployStatus === "confirmed" && data.token.contractAddress) {
+            console.log(`(confirmed, address: ${data.token.contractAddress})`);
+            return;
+          }
+          if (data.token.deployStatus === "failed") throw new Error("Deploy failed on-chain");
+          await sleep(5_000);
+        }
+        throw new Error("Token deploy did not confirm within 120s");
+      });
+
+      // 18. Get on-chain supply via x402
+      await step("Get on-chain supply via x402", async () => {
+        const res = await primFetch(`${TOKEN_URL}/v1/tokens/${testTokenId}/supply`);
+        if (!res.ok) throw new Error(`GET supply → ${res.status}: ${await res.text()}`);
+        const data = (await res.json()) as { totalSupply: string };
+        if (data.totalSupply !== "1000000") throw new Error(`Expected totalSupply=1000000, got ${data.totalSupply}`);
+        console.log(`(totalSupply: ${data.totalSupply})`);
+      });
+
+      // 19. Create Uniswap V3 pool via x402
+      await step("Create Uniswap V3 pool via x402", async () => {
+        const res = await primFetch(`${TOKEN_URL}/v1/tokens/${testTokenId}/pool`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ pricePerToken: "0.001", feeTier: 10000 }),
+        });
+        if (!res.ok) throw new Error(`POST pool → ${res.status}: ${await res.text()}`);
+        const data = (await res.json()) as { poolAddress: string; fee: number; txHash: string };
+        const ZERO = "0x0000000000000000000000000000000000000000";
+        if (!data.poolAddress || data.poolAddress === ZERO) {
+          throw new Error(`Invalid pool address: ${data.poolAddress}`);
+        }
+        console.log(`(pool: ${data.poolAddress}, fee: ${data.fee})`);
+      });
+
+      // 20. Get pool info via x402
+      await step("Get pool info via x402", async () => {
+        const res = await primFetch(`${TOKEN_URL}/v1/tokens/${testTokenId}/pool`);
+        if (!res.ok) throw new Error(`GET pool → ${res.status}: ${await res.text()}`);
+        const data = (await res.json()) as { poolAddress: string; sqrtPriceX96: string; tick: number };
+        if (!data.poolAddress) throw new Error("poolAddress missing from response");
+        console.log(`(sqrtPriceX96: ${data.sqrtPriceX96}, tick: ${data.tick})`);
+      });
+    }
+  }
+  } // else (HAS_TOKEN_DEPLOYER)
 }
 
 // ─── Run with cleanup ────────────────────────────────────────────────────

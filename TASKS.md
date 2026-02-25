@@ -64,7 +64,7 @@
 | 8 | SP-9 | spawn.sh x402 integration: add spawn to cross-primitive integration test, fix SSH key ID resolution bug, fix hardcoded mainnet | scripts/, packages/spawn | SP-7, ST-5 | done |
 | 7 | X4-1 | Investigate x402 facilitator "Settlement failed" on Base Sepolia — intermittent on-chain settlement failures block testnet testing | cross-cutting | ST-5 | done |
 | 8 | X4-2 | Add retry logic to `createPrimFetch` for facilitator `transaction_failed` responses (single retry with backoff) | packages/x402-client | X4-1 | pending |
-| 9 | TK-5 | token.sh live smoke test: deploy ERC-20 + create Uniswap V3 pool on Base Sepolia via x402 payment | packages/token | TK-3 | pending |
+| 9 | TK-5 | token.sh live smoke test: deploy ERC-20 + create Uniswap V3 pool on Base Sepolia via x402 payment | packages/token | TK-3 | done |
 | 9 | TK-6 | Fix mint ownership bug: `mintTokens()` signs with deployer key but `Ownable(owner_)` is set to agent wallet — on-chain mint reverts | packages/token | TK-2 | pending |
 | 9 | TK-7 | `prim token` CLI subcommand: deploy, list, get, mint, pool commands using keystore + x402-client | packages/keystore | TK-3, KS-1 | pending |
 | 9 | R-13 | Fix outbound email delivery: check Stalwart SMTP logs, unblock DO port 25 (or request removal), verify SPF/DKIM/rDNS, confirm delivery to external address | deploy/email | R-12 | done |
@@ -92,6 +92,8 @@
 | 22 | E-7 | Upgrade DMARC back to `p=quarantine` once inbox delivery is consistent | Cloudflare DNS | E-5, E-6 | pending |
 | — | E-8 | Migrate mail domain from `relay.prim.sh` → `email.prim.sh` (DNS, DKIM, Stalwart principal, PTR, TLS cert). Do after deliverability is solid — resets reputation. Code already supports it via `EMAIL_DEFAULT_DOMAIN` env var. | deploy/email, Cloudflare DNS | E-7 | deferred |
 | 23 | M-1 | Build mem.sh: vector memory (Qdrant collections + upsert + query) + KV cache + x402 | packages/mem | — | done |
+| 9 | M-2 | mem.sh live smoke test: create collection → upsert docs → query → cache set/get/delete on Base Sepolia via x402 payment | packages/mem | M-1 | pending |
+| 14 | M-3 | `prim mem` CLI subcommand: create-collection, list-collections, upsert, query, cache-set, cache-get, cache-del using keystore + x402-client | packages/keystore | M-1, KS-1 | pending |
 
 ## Plan Docs
 
