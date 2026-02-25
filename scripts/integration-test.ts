@@ -30,11 +30,13 @@ const FAUCET_PORT = Number(process.env.FAUCET_PORT ?? "3003");
 const STORE_PORT = Number(process.env.STORE_PORT ?? "3002");
 const SPAWN_PORT = Number(process.env.SPAWN_PORT ?? "3004");
 const TOKEN_PORT = Number(process.env.TOKEN_PORT ?? "3005");
+const MEM_PORT = Number(process.env.MEM_PORT ?? "3006");
 const WALLET_URL = `http://localhost:${WALLET_PORT}`;
 const FAUCET_URL = `http://localhost:${FAUCET_PORT}`;
 const STORE_URL = `http://localhost:${STORE_PORT}`;
 const SPAWN_URL = `http://localhost:${SPAWN_PORT}`;
 const TOKEN_URL = `http://localhost:${TOKEN_PORT}`;
+const MEM_URL = `http://localhost:${MEM_PORT}`;
 
 // ─── Preflight checks ───────────────────────────────────────────────────
 
@@ -62,6 +64,7 @@ const HAS_TOKEN_DEPLOYER = !!(
   process.env.TOKEN_DEPLOYER_ENCRYPTED_KEY &&
   process.env.BASE_RPC_URL
 );
+const HAS_MEM = !!(process.env.GOOGLE_API_KEY && process.env.QDRANT_URL);
 
 if (DRY_RUN) {
   console.log("✓ Dry-run mode. wallet.sh + faucet.sh will start.");
@@ -76,6 +79,9 @@ if (DRY_RUN) {
   }
   if (!HAS_TOKEN_DEPLOYER) {
     console.log("  ⚠ TOKEN_MASTER_KEY/TOKEN_DEPLOYER_ENCRYPTED_KEY/BASE_RPC_URL not set — token.sh tests will be skipped");
+  }
+  if (!HAS_MEM) {
+    console.log("  ⚠ GOOGLE_API_KEY/QDRANT_URL not set — mem.sh tests will be skipped");
   }
   console.log("✓ All env vars present. Network: Base Sepolia (eip155:84532)");
 }
@@ -141,6 +147,7 @@ let testBucketId: string | null = null;
 let testServerId: string | null = null;
 let testSshKeyId: string | null = null;
 let testTokenId: string | null = null;
+let testCollectionId: string | null = null;
 let walletAddress: string | null = null;
 let agentPrivateKey: `0x${string}` | null = null;
 const steps: { name: string; passed: boolean; error?: string }[] = [];
@@ -176,6 +183,9 @@ async function main() {
     }
     if (HAS_TOKEN_DEPLOYER) {
       await startService("token.sh", "packages/token/src/index.ts", TOKEN_PORT);
+    }
+    if (HAS_MEM) {
+      await startService("mem.sh", "packages/mem/src/index.ts", MEM_PORT);
     }
   }
 
@@ -536,6 +546,150 @@ async function main() {
     }
   }
   } // else (HAS_TOKEN_DEPLOYER)
+
+  // ─── mem.sh tests (requires GOOGLE_API_KEY + QDRANT_URL) ──────────────
+
+  if (!HAS_MEM) {
+    console.log("\n  Skipping mem.sh tests — no GOOGLE_API_KEY/QDRANT_URL");
+  } else {
+  console.log("\n─── mem.sh x402 integration ────────────────────────────────\n");
+
+  const ts = Date.now();
+  const cacheNamespace = `integ-${ts}`;
+
+  {
+    // 21. Create collection
+    await step("Create collection via x402", async () => {
+      const res = await primFetch(`${MEM_URL}/v1/collections`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name: `integ-test-${ts}` }),
+      });
+      if (res.status !== 201) throw new Error(`POST /v1/collections → ${res.status}: ${await res.text()}`);
+      const data = (await res.json()) as { id: string; name: string; dimension: number; distance: string };
+      if (!data.id.startsWith("c_")) throw new Error(`Expected id starting with "c_", got "${data.id}"`);
+      if (data.dimension !== 768) throw new Error(`Expected dimension=768, got ${data.dimension}`);
+      if (data.distance !== "Cosine") throw new Error(`Expected distance=Cosine, got ${data.distance}`);
+      testCollectionId = data.id;
+      console.log(`(collection: ${testCollectionId})`);
+    });
+
+    if (testCollectionId) {
+      // 22. List collections
+      await step("List collections via x402", async () => {
+        const res = await primFetch(`${MEM_URL}/v1/collections`);
+        if (!res.ok) throw new Error(`GET /v1/collections → ${res.status}: ${await res.text()}`);
+        const data = (await res.json()) as { collections: { id: string }[] };
+        const found = data.collections.some((c) => c.id === testCollectionId);
+        if (!found) throw new Error(`Collection ${testCollectionId} not found in list`);
+      });
+
+      // 23. Get collection (pre-upsert)
+      await step("Get collection (pre-upsert) via x402", async () => {
+        const res = await primFetch(`${MEM_URL}/v1/collections/${testCollectionId}`);
+        if (!res.ok) throw new Error(`GET /v1/collections/:id → ${res.status}: ${await res.text()}`);
+        const data = (await res.json()) as { document_count: number };
+        if (data.document_count !== 0) throw new Error(`Expected document_count=0, got ${data.document_count}`);
+      });
+
+      // 24. Upsert documents
+      await step("Upsert documents via x402", async () => {
+        const res = await primFetch(`${MEM_URL}/v1/collections/${testCollectionId}/upsert`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            documents: [
+              { text: "the quick brown fox jumps over the lazy dog", metadata: { source: "classic" } },
+              { text: "artificial intelligence is transforming software development and machine learning", metadata: { source: "tech" } },
+              { text: "the recipe calls for two cups of flour and one egg", metadata: { source: "cooking" } },
+            ],
+          }),
+        });
+        if (!res.ok) throw new Error(`POST /upsert → ${res.status}: ${await res.text()}`);
+        const data = (await res.json()) as { upserted: number; ids: string[] };
+        if (data.upserted !== 3) throw new Error(`Expected upserted=3, got ${data.upserted}`);
+        if (data.ids.length !== 3) throw new Error(`Expected ids.length=3, got ${data.ids.length}`);
+        console.log(`(upserted: ${data.upserted})`);
+      });
+
+      // 25. Get collection (post-upsert)
+      await step("Get collection (post-upsert) via x402", async () => {
+        const res = await primFetch(`${MEM_URL}/v1/collections/${testCollectionId}`);
+        if (!res.ok) throw new Error(`GET /v1/collections/:id → ${res.status}: ${await res.text()}`);
+        const data = (await res.json()) as { document_count: number };
+        if (data.document_count < 3) throw new Error(`Expected document_count>=3, got ${data.document_count}`);
+        console.log(`(document_count: ${data.document_count})`);
+      });
+
+      // 26. Semantic query
+      await step("Semantic query via x402", async () => {
+        const res = await primFetch(`${MEM_URL}/v1/collections/${testCollectionId}/query`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ text: "machine learning and AI" }),
+        });
+        if (!res.ok) throw new Error(`POST /query → ${res.status}: ${await res.text()}`);
+        const data = (await res.json()) as { matches: { score: number; text: string }[] };
+        if (data.matches.length === 0) throw new Error("Expected matches.length > 0");
+        if (data.matches[0].score <= 0) throw new Error(`Expected score > 0, got ${data.matches[0].score}`);
+        if (!data.matches[0].text.includes("artificial intelligence")) {
+          throw new Error(`Expected top match to contain "artificial intelligence", got: "${data.matches[0].text}"`);
+        }
+        console.log(`(top match score: ${data.matches[0].score.toFixed(4)})`);
+      });
+
+      // 27. Delete collection
+      await step("Delete collection via x402", async () => {
+        const res = await primFetch(`${MEM_URL}/v1/collections/${testCollectionId}`, {
+          method: "DELETE",
+        });
+        if (!res.ok) throw new Error(`DELETE /v1/collections/:id → ${res.status}: ${await res.text()}`);
+        const data = (await res.json()) as { status: string };
+        if (data.status !== "deleted") throw new Error(`Expected status=deleted, got ${data.status}`);
+        testCollectionId = null;
+      });
+    }
+
+    // 28. Cache set
+    await step("Cache set via x402", async () => {
+      const res = await primFetch(`${MEM_URL}/v1/cache/${cacheNamespace}/testkey`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ value: { agent: "smoke" }, ttl: 300 }),
+      });
+      if (!res.ok) throw new Error(`PUT /v1/cache/:ns/:key → ${res.status}: ${await res.text()}`);
+      const data = (await res.json()) as { namespace: string; key: string; value: { agent: string }; expires_at: string | null };
+      if (data.namespace !== cacheNamespace) throw new Error(`Expected namespace=${cacheNamespace}, got ${data.namespace}`);
+      if (data.key !== "testkey") throw new Error(`Expected key=testkey, got ${data.key}`);
+      if (data.value.agent !== "smoke") throw new Error(`Expected value.agent=smoke, got ${data.value.agent}`);
+      if (data.expires_at === null) throw new Error("Expected expires_at to be set");
+    });
+
+    // 29. Cache get
+    await step("Cache get via x402", async () => {
+      const res = await primFetch(`${MEM_URL}/v1/cache/${cacheNamespace}/testkey`);
+      if (!res.ok) throw new Error(`GET /v1/cache/:ns/:key → ${res.status}: ${await res.text()}`);
+      const data = (await res.json()) as { value: { agent: string } };
+      if (data.value.agent !== "smoke") throw new Error(`Expected value.agent=smoke, got ${data.value.agent}`);
+    });
+
+    // 30. Cache delete
+    await step("Cache delete via x402", async () => {
+      const res = await primFetch(`${MEM_URL}/v1/cache/${cacheNamespace}/testkey`, {
+        method: "DELETE",
+      });
+      if (!res.ok) throw new Error(`DELETE /v1/cache/:ns/:key → ${res.status}: ${await res.text()}`);
+      const data = (await res.json()) as { status: string };
+      if (data.status !== "deleted") throw new Error(`Expected status=deleted, got ${data.status}`);
+    });
+
+    // 31. Cache get after delete — expect 404
+    await step("Cache get (post-delete, expect 404) via x402", async () => {
+      const res = await primFetch(`${MEM_URL}/v1/cache/${cacheNamespace}/testkey`);
+      if (res.status !== 404) throw new Error(`Expected 404, got ${res.status}`);
+    });
+  }
+  } // else (HAS_MEM)
 }
 
 // ─── Run with cleanup ────────────────────────────────────────────────────
@@ -546,7 +700,7 @@ try {
   console.error("\n✗ Fatal error:", err instanceof Error ? err.message : err);
 } finally {
   // Cleanup: delete orphaned resources
-  if (agentPrivateKey && (testBucketId || testServerId || testSshKeyId)) {
+  if (agentPrivateKey && (testBucketId || testServerId || testSshKeyId || testCollectionId)) {
     console.log("\n  Cleaning up...");
     const { createPrimFetch } = await import("../packages/x402-client/src/index.ts");
     const primFetch = createPrimFetch({ privateKey: agentPrivateKey, maxPayment: "1.00" });
@@ -573,6 +727,14 @@ try {
         console.log("  ✓ Cleaned up bucket");
       } catch {
         console.log("  ✗ Bucket cleanup failed");
+      }
+    }
+    if (testCollectionId) {
+      try {
+        await primFetch(`${MEM_URL}/v1/collections/${testCollectionId}`, { method: "DELETE" });
+        console.log("  ✓ Cleaned up collection");
+      } catch {
+        console.log("  ✗ Collection cleanup failed");
       }
     }
   }
