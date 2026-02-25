@@ -4,46 +4,46 @@
 
 | Priority | ID | Task | Scope | Depends on | Status |
 |---|---|---|---|---|---|
-| 1 | S-1 | Fix "Fourteen primitives" copy → "Nineteen" (manifesto x2 + CTA in `agentstack/index.html`) | site/index.html | — | Done |
-| 2 | S-2 | Fix `.c` CSS class collision in `agentstack/index.html` (coral vs comment gray) | site/index.html | — | Done |
-| 3 | S-3 | Add missing routes to `serve.py` (mem, infer, watch + new primitives: browse, auth, code, trace) | site/serve.py | — | Done |
-| 4 | S-4 | Create landing pages for new primitives (browse, auth, code, trace) | site/ | — | Done |
-| 5 | S-5 | Update landing page hero count to 26 primitives, add new primitive cards | site/index.html | — | Done |
-| 6 | S-6 | Add "This page is for humans. The API is for agents." line to all landing pages | site/ | — | Done |
-| 7 | P-1 | Write llms.txt (root) + per-primitive llms.txt files | site/ | — | Done |
-| 8 | P-2 | Add llms.txt routes to serve.py (or replace with smarter static server) | site/serve.py | P-1 | Done |
-| 9 | P-3 | Set up monorepo structure (pnpm workspaces, shared x402 middleware package) | root | — | Done |
-| 10 | P-4 | Build shared x402 Hono middleware package | packages/x402-middleware | P-3 | Done |
-| 11 | W-1 | Design wallet.sh API surface (finalize endpoints, request/response shapes) | specs/wallet.md | — | Done |
-| 12 | W-2 | Implement wallet creation (local keypair generation, encrypted keystore) | wallet/ | W-1 | Done |
-| 13 | W-3 | Implement balance queries (Base USDC via RPC) | wallet/ | W-2 | Done |
-| 14 | W-4 | Implement send (USDC transfer on Base) | wallet/ | W-2 | Done |
-| 15 | W-5 | Integrate x402 client (`@x402/fetch` wrapper) | wallet/ | W-2 | Done |
-| 16 | W-6 | Implement funding request flow (agent → owner notification → approval) | wallet/ | W-4 | Done |
-| 17 | W-7 | Implement budget/spending policy engine | wallet/ | W-4 | Done |
-| 18 | W-8 | Port execution journal + idempotency from Railgunner | wallet/ | W-4 | Done |
-| 19 | W-9 | Port circuit breaker from Railgunner | wallet/ | W-4 | Done |
-| 20 | D-1 | Build dns.sh: zone + record CRUD via Cloudflare API | dns/ | P-4 | Open |
-| 21 | D-2 | Build dns.sh: batch operations + mail-setup convenience endpoint | dns/ | D-1 | Open |
-| 22 | D-3 | Build dns.sh: verification endpoint (NS + record propagation checks) | dns/ | D-1 | Open |
-| 23 | D-4 | Integrate x402 middleware | dns/ | D-1, P-4 | Open |
-| 24 | R-1 | Deploy Stalwart (Docker on DigitalOcean Droplet) | relay/ | DO account | Planned |
-| 25 | R-2 | Configure Stalwart: domain, DKIM, SPF, DMARC, ACME TLS | relay/ | R-1, D-1 | Open |
-| 26 | R-3 | Build relay.sh wrapper: mailbox creation (Stalwart REST API) | relay/ | R-2 | Open |
-| 27 | R-4 | Build relay.sh wrapper: OAuth token cache for JMAP auth per mailbox | relay/ | R-3 | Open |
-| 28 | R-5 | Build relay.sh wrapper: read messages (JMAP Email/query + Email/get) | relay/ | R-4 | Open |
-| 29 | R-6 | Build relay.sh wrapper: send messages (JMAP EmailSubmission/set) — receive-only first | relay/ | R-4 | Open |
-| 30 | R-7 | Build relay.sh wrapper: incoming mail webhooks (Stalwart MTA Hooks) | relay/ | R-2 | Open |
-| 31 | R-8 | Build relay.sh wrapper: mailbox TTL/expiry manager | relay/ | R-3 | Open |
-| 32 | R-9 | Build relay.sh wrapper: custom domain support | relay/ | R-2, D-1 | Open |
-| 33 | R-10 | Integrate x402 middleware (all endpoints gated by payment) | relay/ | R-3, P-4 | Open |
-| 34 | SP-1 | Write spawn.sh spec (Hetzner API wrapping, VM lifecycle, pricing) | specs/ | — | Done |
-| 35 | SP-2 | Build spawn.sh: VM provisioning via Hetzner Cloud API | spawn/ | SP-1 | Done |
-| 36 | SP-3 | Build spawn.sh: VM lifecycle (start, stop, destroy, resize) | spawn/ | SP-2 | Done |
-| 37 | SP-4 | Build spawn.sh: SSH key injection + initial setup | spawn/ | SP-2 | Done |
-| 38 | SP-5 | Integrate x402 middleware | spawn/ | SP-2, P-4 | Done |
-| 39 | B-1 | Batch 1: parallel agent team execution (W-2 + R-1 + SP-1) | cross-cutting | W-2 plan, R-1 plan, SP-1 plan | Done |
-| 40 | SP-6 | Abstract provider layer + multi-cloud support (DO, AWS, GCP, Hetzner) | spawn/ | SP-4 | Open |
+| 1 | S-1 | Fix "Fourteen primitives" copy → "Nineteen" (manifesto x2 + CTA in `agentstack/index.html`) | site/index.html | — | done |
+| 2 | S-2 | Fix `.c` CSS class collision in `agentstack/index.html` (coral vs comment gray) | site/index.html | — | done |
+| 3 | S-3 | Add missing routes to `serve.py` (mem, infer, watch + new primitives: browse, auth, code, trace) | site/serve.py | — | done |
+| 4 | S-4 | Create landing pages for new primitives (browse, auth, code, trace) | site/ | — | done |
+| 5 | S-5 | Update landing page hero count to 26 primitives, add new primitive cards | site/index.html | — | done |
+| 6 | S-6 | Add "This page is for humans. The API is for agents." line to all landing pages | site/ | — | done |
+| 7 | P-1 | Write llms.txt (root) + per-primitive llms.txt files | site/ | — | done |
+| 8 | P-2 | Add llms.txt routes to serve.py (or replace with smarter static server) | site/serve.py | P-1 | done |
+| 9 | P-3 | Set up monorepo structure (pnpm workspaces, shared x402 middleware package) | root | — | done |
+| 10 | P-4 | Build shared x402 Hono middleware package | packages/x402-middleware | P-3 | done |
+| 11 | W-1 | Design wallet.sh API surface (finalize endpoints, request/response shapes) | specs/wallet.md | — | done |
+| 12 | W-2 | Implement wallet creation (local keypair generation, encrypted keystore) | wallet/ | W-1 | done |
+| 13 | W-3 | Implement balance queries (Base USDC via RPC) | wallet/ | W-2 | done |
+| 14 | W-4 | Implement send (USDC transfer on Base) | wallet/ | W-2 | done |
+| 15 | W-5 | Integrate x402 client (`@x402/fetch` wrapper) | wallet/ | W-2 | done |
+| 16 | W-6 | Implement funding request flow (agent → owner notification → approval) | wallet/ | W-4 | done |
+| 17 | W-7 | Implement budget/spending policy engine | wallet/ | W-4 | done |
+| 18 | W-8 | Port execution journal + idempotency from Railgunner | wallet/ | W-4 | done |
+| 19 | W-9 | Port circuit breaker from Railgunner | wallet/ | W-4 | done |
+| 20 | D-1 | Build dns.sh: zone + record CRUD via Cloudflare API | dns/ | P-4 | pending |
+| 21 | D-2 | Build dns.sh: batch operations + mail-setup convenience endpoint | dns/ | D-1 | pending |
+| 22 | D-3 | Build dns.sh: verification endpoint (NS + record propagation checks) | dns/ | D-1 | pending |
+| 23 | D-4 | Integrate x402 middleware | dns/ | D-1, P-4 | pending |
+| 24 | R-1 | Deploy Stalwart (Docker on DigitalOcean Droplet) | relay/ | DO account | pending |
+| 25 | R-2 | Configure Stalwart: domain, DKIM, SPF, DMARC, ACME TLS | relay/ | R-1, D-1 | pending |
+| 26 | R-3 | Build relay.sh wrapper: mailbox creation (Stalwart REST API) | relay/ | R-2 | pending |
+| 27 | R-4 | Build relay.sh wrapper: OAuth token cache for JMAP auth per mailbox | relay/ | R-3 | pending |
+| 28 | R-5 | Build relay.sh wrapper: read messages (JMAP Email/query + Email/get) | relay/ | R-4 | pending |
+| 29 | R-6 | Build relay.sh wrapper: send messages (JMAP EmailSubmission/set) — receive-only first | relay/ | R-4 | pending |
+| 30 | R-7 | Build relay.sh wrapper: incoming mail webhooks (Stalwart MTA Hooks) | relay/ | R-2 | pending |
+| 31 | R-8 | Build relay.sh wrapper: mailbox TTL/expiry manager | relay/ | R-3 | pending |
+| 32 | R-9 | Build relay.sh wrapper: custom domain support | relay/ | R-2, D-1 | pending |
+| 33 | R-10 | Integrate x402 middleware (all endpoints gated by payment) | relay/ | R-3, P-4 | pending |
+| 34 | SP-1 | Write spawn.sh spec (Hetzner API wrapping, VM lifecycle, pricing) | specs/ | — | done |
+| 35 | SP-2 | Build spawn.sh: VM provisioning via Hetzner Cloud API | spawn/ | SP-1 | done |
+| 36 | SP-3 | Build spawn.sh: VM lifecycle (start, stop, destroy, resize) | spawn/ | SP-2 | done |
+| 37 | SP-4 | Build spawn.sh: SSH key injection + initial setup | spawn/ | SP-2 | done |
+| 38 | SP-5 | Integrate x402 middleware | spawn/ | SP-2, P-4 | done |
+| 39 | B-1 | Batch 1: parallel agent team execution (W-2 + R-1 + SP-1) | cross-cutting | W-2 plan, R-1 plan, SP-1 plan | done |
+| 40 | SP-6 | Abstract provider layer + multi-cloud support (DO, AWS, GCP, Hetzner) | spawn/ | SP-4 | pending |
 
 ## Plan Docs
 
