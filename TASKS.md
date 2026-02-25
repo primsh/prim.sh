@@ -30,7 +30,7 @@
 | 45 | D-5 | Build domain.sh: mail-setup convenience endpoint (MX+SPF+DMARC+DKIM in one call) | packages/domain | D-1 | pending |
 | 46 | D-6 | Build domain.sh: verification endpoint (NS + record propagation checks) | packages/domain | D-1 | pending |
 | 47 | D-7 | Build domain.sh: auto-configure NS to Cloudflare after registration | packages/domain | D-3 | pending |
-| 48 | D-8 | Build domain.sh: batch record operations (atomic multi-record create/update/delete) | packages/domain | D-2 | pending |
+| 48 | D-8 | Build domain.sh: batch record operations (atomic multi-record create/update/delete) | packages/domain | D-2 | done |
 | 24 | R-1 | Deploy Stalwart (Docker on DigitalOcean Droplet) | deploy/email | DO account | done |
 | 25 | R-2 | Configure Stalwart: domain, DKIM, SPF, DMARC, ACME TLS | deploy/email | R-1, D-1 | done |
 | 26 | R-3 | Build email.sh wrapper: mailbox creation (Stalwart REST API) | packages/email | R-2 | done |

@@ -74,6 +74,11 @@ export function resetDb(): void {
   _db = null;
 }
 
+export function runInTransaction(fn: () => void): void {
+  const db = getDb();
+  db.transaction(fn)();
+}
+
 // ─── Zone queries ────────────────────────────────────────────────────────
 
 export function insertZone(params: {

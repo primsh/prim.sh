@@ -184,3 +184,52 @@ export async function deleteDnsRecord(zoneId: string, recordId: string): Promise
   });
   await handleResponse<unknown>(res);
 }
+
+// ─── Batch DNS record types ──────────────────────────────────────────────
+
+export interface CfBatchPost {
+  name: string;
+  type: string;
+  content: string;
+  ttl?: number;
+  proxied?: boolean;
+  priority?: number;
+}
+
+export interface CfBatchPatch {
+  id: string;
+  content?: string;
+  ttl?: number;
+  proxied?: boolean;
+  priority?: number;
+  type?: string;
+  name?: string;
+}
+
+export interface CfBatchDelete {
+  id: string;
+}
+
+export interface CfBatchResult {
+  posts: CfDnsRecord[];
+  patches: CfDnsRecord[];
+  puts?: CfDnsRecord[];
+  deletes: CfDnsRecord[];
+}
+
+export async function batchDnsRecords(
+  zoneId: string,
+  params: {
+    posts?: CfBatchPost[];
+    patches?: CfBatchPatch[];
+    deletes?: CfBatchDelete[];
+  },
+): Promise<CfBatchResult> {
+  const res = await fetch(`${BASE_URL}/zones/${zoneId}/dns_records/batch`, {
+    method: "POST",
+    headers: authHeaders(),
+    body: JSON.stringify(params),
+  });
+  const body = await handleResponse<CfBatchResult>(res);
+  return body.result;
+}

@@ -12,6 +12,7 @@ import {
   updateRecordRow,
   deleteRecordRow,
   deleteRecordsByZone,
+  runInTransaction,
 } from "./db.ts";
 import {
   CloudflareError,
@@ -20,7 +21,9 @@ import {
   createDnsRecord as cfCreateRecord,
   updateDnsRecord as cfUpdateRecord,
   deleteDnsRecord as cfDeleteRecord,
+  batchDnsRecords as cfBatchDnsRecords,
 } from "./cloudflare.ts";
+import type { CfBatchResult } from "./cloudflare.ts";
 import type {
   ZoneResponse,
   ZoneListResponse,
@@ -32,6 +35,8 @@ import type {
   UpdateRecordRequest,
   RecordType,
   DomainSearchResponse,
+  BatchRecordsRequest,
+  BatchRecordsResponse,
 } from "./api.ts";
 import type { ZoneRow, RecordRow } from "./db.ts";
 import { getRegistrar } from "./namesilo.ts";
@@ -389,6 +394,165 @@ export async function deleteRecord(
   deleteRecordRow(recordId);
 
   return { ok: true, data: { status: "deleted" } };
+}
+
+// ─── Batch record operations ──────────────────────────────────────────────
+
+const MAX_BATCH_OPS = 200;
+
+export async function batchRecords(
+  zoneId: string,
+  request: BatchRecordsRequest,
+  callerWallet: string,
+): Promise<ServiceResult<BatchRecordsResponse>> {
+  const check = checkZoneOwnership(zoneId, callerWallet);
+  if (!check.ok) return check;
+
+  const creates = request.create ?? [];
+  const updates = request.update ?? [];
+  const deletes = request.delete ?? [];
+
+  const totalOps = creates.length + updates.length + deletes.length;
+  if (totalOps === 0) {
+    return { ok: false, status: 400, code: "invalid_request", message: "Batch request must have at least one operation" };
+  }
+  if (totalOps > MAX_BATCH_OPS) {
+    return { ok: false, status: 400, code: "invalid_request", message: `Batch request exceeds ${MAX_BATCH_OPS} operation limit` };
+  }
+
+  // Validate create entries
+  for (const entry of creates) {
+    if (!entry.type || !VALID_RECORD_TYPES.includes(entry.type)) {
+      return { ok: false, status: 400, code: "invalid_request", message: `Invalid record type: ${entry.type}. Must be one of: ${VALID_RECORD_TYPES.join(", ")}` };
+    }
+    if (!entry.name) {
+      return { ok: false, status: 400, code: "invalid_request", message: "Record name is required" };
+    }
+    if (!entry.content) {
+      return { ok: false, status: 400, code: "invalid_request", message: "Record content is required" };
+    }
+    if (entry.type === "MX" && entry.priority === undefined) {
+      return { ok: false, status: 400, code: "invalid_request", message: "MX records require a priority" };
+    }
+  }
+
+  // Look up update/delete IDs — must exist and belong to this zone
+  interface UpdateRowInfo {
+    primId: string;
+    cfId: string;
+    entry: (typeof updates)[0];
+  }
+  const updateRows: UpdateRowInfo[] = [];
+  for (const entry of updates) {
+    const row = getRecordById(entry.id);
+    if (!row || row.zone_id !== zoneId) {
+      return { ok: false, status: 404, code: "not_found", message: `Record not found: ${entry.id}` };
+    }
+    updateRows.push({ primId: entry.id, cfId: row.cloudflare_id, entry });
+  }
+
+  interface DeleteRowInfo {
+    primId: string;
+    cfId: string;
+  }
+  const deleteRows: DeleteRowInfo[] = [];
+  for (const entry of deletes) {
+    const row = getRecordById(entry.id);
+    if (!row || row.zone_id !== zoneId) {
+      return { ok: false, status: 404, code: "not_found", message: `Record not found: ${entry.id}` };
+    }
+    deleteRows.push({ primId: entry.id, cfId: row.cloudflare_id });
+  }
+
+  // Build Cloudflare batch request
+  const cfPosts = creates.map((e) => ({
+    type: e.type,
+    name: e.name,
+    content: e.content,
+    ttl: e.ttl ?? 3600,
+    proxied: e.proxied ?? false,
+    ...(e.priority !== undefined ? { priority: e.priority } : {}),
+  }));
+
+  const cfPatches = updateRows.map(({ cfId, entry }) => {
+    const { id: _id, ...fields } = entry;
+    return { id: cfId, ...fields };
+  });
+
+  const cfDeletes = deleteRows.map(({ cfId }) => ({ id: cfId }));
+
+  // Generate prim IDs for creates upfront so they're available after the transaction
+  const createPrimIds = creates.map(() => generateRecordId());
+
+  // Call Cloudflare batch API
+  let batchResult: CfBatchResult;
+  try {
+    batchResult = await cfBatchDnsRecords(check.row.cloudflare_id, {
+      ...(cfPosts.length > 0 ? { posts: cfPosts } : {}),
+      ...(cfPatches.length > 0 ? { patches: cfPatches } : {}),
+      ...(cfDeletes.length > 0 ? { deletes: cfDeletes } : {}),
+    });
+  } catch (err) {
+    if (err instanceof CloudflareError) {
+      return { ok: false, status: err.statusCode, code: err.code, message: err.message };
+    }
+    throw err;
+  }
+
+  // Apply SQLite changes in a transaction
+  try {
+    runInTransaction(() => {
+      // Persist created records
+      const cfPostResults = batchResult.posts ?? [];
+      for (let i = 0; i < cfPostResults.length; i++) {
+        const cf = cfPostResults[i];
+        insertRecord({
+          id: createPrimIds[i],
+          cloudflare_id: cf.id,
+          zone_id: zoneId,
+          type: cf.type,
+          name: cf.name,
+          content: cf.content,
+          ttl: cf.ttl,
+          proxied: cf.proxied ?? false,
+          priority: cf.priority ?? null,
+        });
+      }
+      // Persist updated records
+      for (const cf of batchResult.patches ?? []) {
+        const ur = updateRows.find((r) => r.cfId === cf.id);
+        if (!ur) continue;
+        updateRecordRow(ur.primId, {
+          type: cf.type,
+          name: cf.name,
+          content: cf.content,
+          ttl: cf.ttl,
+          proxied: cf.proxied ?? false,
+          priority: cf.priority ?? null,
+        });
+      }
+      // Remove deleted records
+      for (const { primId } of deleteRows) {
+        deleteRecordRow(primId);
+      }
+    });
+  } catch (err) {
+    console.error("CRITICAL: batch SQLite transaction failed after CF batch succeeded", err);
+    return { ok: false, status: 500, code: "internal_error", message: "Internal error applying batch — CF succeeded but local DB update failed" };
+  }
+
+  // Read back rows for response
+  const createdRows = createPrimIds.map((id) => getRecordById(id)).filter((r): r is NonNullable<typeof r> => r !== null);
+  const updatedRows = updateRows.map(({ primId }) => getRecordById(primId)).filter((r): r is NonNullable<typeof r> => r !== null);
+
+  return {
+    ok: true,
+    data: {
+      created: createdRows.map(rowToRecordResponse),
+      updated: updatedRows.map(rowToRecordResponse),
+      deleted: deleteRows.map(({ primId }) => ({ id: primId })),
+    },
+  };
 }
 
 // ─── Domain search ────────────────────────────────────────────────────────

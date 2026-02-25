@@ -111,6 +111,26 @@ const mockFetch = vi.fn(async (input: RequestInfo | URL, _init?: RequestInit) =>
     );
   }
 
+  // CF: POST /zones/:id/dns_records/batch — batch record operations
+  if (url.match(/\/client\/v4\/zones\/[^/]+\/dns_records\/batch$/) && method === "POST") {
+    const body = JSON.parse(_init?.body as string) as {
+      posts?: { type: string; name: string; content: string; ttl?: number; proxied?: boolean; priority?: number }[];
+      patches?: { id: string; content?: string; ttl?: number; type?: string; name?: string; proxied?: boolean; priority?: number }[];
+      deletes?: { id: string }[];
+    };
+    const posts = (body.posts ?? []).map((p, i) =>
+      makeCfRecord({ id: `cf-record-batch-post-${i}`, type: p.type, name: p.name, content: p.content, ttl: p.ttl ?? 3600, proxied: p.proxied ?? false, priority: p.priority ?? null }),
+    );
+    const patches = (body.patches ?? []).map((p) =>
+      makeCfRecord({ id: p.id, type: p.type ?? "A", name: p.name ?? "example.com", content: p.content ?? "patched", ttl: p.ttl ?? 3600, proxied: p.proxied ?? false, priority: p.priority ?? null }),
+    );
+    const deletes = (body.deletes ?? []).map((d) => makeCfRecord({ id: d.id }));
+    return new Response(
+      JSON.stringify({ success: true, errors: [], result: { posts, patches, puts: [], deletes } }),
+      { status: 200, headers: { "Content-Type": "application/json" } },
+    );
+  }
+
   // CF: DELETE /zones/:id/dns_records/:id — delete record
   if (url.match(/\/client\/v4\/zones\/[^/]+\/dns_records\/[^/]+$/) && method === "DELETE") {
     return new Response(
@@ -140,6 +160,7 @@ import {
   updateRecord,
   deleteRecord,
   searchDomains,
+  batchRecords,
 } from "../src/service.ts";
 
 // ─── Fixtures ────────────────────────────────────────────────────────────
@@ -488,6 +509,266 @@ describe("domain.sh", () => {
       expect(result.ok).toBe(false);
       if (result.ok) return;
       expect(result.code).toBe("rate_limited");
+    });
+  });
+
+  // ─── Batch record operations ──────────────────────────────────────────
+
+  describe("batch records", () => {
+    let zoneId: string;
+
+    beforeEach(async () => {
+      const result = await createZone({ domain: "example.com" }, CALLER);
+      if (!result.ok) throw new Error("Failed to create test zone");
+      zoneId = result.data.zone.id;
+    });
+
+    it("batch create — creates records and returns them", async () => {
+      const result = await batchRecords(
+        zoneId,
+        { create: [{ type: "A", name: "www.example.com", content: "1.2.3.4" }] },
+        CALLER,
+      );
+      expect(result.ok).toBe(true);
+      if (!result.ok) return;
+      expect(result.data.created).toHaveLength(1);
+      expect(result.data.created[0].id).toMatch(/^r_/);
+      expect(result.data.created[0].type).toBe("A");
+      expect(result.data.updated).toHaveLength(0);
+      expect(result.data.deleted).toHaveLength(0);
+    });
+
+    it("batch create — persists records to DB", async () => {
+      const result = await batchRecords(
+        zoneId,
+        { create: [{ type: "TXT", name: "example.com", content: "v=spf1 -all" }] },
+        CALLER,
+      );
+      expect(result.ok).toBe(true);
+      if (!result.ok) return;
+      const row = getRecordById(result.data.created[0].id);
+      expect(row).not.toBeNull();
+    });
+
+    it("batch create — MX without priority returns 400", async () => {
+      const result = await batchRecords(
+        zoneId,
+        { create: [{ type: "MX", name: "example.com", content: "mail.example.com" }] },
+        CALLER,
+      );
+      expect(result.ok).toBe(false);
+      if (result.ok) return;
+      expect(result.status).toBe(400);
+      expect(result.message).toContain("priority");
+    });
+
+    it("batch create — MX with priority succeeds", async () => {
+      const result = await batchRecords(
+        zoneId,
+        { create: [{ type: "MX", name: "example.com", content: "mail.example.com", priority: 10 }] },
+        CALLER,
+      );
+      expect(result.ok).toBe(true);
+      if (!result.ok) return;
+      expect(result.data.created[0].priority).toBe(10);
+    });
+
+    it("batch create — invalid type returns 400", async () => {
+      const result = await batchRecords(
+        zoneId,
+        { create: [{ type: "INVALID" as "A", name: "example.com", content: "1.2.3.4" }] },
+        CALLER,
+      );
+      expect(result.ok).toBe(false);
+      if (result.ok) return;
+      expect(result.status).toBe(400);
+    });
+
+    it("batch create — missing name returns 400", async () => {
+      const result = await batchRecords(
+        zoneId,
+        { create: [{ type: "A", name: "", content: "1.2.3.4" }] },
+        CALLER,
+      );
+      expect(result.ok).toBe(false);
+      if (result.ok) return;
+      expect(result.status).toBe(400);
+    });
+
+    it("batch create — missing content returns 400", async () => {
+      const result = await batchRecords(
+        zoneId,
+        { create: [{ type: "A", name: "example.com", content: "" }] },
+        CALLER,
+      );
+      expect(result.ok).toBe(false);
+      if (result.ok) return;
+      expect(result.status).toBe(400);
+    });
+
+    it("batch update — updates record content", async () => {
+      const created = await createRecord(zoneId, { type: "A", name: "example.com", content: "1.2.3.4" }, CALLER);
+      if (!created.ok) return;
+
+      const result = await batchRecords(
+        zoneId,
+        { update: [{ id: created.data.id, content: "5.6.7.8" }] },
+        CALLER,
+      );
+      expect(result.ok).toBe(true);
+      if (!result.ok) return;
+      expect(result.data.created).toHaveLength(0);
+      expect(result.data.updated).toHaveLength(1);
+      expect(result.data.updated[0].id).toBe(created.data.id);
+      expect(result.data.updated[0].content).toBe("5.6.7.8");
+    });
+
+    it("batch update — nonexistent record ID returns 404", async () => {
+      const result = await batchRecords(
+        zoneId,
+        { update: [{ id: "r_nonexistent", content: "1.2.3.4" }] },
+        CALLER,
+      );
+      expect(result.ok).toBe(false);
+      if (result.ok) return;
+      expect(result.status).toBe(404);
+    });
+
+    it("batch update — record from different zone returns 404", async () => {
+      // Create a second zone and a record in it
+      const otherZone = await createZone({ domain: "other.com" }, CALLER);
+      if (!otherZone.ok) return;
+      const otherRecord = await createRecord(otherZone.data.zone.id, { type: "A", name: "other.com", content: "1.2.3.4" }, CALLER);
+      if (!otherRecord.ok) return;
+
+      // Try to update it via the first zone
+      const result = await batchRecords(
+        zoneId,
+        { update: [{ id: otherRecord.data.id, content: "9.9.9.9" }] },
+        CALLER,
+      );
+      expect(result.ok).toBe(false);
+      if (result.ok) return;
+      expect(result.status).toBe(404);
+    });
+
+    it("batch delete — removes records and returns deleted IDs", async () => {
+      const created = await createRecord(zoneId, { type: "A", name: "example.com", content: "1.2.3.4" }, CALLER);
+      if (!created.ok) return;
+      const recordId = created.data.id;
+
+      const result = await batchRecords(
+        zoneId,
+        { delete: [{ id: recordId }] },
+        CALLER,
+      );
+      expect(result.ok).toBe(true);
+      if (!result.ok) return;
+      expect(result.data.deleted).toHaveLength(1);
+      expect(result.data.deleted[0].id).toBe(recordId);
+
+      // Verify removed from DB
+      expect(getRecordById(recordId)).toBeNull();
+    });
+
+    it("batch delete — nonexistent record ID returns 404", async () => {
+      const result = await batchRecords(
+        zoneId,
+        { delete: [{ id: "r_nonexistent" }] },
+        CALLER,
+      );
+      expect(result.ok).toBe(false);
+      if (result.ok) return;
+      expect(result.status).toBe(404);
+    });
+
+    it("mixed batch — create + delete together", async () => {
+      const created = await createRecord(zoneId, { type: "A", name: "example.com", content: "1.2.3.4" }, CALLER);
+      if (!created.ok) return;
+
+      const result = await batchRecords(
+        zoneId,
+        {
+          create: [{ type: "AAAA", name: "example.com", content: "::1" }],
+          delete: [{ id: created.data.id }],
+        },
+        CALLER,
+      );
+      expect(result.ok).toBe(true);
+      if (!result.ok) return;
+      expect(result.data.created).toHaveLength(1);
+      expect(result.data.deleted).toHaveLength(1);
+      expect(getRecordById(created.data.id)).toBeNull();
+    });
+
+    it("batch — non-owner of zone gets 403", async () => {
+      const result = await batchRecords(
+        zoneId,
+        { create: [{ type: "A", name: "example.com", content: "1.2.3.4" }] },
+        OTHER,
+      );
+      expect(result.ok).toBe(false);
+      if (result.ok) return;
+      expect(result.status).toBe(403);
+    });
+
+    it("batch — nonexistent zone returns 404", async () => {
+      const result = await batchRecords(
+        "z_nonexistent",
+        { create: [{ type: "A", name: "example.com", content: "1.2.3.4" }] },
+        CALLER,
+      );
+      expect(result.ok).toBe(false);
+      if (result.ok) return;
+      expect(result.status).toBe(404);
+    });
+
+    it("batch — empty request returns 400", async () => {
+      const result = await batchRecords(zoneId, {}, CALLER);
+      expect(result.ok).toBe(false);
+      if (result.ok) return;
+      expect(result.status).toBe(400);
+    });
+
+    it("batch — exceeds 200 operation limit returns 400", async () => {
+      const creates = Array.from({ length: 201 }, (_, i) => ({
+        type: "A" as const,
+        name: `record${i}.example.com`,
+        content: "1.2.3.4",
+      }));
+      const result = await batchRecords(zoneId, { create: creates }, CALLER);
+      expect(result.ok).toBe(false);
+      if (result.ok) return;
+      expect(result.status).toBe(400);
+      expect(result.message).toContain("200");
+    });
+
+    it("batch — exactly 200 operations is allowed", async () => {
+      const creates = Array.from({ length: 200 }, (_, i) => ({
+        type: "A" as const,
+        name: `record${i}.example.com`,
+        content: "1.2.3.4",
+      }));
+      const result = await batchRecords(zoneId, { create: creates }, CALLER);
+      expect(result.ok).toBe(true);
+    });
+
+    it("batch — CF error propagates as cloudflare_error", async () => {
+      mockFetch.mockImplementationOnce(async () => {
+        return new Response(
+          JSON.stringify({ success: false, errors: [{ code: 1000, message: "CF batch failed" }] }),
+          { status: 500, headers: { "Content-Type": "application/json" } },
+        );
+      });
+
+      const result = await batchRecords(
+        zoneId,
+        { create: [{ type: "A", name: "example.com", content: "1.2.3.4" }] },
+        CALLER,
+      );
+      expect(result.ok).toBe(false);
+      if (result.ok) return;
+      expect(result.code).toBe("cloudflare_error");
     });
   });
 

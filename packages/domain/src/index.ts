@@ -11,6 +11,8 @@ import type {
   RecordResponse,
   RecordListResponse,
   DomainSearchResponse,
+  BatchRecordsRequest,
+  BatchRecordsResponse,
 } from "./api.ts";
 import {
   createZone,
@@ -23,6 +25,7 @@ import {
   updateRecord,
   deleteRecord,
   searchDomains,
+  batchRecords,
 } from "./service.ts";
 
 const PAY_TO_ADDRESS = "0x0000000000000000000000000000000000000000";
@@ -34,6 +37,7 @@ const DOMAIN_ROUTES = {
   "GET /v1/zones": "$0.001",
   "GET /v1/zones/[id]": "$0.001",
   "DELETE /v1/zones/[id]": "$0.01",
+  "POST /v1/zones/[zone_id]/records/batch": "$0.005",
   "POST /v1/zones/[zone_id]/records": "$0.001",
   "GET /v1/zones/[zone_id]/records": "$0.001",
   "GET /v1/zones/[zone_id]/records/[id]": "$0.001",
@@ -156,6 +160,29 @@ app.delete("/v1/zones/:id", async (c) => {
     return c.json(cloudflareError(result.message), result.status as 502);
   }
   return c.json(result.data, 200);
+});
+
+// POST /v1/zones/:zone_id/records/batch — Batch create/update/delete records
+app.post("/v1/zones/:zone_id/records/batch", async (c) => {
+  const caller = c.get("walletAddress");
+  if (!caller) return c.json(forbidden("No wallet address in payment"), 403);
+
+  let body: BatchRecordsRequest;
+  try {
+    body = await c.req.json<BatchRecordsRequest>();
+  } catch {
+    return c.json(invalidRequest("Invalid JSON body"), 400);
+  }
+
+  const result = await batchRecords(c.req.param("zone_id"), body, caller);
+  if (!result.ok) {
+    if (result.code === "invalid_request") return c.json(invalidRequest(result.message), 400);
+    if (result.status === 404) return c.json(notFound(result.message), 404);
+    if (result.status === 403) return c.json(forbidden(result.message), 403);
+    if (result.status === 500) return c.json({ error: { code: "internal_error", message: result.message } }, 500);
+    return c.json(cloudflareError(result.message), result.status as 502);
+  }
+  return c.json(result.data as BatchRecordsResponse, 200);
 });
 
 // POST /v1/zones/:zone_id/records — Create record

@@ -109,3 +109,40 @@ export interface DomainSearchResult {
 export interface DomainSearchResponse {
   results: DomainSearchResult[];
 }
+
+// ─── Batch record types ────────────────────────────────────────────────────
+
+export interface BatchCreateEntry {
+  type: RecordType;
+  name: string;
+  content: string;
+  ttl?: number;
+  proxied?: boolean;
+  priority?: number;
+}
+
+export interface BatchUpdateEntry {
+  id: string;
+  content?: string;
+  ttl?: number;
+  proxied?: boolean;
+  priority?: number;
+  type?: RecordType;
+  name?: string;
+}
+
+export interface BatchDeleteEntry {
+  id: string;
+}
+
+export interface BatchRecordsRequest {
+  create?: BatchCreateEntry[];
+  update?: BatchUpdateEntry[];
+  delete?: BatchDeleteEntry[];
+}
+
+export interface BatchRecordsResponse {
+  created: RecordResponse[];
+  updated: RecordResponse[];
+  deleted: { id: string }[];
+}
