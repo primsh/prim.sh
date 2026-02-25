@@ -7,6 +7,10 @@
  *
  * Usage:
  *   source .env.testnet && bun run scripts/integration-test.ts
+ *   source .env.testnet && bun run scripts/integration-test.ts --dry-run
+ *
+ * --dry-run: Start wallet.sh, create a wallet, check balance, then exit.
+ *            Use this to get the wallet address for faucet funding.
  */
 
 import { spawn } from "node:child_process";
@@ -14,6 +18,7 @@ import type { ChildProcess } from "node:child_process";
 
 // ─── Config ──────────────────────────────────────────────────────────────
 
+const DRY_RUN = process.argv.includes("--dry-run");
 const WALLET_PORT = Number(process.env.WALLET_PORT ?? "3001");
 const STORE_PORT = Number(process.env.STORE_PORT ?? "3002");
 const WALLET_URL = `http://localhost:${WALLET_PORT}`;
@@ -39,14 +44,18 @@ if (network !== "eip155:84532") {
   process.exit(1);
 }
 
-requireEnv("PRIM_PAY_TO");
-requireEnv("CLOUDFLARE_API_TOKEN");
-requireEnv("CLOUDFLARE_ACCOUNT_ID");
-requireEnv("R2_ACCESS_KEY_ID");
-requireEnv("R2_SECRET_ACCESS_KEY");
 requireEnv("WALLET_MASTER_KEY");
 
-console.log("✓ All env vars present. Network: Base Sepolia (eip155:84532)");
+if (DRY_RUN) {
+  console.log("✓ Dry-run mode. Only wallet.sh will start.");
+} else {
+  requireEnv("PRIM_PAY_TO");
+  requireEnv("CLOUDFLARE_API_TOKEN");
+  requireEnv("CLOUDFLARE_ACCOUNT_ID");
+  requireEnv("R2_ACCESS_KEY_ID");
+  requireEnv("R2_SECRET_ACCESS_KEY");
+  console.log("✓ All env vars present. Network: Base Sepolia (eip155:84532)");
+}
 
 // ─── Subprocess management ──────────────────────────────────────────────
 
@@ -135,7 +144,9 @@ async function main() {
   console.log("\n─── Starting services ───────────────────────────────────────\n");
 
   await startService("wallet.sh", "packages/wallet/src/index.ts", WALLET_PORT);
-  await startService("store.sh", "packages/store/src/index.ts", STORE_PORT);
+  if (!DRY_RUN) {
+    await startService("store.sh", "packages/store/src/index.ts", STORE_PORT);
+  }
 
   console.log("\n─── Running integration tests ──────────────────────────────\n");
 
@@ -150,7 +161,6 @@ async function main() {
     const data = await res.json() as { address: string; claimToken: string };
     walletAddress = data.address;
     claimToken = data.claimToken;
-    console.log(`(address: ${walletAddress})`);
   });
 
   if (!walletAddress) {
@@ -158,14 +168,27 @@ async function main() {
     return;
   }
 
-  // 2. Check balance
+  // 2. Check balance via wallet.sh's balance module
   await step("Check USDC balance", async () => {
-    // Balance check via store health isn't needed — we'll try x402 and see
-    // For now just report the address for manual faucet funding
-    console.log(`\n    Fund this address with test USDC via Circle faucet:`);
-    console.log(`    https://faucet.circle.com/ → Base Sepolia → ${walletAddress}`);
-    console.log(`    Then re-run this script.\n`);
+    const { getUsdcBalance } = await import("../packages/wallet/src/balance.ts");
+    const { balance, funded } = await getUsdcBalance(walletAddress as `0x${string}`);
+    console.log(`(${balance} USDC, funded=${funded})`);
+
+    if (!funded) {
+      console.log(`\n    ⚠ Wallet has zero USDC. Fund it before running the full test:`);
+      console.log(`    1. Test USDC: https://faucet.circle.com/ → Base Sepolia → ${walletAddress}`);
+      console.log(`    2. Gas ETH:   https://www.alchemy.com/faucets/base-sepolia → ${walletAddress}`);
+      if (DRY_RUN) {
+        console.log(`\n    Then run the full test:`);
+        console.log(`    source .env.testnet && bun run scripts/integration-test.ts\n`);
+      }
+    }
   });
+
+  if (DRY_RUN) {
+    console.log("\n  Dry-run complete. Address and balance above.");
+    return;
+  }
 
   // 3. Create bucket via x402Fetch
   const x402Fetch = await getX402Fetch();
