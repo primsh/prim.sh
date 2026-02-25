@@ -38,6 +38,7 @@
 | 32 | SP-3 | Build spawn.sh: VM lifecycle (start, stop, destroy, resize) | spawn/ | SP-2 | Open |
 | 33 | SP-4 | Build spawn.sh: SSH key injection + initial setup | spawn/ | SP-2 | Open |
 | 34 | SP-5 | Integrate x402 middleware | spawn/ | SP-2, P-4 | Open |
+| 35 | B-1 | Batch 1: parallel agent team execution (W-2 + R-1 + SP-1) | cross-cutting | W-2 plan, R-1 plan, SP-1 plan | Open |
 
 ## Plan Docs
 
@@ -47,6 +48,7 @@
 - W-2: `tasks/active/w-2-wallet-creation-2026-02-24.md`
 - R-1: `tasks/active/r-1-stalwart-docker-deploy-2026-02-24.md`
 - SP-1: `tasks/active/sp-1-spawn-spec-2026-02-24.md`
+- B-1: `tasks/active/b-1-batch-1-team-execution-2026-02-24.md`
 
 ## Backlog — Future Primitives
 
