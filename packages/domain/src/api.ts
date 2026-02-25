@@ -95,7 +95,7 @@ export interface RecordListResponse {
 
 export interface DomainSearchPrice {
   register: number;
-  renew: number;
+  renew?: number; // not returned by checkRegisterAvailability; omitted means unknown
   currency: string;
 }
 

@@ -153,7 +153,7 @@ export class NameSiloClient implements RegistrarProvider {
       const registerPrice = parsePrice(entry.price ?? entry["regular-price"]);
       const price: DomainPrice | undefined =
         registerPrice !== undefined
-          ? { register: registerPrice, renew: registerPrice, currency: "USD" }
+          ? { register: registerPrice, currency: "USD" }
           : undefined;
 
       resultMap.set(entry.domain, {

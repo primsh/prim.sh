@@ -5,7 +5,7 @@
 
 export interface DomainPrice {
   register: number;
-  renew: number;
+  renew?: number; // not returned by checkRegisterAvailability; omitted means unknown
   currency: string;
 }
 
