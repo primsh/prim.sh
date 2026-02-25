@@ -53,7 +53,8 @@
 | 4 | ST-4 | Integrate x402 middleware for store.sh | packages/store | ST-1, P-4 | done |
 | 5 | TK-1 | Build token.sh: scaffold + deploy + query (package, db, deployer keystore, factory ABI, CREATE2, service, routes, tests) | packages/token | P-4 | done |
 | 6 | TK-2 | Build token.sh: mint + supply (POST /mint, GET /supply, ownership + cap enforcement, tests) | packages/token | TK-1 | done |
-| 7 | TK-3 | Build token.sh: Uniswap pool creation (liquidity coordination with wallet.sh) | packages/token | TK-2 | pending |
+| 7 | TK-4 | Evaluate wrapping Thirdweb/Zora vs custom factory; fix TS bugs (stale cap check, missing tx confirmation); testnet validation | packages/token | TK-2 | pending |
+| 8 | TK-3 | Build token.sh: Uniswap pool creation (liquidity coordination with wallet.sh) | packages/token | TK-4 | pending |
 | 8 | P-5 | Testnet integration testing: env-configurable network (`PRIM_NETWORK`), Base Sepolia x402 end-to-end, wallet.sh ↔ store.sh | cross-cutting | ST-4, W-5 | pending |
 
 ## Plan Docs
@@ -88,6 +89,7 @@
 - R-8: `tasks/completed/r-8-mailbox-ttl-expiry.md`
 - ST-3: `tasks/completed/st-3-storage-quota-usage.md`
 - TK-1/TK-2: implemented directly (no plan doc — plan provided in prompt)
+- TK-4: `tasks/active/tk-4-factory-contract-testnet.md`
 - P-5: `tasks/active/p-5-testnet-integration-testing.md`
 - Umbrella: `tasks/active/batch-execution-umbrella-2026-02-24.md`
 
