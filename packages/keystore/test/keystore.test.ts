@@ -5,7 +5,27 @@
  * PRIM_SCRYPT_N=1024 keeps scrypt fast for test runs.
  */
 
-import { describe, it, expect, beforeEach, afterEach } from "vitest";
+import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
+
+// ── Mocks for balance tests ───────────────────────────────────────────────────
+
+const mockReadContract = vi.fn();
+vi.mock("viem", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("viem")>();
+  return {
+    ...actual,
+    createPublicClient: vi.fn(() => ({ readContract: mockReadContract })),
+  };
+});
+
+vi.mock("@agentstack/x402-middleware", () => ({
+  getNetworkConfig: vi.fn(() => ({
+    network: "eip155:84532",
+    chainId: 84532,
+    rpcUrl: "https://sepolia.base.org",
+    usdcAddress: "0x036CbD53842c5426634e7929541eC2318f3dCF7e",
+  })),
+}));
 import { mkdirSync, rmSync, existsSync, statSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import { tmpdir } from "node:os";
@@ -18,6 +38,7 @@ import {
   exportKey,
   removeKey,
 } from "../src/keystore.ts";
+import { getUsdcBalance } from "../src/balance.ts";
 import { getDefaultAddress, setDefaultAddress, getConfig } from "../src/config.ts";
 import { getDeviceKeyPath } from "../src/paths.ts";
 
@@ -294,5 +315,44 @@ describe("loadAccount", () => {
     const account = await loadAccount(TEST_ADDRESS);
     const sig = await account.signMessage({ message: "hello" });
     expect(sig).toMatch(/^0x[0-9a-f]+$/i);
+  });
+});
+
+// ── getUsdcBalance ────────────────────────────────────────────────────────────
+
+describe("getUsdcBalance", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it("returns balance, funded=true, and network on success", async () => {
+    // 10.50 USDC in atomic units (6 decimals)
+    mockReadContract.mockResolvedValue(10_500_000n);
+    const result = await getUsdcBalance(TEST_ADDRESS);
+    expect(result.address).toBe(TEST_ADDRESS);
+    expect(result.balance).toBe("10.50");
+    expect(result.funded).toBe(true);
+    expect(result.network).toBe("eip155:84532");
+  });
+
+  it("returns funded=false when balance is zero", async () => {
+    mockReadContract.mockResolvedValue(0n);
+    const result = await getUsdcBalance(TEST_ADDRESS);
+    expect(result.balance).toBe("0.00");
+    expect(result.funded).toBe(false);
+  });
+
+  it("returns fallback { balance: '0.00', funded: false } on RPC failure", async () => {
+    mockReadContract.mockRejectedValue(new Error("RPC timeout"));
+    const result = await getUsdcBalance(TEST_ADDRESS);
+    expect(result.balance).toBe("0.00");
+    expect(result.funded).toBe(false);
+    expect(result.network).toBe("eip155:84532");
+  });
+
+  it("includes address in result", async () => {
+    mockReadContract.mockResolvedValue(5_000_000n);
+    const result = await getUsdcBalance(TEST_ADDRESS);
+    expect(result.address).toBe(TEST_ADDRESS);
   });
 });

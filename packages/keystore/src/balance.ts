@@ -15,15 +15,23 @@ const BALANCE_OF_ABI = [
   },
 ] as const;
 
+export interface BalanceResult {
+  address: string;
+  balance: string;
+  funded: boolean;
+  network: string;
+}
+
 function getViemChain(chainId: number) {
   if (chainId === 84532) return baseSepolia;
   return base;
 }
 
-/** Live on-chain USDC balance via viem readContract. */
-export async function getUsdcBalance(
-  address: string,
-): Promise<{ balance: string; funded: boolean }> {
+/**
+ * Fetch live on-chain USDC balance via viem readContract.
+ * On RPC failure, returns { balance: "0.00", funded: false } rather than throwing.
+ */
+export async function getUsdcBalance(address: string): Promise<BalanceResult> {
   const netConfig = getNetworkConfig();
   const rpcUrl = process.env.BASE_RPC_URL ?? netConfig.rpcUrl;
 
@@ -32,15 +40,19 @@ export async function getUsdcBalance(
     transport: http(rpcUrl),
   });
 
-  const raw = (await client.readContract({
-    address: netConfig.usdcAddress as Address,
-    abi: BALANCE_OF_ABI,
-    functionName: "balanceOf",
-    args: [address as Address],
-  })) as bigint;
+  try {
+    const raw = (await client.readContract({
+      address: netConfig.usdcAddress as Address,
+      abi: BALANCE_OF_ABI,
+      functionName: "balanceOf",
+      args: [address as Address],
+    })) as bigint;
 
-  const funded = raw > 0n;
-  const balance = Number(formatUnits(raw, USDC_DECIMALS)).toFixed(2);
+    const funded = raw > 0n;
+    const balance = Number(formatUnits(raw, USDC_DECIMALS)).toFixed(2);
 
-  return { balance, funded };
+    return { address, balance, funded, network: netConfig.network };
+  } catch {
+    return { address, balance: "0.00", funded: false, network: netConfig.network };
+  }
 }

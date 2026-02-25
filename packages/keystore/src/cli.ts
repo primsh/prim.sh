@@ -41,8 +41,21 @@ async function main() {
   const group = argv[0];
   const subcommand = argv[1];
 
+  if (group === "store") {
+    try {
+      const { runStoreCommand } = await import("./store-commands.ts");
+      await runStoreCommand(subcommand, argv);
+    } catch (err) {
+      console.error(`Error: ${err instanceof Error ? err.message : String(err)}`);
+      process.exit(1);
+    }
+    return;
+  }
+
   if (group !== "wallet") {
-    console.log("Usage: prim wallet <create|list|balance|import|export|default|remove>");
+    console.log("Usage: prim <wallet|store> <subcommand>");
+    console.log("  prim wallet <create|list|balance|import|export|default|remove>");
+    console.log("  prim store <create-bucket|ls|put|get|rm|rm-bucket|quota>");
     process.exit(1);
   }
 
@@ -87,8 +100,10 @@ async function main() {
           const { privateKeyToAccount } = await import("viem/accounts");
           resolvedAddress = privateKeyToAccount(key).address;
         }
-        const { balance, funded } = await getUsdcBalance(resolvedAddress);
-        console.log(`${resolvedAddress}  ${balance} USDC${funded ? "" : "  (unfunded)"}`);
+        const { balance, funded, network } = await getUsdcBalance(resolvedAddress);
+        console.log(
+          `${resolvedAddress}  ${balance} USDC  [${network}]${funded ? "" : "  (unfunded)"}`,
+        );
         break;
       }
 
