@@ -7,13 +7,22 @@ type ServiceResult<T> =
   | { ok: true; data: T }
   | { ok: false; status: number; code: string; message: string; retryAfter?: number };
 
-// Module-level singleton — created once, reused across requests.
+// Module-level singleton — created once per key value, reused across requests.
 let _client: TavilyClient | undefined;
+let _clientKey: string | undefined;
+
+export function resetClient(): void {
+  _client = undefined;
+  _clientKey = undefined;
+}
 
 function getClient(): TavilyClient {
   const key = process.env.TAVILY_API_KEY;
   if (!key) throw new ProviderError("TAVILY_API_KEY is not configured", "provider_error");
-  if (!_client) _client = new TavilyClient(key);
+  if (!_client || _clientKey !== key) {
+    _client = new TavilyClient(key);
+    _clientKey = key;
+  }
   return _client;
 }
 
@@ -28,8 +37,8 @@ function handleProviderError(err: unknown): ServiceResult<never> {
 function isValidUrl(url: string): boolean {
   if (!url.trim()) return false;
   try {
-    new URL(url);
-    return true;
+    const parsed = new URL(url);
+    return parsed.protocol === "http:" || parsed.protocol === "https:";
   } catch {
     return false;
   }

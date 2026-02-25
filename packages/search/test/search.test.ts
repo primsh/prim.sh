@@ -3,9 +3,9 @@
  * Service functions accept injectable providers so tests avoid global fetch mocking.
  */
 
-import { describe, expect, it } from "vitest";
+import { beforeEach, describe, expect, it } from "vitest";
 import { ProviderError } from "../src/provider.ts";
-import { searchWeb, searchNews, extractUrls } from "../src/service.ts";
+import { searchWeb, searchNews, extractUrls, resetClient } from "../src/service.ts";
 import type { SearchProvider, ExtractProvider, SearchProviderParams, SearchProviderResult, ExtractProviderResult } from "../src/provider.ts";
 
 // ─── Mock providers ───────────────────────────────────────────────────────────
@@ -106,6 +106,8 @@ class ErrorExtractProvider implements ExtractProvider {
 // ─── searchWeb ────────────────────────────────────────────────────────────────
 
 describe("searchWeb", () => {
+  beforeEach(() => resetClient());
+
   it("returns results for a valid query", async () => {
     const provider = new MockSearchProvider();
     const result = await searchWeb({ query: "latest AI news" }, provider);
@@ -212,6 +214,8 @@ describe("searchWeb", () => {
 // ─── searchNews ───────────────────────────────────────────────────────────────
 
 describe("searchNews", () => {
+  beforeEach(() => resetClient());
+
   it("returns results for a valid query", async () => {
     const provider = new MockSearchProvider();
     const result = await searchNews({ query: "breaking news" }, provider);
@@ -264,6 +268,8 @@ describe("searchNews", () => {
 // ─── extractUrls ──────────────────────────────────────────────────────────────
 
 describe("extractUrls", () => {
+  beforeEach(() => resetClient());
+
   it("extracts content from a single URL string", async () => {
     const provider = new MockExtractProvider();
     const result = await extractUrls({ urls: "https://example.com" }, provider);
@@ -329,6 +335,14 @@ describe("extractUrls", () => {
 
   it("returns 400 for non-URL strings", async () => {
     const result = await extractUrls({ urls: "not a url" });
+    expect(result.ok).toBe(false);
+    if (result.ok) return;
+    expect(result.status).toBe(400);
+    expect(result.code).toBe("invalid_request");
+  });
+
+  it("returns 400 for non-http(s) URL schemes", async () => {
+    const result = await extractUrls({ urls: "ftp://files.example.com" });
     expect(result.ok).toBe(false);
     if (result.ok) return;
     expect(result.status).toBe(400);
