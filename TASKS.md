@@ -23,10 +23,10 @@
 | 17 | W-7 | Implement budget/spending policy engine | wallet/ | W-4 | done |
 | 18 | W-8 | Port execution journal + idempotency from Railgunner | wallet/ | W-4 | done |
 | 19 | W-9 | Port circuit breaker from Railgunner | wallet/ | W-4 | done |
-| 20 | D-1 | Build dns.sh: zone + record CRUD via Cloudflare API | dns/ | P-4 | done |
+| 20 | D-1 | Build dns.sh: zone + record CRUD via Cloudflare API | packages/dns | P-4 | done |
 | 21 | D-2 | Build dns.sh: batch operations + mail-setup convenience endpoint | dns/ | D-1 | pending |
 | 22 | D-3 | Build dns.sh: verification endpoint (NS + record propagation checks) | dns/ | D-1 | pending |
-| 23 | D-4 | Integrate x402 middleware | dns/ | D-1, P-4 | pending |
+| 23 | D-4 | Integrate x402 middleware | dns/ | D-1, P-4 | done |
 | 24 | R-1 | Deploy Stalwart (Docker on DigitalOcean Droplet) | relay/ | DO account | pending |
 | 25 | R-2 | Configure Stalwart: domain, DKIM, SPF, DMARC, ACME TLS | relay/ | R-1, D-1 | pending |
 | 26 | R-3 | Build relay.sh wrapper: mailbox creation (Stalwart REST API) | relay/ | R-2 | pending |
@@ -63,7 +63,7 @@
 - W-8: `tasks/completed/w-8-execution-journal-2026-02-24.md`
 - W-9: `tasks/completed/w-9-circuit-breaker-2026-02-24.md`
 - SP-3/SP-4: `tasks/completed/sp-3-sp-4-lifecycle-ssh-2026-02-24.md`
-- D-1: `tasks/active/d-1-dns-zone-record-crud-2026-02-24.md`
+- D-1: `tasks/completed/d-1-dns-zone-record-crud-2026-02-24.md`
 - SP-6: `tasks/completed/sp-6-provider-abstraction-2026-02-24.md`
 - R-2: `tasks/active/r-2-stalwart-domain-tls-2026-02-24.md`
 - Umbrella: `tasks/active/batch-execution-umbrella-2026-02-24.md`
@@ -188,5 +188,7 @@ ERC-8004 uses CAIP-10 wallet addresses as root identity. DIDs layer on top non-b
 - P-2 — llms.txt routes wired in `site/serve.py` (2026-02-24)
 - P-1 — llms.txt root + per-primitive files (2026-02-24)
 
+- D-1 — dns.sh: zone + record CRUD, Cloudflare API, SQLite ownership, 36 tests (2026-02-25)
+- D-4 — x402 middleware already integrated in D-1 (2026-02-25)
 - SP-6 — provider abstraction: CloudProvider interface, Hetzner implementation, provider registry (2026-02-24)
 - S-6 — "This page is for humans. The API is for agents." (2026-02-24)

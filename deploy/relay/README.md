@@ -5,7 +5,7 @@ This directory contains the Docker Compose configuration for deploying Stalwart 
 ## Prerequisites
 
 - Docker and Docker Compose installed
-- (For VPS deployment) Hetzner Cloud account and a provisioned VPS
+- (For VPS deployment) DigitalOcean account and a provisioned Droplet
 
 ## Quick Start
 
@@ -22,13 +22,13 @@ docker logs stalwart
 docker compose down
 ```
 
-### VPS Deployment (Hetzner)
+### VPS Deployment (DigitalOcean)
 
-1. **Provision a Hetzner VPS:**
-   - Cloud console: https://console.hetzner.cloud/
-   - Server type: CX23 (2 vCPU, 4 GB RAM, 40 GB disk, ~€3/mo)
+1. **Provision a DigitalOcean Droplet:**
+   - Cloud console: https://cloud.digitalocean.com/
+   - Droplet type: Basic, 1 vCPU, 2 GB RAM, 50 GB disk ($12/mo)
    - OS: Ubuntu 24.04 LTS
-   - Location: `nbg1` (Nuremberg, EU) or `ash` (Ashburn, US)
+   - Region: `nyc1` (New York) or `sfo3` (San Francisco)
    - SSH key: Use your personal key for access
 
 2. **SSH into the VPS:**
