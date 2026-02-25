@@ -1,0 +1,4 @@
+wallet.prim.sh { reverse_proxy localhost:3001 }
+store.prim.sh  { reverse_proxy localhost:3002 }
+faucet.prim.sh { reverse_proxy localhost:3003 }
+spawn.prim.sh  { reverse_proxy localhost:3004 }

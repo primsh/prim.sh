@@ -164,12 +164,12 @@ Plan doc: `tasks/active/v1-launch-plan-2026-02-25.md`
 
 | ID | Task | Owner | Depends on | Status |
 |---|---|---|---|---|
-| L-4 | Create GitHub org `useprim` + repo `prim.sh` (private), push clean code | Garric | L-1, L-2 | pending |
+| L-4 | Create GitHub org `useprim` + repo `prim.sh` (private), push clean code | Garric | L-1, L-2 | done |
 | L-5 | Register `@primsh` npm org | Garric | — | done |
-| L-6 | Write GitHub Actions CI workflow (`.github/workflows/ci.yml` + `release.yml`) | Claude | L-4 | pending |
-| L-7 | Provision DigitalOcean VPS for Core 4 services | Garric | — | pending |
-| L-8 | Write deploy scripts: systemd services + Caddyfile + setup.sh | Claude | — | pending |
-| L-9 | Wire DNS A records (`*.prim.sh` → VPS) + set env vars on VPS | Garric | L-7 | pending |
+| L-6 | Write GitHub Actions CI workflow (`.github/workflows/ci.yml` + `release.yml`) | Claude | L-4 | done |
+| L-7 | Provision DigitalOcean VPS for Core 4 services (`prim-core`, 157.230.187.207, s-1vcpu-2gb, nyc1) | Claude | — | done |
+| L-8 | Write deploy scripts: systemd services + Caddyfile + setup.sh | Claude | — | done |
+| L-9 | Wire DNS A records (`*.prim.sh` → VPS) + set env vars on VPS | Claude | L-7 | done |
 
 ### Wave 2: Go Live
 
