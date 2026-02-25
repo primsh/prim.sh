@@ -47,10 +47,10 @@
 | 38 | SP-5 | Integrate x402 middleware | spawn/ | SP-2, P-4 | done |
 | 39 | B-1 | Batch 1: parallel agent team execution (W-2 + R-1 + SP-1) | cross-cutting | W-2 plan, R-1 plan, SP-1 plan | done |
 | 40 | SP-6 | Abstract provider layer + multi-cloud support (DO, AWS, GCP, Hetzner) | spawn/ | SP-4 | done |
-| 41 | ST-1 | Build store.sh: bucket CRUD via Cloudflare R2 API (create, list, get, delete; ownership; SQLite) | packages/store | P-4 | pending |
-| 42 | ST-2 | Build store.sh: object CRUD via S3-compatible API (put, get, delete, list within owned buckets) | packages/store | ST-1 | pending |
-| 43 | ST-3 | Build store.sh: storage quota + usage tracking (per-bucket limits, metering) | packages/store | ST-1 | pending |
-| 44 | ST-4 | Integrate x402 middleware for store.sh | packages/store | ST-1, P-4 | pending |
+| 1 | ST-1 | Build store.sh: bucket CRUD via Cloudflare R2 API (create, list, get, delete; ownership; SQLite) | packages/store | P-4 | pending |
+| 2 | ST-2 | Build store.sh: object CRUD via S3-compatible API (put, get, delete, list within owned buckets) | packages/store | ST-1 | pending |
+| 3 | ST-3 | Build store.sh: storage quota + usage tracking (per-bucket limits, metering) | packages/store | ST-1 | pending |
+| 4 | ST-4 | Integrate x402 middleware for store.sh | packages/store | ST-1, P-4 | pending |
 
 ## Plan Docs
 
@@ -73,6 +73,7 @@
 - D-1: `tasks/completed/d-1-dns-zone-record-crud-2026-02-24.md`
 - SP-6: `tasks/completed/sp-6-provider-abstraction-2026-02-24.md`
 - R-2: `tasks/completed/r-2-stalwart-domain-tls-2026-02-24.md`
+- R-3: `tasks/active/r-3-mailbox-creation-stalwart-rest.md`
 - D-2→D-7: `tasks/active/d-2-domain-sh-rename-search-2026-02-25.md`
 - ST-1: `tasks/active/st-1-bucket-crud-cloudflare-r2.md`
 - Umbrella: `tasks/active/batch-execution-umbrella-2026-02-24.md`
