@@ -10,13 +10,14 @@
  *   pnpm -F @agentstack/relay test:smoke
  *
  * Required env vars:
- *   STALWART_API_URL          — e.g. http://localhost:8080
- *   STALWART_API_CREDENTIALS  — e.g. admin:password
- *   STALWART_JMAP_URL         — e.g. http://localhost:8443
- *   RELAY_ENCRYPTION_KEY      — 64 hex chars (openssl rand -hex 32)
- *   RELAY_DB_PATH             — e.g. /tmp/relay-smoke.db
- *   STALWART_WEBHOOK_SECRET   — HMAC secret for ingest endpoint
- *   RELAY_ALLOW_HTTP_WEBHOOKS — set to "1"
+ *   STALWART_API_URL            — e.g. http://localhost:8080
+ *   STALWART_API_CREDENTIALS    — e.g. admin:password
+ *   STALWART_JMAP_URL           — e.g. https://localhost:8443 (HTTPS — Stalwart serves JMAP over TLS)
+ *   RELAY_ENCRYPTION_KEY        — 64 hex chars (openssl rand -hex 32)
+ *   RELAY_DB_PATH               — e.g. /tmp/relay-smoke.db
+ *   STALWART_WEBHOOK_SECRET     — HMAC secret for ingest endpoint
+ *   RELAY_ALLOW_HTTP_WEBHOOKS   — set to "1"
+ *   NODE_TLS_REJECT_UNAUTHORIZED — set to "0" (cert is for mail.relay.prim.sh, not localhost)
  */
 
 import { describe, it, expect, beforeAll, afterAll } from "bun:test";

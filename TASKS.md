@@ -58,6 +58,7 @@
 | 7 | TK-4 | Evaluate wrapping Thirdweb/Zora vs custom factory; fix TS bugs (stale cap check, missing tx confirmation); testnet validation | packages/token | TK-2 | pending |
 | 8 | TK-3 | Build token.sh: Uniswap pool creation (liquidity coordination with wallet.sh) | packages/token | TK-4 | pending |
 | 8 | ST-5 | Testnet integration testing: env-configurable network (`PRIM_NETWORK`), Base Sepolia x402 end-to-end, wallet.sh ↔ store.sh | cross-cutting | ST-4, W-5 | done |
+| 9 | R-13 | Fix outbound email delivery: check Stalwart SMTP logs, unblock DO port 25 (or request removal), verify SPF/DKIM/rDNS, confirm delivery to external address | deploy/relay | R-12 | pending |
 | 9 | W-10 | Non-custodial architecture: wallet.sh returns private key to agent, publish `@prim/x402-client` for agent-side signing, rethink custody model | specs/, packages/wallet, packages/x402-client | W-5 | pending |
 
 ## Plan Docs
@@ -95,7 +96,7 @@
 - TK-1/TK-2: implemented directly (no plan doc — plan provided in prompt)
 - TK-4: `tasks/active/tk-4-factory-contract-testnet.md`
 - ST-5: `tasks/completed/st-5-testnet-integration-testing.md`
-- R-11: `tasks/active/r-11-local-smoke-test.md`
+- R-11: `tasks/completed/r-11-local-smoke-test.md`
 - Umbrella: `tasks/active/batch-execution-umbrella-2026-02-24.md`
 
 ## Backlog — Future Primitives
@@ -258,6 +259,7 @@ ERC-8004 uses CAIP-10 wallet addresses as root identity. DIDs layer on top non-b
 - R-9 — relay.sh custom domains: domain registration, DNS verification, Stalwart provisioning (domain principal + DKIM), mailbox creation on custom domains, 148 tests (2026-02-25)
 - ST-5 — testnet integration: getNetworkConfig() in x402-middleware, PRIM_NETWORK/PRIM_PAY_TO env vars, wallet+store wired to Sepolia, integration test script, 496 tests pass (2026-02-25)
 - R-10 — relay.sh x402 middleware: all 16 paid endpoints gated, health check + ingest webhook free, per-route pricing (2026-02-25)
+- R-11 — relay.sh live smoke test: 11 tests against live Stalwart (create → list → get → webhook → send → read → ingest → delete), JMAP over HTTPS tunnel (2026-02-25)
 
 ### R-2 completion details (2026-02-25)
 

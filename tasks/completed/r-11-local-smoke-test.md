@@ -85,13 +85,14 @@ ssh -L 8080:localhost:8080 -L 8443:localhost:443 stalwart-host
 
 # 2. Run the smoke test
 STALWART_API_URL=http://localhost:8080 \
-STALWART_API_CREDENTIALS=admin:password \
-STALWART_JMAP_URL=http://localhost:8443 \
+STALWART_API_CREDENTIALS=relay-wrapper:[REDACTED] \
+STALWART_JMAP_URL=https://localhost:8443 \
 RELAY_ENCRYPTION_KEY=$(openssl rand -hex 32) \
 RELAY_DB_PATH=/tmp/relay-smoke.db \
 RELAY_ALLOW_HTTP_WEBHOOKS=1 \
 STALWART_WEBHOOK_SECRET=test-secret \
-pnpm -F @agentstack/relay exec vitest --run test/smoke-live.test.ts
+NODE_TLS_REJECT_UNAUTHORIZED=0 \
+pnpm -F @agentstack/relay test:smoke
 ```
 
 Add a `test:smoke` script to `packages/relay/package.json` that runs only this file. Regular `pnpm test` excludes it (vitest config or filename convention).
