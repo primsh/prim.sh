@@ -24,11 +24,14 @@
 | 18 | W-8 | Port execution journal + idempotency from Railgunner | wallet/ | W-4 | done |
 | 19 | W-9 | Port circuit breaker from Railgunner | wallet/ | W-4 | done |
 | 20 | D-1 | Build dns.sh: zone + record CRUD via Cloudflare API | packages/dns | P-4 | done |
-| 21 | D-2 | Build dns.sh: batch operations + mail-setup convenience endpoint | dns/ | D-1 | pending |
-| 22 | D-3 | Build dns.sh: verification endpoint (NS + record propagation checks) | dns/ | D-1 | pending |
+| 21 | D-2 | Rename dns.sh → domain.sh, add domain search endpoint (registrar availability API) | packages/dns→domain | D-1 | pending |
+| 22 | D-3 | Build domain.sh: domain registration endpoint (registrar purchase API) | packages/domain | D-2 | pending |
 | 23 | D-4 | Integrate x402 middleware | dns/ | D-1, P-4 | done |
-| 24 | R-1 | Deploy Stalwart (Docker on DigitalOcean Droplet) | relay/ | DO account | pending |
-| 25 | R-2 | Configure Stalwart: domain, DKIM, SPF, DMARC, ACME TLS | relay/ | R-1, D-1 | pending |
+| 45 | D-5 | Build domain.sh: mail-setup convenience endpoint (MX+SPF+DMARC+DKIM in one call) | packages/domain | D-1 | pending |
+| 46 | D-6 | Build domain.sh: verification endpoint (NS + record propagation checks) | packages/domain | D-1 | pending |
+| 47 | D-7 | Build domain.sh: auto-configure NS to Cloudflare after registration | packages/domain | D-3 | pending |
+| 24 | R-1 | Deploy Stalwart (Docker on DigitalOcean Droplet) | relay/ | DO account | done |
+| 25 | R-2 | Configure Stalwart: domain, DKIM, SPF, DMARC, ACME TLS | relay/ | R-1, D-1 | in progress |
 | 26 | R-3 | Build relay.sh wrapper: mailbox creation (Stalwart REST API) | relay/ | R-2 | pending |
 | 27 | R-4 | Build relay.sh wrapper: OAuth token cache for JMAP auth per mailbox | relay/ | R-3 | pending |
 | 28 | R-5 | Build relay.sh wrapper: read messages (JMAP Email/query + Email/get) | relay/ | R-4 | pending |
@@ -44,6 +47,10 @@
 | 38 | SP-5 | Integrate x402 middleware | spawn/ | SP-2, P-4 | done |
 | 39 | B-1 | Batch 1: parallel agent team execution (W-2 + R-1 + SP-1) | cross-cutting | W-2 plan, R-1 plan, SP-1 plan | done |
 | 40 | SP-6 | Abstract provider layer + multi-cloud support (DO, AWS, GCP, Hetzner) | spawn/ | SP-4 | done |
+| 41 | ST-1 | Build store.sh: bucket CRUD via Cloudflare R2 API (create, list, get, delete; ownership; SQLite) | packages/store | P-4 | pending |
+| 42 | ST-2 | Build store.sh: object CRUD via S3-compatible API (put, get, delete, list within owned buckets) | packages/store | ST-1 | pending |
+| 43 | ST-3 | Build store.sh: storage quota + usage tracking (per-bucket limits, metering) | packages/store | ST-1 | pending |
+| 44 | ST-4 | Integrate x402 middleware for store.sh | packages/store | ST-1, P-4 | pending |
 
 ## Plan Docs
 
@@ -66,6 +73,8 @@
 - D-1: `tasks/completed/d-1-dns-zone-record-crud-2026-02-24.md`
 - SP-6: `tasks/completed/sp-6-provider-abstraction-2026-02-24.md`
 - R-2: `tasks/active/r-2-stalwart-domain-tls-2026-02-24.md`
+- D-2→D-7: `tasks/active/d-2-domain-sh-rename-search-2026-02-25.md`
+- ST-1: `tasks/active/st-1-bucket-crud-cloudflare-r2.md`
 - Umbrella: `tasks/active/batch-execution-umbrella-2026-02-24.md`
 
 ## Backlog — Future Primitives
@@ -192,3 +201,22 @@ ERC-8004 uses CAIP-10 wallet addresses as root identity. DIDs layer on top non-b
 - D-4 — x402 middleware already integrated in D-1 (2026-02-25)
 - SP-6 — provider abstraction: CloudProvider interface, Hetzner implementation, provider registry (2026-02-24)
 - S-6 — "This page is for humans. The API is for agents." (2026-02-24)
+- R-1 — Stalwart Docker Compose on DigitalOcean Droplet ([STALWART_HOST]) (2026-02-24)
+
+### R-2 progress (2026-02-25)
+
+**Domain:** `prim.sh` registered via Namecheap ($34.98/yr). Project renamed from "AgentStack" to **Prim** ("primitive shell"). Each primitive is a subdomain: `relay.prim.sh`, `wallet.prim.sh`, `spawn.prim.sh`.
+
+**Completed:**
+- `prim.sh` Cloudflare zone (ID: `a16698041d45830e33b6f82b6f524e30`), NS pointed to `gene.ns.cloudflare.com` / `rudy.ns.cloudflare.com`
+- 8 DNS records: A (prim.sh, relay.prim.sh, mail.relay.prim.sh), MX, SPF, DMARC, DKIM (RSA + Ed25519)
+- Stalwart configured: hostname `mail.relay.prim.sh`, domain `relay.prim.sh`, DKIM dual signing, ACME Let's Encrypt (tls-alpn-01)
+- API key created (`relay-wrapper` / Basic auth)
+- docker-compose.yml deployed: port 8080 bound to 127.0.0.1
+- UFW firewall: 22/25/443/465/587/993 open, 8080 denied
+- Admin lockdown verified: 8080 unreachable from internet, works via SSH/localhost
+
+**Waiting on:**
+- NS propagation (`.sh` registry → Cloudflare)
+- ACME cert auto-issuance (after DNS resolves)
+- Final verification (dig, TLS, inbound email test)
