@@ -44,6 +44,9 @@
 - P-1: `tasks/completed/p-1-llms-txt-catalog-2026-02-24.md`
 - P-4: `tasks/active/p-4-x402-hono-middleware-2026-02-24.md`
 - W-1: `tasks/completed/w-1-wallet-api-surface-2026-02-24.md`
+- W-2: `tasks/active/w-2-wallet-creation-2026-02-24.md`
+- R-1: `tasks/active/r-1-stalwart-docker-deploy-2026-02-24.md`
+- SP-1: `tasks/active/sp-1-spawn-spec-2026-02-24.md`
 
 ## Backlog — Future Primitives
 
