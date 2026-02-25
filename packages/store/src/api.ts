@@ -18,6 +18,7 @@ export const ERROR_CODES = [
   "r2_error",
   "rate_limited",
   "bucket_name_taken",
+  "quota_exceeded",
 ] as const;
 
 export type ErrorCode = (typeof ERROR_CODES)[number];
@@ -29,6 +30,8 @@ export interface BucketResponse {
   name: string;
   location: string | null;
   owner_wallet: string;
+  quota_bytes: number | null;
+  usage_bytes: number;
   created_at: string;
 }
 
@@ -77,4 +80,24 @@ export interface PutObjectResponse {
 
 export interface DeleteObjectResponse {
   status: "deleted";
+}
+
+// ─── Quota types ──────────────────────────────────────────────────────────
+
+export interface QuotaResponse {
+  bucket_id: string;
+  quota_bytes: number | null;
+  usage_bytes: number;
+  usage_pct: number | null;
+}
+
+export interface SetQuotaRequest {
+  quota_bytes: number | null;
+}
+
+export interface ReconcileResponse {
+  bucket_id: string;
+  previous_bytes: number;
+  actual_bytes: number;
+  delta_bytes: number;
 }

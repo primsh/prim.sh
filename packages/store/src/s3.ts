@@ -49,6 +49,24 @@ async function parseS3Error(res: Response): Promise<CloudflareError> {
 
 // ─── Object operations ──────────────────────────────────────────────────
 
+export async function headObject(
+  bucketName: string,
+  key: string,
+): Promise<{ size: number; etag: string } | null> {
+  const client = getS3Client();
+  const url = `${getBaseUrl()}/${bucketName}/${key}`;
+
+  const res = await client.fetch(url, { method: "HEAD" });
+
+  if (res.status === 404) return null;
+  if (!res.ok) throw await parseS3Error(res);
+
+  return {
+    size: Number.parseInt(res.headers.get("Content-Length") ?? "0", 10),
+    etag: res.headers.get("ETag") ?? "",
+  };
+}
+
 export async function putObject(
   bucketName: string,
   key: string,

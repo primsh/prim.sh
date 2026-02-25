@@ -49,7 +49,7 @@
 | 40 | SP-6 | Abstract provider layer + multi-cloud support (DO, AWS, GCP, Hetzner) | spawn/ | SP-4 | done |
 | 1 | ST-1 | Build store.sh: bucket CRUD via Cloudflare R2 API (create, list, get, delete; ownership; SQLite) | packages/store | P-4 | done |
 | 2 | ST-2 | Build store.sh: object CRUD via S3-compatible API (put, get, delete, list within owned buckets) | packages/store | ST-1 | done |
-| 3 | ST-3 | Build store.sh: storage quota + usage tracking (per-bucket limits, metering) | packages/store | ST-1 | pending |
+| 3 | ST-3 | Build store.sh: storage quota + usage tracking (per-bucket limits, metering) | packages/store | ST-1 | done |
 | 4 | ST-4 | Integrate x402 middleware for store.sh | packages/store | ST-1, P-4 | done |
 
 ## Plan Docs
@@ -80,6 +80,9 @@
 - R-5: `tasks/completed/r-5-read-messages-jmap-2026-02-25.md`
 - ST-4: `tasks/completed/st-4-x402-middleware-store.md`
 - R-6: `tasks/active/r-6-send-messages-jmap-2026-02-25.md`
+- R-7: `tasks/active/r-7-incoming-webhooks-mta-hooks.md`
+- R-8: `tasks/active/r-8-mailbox-ttl-expiry.md`
+- ST-3: `tasks/completed/st-3-storage-quota-usage.md`
 - Umbrella: `tasks/active/batch-execution-umbrella-2026-02-24.md`
 
 ## Backlog — Future Primitives
@@ -234,6 +237,7 @@ ERC-8004 uses CAIP-10 wallet addresses as root identity. DIDs layer on top non-b
 - R-5 — read messages: JMAP Email/query + Email/get, folder filtering, address flattening, 61 tests (2026-02-25)
 - ST-1 — store.sh bucket CRUD: R2 API wrapper, name validation, SQLite ownership, 31 tests (2026-02-25)
 - ST-2 — store.sh object CRUD: S3-compatible API via aws4fetch, put/get/delete/list, streaming download, 54 tests (2026-02-25)
+- ST-3 — store.sh quota + usage: per-bucket quotas, synchronous enforcement, headObject for overwrite/delete tracking, reconciliation, 78 tests (2026-02-25)
 - ST-4 — x402 middleware already integrated in ST-1/ST-2 (2026-02-25)
 
 ### R-2 completion details (2026-02-25)

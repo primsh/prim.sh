@@ -6,6 +6,8 @@ export interface BucketRow {
   name: string;
   owner_wallet: string;
   location: string | null;
+  quota_bytes: number | null;
+  usage_bytes: number;
   created_at: number;
   updated_at: number;
 }
@@ -32,6 +34,10 @@ export function getDb(): Database {
 
   _db.run("CREATE INDEX IF NOT EXISTS idx_buckets_owner_wallet ON buckets(owner_wallet)");
   _db.run("CREATE INDEX IF NOT EXISTS idx_buckets_cf_name ON buckets(cf_name)");
+
+  // ST-3 migration: add quota + usage columns
+  try { _db.run("ALTER TABLE buckets ADD COLUMN quota_bytes INTEGER DEFAULT NULL"); } catch { /* column exists */ }
+  try { _db.run("ALTER TABLE buckets ADD COLUMN usage_bytes INTEGER NOT NULL DEFAULT 0"); } catch { /* column exists */ }
 
   return _db;
 }
@@ -87,4 +93,36 @@ export function insertBucket(params: {
 export function deleteBucketRow(id: string): void {
   const db = getDb();
   db.query("DELETE FROM buckets WHERE id = ?").run(id);
+}
+
+// ─── Quota queries ────────────────────────────────────────────────────────
+
+export function getQuota(bucketId: string): { quota_bytes: number | null; usage_bytes: number } | null {
+  const db = getDb();
+  const row = db
+    .query<{ quota_bytes: number | null; usage_bytes: number }, [string]>(
+      "SELECT quota_bytes, usage_bytes FROM buckets WHERE id = ?",
+    )
+    .get(bucketId) as { quota_bytes: number | null; usage_bytes: number } | null;
+  return row ?? null;
+}
+
+export function setQuota(bucketId: string, quotaBytes: number | null): void {
+  const db = getDb();
+  db.query("UPDATE buckets SET quota_bytes = ?, updated_at = ? WHERE id = ?").run(quotaBytes, Date.now(), bucketId);
+}
+
+export function incrementUsage(bucketId: string, deltaBytes: number): void {
+  const db = getDb();
+  db.query("UPDATE buckets SET usage_bytes = usage_bytes + ?, updated_at = ? WHERE id = ?").run(deltaBytes, Date.now(), bucketId);
+}
+
+export function decrementUsage(bucketId: string, deltaBytes: number): void {
+  const db = getDb();
+  db.query("UPDATE buckets SET usage_bytes = MAX(0, usage_bytes - ?), updated_at = ? WHERE id = ?").run(deltaBytes, Date.now(), bucketId);
+}
+
+export function setUsage(bucketId: string, usageBytes: number): void {
+  const db = getDb();
+  db.query("UPDATE buckets SET usage_bytes = ?, updated_at = ? WHERE id = ?").run(usageBytes, Date.now(), bucketId);
 }

@@ -9,6 +9,9 @@ import type {
   PutObjectResponse,
   ObjectListResponse,
   DeleteObjectResponse,
+  QuotaResponse,
+  SetQuotaRequest,
+  ReconcileResponse,
 } from "./api.ts";
 import {
   createBucket,
@@ -19,6 +22,9 @@ import {
   getObject,
   deleteObject,
   listObjects,
+  getUsage,
+  setQuotaForBucket,
+  reconcileUsage,
 } from "./service.ts";
 
 const PAY_TO_ADDRESS = "0x0000000000000000000000000000000000000000";
@@ -33,6 +39,9 @@ const STORE_ROUTES = {
   "GET /v1/buckets/[id]/objects": "$0.001",
   "GET /v1/buckets/[id]/objects/*": "$0.001",
   "DELETE /v1/buckets/[id]/objects/*": "$0.001",
+  "GET /v1/buckets/[id]/quota": "$0.001",
+  "PUT /v1/buckets/[id]/quota": "$0.01",
+  "POST /v1/buckets/[id]/quota/reconcile": "$0.05",
 } as const;
 
 function forbidden(message: string): ApiError {
@@ -49,6 +58,10 @@ function invalidRequest(message: string): ApiError {
 
 function r2Error(message: string): ApiError {
   return { error: { code: "r2_error", message } };
+}
+
+function quotaExceeded(message: string): ApiError {
+  return { error: { code: "quota_exceeded", message } };
 }
 
 type AppVariables = { walletAddress: string | undefined };
@@ -144,8 +157,13 @@ app.put("/v1/buckets/:id/objects/*", async (c) => {
   const body = c.req.raw.body;
   if (!body) return c.json(invalidRequest("Request body is required"), 400);
 
-  const result = await putObject(c.req.param("id"), key, body, contentType, caller);
+  const clHeader = c.req.header("Content-Length");
+  const contentLength = clHeader ? Number.parseInt(clHeader, 10) : null;
+
+  const result = await putObject(c.req.param("id"), key, body, contentType, caller, contentLength);
   if (!result.ok) {
+    if (result.code === "quota_exceeded") return c.json(quotaExceeded(result.message), 413);
+    if (result.status === 411) return c.json(invalidRequest(result.message), 411);
     if (result.code === "invalid_request") return c.json(invalidRequest(result.message), 400);
     if (result.status === 404) return c.json(notFound(result.message), 404);
     if (result.status === 403) return c.json(forbidden(result.message), 403);
@@ -210,6 +228,57 @@ app.delete("/v1/buckets/:id/objects/*", async (c) => {
     return c.json(r2Error(result.message), result.status as 502);
   }
   return c.json(result.data as DeleteObjectResponse, 200);
+});
+
+// ─── Quota routes ───────────────────────────────────────────────────────
+
+// GET /v1/buckets/:id/quota — Get quota + usage
+app.get("/v1/buckets/:id/quota", (c) => {
+  const caller = c.get("walletAddress");
+  if (!caller) return c.json(forbidden("No wallet address in payment"), 403);
+
+  const result = getUsage(c.req.param("id"), caller);
+  if (!result.ok) {
+    if (result.status === 404) return c.json(notFound(result.message), 404);
+    return c.json(forbidden(result.message), 403);
+  }
+  return c.json(result.data as QuotaResponse, 200);
+});
+
+// PUT /v1/buckets/:id/quota — Set quota
+app.put("/v1/buckets/:id/quota", async (c) => {
+  const caller = c.get("walletAddress");
+  if (!caller) return c.json(forbidden("No wallet address in payment"), 403);
+
+  let body: SetQuotaRequest;
+  try {
+    body = await c.req.json<SetQuotaRequest>();
+  } catch {
+    return c.json(invalidRequest("Invalid JSON body"), 400);
+  }
+
+  const result = setQuotaForBucket(c.req.param("id"), caller, body.quota_bytes);
+  if (!result.ok) {
+    if (result.code === "invalid_request") return c.json(invalidRequest(result.message), 400);
+    if (result.status === 404) return c.json(notFound(result.message), 404);
+    if (result.status === 403) return c.json(forbidden(result.message), 403);
+    return c.json(r2Error(result.message), result.status as 502);
+  }
+  return c.json(result.data as QuotaResponse, 200);
+});
+
+// POST /v1/buckets/:id/quota/reconcile — Reconcile usage
+app.post("/v1/buckets/:id/quota/reconcile", async (c) => {
+  const caller = c.get("walletAddress");
+  if (!caller) return c.json(forbidden("No wallet address in payment"), 403);
+
+  const result = await reconcileUsage(c.req.param("id"), caller);
+  if (!result.ok) {
+    if (result.status === 404) return c.json(notFound(result.message), 404);
+    if (result.status === 403) return c.json(forbidden(result.message), 403);
+    return c.json(r2Error(result.message), result.status as 502);
+  }
+  return c.json(result.data as ReconcileResponse, 200);
 });
 
 export default app;

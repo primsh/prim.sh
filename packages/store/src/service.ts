@@ -6,6 +6,11 @@ import {
   getBucketsByOwner,
   countBucketsByOwner,
   deleteBucketRow,
+  getQuota as dbGetQuota,
+  setQuota as dbSetQuota,
+  incrementUsage,
+  decrementUsage,
+  setUsage,
 } from "./db.ts";
 import {
   CloudflareError,
@@ -17,6 +22,7 @@ import {
   getObject as s3GetObject,
   deleteObject as s3DeleteObject,
   listObjects as s3ListObjects,
+  headObject as s3HeadObject,
 } from "./s3.ts";
 import type {
   BucketResponse,
@@ -26,6 +32,8 @@ import type {
   PutObjectResponse,
   DeleteObjectResponse,
   ObjectListResponse,
+  QuotaResponse,
+  ReconcileResponse,
 } from "./api.ts";
 import type { BucketRow } from "./db.ts";
 
@@ -41,6 +49,8 @@ function rowToBucketResponse(row: BucketRow): BucketResponse {
     name: row.name,
     location: row.location,
     owner_wallet: row.owner_wallet,
+    quota_bytes: row.quota_bytes,
+    usage_bytes: row.usage_bytes,
     created_at: new Date(row.created_at).toISOString(),
   };
 }
@@ -186,6 +196,7 @@ export async function putObject(
   body: ReadableStream | ArrayBuffer | string,
   contentType: string | undefined,
   callerWallet: string,
+  contentLength: number | null,
 ): Promise<ServiceResult<PutObjectResponse>> {
   const check = checkBucketOwnership(bucketId, callerWallet);
   if (!check.ok) return check;
@@ -199,9 +210,55 @@ export async function putObject(
     };
   }
 
+  const { quota_bytes, usage_bytes } = check.row;
+  const trackUsage = contentLength !== null;
+
+  // Content-Length required when quota is set
+  if (quota_bytes !== null && contentLength === null) {
+    return {
+      ok: false,
+      status: 411,
+      code: "invalid_request",
+      message: "Content-Length header is required when bucket has a quota.",
+    };
+  }
+
+  const incomingSize = contentLength ?? 0;
+
+  // HeadObject for overwrite detection (only when tracking usage)
+  let oldSize = 0;
+  if (trackUsage) {
+    try {
+      const existing = await s3HeadObject(check.row.cf_name, key);
+      if (existing) oldSize = existing.size;
+    } catch { /* head failed — assume new object */ }
+  }
+
+  // Quota enforcement
+  if (quota_bytes !== null) {
+    const netDelta = incomingSize - oldSize;
+    if (quota_bytes === 0 || usage_bytes + netDelta > quota_bytes) {
+      return {
+        ok: false,
+        status: 413,
+        code: "quota_exceeded",
+        message: `Upload would exceed bucket quota (${quota_bytes} bytes). Current usage: ${usage_bytes}, incoming: ${incomingSize}.`,
+      };
+    }
+  }
+
   try {
     const result = await s3PutObject(check.row.cf_name, key, body, contentType);
-    return { ok: true, data: { key, size: result.size, etag: result.etag } };
+    const actualSize = contentLength ?? result.size;
+
+    // Update usage tracking
+    if (trackUsage) {
+      const netDelta = actualSize - oldSize;
+      if (netDelta > 0) incrementUsage(bucketId, netDelta);
+      else if (netDelta < 0) decrementUsage(bucketId, -netDelta);
+    }
+
+    return { ok: true, data: { key, size: actualSize, etag: result.etag } };
   } catch (err) {
     if (err instanceof CloudflareError) {
       return { ok: false, status: err.statusCode, code: err.code, message: err.message };
@@ -255,8 +312,16 @@ export async function deleteObject(
     };
   }
 
+  // HeadObject before delete to capture size for usage decrement
+  let objectSize = 0;
+  try {
+    const head = await s3HeadObject(check.row.cf_name, key);
+    if (head) objectSize = head.size;
+  } catch { /* object may already be gone — skip usage decrement */ }
+
   try {
     await s3DeleteObject(check.row.cf_name, key);
+    if (objectSize > 0) decrementUsage(bucketId, objectSize);
     return { ok: true, data: { status: "deleted" } };
   } catch (err) {
     if (err instanceof CloudflareError) {
@@ -300,4 +365,102 @@ export async function listObjects(
     }
     throw err;
   }
+}
+
+// ─── Quota service ──────────────────────────────────────────────────────
+
+function computeUsagePct(usageBytes: number, quotaBytes: number | null): number | null {
+  if (quotaBytes === null || quotaBytes === 0) return null;
+  return Math.round((usageBytes / quotaBytes) * 100 * 100) / 100;
+}
+
+export function getUsage(
+  bucketId: string,
+  callerWallet: string,
+): ServiceResult<QuotaResponse> {
+  const check = checkBucketOwnership(bucketId, callerWallet);
+  if (!check.ok) return check;
+
+  return {
+    ok: true,
+    data: {
+      bucket_id: bucketId,
+      quota_bytes: check.row.quota_bytes,
+      usage_bytes: check.row.usage_bytes,
+      usage_pct: computeUsagePct(check.row.usage_bytes, check.row.quota_bytes),
+    },
+  };
+}
+
+export function setQuotaForBucket(
+  bucketId: string,
+  callerWallet: string,
+  quotaBytes: number | null,
+): ServiceResult<QuotaResponse> {
+  const check = checkBucketOwnership(bucketId, callerWallet);
+  if (!check.ok) return check;
+
+  if (quotaBytes !== null && (quotaBytes < 0 || !Number.isInteger(quotaBytes))) {
+    return {
+      ok: false,
+      status: 400,
+      code: "invalid_request",
+      message: "quota_bytes must be null or a non-negative integer.",
+    };
+  }
+
+  dbSetQuota(bucketId, quotaBytes);
+
+  const updated = dbGetQuota(bucketId);
+  const usageBytes = updated?.usage_bytes ?? check.row.usage_bytes;
+
+  return {
+    ok: true,
+    data: {
+      bucket_id: bucketId,
+      quota_bytes: quotaBytes,
+      usage_bytes: usageBytes,
+      usage_pct: computeUsagePct(usageBytes, quotaBytes),
+    },
+  };
+}
+
+export async function reconcileUsage(
+  bucketId: string,
+  callerWallet: string,
+): Promise<ServiceResult<ReconcileResponse>> {
+  const check = checkBucketOwnership(bucketId, callerWallet);
+  if (!check.ok) return check;
+
+  const previousBytes = check.row.usage_bytes;
+
+  // Paginate through all objects to sum actual usage
+  let actualBytes = 0;
+  let continuationToken: string | undefined;
+  try {
+    do {
+      const page = await s3ListObjects(check.row.cf_name, undefined, 1000, continuationToken);
+      for (const obj of page.objects) {
+        actualBytes += obj.size;
+      }
+      continuationToken = page.isTruncated ? (page.nextToken ?? undefined) : undefined;
+    } while (continuationToken);
+  } catch (err) {
+    if (err instanceof CloudflareError) {
+      return { ok: false, status: err.statusCode, code: err.code, message: err.message };
+    }
+    throw err;
+  }
+
+  setUsage(bucketId, actualBytes);
+
+  return {
+    ok: true,
+    data: {
+      bucket_id: bucketId,
+      previous_bytes: previousBytes,
+      actual_bytes: actualBytes,
+      delta_bytes: actualBytes - previousBytes,
+    },
+  };
 }

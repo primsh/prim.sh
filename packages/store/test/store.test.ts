@@ -77,6 +77,14 @@ const mockFetch = vi.fn(async (input: RequestInfo | URL, _init?: RequestInit) =>
     const _bucketName = s3Match[1];
     const objectKey = s3Match[3];
 
+    // S3: HEAD /{bucket}/{key} — head object
+    if (method === "HEAD" && objectKey) {
+      return new Response(null, {
+        status: 200,
+        headers: { "Content-Length": "42", ETag: '"abc123etag"' },
+      });
+    }
+
     // S3: PUT /{bucket}/{key} — upload object
     if (method === "PUT" && objectKey) {
       return new Response(null, {
@@ -137,7 +145,7 @@ const mockFetch = vi.fn(async (input: RequestInfo | URL, _init?: RequestInit) =>
 vi.stubGlobal("fetch", mockFetch);
 
 // Import after env + fetch stub
-import { resetDb, getBucketById } from "../src/db.ts";
+import { resetDb, getBucketById, getQuota, setQuota as dbSetQuota, setUsage as dbSetUsage } from "../src/db.ts";
 import {
   createBucket,
   listBuckets,
@@ -149,6 +157,9 @@ import {
   deleteObject,
   listObjects,
   isValidObjectKey,
+  getUsage,
+  setQuotaForBucket,
+  reconcileUsage,
 } from "../src/service.ts";
 
 // ─── Fixtures ────────────────────────────────────────────────────────────
@@ -448,7 +459,7 @@ describe("store.sh", () => {
 
     it("putObject — upload succeeds", async () => {
       const bucketId = await createTestBucket();
-      const result = await putObject(bucketId, "hello.txt", "hello world", "text/plain", CALLER);
+      const result = await putObject(bucketId, "hello.txt", "hello world", "text/plain", CALLER, 11);
       expect(result.ok).toBe(true);
       if (!result.ok) return;
       expect(result.data.key).toBe("hello.txt");
@@ -457,7 +468,7 @@ describe("store.sh", () => {
 
     it("putObject — nested key with slashes", async () => {
       const bucketId = await createTestBucket();
-      const result = await putObject(bucketId, "folder/sub/file.txt", "data", "text/plain", CALLER);
+      const result = await putObject(bucketId, "folder/sub/file.txt", "data", "text/plain", CALLER, 4);
       expect(result.ok).toBe(true);
       if (!result.ok) return;
       expect(result.data.key).toBe("folder/sub/file.txt");
@@ -465,7 +476,7 @@ describe("store.sh", () => {
 
     it("putObject — invalid key (empty) returns invalid_request", async () => {
       const bucketId = await createTestBucket();
-      const result = await putObject(bucketId, "", "data", "text/plain", CALLER);
+      const result = await putObject(bucketId, "", "data", "text/plain", CALLER, 4);
       expect(result.ok).toBe(false);
       if (result.ok) return;
       expect(result.code).toBe("invalid_request");
@@ -473,7 +484,7 @@ describe("store.sh", () => {
 
     it("putObject — invalid key (leading slash) returns invalid_request", async () => {
       const bucketId = await createTestBucket();
-      const result = await putObject(bucketId, "/bad-key", "data", "text/plain", CALLER);
+      const result = await putObject(bucketId, "/bad-key", "data", "text/plain", CALLER, 4);
       expect(result.ok).toBe(false);
       if (result.ok) return;
       expect(result.code).toBe("invalid_request");
@@ -481,7 +492,7 @@ describe("store.sh", () => {
 
     it("putObject — invalid key (too long) returns invalid_request", async () => {
       const bucketId = await createTestBucket();
-      const result = await putObject(bucketId, "a".repeat(1025), "data", "text/plain", CALLER);
+      const result = await putObject(bucketId, "a".repeat(1025), "data", "text/plain", CALLER, 4);
       expect(result.ok).toBe(false);
       if (result.ok) return;
       expect(result.code).toBe("invalid_request");
@@ -489,14 +500,14 @@ describe("store.sh", () => {
 
     it("putObject — non-owner gets 403", async () => {
       const bucketId = await createTestBucket();
-      const result = await putObject(bucketId, "hello.txt", "data", "text/plain", OTHER);
+      const result = await putObject(bucketId, "hello.txt", "data", "text/plain", OTHER, 4);
       expect(result.ok).toBe(false);
       if (result.ok) return;
       expect(result.status).toBe(403);
     });
 
     it("putObject — nonexistent bucket returns 404", async () => {
-      const result = await putObject("b_nonexist", "hello.txt", "data", "text/plain", CALLER);
+      const result = await putObject("b_nonexist", "hello.txt", "data", "text/plain", CALLER, 4);
       expect(result.ok).toBe(false);
       if (result.ok) return;
       expect(result.status).toBe(404);
@@ -559,6 +570,11 @@ describe("store.sh", () => {
 
     it("deleteObject — S3 error propagation", async () => {
       const bucketId = await createTestBucket();
+      // HEAD succeeds (returns object size)
+      mockFetch.mockImplementationOnce(async () =>
+        new Response(null, { status: 200, headers: { "Content-Length": "42", ETag: '"e"' } }),
+      );
+      // DELETE fails with AccessDenied
       mockFetch.mockImplementationOnce(async () => {
         return new Response("<Error><Code>AccessDenied</Code><Message>Access Denied</Message></Error>", {
           status: 403,
@@ -603,6 +619,262 @@ describe("store.sh", () => {
       expect(result.ok).toBe(true);
       if (!result.ok) return;
       expect(result.data.is_truncated).toBe(false);
+    });
+  });
+
+  // ─── Quota + Usage ─────────────────────────────────────────────────
+
+  describe("quota enforcement", () => {
+    async function createTestBucketWithQuota(quotaBytes: number | null): Promise<string> {
+      const result = await createBucket({ name: `quota-test-${Date.now()}` }, CALLER);
+      if (!result.ok) throw new Error("Setup failed");
+      if (quotaBytes !== null) dbSetQuota(result.data.bucket.id, quotaBytes);
+      return result.data.bucket.id;
+    }
+
+    it("putObject — unlimited quota allows upload", async () => {
+      const bucketId = await createTestBucketWithQuota(null);
+      const result = await putObject(bucketId, "file.txt", "data", "text/plain", CALLER, 100);
+      expect(result.ok).toBe(true);
+    });
+
+    it("putObject — within quota allows upload", async () => {
+      const bucketId = await createTestBucketWithQuota(1000);
+      const result = await putObject(bucketId, "file.txt", "data", "text/plain", CALLER, 500);
+      expect(result.ok).toBe(true);
+    });
+
+    it("putObject — exceeds quota rejects with quota_exceeded", async () => {
+      const bucketId = await createTestBucketWithQuota(100);
+      const result = await putObject(bucketId, "file.txt", "data", "text/plain", CALLER, 200);
+      expect(result.ok).toBe(false);
+      if (result.ok) return;
+      expect(result.code).toBe("quota_exceeded");
+      expect(result.status).toBe(413);
+    });
+
+    it("putObject — zero quota rejects (read-only bucket)", async () => {
+      const bucketId = await createTestBucketWithQuota(0);
+      const result = await putObject(bucketId, "file.txt", "data", "text/plain", CALLER, 1);
+      expect(result.ok).toBe(false);
+      if (result.ok) return;
+      expect(result.code).toBe("quota_exceeded");
+    });
+
+    it("putObject — quota set but no Content-Length rejects 411", async () => {
+      const bucketId = await createTestBucketWithQuota(1000);
+      const result = await putObject(bucketId, "file.txt", "data", "text/plain", CALLER, null);
+      expect(result.ok).toBe(false);
+      if (result.ok) return;
+      expect(result.status).toBe(411);
+    });
+
+    it("putObject — no quota and no Content-Length still succeeds", async () => {
+      const bucketId = await createTestBucketWithQuota(null);
+      const result = await putObject(bucketId, "file.txt", "data", "text/plain", CALLER, null);
+      expect(result.ok).toBe(true);
+    });
+  });
+
+  describe("usage tracking", () => {
+    async function createTestBucketForUsage(): Promise<string> {
+      const result = await createBucket({ name: `usage-test-${Date.now()}` }, CALLER);
+      if (!result.ok) throw new Error("Setup failed");
+      return result.data.bucket.id;
+    }
+
+    it("putObject — increments usage after upload", async () => {
+      const bucketId = await createTestBucketForUsage();
+      // HEAD returns 404 for new object
+      mockFetch.mockImplementationOnce(async () => new Response(null, { status: 404 }));
+      await putObject(bucketId, "file.txt", "data", "text/plain", CALLER, 100);
+      const quota = getQuota(bucketId);
+      expect(quota?.usage_bytes).toBe(100);
+    });
+
+    it("putObject — two uploads sum usage", async () => {
+      const bucketId = await createTestBucketForUsage();
+      // HEAD 404 for first file
+      mockFetch.mockImplementationOnce(async () => new Response(null, { status: 404 }));
+      await putObject(bucketId, "file1.txt", "data", "text/plain", CALLER, 100);
+      // HEAD 404 for second file
+      mockFetch.mockImplementationOnce(async () => new Response(null, { status: 404 }));
+      await putObject(bucketId, "file2.txt", "data", "text/plain", CALLER, 200);
+      const quota = getQuota(bucketId);
+      expect(quota?.usage_bytes).toBe(300);
+    });
+
+    it("putObject — overwrite computes net delta", async () => {
+      const bucketId = await createTestBucketForUsage();
+      // First write: HEAD 404 (new object)
+      mockFetch.mockImplementationOnce(async () => new Response(null, { status: 404 }));
+      await putObject(bucketId, "file.txt", "data", "text/plain", CALLER, 100);
+      // Overwrite: HEAD returns old size 100
+      // (default mock returns Content-Length: 42, override for this test)
+      mockFetch.mockImplementationOnce(async () =>
+        new Response(null, { status: 200, headers: { "Content-Length": "100", ETag: '"old"' } }),
+      );
+      await putObject(bucketId, "file.txt", "data", "text/plain", CALLER, 150);
+      const quota = getQuota(bucketId);
+      // 100 (first write) + 50 (net delta: 150 - 100) = 150
+      expect(quota?.usage_bytes).toBe(150);
+    });
+
+    it("deleteObject — decrements usage", async () => {
+      const bucketId = await createTestBucketForUsage();
+      // Seed usage
+      dbSetUsage(bucketId, 100);
+      // HEAD returns size 100 before delete
+      mockFetch.mockImplementationOnce(async () =>
+        new Response(null, { status: 200, headers: { "Content-Length": "100", ETag: '"e"' } }),
+      );
+      await deleteObject(bucketId, "file.txt", CALLER);
+      const quota = getQuota(bucketId);
+      expect(quota?.usage_bytes).toBe(0);
+    });
+
+    it("deleteObject — HEAD 404 skips usage decrement", async () => {
+      const bucketId = await createTestBucketForUsage();
+      dbSetUsage(bucketId, 100);
+      // HEAD returns 404 — object already gone
+      mockFetch.mockImplementationOnce(async () => new Response(null, { status: 404 }));
+      await deleteObject(bucketId, "file.txt", CALLER);
+      const quota = getQuota(bucketId);
+      expect(quota?.usage_bytes).toBe(100);
+    });
+  });
+
+  describe("setQuota", () => {
+    async function createTestBucketForQuota(): Promise<string> {
+      const result = await createBucket({ name: `setquota-${Date.now()}` }, CALLER);
+      if (!result.ok) throw new Error("Setup failed");
+      return result.data.bucket.id;
+    }
+
+    it("owner sets valid quota", async () => {
+      const bucketId = await createTestBucketForQuota();
+      const result = setQuotaForBucket(bucketId, CALLER, 1073741824);
+      expect(result.ok).toBe(true);
+      if (!result.ok) return;
+      expect(result.data.quota_bytes).toBe(1073741824);
+    });
+
+    it("set quota to null removes limit", async () => {
+      const bucketId = await createTestBucketForQuota();
+      setQuotaForBucket(bucketId, CALLER, 1000);
+      const result = setQuotaForBucket(bucketId, CALLER, null);
+      expect(result.ok).toBe(true);
+      if (!result.ok) return;
+      expect(result.data.quota_bytes).toBeNull();
+    });
+
+    it("non-owner gets 403", async () => {
+      const bucketId = await createTestBucketForQuota();
+      const result = setQuotaForBucket(bucketId, OTHER, 1000);
+      expect(result.ok).toBe(false);
+      if (result.ok) return;
+      expect(result.status).toBe(403);
+    });
+
+    it("nonexistent bucket gets 404", () => {
+      const result = setQuotaForBucket("b_nonexist", CALLER, 1000);
+      expect(result.ok).toBe(false);
+      if (result.ok) return;
+      expect(result.status).toBe(404);
+    });
+
+    it("negative quota returns invalid_request", async () => {
+      const bucketId = await createTestBucketForQuota();
+      const result = setQuotaForBucket(bucketId, CALLER, -100);
+      expect(result.ok).toBe(false);
+      if (result.ok) return;
+      expect(result.code).toBe("invalid_request");
+    });
+
+    it("setting quota below usage succeeds (over-quota)", async () => {
+      const bucketId = await createTestBucketForQuota();
+      dbSetUsage(bucketId, 500);
+      const result = setQuotaForBucket(bucketId, CALLER, 100);
+      expect(result.ok).toBe(true);
+    });
+  });
+
+  describe("getUsage", () => {
+    it("returns usage_pct when quota is set", async () => {
+      const created = await createBucket({ name: `usage-pct-${Date.now()}` }, CALLER);
+      if (!created.ok) return;
+      const bucketId = created.data.bucket.id;
+      dbSetQuota(bucketId, 1000);
+      dbSetUsage(bucketId, 500);
+      const result = getUsage(bucketId, CALLER);
+      expect(result.ok).toBe(true);
+      if (!result.ok) return;
+      expect(result.data.usage_pct).toBe(50);
+    });
+
+    it("returns usage_pct null when unlimited", async () => {
+      const created = await createBucket({ name: `usage-null-${Date.now()}` }, CALLER);
+      if (!created.ok) return;
+      const result = getUsage(created.data.bucket.id, CALLER);
+      expect(result.ok).toBe(true);
+      if (!result.ok) return;
+      expect(result.data.usage_pct).toBeNull();
+    });
+
+    it("non-owner gets 403", async () => {
+      const created = await createBucket({ name: `usage-other-${Date.now()}` }, CALLER);
+      if (!created.ok) return;
+      const result = getUsage(created.data.bucket.id, OTHER);
+      expect(result.ok).toBe(false);
+      if (result.ok) return;
+      expect(result.status).toBe(403);
+    });
+
+    it("nonexistent bucket gets 404", () => {
+      const result = getUsage("b_nonexist", CALLER);
+      expect(result.ok).toBe(false);
+      if (result.ok) return;
+      expect(result.status).toBe(404);
+    });
+  });
+
+  describe("reconcileUsage", () => {
+    it("corrects drifted usage", async () => {
+      const created = await createBucket({ name: `reconcile-${Date.now()}` }, CALLER);
+      if (!created.ok) return;
+      const bucketId = created.data.bucket.id;
+      // DB says 100, but S3 ListObjects returns 100+200=300
+      dbSetUsage(bucketId, 100);
+      const result = await reconcileUsage(bucketId, CALLER);
+      expect(result.ok).toBe(true);
+      if (!result.ok) return;
+      expect(result.data.previous_bytes).toBe(100);
+      expect(result.data.actual_bytes).toBe(300); // 100 + 200 from mock
+      expect(result.data.delta_bytes).toBe(200);
+      // Verify DB updated
+      const quota = getQuota(bucketId);
+      expect(quota?.usage_bytes).toBe(300);
+    });
+
+    it("non-owner gets 403", async () => {
+      const created = await createBucket({ name: `reconcile-other-${Date.now()}` }, CALLER);
+      if (!created.ok) return;
+      const result = await reconcileUsage(created.data.bucket.id, OTHER);
+      expect(result.ok).toBe(false);
+      if (result.ok) return;
+      expect(result.status).toBe(403);
+    });
+  });
+
+  describe("BucketResponse includes quota fields", () => {
+    it("new bucket has quota_bytes null and usage_bytes 0", async () => {
+      const created = await createBucket({ name: `bucket-quota-${Date.now()}` }, CALLER);
+      if (!created.ok) return;
+      const result = getBucket(created.data.bucket.id, CALLER);
+      expect(result.ok).toBe(true);
+      if (!result.ok) return;
+      expect(result.data.quota_bytes).toBeNull();
+      expect(result.data.usage_bytes).toBe(0);
     });
   });
 
