@@ -110,9 +110,8 @@ export class TavilyClient implements SearchProvider, ExtractProvider {
     return this._search(params, "news");
   }
 
-  async extract(urls: string[], _format: "markdown" | "text"): Promise<ExtractProviderResult> {
-    // Tavily extract returns markdown by default; format param is for future providers
-    const data = await this.post<TavilyExtractResponse>("/extract", { urls });
+  async extract(urls: string[], format: "markdown" | "text"): Promise<ExtractProviderResult> {
+    const data = await this.post<TavilyExtractResponse>("/extract", { urls, format });
 
     return {
       results: data.results.map((r) => ({

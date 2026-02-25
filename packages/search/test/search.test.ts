@@ -327,6 +327,30 @@ describe("extractUrls", () => {
     expect(result.ok).toBe(true);
   });
 
+  it("returns 400 for non-URL strings", async () => {
+    const result = await extractUrls({ urls: "not a url" });
+    expect(result.ok).toBe(false);
+    if (result.ok) return;
+    expect(result.status).toBe(400);
+    expect(result.code).toBe("invalid_request");
+  });
+
+  it("returns 400 for empty string in urls array", async () => {
+    const result = await extractUrls({ urls: ["https://example.com", ""] });
+    expect(result.ok).toBe(false);
+    if (result.ok) return;
+    expect(result.status).toBe(400);
+    expect(result.code).toBe("invalid_request");
+  });
+
+  it("returns 400 for mixed valid and invalid URLs", async () => {
+    const result = await extractUrls({ urls: ["https://ok.com", "not-a-url"] });
+    expect(result.ok).toBe(false);
+    if (result.ok) return;
+    expect(result.code).toBe("invalid_request");
+    expect(result.message).toContain("not-a-url");
+  });
+
   it("includes failed extractions in response", async () => {
     const provider = new FailedExtractProvider();
     const result = await extractUrls({ urls: "https://broken.com" }, provider);
