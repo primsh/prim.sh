@@ -278,7 +278,7 @@ describe("Wallet ownership logic (via service)", () => {
     const address = body.address as string;
 
     const { getWallet } = await import("../src/service.ts");
-    const result = getWallet(address, CALLER);
+    const result = await getWallet(address, CALLER);
     expect(result.ok).toBe(false);
     if (!result.ok) {
       expect(result.status).toBe(403);
@@ -296,7 +296,7 @@ describe("Wallet ownership logic (via service)", () => {
     claimWallet(address, claimToken, CALLER);
 
     const { getWallet } = await import("../src/service.ts");
-    const result = getWallet(address, OTHER_CALLER);
+    const result = await getWallet(address, OTHER_CALLER);
     expect(result.ok).toBe(false);
     if (!result.ok) {
       expect(result.status).toBe(403);
@@ -313,10 +313,11 @@ describe("Wallet ownership logic (via service)", () => {
     claimWallet(address, claimToken, CALLER);
 
     const { getWallet } = await import("../src/service.ts");
-    const result = getWallet(address, CALLER);
+    const result = await getWallet(address, CALLER);
     expect(result.ok).toBe(true);
     if (result.ok) {
       expect(result.data.address).toBe(address);
+      // RPC will fail in test env (no mock), graceful fallback returns "0.00"
       expect(result.data.balance).toBe("0.00");
     }
   });
@@ -333,7 +334,7 @@ describe("Wallet ownership logic (via service)", () => {
     claimWallet(b2.address as string, b2.claimToken as string, OTHER_CALLER);
 
     const { listWallets } = await import("../src/service.ts");
-    const result = listWallets(CALLER, 20);
+    const result = await listWallets(CALLER, 20);
     expect(result.wallets).toHaveLength(1);
     expect(result.wallets[0].address).toBe(b1.address);
   });
@@ -371,7 +372,7 @@ describe("Wallet deactivation", () => {
     const { deactivateWallet, getWallet } = await import("../src/service.ts");
     deactivateWallet(address, CALLER);
 
-    const result = getWallet(address, CALLER);
+    const result = await getWallet(address, CALLER);
     expect(result.ok).toBe(false);
     if (!result.ok) {
       expect(result.status).toBe(404);

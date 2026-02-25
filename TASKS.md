@@ -16,9 +16,9 @@
 | 10 | P-4 | Build shared x402 Hono middleware package | packages/x402-middleware | P-3 | Done |
 | 11 | W-1 | Design wallet.sh API surface (finalize endpoints, request/response shapes) | specs/wallet.md | — | Done |
 | 12 | W-2 | Implement wallet creation (local keypair generation, encrypted keystore) | wallet/ | W-1 | Done |
-| 13 | W-3 | Implement balance queries (Base USDC via RPC) | wallet/ | W-2 | Open |
-| 14 | W-4 | Implement send (USDC transfer on Base) | wallet/ | W-2 | Open |
-| 15 | W-5 | Integrate x402 client (`@x402/fetch` wrapper) | wallet/ | W-2 | Open |
+| 13 | W-3 | Implement balance queries (Base USDC via RPC) | wallet/ | W-2 | Done |
+| 14 | W-4 | Implement send (USDC transfer on Base) | wallet/ | W-2 | Done |
+| 15 | W-5 | Integrate x402 client (`@x402/fetch` wrapper) | wallet/ | W-2 | Done |
 | 16 | W-6 | Implement funding request flow (agent → owner notification → approval) | wallet/ | W-4 | Open |
 | 17 | W-7 | Implement budget/spending policy engine | wallet/ | W-4 | Open |
 | 18 | W-8 | Port execution journal + idempotency from Railgunner | wallet/ | W-4 | Open |
@@ -34,7 +34,7 @@
 | 28 | R-9 | Build relay.sh wrapper: custom domain support | relay/ | R-2 | Open |
 | 29 | R-10 | Integrate x402 middleware (all endpoints gated by payment) | relay/ | R-3, P-4 | Open |
 | 30 | SP-1 | Write spawn.sh spec (Hetzner API wrapping, VM lifecycle, pricing) | specs/ | — | Done |
-| 31 | SP-2 | Build spawn.sh: VM provisioning via Hetzner Cloud API | spawn/ | SP-1 | Open |
+| 31 | SP-2 | Build spawn.sh: VM provisioning via Hetzner Cloud API | spawn/ | SP-1 | Done |
 | 32 | SP-3 | Build spawn.sh: VM lifecycle (start, stop, destroy, resize) | spawn/ | SP-2 | Open |
 | 33 | SP-4 | Build spawn.sh: SSH key injection + initial setup | spawn/ | SP-2 | Open |
 | 34 | SP-5 | Integrate x402 middleware | spawn/ | SP-2, P-4 | Open |
@@ -49,10 +49,10 @@
 - R-1: `tasks/completed/r-1-stalwart-docker-deploy-2026-02-24.md`
 - SP-1: `tasks/completed/sp-1-spawn-spec-2026-02-24.md`
 - B-1: `tasks/completed/b-1-batch-1-team-execution-2026-02-24.md`
-- W-3: `tasks/active/w-3-balance-queries-2026-02-24.md`
-- W-4: `tasks/active/w-4-send-usdc-2026-02-24.md`
-- W-5: `tasks/active/w-5-x402-client-2026-02-24.md`
-- SP-2: `tasks/active/sp-2-vm-provisioning-2026-02-24.md`
+- W-3: `tasks/completed/w-3-balance-queries-2026-02-24.md`
+- W-4: `tasks/completed/w-4-send-usdc-2026-02-24.md`
+- W-5: `tasks/completed/w-5-x402-client-2026-02-24.md`
+- SP-2: `tasks/completed/sp-2-vm-provisioning-2026-02-24.md`
 - Umbrella: `tasks/active/batch-execution-umbrella-2026-02-24.md`
 
 ## Backlog — Future Primitives
@@ -129,6 +129,10 @@ ERC-8004 uses CAIP-10 wallet addresses as root identity. DIDs layer on top non-b
 
 ## Done
 
+- W-3 — balance queries: live USDC via viem readContract (2026-02-24)
+- W-4 — send USDC: ERC-20 transfer, idempotency journal, ownership check (2026-02-24)
+- W-5 — x402 client: 402 → sign EIP-3009 → retry wrapper (2026-02-24)
+- SP-2 — spawn.sh VM provisioning: Hetzner CRUD, SQLite, x402 (2026-02-24)
 - B-1 — Wave 1 agent team execution: W-2, R-1, SP-1 (2026-02-24)
 - SP-1 — spawn.sh spec (2026-02-24)
 - R-1 — Stalwart Docker Compose + deployment docs (2026-02-24)

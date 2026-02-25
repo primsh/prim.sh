@@ -11,6 +11,17 @@ export interface WalletRow {
   updated_at: number;
 }
 
+export interface ExecutionRow {
+  idempotency_key: string;
+  wallet_address: string;
+  action_type: string;
+  payload_hash: string;
+  status: "pending" | "succeeded" | "failed";
+  result: string | null;
+  created_at: number;
+  updated_at: number;
+}
+
 let _db: Database | null = null;
 
 export function getDb(): Database {
@@ -34,6 +45,21 @@ export function getDb(): Database {
 
   _db.run("CREATE INDEX IF NOT EXISTS idx_wallets_created_by ON wallets(created_by)");
   _db.run("CREATE INDEX IF NOT EXISTS idx_wallets_claim_token ON wallets(claim_token)");
+
+  _db.run(`
+    CREATE TABLE IF NOT EXISTS executions (
+      idempotency_key TEXT PRIMARY KEY,
+      wallet_address  TEXT NOT NULL,
+      action_type     TEXT NOT NULL,
+      payload_hash    TEXT NOT NULL,
+      status          TEXT NOT NULL,
+      result          TEXT,
+      created_at      INTEGER NOT NULL,
+      updated_at      INTEGER NOT NULL
+    )
+  `);
+
+  _db.run("CREATE INDEX IF NOT EXISTS idx_executions_wallet_address ON executions(wallet_address)");
 
   return _db;
 }
@@ -109,4 +135,38 @@ export function deactivateWallet(address: string): void {
   db.query(
     "UPDATE wallets SET deactivated_at = ?, updated_at = ? WHERE address = ?",
   ).run(deactivatedAt, now, address);
+}
+
+export function getExecution(idempotencyKey: string): ExecutionRow | null {
+  const db = getDb();
+  return (
+    db
+      .query<ExecutionRow, [string]>("SELECT * FROM executions WHERE idempotency_key = ?")
+      .get(idempotencyKey) ?? null
+  );
+}
+
+export function insertExecution(params: {
+  idempotencyKey: string;
+  walletAddress: string;
+  actionType: string;
+  payloadHash: string;
+}): void {
+  const db = getDb();
+  const now = Date.now();
+  db.query(
+    "INSERT INTO executions (idempotency_key, wallet_address, action_type, payload_hash, status, result, created_at, updated_at) VALUES (?, ?, ?, ?, 'pending', NULL, ?, ?)",
+  ).run(params.idempotencyKey, params.walletAddress, params.actionType, params.payloadHash, now, now);
+}
+
+export function completeExecution(
+  idempotencyKey: string,
+  status: "succeeded" | "failed",
+  result: string,
+): void {
+  const db = getDb();
+  const now = Date.now();
+  db.query(
+    "UPDATE executions SET status = ?, result = ?, updated_at = ? WHERE idempotency_key = ?",
+  ).run(status, result, now, idempotencyKey);
 }

@@ -6,6 +6,7 @@ import type {
   WalletListResponse,
   WalletDetailResponse,
   WalletDeactivateResponse,
+  SendRequest,
   SendResponse,
   HistoryResponse,
   FundRequestResponse,
@@ -17,7 +18,8 @@ import type {
   ResumeResponse,
   ApiError,
 } from "./api.ts";
-import { createWallet, listWallets, getWallet, deactivateWallet, claimWallet } from "./service.ts";
+import { isAddress } from "viem";
+import { createWallet, listWallets, getWallet, deactivateWallet, claimWallet, sendUsdc } from "./service.ts";
 
 const PAY_TO_ADDRESS = "0x0000000000000000000000000000000000000000";
 const NETWORK = "eip155:8453";
@@ -107,7 +109,7 @@ const claimMiddleware: MiddlewareHandler<{ Variables: AppVariables }> = async (c
 };
 
 // GET /v1/wallets — List wallets
-app.get("/v1/wallets", (c) => {
+app.get("/v1/wallets", async (c) => {
   const caller = c.get("walletAddress");
   if (!caller) {
     return c.json(forbidden("No wallet address in payment"), 403);
@@ -117,19 +119,19 @@ app.get("/v1/wallets", (c) => {
   const limit = Math.min(Number(limitParam) || 20, 100);
   const after = c.req.query("after");
 
-  const result = listWallets(caller, limit, after);
+  const result = await listWallets(caller, limit, after);
   return c.json(result as WalletListResponse, 200);
 });
 
 // GET /v1/wallets/:address — Wallet detail
-app.get("/v1/wallets/:address", claimMiddleware, (c) => {
+app.get("/v1/wallets/:address", claimMiddleware, async (c) => {
   const address = c.req.param("address");
   const caller = c.get("walletAddress");
   if (!caller) {
     return c.json(forbidden("No wallet address in payment"), 403);
   }
 
-  const result = getWallet(address, caller);
+  const result = await getWallet(address, caller);
   if (!result.ok) {
     const status = result.status;
     if (status === 404) return c.json(notFound(result.message), 404);
@@ -156,8 +158,41 @@ app.delete("/v1/wallets/:address", claimMiddleware, (c) => {
 });
 
 // POST /v1/wallets/:address/send
-app.post("/v1/wallets/:address/send", (c) => {
-  return c.json(notImplemented() as unknown as SendResponse, 501);
+app.post("/v1/wallets/:address/send", claimMiddleware, async (c) => {
+  const address = c.req.param("address");
+  const caller = c.get("walletAddress");
+  if (!caller) {
+    return c.json(forbidden("No wallet address in payment"), 403);
+  }
+
+  let body: Partial<SendRequest>;
+  try {
+    body = await c.req.json<Partial<SendRequest>>();
+  } catch {
+    return c.json({ error: { code: "invalid_request", message: "Invalid JSON body" } } as ApiError, 400);
+  }
+
+  const { to, amount, idempotencyKey } = body;
+
+  if (!to || !amount || !idempotencyKey) {
+    return c.json({ error: { code: "invalid_request", message: "Missing required fields: to, amount, idempotencyKey" } } as ApiError, 400);
+  }
+
+  if (!isAddress(to)) {
+    return c.json({ error: { code: "invalid_request", message: "Invalid Ethereum address: to" } } as ApiError, 400);
+  }
+
+  const amountNum = Number.parseFloat(amount);
+  if (Number.isNaN(amountNum) || amountNum <= 0) {
+    return c.json({ error: { code: "invalid_request", message: "amount must be a positive decimal string" } } as ApiError, 400);
+  }
+
+  const result = await sendUsdc(address, { to, amount, idempotencyKey }, caller);
+  if (!result.ok) {
+    const { status, code, message } = result;
+    return c.json({ error: { code, message } } as ApiError, status as 400 | 403 | 404 | 409 | 422 | 500 | 502);
+  }
+  return c.json(result.data as SendResponse, 200);
 });
 
 // POST /v1/wallets/:address/swap (deferred)

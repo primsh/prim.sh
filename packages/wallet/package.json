@@ -15,6 +15,7 @@
   },
   "dependencies": {
     "@agentstack/x402-middleware": "workspace:*",
+    "@x402/evm": "^2.4.0",
     "hono": "^4.4.7",
     "viem": "^2.21.0"
   },
