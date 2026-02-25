@@ -3,8 +3,11 @@ import {
   insertMailbox,
   getMailboxById,
   getMailboxesByOwner,
+  getMailboxesByOwnerAll,
   countMailboxesByOwner,
+  countMailboxesByOwnerAll,
   deleteMailboxRow,
+  updateExpiresAt,
 } from "./db.ts";
 import {
   StalwartError,
@@ -14,11 +17,13 @@ import {
 import { encryptPassword } from "./crypto.ts";
 import { discoverSession, buildBasicAuth, JmapError, queryEmails, getEmail, sendEmail } from "./jmap.ts";
 import { getJmapContext } from "./context.ts";
+import { expireMailbox } from "./expiry.ts";
 import type {
   ServiceResult,
   MailboxResponse,
   MailboxListResponse,
   CreateMailboxRequest,
+  RenewMailboxRequest,
   DeleteMailboxResponse,
   EmailMessage,
   EmailDetail,
@@ -33,6 +38,8 @@ import type { MailboxRow } from "./db.ts";
 
 const DEFAULT_DOMAIN = process.env.RELAY_DEFAULT_DOMAIN ?? "relay.prim.sh";
 const DEFAULT_TTL_MS = Number(process.env.RELAY_DEFAULT_TTL_MS) || 86_400_000; // 24h
+const MIN_TTL_MS = Number(process.env.RELAY_MIN_TTL_MS) || 300_000; // 5 min
+const MAX_TTL_MS = Number(process.env.RELAY_MAX_TTL_MS) || 604_800_000; // 7 days
 const MAX_COLLISION_RETRIES = 3;
 
 // ─── Helpers ─────────────────────────────────────────────────────────────
@@ -65,6 +72,18 @@ function rowToResponse(row: MailboxRow): MailboxResponse {
   };
 }
 
+// ─── Expiry check ────────────────────────────────────────────────────────
+
+function isExpired(row: MailboxRow): boolean {
+  return row.status === "expired" || (row.status === "active" && row.expires_at < Date.now());
+}
+
+async function lazyExpire(row: MailboxRow): Promise<void> {
+  if (row.status === "active" && row.expires_at < Date.now()) {
+    await expireMailbox(row);
+  }
+}
+
 // ─── Ownership ───────────────────────────────────────────────────────────
 
 function checkOwnership(
@@ -76,6 +95,19 @@ function checkOwnership(
     return { ok: false, status: 404, code: "not_found", message: "Mailbox not found" };
   }
   return { ok: true, row };
+}
+
+function validateTtl(ttlMs: number | undefined): ServiceResult<number> {
+  if (ttlMs === undefined) return { ok: true, data: DEFAULT_TTL_MS };
+  if (ttlMs < MIN_TTL_MS || ttlMs > MAX_TTL_MS) {
+    return {
+      ok: false,
+      status: 400,
+      code: "invalid_request",
+      message: `ttl_ms must be between ${MIN_TTL_MS} and ${MAX_TTL_MS}`,
+    };
+  }
+  return { ok: true, data: ttlMs };
 }
 
 // ─── Mailbox service ─────────────────────────────────────────────────────
@@ -95,11 +127,14 @@ export async function createMailbox(
     };
   }
 
+  const ttlResult = validateTtl(request.ttl_ms);
+  if (!ttlResult.ok) return ttlResult;
+
   const password = generatePassword();
   const passwordHash = hashPassword(password);
   const passwordEnc = encryptPassword(password);
   const now = Date.now();
-  const expiresAt = now + DEFAULT_TTL_MS;
+  const expiresAt = now + ttlResult.data;
 
   let lastError: StalwartError | null = null;
 
@@ -193,10 +228,15 @@ export function listMailboxes(
   callerWallet: string,
   page: number,
   perPage: number,
+  includeExpired = false,
 ): MailboxListResponse {
   const offset = (page - 1) * perPage;
-  const rows = getMailboxesByOwner(callerWallet, perPage, offset);
-  const total = countMailboxesByOwner(callerWallet);
+  const rows = includeExpired
+    ? getMailboxesByOwnerAll(callerWallet, perPage, offset)
+    : getMailboxesByOwner(callerWallet, perPage, offset);
+  const total = includeExpired
+    ? countMailboxesByOwnerAll(callerWallet)
+    : countMailboxesByOwner(callerWallet);
 
   return {
     mailboxes: rows.map(rowToResponse),
@@ -206,13 +246,19 @@ export function listMailboxes(
   };
 }
 
-export function getMailbox(
+export async function getMailbox(
   id: string,
   callerWallet: string,
-): ServiceResult<MailboxResponse> {
+): Promise<ServiceResult<MailboxResponse>> {
   const check = checkOwnership(id, callerWallet);
   if (!check.ok) return check;
-  return { ok: true, data: rowToResponse(check.row) };
+
+  await lazyExpire(check.row);
+  // Re-read to get updated status
+  const row = getMailboxById(id);
+  if (!row) return { ok: false, status: 404, code: "not_found", message: "Mailbox not found" };
+
+  return { ok: true, data: rowToResponse(row) };
 }
 
 export async function deleteMailbox(
@@ -255,6 +301,13 @@ export async function listMessages(
   callerWallet: string,
   opts: { limit?: number; position?: number; folder?: FolderName },
 ): Promise<ServiceResult<EmailListResponse>> {
+  const check = checkOwnership(mailboxId, callerWallet);
+  if (!check.ok) return check;
+  await lazyExpire(check.row);
+  if (isExpired(check.row)) {
+    return { ok: false, status: 410, code: "expired", message: "Mailbox has expired" };
+  }
+
   const ctxResult = await getJmapContext(mailboxId, callerWallet);
   if (!ctxResult.ok) return ctxResult;
   const ctx = ctxResult.data;
@@ -295,6 +348,13 @@ export async function getMessage(
   callerWallet: string,
   messageId: string,
 ): Promise<ServiceResult<EmailDetail>> {
+  const check = checkOwnership(mailboxId, callerWallet);
+  if (!check.ok) return check;
+  await lazyExpire(check.row);
+  if (isExpired(check.row)) {
+    return { ok: false, status: 410, code: "expired", message: "Mailbox has expired" };
+  }
+
   const ctxResult = await getJmapContext(mailboxId, callerWallet);
   if (!ctxResult.ok) return ctxResult;
   const ctx = ctxResult.data;
@@ -356,6 +416,13 @@ export async function sendMessage(
     };
   }
 
+  const check = checkOwnership(mailboxId, callerWallet);
+  if (!check.ok) return check;
+  await lazyExpire(check.row);
+  if (isExpired(check.row)) {
+    return { ok: false, status: 410, code: "expired", message: "Mailbox has expired" };
+  }
+
   const ctxResult = await getJmapContext(mailboxId, callerWallet);
   if (!ctxResult.ok) return ctxResult;
   const ctx = ctxResult.data;
@@ -383,4 +450,32 @@ export async function sendMessage(
     }
     throw err;
   }
+}
+
+// ─── Mailbox renewal (R-8) ────────────────────────────────────────────
+
+export async function renewMailbox(
+  id: string,
+  callerWallet: string,
+  request: RenewMailboxRequest,
+): Promise<ServiceResult<MailboxResponse>> {
+  const check = checkOwnership(id, callerWallet);
+  if (!check.ok) return check;
+
+  // Cannot renew an already-expired mailbox
+  await lazyExpire(check.row);
+  if (isExpired(check.row)) {
+    return { ok: false, status: 410, code: "expired", message: "Mailbox has expired" };
+  }
+
+  const ttlResult = validateTtl(request.ttl_ms);
+  if (!ttlResult.ok) return ttlResult;
+
+  const newExpiresAt = Date.now() + ttlResult.data;
+  updateExpiresAt(id, newExpiresAt);
+
+  const row = getMailboxById(id);
+  if (!row) return { ok: false, status: 404, code: "not_found", message: "Mailbox not found" };
+
+  return { ok: true, data: rowToResponse(row) };
 }

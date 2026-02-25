@@ -2,6 +2,7 @@ import { Hono } from "hono";
 import type {
   ApiError,
   CreateMailboxRequest,
+  RenewMailboxRequest,
   SendMessageRequest,
   MailboxResponse,
   MailboxListResponse,
@@ -18,6 +19,7 @@ import {
   listMessages,
   getMessage,
   sendMessage,
+  renewMailbox,
 } from "./service.ts";
 
 function forbidden(message: string): ApiError {
@@ -76,17 +78,18 @@ app.get("/v1/mailboxes", (c) => {
 
   const perPage = Math.min(Number(c.req.query("per_page")) || 25, 100);
   const page = Math.max(Number(c.req.query("page")) || 1, 1);
+  const includeExpired = c.req.query("include_expired") === "true";
 
-  const data = listMailboxes(caller, page, perPage);
+  const data = listMailboxes(caller, page, perPage, includeExpired);
   return c.json(data as MailboxListResponse, 200);
 });
 
 // GET /v1/mailboxes/:id — Get mailbox
-app.get("/v1/mailboxes/:id", (c) => {
+app.get("/v1/mailboxes/:id", async (c) => {
   const caller = c.get("walletAddress");
   if (!caller) return c.json(forbidden("No wallet address in payment"), 403);
 
-  const result = getMailbox(c.req.param("id"), caller);
+  const result = await getMailbox(c.req.param("id"), caller);
   if (!result.ok) return c.json(notFound(result.message), 404);
   return c.json(result.data as MailboxResponse, 200);
 });
@@ -104,6 +107,28 @@ app.delete("/v1/mailboxes/:id", async (c) => {
   return c.json(result.data as DeleteMailboxResponse, 200);
 });
 
+// POST /v1/mailboxes/:id/renew — Renew mailbox TTL
+app.post("/v1/mailboxes/:id/renew", async (c) => {
+  const caller = c.get("walletAddress");
+  if (!caller) return c.json(forbidden("No wallet address in payment"), 403);
+
+  let body: RenewMailboxRequest;
+  try {
+    body = await c.req.json<RenewMailboxRequest>();
+  } catch {
+    body = {};
+  }
+
+  const result = await renewMailbox(c.req.param("id"), caller, body);
+  if (!result.ok) {
+    if (result.code === "not_found") return c.json(notFound(result.message), 404);
+    if (result.code === "expired") return c.json(serviceError("expired", result.message), 410);
+    if (result.code === "invalid_request") return c.json(invalidRequest(result.message), 400);
+    return c.json(serviceError(result.code, result.message), result.status as 502);
+  }
+  return c.json(result.data as MailboxResponse, 200);
+});
+
 // GET /v1/mailboxes/:id/messages — List messages
 app.get("/v1/mailboxes/:id/messages", async (c) => {
   const caller = c.get("walletAddress");
@@ -119,6 +144,7 @@ app.get("/v1/mailboxes/:id/messages", async (c) => {
   const result = await listMessages(c.req.param("id"), caller, { limit, position, folder });
   if (!result.ok) {
     if (result.code === "not_found") return c.json(notFound(result.message), 404);
+    if (result.code === "expired") return c.json(serviceError("expired", result.message), 410);
     return c.json(serviceError(result.code, result.message), result.status as 502);
   }
   return c.json(result.data as EmailListResponse, 200);
@@ -132,6 +158,7 @@ app.get("/v1/mailboxes/:id/messages/:msgId", async (c) => {
   const result = await getMessage(c.req.param("id"), caller, c.req.param("msgId"));
   if (!result.ok) {
     if (result.code === "not_found") return c.json(notFound(result.message), 404);
+    if (result.code === "expired") return c.json(serviceError("expired", result.message), 410);
     return c.json(serviceError(result.code, result.message), result.status as 502);
   }
   return c.json(result.data as EmailDetail, 200);
@@ -152,6 +179,7 @@ app.post("/v1/mailboxes/:id/send", async (c) => {
   const result = await sendMessage(c.req.param("id"), caller, body);
   if (!result.ok) {
     if (result.code === "not_found") return c.json(notFound(result.message), 404);
+    if (result.code === "expired") return c.json(serviceError("expired", result.message), 410);
     if (result.code === "invalid_request") return c.json(invalidRequest(result.message), 400);
     return c.json(serviceError(result.code, result.message), result.status as 502);
   }

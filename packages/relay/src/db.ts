@@ -18,6 +18,8 @@ export interface MailboxRow {
   jmap_inbox_id: string | null;
   jmap_drafts_id: string | null;
   jmap_sent_id: string | null;
+  stalwart_cleanup_failed: number;
+  cleanup_attempts: number;
 }
 
 let _db: Database | null = null;
@@ -50,8 +52,17 @@ export function getDb(): Database {
     )
   `);
 
+  // R-8: additive columns for expiry management
+  try {
+    _db.run("ALTER TABLE mailboxes ADD COLUMN stalwart_cleanup_failed INTEGER NOT NULL DEFAULT 0");
+  } catch { /* column already exists */ }
+  try {
+    _db.run("ALTER TABLE mailboxes ADD COLUMN cleanup_attempts INTEGER NOT NULL DEFAULT 0");
+  } catch { /* column already exists */ }
+
   _db.run("CREATE INDEX IF NOT EXISTS idx_mailboxes_owner ON mailboxes(owner_wallet)");
   _db.run("CREATE INDEX IF NOT EXISTS idx_mailboxes_address ON mailboxes(address)");
+  _db.run("CREATE INDEX IF NOT EXISTS idx_mailboxes_expiry ON mailboxes(status, expires_at)");
 
   return _db;
 }
@@ -153,4 +164,74 @@ export function countMailboxesByOwner(owner: string): number {
 export function deleteMailboxRow(id: string): void {
   const db = getDb();
   db.query("DELETE FROM mailboxes WHERE id = ?").run(id);
+}
+
+// ─── Expiry queries (R-8) ─────────────────────────────────────────────
+
+export function getExpiredMailboxes(limit: number): MailboxRow[] {
+  const db = getDb();
+  return db
+    .query<MailboxRow, [number, number]>(
+      "SELECT * FROM mailboxes WHERE status = 'active' AND expires_at < ? LIMIT ?",
+    )
+    .all(Date.now(), limit);
+}
+
+export function getFailedCleanups(limit: number): MailboxRow[] {
+  const db = getDb();
+  return db
+    .query<MailboxRow, [number]>(
+      "SELECT * FROM mailboxes WHERE status = 'expired' AND stalwart_cleanup_failed = 1 LIMIT ?",
+    )
+    .all(limit);
+}
+
+export function markExpired(id: string, cleanupFailed: boolean): void {
+  const db = getDb();
+  db.query(
+    "UPDATE mailboxes SET status = 'expired', stalwart_cleanup_failed = ? WHERE id = ?",
+  ).run(cleanupFailed ? 1 : 0, id);
+}
+
+export function markCleanupDone(id: string): void {
+  const db = getDb();
+  db.query(
+    "UPDATE mailboxes SET stalwart_cleanup_failed = 0 WHERE id = ?",
+  ).run(id);
+}
+
+export function markCleanupDeadLetter(id: string): void {
+  const db = getDb();
+  db.query(
+    "UPDATE mailboxes SET stalwart_cleanup_failed = -1 WHERE id = ?",
+  ).run(id);
+}
+
+export function updateExpiresAt(id: string, expiresAt: number): void {
+  const db = getDb();
+  db.query("UPDATE mailboxes SET expires_at = ? WHERE id = ?").run(expiresAt, id);
+}
+
+export function incrementCleanupAttempts(id: string): void {
+  const db = getDb();
+  db.query("UPDATE mailboxes SET cleanup_attempts = cleanup_attempts + 1 WHERE id = ?").run(id);
+}
+
+export function getMailboxesByOwnerAll(owner: string, limit: number, offset: number): MailboxRow[] {
+  const db = getDb();
+  return db
+    .query<MailboxRow, [string, number, number]>(
+      "SELECT * FROM mailboxes WHERE owner_wallet = ? AND status IN ('active', 'expired') ORDER BY created_at DESC LIMIT ? OFFSET ?",
+    )
+    .all(owner, limit, offset);
+}
+
+export function countMailboxesByOwnerAll(owner: string): number {
+  const db = getDb();
+  const row = db
+    .query<{ count: number }, [string]>(
+      "SELECT COUNT(*) as count FROM mailboxes WHERE owner_wallet = ? AND status IN ('active', 'expired')",
+    )
+    .get(owner) as { count: number } | null;
+  return row?.count ?? 0;
 }

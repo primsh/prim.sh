@@ -18,6 +18,7 @@ export const ERROR_CODES = [
   "stalwart_error",
   "conflict",
   "jmap_error",
+  "expired",
 ] as const;
 
 export type ErrorCode = (typeof ERROR_CODES)[number];
@@ -44,6 +45,11 @@ export interface MailboxResponse {
 
 export interface CreateMailboxRequest {
   domain?: string;
+  ttl_ms?: number;
+}
+
+export interface RenewMailboxRequest {
+  ttl_ms?: number;
 }
 
 export interface MailboxListResponse {

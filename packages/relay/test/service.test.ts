@@ -51,11 +51,20 @@ vi.mock("../src/context", () => ({
   getJmapContext: vi.fn(),
 }));
 
+vi.mock("../src/expiry", () => ({
+  expireMailbox: vi.fn(async (row: Record<string, unknown>) => {
+    // Simulate marking the row as expired in the mock store
+    if (row.status === "active" && (row.expires_at as number) < Date.now()) {
+      row.status = "expired";
+    }
+  }),
+}));
+
 vi.mock("../src/db", () => {
   const rows = new Map<string, Record<string, unknown>>();
   return {
     insertMailbox: vi.fn((params: Record<string, unknown>) => {
-      rows.set(params.id as string, { ...params, status: "active" });
+      rows.set(params.id as string, { ...params, status: "active", stalwart_cleanup_failed: 0, cleanup_attempts: 0 });
     }),
     getMailboxById: vi.fn((id: string) => rows.get(id) ?? null),
     getMailboxesByOwner: vi.fn((owner: string, limit: number, _offset: number) => {
@@ -63,18 +72,31 @@ vi.mock("../src/db", () => {
         .filter((r) => r.owner_wallet === owner && r.status === "active")
         .slice(0, limit);
     }),
+    getMailboxesByOwnerAll: vi.fn((owner: string, limit: number, _offset: number) => {
+      return [...rows.values()]
+        .filter((r) => r.owner_wallet === owner && (r.status === "active" || r.status === "expired"))
+        .slice(0, limit);
+    }),
     countMailboxesByOwner: vi.fn((owner: string) => {
       return [...rows.values()].filter((r) => r.owner_wallet === owner && r.status === "active")
+        .length;
+    }),
+    countMailboxesByOwnerAll: vi.fn((owner: string) => {
+      return [...rows.values()].filter((r) => r.owner_wallet === owner && (r.status === "active" || r.status === "expired"))
         .length;
     }),
     deleteMailboxRow: vi.fn((id: string) => {
       rows.delete(id);
     }),
+    updateExpiresAt: vi.fn((id: string, expiresAt: number) => {
+      const row = rows.get(id);
+      if (row) row.expires_at = expiresAt;
+    }),
     _rows: rows,
   };
 });
 
-import { createMailbox, listMailboxes, getMailbox, deleteMailbox, listMessages, getMessage, sendMessage } from "../src/service";
+import { createMailbox, listMailboxes, getMailbox, deleteMailbox, listMessages, getMessage, sendMessage, renewMailbox } from "../src/service";
 import { createPrincipal, deletePrincipal, StalwartError } from "../src/stalwart";
 import { JmapError, queryEmails, getEmail, sendEmail } from "../src/jmap";
 import { getJmapContext } from "../src/context";
@@ -82,6 +104,33 @@ import * as dbMock from "../src/db";
 
 const WALLET_A = "0xaaa";
 const WALLET_B = "0xbbb";
+
+/** Seed a mock mailbox row directly in the DB mock store */
+function seedRow(id: string, wallet: string, overrides: Record<string, unknown> = {}) {
+  // biome-ignore lint/suspicious/noExplicitAny: accessing mock internals
+  ((dbMock as any)._rows as Map<string, Record<string, unknown>>).set(id, {
+    id,
+    stalwart_name: "testuser",
+    address: "[email protected]",
+    domain: "relay.prim.sh",
+    owner_wallet: wallet,
+    status: "active",
+    password_hash: "fakehash",
+    password_enc: "encrypted",
+    quota: 0,
+    created_at: Date.now(),
+    expires_at: Date.now() + 86_400_000,
+    jmap_api_url: null,
+    jmap_account_id: null,
+    jmap_identity_id: null,
+    jmap_inbox_id: null,
+    jmap_drafts_id: null,
+    jmap_sent_id: null,
+    stalwart_cleanup_failed: 0,
+    cleanup_attempts: 0,
+    ...overrides,
+  });
+}
 
 describe("relay service", () => {
   beforeEach(() => {
@@ -210,7 +259,7 @@ describe("relay service", () => {
       const created = await createMailbox({}, WALLET_A);
       if (!created.ok) return;
 
-      const result = getMailbox(created.data.id, WALLET_A);
+      const result = await getMailbox(created.data.id, WALLET_A);
       expect(result.ok).toBe(true);
       if (result.ok) {
         expect(result.data.id).toBe(created.data.id);
@@ -223,7 +272,7 @@ describe("relay service", () => {
       const created = await createMailbox({}, WALLET_A);
       if (!created.ok) return;
 
-      const result = getMailbox(created.data.id, WALLET_B);
+      const result = await getMailbox(created.data.id, WALLET_B);
       expect(result.ok).toBe(false);
       if (!result.ok) {
         expect(result.code).toBe("not_found");
@@ -231,7 +280,7 @@ describe("relay service", () => {
     });
 
     it("returns not_found for nonexistent mailbox", async () => {
-      const result = getMailbox("mbx_00000000", WALLET_A);
+      const result = await getMailbox("mbx_00000000", WALLET_A);
       expect(result.ok).toBe(false);
       if (!result.ok) {
         expect(result.code).toBe("not_found");
@@ -256,7 +305,7 @@ describe("relay service", () => {
 
       expect(deletePrincipal).toHaveBeenCalled();
 
-      const getResult = getMailbox(created.data.id, WALLET_A);
+      const getResult = await getMailbox(created.data.id, WALLET_A);
       expect(getResult.ok).toBe(false);
     });
 
@@ -301,9 +350,11 @@ describe("relay service", () => {
       draftsId: "mb_drafts",
       sentId: "mb_sent",
       authHeader: "Basic mock",
+      address: "[email protected]",
     };
 
     it("returns messages for valid mailbox and wallet", async () => {
+      seedRow("mbx_test", WALLET_A);
       (getJmapContext as ReturnType<typeof vi.fn>).mockResolvedValue({
         ok: true,
         data: MOCK_CTX,
@@ -351,6 +402,7 @@ describe("relay service", () => {
     });
 
     it("passes sentId when folder=sent", async () => {
+      seedRow("mbx_test", WALLET_A);
       (getJmapContext as ReturnType<typeof vi.fn>).mockResolvedValue({
         ok: true,
         data: MOCK_CTX,
@@ -370,6 +422,7 @@ describe("relay service", () => {
     });
 
     it("omits mailboxId when folder=all", async () => {
+      seedRow("mbx_test", WALLET_A);
       (getJmapContext as ReturnType<typeof vi.fn>).mockResolvedValue({
         ok: true,
         data: MOCK_CTX,
@@ -389,6 +442,7 @@ describe("relay service", () => {
     });
 
     it("clamps limit to 100", async () => {
+      seedRow("mbx_test", WALLET_A);
       (getJmapContext as ReturnType<typeof vi.fn>).mockResolvedValue({
         ok: true,
         data: MOCK_CTX,
@@ -408,6 +462,7 @@ describe("relay service", () => {
     });
 
     it("returns jmap_error on JMAP failure", async () => {
+      seedRow("mbx_test", WALLET_A);
       (getJmapContext as ReturnType<typeof vi.fn>).mockResolvedValue({
         ok: true,
         data: MOCK_CTX,
@@ -434,9 +489,11 @@ describe("relay service", () => {
       draftsId: "mb_drafts",
       sentId: "mb_sent",
       authHeader: "Basic mock",
+      address: "[email protected]",
     };
 
     it("returns full message with body", async () => {
+      seedRow("mbx_test", WALLET_A);
       (getJmapContext as ReturnType<typeof vi.fn>).mockResolvedValue({
         ok: true,
         data: MOCK_CTX,
@@ -487,6 +544,7 @@ describe("relay service", () => {
     });
 
     it("returns not_found when message does not exist", async () => {
+      seedRow("mbx_test", WALLET_A);
       (getJmapContext as ReturnType<typeof vi.fn>).mockResolvedValue({
         ok: true,
         data: MOCK_CTX,
@@ -517,6 +575,7 @@ describe("relay service", () => {
     };
 
     it("returns message_id and status sent for valid request", async () => {
+      seedRow("mbx_test", WALLET_A);
       (getJmapContext as ReturnType<typeof vi.fn>).mockResolvedValue({
         ok: true,
         data: MOCK_CTX,
@@ -539,6 +598,7 @@ describe("relay service", () => {
     });
 
     it("sets from address from mailbox address, not request", async () => {
+      seedRow("mbx_test", WALLET_A);
       (getJmapContext as ReturnType<typeof vi.fn>).mockResolvedValue({
         ok: true,
         data: MOCK_CTX,
@@ -610,6 +670,7 @@ describe("relay service", () => {
     });
 
     it("returns jmap_error when JMAP call fails", async () => {
+      seedRow("mbx_test", WALLET_A);
       (getJmapContext as ReturnType<typeof vi.fn>).mockResolvedValue({
         ok: true,
         data: MOCK_CTX,
@@ -627,6 +688,177 @@ describe("relay service", () => {
       expect(result.ok).toBe(false);
       if (!result.ok) {
         expect(result.code).toBe("jmap_error");
+      }
+    });
+  });
+
+  describe("createMailbox with ttl_ms (R-8)", () => {
+    it("uses custom ttl_ms when provided", async () => {
+      (createPrincipal as ReturnType<typeof vi.fn>).mockResolvedValue(42);
+
+      const before = Date.now();
+      const result = await createMailbox({ ttl_ms: 3_600_000 }, WALLET_A);
+
+      expect(result.ok).toBe(true);
+      if (!result.ok) return;
+      const expiresAt = new Date(result.data.expires_at).getTime();
+      expect(expiresAt).toBeGreaterThanOrEqual(before + 3_600_000);
+      expect(expiresAt).toBeLessThan(before + 3_600_000 + 5_000);
+    });
+
+    it("rejects ttl_ms below minimum", async () => {
+      const result = await createMailbox({ ttl_ms: 100 }, WALLET_A);
+
+      expect(result.ok).toBe(false);
+      if (!result.ok) {
+        expect(result.code).toBe("invalid_request");
+        expect(result.message).toContain("ttl_ms");
+      }
+    });
+
+    it("rejects ttl_ms above maximum", async () => {
+      const result = await createMailbox({ ttl_ms: 999_999_999 }, WALLET_A);
+
+      expect(result.ok).toBe(false);
+      if (!result.ok) {
+        expect(result.code).toBe("invalid_request");
+      }
+    });
+
+    it("uses default ttl when ttl_ms not provided", async () => {
+      (createPrincipal as ReturnType<typeof vi.fn>).mockResolvedValue(42);
+
+      const before = Date.now();
+      const result = await createMailbox({}, WALLET_A);
+
+      expect(result.ok).toBe(true);
+      if (!result.ok) return;
+      const expiresAt = new Date(result.data.expires_at).getTime();
+      // Default is 24h = 86400000
+      expect(expiresAt).toBeGreaterThanOrEqual(before + 86_400_000);
+    });
+  });
+
+  describe("renewMailbox (R-8)", () => {
+    it("extends expires_at on active mailbox", async () => {
+      (createPrincipal as ReturnType<typeof vi.fn>).mockResolvedValue(1);
+      const created = await createMailbox({}, WALLET_A);
+      if (!created.ok) return;
+
+      const before = Date.now();
+      const result = await renewMailbox(created.data.id, WALLET_A, { ttl_ms: 3_600_000 });
+
+      expect(result.ok).toBe(true);
+      if (!result.ok) return;
+      const newExpiry = new Date(result.data.expires_at).getTime();
+      expect(newExpiry).toBeGreaterThanOrEqual(before + 3_600_000);
+    });
+
+    it("returns expired for expired mailbox", async () => {
+      (createPrincipal as ReturnType<typeof vi.fn>).mockResolvedValue(1);
+      const created = await createMailbox({}, WALLET_A);
+      if (!created.ok) return;
+
+      // Manually expire the row in mock store
+      // biome-ignore lint/suspicious/noExplicitAny: accessing mock internals
+      const row = ((dbMock as any)._rows as Map<string, Record<string, unknown>>).get(created.data.id);
+      if (row) {
+        row.expires_at = Date.now() - 1_000;
+      }
+
+      const result = await renewMailbox(created.data.id, WALLET_A, {});
+
+      expect(result.ok).toBe(false);
+      if (!result.ok) {
+        expect(result.code).toBe("expired");
+        expect(result.status).toBe(410);
+      }
+    });
+
+    it("returns not_found for non-owned mailbox", async () => {
+      const result = await renewMailbox("mbx_nonexist", WALLET_A, {});
+
+      expect(result.ok).toBe(false);
+      if (!result.ok) {
+        expect(result.code).toBe("not_found");
+      }
+    });
+
+    it("rejects invalid ttl_ms", async () => {
+      (createPrincipal as ReturnType<typeof vi.fn>).mockResolvedValue(1);
+      const created = await createMailbox({}, WALLET_A);
+      if (!created.ok) return;
+
+      const result = await renewMailbox(created.data.id, WALLET_A, { ttl_ms: 100 });
+
+      expect(result.ok).toBe(false);
+      if (!result.ok) {
+        expect(result.code).toBe("invalid_request");
+      }
+    });
+  });
+
+  describe("lazy expiry (R-8)", () => {
+    it("getMailbox returns expired status for past-expiry active row", async () => {
+      (createPrincipal as ReturnType<typeof vi.fn>).mockResolvedValue(1);
+      const created = await createMailbox({}, WALLET_A);
+      if (!created.ok) return;
+
+      // Manually set expires_at to past
+      // biome-ignore lint/suspicious/noExplicitAny: accessing mock internals
+      const row = ((dbMock as any)._rows as Map<string, Record<string, unknown>>).get(created.data.id);
+      if (row) {
+        row.expires_at = Date.now() - 1_000;
+      }
+
+      const result = await getMailbox(created.data.id, WALLET_A);
+
+      expect(result.ok).toBe(true);
+      if (!result.ok) return;
+      expect(result.data.status).toBe("expired");
+    });
+
+    it("listMessages returns 410 for expired mailbox", async () => {
+      (createPrincipal as ReturnType<typeof vi.fn>).mockResolvedValue(1);
+      const created = await createMailbox({}, WALLET_A);
+      if (!created.ok) return;
+
+      // biome-ignore lint/suspicious/noExplicitAny: accessing mock internals
+      const row = ((dbMock as any)._rows as Map<string, Record<string, unknown>>).get(created.data.id);
+      if (row) {
+        row.expires_at = Date.now() - 1_000;
+      }
+
+      const result = await listMessages(created.data.id, WALLET_A, {});
+
+      expect(result.ok).toBe(false);
+      if (!result.ok) {
+        expect(result.code).toBe("expired");
+        expect(result.status).toBe(410);
+      }
+    });
+
+    it("sendMessage returns 410 for expired mailbox", async () => {
+      (createPrincipal as ReturnType<typeof vi.fn>).mockResolvedValue(1);
+      const created = await createMailbox({}, WALLET_A);
+      if (!created.ok) return;
+
+      // biome-ignore lint/suspicious/noExplicitAny: accessing mock internals
+      const row = ((dbMock as any)._rows as Map<string, Record<string, unknown>>).get(created.data.id);
+      if (row) {
+        row.expires_at = Date.now() - 1_000;
+      }
+
+      const result = await sendMessage(created.data.id, WALLET_A, {
+        to: "[email protected]",
+        subject: "Hello",
+        body: "Hi",
+      });
+
+      expect(result.ok).toBe(false);
+      if (!result.ok) {
+        expect(result.code).toBe("expired");
+        expect(result.status).toBe(410);
       }
     });
   });
