@@ -81,18 +81,6 @@ function buildHttpClient(account: LocalAccount, network?: string): x402HTTPClien
 /**
  * Creates a fetch-compatible function that auto-handles x402 402 payment-required responses.
  *
- * Flow:
- * 1. Make initial request
- * 2. If not 402, return immediately
- * 3. Parse Payment-Required header
- * 4. Check price against maxPayment cap
- * 5. Sign EIP-3009 payment via x402 client
- * 6. Retry with Payment-Signature header
- * 7. Return retry response (no second retry)
- */
-/**
- * Creates a fetch-compatible function that auto-handles x402 402 payment-required responses.
- *
  * Key resolution order:
  * 1. signer (viem LocalAccount)
  * 2. privateKey (hex string)

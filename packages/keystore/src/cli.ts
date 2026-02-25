@@ -2,8 +2,9 @@
 import { createInterface } from "node:readline/promises";
 import { stdin as input, stdout as output } from "node:process";
 import { existsSync, readFileSync } from "node:fs";
-import { createKey, importKey, listKeys, exportKey, removeKey } from "./keystore.ts";
+import { createKey, importKey, listKeys, exportKey, removeKey, loadKey } from "./keystore.ts";
 import { getDefaultAddress, setDefaultAddress } from "./config.ts";
+import { getUsdcBalance } from "./balance.ts";
 import { decryptFromV3 } from "./crypto.ts";
 import type { KeystoreFile } from "./types.ts";
 
@@ -41,7 +42,7 @@ async function main() {
   const subcommand = argv[1];
 
   if (group !== "wallet") {
-    console.log("Usage: prim wallet <create|list|import|export|default|remove>");
+    console.log("Usage: prim wallet <create|list|balance|import|export|default|remove>");
     process.exit(1);
   }
 
@@ -71,6 +72,23 @@ async function main() {
           const def = k.isDefault ? "*" : "";
           console.log(`${k.address.padEnd(44)} ${label.padEnd(20)} ${def}`);
         }
+        break;
+      }
+
+      case "balance": {
+        // prim wallet balance [address] — optional address, defaults to default wallet
+        const address = argv[2];
+        let resolvedAddress: string;
+        if (address) {
+          resolvedAddress = address;
+        } else {
+          // Load the key to resolve the default address (throws if none configured)
+          const key = await loadKey();
+          const { privateKeyToAccount } = await import("viem/accounts");
+          resolvedAddress = privateKeyToAccount(key).address;
+        }
+        const { balance, funded } = await getUsdcBalance(resolvedAddress);
+        console.log(`${resolvedAddress}  ${balance} USDC${funded ? "" : "  (unfunded)"}`);
         break;
       }
 
@@ -140,7 +158,7 @@ async function main() {
       }
 
       default:
-        console.log("Usage: prim wallet <create|list|import|export|default|remove>");
+        console.log("Usage: prim wallet <create|list|balance|import|export|default|remove>");
         process.exit(1);
     }
   } catch (err) {

@@ -15,6 +15,7 @@
     "check": "pnpm lint && pnpm typecheck && pnpm test"
   },
   "dependencies": {
+    "@agentstack/x402-middleware": "workspace:*",
     "viem": "^2.21.0"
   },
   "devDependencies": {

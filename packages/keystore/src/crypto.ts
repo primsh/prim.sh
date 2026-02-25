@@ -18,8 +18,8 @@ function deriveKey(password: string, salt: Buffer, n: number): Buffer {
 
 function computeMac(dkSlice: Buffer, ciphertext: Buffer): string {
   const combined = Buffer.concat([dkSlice, ciphertext]);
-  // keccak256 accepts Uint8Array (Buffer extends Uint8Array)
-  const mac = keccak256(combined as unknown as `0x${string}`);
+  // Buffer extends Uint8Array; keccak256 accepts Uint8Array directly
+  const mac = keccak256(combined as Uint8Array);
   return mac.slice(2); // strip "0x"
 }
 

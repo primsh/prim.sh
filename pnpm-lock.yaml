@@ -80,6 +80,9 @@ importers:
 
   packages/keystore:
     dependencies:
+      '@agentstack/x402-middleware':
+        specifier: workspace:*
+        version: link:../x402-middleware
       viem:
         specifier: ^2.21.0
         version: 2.46.3(typescript@5.9.3)(zod@3.25.76)
