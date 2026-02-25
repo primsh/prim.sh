@@ -102,13 +102,13 @@ describe("stalwart client", () => {
 
   describe("error mapping", () => {
     it("maps 404 to not_found", async () => {
+      expect.assertions(2);
       globalThis.fetch = vi.fn().mockResolvedValue({
         ok: false,
         status: 404,
         json: async () => ({ error: "Principal not found" }),
       });
 
-      await expect(getPrincipal("missing")).rejects.toThrow(StalwartError);
       try {
         await getPrincipal("missing");
       } catch (err) {
@@ -118,6 +118,7 @@ describe("stalwart client", () => {
     });
 
     it("maps 401 to forbidden", async () => {
+      expect.assertions(1);
       globalThis.fetch = vi.fn().mockResolvedValue({
         ok: false,
         status: 401,
@@ -132,6 +133,7 @@ describe("stalwart client", () => {
     });
 
     it("maps 409 to conflict", async () => {
+      expect.assertions(1);
       globalThis.fetch = vi.fn().mockResolvedValue({
         ok: false,
         status: 409,
@@ -151,6 +153,7 @@ describe("stalwart client", () => {
     });
 
     it("maps 500 to stalwart_error", async () => {
+      expect.assertions(2);
       globalThis.fetch = vi.fn().mockResolvedValue({
         ok: false,
         status: 500,
@@ -166,6 +169,7 @@ describe("stalwart client", () => {
     });
 
     it("maps 200 + fieldAlreadyExists body to 409 conflict", async () => {
+      expect.assertions(2);
       globalThis.fetch = vi.fn().mockResolvedValue({
         ok: true,
         status: 200,
@@ -186,6 +190,7 @@ describe("stalwart client", () => {
     });
 
     it("maps 200 + unknown error body to 500 stalwart_error", async () => {
+      expect.assertions(3);
       globalThis.fetch = vi.fn().mockResolvedValue({
         ok: true,
         status: 200,
@@ -202,6 +207,7 @@ describe("stalwart client", () => {
     });
 
     it("handles malformed JSON response", async () => {
+      expect.assertions(2);
       globalThis.fetch = vi.fn().mockResolvedValue({
         ok: false,
         status: 502,
