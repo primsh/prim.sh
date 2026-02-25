@@ -76,7 +76,7 @@ footer .links{margin-top:0.5rem}footer .links a{margin:0 0.75rem}
   <div class="grid">
     <div class="card"><h3>Credential passing</h3><p>Parent agent stores API keys, spawns child agent on spawn.sh, passes a scoped vault token. Child reads only what it needs. No env vars in plaintext.</p></div>
     <div class="card"><h3>Rotate & revoke</h3><p>Agent rotates its own API keys on a schedule. Old keys auto-expire. Compromised key? Revoke instantly via API.</p></div>
-    <div class="card"><h3>Cross-service auth</h3><p>Store credentials for relay.sh, ring.sh, external APIs. One vault, every secret an agent touches.</p></div>
+    <div class="card"><h3>Cross-service auth</h3><p>Store credentials for email.sh, ring.sh, external APIs. One vault, every secret an agent touches.</p></div>
     <div class="card"><h3>Ephemeral secrets</h3><p>Generate a secret for a single task. TTL of 5 minutes. Auto-destroyed. No cleanup required.</p></div>
   </div>
 </section>

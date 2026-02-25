@@ -1,14 +1,14 @@
-# R-10: Integrate x402 middleware for relay.sh
+# R-10: Integrate x402 middleware for email.sh
 
 ## Context
 
-relay.sh is the email primitive wrapping Stalwart Mail Server. It currently has 7 routes across mailbox CRUD (R-3), message reading (R-5), and message sending (R-6). The routes already extract `walletAddress` from Hono context variables, but no x402 middleware is wired in — the wallet address is always undefined today.
+email.sh is the email primitive wrapping Stalwart Mail Server. It currently has 7 routes across mailbox CRUD (R-3), message reading (R-5), and message sending (R-6). The routes already extract `walletAddress` from Hono context variables, but no x402 middleware is wired in — the wallet address is always undefined today.
 
 This task adds the `@agentstack/x402-middleware` package as a dependency and wires `createAgentStackMiddleware` into the Hono app, following the identical pattern used by dns.sh (D-4), spawn.sh (SP-5), and store.sh (ST-4).
 
 ## Goal
 
-Gate all relay.sh endpoints (except `GET /` health check) behind x402 payment. Extract the payer's wallet address from the payment header so ownership checks continue to work.
+Gate all email.sh endpoints (except `GET /` health check) behind x402 payment. Extract the payer's wallet address from the payment header so ownership checks continue to work.
 
 ## Endpoints and Pricing
 
@@ -33,25 +33,25 @@ Gate all relay.sh endpoints (except `GET /` health check) behind x402 payment. E
 
 ## Files to Modify
 
-### 1. `packages/relay/package.json`
+### 1. `packages/email/package.json`
 
 Add two dependencies following the dns.sh/store.sh pattern:
 - `"@agentstack/x402-middleware": "workspace:*"` in `dependencies`
 - `"@x402/core": "^2.4.0"` in `devDependencies` (needed for type imports in tests)
 
-### 2. `packages/relay/src/index.ts`
+### 2. `packages/email/src/index.ts`
 
 Three changes:
 
 **a) Import middleware.** Add `createAgentStackMiddleware` import from `@agentstack/x402-middleware`.
 
-**b) Define route pricing map.** Add a `RELAY_ROUTES` const (same shape as `SPAWN_ROUTES`, `DNS_ROUTES`, `STORE_ROUTES`) mapping each `"METHOD /path"` to a price string. Use `[id]` for path parameters and `[msgId]` for the nested message param.
+**b) Define route pricing map.** Add a `EMAIL_ROUTES` const (same shape as `SPAWN_ROUTES`, `DNS_ROUTES`, `STORE_ROUTES`) mapping each `"METHOD /path"` to a price string. Use `[id]` for path parameters and `[msgId]` for the nested message param.
 
 **c) Wire middleware.** Add `app.use("*", createAgentStackMiddleware(options, routes))` before any route handlers. Options: `payTo` set to placeholder `0x0000...0000`, `network` set to `"eip155:8453"`, `freeRoutes` set to `["GET /"]`.
 
 The `PAY_TO_ADDRESS` and `NETWORK` constants follow the pattern in spawn/dns/store. The placeholder address gets replaced with the real operator wallet when deploying.
 
-### 3. `packages/relay/test/smoke.test.ts`
+### 3. `packages/email/test/smoke.test.ts`
 
 The existing smoke test imports `../src/index` which will now pull in `@agentstack/x402-middleware`. The test already mocks `bun:sqlite`. It may also need to mock or stub the x402 middleware import so the test doesn't attempt real facilitator connections.
 
@@ -63,7 +63,7 @@ The service/JMAP/crypto/context tests (`service.test.ts`, `jmap.test.ts`, `crypt
 
 ## Route Pattern Syntax
 
-The x402 middleware uses Hono-style route patterns with `[param]` for path parameters (not `:param`). For relay.sh's nested routes:
+The x402 middleware uses Hono-style route patterns with `[param]` for path parameters (not `:param`). For email.sh's nested routes:
 
 ```
 "POST /v1/mailboxes"                     → matches POST /v1/mailboxes
@@ -90,7 +90,7 @@ Tests 2 and 3 are nice-to-haves. The critical path is test 1 plus manual verific
 - [ ] Run `pnpm -r check` (lint + typecheck + tests pass across all packages)
 - [ ] Verify `GET /` returns 200 without any payment headers
 - [ ] Verify any paid endpoint (e.g. `POST /v1/mailboxes`) returns 402 without payment headers
-- [ ] Confirm `RELAY_ROUTES` has exactly 7 entries (one per paid endpoint)
-- [ ] Confirm `packages/relay/package.json` has `@agentstack/x402-middleware: "workspace:*"` in dependencies
+- [ ] Confirm `EMAIL_ROUTES` has exactly 7 entries (one per paid endpoint)
+- [ ] Confirm `packages/email/package.json` has `@agentstack/x402-middleware: "workspace:*"` in dependencies
 - [ ] Verify route pattern syntax matches what `@x402/hono` expects (bracket params vs colon params)
 - [ ] Re-read each paid endpoint and confirm it still checks `walletAddress` and returns 403 if missing

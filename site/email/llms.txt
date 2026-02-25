@@ -26,10 +26,15 @@ See human docs at `https://docs.email.sh` for detailed pricing.
 ## Examples
 
 ```bash
-# Create a mailbox
+# Create a permanent mailbox (no TTL = permanent)
 curl -X POST https://api.email.sh/v1/mailboxes \
   -H "X-402-Payment: $TOKEN" \
-  -d '{"domain": "email.sh", "ttl": 86400}'
+  -d '{"domain": "email.sh"}'
+
+# Create a mailbox with a custom username (case-insensitive, lowercased)
+curl -X POST https://api.email.sh/v1/mailboxes \
+  -H "X-402-Payment: $TOKEN" \
+  -d '{"username": "my-agent", "ttl_ms": 86400000}'
 
 # Send an email
 curl -X POST https://api.email.sh/v1/mailboxes/$MBX_ID/send \

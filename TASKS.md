@@ -31,18 +31,18 @@
 | 46 | D-6 | Build domain.sh: verification endpoint (NS + record propagation checks) | packages/domain | D-1 | pending |
 | 47 | D-7 | Build domain.sh: auto-configure NS to Cloudflare after registration | packages/domain | D-3 | pending |
 | 48 | D-8 | Build domain.sh: batch record operations (atomic multi-record create/update/delete) | packages/domain | D-2 | pending |
-| 24 | R-1 | Deploy Stalwart (Docker on DigitalOcean Droplet) | relay/ | DO account | done |
-| 25 | R-2 | Configure Stalwart: domain, DKIM, SPF, DMARC, ACME TLS | relay/ | R-1, D-1 | done |
-| 26 | R-3 | Build relay.sh wrapper: mailbox creation (Stalwart REST API) | relay/ | R-2 | done |
-| 27 | R-4 | Build relay.sh wrapper: JMAP auth bridge + session bootstrap (Basic auth, no OAuth) | relay/ | R-3 | done |
-| 28 | R-5 | Build relay.sh wrapper: read messages (JMAP Email/query + Email/get) | relay/ | R-4 | done |
-| 29 | R-6 | Build relay.sh wrapper: send messages (JMAP EmailSubmission/set) — receive-only first | relay/ | R-4 | done |
-| 30 | R-7 | Build relay.sh wrapper: incoming mail webhooks (Stalwart MTA Hooks) | relay/ | R-2 | done |
-| 31 | R-8 | Build relay.sh wrapper: mailbox TTL/expiry manager | relay/ | R-3 | done |
-| 32 | R-9 | Build relay.sh wrapper: custom domain support | relay/ | R-2, D-1 | done |
-| 33 | R-11 | Write local smoke test: vitest integration test against live Stalwart (create mailbox → send → read → webhook) | relay/ | R-6 | done |
-| 33 | R-12 | Run R-11 smoke test: SSH tunnel to Stalwart, execute test:smoke, verify full flow passes | relay/ | R-11 | done |
-| 34 | R-10 | Integrate x402 middleware (all endpoints gated by payment) | relay/ | R-3, P-4 | done |
+| 24 | R-1 | Deploy Stalwart (Docker on DigitalOcean Droplet) | deploy/email | DO account | done |
+| 25 | R-2 | Configure Stalwart: domain, DKIM, SPF, DMARC, ACME TLS | deploy/email | R-1, D-1 | done |
+| 26 | R-3 | Build email.sh wrapper: mailbox creation (Stalwart REST API) | packages/email | R-2 | done |
+| 27 | R-4 | Build email.sh wrapper: JMAP auth bridge + session bootstrap (Basic auth, no OAuth) | packages/email | R-3 | done |
+| 28 | R-5 | Build email.sh wrapper: read messages (JMAP Email/query + Email/get) | packages/email | R-4 | done |
+| 29 | R-6 | Build email.sh wrapper: send messages (JMAP EmailSubmission/set) — receive-only first | packages/email | R-4 | done |
+| 30 | R-7 | Build email.sh wrapper: incoming mail webhooks (Stalwart MTA Hooks) | packages/email | R-2 | done |
+| 31 | R-8 | Build email.sh wrapper: mailbox TTL/expiry manager | packages/email | R-3 | done |
+| 32 | R-9 | Build email.sh wrapper: custom domain support | packages/email | R-2, D-1 | done |
+| 33 | R-11 | Write local smoke test: vitest integration test against live Stalwart (create mailbox → send → read → webhook) | packages/email | R-6 | done |
+| 33 | R-12 | Run R-11 smoke test: SSH tunnel to Stalwart, execute test:smoke, verify full flow passes | packages/email | R-11 | done |
+| 34 | R-10 | Integrate x402 middleware (all endpoints gated by payment) | packages/email | R-3, P-4 | done |
 | 34 | SP-1 | Write spawn.sh spec (Hetzner API wrapping, VM lifecycle, pricing) | specs/ | — | done |
 | 35 | SP-2 | Build spawn.sh: VM provisioning via Hetzner Cloud API | spawn/ | SP-1 | done |
 | 36 | SP-3 | Build spawn.sh: VM lifecycle (start, stop, destroy, resize) | spawn/ | SP-2 | done |
@@ -97,6 +97,7 @@
 - R-7: `tasks/completed/r-7-incoming-webhooks-mta-hooks.md`
 - R-9: `tasks/completed/r-9-custom-domain-support.md`
 - R-8: `tasks/completed/r-8-mailbox-ttl-expiry.md`
+- R-10: `tasks/completed/r-10-x402-middleware-email.md`
 - ST-3: `tasks/completed/st-3-storage-quota-usage.md`
 - TK-1/TK-2: implemented directly (no plan doc — plan provided in prompt)
 - TK-4: `tasks/active/tk-4-factory-contract-testnet.md`

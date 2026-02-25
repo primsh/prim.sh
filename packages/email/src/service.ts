@@ -69,11 +69,10 @@ import type { MailboxRow, DomainRow } from "./db.ts";
 // ─── Constants ───────────────────────────────────────────────────────────
 
 const DEFAULT_DOMAIN = process.env.EMAIL_DEFAULT_DOMAIN ?? "email.prim.sh";
-const DEFAULT_TTL_MS = Number(process.env.EMAIL_DEFAULT_TTL_MS) || 86_400_000; // 24h
 const MIN_TTL_MS = Number(process.env.EMAIL_MIN_TTL_MS) || 300_000; // 5 min
 const MAX_COLLISION_RETRIES = 3;
 
-const USERNAME_RE = /^[a-z0-9]([a-z0-9.\-]*[a-z0-9])?$/i;
+const USERNAME_RE = /^[a-z0-9]([a-z0-9.\-]*[a-z0-9])?$/;
 
 // ─── Helpers ─────────────────────────────────────────────────────────────
 
@@ -86,16 +85,17 @@ function generateUsername(): string {
 }
 
 function validateUsername(username: string): ServiceResult<string> {
-  if (username.length < 3 || username.length > 32) {
+  const lower = username.toLowerCase();
+  if (lower.length < 3 || lower.length > 32) {
     return { ok: false, status: 400, code: "invalid_request", message: "Username must be 3-32 characters" };
   }
-  if (!USERNAME_RE.test(username)) {
+  if (!USERNAME_RE.test(lower)) {
     return { ok: false, status: 400, code: "invalid_request", message: "Username must be alphanumeric, dots, or hyphens, and cannot start/end with dot or hyphen" };
   }
-  if (/[.\-]{2}/.test(username)) {
+  if (/[.\-]{2}/.test(lower)) {
     return { ok: false, status: 400, code: "invalid_request", message: "Username cannot contain consecutive dots or hyphens" };
   }
-  return { ok: true, data: username.toLowerCase() };
+  return { ok: true, data: lower };
 }
 
 function generatePassword(): string {
@@ -188,13 +188,13 @@ export async function createMailbox(
     customUsername = usernameResult.data;
   }
 
-  const password = generatePassword();
-  const passwordHash = hashPassword(password);
-  const passwordEnc = encryptPassword(password);
   const now = Date.now();
   const expiresAt = ttlResult.data !== null ? now + ttlResult.data : null;
 
   if (customUsername) {
+    const password = generatePassword();
+    const passwordHash = hashPassword(password);
+    const passwordEnc = encryptPassword(password);
     // Custom username path — single attempt, no retry loop
     const address = `${customUsername}@${domain}`;
 
@@ -223,6 +223,9 @@ export async function createMailbox(
   let lastError: StalwartError | null = null;
 
   for (let attempt = 0; attempt < MAX_COLLISION_RETRIES; attempt++) {
+    const password = generatePassword();
+    const passwordHash = hashPassword(password);
+    const passwordEnc = encryptPassword(password);
     const username = generateUsername();
     const address = `${username}@${domain}`;
 
