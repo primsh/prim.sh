@@ -62,6 +62,7 @@ export function getDb(): Database {
       PRIMARY KEY (owner_wallet, namespace, key)
     )
   `);
+  _db.run("CREATE INDEX IF NOT EXISTS idx_cache_owner ON cache_entries(owner_wallet)");
 
   return _db;
 }
@@ -155,9 +156,13 @@ export function upsertCacheEntry(params: {
   const db = getDb();
   const now = Date.now();
   db.query(
-    `INSERT OR REPLACE INTO cache_entries
+    `INSERT INTO cache_entries
        (namespace, key, value, owner_wallet, expires_at, created_at, updated_at)
-     VALUES (?, ?, ?, ?, ?, ?, ?)`,
+     VALUES (?, ?, ?, ?, ?, ?, ?)
+     ON CONFLICT(owner_wallet, namespace, key) DO UPDATE SET
+       value      = excluded.value,
+       expires_at = excluded.expires_at,
+       updated_at = excluded.updated_at`,
   ).run(params.namespace, params.key, params.value, params.owner_wallet, params.expires_at, now, now);
 }
 

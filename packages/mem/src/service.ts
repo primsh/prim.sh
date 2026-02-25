@@ -1,4 +1,4 @@
-import { createHash } from "node:crypto";
+import { createHash, randomBytes } from "node:crypto";
 import {
   insertCollection,
   getCollectionById,
@@ -41,7 +41,7 @@ type ServiceResult<T> =
 
 // ─── Validation ───────────────────────────────────────────────────────────
 
-const COLLECTION_NAME_RE = /^[a-zA-Z0-9][a-zA-Z0-9_-]*$/;
+const COLLECTION_NAME_RE = /^[a-z0-9][a-z0-9_-]*$/;
 
 export function isValidCollectionName(name: string): boolean {
   if (!name || name.length < 1 || name.length > 128) return false;
@@ -70,7 +70,7 @@ function qdrantCollectionName(ownerWallet: string, collectionName: string): stri
 }
 
 function generateId(): string {
-  return `c_${Math.random().toString(36).slice(2, 10)}`;
+  return `c_${randomBytes(4).toString("hex")}`;
 }
 
 function rowToCollectionResponse(row: CollectionRow, documentCount: number | null): CollectionResponse {
