@@ -1,6 +1,6 @@
 import { Hono } from "hono";
 import type { MiddlewareHandler } from "hono";
-import { createAgentStackMiddleware } from "@agentstack/x402-middleware";
+import { createAgentStackMiddleware, getNetworkConfig } from "@agentstack/x402-middleware";
 import type {
   WalletCreateRequest,
   WalletListResponse,
@@ -23,8 +23,9 @@ import { createWallet, listWallets, getWallet, deactivateWallet, claimWallet, se
 import type { FundRequestCreateRequest, FundRequestDenyRequest, PolicyUpdateRequest, PauseRequest, ResumeRequest } from "./api.ts";
 import { pause, resume, getState } from "./circuit-breaker.ts";
 
-const PAY_TO_ADDRESS = "0x0000000000000000000000000000000000000000";
-const NETWORK = "eip155:8453";
+const networkConfig = getNetworkConfig();
+const PAY_TO_ADDRESS = process.env.PRIM_PAY_TO ?? "0x0000000000000000000000000000000000000000";
+const NETWORK = networkConfig.network;
 
 const WALLET_ROUTES = {
   "GET /v1/wallets": "$0.001",

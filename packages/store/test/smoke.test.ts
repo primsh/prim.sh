@@ -17,6 +17,13 @@ vi.mock("@agentstack/x402-middleware", () => ({
     async (_c: unknown, next: () => Promise<void>): Promise<void> => {
       await next();
     },
+  getNetworkConfig: () => ({
+    network: "eip155:8453",
+    chainId: 8453,
+    rpcUrl: "https://mainnet.base.org",
+    usdcAddress: "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+    isTestnet: false,
+  }),
 }));
 
 describe("store.sh app", () => {

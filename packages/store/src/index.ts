@@ -1,5 +1,5 @@
 import { Hono } from "hono";
-import { createAgentStackMiddleware } from "@agentstack/x402-middleware";
+import { createAgentStackMiddleware, getNetworkConfig } from "@agentstack/x402-middleware";
 import type {
   ApiError,
   CreateBucketRequest,
@@ -27,8 +27,9 @@ import {
   reconcileUsage,
 } from "./service.ts";
 
-const PAY_TO_ADDRESS = "0x0000000000000000000000000000000000000000";
-const NETWORK = "eip155:8453";
+const networkConfig = getNetworkConfig();
+const PAY_TO_ADDRESS = process.env.PRIM_PAY_TO ?? "0x0000000000000000000000000000000000000000";
+const NETWORK = networkConfig.network;
 
 const STORE_ROUTES = {
   "POST /v1/buckets": "$0.05",

@@ -17,6 +17,7 @@ dist/
 # Env / data
 .env
 .env.*
+!.env.example
 *.db
 
 # Logs

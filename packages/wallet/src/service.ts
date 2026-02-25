@@ -1,8 +1,9 @@
 import { randomBytes, createHash } from "node:crypto";
 import { createWalletClient, http, isAddress, parseUnits } from "viem";
 import { privateKeyToAccount } from "viem/accounts";
-import { base } from "viem/chains";
+import { base, baseSepolia } from "viem/chains";
 import type { Hex } from "viem";
+import { getNetworkConfig } from "@agentstack/x402-middleware";
 import { generateWallet, encryptPrivateKey, decryptPrivateKey } from "./keystore.ts";
 import {
   insertWallet,
@@ -193,8 +194,12 @@ export function claimWallet(address: string, claimToken: string, caller: string)
   return dbClaimWallet(address, claimToken, caller);
 }
 
-const USDC_ADDRESS = "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913" as const;
 const USDC_DECIMALS = 6;
+
+function getViemChain(chainId: number) {
+  if (chainId === 84532) return baseSepolia;
+  return base;
+}
 
 const ERC20_TRANSFER_ABI = [
   {
@@ -296,10 +301,11 @@ export async function sendUsdc(
   appendEvent(request.idempotencyKey, "balance_checked", { balance });
 
   // 7. Sign and send
-  const rpcUrl = process.env.BASE_RPC_URL ?? "https://mainnet.base.org";
+  const netConfig = getNetworkConfig();
+  const rpcUrl = process.env.BASE_RPC_URL ?? netConfig.rpcUrl;
   const walletClient = createWalletClient({
     account: privateKeyToAccount(privateKey),
-    chain: base,
+    chain: getViemChain(netConfig.chainId),
     transport: http(rpcUrl),
   });
 
@@ -307,7 +313,7 @@ export async function sendUsdc(
 
   try {
     const txHash = await walletClient.writeContract({
-      address: USDC_ADDRESS,
+      address: netConfig.usdcAddress as `0x${string}`,
       abi: ERC20_TRANSFER_ABI,
       functionName: "transfer",
       args: [request.to as `0x${string}`, parseUnits(request.amount, USDC_DECIMALS)],

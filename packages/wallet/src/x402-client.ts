@@ -2,17 +2,21 @@ import { x402Client, x402HTTPClient } from "@x402/core/client";
 import { decodePaymentRequiredHeader } from "@x402/core/http";
 import { registerExactEvmScheme } from "@x402/evm/exact/client";
 import { createPublicClient, http } from "viem";
-import { base } from "viem/chains";
+import { base, baseSepolia } from "viem/chains";
 import { privateKeyToAccount } from "viem/accounts";
 import { decryptPrivateKey } from "./keystore.ts";
 import { getWalletByAddress } from "./db.ts";
+import { getNetworkConfig } from "@agentstack/x402-middleware";
 
 export interface X402FetchOptions extends RequestInit {
   walletAddress: string;
   maxPayment?: string;
 }
 
-const BASE_RPC = process.env.BASE_RPC_URL ?? "https://mainnet.base.org";
+function getViemChain(chainId: number) {
+  if (chainId === 84532) return baseSepolia;
+  return base;
+}
 
 /**
  * Creates an x402HTTPClient with the given private key signer.
@@ -20,10 +24,12 @@ const BASE_RPC = process.env.BASE_RPC_URL ?? "https://mainnet.base.org";
  */
 function buildHttpClient(privateKeyHex: `0x${string}`): x402HTTPClient {
   const account = privateKeyToAccount(privateKeyHex);
+  const netConfig = getNetworkConfig();
+  const rpcUrl = process.env.BASE_RPC_URL ?? netConfig.rpcUrl;
 
   const publicClient = createPublicClient({
-    chain: base,
-    transport: http(BASE_RPC),
+    chain: getViemChain(netConfig.chainId),
+    transport: http(rpcUrl),
   });
 
   const signer = {

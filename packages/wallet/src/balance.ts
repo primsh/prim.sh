@@ -1,8 +1,8 @@
 import { createPublicClient, http, formatUnits } from "viem";
-import { base } from "viem/chains";
+import { base, baseSepolia } from "viem/chains";
 import type { Address } from "viem";
+import { getNetworkConfig } from "@agentstack/x402-middleware";
 
-const USDC_ADDRESS = "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913" as const;
 const USDC_DECIMALS = 6;
 
 const BALANCE_OF_ABI = [
@@ -15,23 +15,32 @@ const BALANCE_OF_ABI = [
   },
 ] as const;
 
+function getViemChain(chainId: number) {
+  if (chainId === 84532) return baseSepolia;
+  return base;
+}
+
 // biome-ignore lint/suspicious/noExplicitAny: lazy-init holder for viem PublicClient avoids complex generic type annotation
 let _client: any; // eslint-disable-line @typescript-eslint/no-explicit-any
+let _clientChainId: number | null = null;
 
 function getClient() {
-  if (!_client) {
+  const config = getNetworkConfig();
+  if (!_client || _clientChainId !== config.chainId) {
     _client = createPublicClient({
-      chain: base,
-      transport: http(process.env.BASE_RPC_URL ?? "https://mainnet.base.org"),
+      chain: getViemChain(config.chainId),
+      transport: http(process.env.BASE_RPC_URL ?? config.rpcUrl),
     });
+    _clientChainId = config.chainId;
   }
   return _client as ReturnType<typeof createPublicClient>;
 }
 
 export async function getUsdcBalance(address: Address): Promise<{ balance: string; funded: boolean }> {
   try {
+    const { usdcAddress } = getNetworkConfig();
     const raw = (await getClient().readContract({
-      address: USDC_ADDRESS,
+      address: usdcAddress as Address,
       abi: BALANCE_OF_ABI,
       functionName: "balanceOf",
       args: [address],

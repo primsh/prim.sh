@@ -56,7 +56,7 @@
 | 6 | TK-2 | Build token.sh: mint + supply (POST /mint, GET /supply, ownership + cap enforcement, tests) | packages/token | TK-1 | done |
 | 7 | TK-4 | Evaluate wrapping Thirdweb/Zora vs custom factory; fix TS bugs (stale cap check, missing tx confirmation); testnet validation | packages/token | TK-2 | pending |
 | 8 | TK-3 | Build token.sh: Uniswap pool creation (liquidity coordination with wallet.sh) | packages/token | TK-4 | pending |
-| 8 | ST-5 | Testnet integration testing: env-configurable network (`PRIM_NETWORK`), Base Sepolia x402 end-to-end, wallet.sh ↔ store.sh | cross-cutting | ST-4, W-5 | pending |
+| 8 | ST-5 | Testnet integration testing: env-configurable network (`PRIM_NETWORK`), Base Sepolia x402 end-to-end, wallet.sh ↔ store.sh | cross-cutting | ST-4, W-5 | done |
 
 ## Plan Docs
 
@@ -92,7 +92,7 @@
 - ST-3: `tasks/completed/st-3-storage-quota-usage.md`
 - TK-1/TK-2: implemented directly (no plan doc — plan provided in prompt)
 - TK-4: `tasks/active/tk-4-factory-contract-testnet.md`
-- ST-5: `tasks/active/st-5-testnet-integration-testing.md`
+- ST-5: `tasks/completed/st-5-testnet-integration-testing.md`
 - Umbrella: `tasks/active/batch-execution-umbrella-2026-02-24.md`
 
 ## Backlog — Future Primitives
@@ -253,6 +253,7 @@ ERC-8004 uses CAIP-10 wallet addresses as root identity. DIDs layer on top non-b
 - TK-2 — token.sh mint + supply: mintable/not_mintable/forbidden/exceeds_max_supply decision table, on-chain totalSupply reads, 58 tests (2026-02-25)
 - R-7 — relay.sh incoming webhooks: webhook CRUD, HMAC signing, delivery with retry, Stalwart ingest handler, 125 tests (2026-02-25)
 - R-9 — relay.sh custom domains: domain registration, DNS verification, Stalwart provisioning (domain principal + DKIM), mailbox creation on custom domains, 148 tests (2026-02-25)
+- ST-5 — testnet integration: getNetworkConfig() in x402-middleware, PRIM_NETWORK/PRIM_PAY_TO env vars, wallet+store wired to Sepolia, integration test script, 496 tests pass (2026-02-25)
 
 ### R-2 completion details (2026-02-25)
 

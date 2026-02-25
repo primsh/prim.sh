@@ -1,4 +1,4 @@
-# P-5: Testnet Integration Testing (Base Sepolia x402 End-to-End)
+# ST-5: Testnet Integration Testing (Base Sepolia x402 End-to-End)
 
 ## Context
 
