@@ -95,6 +95,23 @@ export function getDb(): Database {
 
   _db.run("CREATE INDEX IF NOT EXISTS idx_deployments_owner_wallet ON deployments(owner_wallet)");
 
+  _db.run(`
+    CREATE TABLE IF NOT EXISTS pools (
+      id               TEXT PRIMARY KEY,
+      token_id         TEXT NOT NULL UNIQUE REFERENCES deployments(id),
+      pool_address     TEXT NOT NULL,
+      token0           TEXT NOT NULL,
+      token1           TEXT NOT NULL,
+      fee              INTEGER NOT NULL,
+      sqrt_price_x96   TEXT NOT NULL,
+      tick             INTEGER NOT NULL,
+      tx_hash          TEXT NOT NULL,
+      deploy_status    TEXT NOT NULL DEFAULT 'confirmed',
+      created_at       INTEGER NOT NULL,
+      updated_at       INTEGER NOT NULL
+    )
+  `);
+
   return _db;
 }
 
@@ -181,5 +198,65 @@ export function incrementTotalMinted(id: string, amount: string): void {
     newTotal,
     Date.now(),
     id,
+  );
+}
+
+// ─── Pool queries ─────────────────────────────────────────────────────────
+
+export interface PoolRow {
+  id: string;
+  token_id: string;
+  pool_address: string;
+  token0: string;
+  token1: string;
+  fee: number;
+  sqrt_price_x96: string;
+  tick: number;
+  tx_hash: string;
+  deploy_status: string;
+  created_at: number;
+  updated_at: number;
+}
+
+export function getPoolByTokenId(tokenId: string): PoolRow | null {
+  const db = getDb();
+  return (
+    db
+      .query<PoolRow, [string]>("SELECT * FROM pools WHERE token_id = ?")
+      .get(tokenId) ?? null
+  );
+}
+
+export function insertPool(params: {
+  id: string;
+  token_id: string;
+  pool_address: string;
+  token0: string;
+  token1: string;
+  fee: number;
+  sqrt_price_x96: string;
+  tick: number;
+  tx_hash: string;
+  deploy_status: string;
+}): void {
+  const db = getDb();
+  const now = Date.now();
+  db.query(
+    `INSERT INTO pools
+       (id, token_id, pool_address, token0, token1, fee, sqrt_price_x96, tick, tx_hash, deploy_status, created_at, updated_at)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+  ).run(
+    params.id,
+    params.token_id,
+    params.pool_address,
+    params.token0,
+    params.token1,
+    params.fee,
+    params.sqrt_price_x96,
+    params.tick,
+    params.tx_hash,
+    params.deploy_status,
+    now,
+    now,
   );
 }

@@ -5,6 +5,7 @@ import type {
   ApiError,
   CreateTokenRequest,
   MintRequest,
+  CreatePoolRequest,
 } from "./api.ts";
 import {
   deployToken,
@@ -12,6 +13,9 @@ import {
   getToken,
   mintTokens,
   getSupply,
+  createPool,
+  getPool,
+  getLiquidityParams,
 } from "./service.ts";
 
 const PAY_TO_ADDRESS = "0x0000000000000000000000000000000000000000";
@@ -23,6 +27,9 @@ const TOKEN_ROUTES = {
   "GET /v1/tokens/[id]": "$0.001",
   "POST /v1/tokens/[id]/mint": "$0.10",
   "GET /v1/tokens/[id]/supply": "$0.001",
+  "POST /v1/tokens/[id]/pool": "$0.50",
+  "GET /v1/tokens/[id]/pool": "$0.001",
+  "GET /v1/tokens/[id]/pool/liquidity-params": "$0.001",
 } as const;
 
 function forbidden(message: string): ApiError {
@@ -47,6 +54,10 @@ function notMintable(message: string): ApiError {
 
 function exceedsMaxSupply(message: string): ApiError {
   return { error: { code: "exceeds_max_supply", message } };
+}
+
+function poolExists(message: string): ApiError {
+  return { error: { code: "pool_exists", message } };
 }
 
 type AppVariables = { walletAddress: string | undefined };
@@ -149,6 +160,63 @@ app.get("/v1/tokens/:id/supply", async (c) => {
     if (result.status === 404) return c.json(notFound(result.message), 404);
     if (result.status === 403) return c.json(forbidden(result.message), 403);
     if (result.code === "rpc_error") return c.json(rpcError(result.message), 502);
+    return c.json(invalidRequest(result.message), result.status as ContentfulStatusCode);
+  }
+  return c.json(result.data, 200);
+});
+
+// POST /v1/tokens/:id/pool — Create + initialize Uniswap V3 pool
+app.post("/v1/tokens/:id/pool", async (c) => {
+  const caller = c.get("walletAddress");
+  if (!caller) return c.json(forbidden("No wallet address in payment"), 403);
+
+  let body: CreatePoolRequest;
+  try {
+    body = await c.req.json<CreatePoolRequest>();
+  } catch {
+    return c.json(invalidRequest("Invalid JSON body"), 400);
+  }
+
+  const result = await createPool(c.req.param("id"), body, caller);
+  if (!result.ok) {
+    if (result.code === "not_found") return c.json(notFound(result.message), 404);
+    if (result.code === "forbidden") return c.json(forbidden(result.message), 403);
+    if (result.code === "pool_exists") return c.json(poolExists(result.message), 409);
+    if (result.code === "invalid_request") return c.json(invalidRequest(result.message), 400);
+    if (result.code === "rpc_error") return c.json(rpcError(result.message), 502);
+    return c.json(invalidRequest(result.message), result.status as ContentfulStatusCode);
+  }
+  return c.json(result.data, 201);
+});
+
+// GET /v1/tokens/:id/pool/liquidity-params — Compute add-liquidity calldata
+// NOTE: must be registered before GET /v1/tokens/:id/pool to avoid routing conflict
+app.get("/v1/tokens/:id/pool/liquidity-params", (c) => {
+  const caller = c.get("walletAddress");
+  if (!caller) return c.json(forbidden("No wallet address in payment"), 403);
+
+  const tokenAmount = c.req.query("tokenAmount") ?? "";
+  const usdcAmount = c.req.query("usdcAmount") ?? "";
+
+  const result = getLiquidityParams(c.req.param("id"), tokenAmount, usdcAmount, caller);
+  if (!result.ok) {
+    if (result.status === 404) return c.json(notFound(result.message), 404);
+    if (result.status === 403) return c.json(forbidden(result.message), 403);
+    if (result.code === "invalid_request") return c.json(invalidRequest(result.message), 400);
+    return c.json(invalidRequest(result.message), result.status as ContentfulStatusCode);
+  }
+  return c.json(result.data, 200);
+});
+
+// GET /v1/tokens/:id/pool — Pool info
+app.get("/v1/tokens/:id/pool", (c) => {
+  const caller = c.get("walletAddress");
+  if (!caller) return c.json(forbidden("No wallet address in payment"), 403);
+
+  const result = getPool(c.req.param("id"), caller);
+  if (!result.ok) {
+    if (result.status === 404) return c.json(notFound(result.message), 404);
+    if (result.status === 403) return c.json(forbidden(result.message), 403);
     return c.json(invalidRequest(result.message), result.status as ContentfulStatusCode);
   }
   return c.json(result.data, 200);

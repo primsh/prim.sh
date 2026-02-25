@@ -89,7 +89,14 @@ import {
   mintTokens,
   getSupply,
   validateCreateToken,
+  createPool,
+  getPool,
+  getLiquidityParams,
 } from "../src/service.ts";
+import {
+  computeSqrtPriceX96,
+  computeFullRangeTicks,
+} from "../src/uniswap.ts";
 
 // ─── Fixtures ────────────────────────────────────────────────────────────
 
@@ -709,6 +716,369 @@ describe("token.sh", () => {
       } finally {
         process.env.TOKEN_MASTER_KEY = origKey;
       }
+    });
+  });
+
+  // ─── Uniswap math ────────────────────────────────────────────────────
+
+  describe("computeSqrtPriceX96", () => {
+    // USDC on Base mainnet: 0x833589fCD6eDb6E08f4c7C32D4f71b1566469c3d
+    // "token < USDC" address: 0x0000000000000000000000000000000000000001 (always < 0x8335...)
+    // "token > USDC" address: 0xffffffffffffffffffffffffffffffffffffffff (always > 0x8335...)
+    const TOKEN_LT = "0x0000000000000000000000000000000000000001" as const;
+    const TOKEN_GT = "0xffffffffffffffffffffffffffffffffffffffff" as const;
+
+    it("price=1.0, token < USDC: sqrtPriceX96 = floor(2^96 / 10^6)", () => {
+      // token0=agentToken(18), token1=USDC(6)
+      // price_atomic = 1 * 10^6 / 10^18 = 10^-12
+      // sqrtPriceX96 = sqrt(10^-12) * 2^96 = 10^-6 * 2^96 = floor(2^96 / 10^6)
+      const expected = 2n ** 96n / 10n ** 6n;
+      const result = computeSqrtPriceX96("1.0", TOKEN_LT, 18, 8453);
+      expect(result).toBe(expected);
+    });
+
+    it("price=1.0, token > USDC: sqrtPriceX96 = 10^6 * 2^96 (inversion)", () => {
+      // token0=USDC(6), token1=agentToken(18)
+      // price_atomic = 1 * 10^18 / 10^6 = 10^12
+      // sqrtPriceX96 = sqrt(10^12) * 2^96 = 10^6 * 2^96
+      const expected = 10n ** 6n * 2n ** 96n;
+      const result = computeSqrtPriceX96("1.0", TOKEN_GT, 18, 8453);
+      expect(result).toBe(expected);
+    });
+
+    it("price=0.01, token < USDC: sqrtPriceX96 = floor(2^96 / 10^7)", () => {
+      // price_atomic = 0.01 * 10^6 / 10^18 = 10^-14
+      // sqrtPriceX96 = sqrt(10^-14) * 2^96 = 10^-7 * 2^96 = floor(2^96 / 10^7)
+      const expected = 2n ** 96n / 10n ** 7n;
+      const result = computeSqrtPriceX96("0.01", TOKEN_LT, 18, 8453);
+      expect(result).toBe(expected);
+    });
+
+    it("price=0.01, token > USDC: sqrtPriceX96 = 10^7 * 2^96 (inversion)", () => {
+      // price_atomic = 100 * 10^18 / 10^6 = 10^14
+      // sqrtPriceX96 = sqrt(10^14) * 2^96 = 10^7 * 2^96
+      const expected = 10n ** 7n * 2n ** 96n;
+      const result = computeSqrtPriceX96("0.01", TOKEN_GT, 18, 8453);
+      expect(result).toBe(expected);
+    });
+
+    it("inversion symmetry: token>USDC price is strictly larger than token<USDC price", () => {
+      // When token > USDC, USDC is token0 and price is inverted (large value)
+      // When token < USDC, agentToken is token0 and price is small
+      const lt = computeSqrtPriceX96("0.01", TOKEN_LT, 18, 8453);
+      const gt = computeSqrtPriceX96("0.01", TOKEN_GT, 18, 8453);
+      expect(gt).toBeGreaterThan(lt);
+      // gt / lt should be approximately 10^14 (= price_B / price_A = 10^14 / 10^-14... no,
+      // sqrt(price_B) / sqrt(price_A) = sqrt(10^14 / 10^-14) = sqrt(10^28) = 10^14)
+      // so gt / lt ≈ 10^14
+      expect(gt / lt).toBe(10n ** 14n);
+    });
+  });
+
+  describe("computeFullRangeTicks", () => {
+    it("fee tier 500 → tickSpacing 10: [-887270, 887270]", () => {
+      const { tickLower, tickUpper } = computeFullRangeTicks(500);
+      expect(tickLower).toBe(-887270);
+      expect(tickUpper).toBe(887270);
+    });
+
+    it("fee tier 3000 → tickSpacing 60: [-887220, 887220]", () => {
+      const { tickLower, tickUpper } = computeFullRangeTicks(3000);
+      expect(tickLower).toBe(-887220);
+      expect(tickUpper).toBe(887220);
+    });
+
+    it("fee tier 10000 → tickSpacing 200: [-887200, 887200]", () => {
+      const { tickLower, tickUpper } = computeFullRangeTicks(10000);
+      expect(tickLower).toBe(-887200);
+      expect(tickUpper).toBe(887200);
+    });
+
+    it("unsupported fee tier throws", () => {
+      expect(() => computeFullRangeTicks(9999)).toThrow("Unsupported fee tier");
+    });
+  });
+
+  // ─── Pool creation ────────────────────────────────────────────────────
+
+  describe("createPool + getPool + getLiquidityParams", () => {
+    // Token address used by mock: "0xTOKEN_DEPLOYED_CONTRACT0000000000000001"
+    // USDC on Base (chain 8453): "0x833589fCD6eDb6E08f4c7C32D4f71b1566469c3d"
+    // "0xtoken_..." > "0x8335..." → USDC is token0, agentToken is token1
+
+    const POOL_ADDRESS = "0xPOOLADDRESS00000000000000000000000000001";
+    const INIT_TX = "0xTXHASH_INIT_000000000000000000000000000000000000000000000000000000";
+    const MOCK_TICK = -46055;
+
+    function setupPoolMocks(tick = MOCK_TICK) {
+      // writeContract: call 1 = createPool tx, call 2 = initialize tx
+      writeContractMock.mockResolvedValueOnce(
+        "0xTXHASH_CREATE_000000000000000000000000000000000000000000000000000000",
+      );
+      writeContractMock.mockResolvedValueOnce(INIT_TX);
+      // waitForTransactionReceipt: two receipts (createPool, initialize)
+      waitForTransactionReceiptMock.mockResolvedValueOnce({
+        status: "success" as const,
+        contractAddress: null,
+      });
+      waitForTransactionReceiptMock.mockResolvedValueOnce({
+        status: "success" as const,
+        contractAddress: null,
+      });
+      // readContract: call 1 = factory.getPool, call 2 = pool.slot0
+      readContractMock.mockResolvedValueOnce(POOL_ADDRESS);
+      readContractMock.mockResolvedValueOnce({
+        sqrtPriceX96: 792281625142643n,
+        tick,
+        observationIndex: 0,
+        observationCardinality: 1,
+        observationCardinalityNext: 1,
+        feeProtocol: 0,
+        unlocked: true,
+      });
+    }
+
+    async function deployConfirmedToken(): Promise<string> {
+      const r = await deployToken(VALID_REQUEST, CALLER);
+      if (!r.ok) throw new Error("Deploy failed");
+      // receipt mock returns contractAddress="0xTOKEN_DEPLOYED_CONTRACT0000000000000001"
+      return r.data.token.id;
+    }
+
+    it("happy path: creates pool and returns pool info", async () => {
+      const tokenId = await deployConfirmedToken();
+      setupPoolMocks();
+      const result = await createPool(tokenId, { pricePerToken: "0.01" }, CALLER);
+      expect(result.ok).toBe(true);
+      if (!result.ok) return;
+      expect(result.data.poolAddress).toBe(POOL_ADDRESS);
+      expect(result.data.fee).toBe(10000);
+      expect(result.data.tick).toBe(MOCK_TICK);
+      expect(result.data.txHash).toBe(INIT_TX);
+      expect(result.data.token0).toBeDefined();
+      expect(result.data.token1).toBeDefined();
+    });
+
+    it("custom fee tier 3000 is accepted", async () => {
+      const tokenId = await deployConfirmedToken();
+      setupPoolMocks();
+      const result = await createPool(tokenId, { pricePerToken: "0.01", feeTier: 3000 }, CALLER);
+      expect(result.ok).toBe(true);
+      if (!result.ok) return;
+      expect(result.data.fee).toBe(3000);
+    });
+
+    it("token not found → 404", async () => {
+      const result = await createPool("tk_nonexist", { pricePerToken: "0.01" }, CALLER);
+      expect(result.ok).toBe(false);
+      if (result.ok) return;
+      expect(result.status).toBe(404);
+      expect(result.code).toBe("not_found");
+    });
+
+    it("non-owner → 403", async () => {
+      const tokenId = await deployConfirmedToken();
+      const result = await createPool(tokenId, { pricePerToken: "0.01" }, OTHER);
+      expect(result.ok).toBe(false);
+      if (result.ok) return;
+      expect(result.status).toBe(403);
+      expect(result.code).toBe("forbidden");
+    });
+
+    it("token not confirmed (pending) → 400", async () => {
+      // Deploy with timed-out receipt → stays pending
+      waitForTransactionReceiptMock.mockRejectedValueOnce(new Error("Timed out"));
+      const r = await deployToken(VALID_REQUEST, CALLER);
+      if (!r.ok) throw new Error("Deploy failed");
+      const result = await createPool(r.data.token.id, { pricePerToken: "0.01" }, CALLER);
+      expect(result.ok).toBe(false);
+      if (result.ok) return;
+      expect(result.status).toBe(400);
+      expect(result.code).toBe("invalid_request");
+    });
+
+    it("duplicate pool → 409 pool_exists", async () => {
+      const tokenId = await deployConfirmedToken();
+      // First pool creation succeeds
+      setupPoolMocks();
+      const r1 = await createPool(tokenId, { pricePerToken: "0.01" }, CALLER);
+      expect(r1.ok).toBe(true);
+      // Second attempt → 409
+      const r2 = await createPool(tokenId, { pricePerToken: "0.01" }, CALLER);
+      expect(r2.ok).toBe(false);
+      if (r2.ok) return;
+      expect(r2.status).toBe(409);
+      expect(r2.code).toBe("pool_exists");
+    });
+
+    it("invalid feeTier → 400", async () => {
+      const tokenId = await deployConfirmedToken();
+      const result = await createPool(tokenId, { pricePerToken: "0.01", feeTier: 9999 }, CALLER);
+      expect(result.ok).toBe(false);
+      if (result.ok) return;
+      expect(result.status).toBe(400);
+      expect(result.code).toBe("invalid_request");
+    });
+
+    it("invalid pricePerToken (zero) → 400", async () => {
+      const tokenId = await deployConfirmedToken();
+      const result = await createPool(tokenId, { pricePerToken: "0" }, CALLER);
+      expect(result.ok).toBe(false);
+      if (result.ok) return;
+      expect(result.status).toBe(400);
+    });
+
+    it("invalid pricePerToken (negative) → 400", async () => {
+      const tokenId = await deployConfirmedToken();
+      const result = await createPool(tokenId, { pricePerToken: "-1" }, CALLER);
+      expect(result.ok).toBe(false);
+      if (result.ok) return;
+      expect(result.status).toBe(400);
+    });
+
+    it("RPC error during pool creation → 502", async () => {
+      const tokenId = await deployConfirmedToken();
+      writeContractMock.mockRejectedValueOnce(new Error("execution reverted"));
+      const result = await createPool(tokenId, { pricePerToken: "0.01" }, CALLER);
+      expect(result.ok).toBe(false);
+      if (result.ok) return;
+      expect(result.status).toBe(502);
+      expect(result.code).toBe("rpc_error");
+    });
+
+    // ─── getPool ──────────────────────────────────────────────────────
+
+    it("getPool: owner can fetch pool info", async () => {
+      const tokenId = await deployConfirmedToken();
+      setupPoolMocks();
+      await createPool(tokenId, { pricePerToken: "0.01" }, CALLER);
+      const result = getPool(tokenId, CALLER);
+      expect(result.ok).toBe(true);
+      if (!result.ok) return;
+      expect(result.data.poolAddress).toBe(POOL_ADDRESS);
+    });
+
+    it("getPool: non-owner → 403", async () => {
+      const tokenId = await deployConfirmedToken();
+      setupPoolMocks();
+      await createPool(tokenId, { pricePerToken: "0.01" }, CALLER);
+      const result = getPool(tokenId, OTHER);
+      expect(result.ok).toBe(false);
+      if (result.ok) return;
+      expect(result.status).toBe(403);
+    });
+
+    it("getPool: no pool exists → 404", async () => {
+      const tokenId = await deployConfirmedToken();
+      const result = getPool(tokenId, CALLER);
+      expect(result.ok).toBe(false);
+      if (result.ok) return;
+      expect(result.status).toBe(404);
+    });
+
+    it("getPool: token not found → 404", async () => {
+      const result = getPool("tk_nonexist", CALLER);
+      expect(result.ok).toBe(false);
+      if (result.ok) return;
+      expect(result.status).toBe(404);
+      expect(result.code).toBe("not_found");
+    });
+
+    // ─── getLiquidityParams ───────────────────────────────────────────
+
+    it("getLiquidityParams: returns complete calldata", async () => {
+      const tokenId = await deployConfirmedToken();
+      setupPoolMocks();
+      await createPool(tokenId, { pricePerToken: "0.01" }, CALLER);
+
+      const result = getLiquidityParams(tokenId, "100", "1", CALLER);
+      expect(result.ok).toBe(true);
+      if (!result.ok) return;
+      const d = result.data;
+      expect(d.positionManagerAddress).toBeDefined();
+      expect(d.token0).toBeDefined();
+      expect(d.token1).toBeDefined();
+      expect(d.fee).toBe(10000);
+      expect(d.tickLower).toBe(-887200);
+      expect(d.tickUpper).toBe(887200);
+      expect(d.amount0Min).toBe("0");
+      expect(d.amount1Min).toBe("0");
+      expect(d.recipient).toBe(CALLER);
+      expect(d.deadline).toBeGreaterThan(Math.floor(Date.now() / 1000));
+      expect(d.approvals).toHaveLength(2);
+      expect(d.approvals[0].spender).toBe(d.positionManagerAddress);
+      expect(d.approvals[1].spender).toBe(d.positionManagerAddress);
+    });
+
+    it("getLiquidityParams: amounts are in atomic units", async () => {
+      const tokenId = await deployConfirmedToken();
+      setupPoolMocks();
+      await createPool(tokenId, { pricePerToken: "0.01" }, CALLER);
+
+      const result = getLiquidityParams(tokenId, "1", "1", CALLER);
+      expect(result.ok).toBe(true);
+      if (!result.ok) return;
+      // One of amount0Desired/amount1Desired should be 1 USDC in atomic = 1000000
+      // Other should be 1 token in atomic = 1000000000000000000
+      const amounts = [result.data.amount0Desired, result.data.amount1Desired];
+      expect(amounts).toContain("1000000"); // 1 USDC (6 dec)
+      expect(amounts).toContain("1000000000000000000"); // 1 token (18 dec)
+    });
+
+    it("getLiquidityParams: token0/token1 ordering respected in amounts", async () => {
+      // token "0xTOKEN_DEPLOYED_CONTRACT0000000000000001" > USDC → USDC is token0
+      // So amount0Desired = usdcAtoms, amount1Desired = tokenAtoms
+      const tokenId = await deployConfirmedToken();
+      setupPoolMocks();
+      await createPool(tokenId, { pricePerToken: "0.01" }, CALLER);
+
+      const result = getLiquidityParams(tokenId, "5", "2", CALLER);
+      expect(result.ok).toBe(true);
+      if (!result.ok) return;
+      const pool = result.data;
+      // token > USDC: token is token1, USDC is token0
+      // token1 address contains "token", token0 address = USDC
+      // amount0 = USDC = 2 * 10^6, amount1 = token = 5 * 10^18
+      expect(pool.amount0Desired).toBe("2000000"); // 2 USDC
+      expect(pool.amount1Desired).toBe("5000000000000000000"); // 5 tokens
+    });
+
+    it("getLiquidityParams: non-owner → 403", async () => {
+      const tokenId = await deployConfirmedToken();
+      setupPoolMocks();
+      await createPool(tokenId, { pricePerToken: "0.01" }, CALLER);
+      const result = getLiquidityParams(tokenId, "100", "1", OTHER);
+      expect(result.ok).toBe(false);
+      if (result.ok) return;
+      expect(result.status).toBe(403);
+    });
+
+    it("getLiquidityParams: no pool → 404", async () => {
+      const tokenId = await deployConfirmedToken();
+      const result = getLiquidityParams(tokenId, "100", "1", CALLER);
+      expect(result.ok).toBe(false);
+      if (result.ok) return;
+      expect(result.status).toBe(404);
+    });
+
+    it("getLiquidityParams: invalid tokenAmount → 400", async () => {
+      const tokenId = await deployConfirmedToken();
+      setupPoolMocks();
+      await createPool(tokenId, { pricePerToken: "0.01" }, CALLER);
+      const result = getLiquidityParams(tokenId, "0", "1", CALLER);
+      expect(result.ok).toBe(false);
+      if (result.ok) return;
+      expect(result.status).toBe(400);
+    });
+
+    it("getLiquidityParams: invalid usdcAmount → 400", async () => {
+      const tokenId = await deployConfirmedToken();
+      setupPoolMocks();
+      await createPool(tokenId, { pricePerToken: "0.01" }, CALLER);
+      const result = getLiquidityParams(tokenId, "100", "-1", CALLER);
+      expect(result.ok).toBe(false);
+      if (result.ok) return;
+      expect(result.status).toBe(400);
     });
   });
 

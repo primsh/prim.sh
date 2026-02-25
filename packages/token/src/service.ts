@@ -7,10 +7,19 @@ import {
   getDeploymentsByOwner,
   updateDeploymentStatus,
   incrementTotalMinted,
+  insertPool,
+  getPoolByTokenId,
 } from "./db.ts";
-import type { DeploymentRow } from "./db.ts";
-import { getDeployerClient, getPublicClient, assertChainId } from "./deployer.ts";
+import type { DeploymentRow, PoolRow } from "./db.ts";
+import { getDeployerClient, getPublicClient, assertChainId, getChain } from "./deployer.ts";
 import { AGENT_TOKEN_ABI, AGENT_TOKEN_BYTECODE, ERC20_ABI } from "./contracts.ts";
+import {
+  UNISWAP_V3_FACTORY_ABI,
+  UNISWAP_V3_POOL_ABI,
+  getUniswapAddresses,
+  computeSqrtPriceX96,
+  computeFullRangeTicks,
+} from "./uniswap.ts";
 import type {
   CreateTokenRequest,
   TokenResponse,
@@ -18,6 +27,9 @@ import type {
   MintRequest,
   MintResponse,
   SupplyResponse,
+  CreatePoolRequest,
+  PoolResponse,
+  LiquidityParamsResponse,
   ServiceResult,
 } from "./api.ts";
 
@@ -379,4 +391,247 @@ export async function getSupply(
     const errMsg = err instanceof Error ? err.message : String(err);
     return { ok: false, status: 502, code: "rpc_error", message: `Supply read failed: ${errMsg}` };
   }
+}
+
+// ─── Pool service ─────────────────────────────────────────────────────────
+
+function poolRowToResponse(pool: PoolRow): PoolResponse {
+  return {
+    poolAddress: pool.pool_address,
+    token0: pool.token0,
+    token1: pool.token1,
+    fee: pool.fee,
+    sqrtPriceX96: pool.sqrt_price_x96,
+    tick: pool.tick,
+    txHash: pool.tx_hash,
+  };
+}
+
+const VALID_FEE_TIERS = new Set([500, 3000, 10000]);
+
+export async function createPool(
+  tokenId: string,
+  request: CreatePoolRequest,
+  callerWallet: string,
+): Promise<ServiceResult<PoolResponse>> {
+  const token = getDeploymentById(tokenId);
+  if (!token) {
+    return { ok: false, status: 404, code: "not_found", message: "Token not found" };
+  }
+  if (token.owner_wallet !== callerWallet) {
+    return { ok: false, status: 403, code: "forbidden", message: "Forbidden" };
+  }
+  if (token.deploy_status !== "confirmed" || !token.contract_address) {
+    return {
+      ok: false,
+      status: 400,
+      code: "invalid_request",
+      message: "Token must be confirmed before creating a pool",
+    };
+  }
+
+  const existing = getPoolByTokenId(tokenId);
+  if (existing) {
+    return { ok: false, status: 409, code: "pool_exists", message: "Pool already exists for this token" };
+  }
+
+  const feeTier = request.feeTier ?? 10000;
+  if (!VALID_FEE_TIERS.has(feeTier)) {
+    return {
+      ok: false,
+      status: 400,
+      code: "invalid_request",
+      message: "feeTier must be one of: 500, 3000, 10000",
+    };
+  }
+
+  const priceNum = Number(request.pricePerToken);
+  if (!request.pricePerToken || Number.isNaN(priceNum) || priceNum <= 0) {
+    return {
+      ok: false,
+      status: 400,
+      code: "invalid_request",
+      message: "pricePerToken must be a positive number string",
+    };
+  }
+
+  const chainId = getChain().id;
+  const { factory: factoryAddress, usdc: usdcAddress } = getUniswapAddresses(chainId);
+  const tokenAddress = token.contract_address as Address;
+
+  const tokenIsToken0 = tokenAddress.toLowerCase() < usdcAddress.toLowerCase();
+  const [token0, token1] = tokenIsToken0
+    ? ([tokenAddress, usdcAddress] as [Address, Address])
+    : ([usdcAddress, tokenAddress] as [Address, Address]);
+
+  const sqrtPriceX96 = computeSqrtPriceX96(
+    request.pricePerToken,
+    tokenAddress,
+    token.decimals,
+    chainId,
+  );
+
+  const publicClient = getPublicClient();
+  const walletClient = getDeployerClient();
+
+  try {
+    await assertChainId(publicClient);
+
+    // Step 1: create pool
+    const createTxHash = await walletClient.writeContract({
+      address: factoryAddress,
+      abi: UNISWAP_V3_FACTORY_ABI,
+      functionName: "createPool",
+      args: [token0, token1, feeTier],
+    });
+    await publicClient.waitForTransactionReceipt({
+      hash: createTxHash as `0x${string}`,
+      timeout: 30_000,
+    });
+
+    // Step 2: read pool address from factory
+    const poolAddress = (await publicClient.readContract({
+      address: factoryAddress,
+      abi: UNISWAP_V3_FACTORY_ABI,
+      functionName: "getPool",
+      args: [token0, token1, feeTier],
+    })) as Address;
+
+    // Step 3: initialize price
+    const initTxHash = await walletClient.writeContract({
+      address: poolAddress,
+      abi: UNISWAP_V3_POOL_ABI,
+      functionName: "initialize",
+      args: [sqrtPriceX96],
+    });
+    await publicClient.waitForTransactionReceipt({
+      hash: initTxHash as `0x${string}`,
+      timeout: 30_000,
+    });
+
+    // Step 4: read slot0 for confirmed tick
+    const slot0 = (await publicClient.readContract({
+      address: poolAddress,
+      abi: UNISWAP_V3_POOL_ABI,
+      functionName: "slot0",
+    })) as unknown as { sqrtPriceX96: bigint; tick: number };
+    const tick = slot0.tick;
+
+    // Step 5: persist
+    const poolId = `pool_${randomBytes(4).toString("hex")}`;
+    insertPool({
+      id: poolId,
+      token_id: tokenId,
+      pool_address: poolAddress,
+      token0,
+      token1,
+      fee: feeTier,
+      sqrt_price_x96: sqrtPriceX96.toString(),
+      tick,
+      tx_hash: initTxHash,
+      deploy_status: "confirmed",
+    });
+
+    const pool = getPoolByTokenId(tokenId);
+    if (!pool) throw new Error("Pool not found after insert");
+    return { ok: true, data: poolRowToResponse(pool) };
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : String(err);
+    return { ok: false, status: 502, code: "rpc_error", message: `Pool creation failed: ${msg}` };
+  }
+}
+
+export function getPool(
+  tokenId: string,
+  callerWallet: string,
+): ServiceResult<PoolResponse> {
+  const token = getDeploymentById(tokenId);
+  if (!token) {
+    return { ok: false, status: 404, code: "not_found", message: "Token not found" };
+  }
+  if (token.owner_wallet !== callerWallet) {
+    return { ok: false, status: 403, code: "forbidden", message: "Forbidden" };
+  }
+  const pool = getPoolByTokenId(tokenId);
+  if (!pool) {
+    return { ok: false, status: 404, code: "not_found", message: "No pool exists for this token" };
+  }
+  return { ok: true, data: poolRowToResponse(pool) };
+}
+
+export function getLiquidityParams(
+  tokenId: string,
+  tokenAmount: string,
+  usdcAmount: string,
+  callerWallet: string,
+): ServiceResult<LiquidityParamsResponse> {
+  const token = getDeploymentById(tokenId);
+  if (!token) {
+    return { ok: false, status: 404, code: "not_found", message: "Token not found" };
+  }
+  if (token.owner_wallet !== callerWallet) {
+    return { ok: false, status: 403, code: "forbidden", message: "Forbidden" };
+  }
+
+  const pool = getPoolByTokenId(tokenId);
+  if (!pool) {
+    return { ok: false, status: 404, code: "not_found", message: "No pool exists for this token" };
+  }
+
+  if (!tokenAmount || Number.isNaN(Number(tokenAmount)) || Number(tokenAmount) <= 0) {
+    return {
+      ok: false,
+      status: 400,
+      code: "invalid_request",
+      message: "tokenAmount must be a positive number",
+    };
+  }
+  if (!usdcAmount || Number.isNaN(Number(usdcAmount)) || Number(usdcAmount) <= 0) {
+    return {
+      ok: false,
+      status: 400,
+      code: "invalid_request",
+      message: "usdcAmount must be a positive number",
+    };
+  }
+
+  const chainId = getChain().id;
+  const { positionManager, usdc: usdcAddress } = getUniswapAddresses(chainId);
+  const { tickLower, tickUpper } = computeFullRangeTicks(pool.fee);
+
+  // Determine token ordering (same logic used when pool was created)
+  const tokenAddress = token.contract_address as string;
+  const tokenIsToken0 = tokenAddress.toLowerCase() < usdcAddress.toLowerCase();
+
+  const USDC_DECIMALS = 6;
+  const tokenAtoms = parseUnits(tokenAmount, token.decimals).toString();
+  const usdcAtoms = parseUnits(usdcAmount, USDC_DECIMALS).toString();
+
+  const [amount0Desired, amount1Desired] = tokenIsToken0
+    ? [tokenAtoms, usdcAtoms]
+    : [usdcAtoms, tokenAtoms];
+
+  const deadline = Math.floor(Date.now() / 1000) + 3600;
+
+  return {
+    ok: true,
+    data: {
+      positionManagerAddress: positionManager,
+      token0: pool.token0,
+      token1: pool.token1,
+      fee: pool.fee,
+      tickLower,
+      tickUpper,
+      amount0Desired,
+      amount1Desired,
+      amount0Min: "0",
+      amount1Min: "0",
+      recipient: callerWallet,
+      deadline,
+      approvals: [
+        { token: pool.token0, spender: positionManager, amount: amount0Desired },
+        { token: pool.token1, spender: positionManager, amount: amount1Desired },
+      ],
+    },
+  };
 }

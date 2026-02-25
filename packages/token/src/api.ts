@@ -17,6 +17,7 @@ export const ERROR_CODES = [
   "invalid_request",
   "not_mintable",
   "exceeds_max_supply",
+  "pool_exists",
   "rpc_error",
 ] as const;
 
@@ -75,4 +76,43 @@ export interface SupplyResponse {
   tokenId: string;
   contractAddress: string;
   totalSupply: string;
+}
+
+// ─── Pool types ───────────────────────────────────────────────────────────
+
+export interface CreatePoolRequest {
+  pricePerToken: string;
+  feeTier?: number;
+}
+
+export interface PoolResponse {
+  poolAddress: string;
+  token0: string;
+  token1: string;
+  fee: number;
+  sqrtPriceX96: string;
+  tick: number;
+  txHash: string;
+}
+
+export interface LiquidityApproval {
+  token: string;
+  spender: string;
+  amount: string;
+}
+
+export interface LiquidityParamsResponse {
+  positionManagerAddress: string;
+  token0: string;
+  token1: string;
+  fee: number;
+  tickLower: number;
+  tickUpper: number;
+  amount0Desired: string;
+  amount1Desired: string;
+  amount0Min: string;
+  amount1Min: string;
+  recipient: string;
+  deadline: number;
+  approvals: LiquidityApproval[];
 }

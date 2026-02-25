@@ -58,7 +58,7 @@
 | 5 | TK-1 | Build token.sh: scaffold + deploy + query (package, db, deployer keystore, factory ABI, CREATE2, service, routes, tests) | packages/token | P-4 | done |
 | 6 | TK-2 | Build token.sh: mint + supply (POST /mint, GET /supply, ownership + cap enforcement, tests) | packages/token | TK-1 | done |
 | 7 | TK-4 | OZ + viem deployContract: compile AgentToken.sol, replace factory, fix TS bugs (stale cap, missing receipt), Base Sepolia smoke test | packages/token | TK-2 | done |
-| 8 | TK-3 | Build token.sh: Uniswap pool creation (liquidity coordination with wallet.sh) | packages/token | TK-4 | pending |
+| 8 | TK-3 | Build token.sh: Uniswap pool creation (liquidity coordination with wallet.sh) | packages/token | TK-4 | done |
 | 8 | ST-5 | Testnet integration testing: env-configurable network (`PRIM_NETWORK`), Base Sepolia x402 end-to-end, wallet.sh ↔ store.sh | cross-cutting | ST-4, W-5 | done |
 | 8 | SP-8 | spawn.sh live smoke test against DigitalOcean (provider-direct, 9 tests) | packages/spawn | SP-7 | done |
 | 8 | SP-9 | spawn.sh x402 integration: add spawn to cross-primitive integration test, fix SSH key ID resolution bug, fix hardcoded mainnet | scripts/, packages/spawn | SP-7, ST-5 | done |
