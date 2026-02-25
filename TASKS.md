@@ -144,6 +144,7 @@
 - SE-1: `tasks/completed/se-1-search-sh-plan-2026-02-25.md`
 - M-1: `tasks/completed/m-1-mem-sh-vector-cache-2026-02-25.md`
 - M-2: `tasks/active/m-2-mem-live-smoke-test-2026-02-25.md`
+- E-8: `tasks/active/e-8-email-domain-migration-2026-02-25.md`
 - V1 Launch: `tasks/active/v1-launch-plan-2026-02-25.md`
 
 ## V1 Launch (scope: L)
@@ -182,7 +183,8 @@ Plan doc: `tasks/active/v1-launch-plan-2026-02-25.md`
 
 | ID | Task | Owner | Depends on | Status |
 |---|---|---|---|---|
-| L-14 | Check ticker availability on BaseScan, deploy $PRIM/$PRIMSH/$PRIMITIVESHELL defensively, create Uniswap pool, make repo public | Garric + token dev | L-10 | pending |
+| L-15 | Pre-public checklist: rotate Stalwart admin password + `relay-wrapper` API key, verify no secrets in git history (`git log -p \| grep`), confirm .env files gitignored | Garric | L-10 | pending |
+| L-14 | Check ticker availability on BaseScan, deploy $PRIM/$PRIMSH/$PRIMITIVESHELL defensively, create Uniswap pool, make repo public | Garric + token dev | L-15 | pending |
 
 ## Backlog — Future Primitives
 
