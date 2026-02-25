@@ -85,6 +85,7 @@ describe("getJmapContext", () => {
       expect(result.data.identityId).toBe("id_1");
       expect(result.data.inboxId).toBe("mb_inbox");
       expect(result.data.authHeader).toContain("Basic ");
+      expect(result.data.address).toBe("[email protected]");
     }
     expect(discoverSession).not.toHaveBeenCalled();
   });
@@ -113,6 +114,7 @@ describe("getJmapContext", () => {
     expect(result.ok).toBe(true);
     if (result.ok) {
       expect(result.data.accountId).toBe("acc_new");
+      expect(result.data.address).toBe("[email protected]");
     }
     expect(discoverSession).toHaveBeenCalledOnce();
     expect(dbMock.updateMailboxJmap).toHaveBeenCalledOnce();

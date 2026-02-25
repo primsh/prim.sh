@@ -1,5 +1,5 @@
 import { describe, expect, it, vi, beforeEach, afterEach } from "vitest";
-import { discoverSession, buildBasicAuth, JmapError, queryEmails, getEmail } from "../src/jmap";
+import { discoverSession, buildBasicAuth, JmapError, queryEmails, getEmail, sendEmail } from "../src/jmap";
 
 const MOCK_BASE_URL = "https://mail.test.com";
 const AUTH_HEADER = buildBasicAuth("[email protected]", "password123");
@@ -460,6 +460,147 @@ describe("jmap client", () => {
         expect(err).toBeInstanceOf(JmapError);
         expect((err as JmapError).code).toBe("not_found");
       }
+    });
+  });
+
+  describe("sendEmail", () => {
+    const ctx = {
+      apiUrl: "https://mail.test.com/jmap/",
+      accountId: "acc_123",
+      authHeader: AUTH_HEADER,
+    };
+
+    const baseOpts = {
+      from: { name: null, email: "[email protected]" },
+      to: [{ name: null, email: "[email protected]" }],
+      subject: "Test",
+      textBody: "Hello",
+      htmlBody: null,
+      identityId: "id_1",
+      draftsId: "mb_drafts",
+    };
+
+    function mockSendSuccess() {
+      globalThis.fetch = vi.fn().mockResolvedValueOnce({
+        ok: true,
+        status: 200,
+        json: async () => ({
+          methodResponses: [
+            ["Email/set", { created: { draft: { id: "email_abc" } } }, "e"],
+            ["EmailSubmission/set", { created: { sub: { id: "sub_xyz" } } }, "es"],
+          ],
+        }),
+      });
+    }
+
+    it("returns messageId and submissionId on success", async () => {
+      mockSendSuccess();
+
+      const result = await sendEmail(ctx, baseOpts);
+
+      expect(result.messageId).toBe("email_abc");
+      expect(result.submissionId).toBe("sub_xyz");
+    });
+
+    it("includes submission namespace in using array", async () => {
+      mockSendSuccess();
+
+      await sendEmail(ctx, baseOpts);
+
+      const body = JSON.parse((globalThis.fetch as ReturnType<typeof vi.fn>).mock.calls[0][1].body);
+      expect(body.using).toContain("urn:ietf:params:jmap:submission");
+    });
+
+    it("sends text-only bodyStructure when only textBody provided", async () => {
+      mockSendSuccess();
+
+      await sendEmail(ctx, { ...baseOpts, textBody: "Hello", htmlBody: null });
+
+      const body = JSON.parse((globalThis.fetch as ReturnType<typeof vi.fn>).mock.calls[0][1].body);
+      const draft = body.methodCalls[0][1].create.draft;
+      expect(draft.bodyStructure.type).toBe("text/plain");
+      expect(draft.bodyStructure.partId).toBe("text");
+      expect(draft.bodyStructure.subParts).toBeUndefined();
+    });
+
+    it("sends html-only bodyStructure when only htmlBody provided", async () => {
+      mockSendSuccess();
+
+      await sendEmail(ctx, { ...baseOpts, textBody: null, htmlBody: "<p>Hi</p>" });
+
+      const body = JSON.parse((globalThis.fetch as ReturnType<typeof vi.fn>).mock.calls[0][1].body);
+      const draft = body.methodCalls[0][1].create.draft;
+      expect(draft.bodyStructure.type).toBe("text/html");
+      expect(draft.bodyStructure.partId).toBe("html");
+    });
+
+    it("sends multipart/alternative when both text and html provided", async () => {
+      mockSendSuccess();
+
+      await sendEmail(ctx, { ...baseOpts, textBody: "Hello", htmlBody: "<p>Hello</p>" });
+
+      const body = JSON.parse((globalThis.fetch as ReturnType<typeof vi.fn>).mock.calls[0][1].body);
+      const draft = body.methodCalls[0][1].create.draft;
+      expect(draft.bodyStructure.type).toBe("multipart/alternative");
+      expect(draft.bodyStructure.subParts).toHaveLength(2);
+      expect(draft.bodyStructure.subParts[0].type).toBe("text/plain");
+      expect(draft.bodyStructure.subParts[1].type).toBe("text/html");
+    });
+
+    it("throws JmapError(400) when Email/set returns notCreated", async () => {
+      globalThis.fetch = vi.fn().mockResolvedValueOnce({
+        ok: true,
+        status: 200,
+        json: async () => ({
+          methodResponses: [
+            ["Email/set", { notCreated: { draft: { type: "invalidProperties", description: "bad subject" } } }, "e"],
+            ["EmailSubmission/set", { created: { sub: { id: "sub_xyz" } } }, "es"],
+          ],
+        }),
+      });
+
+      try {
+        await sendEmail(ctx, baseOpts);
+        expect.fail("should have thrown");
+      } catch (err) {
+        expect(err).toBeInstanceOf(JmapError);
+        expect((err as JmapError).statusCode).toBe(400);
+        expect((err as JmapError).code).toBe("invalid_request");
+        expect((err as JmapError).message).toContain("bad subject");
+      }
+    });
+
+    it("throws JmapError(502) when EmailSubmission/set returns notCreated", async () => {
+      globalThis.fetch = vi.fn().mockResolvedValueOnce({
+        ok: true,
+        status: 200,
+        json: async () => ({
+          methodResponses: [
+            ["Email/set", { created: { draft: { id: "email_abc" } } }, "e"],
+            ["EmailSubmission/set", { notCreated: { sub: { type: "forbidden", description: "rate limited" } } }, "es"],
+          ],
+        }),
+      });
+
+      try {
+        await sendEmail(ctx, baseOpts);
+        expect.fail("should have thrown");
+      } catch (err) {
+        expect(err).toBeInstanceOf(JmapError);
+        expect((err as JmapError).statusCode).toBe(502);
+        expect((err as JmapError).code).toBe("jmap_error");
+        expect((err as JmapError).message).toContain("rate limited");
+      }
+    });
+
+    it("uses back-reference #e for emailId in submission", async () => {
+      mockSendSuccess();
+
+      await sendEmail(ctx, baseOpts);
+
+      const body = JSON.parse((globalThis.fetch as ReturnType<typeof vi.fn>).mock.calls[0][1].body);
+      const subCreate = body.methodCalls[1][1].create.sub;
+      expect(subCreate.emailId).toBe("#e");
     });
   });
 });

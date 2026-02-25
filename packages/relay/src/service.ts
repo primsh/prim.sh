@@ -12,7 +12,7 @@ import {
   deletePrincipal,
 } from "./stalwart.ts";
 import { encryptPassword } from "./crypto.ts";
-import { discoverSession, buildBasicAuth, JmapError, queryEmails, getEmail } from "./jmap.ts";
+import { discoverSession, buildBasicAuth, JmapError, queryEmails, getEmail, sendEmail } from "./jmap.ts";
 import { getJmapContext } from "./context.ts";
 import type {
   ServiceResult,
@@ -24,6 +24,8 @@ import type {
   EmailDetail,
   EmailListResponse,
   EmailAddress,
+  SendMessageRequest,
+  SendMessageResponse,
 } from "./api.ts";
 import type { MailboxRow } from "./db.ts";
 
@@ -327,6 +329,54 @@ export async function getMessage(
       htmlBody,
     };
     return { ok: true, data: detail };
+  } catch (err) {
+    if (err instanceof JmapError) {
+      return { ok: false, status: err.statusCode, code: err.code, message: err.message };
+    }
+    throw err;
+  }
+}
+
+// ─── Email sending (R-6) ──────────────────────────────────────────────
+
+export async function sendMessage(
+  mailboxId: string,
+  callerWallet: string,
+  request: SendMessageRequest,
+): Promise<ServiceResult<SendMessageResponse>> {
+  if (!request.to || request.to.trim() === "") {
+    return { ok: false, status: 400, code: "invalid_request", message: "to is required" };
+  }
+  if (!request.body && !request.html) {
+    return {
+      ok: false,
+      status: 400,
+      code: "invalid_request",
+      message: "At least one of body or html is required",
+    };
+  }
+
+  const ctxResult = await getJmapContext(mailboxId, callerWallet);
+  if (!ctxResult.ok) return ctxResult;
+  const ctx = ctxResult.data;
+
+  const to = [{ name: null, email: request.to }];
+  const cc = request.cc ? [{ name: null, email: request.cc }] : undefined;
+  const bcc = request.bcc ? [{ name: null, email: request.bcc }] : undefined;
+
+  try {
+    const result = await sendEmail(ctx, {
+      from: { name: null, email: ctx.address },
+      to,
+      cc,
+      bcc,
+      subject: request.subject,
+      textBody: request.body ?? null,
+      htmlBody: request.html ?? null,
+      identityId: ctx.identityId,
+      draftsId: ctx.draftsId,
+    });
+    return { ok: true, data: { message_id: result.messageId, status: "sent" } };
   } catch (err) {
     if (err instanceof JmapError) {
       return { ok: false, status: err.statusCode, code: err.code, message: err.message };

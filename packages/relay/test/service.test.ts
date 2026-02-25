@@ -43,6 +43,7 @@ vi.mock("../src/jmap", () => {
     buildBasicAuth: vi.fn(() => "Basic mock"),
     queryEmails: vi.fn(),
     getEmail: vi.fn(),
+    sendEmail: vi.fn(),
   };
 });
 
@@ -73,9 +74,9 @@ vi.mock("../src/db", () => {
   };
 });
 
-import { createMailbox, listMailboxes, getMailbox, deleteMailbox, listMessages, getMessage } from "../src/service";
+import { createMailbox, listMailboxes, getMailbox, deleteMailbox, listMessages, getMessage, sendMessage } from "../src/service";
 import { createPrincipal, deletePrincipal, StalwartError } from "../src/stalwart";
-import { JmapError, queryEmails, getEmail } from "../src/jmap";
+import { JmapError, queryEmails, getEmail, sendEmail } from "../src/jmap";
 import { getJmapContext } from "../src/context";
 import * as dbMock from "../src/db";
 
@@ -499,6 +500,133 @@ describe("relay service", () => {
       expect(result.ok).toBe(false);
       if (!result.ok) {
         expect(result.code).toBe("not_found");
+      }
+    });
+  });
+
+  describe("sendMessage", () => {
+    const MOCK_CTX = {
+      apiUrl: "https://mail.relay.prim.sh/jmap/",
+      accountId: "acc_1",
+      identityId: "id_1",
+      inboxId: "mb_inbox",
+      draftsId: "mb_drafts",
+      sentId: "mb_sent",
+      authHeader: "Basic mock",
+      address: "[email protected]",
+    };
+
+    it("returns message_id and status sent for valid request", async () => {
+      (getJmapContext as ReturnType<typeof vi.fn>).mockResolvedValue({
+        ok: true,
+        data: MOCK_CTX,
+      });
+      (sendEmail as ReturnType<typeof vi.fn>).mockResolvedValue({
+        messageId: "email_abc",
+        submissionId: "sub_xyz",
+      });
+
+      const result = await sendMessage("mbx_test", WALLET_A, {
+        to: "[email protected]",
+        subject: "Hello",
+        body: "Hi there",
+      });
+
+      expect(result.ok).toBe(true);
+      if (!result.ok) return;
+      expect(result.data.message_id).toBe("email_abc");
+      expect(result.data.status).toBe("sent");
+    });
+
+    it("sets from address from mailbox address, not request", async () => {
+      (getJmapContext as ReturnType<typeof vi.fn>).mockResolvedValue({
+        ok: true,
+        data: MOCK_CTX,
+      });
+      (sendEmail as ReturnType<typeof vi.fn>).mockResolvedValue({
+        messageId: "email_abc",
+        submissionId: "sub_xyz",
+      });
+
+      await sendMessage("mbx_test", WALLET_A, {
+        to: "[email protected]",
+        subject: "Hello",
+        body: "Hi",
+      });
+
+      expect(sendEmail).toHaveBeenCalledWith(
+        MOCK_CTX,
+        expect.objectContaining({
+          from: { name: null, email: "[email protected]" },
+        }),
+      );
+    });
+
+    it("returns not_found for wrong wallet", async () => {
+      (getJmapContext as ReturnType<typeof vi.fn>).mockResolvedValue({
+        ok: false,
+        status: 404,
+        code: "not_found",
+        message: "Mailbox not found",
+      });
+
+      const result = await sendMessage("mbx_test", WALLET_B, {
+        to: "[email protected]",
+        subject: "Hello",
+        body: "Hi",
+      });
+
+      expect(result.ok).toBe(false);
+      if (!result.ok) {
+        expect(result.code).toBe("not_found");
+      }
+    });
+
+    it("returns invalid_request when to is empty", async () => {
+      const result = await sendMessage("mbx_test", WALLET_A, {
+        to: "",
+        subject: "Hello",
+        body: "Hi",
+      });
+
+      expect(result.ok).toBe(false);
+      if (!result.ok) {
+        expect(result.code).toBe("invalid_request");
+        expect(result.message).toContain("to");
+      }
+    });
+
+    it("returns invalid_request when both body and html are missing", async () => {
+      const result = await sendMessage("mbx_test", WALLET_A, {
+        to: "[email protected]",
+        subject: "Hello",
+      });
+
+      expect(result.ok).toBe(false);
+      if (!result.ok) {
+        expect(result.code).toBe("invalid_request");
+        expect(result.message).toContain("body");
+      }
+    });
+
+    it("returns jmap_error when JMAP call fails", async () => {
+      (getJmapContext as ReturnType<typeof vi.fn>).mockResolvedValue({
+        ok: true,
+        data: MOCK_CTX,
+      });
+      (sendEmail as ReturnType<typeof vi.fn>).mockRejectedValue(
+        new JmapError(502, "jmap_error", "Submission failed"),
+      );
+
+      const result = await sendMessage("mbx_test", WALLET_A, {
+        to: "[email protected]",
+        subject: "Hello",
+        body: "Hi",
+      });
+
+      expect(result.ok).toBe(false);
+      if (!result.ok) {
+        expect(result.code).toBe("jmap_error");
       }
     });
   });

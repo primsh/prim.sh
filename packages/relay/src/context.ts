@@ -11,6 +11,7 @@ export interface JmapContext {
   draftsId: string;
   sentId: string;
   authHeader: string;
+  address: string;
 }
 
 export async function getJmapContext(
@@ -57,6 +58,7 @@ export async function getJmapContext(
         draftsId: row.jmap_drafts_id ?? "",
         sentId: row.jmap_sent_id ?? "",
         authHeader,
+        address: row.address,
       },
     };
   }
@@ -76,7 +78,7 @@ export async function getJmapContext(
 
     return {
       ok: true,
-      data: { ...session, authHeader },
+      data: { ...session, authHeader, address: row.address },
     };
   } catch (err) {
     if (err instanceof JmapError) {

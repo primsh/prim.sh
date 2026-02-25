@@ -2,11 +2,13 @@ import { Hono } from "hono";
 import type {
   ApiError,
   CreateMailboxRequest,
+  SendMessageRequest,
   MailboxResponse,
   MailboxListResponse,
   DeleteMailboxResponse,
   EmailListResponse,
   EmailDetail,
+  SendMessageResponse,
 } from "./api.ts";
 import {
   createMailbox,
@@ -15,6 +17,7 @@ import {
   deleteMailbox,
   listMessages,
   getMessage,
+  sendMessage,
 } from "./service.ts";
 
 function forbidden(message: string): ApiError {
@@ -132,6 +135,27 @@ app.get("/v1/mailboxes/:id/messages/:msgId", async (c) => {
     return c.json(serviceError(result.code, result.message), result.status as 502);
   }
   return c.json(result.data as EmailDetail, 200);
+});
+
+// POST /v1/mailboxes/:id/send — Send message
+app.post("/v1/mailboxes/:id/send", async (c) => {
+  const caller = c.get("walletAddress");
+  if (!caller) return c.json(forbidden("No wallet address in payment"), 403);
+
+  let body: SendMessageRequest;
+  try {
+    body = await c.req.json<SendMessageRequest>();
+  } catch {
+    return c.json(invalidRequest("Invalid JSON body"), 400);
+  }
+
+  const result = await sendMessage(c.req.param("id"), caller, body);
+  if (!result.ok) {
+    if (result.code === "not_found") return c.json(notFound(result.message), 404);
+    if (result.code === "invalid_request") return c.json(invalidRequest(result.message), 400);
+    return c.json(serviceError(result.code, result.message), result.status as 502);
+  }
+  return c.json(result.data as SendMessageResponse, 200);
 });
 
 export default app;

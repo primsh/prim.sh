@@ -198,17 +198,20 @@ interface JmapContextLike {
 async function jmapCall(
   ctx: JmapContextLike,
   methodCalls: unknown[],
+  extraNamespaces?: string[],
 ): Promise<JmapMethodResponse> {
+  const using = ["urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail"];
+  if (extraNamespaces) {
+    using.push(...extraNamespaces);
+  }
+
   const res = await fetch(ctx.apiUrl, {
     method: "POST",
     headers: {
       Authorization: ctx.authHeader,
       "Content-Type": "application/json",
     },
-    body: JSON.stringify({
-      using: ["urn:ietf:params:jmap:core", "urn:ietf:params:jmap:mail"],
-      methodCalls,
-    }),
+    body: JSON.stringify({ using, methodCalls }),
   });
 
   if (!res.ok) {
@@ -355,4 +358,147 @@ export async function getEmail(
   }
 
   return list[0];
+}
+
+// ─── Email send (R-6) ─────────────────────────────────────────────────
+
+export interface SendEmailOpts {
+  from: { name: string | null; email: string };
+  to: { name: string | null; email: string }[];
+  cc?: { name: string | null; email: string }[];
+  bcc?: { name: string | null; email: string }[];
+  subject: string;
+  textBody: string | null;
+  htmlBody: string | null;
+  identityId: string;
+  draftsId: string;
+}
+
+export interface SendResult {
+  messageId: string;
+  submissionId: string;
+}
+
+export async function sendEmail(
+  ctx: JmapContextLike,
+  opts: SendEmailOpts,
+): Promise<SendResult> {
+  // Build bodyStructure + bodyValues based on provided parts
+  let bodyStructure: Record<string, unknown>;
+  const bodyValues: Record<string, { value: string; isEncodingProblem?: boolean; isTruncated?: boolean }> = {};
+
+  const hasText = opts.textBody !== null;
+  const hasHtml = opts.htmlBody !== null;
+
+  if (hasText && hasHtml) {
+    bodyValues.text = { value: opts.textBody as string };
+    bodyValues.html = { value: opts.htmlBody as string };
+    bodyStructure = {
+      type: "multipart/alternative",
+      subParts: [
+        { type: "text/plain", partId: "text" },
+        { type: "text/html", partId: "html" },
+      ],
+    };
+  } else if (hasHtml) {
+    bodyValues.html = { value: opts.htmlBody as string };
+    bodyStructure = { type: "text/html", partId: "html" };
+  } else {
+    bodyValues.text = { value: opts.textBody as string };
+    bodyStructure = { type: "text/plain", partId: "text" };
+  }
+
+  // Build recipient arrays for envelope
+  const allRecipients = [
+    ...opts.to,
+    ...(opts.cc ?? []),
+    ...(opts.bcc ?? []),
+  ];
+
+  const batch = await jmapCall(
+    ctx,
+    [
+      [
+        "Email/set",
+        {
+          accountId: ctx.accountId,
+          create: {
+            draft: {
+              mailboxIds: opts.draftsId ? { [opts.draftsId]: true } : {},
+              from: [opts.from],
+              to: opts.to,
+              ...(opts.cc?.length ? { cc: opts.cc } : {}),
+              ...(opts.bcc?.length ? { bcc: opts.bcc } : {}),
+              subject: opts.subject,
+              bodyStructure,
+              bodyValues,
+            },
+          },
+        },
+        "e",
+      ],
+      [
+        "EmailSubmission/set",
+        {
+          accountId: ctx.accountId,
+          create: {
+            sub: {
+              identityId: opts.identityId,
+              emailId: "#e",
+              envelope: {
+                mailFrom: { email: opts.from.email },
+                rcptTo: allRecipients.map((r) => ({ email: r.email })),
+              },
+            },
+          },
+        },
+        "es",
+      ],
+    ],
+    ["urn:ietf:params:jmap:submission"],
+  );
+
+  // Check for method-level errors
+  for (const response of batch.methodResponses) {
+    checkMethodError(response);
+  }
+
+  // Check Email/set result
+  const emailSetResponse = batch.methodResponses.find(([name]) => name === "Email/set");
+  if (!emailSetResponse) {
+    throw new JmapError(500, "jmap_error", "Email/set response missing");
+  }
+
+  const emailNotCreated = emailSetResponse[1].notCreated as Record<string, { type: string; description?: string }> | undefined;
+  if (emailNotCreated?.draft) {
+    const reason = emailNotCreated.draft.description ?? emailNotCreated.draft.type;
+    throw new JmapError(400, "invalid_request", `Email creation failed: ${reason}`);
+  }
+
+  const emailCreated = emailSetResponse[1].created as Record<string, { id: string }> | undefined;
+  if (!emailCreated?.draft) {
+    throw new JmapError(500, "jmap_error", "Email/set did not return created draft");
+  }
+
+  // Check EmailSubmission/set result
+  const subResponse = batch.methodResponses.find(([name]) => name === "EmailSubmission/set");
+  if (!subResponse) {
+    throw new JmapError(500, "jmap_error", "EmailSubmission/set response missing");
+  }
+
+  const subNotCreated = subResponse[1].notCreated as Record<string, { type: string; description?: string }> | undefined;
+  if (subNotCreated?.sub) {
+    const reason = subNotCreated.sub.description ?? subNotCreated.sub.type;
+    throw new JmapError(502, "jmap_error", `Email submission failed: ${reason}`);
+  }
+
+  const subCreated = subResponse[1].created as Record<string, { id: string }> | undefined;
+  if (!subCreated?.sub) {
+    throw new JmapError(500, "jmap_error", "EmailSubmission/set did not return created submission");
+  }
+
+  return {
+    messageId: emailCreated.draft.id,
+    submissionId: subCreated.sub.id,
+  };
 }

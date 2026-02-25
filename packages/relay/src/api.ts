@@ -88,6 +88,22 @@ export interface EmailListResponse {
   position: number;
 }
 
+// ─── Send types (R-6) ─────────────────────────────────────────────────
+
+export interface SendMessageRequest {
+  to: string;
+  subject: string;
+  body?: string;
+  html?: string;
+  cc?: string;
+  bcc?: string;
+}
+
+export interface SendMessageResponse {
+  message_id: string;
+  status: "sent";
+}
+
 // ─── JMAP context (used by R-5/R-6) ────────────────────────────────────
 
 export type { JmapContext } from "./context.ts";
