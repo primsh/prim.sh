@@ -112,6 +112,7 @@ describe("email.sh live smoke test", () => {
   // State carried across sequential steps
   let mailboxId: string;
   let mailboxAddress: string;
+  let customMailboxId: string;
 
   beforeAll(async () => {
     // Preflight: check required env vars
@@ -144,12 +145,14 @@ describe("email.sh live smoke test", () => {
   });
 
   afterAll(async () => {
-    // Clean up: delete the mailbox if it was created (best effort)
-    if (mailboxId) {
-      try {
-        await deleteMailbox(mailboxId, WALLET);
-      } catch {
-        // already deleted or test failed before creation
+    // Clean up: delete mailboxes if created (best effort)
+    for (const id of [mailboxId, customMailboxId]) {
+      if (id) {
+        try {
+          await deleteMailbox(id, WALLET);
+        } catch {
+          // already deleted or test failed before creation
+        }
       }
     }
 
@@ -162,7 +165,7 @@ describe("email.sh live smoke test", () => {
     resetDb();
   });
 
-  it("1. create mailbox", async () => {
+  it("1. create mailbox (permanent, random username)", async () => {
     const result = await createMailbox({}, WALLET);
     expect(result.ok).toBe(true);
     if (!result.ok) return;
@@ -174,6 +177,50 @@ describe("email.sh live smoke test", () => {
 
     mailboxId = result.data.id;
     mailboxAddress = result.data.address;
+  });
+
+  it("1b. create mailbox with custom username", async () => {
+    const tag = `smoke-${Date.now().toString(36)}`;
+    const result = await createMailbox({ username: tag }, WALLET);
+    expect(result.ok).toBe(true);
+    if (!result.ok) return;
+
+    expect(result.data.address).toBe(`${tag}@${process.env.EMAIL_DEFAULT_DOMAIN ?? "email.prim.sh"}`);
+    expect(result.data.expires_at).toBeNull();
+
+    customMailboxId = result.data.id;
+  });
+
+  it("1c. custom username conflict returns 409", async () => {
+    // Re-use the username from 1b — should fail
+    const existing = await getMailbox(customMailboxId, WALLET);
+    expect(existing.ok).toBe(true);
+    if (!existing.ok) return;
+
+    const username = existing.data.address.split("@")[0];
+    const result = await createMailbox({ username }, WALLET);
+    expect(result.ok).toBe(false);
+    if (result.ok) return;
+
+    expect(result.status).toBe(409);
+    expect(result.code).toBe("username_taken");
+  });
+
+  it("1d. create ephemeral mailbox with ttl_ms", async () => {
+    const result = await createMailbox({ ttl_ms: 3_600_000 }, WALLET);
+    expect(result.ok).toBe(true);
+    if (!result.ok) return;
+
+    expect(result.data.expires_at).not.toBeNull();
+
+    // Clean up immediately
+    await deleteMailbox(result.data.id, WALLET);
+  });
+
+  it("1e. delete custom username mailbox", async () => {
+    const result = await deleteMailbox(customMailboxId, WALLET);
+    expect(result.ok).toBe(true);
+    customMailboxId = "";
   });
 
   it("2. list mailboxes — new mailbox appears", () => {
