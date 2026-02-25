@@ -650,6 +650,9 @@ async function main() {
       });
     }
 
+    // Cache steps are independent of vector steps — no collection required.
+    // They run even if collection creation failed above (different subsystem).
+
     // 28. Cache set
     await step("Cache set via x402", async () => {
       const res = await primFetch(`${MEM_URL}/v1/cache/${cacheNamespace}/testkey`, {
@@ -683,7 +686,11 @@ async function main() {
       if (data.status !== "deleted") throw new Error(`Expected status=deleted, got ${data.status}`);
     });
 
-    // 31. Cache get after delete — expect 404
+    // 31. Cache get after delete — expect 404.
+    // The route is x402-gated ($0.0001): the agent pays before the handler runs, then gets
+    // a 404 back. The miss fee is intentional (cache.sh charges per lookup regardless of hit/miss).
+    // If x402 settlement fails transiently (X4-1), the response will be 402, not 404 — that
+    // indicates a facilitator issue, not a test bug.
     await step("Cache get (post-delete, expect 404) via x402", async () => {
       const res = await primFetch(`${MEM_URL}/v1/cache/${cacheNamespace}/testkey`);
       if (res.status !== 404) throw new Error(`Expected 404, got ${res.status}`);
