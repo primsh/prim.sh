@@ -12,6 +12,18 @@ process.env.HETZNER_API_KEY = "test-hetzner-key";
 
 // ─── Hetzner API mock helpers ──────────────────────────────────────────────
 
+function makeHetznerSshKey(overrides: Partial<Record<string, unknown>> = {}): Record<string, unknown> {
+  return {
+    id: 55555,
+    name: "my-key",
+    fingerprint: "ab:cd:ef:00:11:22:33:44",
+    public_key: "ssh-ed25519 AAAAC3NzaC test",
+    labels: { wallet: "0xCa11e900000000000000000000000000000000001" },
+    created: "2024-01-01T00:00:00Z",
+    ...overrides,
+  };
+}
+
 function makeHetznerServer(overrides: Partial<Record<string, unknown>> = {}): Record<string, unknown> {
   return {
     id: 12345,
@@ -71,9 +83,29 @@ const mockFetch = vi.fn(async (input: RequestInfo | URL, _init?: RequestInit) =>
     );
   }
 
-  // Hetzner: DELETE /v1/servers/:id
-  if (url.startsWith("https://api.hetzner.cloud/v1/servers/") && _init?.method === "DELETE") {
+  // Hetzner: DELETE /v1/servers/:id (not an action)
+  if (url.match(/^https:\/\/api\.hetzner\.cloud\/v1\/servers\/\d+$/) && _init?.method === "DELETE") {
     return new Response(null, { status: 204 });
+  }
+
+  // Hetzner: POST /v1/servers/:id/actions/* (lifecycle actions)
+  if (url.match(/^https:\/\/api\.hetzner\.cloud\/v1\/servers\/\d+\/actions\//) && _init?.method === "POST") {
+    const isRebuild = url.endsWith("/rebuild");
+    if (isRebuild) {
+      return new Response(
+        JSON.stringify({
+          action: { id: 9998, command: "rebuild_server", status: "running", started: "2024-01-01T00:00:00Z", finished: null },
+          root_password: null,
+        }),
+        { status: 200, headers: { "Content-Type": "application/json" } },
+      );
+    }
+    return new Response(
+      JSON.stringify({
+        action: { id: 9997, command: "server_action", status: "running", started: "2024-01-01T00:00:00Z", finished: null },
+      }),
+      { status: 200, headers: { "Content-Type": "application/json" } },
+    );
   }
 
   // Hetzner: GET /v1/servers/:id (not a list)
@@ -98,6 +130,27 @@ const mockFetch = vi.fn(async (input: RequestInfo | URL, _init?: RequestInit) =>
     );
   }
 
+  // Hetzner: POST /v1/ssh_keys — create SSH key
+  if (url === "https://api.hetzner.cloud/v1/ssh_keys" && _init?.method === "POST") {
+    return new Response(
+      JSON.stringify({ ssh_key: makeHetznerSshKey() }),
+      { status: 201, headers: { "Content-Type": "application/json" } },
+    );
+  }
+
+  // Hetzner: GET /v1/ssh_keys (list)
+  if (url.startsWith("https://api.hetzner.cloud/v1/ssh_keys") && (!_init?.method || _init.method === "GET")) {
+    return new Response(
+      JSON.stringify({ ssh_keys: [makeHetznerSshKey()] }),
+      { status: 200, headers: { "Content-Type": "application/json" } },
+    );
+  }
+
+  // Hetzner: DELETE /v1/ssh_keys/:id
+  if (url.match(/^https:\/\/api\.hetzner\.cloud\/v1\/ssh_keys\/\d+$/) && _init?.method === "DELETE") {
+    return new Response(null, { status: 204 });
+  }
+
   return new Response(JSON.stringify({ ok: true }), {
     status: 200,
     headers: { "Content-Type": "application/json" },
@@ -107,8 +160,21 @@ const mockFetch = vi.fn(async (input: RequestInfo | URL, _init?: RequestInit) =>
 vi.stubGlobal("fetch", mockFetch);
 
 // Import after env + fetch stub
-import { resetDb, insertServer, getServerById } from "../src/db.ts";
-import { createServer, listServers, getServer, deleteServer } from "../src/service.ts";
+import { resetDb, insertServer, getServerById, insertSshKey, getSshKeyById } from "../src/db.ts";
+import {
+  createServer,
+  listServers,
+  getServer,
+  deleteServer,
+  startServer,
+  stopServer,
+  rebootServer,
+  resizeServer,
+  rebuildServer,
+  registerSshKey,
+  listSshKeys,
+  deleteSshKey,
+} from "../src/service.ts";
 import type { CreateServerRequest } from "../src/api.ts";
 
 // ─── Fixtures ─────────────────────────────────────────────────────────────
@@ -138,6 +204,19 @@ function insertTestServer(overrides: Partial<Parameters<typeof insertServer>[0]>
     public_ipv6: null,
     deposit_charged: "0.01",
     deposit_daily_burn: "0.15",
+    ...overrides,
+  });
+  return id;
+}
+
+function insertTestSshKey(overrides: Partial<Parameters<typeof insertSshKey>[0]> = {}): string {
+  const id = `sk_test${Math.random().toString(16).slice(2, 6)}`;
+  insertSshKey({
+    id,
+    hetzner_id: 55555,
+    owner_wallet: CALLER,
+    name: "my-key",
+    fingerprint: "ab:cd:ef:00:11:22:33:44",
     ...overrides,
   });
   return id;
@@ -395,4 +474,177 @@ describe("server type translation", () => {
       mockFetch.mockClear();
     });
   }
+});
+
+// ─── VM lifecycle action tests ─────────────────────────────────────────────
+
+describe("startServer", () => {
+  it("start server (owner) — returns 200 with action object", async () => {
+    const id = insertTestServer({ owner_wallet: CALLER, hetzner_id: 12345 });
+    const result = await startServer(id, CALLER);
+    expect(result.ok).toBe(true);
+    if (!result.ok) return;
+    expect(result.data.action.id).toBe(9997);
+    expect(typeof result.data.action.status).toBe("string");
+  });
+
+  it("start server (not owner) — returns 403", async () => {
+    const id = insertTestServer({ owner_wallet: CALLER });
+    const result = await startServer(id, OTHER);
+    expect(result.ok).toBe(false);
+    if (result.ok) return;
+    expect(result.status).toBe(403);
+    expect(result.code).toBe("forbidden");
+  });
+
+  it("Hetzner action failure — returns 502", async () => {
+    const id = insertTestServer({ owner_wallet: CALLER, hetzner_id: 77777 });
+    mockFetch.mockImplementationOnce(async (input: RequestInfo | URL, init?: RequestInit) => {
+      const url = typeof input === "string" ? input : input instanceof Request ? input.url : (input as URL).toString();
+      if (url.includes("/servers/77777/actions/") && (init as RequestInit)?.method === "POST") {
+        return new Response(
+          JSON.stringify({ error: { code: "server_error", message: "Action failed" } }),
+          { status: 500, headers: { "Content-Type": "application/json" } },
+        );
+      }
+      return new Response(JSON.stringify({ ok: true }), { status: 200, headers: { "Content-Type": "application/json" } });
+    });
+
+    const result = await startServer(id, CALLER);
+    expect(result.ok).toBe(false);
+    if (result.ok) return;
+    expect(result.status).toBe(502);
+  });
+});
+
+describe("stopServer", () => {
+  it("stop server (owner) — returns 200 with action object", async () => {
+    const id = insertTestServer({ owner_wallet: CALLER, hetzner_id: 12345 });
+    const result = await stopServer(id, CALLER);
+    expect(result.ok).toBe(true);
+    if (!result.ok) return;
+    expect(result.data.action.id).toBe(9997);
+  });
+});
+
+describe("rebootServer", () => {
+  it("reboot server (owner) — returns 200 with action object", async () => {
+    const id = insertTestServer({ owner_wallet: CALLER, hetzner_id: 12345 });
+    const result = await rebootServer(id, CALLER);
+    expect(result.ok).toBe(true);
+    if (!result.ok) return;
+    expect(result.data.action.id).toBe(9997);
+  });
+});
+
+describe("resizeServer", () => {
+  it("resize server (valid type) — returns 200 with action and new_type", async () => {
+    const id = insertTestServer({ owner_wallet: CALLER, hetzner_id: 12345 });
+    const result = await resizeServer(id, CALLER, { type: "medium" });
+    expect(result.ok).toBe(true);
+    if (!result.ok) return;
+    expect(result.data.new_type).toBe("medium");
+    expect(typeof result.data.action.id).toBe("number");
+  });
+
+  it("resize server (invalid type) — returns 400", async () => {
+    const id = insertTestServer({ owner_wallet: CALLER });
+    const result = await resizeServer(id, CALLER, { type: "xlarge" as never });
+    expect(result.ok).toBe(false);
+    if (result.ok) return;
+    expect(result.status).toBe(400);
+    expect(result.code).toBe("invalid_request");
+  });
+});
+
+describe("rebuildServer", () => {
+  it("rebuild server (valid image) — returns 200 with action", async () => {
+    const id = insertTestServer({ owner_wallet: CALLER, hetzner_id: 12345 });
+    const result = await rebuildServer(id, CALLER, { image: "debian-12" });
+    expect(result.ok).toBe(true);
+    if (!result.ok) return;
+    expect(result.data.action.id).toBe(9998);
+    expect(result.data.root_password).toBeNull();
+  });
+
+  it("rebuild server (invalid image) — returns 400", async () => {
+    const id = insertTestServer({ owner_wallet: CALLER });
+    const result = await rebuildServer(id, CALLER, { image: "windows-11" as never });
+    expect(result.ok).toBe(false);
+    if (result.ok) return;
+    expect(result.status).toBe(400);
+    expect(result.code).toBe("invalid_request");
+  });
+});
+
+// ─── SSH key tests ─────────────────────────────────────────────────────────
+
+describe("registerSshKey", () => {
+  it("register SSH key — returns 201 with sk_ id and fingerprint", async () => {
+    const result = await registerSshKey(
+      { name: "my-key", public_key: "ssh-ed25519 AAAAC3NzaC test" },
+      CALLER,
+    );
+    expect(result.ok).toBe(true);
+    if (!result.ok) return;
+    expect(result.data.id).toMatch(/^sk_[0-9a-f]{8}$/);
+    expect(result.data.fingerprint).toBe("ab:cd:ef:00:11:22:33:44");
+    expect(result.data.owner_wallet).toBe(CALLER);
+  });
+
+  it("register SSH key — missing fields returns 400", async () => {
+    const result = await registerSshKey({ name: "", public_key: "" }, CALLER);
+    expect(result.ok).toBe(false);
+    if (result.ok) return;
+    expect(result.status).toBe(400);
+  });
+});
+
+describe("listSshKeys", () => {
+  it("list SSH keys (has keys) — returns array with owner's keys", () => {
+    insertTestSshKey({ owner_wallet: CALLER });
+    insertTestSshKey({ owner_wallet: CALLER });
+    insertTestSshKey({ owner_wallet: OTHER });
+
+    const result = listSshKeys(CALLER);
+    expect(result.ssh_keys).toHaveLength(2);
+    for (const k of result.ssh_keys) {
+      expect(k.owner_wallet).toBe(CALLER);
+    }
+  });
+
+  it("list SSH keys (empty) — returns empty array", () => {
+    const result = listSshKeys(CALLER);
+    expect(result.ssh_keys).toHaveLength(0);
+  });
+});
+
+describe("deleteSshKey", () => {
+  it("delete SSH key (owner) — removes from SQLite and calls Hetzner delete", async () => {
+    const id = insertTestSshKey({ owner_wallet: CALLER, hetzner_id: 55555 });
+
+    const result = await deleteSshKey(id, CALLER);
+    expect(result.ok).toBe(true);
+    if (!result.ok) return;
+    expect(result.data.status).toBe("deleted");
+
+    expect(getSshKeyById(id)).toBeNull();
+  });
+
+  it("delete SSH key (not owner) — returns 403", async () => {
+    const id = insertTestSshKey({ owner_wallet: CALLER });
+    const result = await deleteSshKey(id, OTHER);
+    expect(result.ok).toBe(false);
+    if (result.ok) return;
+    expect(result.status).toBe(403);
+    expect(result.code).toBe("forbidden");
+  });
+
+  it("delete SSH key (not found) — returns 404", async () => {
+    const result = await deleteSshKey("sk_notexist", CALLER);
+    expect(result.ok).toBe(false);
+    if (result.ok) return;
+    expect(result.status).toBe(404);
+    expect(result.code).toBe("not_found");
+  });
 });

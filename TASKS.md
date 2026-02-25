@@ -19,10 +19,10 @@
 | 13 | W-3 | Implement balance queries (Base USDC via RPC) | wallet/ | W-2 | Done |
 | 14 | W-4 | Implement send (USDC transfer on Base) | wallet/ | W-2 | Done |
 | 15 | W-5 | Integrate x402 client (`@x402/fetch` wrapper) | wallet/ | W-2 | Done |
-| 16 | W-6 | Implement funding request flow (agent → owner notification → approval) | wallet/ | W-4 | Open |
-| 17 | W-7 | Implement budget/spending policy engine | wallet/ | W-4 | Open |
-| 18 | W-8 | Port execution journal + idempotency from Railgunner | wallet/ | W-4 | Open |
-| 19 | W-9 | Port circuit breaker from Railgunner | wallet/ | W-4 | Open |
+| 16 | W-6 | Implement funding request flow (agent → owner notification → approval) | wallet/ | W-4 | Done |
+| 17 | W-7 | Implement budget/spending policy engine | wallet/ | W-4 | Done |
+| 18 | W-8 | Port execution journal + idempotency from Railgunner | wallet/ | W-4 | Done |
+| 19 | W-9 | Port circuit breaker from Railgunner | wallet/ | W-4 | Done |
 | 20 | R-1 | Deploy Stalwart (Docker on Hetzner VPS) | relay/ | — | Done |
 | 21 | R-2 | Configure Stalwart: domain, DKIM, SPF, DMARC, ACME TLS | relay/ | R-1 | Open |
 | 22 | R-3 | Build relay.sh wrapper: mailbox creation (Stalwart REST API) | relay/ | R-2 | Open |
@@ -35,8 +35,8 @@
 | 29 | R-10 | Integrate x402 middleware (all endpoints gated by payment) | relay/ | R-3, P-4 | Open |
 | 30 | SP-1 | Write spawn.sh spec (Hetzner API wrapping, VM lifecycle, pricing) | specs/ | — | Done |
 | 31 | SP-2 | Build spawn.sh: VM provisioning via Hetzner Cloud API | spawn/ | SP-1 | Done |
-| 32 | SP-3 | Build spawn.sh: VM lifecycle (start, stop, destroy, resize) | spawn/ | SP-2 | Open |
-| 33 | SP-4 | Build spawn.sh: SSH key injection + initial setup | spawn/ | SP-2 | Open |
+| 32 | SP-3 | Build spawn.sh: VM lifecycle (start, stop, destroy, resize) | spawn/ | SP-2 | Done |
+| 33 | SP-4 | Build spawn.sh: SSH key injection + initial setup | spawn/ | SP-2 | Done |
 | 34 | SP-5 | Integrate x402 middleware | spawn/ | SP-2, P-4 | Open |
 | 35 | B-1 | Batch 1: parallel agent team execution (W-2 + R-1 + SP-1) | cross-cutting | W-2 plan, R-1 plan, SP-1 plan | Done |
 
@@ -53,11 +53,11 @@
 - W-4: `tasks/completed/w-4-send-usdc-2026-02-24.md`
 - W-5: `tasks/completed/w-5-x402-client-2026-02-24.md`
 - SP-2: `tasks/completed/sp-2-vm-provisioning-2026-02-24.md`
-- W-6: `tasks/active/w-6-funding-request-2026-02-24.md`
-- W-7: `tasks/active/w-7-policy-engine-2026-02-24.md`
-- W-8: `tasks/active/w-8-execution-journal-2026-02-24.md`
-- W-9: `tasks/active/w-9-circuit-breaker-2026-02-24.md`
-- SP-3/SP-4: `tasks/active/sp-3-sp-4-lifecycle-ssh-2026-02-24.md`
+- W-6: `tasks/completed/w-6-funding-request-2026-02-24.md`
+- W-7: `tasks/completed/w-7-policy-engine-2026-02-24.md`
+- W-8: `tasks/completed/w-8-execution-journal-2026-02-24.md`
+- W-9: `tasks/completed/w-9-circuit-breaker-2026-02-24.md`
+- SP-3/SP-4: `tasks/completed/sp-3-sp-4-lifecycle-ssh-2026-02-24.md`
 - Umbrella: `tasks/active/batch-execution-umbrella-2026-02-24.md`
 
 ## Backlog — Future Primitives
@@ -134,6 +134,12 @@ ERC-8004 uses CAIP-10 wallet addresses as root identity. DIDs layer on top non-b
 
 ## Done
 
+- W-6 — funding request: agent→owner CRUD, approve triggers sendUsdc (2026-02-24)
+- W-7 — policy engine: maxPerTx/maxPerDay, daily reset, per-wallet pause/resume (2026-02-24)
+- W-8 — execution journal: events, dead letters, tryClaim, history endpoint (2026-02-24)
+- W-9 — circuit breaker: global pause/resume by scope, admin routes (2026-02-24)
+- SP-3 — VM lifecycle: start/stop/reboot/resize/rebuild (2026-02-24)
+- SP-4 — SSH key management: register/list/delete (2026-02-24)
 - W-3 — balance queries: live USDC via viem readContract (2026-02-24)
 - W-4 — send USDC: ERC-20 transfer, idempotency journal, ownership check (2026-02-24)
 - W-5 — x402 client: 402 → sign EIP-3009 → retry wrapper (2026-02-24)

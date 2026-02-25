@@ -108,3 +108,49 @@ export interface DeleteServerResponse {
   status: "deleted";
   deposit_refunded: string;
 }
+
+// ─── VM actions ───────────────────────────────────────────────────────────
+
+export interface ActionOnlyResponse {
+  action: ActionResponse;
+}
+
+export interface ResizeRequest {
+  type: SpawnServerType;
+  upgrade_disk?: boolean;
+}
+
+export interface ResizeResponse {
+  action: ActionResponse;
+  new_type: string;
+  deposit_delta: string;
+}
+
+export interface RebuildRequest {
+  image: SpawnImage;
+}
+
+export interface RebuildResponse {
+  action: ActionResponse;
+  root_password: string | null;
+}
+
+// ─── SSH keys ─────────────────────────────────────────────────────────────
+
+export interface CreateSshKeyRequest {
+  name: string;
+  public_key: string;
+}
+
+export interface SshKeyResponse {
+  id: string;
+  hetzner_id: number;
+  name: string;
+  fingerprint: string;
+  owner_wallet: string;
+  created_at: string;
+}
+
+export interface SshKeyListResponse {
+  ssh_keys: SshKeyResponse[];
+}

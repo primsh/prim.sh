@@ -1,5 +1,14 @@
 import { Database } from "bun:sqlite";
 
+export interface SshKeyRow {
+  id: string;
+  hetzner_id: number;
+  owner_wallet: string;
+  name: string;
+  fingerprint: string;
+  created_at: number;
+}
+
 export interface ServerRow {
   id: string;
   hetzner_id: number;
@@ -46,6 +55,19 @@ export function getDb(): Database {
 
   _db.run("CREATE INDEX IF NOT EXISTS idx_servers_owner_wallet ON servers(owner_wallet)");
   _db.run("CREATE INDEX IF NOT EXISTS idx_servers_hetzner_id ON servers(hetzner_id)");
+
+  _db.run(`
+    CREATE TABLE IF NOT EXISTS ssh_keys (
+      id            TEXT PRIMARY KEY,
+      hetzner_id    INTEGER NOT NULL,
+      owner_wallet  TEXT NOT NULL,
+      name          TEXT NOT NULL,
+      fingerprint   TEXT NOT NULL,
+      created_at    INTEGER NOT NULL
+    )
+  `);
+
+  _db.run("CREATE INDEX IF NOT EXISTS idx_ssh_keys_owner_wallet ON ssh_keys(owner_wallet)");
 
   return _db;
 }
@@ -135,4 +157,47 @@ export function updateServerStatus(
 export function deleteServerRow(id: string): void {
   const db = getDb();
   db.query("DELETE FROM servers WHERE id = ?").run(id);
+}
+
+export function updateServerTypeAndImage(id: string, type?: string, image?: string): void {
+  const db = getDb();
+  const now = Date.now();
+  if (type !== undefined && image !== undefined) {
+    db.query("UPDATE servers SET type = ?, image = ?, updated_at = ? WHERE id = ?").run(type, image, now, id);
+  } else if (type !== undefined) {
+    db.query("UPDATE servers SET type = ?, updated_at = ? WHERE id = ?").run(type, now, id);
+  } else if (image !== undefined) {
+    db.query("UPDATE servers SET image = ?, updated_at = ? WHERE id = ?").run(image, now, id);
+  }
+}
+
+export function insertSshKey(params: {
+  id: string;
+  hetzner_id: number;
+  owner_wallet: string;
+  name: string;
+  fingerprint: string;
+}): void {
+  const db = getDb();
+  const now = Date.now();
+  db.query(
+    "INSERT INTO ssh_keys (id, hetzner_id, owner_wallet, name, fingerprint, created_at) VALUES (?, ?, ?, ?, ?, ?)",
+  ).run(params.id, params.hetzner_id, params.owner_wallet, params.name, params.fingerprint, now);
+}
+
+export function getSshKeyById(id: string): SshKeyRow | null {
+  const db = getDb();
+  return db.query<SshKeyRow, [string]>("SELECT * FROM ssh_keys WHERE id = ?").get(id) ?? null;
+}
+
+export function getSshKeysByOwner(owner: string): SshKeyRow[] {
+  const db = getDb();
+  return db
+    .query<SshKeyRow, [string]>("SELECT * FROM ssh_keys WHERE owner_wallet = ? ORDER BY created_at DESC")
+    .all(owner);
+}
+
+export function deleteSshKeyRow(id: string): void {
+  const db = getDb();
+  db.query("DELETE FROM ssh_keys WHERE id = ?").run(id);
 }

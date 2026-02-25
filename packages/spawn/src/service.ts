@@ -5,10 +5,22 @@ import {
   getServersByOwner,
   countServersByOwner,
   updateServerStatus,
+  updateServerTypeAndImage,
+  insertSshKey,
+  getSshKeyById,
+  getSshKeysByOwner,
+  deleteSshKeyRow,
 } from "./db.ts";
 import {
   createHetznerServer,
   deleteHetznerServer,
+  powerOnServer,
+  shutdownServer,
+  rebootServer as rebootHetznerServer,
+  changeServerType,
+  rebuildServer as rebuildHetznerServer,
+  createHetznerSshKey,
+  deleteHetznerSshKey,
   HetznerError,
 } from "./hetzner.ts";
 import type {
@@ -17,9 +29,44 @@ import type {
   ServerListResponse,
   ServerResponse,
   DeleteServerResponse,
+  ActionOnlyResponse,
+  ResizeRequest,
+  ResizeResponse,
+  RebuildRequest,
+  RebuildResponse,
+  CreateSshKeyRequest,
+  SshKeyResponse,
+  SshKeyListResponse,
 } from "./api.ts";
 import { SPAWN_SERVER_TYPES, SPAWN_IMAGES, SPAWN_LOCATIONS } from "./api.ts";
-import type { ServerRow } from "./db.ts";
+import type { ServerRow, SshKeyRow } from "./db.ts";
+
+// ─── Helpers ─────────────────────────────────────────────────────────────
+
+function generateSshKeyId(): string {
+  return `sk_${randomBytes(4).toString("hex")}`;
+}
+
+function rowToSshKeyResponse(row: SshKeyRow): SshKeyResponse {
+  return {
+    id: row.id,
+    hetzner_id: row.hetzner_id,
+    name: row.name,
+    fingerprint: row.fingerprint,
+    owner_wallet: row.owner_wallet,
+    created_at: new Date(row.created_at).toISOString(),
+  };
+}
+
+function mapActionResponse(action: { id: number; command: string; status: string; started: string; finished: string | null }) {
+  return {
+    id: action.id,
+    command: action.command,
+    status: action.status,
+    started_at: action.started,
+    finished_at: action.finished,
+  };
+}
 
 // ─── Constants ────────────────────────────────────────────────────────────
 
@@ -264,4 +311,211 @@ export async function deleteServer(
       deposit_refunded: depositRefunded,
     },
   };
+}
+
+// ─── VM lifecycle actions ─────────────────────────────────────────────────
+
+export async function startServer(
+  serverId: string,
+  callerWallet: string,
+): Promise<ServiceResult<ActionOnlyResponse>> {
+  const check = checkServerOwnership(serverId, callerWallet);
+  if (!check.ok) return check;
+
+  try {
+    const result = await powerOnServer(check.row.hetzner_id);
+    return { ok: true, data: { action: mapActionResponse(result.action) } };
+  } catch (err) {
+    if (err instanceof HetznerError) {
+      return { ok: false, status: 502, code: err.code, message: err.message };
+    }
+    throw err;
+  }
+}
+
+export async function stopServer(
+  serverId: string,
+  callerWallet: string,
+): Promise<ServiceResult<ActionOnlyResponse>> {
+  const check = checkServerOwnership(serverId, callerWallet);
+  if (!check.ok) return check;
+
+  try {
+    const result = await shutdownServer(check.row.hetzner_id);
+    return { ok: true, data: { action: mapActionResponse(result.action) } };
+  } catch (err) {
+    if (err instanceof HetznerError) {
+      return { ok: false, status: 502, code: err.code, message: err.message };
+    }
+    throw err;
+  }
+}
+
+export async function rebootServer(
+  serverId: string,
+  callerWallet: string,
+): Promise<ServiceResult<ActionOnlyResponse>> {
+  const check = checkServerOwnership(serverId, callerWallet);
+  if (!check.ok) return check;
+
+  try {
+    const result = await rebootHetznerServer(check.row.hetzner_id);
+    return { ok: true, data: { action: mapActionResponse(result.action) } };
+  } catch (err) {
+    if (err instanceof HetznerError) {
+      return { ok: false, status: 502, code: err.code, message: err.message };
+    }
+    throw err;
+  }
+}
+
+export async function resizeServer(
+  serverId: string,
+  callerWallet: string,
+  request: ResizeRequest,
+): Promise<ServiceResult<ResizeResponse>> {
+  const check = checkServerOwnership(serverId, callerWallet);
+  if (!check.ok) return check;
+
+  if (!SPAWN_SERVER_TYPES.includes(request.type)) {
+    return {
+      ok: false,
+      status: 400,
+      code: "invalid_request",
+      message: `Invalid server type. Must be one of: ${SPAWN_SERVER_TYPES.join(", ")}`,
+    };
+  }
+
+  const hetznerType = HETZNER_TYPE_MAP[request.type];
+
+  try {
+    const result = await changeServerType(check.row.hetzner_id, hetznerType, request.upgrade_disk ?? false);
+    updateServerTypeAndImage(serverId, request.type);
+    return {
+      ok: true,
+      data: {
+        action: mapActionResponse(result.action),
+        new_type: request.type,
+        deposit_delta: "0.00",
+      },
+    };
+  } catch (err) {
+    if (err instanceof HetznerError) {
+      return { ok: false, status: 502, code: err.code, message: err.message };
+    }
+    throw err;
+  }
+}
+
+export async function rebuildServer(
+  serverId: string,
+  callerWallet: string,
+  request: RebuildRequest,
+): Promise<ServiceResult<RebuildResponse>> {
+  const check = checkServerOwnership(serverId, callerWallet);
+  if (!check.ok) return check;
+
+  if (!SPAWN_IMAGES.includes(request.image)) {
+    return {
+      ok: false,
+      status: 400,
+      code: "invalid_request",
+      message: `Invalid image. Must be one of: ${SPAWN_IMAGES.join(", ")}`,
+    };
+  }
+
+  try {
+    const result = await rebuildHetznerServer(check.row.hetzner_id, request.image);
+    updateServerTypeAndImage(serverId, undefined, request.image);
+    return {
+      ok: true,
+      data: {
+        action: mapActionResponse(result.action),
+        root_password: result.root_password,
+      },
+    };
+  } catch (err) {
+    if (err instanceof HetznerError) {
+      return { ok: false, status: 502, code: err.code, message: err.message };
+    }
+    throw err;
+  }
+}
+
+// ─── SSH key management ───────────────────────────────────────────────────
+
+export async function registerSshKey(
+  request: CreateSshKeyRequest,
+  callerWallet: string,
+): Promise<ServiceResult<SshKeyResponse>> {
+  if (!request.name || !request.public_key) {
+    return {
+      ok: false,
+      status: 400,
+      code: "invalid_request",
+      message: "name and public_key are required",
+    };
+  }
+
+  try {
+    const hetznerResult = await createHetznerSshKey({
+      name: request.name,
+      public_key: request.public_key,
+      labels: { wallet: callerWallet },
+    });
+
+    const { ssh_key: hk } = hetznerResult;
+    const skId = generateSshKeyId();
+
+    insertSshKey({
+      id: skId,
+      hetzner_id: hk.id,
+      owner_wallet: callerWallet,
+      name: hk.name,
+      fingerprint: hk.fingerprint,
+    });
+
+    const row = getSshKeyById(skId);
+    if (!row) throw new Error("Failed to retrieve ssh key after insert");
+
+    return { ok: true, data: rowToSshKeyResponse(row) };
+  } catch (err) {
+    if (err instanceof HetznerError) {
+      return { ok: false, status: 502, code: err.code, message: err.message };
+    }
+    throw err;
+  }
+}
+
+export function listSshKeys(callerWallet: string): SshKeyListResponse {
+  const rows = getSshKeysByOwner(callerWallet);
+  return { ssh_keys: rows.map(rowToSshKeyResponse) };
+}
+
+export async function deleteSshKey(
+  keyId: string,
+  callerWallet: string,
+): Promise<ServiceResult<{ status: "deleted" }>> {
+  const row = getSshKeyById(keyId);
+
+  if (!row) {
+    return { ok: false, status: 404, code: "not_found", message: "SSH key not found" };
+  }
+
+  if (row.owner_wallet !== callerWallet) {
+    return { ok: false, status: 403, code: "forbidden", message: "Forbidden" };
+  }
+
+  try {
+    await deleteHetznerSshKey(row.hetzner_id);
+  } catch (err) {
+    if (err instanceof HetznerError) {
+      return { ok: false, status: 502, code: err.code, message: err.message };
+    }
+    throw err;
+  }
+
+  deleteSshKeyRow(keyId);
+
+  return { ok: true, data: { status: "deleted" } };
 }

@@ -19,7 +19,9 @@ import type {
   ApiError,
 } from "./api.ts";
 import { isAddress } from "viem";
-import { createWallet, listWallets, getWallet, deactivateWallet, claimWallet, sendUsdc } from "./service.ts";
+import { createWallet, listWallets, getWallet, deactivateWallet, claimWallet, sendUsdc, getTransactionHistory, createFundRequest, listFundRequests, approveFundRequest, denyFundRequest, getSpendingPolicy, updateSpendingPolicy, pauseWallet, resumeWallet } from "./service.ts";
+import type { FundRequestCreateRequest, FundRequestDenyRequest, PolicyUpdateRequest, PauseRequest, ResumeRequest } from "./api.ts";
+import { pause, resume, getState } from "./circuit-breaker.ts";
 
 const PAY_TO_ADDRESS = "0x0000000000000000000000000000000000000000";
 const NETWORK = "eip155:8453";
@@ -67,7 +69,7 @@ app.use(
     {
       payTo: PAY_TO_ADDRESS,
       network: NETWORK,
-      freeRoutes: ["GET /", "POST /v1/wallets"],
+      freeRoutes: ["GET /", "POST /v1/wallets", "POST /v1/admin/circuit-breaker/pause", "POST /v1/admin/circuit-breaker/resume", "GET /v1/admin/circuit-breaker"],
     },
     { ...WALLET_ROUTES },
   ),
@@ -201,48 +203,246 @@ app.post("/v1/wallets/:address/swap", (c) => {
 });
 
 // GET /v1/wallets/:address/history
-app.get("/v1/wallets/:address/history", (c) => {
-  return c.json(notImplemented() as unknown as HistoryResponse, 501);
+app.get("/v1/wallets/:address/history", claimMiddleware, (c) => {
+  const address = c.req.param("address");
+  const caller = c.get("walletAddress");
+  if (!caller) {
+    return c.json(forbidden("No wallet address in payment"), 403);
+  }
+
+  const limitParam = c.req.query("limit");
+  const limit = Math.min(Number(limitParam) || 20, 100);
+  const after = c.req.query("after");
+
+  const result = getTransactionHistory(address, caller, limit, after);
+  if (!result.ok) {
+    const { status, code, message } = result;
+    if (status === 404) return c.json(notFound(message), 404);
+    return c.json(forbidden(message), 403);
+  }
+  return c.json(result.data as HistoryResponse, 200);
 });
 
 // POST /v1/wallets/:address/fund-request
-app.post("/v1/wallets/:address/fund-request", (c) => {
-  return c.json(notImplemented() as unknown as FundRequestResponse, 501);
+app.post("/v1/wallets/:address/fund-request", claimMiddleware, async (c) => {
+  const address = c.req.param("address");
+  const caller = c.get("walletAddress");
+  if (!caller) {
+    return c.json(forbidden("No wallet address in payment"), 403);
+  }
+
+  let body: Partial<FundRequestCreateRequest>;
+  try {
+    body = await c.req.json<Partial<FundRequestCreateRequest>>();
+  } catch {
+    return c.json({ error: { code: "invalid_request", message: "Invalid JSON body" } } as ApiError, 400);
+  }
+
+  const { amount, reason } = body;
+  if (!amount || !reason) {
+    return c.json({ error: { code: "invalid_request", message: "Missing required fields: amount, reason" } } as ApiError, 400);
+  }
+
+  const result = createFundRequest(address, { amount, reason }, caller);
+  if (!result.ok) {
+    const { status, code, message } = result;
+    return c.json({ error: { code, message } } as ApiError, status as 400 | 403 | 404 | 500);
+  }
+  return c.json(result.data as FundRequestResponse, 200);
 });
 
 // GET /v1/wallets/:address/fund-requests
-app.get("/v1/wallets/:address/fund-requests", (c) => {
-  return c.json(notImplemented() as unknown as FundRequestListResponse, 501);
+app.get("/v1/wallets/:address/fund-requests", claimMiddleware, (c) => {
+  const address = c.req.param("address");
+  const caller = c.get("walletAddress");
+  if (!caller) {
+    return c.json(forbidden("No wallet address in payment"), 403);
+  }
+
+  const limitParam = c.req.query("limit");
+  const limit = Math.min(Number(limitParam) || 20, 100);
+  const after = c.req.query("after");
+
+  const result = listFundRequests(address, caller, limit, after);
+  if (!result.ok) {
+    const { status, code, message } = result;
+    return c.json({ error: { code, message } } as ApiError, status as 403 | 404);
+  }
+  return c.json(result.data as FundRequestListResponse, 200);
 });
 
 // POST /v1/fund-requests/:id/approve
-app.post("/v1/fund-requests/:id/approve", (c) => {
-  return c.json(notImplemented() as unknown as FundRequestApproveResponse, 501);
+app.post("/v1/fund-requests/:id/approve", claimMiddleware, async (c) => {
+  const id = c.req.param("id");
+  const caller = c.get("walletAddress");
+  if (!caller) {
+    return c.json(forbidden("No wallet address in payment"), 403);
+  }
+
+  const result = await approveFundRequest(id, caller);
+  if (!result.ok) {
+    const { status, code, message } = result;
+    return c.json({ error: { code, message } } as ApiError, status as 403 | 404 | 409 | 422 | 502);
+  }
+  return c.json(result.data as FundRequestApproveResponse, 200);
 });
 
 // POST /v1/fund-requests/:id/deny
-app.post("/v1/fund-requests/:id/deny", (c) => {
-  return c.json(notImplemented() as unknown as FundRequestDenyResponse, 501);
+app.post("/v1/fund-requests/:id/deny", claimMiddleware, async (c) => {
+  const id = c.req.param("id");
+  const caller = c.get("walletAddress");
+  if (!caller) {
+    return c.json(forbidden("No wallet address in payment"), 403);
+  }
+
+  let reason: string | undefined;
+  try {
+    const body = await c.req.json<Partial<FundRequestDenyRequest>>();
+    reason = body.reason;
+  } catch {
+    // No body or invalid JSON — reason is optional
+  }
+
+  const result = denyFundRequest(id, caller, reason);
+  if (!result.ok) {
+    const { status, code, message } = result;
+    return c.json({ error: { code, message } } as ApiError, status as 403 | 404 | 409);
+  }
+  return c.json(result.data as FundRequestDenyResponse, 200);
 });
 
 // GET /v1/wallets/:address/policy
-app.get("/v1/wallets/:address/policy", (c) => {
-  return c.json(notImplemented() as unknown as PolicyResponse, 501);
+app.get("/v1/wallets/:address/policy", claimMiddleware, (c) => {
+  const address = c.req.param("address");
+  const caller = c.get("walletAddress");
+  if (!caller) return c.json(forbidden("No wallet address in payment"), 403);
+
+  const result = getSpendingPolicy(address, caller);
+  if (!result.ok) {
+    const { status, code, message } = result;
+    if (status === 404) return c.json(notFound(message), 404);
+    return c.json(forbidden(message), 403);
+  }
+  return c.json(result.data as PolicyResponse, 200);
 });
 
 // PUT /v1/wallets/:address/policy
-app.put("/v1/wallets/:address/policy", (c) => {
-  return c.json(notImplemented() as unknown as PolicyResponse, 501);
+app.put("/v1/wallets/:address/policy", claimMiddleware, async (c) => {
+  const address = c.req.param("address");
+  const caller = c.get("walletAddress");
+  if (!caller) return c.json(forbidden("No wallet address in payment"), 403);
+
+  let body: Partial<PolicyUpdateRequest>;
+  try {
+    body = await c.req.json<Partial<PolicyUpdateRequest>>();
+  } catch {
+    return c.json({ error: { code: "invalid_request", message: "Invalid JSON body" } } as ApiError, 400);
+  }
+
+  const result = updateSpendingPolicy(address, caller, body);
+  if (!result.ok) {
+    const { status, code, message } = result;
+    return c.json({ error: { code, message } } as ApiError, status as 400 | 403 | 404);
+  }
+  return c.json(result.data as PolicyResponse, 200);
 });
 
 // POST /v1/wallets/:address/pause
-app.post("/v1/wallets/:address/pause", (c) => {
-  return c.json(notImplemented() as unknown as PauseResponse, 501);
+app.post("/v1/wallets/:address/pause", claimMiddleware, async (c) => {
+  const address = c.req.param("address");
+  const caller = c.get("walletAddress");
+  if (!caller) return c.json(forbidden("No wallet address in payment"), 403);
+
+  let scope: string | undefined;
+  try {
+    const body = await c.req.json<Partial<PauseRequest>>();
+    scope = body.scope;
+  } catch {
+    // scope optional, default to "all"
+  }
+  const effectiveScope = (scope ?? "all") as import("./api.ts").PauseScope;
+  if (!["all", "send", "swap"].includes(effectiveScope)) {
+    return c.json({ error: { code: "invalid_request", message: "scope must be one of: all, send, swap" } } as ApiError, 400);
+  }
+
+  const result = pauseWallet(address, caller, effectiveScope);
+  if (!result.ok) {
+    const { status, code, message } = result;
+    if (status === 404) return c.json(notFound(message), 404);
+    return c.json(forbidden(message), 403);
+  }
+  return c.json(result.data as PauseResponse, 200);
 });
 
 // POST /v1/wallets/:address/resume
-app.post("/v1/wallets/:address/resume", (c) => {
-  return c.json(notImplemented() as unknown as ResumeResponse, 501);
+app.post("/v1/wallets/:address/resume", claimMiddleware, async (c) => {
+  const address = c.req.param("address");
+  const caller = c.get("walletAddress");
+  if (!caller) return c.json(forbidden("No wallet address in payment"), 403);
+
+  let scope: string | undefined;
+  try {
+    const body = await c.req.json<Partial<ResumeRequest>>();
+    scope = body.scope;
+  } catch {
+    // scope optional, default to "all"
+  }
+  const effectiveScope = (scope ?? "all") as import("./api.ts").PauseScope;
+  if (!["all", "send", "swap"].includes(effectiveScope)) {
+    return c.json({ error: { code: "invalid_request", message: "scope must be one of: all, send, swap" } } as ApiError, 400);
+  }
+
+  const result = resumeWallet(address, caller, effectiveScope);
+  if (!result.ok) {
+    const { status, code, message } = result;
+    if (status === 404) return c.json(notFound(message), 404);
+    return c.json(forbidden(message), 403);
+  }
+  return c.json(result.data as ResumeResponse, 200);
+});
+
+// ─── Admin: circuit breaker ────────────────────────────────────────────────
+
+// POST /v1/admin/circuit-breaker/pause
+app.post("/v1/admin/circuit-breaker/pause", async (c) => {
+  let scope: string | undefined;
+  try {
+    const body = await c.req.json<{ scope?: string }>();
+    scope = body.scope;
+  } catch {
+    return c.json({ error: { code: "invalid_request", message: "Invalid JSON body" } } as ApiError, 400);
+  }
+
+  if (!scope || !["all", "send", "swap"].includes(scope)) {
+    return c.json({ error: { code: "invalid_request", message: "scope must be one of: all, send, swap" } } as ApiError, 400);
+  }
+
+  pause(scope as "all" | "send" | "swap");
+  return c.json({ scope, paused: true }, 200);
+});
+
+// POST /v1/admin/circuit-breaker/resume
+app.post("/v1/admin/circuit-breaker/resume", async (c) => {
+  let scope: string | undefined;
+  try {
+    const body = await c.req.json<{ scope?: string }>();
+    scope = body.scope;
+  } catch {
+    return c.json({ error: { code: "invalid_request", message: "Invalid JSON body" } } as ApiError, 400);
+  }
+
+  if (!scope || !["all", "send", "swap"].includes(scope)) {
+    return c.json({ error: { code: "invalid_request", message: "scope must be one of: all, send, swap" } } as ApiError, 400);
+  }
+
+  resume(scope as "all" | "send" | "swap");
+  return c.json({ scope, paused: false }, 200);
+});
+
+// GET /v1/admin/circuit-breaker
+app.get("/v1/admin/circuit-breaker", (c) => {
+  const state = getState();
+  return c.json(state, 200);
 });
 
 export default app;

@@ -103,6 +103,32 @@ export interface HetznerListResponse {
   };
 }
 
+export interface HetznerActionResponse {
+  action: HetznerAction;
+}
+
+export interface HetznerRebuildResponse {
+  action: HetznerAction;
+  root_password: string | null;
+}
+
+export interface HetznerSshKey {
+  id: number;
+  name: string;
+  fingerprint: string;
+  public_key: string;
+  labels: Record<string, string>;
+  created: string;
+}
+
+export interface HetznerSshKeyResponse {
+  ssh_key: HetznerSshKey;
+}
+
+export interface HetznerSshKeyListResponse {
+  ssh_keys: HetznerSshKey[];
+}
+
 // ─── API functions ────────────────────────────────────────────────────────
 
 export interface CreateServerParams {
@@ -141,6 +167,73 @@ export async function listHetznerServers(labelSelector: string): Promise<Hetzner
 
 export async function deleteHetznerServer(id: number): Promise<void> {
   const res = await fetch(`${BASE_URL}/servers/${id}`, {
+    method: "DELETE",
+    headers: headers(),
+  });
+  await handleResponse<void>(res);
+}
+
+// ─── VM action functions ───────────────────────────────────────────────────
+
+async function postServerAction<T>(hetznerServerId: number, action: string, body: Record<string, unknown> = {}): Promise<T> {
+  const res = await fetch(`${BASE_URL}/servers/${hetznerServerId}/actions/${action}`, {
+    method: "POST",
+    headers: headers(),
+    body: JSON.stringify(body),
+  });
+  return handleResponse<T>(res);
+}
+
+export async function powerOnServer(id: number): Promise<HetznerActionResponse> {
+  return postServerAction<HetznerActionResponse>(id, "poweron");
+}
+
+export async function shutdownServer(id: number): Promise<HetznerActionResponse> {
+  return postServerAction<HetznerActionResponse>(id, "shutdown");
+}
+
+export async function rebootServer(id: number): Promise<HetznerActionResponse> {
+  return postServerAction<HetznerActionResponse>(id, "reboot");
+}
+
+export async function changeServerType(
+  id: number,
+  serverType: string,
+  upgradeDisk: boolean,
+): Promise<HetznerActionResponse> {
+  return postServerAction<HetznerActionResponse>(id, "change_type", {
+    server_type: serverType,
+    upgrade_disk: upgradeDisk,
+  });
+}
+
+export async function rebuildServer(id: number, image: string): Promise<HetznerRebuildResponse> {
+  return postServerAction<HetznerRebuildResponse>(id, "rebuild", { image });
+}
+
+// ─── SSH key functions ────────────────────────────────────────────────────
+
+export async function createHetznerSshKey(params: {
+  name: string;
+  public_key: string;
+  labels?: Record<string, string>;
+}): Promise<HetznerSshKeyResponse> {
+  const res = await fetch(`${BASE_URL}/ssh_keys`, {
+    method: "POST",
+    headers: headers(),
+    body: JSON.stringify(params),
+  });
+  return handleResponse<HetznerSshKeyResponse>(res);
+}
+
+export async function listHetznerSshKeys(labelSelector: string): Promise<HetznerSshKeyListResponse> {
+  const url = `${BASE_URL}/ssh_keys?label_selector=${encodeURIComponent(labelSelector)}`;
+  const res = await fetch(url, { headers: headers() });
+  return handleResponse<HetznerSshKeyListResponse>(res);
+}
+
+export async function deleteHetznerSshKey(id: number): Promise<void> {
+  const res = await fetch(`${BASE_URL}/ssh_keys/${id}`, {
     method: "DELETE",
     headers: headers(),
   });
