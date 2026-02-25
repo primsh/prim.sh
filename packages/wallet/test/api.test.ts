@@ -1,11 +1,16 @@
-import { describe, expect, it, beforeAll, afterAll, vi } from "vitest";
+/**
+ * API route integration tests: health check, signature registration, x402 gating.
+ *
+ * Rewritten in W-10 for non-custodial registration (EIP-191 signature).
+ */
+
+import { describe, expect, it, beforeAll, afterAll, beforeEach, vi } from "vitest";
+import { privateKeyToAccount, generatePrivateKey } from "viem/accounts";
+import { getAddress } from "viem";
 import { encodePaymentSignatureHeader } from "@x402/core/http";
 
-// Set up env before any imports that might initialize the DB or keystore
-process.env.WALLET_MASTER_KEY = "a".repeat(64);
 process.env.WALLET_DB_PATH = ":memory:";
 
-const PAY_TO = "0x0000000000000000000000000000000000000000";
 const NETWORK = "eip155:8453";
 
 const mockFetch = vi.fn(async (input: RequestInfo | URL) => {
@@ -32,17 +37,24 @@ const mockFetch = vi.fn(async (input: RequestInfo | URL) => {
 });
 
 let app: Awaited<typeof import("../src/index")>["default"];
+let resetDb: typeof import("../src/db.ts")["resetDb"];
 
 beforeAll(async () => {
   vi.stubGlobal("fetch", mockFetch);
+  const db = await import("../src/db.ts");
+  resetDb = db.resetDb;
   app = (await import("../src/index")).default;
+});
+
+beforeEach(() => {
+  resetDb();
 });
 
 afterAll(() => {
   vi.unstubAllGlobals();
 });
 
-describe("wallet.sh API stubs", () => {
+describe("wallet.sh API", () => {
   it("GET / returns 200 with service and status", async () => {
     const res = await app.request("/", { method: "GET" });
     expect(res.status).toBe(200);
@@ -50,40 +62,30 @@ describe("wallet.sh API stubs", () => {
     expect(body).toMatchObject({ service: "wallet.sh", status: "ok" });
   });
 
-  it("POST /v1/wallets (free) returns 201 with stub create response", async () => {
+  it("POST /v1/wallets (free) registers with valid signature", async () => {
+    const privateKey = generatePrivateKey();
+    const account = privateKeyToAccount(privateKey);
+    const timestamp = new Date().toISOString();
+    const address = getAddress(account.address);
+    const message = `Register ${address} with prim.sh at ${timestamp}`;
+    const signature = await account.signMessage({ message });
+
     const res = await app.request("/v1/wallets", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ chain: "eip155:8453" }),
+      body: JSON.stringify({ address: account.address, signature, timestamp }),
     });
     expect(res.status).toBe(201);
     const body = await res.json();
     expect(body).toMatchObject({
-      address: expect.stringMatching(/^0x[0-9a-fA-F]{40}$/),
+      address,
       chain: "eip155:8453",
-      balance: "0.00",
-      funded: false,
-      claimToken: expect.stringMatching(/^ctk_[0-9a-f]{64}$/),
     });
-    expect(body.createdAt).toBeDefined();
+    expect(body.registeredAt).toBeDefined();
   });
 
   it("GET /v1/wallets without payment returns 402", async () => {
     const res = await app.request("/v1/wallets", { method: "GET" });
-    expect(res.status).toBe(402);
-    expect(res.headers.get("Payment-Required")).toBeTruthy();
-  });
-
-  it("POST /v1/wallets/:address/send without payment returns 402", async () => {
-    const res = await app.request("/v1/wallets/0x123/send", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        to: "0x456",
-        amount: "10.00",
-        idempotencyKey: "idk_1",
-      }),
-    });
     expect(res.status).toBe(402);
     expect(res.headers.get("Payment-Required")).toBeTruthy();
   });
@@ -96,7 +98,7 @@ describe("wallet.sh API stubs", () => {
       payload: {
         authorization: {
           from: "0xPayerAddress",
-          to: PAY_TO,
+          to: "0x0000000000000000000000000000000000000000",
           value: "1000",
           validAfter: "0",
           validBefore: "9999999999",

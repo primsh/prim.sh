@@ -1,5 +1,5 @@
 {
-  "name": "@agentstack/wallet",
+  "name": "@prim/x402-client",
   "version": "0.0.0",
   "private": false,
   "type": "module",
@@ -15,7 +15,7 @@
   },
   "dependencies": {
     "@agentstack/x402-middleware": "workspace:*",
-    "hono": "^4.4.7",
+    "@x402/evm": "^2.4.0",
     "viem": "^2.21.0"
   },
   "devDependencies": {

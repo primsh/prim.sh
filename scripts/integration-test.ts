@@ -1,27 +1,35 @@
 #!/usr/bin/env bun
 /**
- * ST-5: Testnet Integration Test — wallet.sh ↔ store.sh on Base Sepolia
+ * Testnet Integration Test — wallet.sh + faucet.sh + store.sh on Base Sepolia
  *
- * Spins up both services as subprocesses, creates a wallet, then exercises
- * store.sh endpoints via x402Fetch (real 402 → sign → retry flow).
+ * Non-custodial flow (W-10):
+ *   1. Generate private key locally (agent-side)
+ *   2. Register wallet via EIP-191 signature
+ *   3. Fund via faucet.sh (Circle USDC drip)
+ *   4. Exercise store.sh endpoints via @prim/x402-client
  *
  * Usage:
  *   source .env.testnet && bun run scripts/integration-test.ts
  *   source .env.testnet && bun run scripts/integration-test.ts --dry-run
  *
- * --dry-run: Start wallet.sh, create a wallet, check balance, then exit.
- *            Use this to get the wallet address for faucet funding.
+ * --dry-run: Start wallet.sh + faucet.sh, register wallet, fund, check balance, then exit.
+ *            Use this to verify the non-custodial flow without store.sh.
  */
 
 import { spawn } from "node:child_process";
 import type { ChildProcess } from "node:child_process";
+import { readFileSync, writeFileSync, existsSync, appendFileSync } from "node:fs";
+import { privateKeyToAccount, generatePrivateKey } from "viem/accounts";
+import { getAddress } from "viem";
 
 // ─── Config ──────────────────────────────────────────────────────────────
 
 const DRY_RUN = process.argv.includes("--dry-run");
 const WALLET_PORT = Number(process.env.WALLET_PORT ?? "3001");
+const FAUCET_PORT = Number(process.env.FAUCET_PORT ?? "3003");
 const STORE_PORT = Number(process.env.STORE_PORT ?? "3002");
 const WALLET_URL = `http://localhost:${WALLET_PORT}`;
+const FAUCET_URL = `http://localhost:${FAUCET_PORT}`;
 const STORE_URL = `http://localhost:${STORE_PORT}`;
 
 // ─── Preflight checks ───────────────────────────────────────────────────
@@ -44,10 +52,8 @@ if (network !== "eip155:84532") {
   process.exit(1);
 }
 
-requireEnv("WALLET_MASTER_KEY");
-
 if (DRY_RUN) {
-  console.log("✓ Dry-run mode. Only wallet.sh will start.");
+  console.log("✓ Dry-run mode. wallet.sh + faucet.sh will start.");
 } else {
   requireEnv("PRIM_PAY_TO");
   requireEnv("CLOUDFLARE_API_TOKEN");
@@ -116,7 +122,7 @@ function cleanup() {
 
 let testBucketId: string | null = null;
 let walletAddress: string | null = null;
-let claimToken: string | null = null;
+let agentPrivateKey: `0x${string}` | null = null;
 const steps: { name: string; passed: boolean; error?: string }[] = [];
 
 async function step(name: string, fn: () => Promise<void>) {
@@ -132,10 +138,8 @@ async function step(name: string, fn: () => Promise<void>) {
   }
 }
 
-// Dynamically import x402Fetch from wallet package (after services start)
-async function getX402Fetch() {
-  const mod = await import("../packages/wallet/src/x402-client.ts");
-  return mod.x402Fetch;
+async function sleep(ms: number) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
 // ─── Main ────────────────────────────────────────────────────────────────
@@ -144,65 +148,131 @@ async function main() {
   console.log("\n─── Starting services ───────────────────────────────────────\n");
 
   await startService("wallet.sh", "packages/wallet/src/index.ts", WALLET_PORT);
+  await startService("faucet.sh", "packages/faucet/src/index.ts", FAUCET_PORT);
   if (!DRY_RUN) {
     await startService("store.sh", "packages/store/src/index.ts", STORE_PORT);
   }
 
   console.log("\n─── Running integration tests ──────────────────────────────\n");
 
-  // 1. Create wallet (free route)
-  await step("Create wallet", async () => {
+  // 1. Load or generate agent key, then register wallet via EIP-191 signature
+  await step("Register wallet (EIP-191 signature)", async () => {
+    // Reuse AGENT_PRIVATE_KEY from env if set, otherwise generate + persist
+    const existingKey = process.env.AGENT_PRIVATE_KEY;
+    if (existingKey) {
+      agentPrivateKey = existingKey as `0x${string}`;
+      console.log("(reusing AGENT_PRIVATE_KEY) ");
+    } else {
+      agentPrivateKey = generatePrivateKey();
+      // Persist to .env.testnet so the key survives across runs
+      const envFile = ".env.testnet";
+      if (existsSync(envFile)) {
+        appendFileSync(envFile, `\nAGENT_PRIVATE_KEY=${agentPrivateKey}\n`);
+        console.log(`(new key saved to ${envFile}) `);
+      } else {
+        console.log(`(new key — set AGENT_PRIVATE_KEY=${agentPrivateKey} to reuse) `);
+      }
+    }
+
+    const account = privateKeyToAccount(agentPrivateKey);
+    walletAddress = getAddress(account.address);
+    const timestamp = new Date().toISOString();
+    const message = `Register ${walletAddress} with prim.sh at ${timestamp}`;
+    const signature = await account.signMessage({ message });
+
     const res = await fetch(`${WALLET_URL}/v1/wallets`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({}),
+      body: JSON.stringify({ address: walletAddress, signature, timestamp }),
     });
+
+    // 409 = already registered (reusing key from previous run) — that's fine
+    if (res.status === 409) {
+      console.log(`(${walletAddress} — already registered)`);
+      return;
+    }
     if (!res.ok) throw new Error(`POST /v1/wallets → ${res.status}: ${await res.text()}`);
-    const data = await res.json() as { address: string; claimToken: string };
-    walletAddress = data.address;
-    claimToken = data.claimToken;
+    const data = (await res.json()) as { address: string; chain: string };
+    if (data.address !== walletAddress) throw new Error(`Expected ${walletAddress}, got ${data.address}`);
+    console.log(`(${walletAddress})`);
   });
 
-  if (!walletAddress) {
+  if (!walletAddress || !agentPrivateKey) {
     console.error("\n✗ Cannot continue without a wallet. Exiting.");
     return;
   }
 
-  // 2. Check balance via wallet.sh's balance module
+  // 2. Fund wallet via faucet.sh (USDC) — requires CIRCLE_API_KEY
+  let faucetOk = false;
+  if (process.env.CIRCLE_API_KEY) {
+    await step("Fund wallet via faucet.sh (USDC)", async () => {
+      const res = await fetch(`${FAUCET_URL}/v1/faucet/usdc`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ address: walletAddress }),
+      });
+      if (!res.ok) {
+        const text = await res.text();
+        throw new Error(`POST /v1/faucet/usdc → ${res.status}: ${text}`);
+      }
+      const data = (await res.json()) as { amount: string; currency: string };
+      faucetOk = true;
+      console.log(`(${data.amount} ${data.currency})`);
+    });
+  } else {
+    console.log("  Fund wallet via faucet.sh... ⊘ skipped (no CIRCLE_API_KEY)");
+    console.log(`    Fund manually: https://faucet.circle.com/ → Base Sepolia → ${walletAddress}`);
+  }
+
+  // 3. Check USDC balance (poll if faucet was used)
   await step("Check USDC balance", async () => {
     const { getUsdcBalance } = await import("../packages/wallet/src/balance.ts");
+
+    if (faucetOk) {
+      // Poll for up to 60s for faucet funds to arrive
+      const maxWait = 60_000;
+      const start = Date.now();
+      while (Date.now() - start < maxWait) {
+        const { balance, funded } = await getUsdcBalance(walletAddress as `0x${string}`);
+        if (funded) {
+          console.log(`(${balance} USDC)`);
+          return;
+        }
+        await sleep(3000);
+      }
+    }
+
+    // Single check (or final check after timeout)
     const { balance, funded } = await getUsdcBalance(walletAddress as `0x${string}`);
     console.log(`(${balance} USDC, funded=${funded})`);
 
     if (!funded) {
-      console.log(`\n    ⚠ Wallet has zero USDC. Fund it before running the full test:`);
-      console.log(`    1. Test USDC: https://faucet.circle.com/ → Base Sepolia → ${walletAddress}`);
-      console.log(`    2. Gas ETH:   https://www.alchemy.com/faucets/base-sepolia → ${walletAddress}`);
-      if (DRY_RUN) {
-        console.log(`\n    Then run the full test:`);
-        console.log(`    source .env.testnet && bun run scripts/integration-test.ts\n`);
-      }
+      console.log(`\n    ⚠ Wallet not funded. Full test (store.sh x402) requires USDC.`);
+      console.log(`    Fund manually: https://faucet.circle.com/ → Base Sepolia → ${walletAddress}`);
     }
   });
 
   if (DRY_RUN) {
-    console.log("\n  Dry-run complete. Address and balance above.");
+    console.log("\n  Dry-run complete. Wallet registered and funded.");
     return;
   }
 
-  // 3. Create bucket via x402Fetch
-  const x402Fetch = await getX402Fetch();
+  // 4. Create x402 fetch using @prim/x402-client
+  const { createPrimFetch } = await import("../packages/x402-client/src/index.ts");
+  const primFetch = createPrimFetch({
+    privateKey: agentPrivateKey,
+    maxPayment: "1.00",
+  });
 
+  // 5. Create bucket via x402
   await step("Create bucket via x402", async () => {
-    const res = await x402Fetch(`${STORE_URL}/v1/buckets`, {
-      walletAddress: walletAddress!,
-      maxPayment: "1.00",
+    const res = await primFetch(`${STORE_URL}/v1/buckets`, {
       method: "POST",
-      headers: { "Content-Type": "application/json", "X-Claim-Token": claimToken! },
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ name: `test-${Date.now()}` }),
     });
     if (!res.ok) throw new Error(`POST /v1/buckets → ${res.status}: ${await res.text()}`);
-    const data = await res.json() as { id: string; name: string };
+    const data = (await res.json()) as { id: string; name: string };
     testBucketId = data.id;
     console.log(`(bucket: ${testBucketId})`);
   });
@@ -212,75 +282,57 @@ async function main() {
     return;
   }
 
-  // 4. Upload object
+  // 6. Upload object
   await step("Upload object via x402", async () => {
-    const res = await x402Fetch(
+    const res = await primFetch(
       `${STORE_URL}/v1/buckets/${testBucketId}/objects/test.txt`,
       {
-        walletAddress: walletAddress!,
-        maxPayment: "1.00",
         method: "PUT",
         headers: { "Content-Type": "text/plain", "Content-Length": "13" },
         body: "hello testnet",
       },
     );
     if (!res.ok) throw new Error(`PUT object → ${res.status}: ${await res.text()}`);
-    const data = await res.json() as { key: string };
+    const data = (await res.json()) as { key: string };
     if (data.key !== "test.txt") throw new Error(`Expected key "test.txt", got "${data.key}"`);
   });
 
-  // 5. Download object — verify body
+  // 7. Download object — verify body
   await step("Download object via x402", async () => {
-    const res = await x402Fetch(
+    const res = await primFetch(
       `${STORE_URL}/v1/buckets/${testBucketId}/objects/test.txt`,
-      {
-        walletAddress: walletAddress!,
-        maxPayment: "1.00",
-        method: "GET",
-      },
+      { method: "GET" },
     );
     if (!res.ok) throw new Error(`GET object → ${res.status}: ${await res.text()}`);
     const body = await res.text();
     if (body !== "hello testnet") throw new Error(`Expected "hello testnet", got "${body}"`);
   });
 
-  // 6. Get quota
+  // 8. Get quota
   await step("Get quota via x402", async () => {
-    const res = await x402Fetch(
+    const res = await primFetch(
       `${STORE_URL}/v1/buckets/${testBucketId}/quota`,
-      {
-        walletAddress: walletAddress!,
-        maxPayment: "1.00",
-        method: "GET",
-      },
+      { method: "GET" },
     );
     if (!res.ok) throw new Error(`GET quota → ${res.status}: ${await res.text()}`);
-    const data = await res.json() as { usage_bytes: number };
+    const data = (await res.json()) as { usage_bytes: number };
     if (data.usage_bytes !== 13) throw new Error(`Expected usage_bytes=13, got ${data.usage_bytes}`);
   });
 
-  // 7. Delete object
+  // 9. Delete object
   await step("Delete object via x402", async () => {
-    const res = await x402Fetch(
+    const res = await primFetch(
       `${STORE_URL}/v1/buckets/${testBucketId}/objects/test.txt`,
-      {
-        walletAddress: walletAddress!,
-        maxPayment: "1.00",
-        method: "DELETE",
-      },
+      { method: "DELETE" },
     );
     if (!res.ok) throw new Error(`DELETE object → ${res.status}: ${await res.text()}`);
   });
 
-  // 8. Delete bucket
+  // 10. Delete bucket
   await step("Delete bucket via x402", async () => {
-    const res = await x402Fetch(
+    const res = await primFetch(
       `${STORE_URL}/v1/buckets/${testBucketId}`,
-      {
-        walletAddress: walletAddress!,
-        maxPayment: "1.00",
-        method: "DELETE",
-      },
+      { method: "DELETE" },
     );
     if (!res.ok) throw new Error(`DELETE bucket → ${res.status}: ${await res.text()}`);
     testBucketId = null; // Prevent cleanup from trying to delete again
@@ -295,15 +347,12 @@ try {
   console.error("\n✗ Fatal error:", err instanceof Error ? err.message : err);
 } finally {
   // Cleanup: delete test bucket if still exists
-  if (testBucketId && walletAddress) {
+  if (testBucketId && agentPrivateKey) {
     console.log(`\n  Cleaning up test bucket ${testBucketId}...`);
     try {
-      const x402Fetch = await getX402Fetch();
-      await x402Fetch(`${STORE_URL}/v1/buckets/${testBucketId}`, {
-        walletAddress,
-        maxPayment: "1.00",
-        method: "DELETE",
-      });
+      const { createPrimFetch } = await import("../packages/x402-client/src/index.ts");
+      const primFetch = createPrimFetch({ privateKey: agentPrivateKey, maxPayment: "1.00" });
+      await primFetch(`${STORE_URL}/v1/buckets/${testBucketId}`, { method: "DELETE" });
       console.log("  ✓ Cleaned up");
     } catch {
       console.log("  ✗ Cleanup failed (bucket may still exist)");

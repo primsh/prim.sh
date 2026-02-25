@@ -36,18 +36,21 @@ export interface CursorPagination {
   cursor: string | null;
 }
 
-// ─── Wallet create ────────────────────────────────────────────────────────
+// ─── Wallet register ──────────────────────────────────────────────────────
 
-export interface WalletCreateRequest {
+export interface WalletRegisterRequest {
+  address: string;
+  signature: string;
+  timestamp: string;
   chain?: string;
+  label?: string;
 }
 
-export interface WalletCreateResponse {
+export interface WalletRegisterResponse {
   address: string;
   chain: string;
-  balance: string;
-  funded: boolean;
-  claimToken: string;
+  label: string | null;
+  registeredAt: string;
   createdAt: string;
 }
 
@@ -92,53 +95,6 @@ export interface WalletDeactivateResponse {
   deactivatedAt: string;
 }
 
-// ─── Send ──────────────────────────────────────────────────────────────────
-
-export interface SendRequest {
-  to: string;
-  amount: string;
-  idempotencyKey: string;
-}
-
-export type TxStatus = "pending" | "confirmed" | "failed";
-
-export interface SendResponse {
-  txHash: string;
-  from: string;
-  to: string;
-  amount: string;
-  chain: string;
-  status: TxStatus;
-  confirmedAt: string | null;
-}
-
-// ─── Swap (deferred, stub) ─────────────────────────────────────────────────
-
-export interface SwapRequest {
-  from: { token: string; amount: string };
-  to: { token: string };
-  idempotencyKey: string;
-}
-
-// ─── History ────────────────────────────────────────────────────────────────
-
-export type TransactionType = "send" | "receive";
-
-export interface TransactionRecord {
-  txHash: string;
-  type: TransactionType;
-  from: string;
-  to: string;
-  amount: string;
-  chain: string;
-  status: TxStatus;
-  timestamp: string;
-}
-
-export interface HistoryResponse extends CursorPagination {
-  transactions: TransactionRecord[];
-}
-
 // ─── Fund request ──────────────────────────────────────────────────────────
 
 export interface FundRequestCreateRequest {
@@ -164,7 +120,9 @@ export interface FundRequestListResponse extends CursorPagination {
 export interface FundRequestApproveResponse {
   id: string;
   status: "approved";
-  txHash: string;
+  fundingAddress: string;
+  amount: string;
+  chain: string;
   approvedAt: string;
 }
 

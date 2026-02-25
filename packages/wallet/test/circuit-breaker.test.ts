@@ -1,43 +1,14 @@
 /**
- * W-9 circuit breaker tests: pause/resume/isPaused truth table, sendUsdc integration, admin routes.
+ * W-9 circuit breaker tests: pause/resume/isPaused truth table, getState, admin routes.
  *
- * IMPORTANT: env vars must be set before any module imports that touch keystore/db.
+ * sendUsdc integration tests removed in W-10 (non-custodial refactor).
  */
 
 import { describe, expect, it, beforeEach, afterEach, vi } from "vitest";
 
-// Set master key and in-memory DB before any imports
-const TEST_MASTER_KEY = "a".repeat(64); // 32 bytes as hex
-process.env.WALLET_MASTER_KEY = TEST_MASTER_KEY;
 process.env.WALLET_DB_PATH = ":memory:";
 
-// ─── Hoist mock fns so vi.mock factories can reference them ───────────────
-
-const { mockWriteContract, mockGetUsdcBalance } = vi.hoisted(() => ({
-  mockWriteContract: vi.fn<[], Promise<`0x${string}`>>(),
-  mockGetUsdcBalance: vi.fn<[string], Promise<{ balance: string; funded: boolean }>>(),
-}));
-
-// ─── Mock viem wallet client ───────────────────────────────────────────────
-
-vi.mock("viem", async (importOriginal) => {
-  const actual = await importOriginal<typeof import("viem")>();
-  return {
-    ...actual,
-    createWalletClient: vi.fn(() => ({
-      writeContract: mockWriteContract,
-    })),
-  };
-});
-
-// ─── Mock balance check ────────────────────────────────────────────────────
-
-vi.mock("../src/balance.ts", () => ({
-  getUsdcBalance: mockGetUsdcBalance,
-}));
-
-// ─── Mock fetch for x402 middleware ───────────────────────────────────────
-
+// Stub fetch for x402 middleware (needed for app import)
 const mockFetch = vi.fn(async (input: RequestInfo | URL) => {
   const url =
     typeof input === "string"
@@ -64,32 +35,12 @@ const mockFetch = vi.fn(async (input: RequestInfo | URL) => {
 vi.stubGlobal("fetch", mockFetch);
 
 // Import modules after mocks are set up
-import { resetDb, insertWallet, claimWallet } from "../src/db.ts";
-import { generateWallet, encryptPrivateKey } from "../src/keystore.ts";
+import { resetDb } from "../src/db.ts";
 import { pause, resume, isPaused, getState } from "../src/circuit-breaker.ts";
-import { sendUsdc } from "../src/service.ts";
 import app from "../src/index.ts";
-
-// ─── Test helpers ─────────────────────────────────────────────────────────
-
-const CALLER = "0xCa11e900000000000000000000000000000000001";
-const RECIPIENT = "0xRecipient0000000000000000000000000000001";
-
-function makeWallet(owner?: string): { address: string; claimToken: string } {
-  const { address, privateKey } = generateWallet();
-  const encryptedKey = encryptPrivateKey(privateKey);
-  const claimToken = `ctk_${"a".repeat(64)}`;
-  insertWallet({ address, chain: "eip155:8453", encryptedKey, claimToken });
-  if (owner) {
-    claimWallet(address, claimToken, owner);
-  }
-  return { address, claimToken };
-}
 
 beforeEach(() => {
   resetDb();
-  mockWriteContract.mockReset();
-  mockGetUsdcBalance.mockReset();
 });
 
 afterEach(() => {
@@ -181,56 +132,6 @@ describe("getState", () => {
     pause("all");
     const state = getState();
     expect(typeof state.all).toBe("string");
-  });
-});
-
-// ─── sendUsdc integration ─────────────────────────────────────────────────
-
-describe("sendUsdc — circuit breaker integration", () => {
-  it("returns 503 service_paused when 'send' scope is paused", async () => {
-    pause("send");
-    const { address } = makeWallet(CALLER);
-    mockGetUsdcBalance.mockResolvedValue({ balance: "100.00", funded: true });
-
-    const result = await sendUsdc(
-      address,
-      { to: RECIPIENT, amount: "10.00", idempotencyKey: "idk_cb_send" },
-      CALLER,
-    );
-
-    expect(result.ok).toBe(false);
-    if (!result.ok) {
-      expect(result.status).toBe(503);
-      expect(result.code).toBe("service_paused");
-    }
-    expect(mockWriteContract).not.toHaveBeenCalled();
-  });
-
-  it("returns 503 service_paused when 'all' scope is paused", async () => {
-    pause("all");
-    const { address } = makeWallet(CALLER);
-    mockGetUsdcBalance.mockResolvedValue({ balance: "100.00", funded: true });
-
-    const result = await sendUsdc(
-      address,
-      { to: RECIPIENT, amount: "10.00", idempotencyKey: "idk_cb_all" },
-      CALLER,
-    );
-
-    expect(result.ok).toBe(false);
-    if (!result.ok) {
-      expect(result.status).toBe(503);
-      expect(result.code).toBe("service_paused");
-    }
-    expect(mockWriteContract).not.toHaveBeenCalled();
-  });
-
-  it("isPaused returns false after resume — circuit breaker passes", () => {
-    pause("send");
-    expect(isPaused("send")).toBe(true);
-    resume("send");
-    // After resume, isPaused is false — sendUsdc would not return 503
-    expect(isPaused("send")).toBe(false);
   });
 });
 

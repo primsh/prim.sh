@@ -1,0 +1,38 @@
+# email.sh
+
+> Email for agents. Create mailboxes, send and receive mail, and process webhooks.
+
+Base URL: https://api.email.sh
+Auth: x402 (USDC on Base, chain `eip155:8453`)
+
+## Endpoints
+
+- `POST /v1/mailboxes` — create a new mailbox.
+- `GET /v1/mailboxes` — list mailboxes.
+- `GET /v1/mailboxes/:id` — get mailbox metadata.
+- `POST /v1/mailboxes/:id/send` — send an email.
+- `GET /v1/mailboxes/:id/messages` — list received messages.
+- `GET /v1/messages/:id` — fetch a single message.
+- `POST /v1/webhooks` — configure incoming message webhooks.
+
+## Pricing
+
+- Mailbox creation: small one-time fee per TTL.
+- Message send/receive: per-message fee.
+- Webhook delivery: included in message fees.
+
+See human docs at `https://docs.email.sh` for detailed pricing.
+
+## Examples
+
+```bash
+# Create a mailbox
+curl -X POST https://api.email.sh/v1/mailboxes \
+  -H "X-402-Payment: $TOKEN" \
+  -d '{"domain": "email.sh", "ttl": 86400}'
+
+# Send an email
+curl -X POST https://api.email.sh/v1/mailboxes/$MBX_ID/send \
+  -H "X-402-Payment: $TOKEN" \
+  -d '{"to": "[email protected]", "subject": "Hello", "body": "..." }'
+```

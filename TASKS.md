@@ -60,8 +60,11 @@
 | 7 | TK-4 | Evaluate wrapping Thirdweb/Zora vs custom factory; fix TS bugs (stale cap check, missing tx confirmation); testnet validation | packages/token | TK-2 | pending |
 | 8 | TK-3 | Build token.sh: Uniswap pool creation (liquidity coordination with wallet.sh) | packages/token | TK-4 | pending |
 | 8 | ST-5 | Testnet integration testing: env-configurable network (`PRIM_NETWORK`), Base Sepolia x402 end-to-end, wallet.sh ↔ store.sh | cross-cutting | ST-4, W-5 | done |
-| 9 | R-13 | Fix outbound email delivery: check Stalwart SMTP logs, unblock DO port 25 (or request removal), verify SPF/DKIM/rDNS, confirm delivery to external address | deploy/relay | R-12 | pending |
-| 9 | W-10 | Non-custodial architecture: wallet.sh returns private key to agent, publish `@prim/x402-client` for agent-side signing, rethink custody model | specs/, packages/wallet, packages/x402-client | W-5 | pending |
+| 9 | R-13 | Fix outbound email delivery: check Stalwart SMTP logs, unblock DO port 25 (or request removal), verify SPF/DKIM/rDNS, confirm delivery to external address | deploy/email | R-12 | pending |
+| 9 | W-10 | Non-custodial refactor: strip keystore, EIP-191 signature registration, remove send/swap, publish `@prim/x402-client` | specs/, packages/wallet, packages/x402-client | W-5 | done |
+| 10 | XC-1 | Build @prim/x402-client: agent-side x402 fetch wrapper (privateKey + signer modes) | packages/x402-client | — | done |
+| 11 | FC-1 | Build faucet.sh: Circle USDC drip + treasury ETH drip (testnet only) | packages/faucet | — | done |
+| 12 | R-14 | Custom usernames, permanent mailboxes, rename relay → email | packages/email, site/, specs/ | R-11 | done |
 
 ## Plan Docs
 
@@ -97,8 +100,10 @@
 - ST-3: `tasks/completed/st-3-storage-quota-usage.md`
 - TK-1/TK-2: implemented directly (no plan doc — plan provided in prompt)
 - TK-4: `tasks/active/tk-4-factory-contract-testnet.md`
+- W-10/XC-1/FC-1: ADR at `specs/adr-wallet-custody.md`, implemented directly (no plan doc — plan provided in prompt)
 - ST-5: `tasks/completed/st-5-testnet-integration-testing.md`
 - R-11: `tasks/completed/r-11-local-smoke-test.md`
+- R-14: plan provided in prompt (no plan doc)
 - Umbrella: `tasks/active/batch-execution-umbrella-2026-02-24.md`
 
 ## Backlog — Future Primitives
@@ -263,6 +268,9 @@ ERC-8004 uses CAIP-10 wallet addresses as root identity. DIDs layer on top non-b
 - R-10 — relay.sh x402 middleware: all 16 paid endpoints gated, health check + ingest webhook free, per-route pricing (2026-02-25)
 - R-11 — relay.sh live smoke test: 11 tests against live Stalwart (create → list → get → webhook → send → read → ingest → delete), JMAP over HTTPS tunnel (2026-02-25)
 - SP-7 — spawn.sh DigitalOcean provider: CloudProvider impl wrapping DO API v2, image translation, tag-based ownership, default provider switched from Hetzner to DO, 55 tests (2026-02-25)
+- W-10 — non-custodial refactor: strip keystore+encrypted_key, EIP-191 signature registration, remove send/swap/history, fund-request approve returns address+amount (non-custodial), ADR at specs/adr-wallet-custody.md, 82 wallet tests (2026-02-25)
+- XC-1 — @prim/x402-client: agent-side x402 fetch wrapper, privateKey+signer modes, max payment cap, auto-detect network, 14 tests (2026-02-25)
+- FC-1 — faucet.sh: Circle USDC drip + treasury ETH drip, testnet-only guard, in-memory rate limiting, 18 tests (2026-02-25)
 
 ### R-2 completion details (2026-02-25)
 

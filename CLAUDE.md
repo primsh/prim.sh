@@ -8,7 +8,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 The project has two layers:
 1. **Marketing site** — Static HTML landing pages (current state, `site/` equivalent)
-2. **Primitives** — Actual services being built (wallet.sh, relay.sh, spawn.sh, etc.)
+2. **Primitives** — Actual services being built (wallet.sh, email.sh, spawn.sh, etc.)
 
 ## Dev Commands
 
@@ -16,7 +16,7 @@ The project has two layers:
 # Primitives (after P-3 monorepo setup)
 pnpm install                              # Install all deps
 bun run packages/wallet/src/index.ts      # Run wallet.sh locally
-bun run packages/relay/src/index.ts       # Run relay.sh locally
+bun run packages/email/src/index.ts       # Run email.sh locally
 pnpm -r check                            # Lint + typecheck + test (all packages)
 pnpm -r test                             # Tests only
 pnpm -r lint                             # Biome lint
@@ -33,7 +33,7 @@ agentstack/
 ├── packages/
 │   ├── x402-middleware/      # @agentstack/x402-middleware (shared)
 │   ├── wallet/               # @agentstack/wallet (wallet.sh)
-│   ├── relay/                # @agentstack/relay (relay.sh)
+│   ├── email/                # @agentstack/email (email.sh)
 │   └── spawn/                # @agentstack/spawn (spawn.sh)
 ├── site/                     # Landing pages (HTML, moved from root)
 │   ├── serve.py              # Dev server
@@ -49,11 +49,11 @@ agentstack/
 
 ### Current structure (pre-monorepo)
 
-Landing pages are at root level (`spawn/index.html`, `relay/index.html`, etc.). `serve.py` is at root. No `packages/` dir yet. P-3 migrates to the structure above.
+Landing pages are at root level (`spawn/index.html`, `email/index.html`, etc.). `serve.py` is at root. No `packages/` dir yet. P-3 migrates to the structure above.
 
 ## Primitives (27)
 
-Core: wallet, relay, spawn, store, vault, dns, cron, pipe, code
+Core: wallet, email, spawn, store, vault, dns, cron, pipe, code
 Communication: ring, browse
 Intelligence: mem, infer, seek, docs
 Operations: watch, trace, auth, id
@@ -74,13 +74,13 @@ Social: hive, ads
 - **x402 payment** is the auth layer. Every endpoint returns 402 → agent pays → gets resource.
 - **Each primitive is independent.** No shared DB. Shared `@agentstack/x402-middleware` package only.
 - **wallet.sh** is the keystone — adapts patterns from `~/Developer/railgunner` (encrypted keystore, execution journal, circuit breaker).
-- **relay.sh** wraps Stalwart Mail Server (Rust, JMAP + REST API).
+- **email.sh** wraps Stalwart Mail Server (Rust, JMAP + REST API).
 - **spawn.sh** wraps Hetzner Cloud API.
 
 ## Build Priority
 
 1. wallet.sh — Crypto wallets + x402 integration (foundation for everything)
-2. relay.sh — Email (wraps Stalwart, receive-only first)
+2. email.sh — Email (wraps Stalwart, receive-only first)
 3. spawn.sh — VPS provisioning (wraps Hetzner)
 4. llms.txt — Machine-readable primitive catalog
 

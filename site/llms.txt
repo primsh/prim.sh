@@ -16,7 +16,7 @@ Chain: Base (`eip155:8453`). Token: USDC.
 ## Core primitives
 
 - [wallet.sh](https://agentstack.sh/wallet/llms.txt) — wallets, balances, x402 payments
-- [relay.sh](https://agentstack.sh/relay/llms.txt) — email mailboxes, send/receive, webhooks
+- [email.sh](https://agentstack.sh/email/llms.txt) — email mailboxes, send/receive, webhooks
 - [spawn.sh](https://agentstack.sh/spawn/llms.txt) — VPS provisioning and lifecycle
 - [store.sh](https://agentstack.sh/store/llms.txt) — object storage (S3-compatible)
 - [vault.sh](https://agentstack.sh/vault/llms.txt) — secret storage and access

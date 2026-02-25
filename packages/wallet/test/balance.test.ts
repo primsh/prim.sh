@@ -7,7 +7,6 @@
 import { describe, expect, it, vi, beforeEach } from "vitest";
 
 // Set env before any module imports
-process.env.WALLET_MASTER_KEY = "a".repeat(64);
 process.env.WALLET_DB_PATH = ":memory:";
 
 // Mock viem so we can control readContract responses
@@ -97,27 +96,19 @@ describe("balance integration via service", () => {
     });
     vi.stubGlobal("fetch", mockFetch);
 
-    const { default: app } = await import("../src/index.ts");
-    const { resetDb } = await import("../src/db.ts");
+    const { resetDb, insertWallet } = await import("../src/db.ts");
     resetDb();
 
-    // Create a wallet
-    const createRes = await app.request("/v1/wallets", { method: "POST" });
-    expect(createRes.status).toBe(201);
-    const body = (await createRes.json()) as Record<string, unknown>;
-    const address = body.address as string;
-    const claimToken = body.claimToken as string;
-
-    // Claim the wallet directly via db
-    const { claimWallet } = await import("../src/db.ts");
-    claimWallet(address, claimToken, ADDR);
+    // Register a wallet directly via DB
+    const address = "0xCa11e900000000000000000000000000000000001";
+    insertWallet({ address, chain: "eip155:8453", createdBy: address });
 
     // Set the mock to return a specific balance for the next call
     mockReadContract.mockResolvedValue(5000000n); // 5.00 USDC
 
-    // Call service directly (bypasses x402 payment for integration test simplicity)
+    // Call service directly
     const { getWallet } = await import("../src/service.ts");
-    const result = await getWallet(address, ADDR);
+    const result = await getWallet(address, address);
 
     expect(result.ok).toBe(true);
     if (result.ok) {

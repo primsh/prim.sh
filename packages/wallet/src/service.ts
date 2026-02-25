@@ -1,23 +1,11 @@
-import { randomBytes, createHash } from "node:crypto";
-import { createWalletClient, http, isAddress, parseUnits } from "viem";
-import { privateKeyToAccount } from "viem/accounts";
-import { base, baseSepolia } from "viem/chains";
-import type { Hex } from "viem";
+import { randomBytes } from "node:crypto";
+import { isAddress, getAddress, verifyMessage } from "viem";
 import { getNetworkConfig } from "@agentstack/x402-middleware";
-import { generateWallet, encryptPrivateKey, decryptPrivateKey } from "./keystore.ts";
 import {
   insertWallet,
   getWalletByAddress,
   getWalletsByOwner,
-  claimWallet as dbClaimWallet,
   deactivateWallet as dbDeactivateWallet,
-  getExecution,
-  insertExecution,
-  completeExecution,
-  tryClaim,
-  appendEvent,
-  insertDeadLetter,
-  getExecutionsByWallet,
   insertFundRequest,
   getFundRequestById,
   getFundRequestsByWallet,
@@ -28,14 +16,11 @@ import {
   resetDailySpentIfNeeded,
 } from "./db.ts";
 import type {
-  WalletCreateResponse,
+  WalletRegisterRequest,
+  WalletRegisterResponse,
   WalletListResponse,
   WalletDetailResponse,
   WalletDeactivateResponse,
-  SendRequest,
-  SendResponse,
-  HistoryResponse,
-  TransactionRecord,
   FundRequestCreateRequest,
   FundRequestResponse,
   FundRequestListResponse,
@@ -48,30 +33,73 @@ import type {
   ResumeResponse,
 } from "./api.ts";
 import { getUsdcBalance } from "./balance.ts";
-import { isPaused } from "./circuit-breaker.ts";
-import { checkPolicy, recordSpend } from "./policy.ts";
 
 const DEFAULT_CHAIN = "eip155:8453";
+const SIGNATURE_MAX_AGE_MS = 5 * 60 * 1000; // 5 minutes
 
-function generateClaimToken(): string {
-  return `ctk_${randomBytes(32).toString("hex")}`;
+/**
+ * Builds the canonical message agents must sign for registration.
+ * Address is always checksummed via getAddress() before inclusion.
+ */
+function buildRegistrationMessage(address: string, timestamp: string): string {
+  return `Register ${getAddress(address)} with prim.sh at ${timestamp}`;
 }
 
-export function createWallet(chain?: string): WalletCreateResponse {
-  const effectiveChain = chain ?? DEFAULT_CHAIN;
-  const { address, privateKey } = generateWallet();
-  const encryptedKey = encryptPrivateKey(privateKey);
-  const claimToken = generateClaimToken();
+type RegisterResult =
+  | { ok: true; data: WalletRegisterResponse }
+  | { ok: false; status: number; code: string; message: string };
 
-  insertWallet({ address, chain: effectiveChain, encryptedKey, claimToken });
+export async function registerWallet(request: WalletRegisterRequest): Promise<RegisterResult> {
+  const { address, signature, timestamp, chain, label } = request;
+
+  // 1. Validate address
+  if (!address || !isAddress(address)) {
+    return { ok: false, status: 400, code: "invalid_request", message: "Invalid Ethereum address" };
+  }
+
+  const normalizedAddress = getAddress(address);
+
+  // 2. Check timestamp freshness
+  const ts = new Date(timestamp);
+  if (Number.isNaN(ts.getTime())) {
+    return { ok: false, status: 400, code: "invalid_request", message: "Invalid timestamp" };
+  }
+  const age = Date.now() - ts.getTime();
+  if (age > SIGNATURE_MAX_AGE_MS || age < -SIGNATURE_MAX_AGE_MS) {
+    return { ok: false, status: 400, code: "signature_expired", message: "Signature timestamp expired (>5 minutes)" };
+  }
+
+  // 3. Verify EIP-191 signature
+  const message = buildRegistrationMessage(normalizedAddress, timestamp);
+  let valid: boolean;
+  try {
+    valid = await verifyMessage({ address: normalizedAddress, message, signature: signature as `0x${string}` });
+  } catch {
+    valid = false;
+  }
+  if (!valid) {
+    return { ok: false, status: 403, code: "invalid_signature", message: "Signature verification failed" };
+  }
+
+  // 4. Check for existing registration
+  const existing = getWalletByAddress(normalizedAddress);
+  if (existing && !existing.deactivated_at) {
+    return { ok: false, status: 409, code: "already_registered", message: "Wallet already registered" };
+  }
+
+  // 5. Insert wallet
+  const effectiveChain = chain ?? DEFAULT_CHAIN;
+  insertWallet({ address: normalizedAddress, chain: effectiveChain, createdBy: normalizedAddress, label });
 
   return {
-    address,
-    chain: effectiveChain,
-    balance: "0.00",
-    funded: false,
-    claimToken,
-    createdAt: new Date().toISOString(),
+    ok: true,
+    data: {
+      address: normalizedAddress,
+      chain: effectiveChain,
+      label: label ?? null,
+      registeredAt: new Date().toISOString(),
+      createdAt: new Date().toISOString(),
+    },
   };
 }
 
@@ -117,11 +145,6 @@ function checkOwnership(address: string, caller: string): OwnershipCheckResult {
     return { ok: false, status: 404, code: "not_found", message: "Wallet not found" };
   }
 
-  // Unclaimed wallet — must claim first
-  if (!row.created_by) {
-    return { ok: false, status: 403, code: "forbidden", message: "Wallet not claimed" };
-  }
-
   // Owned by someone else
   if (row.created_by !== caller) {
     return { ok: false, status: 403, code: "forbidden", message: "Forbidden" };
@@ -163,7 +186,7 @@ export async function getWallet(
       balance,
       funded,
       paused,
-      createdBy: row.created_by ?? "",
+      createdBy: row.created_by,
       policy: spendingPolicy,
       createdAt: new Date(row.created_at).toISOString(),
     },
@@ -190,195 +213,7 @@ export function deactivateWallet(
   };
 }
 
-export function claimWallet(address: string, claimToken: string, caller: string): boolean {
-  return dbClaimWallet(address, claimToken, caller);
-}
-
-const USDC_DECIMALS = 6;
-
-function getViemChain(chainId: number) {
-  if (chainId === 84532) return baseSepolia;
-  return base;
-}
-
-const ERC20_TRANSFER_ABI = [
-  {
-    type: "function",
-    name: "transfer",
-    inputs: [
-      { name: "to", type: "address" },
-      { name: "amount", type: "uint256" },
-    ],
-    outputs: [{ type: "bool" }],
-    stateMutability: "nonpayable",
-  },
-] as const;
-
-function payloadHash(to: string, amount: string): string {
-  const canonical = JSON.stringify({ amount, to });
-  return createHash("sha256").update(canonical).digest("hex");
-}
-
-type SendResult =
-  | { ok: true; data: SendResponse }
-  | { ok: false; status: number; code: string; message: string };
-
-export async function sendUsdc(
-  address: string,
-  request: SendRequest,
-  caller: string,
-): Promise<SendResult> {
-  // 0. Circuit breaker check (global override — before everything else)
-  if (isPaused("send")) {
-    return { ok: false, status: 503, code: "service_paused", message: "Send operations are paused" };
-  }
-
-  // 1. Ownership check
-  const check = checkOwnership(address, caller);
-  if (!check.ok) return check;
-  const { row } = check;
-
-  // 1a. Policy check (per-wallet: pause, maxPerTx, maxPerDay)
-  const policyResult = checkPolicy(address, request.amount);
-  if (!policyResult.ok) {
-    const status = policyResult.code === "wallet_paused" ? 403 : 422;
-    return { ok: false, status, code: policyResult.code, message: policyResult.message };
-  }
-
-  // 2. Idempotency check
-  const hash = payloadHash(request.to, request.amount);
-  const existing = getExecution(request.idempotencyKey);
-  if (existing) {
-    if (existing.payload_hash !== hash) {
-      return { ok: false, status: 409, code: "duplicate_request", message: "Idempotency key already used with different payload" };
-    }
-    // Same payload — return cached result
-    const result = existing.result ? (JSON.parse(existing.result) as Record<string, unknown>) : null;
-    if (result?.txHash) {
-      return {
-        ok: true,
-        data: {
-          txHash: result.txHash as string,
-          from: address,
-          to: request.to,
-          amount: request.amount,
-          chain: row.chain,
-          status: existing.status === "succeeded" ? "pending" : "failed",
-          confirmedAt: null,
-        },
-      };
-    }
-  }
-
-  // 3. Balance check
-  const { balance } = await getUsdcBalance(address as `0x${string}`);
-  const balanceNum = Number.parseFloat(balance);
-  const amountNum = Number.parseFloat(request.amount);
-  if (Number.isNaN(amountNum) || amountNum <= 0) {
-    return { ok: false, status: 400, code: "invalid_request", message: "amount must be a positive decimal string" };
-  }
-  if (balanceNum < amountNum) {
-    return { ok: false, status: 422, code: "insufficient_balance", message: "Insufficient USDC balance" };
-  }
-
-  // 4. Decrypt key
-  const privateKey = decryptPrivateKey(row.encrypted_key) as Hex;
-
-  // 5. Insert queued execution
-  insertExecution({
-    idempotencyKey: request.idempotencyKey,
-    walletAddress: address,
-    actionType: "send",
-    payloadHash: hash,
-  });
-
-  // 6. Atomic claim — prevent double-execution
-  const claimed = tryClaim(request.idempotencyKey);
-  if (!claimed) {
-    return { ok: false, status: 409, code: "duplicate_request", message: "Execution already running" };
-  }
-
-  appendEvent(request.idempotencyKey, "balance_checked", { balance });
-
-  // 7. Sign and send
-  const netConfig = getNetworkConfig();
-  const rpcUrl = process.env.BASE_RPC_URL ?? netConfig.rpcUrl;
-  const walletClient = createWalletClient({
-    account: privateKeyToAccount(privateKey),
-    chain: getViemChain(netConfig.chainId),
-    transport: http(rpcUrl),
-  });
-
-  appendEvent(request.idempotencyKey, "tx_sent", { to: request.to, amount: request.amount });
-
-  try {
-    const txHash = await walletClient.writeContract({
-      address: netConfig.usdcAddress as `0x${string}`,
-      abi: ERC20_TRANSFER_ABI,
-      functionName: "transfer",
-      args: [request.to as `0x${string}`, parseUnits(request.amount, USDC_DECIMALS)],
-    });
-
-    // 8. Record success
-    appendEvent(request.idempotencyKey, "tx_confirmed", { txHash });
-    completeExecution(request.idempotencyKey, "succeeded", JSON.stringify({ txHash }));
-    recordSpend(address, request.amount);
-
-    return {
-      ok: true,
-      data: {
-        txHash,
-        from: address,
-        to: request.to,
-        amount: request.amount,
-        chain: row.chain,
-        status: "pending",
-        confirmedAt: null,
-      },
-    };
-  } catch (err) {
-    const errMsg = err instanceof Error ? err.message : String(err);
-    appendEvent(request.idempotencyKey, "tx_failed", { error: errMsg });
-    completeExecution(request.idempotencyKey, "failed", JSON.stringify({ error: errMsg }));
-    insertDeadLetter(request.idempotencyKey, errMsg, { to: request.to, amount: request.amount });
-    return { ok: false, status: 502, code: "rpc_error", message: `Transaction failed: ${errMsg}` };
-  }
-}
-
-type HistoryResult =
-  | { ok: true; data: HistoryResponse }
-  | { ok: false; status: 403 | 404; code: string; message: string };
-
-export function getTransactionHistory(
-  address: string,
-  caller: string,
-  limit: number,
-  after?: string,
-): HistoryResult {
-  const check = checkOwnership(address, caller);
-  if (!check.ok) return check;
-
-  const rows = getExecutionsByWallet(address, limit, after);
-  const transactions: TransactionRecord[] = rows.map((r) => {
-    const result = r.result ? (JSON.parse(r.result) as Record<string, unknown>) : null;
-    const txHash = (result?.txHash as string | undefined) ?? "";
-    return {
-      txHash,
-      type: "send",
-      from: r.wallet_address,
-      to: "",
-      amount: "",
-      chain: "eip155:8453",
-      status: r.status === "succeeded" ? "pending" : "failed",
-      timestamp: new Date(r.created_at).toISOString(),
-    };
-  });
-
-  const lastRow = rows[rows.length - 1];
-  const cursor = rows.length === limit && lastRow ? String(lastRow.created_at) : null;
-
-  return { ok: true, data: { transactions, cursor } };
-}
+// ─── Fund request functions ──────────────────────────────────────────────
 
 type FundRequestResult<T> =
   | { ok: true; data: T }
@@ -444,10 +279,10 @@ export function listFundRequests(
   };
 }
 
-export async function approveFundRequest(
+export function approveFundRequest(
   requestId: string,
   caller: string,
-): Promise<FundRequestResult<FundRequestApproveResponse>> {
+): FundRequestResult<FundRequestApproveResponse> {
   const req = getFundRequestById(requestId);
   if (!req) {
     return { ok: false, status: 404, code: "not_found", message: "Fund request not found" };
@@ -460,22 +295,21 @@ export async function approveFundRequest(
   const check = checkOwnership(req.wallet_address, caller);
   if (!check.ok) return check;
 
-  // Transfer from owner's wallet (caller) to agent's wallet (req.wallet_address)
-  const sendResult = await sendUsdc(
-    caller,
-    { to: req.wallet_address as `0x${string}`, amount: req.amount, idempotencyKey: `fr_approve_${requestId}` },
-    caller,
-  );
+  // Non-custodial: mark as approved, return funding details for human to send directly
+  updateFundRequestStatus(requestId, "approved");
 
-  if (!sendResult.ok) return sendResult;
-
-  const { txHash } = sendResult.data;
-  updateFundRequestStatus(requestId, "approved", txHash);
-
+  const netConfig = getNetworkConfig();
   const approvedAt = new Date().toISOString();
   return {
     ok: true,
-    data: { id: requestId, status: "approved", txHash, approvedAt },
+    data: {
+      id: requestId,
+      status: "approved",
+      fundingAddress: req.wallet_address,
+      amount: req.amount,
+      chain: netConfig.network,
+      approvedAt,
+    },
   };
 }
 

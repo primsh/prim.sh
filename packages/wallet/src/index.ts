@@ -1,14 +1,10 @@
 import { Hono } from "hono";
-import type { MiddlewareHandler } from "hono";
 import { createAgentStackMiddleware, getNetworkConfig } from "@agentstack/x402-middleware";
 import type {
-  WalletCreateRequest,
+  WalletRegisterRequest,
   WalletListResponse,
   WalletDetailResponse,
   WalletDeactivateResponse,
-  SendRequest,
-  SendResponse,
-  HistoryResponse,
   FundRequestResponse,
   FundRequestListResponse,
   FundRequestApproveResponse,
@@ -18,8 +14,20 @@ import type {
   ResumeResponse,
   ApiError,
 } from "./api.ts";
-import { isAddress } from "viem";
-import { createWallet, listWallets, getWallet, deactivateWallet, claimWallet, sendUsdc, getTransactionHistory, createFundRequest, listFundRequests, approveFundRequest, denyFundRequest, getSpendingPolicy, updateSpendingPolicy, pauseWallet, resumeWallet } from "./service.ts";
+import {
+  registerWallet,
+  listWallets,
+  getWallet,
+  deactivateWallet,
+  createFundRequest,
+  listFundRequests,
+  approveFundRequest,
+  denyFundRequest,
+  getSpendingPolicy,
+  updateSpendingPolicy,
+  pauseWallet,
+  resumeWallet,
+} from "./service.ts";
 import type { FundRequestCreateRequest, FundRequestDenyRequest, PolicyUpdateRequest, PauseRequest, ResumeRequest } from "./api.ts";
 import { pause, resume, getState } from "./circuit-breaker.ts";
 
@@ -31,11 +39,8 @@ const WALLET_ROUTES = {
   "GET /v1/wallets": "$0.001",
   "GET /v1/wallets/[address]": "$0.001",
   "DELETE /v1/wallets/[address]": "$0.01",
-  "POST /v1/wallets/[address]/send": "$0.01",
-  "POST /v1/wallets/[address]/swap": "$0.01",
-  "GET /v1/wallets/[address]/history": "$0.001",
-  "POST /v1/wallets/[address]/fund-request": "$0.001",
   "GET /v1/wallets/[address]/fund-requests": "$0.001",
+  "POST /v1/wallets/[address]/fund-request": "$0.001",
   "POST /v1/fund-requests/[id]/approve": "$0.01",
   "POST /v1/fund-requests/[id]/deny": "$0.001",
   "GET /v1/wallets/[address]/policy": "$0.001",
@@ -43,15 +48,6 @@ const WALLET_ROUTES = {
   "POST /v1/wallets/[address]/pause": "$0.001",
   "POST /v1/wallets/[address]/resume": "$0.001",
 } as const;
-
-function notImplemented(): ApiError {
-  return {
-    error: {
-      code: "not_implemented",
-      message: "Endpoint not implemented",
-    },
-  };
-}
 
 function forbidden(message: string): ApiError {
   return { error: { code: "forbidden", message } };
@@ -70,7 +66,13 @@ app.use(
     {
       payTo: PAY_TO_ADDRESS,
       network: NETWORK,
-      freeRoutes: ["GET /", "POST /v1/wallets", "POST /v1/admin/circuit-breaker/pause", "POST /v1/admin/circuit-breaker/resume", "GET /v1/admin/circuit-breaker"],
+      freeRoutes: [
+        "GET /",
+        "POST /v1/wallets",
+        "POST /v1/admin/circuit-breaker/pause",
+        "POST /v1/admin/circuit-breaker/resume",
+        "GET /v1/admin/circuit-breaker",
+      ],
     },
     { ...WALLET_ROUTES },
   ),
@@ -80,36 +82,37 @@ app.get("/", (c) => {
   return c.json({ service: "wallet.sh", status: "ok" });
 });
 
-// POST /v1/wallets — Create wallet (FREE)
+// POST /v1/wallets — Register wallet via EIP-191 signature (FREE)
 app.post("/v1/wallets", async (c) => {
-  let chain: string | undefined;
+  let body: Partial<WalletRegisterRequest>;
   try {
-    const body = await c.req.json<WalletCreateRequest>();
-    chain = body.chain;
+    body = await c.req.json<Partial<WalletRegisterRequest>>();
   } catch {
-    // No body or invalid JSON — use default chain
+    return c.json({ error: { code: "invalid_request", message: "Invalid JSON body" } } as ApiError, 400);
   }
-  const result = createWallet(chain);
-  return c.json(result, 201);
+
+  const { address, signature, timestamp } = body;
+  if (!address || !signature || !timestamp) {
+    return c.json(
+      { error: { code: "invalid_request", message: "Missing required fields: address, signature, timestamp" } } as ApiError,
+      400,
+    );
+  }
+
+  const result = await registerWallet({
+    address,
+    signature,
+    timestamp,
+    chain: body.chain,
+    label: body.label,
+  });
+
+  if (!result.ok) {
+    const { status, code, message } = result;
+    return c.json({ error: { code, message } } as ApiError, status as 400 | 403 | 409);
+  }
+  return c.json(result.data, 201);
 });
-
-// Claim token middleware — runs before ownership-gated routes
-// Extracts X-Claim-Token and attempts to claim the wallet for the caller
-const claimMiddleware: MiddlewareHandler<{ Variables: AppVariables }> = async (c, next) => {
-  const claimToken = c.req.header("X-Claim-Token");
-  if (claimToken) {
-    const address = c.req.param("address") as string | undefined;
-    const caller = c.get("walletAddress");
-
-    if (address && caller) {
-      const claimed = claimWallet(address, claimToken, caller);
-      if (!claimed) {
-        return c.json(forbidden("Invalid claim token"), 403);
-      }
-    }
-  }
-  await next();
-};
 
 // GET /v1/wallets — List wallets
 app.get("/v1/wallets", async (c) => {
@@ -127,7 +130,7 @@ app.get("/v1/wallets", async (c) => {
 });
 
 // GET /v1/wallets/:address — Wallet detail
-app.get("/v1/wallets/:address", claimMiddleware, async (c) => {
+app.get("/v1/wallets/:address", async (c) => {
   const address = c.req.param("address");
   const caller = c.get("walletAddress");
   if (!caller) {
@@ -144,7 +147,7 @@ app.get("/v1/wallets/:address", claimMiddleware, async (c) => {
 });
 
 // DELETE /v1/wallets/:address — Deactivate
-app.delete("/v1/wallets/:address", claimMiddleware, (c) => {
+app.delete("/v1/wallets/:address", (c) => {
   const address = c.req.param("address");
   const caller = c.get("walletAddress");
   if (!caller) {
@@ -160,72 +163,8 @@ app.delete("/v1/wallets/:address", claimMiddleware, (c) => {
   return c.json(result.data as WalletDeactivateResponse, 200);
 });
 
-// POST /v1/wallets/:address/send
-app.post("/v1/wallets/:address/send", claimMiddleware, async (c) => {
-  const address = c.req.param("address");
-  const caller = c.get("walletAddress");
-  if (!caller) {
-    return c.json(forbidden("No wallet address in payment"), 403);
-  }
-
-  let body: Partial<SendRequest>;
-  try {
-    body = await c.req.json<Partial<SendRequest>>();
-  } catch {
-    return c.json({ error: { code: "invalid_request", message: "Invalid JSON body" } } as ApiError, 400);
-  }
-
-  const { to, amount, idempotencyKey } = body;
-
-  if (!to || !amount || !idempotencyKey) {
-    return c.json({ error: { code: "invalid_request", message: "Missing required fields: to, amount, idempotencyKey" } } as ApiError, 400);
-  }
-
-  if (!isAddress(to)) {
-    return c.json({ error: { code: "invalid_request", message: "Invalid Ethereum address: to" } } as ApiError, 400);
-  }
-
-  const amountNum = Number.parseFloat(amount);
-  if (Number.isNaN(amountNum) || amountNum <= 0) {
-    return c.json({ error: { code: "invalid_request", message: "amount must be a positive decimal string" } } as ApiError, 400);
-  }
-
-  const result = await sendUsdc(address, { to, amount, idempotencyKey }, caller);
-  if (!result.ok) {
-    const { status, code, message } = result;
-    return c.json({ error: { code, message } } as ApiError, status as 400 | 403 | 404 | 409 | 422 | 500 | 502);
-  }
-  return c.json(result.data as SendResponse, 200);
-});
-
-// POST /v1/wallets/:address/swap (deferred)
-app.post("/v1/wallets/:address/swap", (c) => {
-  return c.json(notImplemented(), 501);
-});
-
-// GET /v1/wallets/:address/history
-app.get("/v1/wallets/:address/history", claimMiddleware, (c) => {
-  const address = c.req.param("address");
-  const caller = c.get("walletAddress");
-  if (!caller) {
-    return c.json(forbidden("No wallet address in payment"), 403);
-  }
-
-  const limitParam = c.req.query("limit");
-  const limit = Math.min(Number(limitParam) || 20, 100);
-  const after = c.req.query("after");
-
-  const result = getTransactionHistory(address, caller, limit, after);
-  if (!result.ok) {
-    const { status, code, message } = result;
-    if (status === 404) return c.json(notFound(message), 404);
-    return c.json(forbidden(message), 403);
-  }
-  return c.json(result.data as HistoryResponse, 200);
-});
-
 // POST /v1/wallets/:address/fund-request
-app.post("/v1/wallets/:address/fund-request", claimMiddleware, async (c) => {
+app.post("/v1/wallets/:address/fund-request", async (c) => {
   const address = c.req.param("address");
   const caller = c.get("walletAddress");
   if (!caller) {
@@ -253,7 +192,7 @@ app.post("/v1/wallets/:address/fund-request", claimMiddleware, async (c) => {
 });
 
 // GET /v1/wallets/:address/fund-requests
-app.get("/v1/wallets/:address/fund-requests", claimMiddleware, (c) => {
+app.get("/v1/wallets/:address/fund-requests", (c) => {
   const address = c.req.param("address");
   const caller = c.get("walletAddress");
   if (!caller) {
@@ -273,23 +212,23 @@ app.get("/v1/wallets/:address/fund-requests", claimMiddleware, (c) => {
 });
 
 // POST /v1/fund-requests/:id/approve
-app.post("/v1/fund-requests/:id/approve", claimMiddleware, async (c) => {
+app.post("/v1/fund-requests/:id/approve", (c) => {
   const id = c.req.param("id");
   const caller = c.get("walletAddress");
   if (!caller) {
     return c.json(forbidden("No wallet address in payment"), 403);
   }
 
-  const result = await approveFundRequest(id, caller);
+  const result = approveFundRequest(id, caller);
   if (!result.ok) {
     const { status, code, message } = result;
-    return c.json({ error: { code, message } } as ApiError, status as 403 | 404 | 409 | 422 | 502);
+    return c.json({ error: { code, message } } as ApiError, status as 403 | 404 | 409);
   }
   return c.json(result.data as FundRequestApproveResponse, 200);
 });
 
 // POST /v1/fund-requests/:id/deny
-app.post("/v1/fund-requests/:id/deny", claimMiddleware, async (c) => {
+app.post("/v1/fund-requests/:id/deny", async (c) => {
   const id = c.req.param("id");
   const caller = c.get("walletAddress");
   if (!caller) {
@@ -313,7 +252,7 @@ app.post("/v1/fund-requests/:id/deny", claimMiddleware, async (c) => {
 });
 
 // GET /v1/wallets/:address/policy
-app.get("/v1/wallets/:address/policy", claimMiddleware, (c) => {
+app.get("/v1/wallets/:address/policy", (c) => {
   const address = c.req.param("address");
   const caller = c.get("walletAddress");
   if (!caller) return c.json(forbidden("No wallet address in payment"), 403);
@@ -328,7 +267,7 @@ app.get("/v1/wallets/:address/policy", claimMiddleware, (c) => {
 });
 
 // PUT /v1/wallets/:address/policy
-app.put("/v1/wallets/:address/policy", claimMiddleware, async (c) => {
+app.put("/v1/wallets/:address/policy", async (c) => {
   const address = c.req.param("address");
   const caller = c.get("walletAddress");
   if (!caller) return c.json(forbidden("No wallet address in payment"), 403);
@@ -349,7 +288,7 @@ app.put("/v1/wallets/:address/policy", claimMiddleware, async (c) => {
 });
 
 // POST /v1/wallets/:address/pause
-app.post("/v1/wallets/:address/pause", claimMiddleware, async (c) => {
+app.post("/v1/wallets/:address/pause", async (c) => {
   const address = c.req.param("address");
   const caller = c.get("walletAddress");
   if (!caller) return c.json(forbidden("No wallet address in payment"), 403);
@@ -376,7 +315,7 @@ app.post("/v1/wallets/:address/pause", claimMiddleware, async (c) => {
 });
 
 // POST /v1/wallets/:address/resume
-app.post("/v1/wallets/:address/resume", claimMiddleware, async (c) => {
+app.post("/v1/wallets/:address/resume", async (c) => {
   const address = c.req.param("address");
   const caller = c.get("walletAddress");
   if (!caller) return c.json(forbidden("No wallet address in payment"), 403);

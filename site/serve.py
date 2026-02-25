@@ -12,7 +12,7 @@ ROUTES = {
     "/store": os.path.join(BASE, "store", "index.html"),
     "/vault": os.path.join(BASE, "vault", "index.html"),
     "/dns": os.path.join(BASE, "dns", "index.html"),
-    "/relay": os.path.join(BASE, "relay", "index.html"),
+    "/email": os.path.join(BASE, "email", "index.html"),
     "/ring": os.path.join(BASE, "ring", "index.html"),
     "/cron": os.path.join(BASE, "cron", "index.html"),
     "/pipe": os.path.join(BASE, "pipe", "index.html"),

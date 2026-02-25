@@ -3,9 +3,8 @@ import { Database } from "bun:sqlite";
 export interface WalletRow {
   address: string;
   chain: string;
-  encrypted_key: string;
-  claim_token: string | null;
-  created_by: string | null;
+  label: string | null;
+  created_by: string;
   deactivated_at: string | null;
   created_at: number;
   updated_at: number;
@@ -76,9 +75,8 @@ export function getDb(): Database {
     CREATE TABLE IF NOT EXISTS wallets (
       address       TEXT PRIMARY KEY,
       chain         TEXT NOT NULL DEFAULT 'eip155:8453',
-      encrypted_key TEXT NOT NULL,
-      claim_token   TEXT,
-      created_by    TEXT,
+      label         TEXT,
+      created_by    TEXT NOT NULL,
       deactivated_at TEXT,
       created_at    INTEGER NOT NULL,
       updated_at    INTEGER NOT NULL
@@ -86,7 +84,6 @@ export function getDb(): Database {
   `);
 
   _db.run("CREATE INDEX IF NOT EXISTS idx_wallets_created_by ON wallets(created_by)");
-  _db.run("CREATE INDEX IF NOT EXISTS idx_wallets_claim_token ON wallets(claim_token)");
 
   _db.run(`
     CREATE TABLE IF NOT EXISTS executions (
@@ -177,14 +174,14 @@ export function resetDb(): void {
 export function insertWallet(wallet: {
   address: string;
   chain: string;
-  encryptedKey: string;
-  claimToken: string;
+  createdBy: string;
+  label?: string;
 }): void {
   const db = getDb();
   const now = Date.now();
   db.query(
-    "INSERT INTO wallets (address, chain, encrypted_key, claim_token, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?)",
-  ).run(wallet.address, wallet.chain, wallet.encryptedKey, wallet.claimToken, now, now);
+    "INSERT INTO wallets (address, chain, label, created_by, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?)",
+  ).run(wallet.address, wallet.chain, wallet.label ?? null, wallet.createdBy, now, now);
 }
 
 export function getWalletByAddress(address: string): WalletRow | null {
@@ -208,30 +205,6 @@ export function getWalletsByOwner(owner: string, limit: number, after?: string):
       "SELECT * FROM wallets WHERE created_by = ? ORDER BY address ASC LIMIT ?",
     )
     .all(owner, limit);
-}
-
-export function claimWallet(address: string, claimToken: string, owner: string): boolean {
-  const db = getDb();
-  const now = Date.now();
-
-  let claimed = false;
-  db.transaction(() => {
-    const row = db
-      .query<WalletRow, [string]>("SELECT * FROM wallets WHERE address = ?")
-      .get(address);
-
-    if (!row || row.claim_token !== claimToken) {
-      return;
-    }
-
-    db.query(
-      "UPDATE wallets SET created_by = ?, claim_token = NULL, updated_at = ? WHERE address = ?",
-    ).run(owner, now, address);
-
-    claimed = true;
-  })();
-
-  return claimed;
 }
 
 export function deactivateWallet(address: string): void {
