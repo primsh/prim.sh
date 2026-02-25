@@ -39,6 +39,7 @@
 | 33 | SP-4 | Build spawn.sh: SSH key injection + initial setup | spawn/ | SP-2 | Done |
 | 34 | SP-5 | Integrate x402 middleware | spawn/ | SP-2, P-4 | Open |
 | 35 | B-1 | Batch 1: parallel agent team execution (W-2 + R-1 + SP-1) | cross-cutting | W-2 plan, R-1 plan, SP-1 plan | Done |
+| 36 | SP-6 | Abstract provider layer + multi-cloud support (AWS, GCP, Azure, Hetzner) | spawn/ | SP-4 | Open |
 
 ## Plan Docs
 
@@ -128,6 +129,30 @@ x402 uses [EIP-3009 (Transfer With Authorization)](https://github.com/coinbase/x
 | Batching | Cloudflare deferred scheme | High-frequency agents settle periodically, not per-call |
 | Guardrails | EIP-7702 delegation | Session keys + spend caps without full AA overhead |
 | Future | AP2 interop | Watch the spec; don't build now |
+
+### spawn.sh provider abstraction (2026-02-24)
+
+**Problem:** spawn.sh currently wraps Hetzner Cloud directly. Hetzner's TOS §5 prohibits reselling services without written consent. spawn.sh is literally reselling compute via API — this is a compliance risk that could result in account termination.
+
+**Decision:** Abstract the provider layer. spawn.sh should define a `CloudProvider` interface (createServer, deleteServer, start, stop, reboot, resize, rebuild, SSH key CRUD) and implement it per provider. The service layer, DB, ownership model, routes, and x402 pricing stay provider-agnostic.
+
+**Provider comparison:**
+
+| Factor | Hetzner | AWS | GCP | Azure |
+|--------|---------|-----|-----|-------|
+| Reseller TOS | Prohibits without agreement | Explicit partner/MSP programs | Partner programs | CSP program |
+| Comparable instance | CX23 ~$4.50/mo | t4g.nano ~$3/mo (ARM) | e2-micro ~$7/mo | B1ls ~$4/mo |
+| API maturity | Simple, limited | Very mature | Mature | Mature |
+| Geographic coverage | EU + US (limited) | Global | Global | Global |
+| Legal risk | High (no reseller agreement) | Low | Low | Low |
+
+**Plan:**
+1. SP-6: Extract `CloudProvider` interface from current `hetzner.ts`, keep Hetzner as one implementation
+2. Add AWS EC2 provider (likely launch provider — best reseller story, t4g ARM pricing competitive with Hetzner)
+3. Agent chooses provider at server creation time (`provider: "aws" | "hetzner" | "gcp"`)
+4. Pricing varies by provider (pass-through cost + margin)
+
+**Action:** SP-6 added to task list. Decide launch provider after comparing real instance pricing and signup friction. Hetzner code is not wasted — it becomes one provider behind the interface.
 
 ### Wallet-first identity upgrade path (2026-02-24)
 ERC-8004 uses CAIP-10 wallet addresses as root identity. DIDs layer on top non-breaking: wallet address becomes `verificationMethod` in DID Document, `alsoKnownAs` bridges old→new. No smart contract changes. Current "wallet = identity" design is correct for v1. id.sh adds DID resolution later.
