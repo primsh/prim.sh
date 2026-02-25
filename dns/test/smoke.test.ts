@@ -1,0 +1,32 @@
+import { describe, expect, it, vi } from "vitest";
+
+vi.mock("hono", () => {
+  class MockHono {
+    use() {}
+
+    get() {}
+
+    post() {}
+
+    delete() {}
+  }
+
+  return { Hono: MockHono };
+});
+
+vi.mock("@agentstack/x402-middleware", () => ({
+  createAgentStackMiddleware:
+    () =>
+    async (_c: unknown, next: () => Promise<void>): Promise<void> => {
+      await next();
+    },
+}));
+
+describe("dns.sh app", () => {
+  it("exposes a default export", async () => {
+    const mod = await import("../src/index");
+    expect(mod.default).toBeDefined();
+  });
+});
+
+

@@ -23,7 +23,7 @@
 | 17 | W-7 | Implement budget/spending policy engine | wallet/ | W-4 | done |
 | 18 | W-8 | Port execution journal + idempotency from Railgunner | wallet/ | W-4 | done |
 | 19 | W-9 | Port circuit breaker from Railgunner | wallet/ | W-4 | done |
-| 20 | D-1 | Build dns.sh: zone + record CRUD via Cloudflare API | dns/ | P-4 | pending |
+| 20 | D-1 | Build dns.sh: zone + record CRUD via Cloudflare API | dns/ | P-4 | done |
 | 21 | D-2 | Build dns.sh: batch operations + mail-setup convenience endpoint | dns/ | D-1 | pending |
 | 22 | D-3 | Build dns.sh: verification endpoint (NS + record propagation checks) | dns/ | D-1 | pending |
 | 23 | D-4 | Integrate x402 middleware | dns/ | D-1, P-4 | pending |
