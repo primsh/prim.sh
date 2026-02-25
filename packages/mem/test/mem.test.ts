@@ -177,6 +177,12 @@ describe("isValidCollectionName", () => {
   it("rejects name with special chars", () => {
     expect(isValidCollectionName("bad!name")).toBe(false);
   });
+
+  it("rejects name with uppercase letters", () => {
+    expect(isValidCollectionName("MyCollection")).toBe(false);
+    expect(isValidCollectionName("myCollection")).toBe(false);
+    expect(isValidCollectionName("MY_COLLECTION")).toBe(false);
+  });
 });
 
 // ─── isValidCacheNamespace ────────────────────────────────────────────────
