@@ -64,6 +64,7 @@
 - W-9: `tasks/completed/w-9-circuit-breaker-2026-02-24.md`
 - SP-3/SP-4: `tasks/completed/sp-3-sp-4-lifecycle-ssh-2026-02-24.md`
 - D-1: `tasks/active/d-1-dns-zone-record-crud-2026-02-24.md`
+- SP-6: `tasks/active/sp-6-provider-abstraction-2026-02-24.md`
 - R-2: `tasks/active/r-2-stalwart-domain-tls-2026-02-24.md`
 - Umbrella: `tasks/active/batch-execution-umbrella-2026-02-24.md`
 
