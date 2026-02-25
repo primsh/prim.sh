@@ -81,7 +81,8 @@
 | 15 | ST-11 | Build store.sh: lifecycle rules — per-bucket auto-expiry policies (max age in days, max object count, optional min-size floor) | packages/store | ST-3 | pending |
 | 15 | ST-12 | Build store.sh: bucket event webhooks — HMAC-signed callbacks on object create/delete, retry queue, same pattern as email.sh R-7 | packages/store | ST-2 | pending |
 | 15 | ST-13 | Build store.sh: object metadata + tagging — custom key-value metadata on put, returned on get, tag-based filtering on list | packages/store | ST-2 | pending |
-| 16 | P-6 | `prim` binary publishing + install scripts: `bun build --compile`, host binary, `curl prim.sh/install \| sh`, per-primitive install wrappers | packages/keystore, site/ | ST-6 | pending |
+| 16 | SE-1 | Build search.sh: web search, news search, extract via Tavily (stateless proxy, x402 gated) | packages/search | — | done |
+| 17 | P-6 | `prim` binary publishing + install scripts: `bun build --compile`, host binary, `curl prim.sh/install \| sh`, per-primitive install wrappers | packages/keystore, site/ | ST-6 | pending |
 | 16 | E-1 | Set PTR record for mail server IP ([STALWART_HOST] → mail.relay.prim.sh) | deploy/email | — | done |
 | 17 | E-2 | Downgrade DMARC to `p=none` temporarily while domain reputation is zero | Cloudflare DNS | — | pending |
 | 18 | E-3 | Register relay.prim.sh with Google Postmaster Tools (DNS TXT verification) | Cloudflare DNS, Google | E-1 | pending |
@@ -116,6 +117,7 @@
 - R-4: `tasks/completed/r-4-jmap-auth-session-bootstrap.md`
 - D-2: `tasks/completed/d-2-domain-sh-rename-search-2026-02-25.md`
 - D-3→D-8: see same file (comprehensive plan covers all phases)
+- D-3: `tasks/active/d-3-domain-registration-2026-02-25.md`
 - D-6: `tasks/active/d-6-verification-endpoint-2026-02-25.md`
 - ST-1: `tasks/completed/st-1-bucket-crud-cloudflare-r2.md`
 - R-5: `tasks/completed/r-5-read-messages-jmap-2026-02-25.md`
@@ -135,6 +137,7 @@
 - KS-1: `~/.claude/plans/fancy-hugging-breeze.md`
 - Umbrella: `tasks/active/batch-execution-umbrella-2026-02-24.md`
 - ST-6: `tasks/active/st-6-prim-store-cli-2026-02-25.md`
+- SE-1: `tasks/completed/se-1-search-sh-plan-2026-02-25.md`
 - M-1: `tasks/completed/m-1-mem-sh-vector-cache-2026-02-25.md`
 
 ## Backlog — Future Primitives
@@ -309,6 +312,7 @@ ERC-8004 uses CAIP-10 wallet addresses as root identity. DIDs layer on top non-b
 - M-1 — mem.sh: Qdrant vector memory (collections + upsert + query) + SQLite KV cache + x402, 96 tests (2026-02-25)
 - TK-4 — OZ + viem deployContract: compile AgentToken.sol, AES-256-GCM deployer keystore, Base Sepolia smoke test (2026-02-25)
 - TK-3 — token.sh Uniswap V3 pool creation: factory ABI, sqrtPriceX96 BigInt math (address-ordered, decimal-adjusted), full-range ticks, createPool+initialize with crash recovery (on-chain existence check), getLiquidityParams calldata, 95 tests (2026-02-25)
+- SE-1 — search.sh: web search + news search + URL extract via Tavily, provider-abstracted, stateless, x402 gated, 30 tests (2026-02-25)
 
 ### Milestone: token.sh complete — ERC-20 deploy + Uniswap V3 pool (2026-02-25)
 
