@@ -477,47 +477,69 @@ export async function createPool(
   try {
     await assertChainId(publicClient);
 
-    // Step 1: create pool
-    const createTxHash = await walletClient.writeContract({
-      address: factoryAddress,
-      abi: UNISWAP_V3_FACTORY_ABI,
-      functionName: "createPool",
-      args: [token0, token1, feeTier],
-    });
-    await publicClient.waitForTransactionReceipt({
-      hash: createTxHash as `0x${string}`,
-      timeout: 30_000,
-    });
+    const ZERO_ADDRESS = "0x0000000000000000000000000000000000000000";
+    let txHash = "0x";
 
-    // Step 2: read pool address from factory
-    const poolAddress = (await publicClient.readContract({
+    // Step 0: check on-chain for existing pool (idempotent crash recovery +
+    // external creation). If the pool already exists we skip createPool and
+    // adopt it instead of reverting and losing $0.50.
+    let poolAddress = (await publicClient.readContract({
       address: factoryAddress,
       abi: UNISWAP_V3_FACTORY_ABI,
       functionName: "getPool",
       args: [token0, token1, feeTier],
     })) as Address;
 
-    // Step 3: initialize price
-    const initTxHash = await walletClient.writeContract({
-      address: poolAddress,
-      abi: UNISWAP_V3_POOL_ABI,
-      functionName: "initialize",
-      args: [sqrtPriceX96],
-    });
-    await publicClient.waitForTransactionReceipt({
-      hash: initTxHash as `0x${string}`,
-      timeout: 30_000,
-    });
+    if (poolAddress === ZERO_ADDRESS) {
+      // Pool does not exist yet — create it
+      const createHash = await walletClient.writeContract({
+        address: factoryAddress,
+        abi: UNISWAP_V3_FACTORY_ABI,
+        functionName: "createPool",
+        args: [token0, token1, feeTier],
+      });
+      await publicClient.waitForTransactionReceipt({
+        hash: createHash as `0x${string}`,
+        timeout: 30_000,
+      });
+      txHash = createHash;
+      poolAddress = (await publicClient.readContract({
+        address: factoryAddress,
+        abi: UNISWAP_V3_FACTORY_ABI,
+        functionName: "getPool",
+        args: [token0, token1, feeTier],
+      })) as Address;
+    }
 
-    // Step 4: read slot0 for confirmed tick
-    const slot0 = (await publicClient.readContract({
+    // Step 1: check if already initialized (sqrtPriceX96 == 0 means uninitialized)
+    let slot0 = (await publicClient.readContract({
       address: poolAddress,
       abi: UNISWAP_V3_POOL_ABI,
       functionName: "slot0",
     })) as unknown as { sqrtPriceX96: bigint; tick: number };
-    const tick = slot0.tick;
 
-    // Step 5: persist
+    if (slot0.sqrtPriceX96 === 0n) {
+      // Not initialized — set the starting price
+      const initHash = await walletClient.writeContract({
+        address: poolAddress,
+        abi: UNISWAP_V3_POOL_ABI,
+        functionName: "initialize",
+        args: [sqrtPriceX96],
+      });
+      await publicClient.waitForTransactionReceipt({
+        hash: initHash as `0x${string}`,
+        timeout: 30_000,
+      });
+      txHash = initHash;
+      // Re-read slot0 to get confirmed tick
+      slot0 = (await publicClient.readContract({
+        address: poolAddress,
+        abi: UNISWAP_V3_POOL_ABI,
+        functionName: "slot0",
+      })) as unknown as { sqrtPriceX96: bigint; tick: number };
+    }
+
+    // Step 2: persist
     const poolId = `pool_${randomBytes(4).toString("hex")}`;
     insertPool({
       id: poolId,
@@ -526,9 +548,9 @@ export async function createPool(
       token0,
       token1,
       fee: feeTier,
-      sqrt_price_x96: sqrtPriceX96.toString(),
-      tick,
-      tx_hash: initTxHash,
+      sqrt_price_x96: slot0.sqrtPriceX96.toString(),
+      tick: slot0.tick,
+      tx_hash: txHash,
       deploy_status: "confirmed",
     });
 

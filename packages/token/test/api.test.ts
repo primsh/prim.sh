@@ -810,13 +810,43 @@ describe("token.sh", () => {
     const INIT_TX = "0xTXHASH_INIT_000000000000000000000000000000000000000000000000000000";
     const MOCK_TICK = -46055;
 
+    const ZERO_ADDRESS = "0x0000000000000000000000000000000000000000";
+    const SLOT0_INITIALIZED = (tick = MOCK_TICK) => ({
+      sqrtPriceX96: 792281625142643n,
+      tick,
+      observationIndex: 0,
+      observationCardinality: 1,
+      observationCardinalityNext: 1,
+      feeProtocol: 0,
+      unlocked: true,
+    });
+    const SLOT0_UNINITIALIZED = {
+      sqrtPriceX96: 0n,
+      tick: 0,
+      observationIndex: 0,
+      observationCardinality: 0,
+      observationCardinalityNext: 0,
+      feeProtocol: 0,
+      unlocked: true,
+    };
+
+    // Happy path: new pool (getPool → zero, createPool, getPool → addr, slot0 → 0, initialize, slot0 → confirmed)
     function setupPoolMocks(tick = MOCK_TICK) {
-      // writeContract: call 1 = createPool tx, call 2 = initialize tx
+      // readContract sequence:
+      // 1. factory.getPool (pre-check) → ZERO_ADDRESS
+      // 2. factory.getPool (after createPool) → POOL_ADDRESS
+      // 3. pool.slot0 (pre-check) → uninitialized (sqrtPriceX96=0)
+      // 4. pool.slot0 (after initialize) → confirmed
+      readContractMock.mockResolvedValueOnce(ZERO_ADDRESS);
+      readContractMock.mockResolvedValueOnce(POOL_ADDRESS);
+      readContractMock.mockResolvedValueOnce(SLOT0_UNINITIALIZED);
+      readContractMock.mockResolvedValueOnce(SLOT0_INITIALIZED(tick));
+      // writeContract: createPool tx, then initialize tx
       writeContractMock.mockResolvedValueOnce(
         "0xTXHASH_CREATE_000000000000000000000000000000000000000000000000000000",
       );
       writeContractMock.mockResolvedValueOnce(INIT_TX);
-      // waitForTransactionReceipt: two receipts (createPool, initialize)
+      // waitForTransactionReceipt: createPool receipt, initialize receipt
       waitForTransactionReceiptMock.mockResolvedValueOnce({
         status: "success" as const,
         contractAddress: null,
@@ -825,16 +855,28 @@ describe("token.sh", () => {
         status: "success" as const,
         contractAddress: null,
       });
-      // readContract: call 1 = factory.getPool, call 2 = pool.slot0
+    }
+
+    // Crash recovery: pool exists on-chain + already initialized (skip createPool + initialize)
+    function setupAdoptInitializedMocks(tick = MOCK_TICK) {
+      // readContract: getPool → POOL_ADDRESS, slot0 → initialized (no re-read needed)
       readContractMock.mockResolvedValueOnce(POOL_ADDRESS);
-      readContractMock.mockResolvedValueOnce({
-        sqrtPriceX96: 792281625142643n,
-        tick,
-        observationIndex: 0,
-        observationCardinality: 1,
-        observationCardinalityNext: 1,
-        feeProtocol: 0,
-        unlocked: true,
+      readContractMock.mockResolvedValueOnce(SLOT0_INITIALIZED(tick));
+      // no writeContract or waitForTransactionReceipt calls
+    }
+
+    // Crash recovery: pool exists on-chain but not yet initialized
+    function setupAdoptUninitializedMocks(tick = MOCK_TICK) {
+      // readContract: getPool → POOL_ADDRESS, slot0 → 0 (pre-check), slot0 → confirmed (after init)
+      readContractMock.mockResolvedValueOnce(POOL_ADDRESS);
+      readContractMock.mockResolvedValueOnce(SLOT0_UNINITIALIZED);
+      readContractMock.mockResolvedValueOnce(SLOT0_INITIALIZED(tick));
+      // writeContract: only initialize tx
+      writeContractMock.mockResolvedValueOnce(INIT_TX);
+      // waitForTransactionReceipt: only initialize receipt
+      waitForTransactionReceiptMock.mockResolvedValueOnce({
+        status: "success" as const,
+        contractAddress: null,
       });
     }
 
@@ -938,12 +980,39 @@ describe("token.sh", () => {
 
     it("RPC error during pool creation → 502", async () => {
       const tokenId = await deployConfirmedToken();
+      // getPool pre-check returns zero, then createPool reverts
+      readContractMock.mockResolvedValueOnce(ZERO_ADDRESS);
       writeContractMock.mockRejectedValueOnce(new Error("execution reverted"));
       const result = await createPool(tokenId, { pricePerToken: "0.01" }, CALLER);
       expect(result.ok).toBe(false);
       if (result.ok) return;
       expect(result.status).toBe(502);
       expect(result.code).toBe("rpc_error");
+    });
+
+    it("crash recovery: pool exists on-chain + initialized → adopt without creating or initializing", async () => {
+      const tokenId = await deployConfirmedToken();
+      setupAdoptInitializedMocks();
+      const result = await createPool(tokenId, { pricePerToken: "0.01" }, CALLER);
+      expect(result.ok).toBe(true);
+      if (!result.ok) return;
+      expect(result.data.poolAddress).toBe(POOL_ADDRESS);
+      expect(result.data.tick).toBe(MOCK_TICK);
+      // No createPool or initialize tx was submitted
+      expect(writeContractMock).not.toHaveBeenCalled();
+    });
+
+    it("crash recovery: pool exists on-chain but uninitialized → skip createPool, call initialize", async () => {
+      const tokenId = await deployConfirmedToken();
+      setupAdoptUninitializedMocks();
+      const result = await createPool(tokenId, { pricePerToken: "0.01" }, CALLER);
+      expect(result.ok).toBe(true);
+      if (!result.ok) return;
+      expect(result.data.poolAddress).toBe(POOL_ADDRESS);
+      // Only initialize was called (not createPool)
+      expect(writeContractMock).toHaveBeenCalledTimes(1);
+      const args = writeContractMock.mock.calls[0][0] as Record<string, unknown>;
+      expect(args.functionName).toBe("initialize");
     });
 
     // ─── getPool ──────────────────────────────────────────────────────
