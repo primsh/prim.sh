@@ -48,7 +48,7 @@
 | 39 | B-1 | Batch 1: parallel agent team execution (W-2 + R-1 + SP-1) | cross-cutting | W-2 plan, R-1 plan, SP-1 plan | done |
 | 40 | SP-6 | Abstract provider layer + multi-cloud support (DO, AWS, GCP, Hetzner) | spawn/ | SP-4 | done |
 | 1 | ST-1 | Build store.sh: bucket CRUD via Cloudflare R2 API (create, list, get, delete; ownership; SQLite) | packages/store | P-4 | done |
-| 2 | ST-2 | Build store.sh: object CRUD via S3-compatible API (put, get, delete, list within owned buckets) | packages/store | ST-1 | pending |
+| 2 | ST-2 | Build store.sh: object CRUD via S3-compatible API (put, get, delete, list within owned buckets) | packages/store | ST-1 | done |
 | 3 | ST-3 | Build store.sh: storage quota + usage tracking (per-bucket limits, metering) | packages/store | ST-1 | pending |
 | 4 | ST-4 | Integrate x402 middleware for store.sh | packages/store | ST-1, P-4 | pending |
 
@@ -231,6 +231,7 @@ ERC-8004 uses CAIP-10 wallet addresses as root identity. DIDs layer on top non-b
 - R-4 — JMAP auth bridge: AES-256-GCM password encryption, session discovery, context provider, 43 tests (2026-02-25)
 - R-5 — read messages: JMAP Email/query + Email/get, folder filtering, address flattening, 61 tests (2026-02-25)
 - ST-1 — store.sh bucket CRUD: R2 API wrapper, name validation, SQLite ownership, 31 tests (2026-02-25)
+- ST-2 — store.sh object CRUD: S3-compatible API via aws4fetch, put/get/delete/list, streaming download, 54 tests (2026-02-25)
 
 ### R-2 completion details (2026-02-25)
 
