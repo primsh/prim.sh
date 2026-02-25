@@ -40,7 +40,7 @@
 | 31 | R-8 | Build relay.sh wrapper: mailbox TTL/expiry manager | relay/ | R-3 | done |
 | 32 | R-9 | Build relay.sh wrapper: custom domain support | relay/ | R-2, D-1 | done |
 | 33 | R-11 | Local smoke test: SSH tunnel to Stalwart, run relay.sh, test full flow (create mailbox → send → read → webhook) | relay/ | R-6 | pending |
-| 34 | R-10 | Integrate x402 middleware (all endpoints gated by payment) | relay/ | R-3, P-4 | pending |
+| 34 | R-10 | Integrate x402 middleware (all endpoints gated by payment) | relay/ | R-3, P-4 | done |
 | 34 | SP-1 | Write spawn.sh spec (Hetzner API wrapping, VM lifecycle, pricing) | specs/ | — | done |
 | 35 | SP-2 | Build spawn.sh: VM provisioning via Hetzner Cloud API | spawn/ | SP-1 | done |
 | 36 | SP-3 | Build spawn.sh: VM lifecycle (start, stop, destroy, resize) | spawn/ | SP-2 | done |
@@ -254,6 +254,7 @@ ERC-8004 uses CAIP-10 wallet addresses as root identity. DIDs layer on top non-b
 - R-7 — relay.sh incoming webhooks: webhook CRUD, HMAC signing, delivery with retry, Stalwart ingest handler, 125 tests (2026-02-25)
 - R-9 — relay.sh custom domains: domain registration, DNS verification, Stalwart provisioning (domain principal + DKIM), mailbox creation on custom domains, 148 tests (2026-02-25)
 - ST-5 — testnet integration: getNetworkConfig() in x402-middleware, PRIM_NETWORK/PRIM_PAY_TO env vars, wallet+store wired to Sepolia, integration test script, 496 tests pass (2026-02-25)
+- R-10 — relay.sh x402 middleware: all 16 paid endpoints gated, health check + ingest webhook free, per-route pricing (2026-02-25)
 
 ### R-2 completion details (2026-02-25)
 

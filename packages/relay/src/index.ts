@@ -1,4 +1,5 @@
 import { Hono } from "hono";
+import { createAgentStackMiddleware, getNetworkConfig } from "@agentstack/x402-middleware";
 import type {
   ApiError,
   CreateMailboxRequest,
@@ -40,6 +41,29 @@ import {
   deleteDomain,
 } from "./service.ts";
 
+const networkConfig = getNetworkConfig();
+const PAY_TO_ADDRESS = process.env.PRIM_PAY_TO ?? "0x0000000000000000000000000000000000000000";
+const NETWORK = networkConfig.network;
+
+const RELAY_ROUTES = {
+  "POST /v1/mailboxes": "$0.05",
+  "GET /v1/mailboxes": "$0.001",
+  "GET /v1/mailboxes/[id]": "$0.001",
+  "DELETE /v1/mailboxes/[id]": "$0.01",
+  "POST /v1/mailboxes/[id]/renew": "$0.01",
+  "GET /v1/mailboxes/[id]/messages": "$0.001",
+  "GET /v1/mailboxes/[id]/messages/[msgId]": "$0.001",
+  "POST /v1/mailboxes/[id]/send": "$0.01",
+  "POST /v1/mailboxes/[id]/webhooks": "$0.01",
+  "GET /v1/mailboxes/[id]/webhooks": "$0.001",
+  "DELETE /v1/mailboxes/[id]/webhooks/[whId]": "$0.001",
+  "POST /v1/domains": "$0.05",
+  "GET /v1/domains": "$0.001",
+  "GET /v1/domains/[id]": "$0.001",
+  "POST /v1/domains/[id]/verify": "$0.01",
+  "DELETE /v1/domains/[id]": "$0.01",
+} as const;
+
 function forbidden(message: string): ApiError {
   return { error: { code: "forbidden", message } };
 }
@@ -62,6 +86,18 @@ function serviceError(code: string, message: string): ApiError {
 
 type AppVariables = { walletAddress: string | undefined };
 const app = new Hono<{ Variables: AppVariables }>();
+
+app.use(
+  "*",
+  createAgentStackMiddleware(
+    {
+      payTo: PAY_TO_ADDRESS,
+      network: NETWORK,
+      freeRoutes: ["GET /", "POST /internal/hooks/ingest"],
+    },
+    { ...RELAY_ROUTES },
+  ),
+);
 
 // GET / — health check (free)
 app.get("/", (c) => {
