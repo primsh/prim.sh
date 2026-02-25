@@ -5,6 +5,7 @@ import type {
   RenewMailboxRequest,
   SendMessageRequest,
   RegisterWebhookRequest,
+  RegisterDomainRequest,
   MailboxResponse,
   MailboxListResponse,
   DeleteMailboxResponse,
@@ -14,6 +15,10 @@ import type {
   WebhookResponse,
   WebhookListResponse,
   DeleteWebhookResponse,
+  DomainResponse,
+  DomainListResponse,
+  DeleteDomainResponse,
+  VerifyDomainResponse,
 } from "./api.ts";
 import {
   createMailbox,
@@ -28,6 +33,11 @@ import {
   listWebhooks,
   deleteWebhook,
   handleIngestEvent,
+  registerDomain,
+  listDomains,
+  getDomain,
+  verifyDomain,
+  deleteDomain,
 } from "./service.ts";
 
 function forbidden(message: string): ApiError {
@@ -239,6 +249,76 @@ app.delete("/v1/mailboxes/:id/webhooks/:whId", (c) => {
     return c.json(serviceError(result.code, result.message), result.status as 502);
   }
   return c.json(result.data as DeleteWebhookResponse, 200);
+});
+
+// POST /v1/domains — Register custom domain
+app.post("/v1/domains", async (c) => {
+  const caller = c.get("walletAddress");
+  if (!caller) return c.json(forbidden("No wallet address in payment"), 403);
+
+  let body: RegisterDomainRequest;
+  try {
+    body = await c.req.json<RegisterDomainRequest>();
+  } catch {
+    return c.json(invalidRequest("Invalid JSON body"), 400);
+  }
+
+  const result = await registerDomain(body, caller);
+  if (!result.ok) {
+    if (result.code === "invalid_request") return c.json(invalidRequest(result.message), 400);
+    if (result.code === "domain_taken") return c.json(serviceError("domain_taken", result.message), 409);
+    return c.json(serviceError(result.code, result.message), result.status as 502);
+  }
+  return c.json(result.data as DomainResponse, 201);
+});
+
+// GET /v1/domains — List caller's domains
+app.get("/v1/domains", (c) => {
+  const caller = c.get("walletAddress");
+  if (!caller) return c.json(forbidden("No wallet address in payment"), 403);
+
+  const perPage = Math.min(Number(c.req.query("per_page")) || 25, 100);
+  const page = Math.max(Number(c.req.query("page")) || 1, 1);
+
+  const data = listDomains(caller, page, perPage);
+  return c.json(data as DomainListResponse, 200);
+});
+
+// GET /v1/domains/:id — Get domain details
+app.get("/v1/domains/:id", (c) => {
+  const caller = c.get("walletAddress");
+  if (!caller) return c.json(forbidden("No wallet address in payment"), 403);
+
+  const result = getDomain(c.req.param("id"), caller);
+  if (!result.ok) return c.json(notFound(result.message), 404);
+  return c.json(result.data as DomainResponse, 200);
+});
+
+// POST /v1/domains/:id/verify — Verify DNS and provision
+app.post("/v1/domains/:id/verify", async (c) => {
+  const caller = c.get("walletAddress");
+  if (!caller) return c.json(forbidden("No wallet address in payment"), 403);
+
+  const result = await verifyDomain(c.req.param("id"), caller);
+  if (!result.ok) {
+    if (result.code === "not_found") return c.json(notFound(result.message), 404);
+    if (result.code === "already_verified") return c.json(invalidRequest(result.message), 400);
+    return c.json(serviceError(result.code, result.message), result.status as 502);
+  }
+  return c.json(result.data as VerifyDomainResponse, 200);
+});
+
+// DELETE /v1/domains/:id — Delete custom domain
+app.delete("/v1/domains/:id", async (c) => {
+  const caller = c.get("walletAddress");
+  if (!caller) return c.json(forbidden("No wallet address in payment"), 403);
+
+  const result = await deleteDomain(c.req.param("id"), caller);
+  if (!result.ok) {
+    if (result.code === "not_found") return c.json(notFound(result.message), 404);
+    return c.json(serviceError(result.code, result.message), result.status as 502);
+  }
+  return c.json(result.data as DeleteDomainResponse, 200);
 });
 
 // POST /internal/hooks/ingest — Stalwart webhook ingest (not x402-gated)

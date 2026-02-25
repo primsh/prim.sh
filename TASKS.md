@@ -38,7 +38,7 @@
 | 29 | R-6 | Build relay.sh wrapper: send messages (JMAP EmailSubmission/set) — receive-only first | relay/ | R-4 | done |
 | 30 | R-7 | Build relay.sh wrapper: incoming mail webhooks (Stalwart MTA Hooks) | relay/ | R-2 | done |
 | 31 | R-8 | Build relay.sh wrapper: mailbox TTL/expiry manager | relay/ | R-3 | done |
-| 32 | R-9 | Build relay.sh wrapper: custom domain support | relay/ | R-2, D-1 | pending |
+| 32 | R-9 | Build relay.sh wrapper: custom domain support | relay/ | R-2, D-1 | done |
 | 33 | R-11 | Local smoke test: SSH tunnel to Stalwart, run relay.sh, test full flow (create mailbox → send → read → webhook) | relay/ | R-6 | pending |
 | 34 | R-10 | Integrate x402 middleware (all endpoints gated by payment) | relay/ | R-3, P-4 | pending |
 | 34 | SP-1 | Write spawn.sh spec (Hetzner API wrapping, VM lifecycle, pricing) | specs/ | — | done |
@@ -87,6 +87,7 @@
 - ST-4: `tasks/completed/st-4-x402-middleware-store.md`
 - R-6: `tasks/completed/r-6-send-messages-jmap-2026-02-25.md`
 - R-7: `tasks/completed/r-7-incoming-webhooks-mta-hooks.md`
+- R-9: `tasks/completed/r-9-custom-domain-support.md`
 - R-8: `tasks/completed/r-8-mailbox-ttl-expiry.md`
 - ST-3: `tasks/completed/st-3-storage-quota-usage.md`
 - TK-1/TK-2: implemented directly (no plan doc — plan provided in prompt)
@@ -251,6 +252,7 @@ ERC-8004 uses CAIP-10 wallet addresses as root identity. DIDs layer on top non-b
 - TK-1 — token.sh scaffold + deploy + query: factory ABI, CREATE2 salt, AES-256-GCM deployer keystore, SQLite deployments, 58 tests (2026-02-25)
 - TK-2 — token.sh mint + supply: mintable/not_mintable/forbidden/exceeds_max_supply decision table, on-chain totalSupply reads, 58 tests (2026-02-25)
 - R-7 — relay.sh incoming webhooks: webhook CRUD, HMAC signing, delivery with retry, Stalwart ingest handler, 125 tests (2026-02-25)
+- R-9 — relay.sh custom domains: domain registration, DNS verification, Stalwart provisioning (domain principal + DKIM), mailbox creation on custom domains, 148 tests (2026-02-25)
 
 ### R-2 completion details (2026-02-25)
 

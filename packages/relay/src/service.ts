@@ -13,18 +13,31 @@ import {
   getWebhooksByMailbox,
   getWebhookById,
   deleteWebhookRow,
+  insertDomain,
+  getDomainById,
+  getDomainByName,
+  getDomainsByOwner,
+  countDomainsByOwner,
+  updateDomainVerification,
+  updateDomainProvisioned,
+  deleteDomainRow,
+  countMailboxesByDomain,
 } from "./db.ts";
 import {
   StalwartError,
   createPrincipal,
   deletePrincipal,
+  createDomainPrincipal,
+  deleteDomainPrincipal,
+  generateDkim,
+  getDnsRecords,
 } from "./stalwart.ts";
 import { encryptPassword } from "./crypto.ts";
 import { discoverSession, buildBasicAuth, JmapError, queryEmails, getEmail, sendEmail } from "./jmap.ts";
 import { getJmapContext } from "./context.ts";
 import { expireMailbox } from "./expiry.ts";
-import { verifySignature } from "./webhook-delivery.ts";
-import { dispatchWebhookDeliveries } from "./webhook-delivery.ts";
+import { verifySignature, dispatchWebhookDeliveries } from "./webhook-delivery.ts";
+import { verifyDns } from "./dns-check.ts";
 import type {
   ServiceResult,
   MailboxResponse,
@@ -43,8 +56,15 @@ import type {
   WebhookListResponse,
   DeleteWebhookResponse,
   WebhookPayload,
+  RegisterDomainRequest,
+  DomainResponse,
+  DomainListResponse,
+  DeleteDomainResponse,
+  VerifyDomainResponse,
+  DnsRecord,
+  VerificationResult,
 } from "./api.ts";
-import type { MailboxRow } from "./db.ts";
+import type { MailboxRow, DomainRow } from "./db.ts";
 
 // ─── Constants ───────────────────────────────────────────────────────────
 
@@ -131,12 +151,13 @@ export async function createMailbox(
   const domain = request.domain ?? DEFAULT_DOMAIN;
 
   if (domain !== DEFAULT_DOMAIN) {
-    return {
-      ok: false,
-      status: 400,
-      code: "invalid_request",
-      message: `Only "${DEFAULT_DOMAIN}" is supported as a domain`,
-    };
+    const domainRow = getDomainByName(domain);
+    if (!domainRow || domainRow.owner_wallet !== callerWallet) {
+      return { ok: false, status: 400, code: "invalid_request", message: "Domain not found" };
+    }
+    if (domainRow.status !== "active") {
+      return { ok: false, status: 400, code: "domain_not_verified", message: "Domain not yet verified" };
+    }
   }
 
   const ttlResult = validateTtl(request.ttl_ms);
@@ -647,4 +668,232 @@ export async function handleIngestEvent(
   }
 
   return { ok: true, data: { accepted: true } };
+}
+
+// ─── Custom domains (R-9) ────────────────────────────────────────────
+
+const MAIL_HOST = process.env.RELAY_MAIL_HOST ?? "mail.relay.prim.sh";
+const RESERVED_DOMAINS = ["relay.prim.sh", "prim.sh", "mail.relay.prim.sh"];
+
+function isValidDomain(domain: string): boolean {
+  if (!domain || domain.length > 253) return false;
+  const parts = domain.split(".");
+  if (parts.length < 2) return false;
+  return parts.every(
+    (p) => p.length > 0 && p.length <= 63 && /^[a-z0-9]([a-z0-9-]*[a-z0-9])?$/i.test(p),
+  );
+}
+
+function buildRequiredRecords(domain: string): DnsRecord[] {
+  return [
+    { type: "MX", name: domain, content: MAIL_HOST, priority: 10 },
+    { type: "TXT", name: domain, content: "v=spf1 include:relay.prim.sh -all" },
+    { type: "TXT", name: `_dmarc.${domain}`, content: `v=DMARC1; p=quarantine; rua=mailto:dmarc@${domain}; pct=100` },
+  ];
+}
+
+function domainToResponse(row: DomainRow): DomainResponse {
+  const resp: DomainResponse = {
+    id: row.id,
+    domain: row.domain,
+    status: row.status,
+    owner_wallet: row.owner_wallet,
+    created_at: new Date(row.created_at).toISOString(),
+    verified_at: row.verified_at ? new Date(row.verified_at).toISOString() : null,
+    required_records: buildRequiredRecords(row.domain),
+  };
+  if (row.status === "active" && (row.dkim_rsa_record || row.dkim_ed_record)) {
+    resp.dkim_records = [];
+    if (row.dkim_rsa_record) {
+      resp.dkim_records.push({ type: "TXT", name: `rsa._domainkey.${row.domain}`, content: row.dkim_rsa_record });
+    }
+    if (row.dkim_ed_record) {
+      resp.dkim_records.push({ type: "TXT", name: `ed._domainkey.${row.domain}`, content: row.dkim_ed_record });
+    }
+  }
+  return resp;
+}
+
+export async function registerDomain(
+  request: RegisterDomainRequest,
+  callerWallet: string,
+): Promise<ServiceResult<DomainResponse>> {
+  const domain = request.domain?.trim().toLowerCase();
+  if (!domain || !isValidDomain(domain)) {
+    return { ok: false, status: 400, code: "invalid_request", message: "Invalid domain format" };
+  }
+  if (RESERVED_DOMAINS.includes(domain)) {
+    return { ok: false, status: 400, code: "invalid_request", message: "Domain is reserved" };
+  }
+
+  const existing = getDomainByName(domain);
+  if (existing) {
+    return { ok: false, status: 409, code: "domain_taken", message: "Domain already registered" };
+  }
+
+  const id = `dom_${randomBytes(4).toString("hex")}`;
+  const now = Date.now();
+  insertDomain({ id, domain, owner_wallet: callerWallet, created_at: now, updated_at: now });
+
+  const row = getDomainById(id);
+  if (!row) throw new Error("Failed to retrieve domain after insert");
+
+  return { ok: true, data: domainToResponse(row) };
+}
+
+export function listDomains(
+  callerWallet: string,
+  page: number,
+  perPage: number,
+): DomainListResponse {
+  const offset = (page - 1) * perPage;
+  const rows = getDomainsByOwner(callerWallet, perPage, offset);
+  const total = countDomainsByOwner(callerWallet);
+  return {
+    domains: rows.map(domainToResponse),
+    total,
+    page,
+    per_page: perPage,
+  };
+}
+
+export function getDomain(
+  id: string,
+  callerWallet: string,
+): ServiceResult<DomainResponse> {
+  const row = getDomainById(id);
+  if (!row || row.owner_wallet !== callerWallet) {
+    return { ok: false, status: 404, code: "not_found", message: "Domain not found" };
+  }
+  return { ok: true, data: domainToResponse(row) };
+}
+
+export async function verifyDomain(
+  id: string,
+  callerWallet: string,
+): Promise<ServiceResult<VerifyDomainResponse>> {
+  const row = getDomainById(id);
+  if (!row || row.owner_wallet !== callerWallet) {
+    return { ok: false, status: 404, code: "not_found", message: "Domain not found" };
+  }
+  if (row.status === "active") {
+    return { ok: false, status: 400, code: "already_verified", message: "Domain already verified" };
+  }
+
+  const dnsResult = await verifyDns(row.domain);
+
+  updateDomainVerification(id, {
+    mx_verified: dnsResult.mx.pass,
+    spf_verified: dnsResult.spf.pass,
+    dmarc_verified: dnsResult.dmarc.pass,
+  });
+
+  if (!dnsResult.allPass) {
+    const results: VerificationResult[] = [
+      { type: "MX", name: row.domain, expected: dnsResult.mx.expected, found: dnsResult.mx.found, pass: dnsResult.mx.pass },
+      { type: "TXT", name: row.domain, expected: dnsResult.spf.expected, found: dnsResult.spf.found, pass: dnsResult.spf.pass },
+      { type: "TXT", name: `_dmarc.${row.domain}`, expected: dnsResult.dmarc.expected, found: dnsResult.dmarc.found, pass: dnsResult.dmarc.pass },
+    ];
+    return {
+      ok: true,
+      data: {
+        id: row.id,
+        domain: row.domain,
+        status: "pending",
+        verified_at: null,
+        verification_results: results,
+      },
+    };
+  }
+
+  // All DNS checks passed — provision in Stalwart
+  try {
+    await createDomainPrincipal(row.domain);
+  } catch (err) {
+    if (err instanceof StalwartError) {
+      if (err.code !== "conflict") {
+        return { ok: false, status: err.statusCode, code: err.code, message: err.message };
+      }
+      // Domain already exists in Stalwart — continue
+    } else {
+      throw err;
+    }
+  }
+
+  try {
+    await generateDkim(row.domain, "RSA");
+    await generateDkim(row.domain, "Ed25519");
+  } catch (err) {
+    if (err instanceof StalwartError) {
+      // Rollback domain principal on DKIM failure
+      try { await deleteDomainPrincipal(row.domain); } catch { /* best effort */ }
+      return { ok: false, status: err.statusCode, code: err.code, message: `DKIM generation failed: ${err.message}` };
+    }
+    throw err;
+  }
+
+  // Fetch DNS records from Stalwart to get DKIM public keys
+  let dkimRsa: string | null = null;
+  let dkimEd: string | null = null;
+  const dkimRecords: DnsRecord[] = [];
+  try {
+    const records = await getDnsRecords(row.domain);
+    for (const rec of records) {
+      if (rec.type === "TXT" && rec.name.includes("_domainkey")) {
+        if (rec.name.startsWith("rsa.") || rec.name.includes("rsa._domainkey")) {
+          dkimRsa = rec.content;
+          dkimRecords.push({ type: "TXT", name: rec.name, content: rec.content });
+        } else if (rec.name.startsWith("ed.") || rec.name.includes("ed._domainkey")) {
+          dkimEd = rec.content;
+          dkimRecords.push({ type: "TXT", name: rec.name, content: rec.content });
+        }
+      }
+    }
+  } catch (err) {
+    if (!(err instanceof StalwartError)) throw err;
+    // Non-fatal — DKIM keys were generated, agent can check later
+  }
+
+  updateDomainProvisioned(id, { dkim_rsa_record: dkimRsa, dkim_ed_record: dkimEd });
+
+  return {
+    ok: true,
+    data: {
+      id: row.id,
+      domain: row.domain,
+      status: "active",
+      verified_at: new Date().toISOString(),
+      dkim_records: dkimRecords,
+    },
+  };
+}
+
+export async function deleteDomain(
+  id: string,
+  callerWallet: string,
+): Promise<ServiceResult<DeleteDomainResponse>> {
+  const row = getDomainById(id);
+  if (!row || row.owner_wallet !== callerWallet) {
+    return { ok: false, status: 404, code: "not_found", message: "Domain not found" };
+  }
+
+  if (row.stalwart_provisioned) {
+    try {
+      await deleteDomainPrincipal(row.domain);
+    } catch (err) {
+      if (err instanceof StalwartError && err.code !== "not_found") {
+        return { ok: false, status: err.statusCode, code: err.code, message: err.message };
+      }
+      // not_found is fine — already cleaned up
+    }
+  }
+
+  const mailboxCount = countMailboxesByDomain(row.domain);
+  deleteDomainRow(id);
+
+  const resp: DeleteDomainResponse = { id, deleted: true };
+  if (mailboxCount > 0) {
+    resp.warning = `${mailboxCount} active mailbox${mailboxCount > 1 ? "es" : ""} on this domain`;
+  }
+  return { ok: true, data: resp };
 }

@@ -96,6 +96,28 @@ export function getDb(): Database {
   _db.run("CREATE INDEX IF NOT EXISTS idx_mailboxes_address ON mailboxes(address)");
   _db.run("CREATE INDEX IF NOT EXISTS idx_mailboxes_expiry ON mailboxes(status, expires_at)");
 
+  // R-9: custom domains table
+  _db.run(`
+    CREATE TABLE IF NOT EXISTS domains (
+      id                   TEXT PRIMARY KEY,
+      domain               TEXT NOT NULL UNIQUE,
+      owner_wallet         TEXT NOT NULL,
+      status               TEXT NOT NULL DEFAULT 'pending',
+      mx_verified          INTEGER NOT NULL DEFAULT 0,
+      spf_verified         INTEGER NOT NULL DEFAULT 0,
+      dmarc_verified       INTEGER NOT NULL DEFAULT 0,
+      dkim_rsa_record      TEXT,
+      dkim_ed_record       TEXT,
+      stalwart_provisioned INTEGER NOT NULL DEFAULT 0,
+      created_at           INTEGER NOT NULL,
+      verified_at          INTEGER,
+      updated_at           INTEGER NOT NULL
+    )
+  `);
+
+  _db.run("CREATE INDEX IF NOT EXISTS idx_domains_owner ON domains(owner_wallet)");
+  _db.run("CREATE INDEX IF NOT EXISTS idx_domains_domain ON domains(domain)");
+
   return _db;
 }
 
@@ -361,4 +383,100 @@ export function insertWebhookLog(params: {
   db.query(
     "INSERT INTO webhooks_log (webhook_id, message_id, status_code, attempt, delivered_at, error, created_at) VALUES (?, ?, ?, ?, ?, ?, ?)",
   ).run(params.webhook_id, params.message_id, params.status_code, params.attempt, params.delivered_at, params.error, Date.now());
+}
+
+// ─── Domain queries (R-9) ────────────────────────────────────────────
+
+export interface DomainRow {
+  id: string;
+  domain: string;
+  owner_wallet: string;
+  status: string;
+  mx_verified: number;
+  spf_verified: number;
+  dmarc_verified: number;
+  dkim_rsa_record: string | null;
+  dkim_ed_record: string | null;
+  stalwart_provisioned: number;
+  created_at: number;
+  verified_at: number | null;
+  updated_at: number;
+}
+
+export function insertDomain(params: {
+  id: string;
+  domain: string;
+  owner_wallet: string;
+  created_at: number;
+  updated_at: number;
+}): void {
+  const db = getDb();
+  db.query(
+    "INSERT INTO domains (id, domain, owner_wallet, created_at, updated_at) VALUES (?, ?, ?, ?, ?)",
+  ).run(params.id, params.domain, params.owner_wallet, params.created_at, params.updated_at);
+}
+
+export function getDomainById(id: string): DomainRow | null {
+  const db = getDb();
+  return db.query<DomainRow, [string]>("SELECT * FROM domains WHERE id = ?").get(id) ?? null;
+}
+
+export function getDomainByName(domain: string): DomainRow | null {
+  const db = getDb();
+  return db.query<DomainRow, [string]>("SELECT * FROM domains WHERE domain = ?").get(domain) ?? null;
+}
+
+export function getDomainsByOwner(owner: string, limit: number, offset: number): DomainRow[] {
+  const db = getDb();
+  return db
+    .query<DomainRow, [string, number, number]>(
+      "SELECT * FROM domains WHERE owner_wallet = ? ORDER BY created_at DESC LIMIT ? OFFSET ?",
+    )
+    .all(owner, limit, offset);
+}
+
+export function countDomainsByOwner(owner: string): number {
+  const db = getDb();
+  const row = db
+    .query<{ count: number }, [string]>(
+      "SELECT COUNT(*) as count FROM domains WHERE owner_wallet = ?",
+    )
+    .get(owner) as { count: number } | null;
+  return row?.count ?? 0;
+}
+
+export function updateDomainVerification(id: string, params: {
+  mx_verified: boolean;
+  spf_verified: boolean;
+  dmarc_verified: boolean;
+}): void {
+  const db = getDb();
+  db.query(
+    "UPDATE domains SET mx_verified = ?, spf_verified = ?, dmarc_verified = ?, updated_at = ? WHERE id = ?",
+  ).run(params.mx_verified ? 1 : 0, params.spf_verified ? 1 : 0, params.dmarc_verified ? 1 : 0, Date.now(), id);
+}
+
+export function updateDomainProvisioned(id: string, params: {
+  dkim_rsa_record: string | null;
+  dkim_ed_record: string | null;
+}): void {
+  const db = getDb();
+  db.query(
+    "UPDATE domains SET status = 'active', stalwart_provisioned = 1, dkim_rsa_record = ?, dkim_ed_record = ?, verified_at = ?, updated_at = ? WHERE id = ?",
+  ).run(params.dkim_rsa_record, params.dkim_ed_record, Date.now(), Date.now(), id);
+}
+
+export function deleteDomainRow(id: string): void {
+  const db = getDb();
+  db.query("DELETE FROM domains WHERE id = ?").run(id);
+}
+
+export function countMailboxesByDomain(domain: string): number {
+  const db = getDb();
+  const row = db
+    .query<{ count: number }, [string]>(
+      "SELECT COUNT(*) as count FROM mailboxes WHERE domain = ? AND status = 'active'",
+    )
+    .get(domain) as { count: number } | null;
+  return row?.count ?? 0;
 }

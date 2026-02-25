@@ -108,3 +108,54 @@ export async function deletePrincipal(name: string): Promise<void> {
   });
   await handleResponse<null>(res);
 }
+
+// ─── Domain functions (R-9) ──────────────────────────────────────────
+
+export async function createDomainPrincipal(domain: string): Promise<number> {
+  const res = await fetch(`${getApiUrl()}/api/principal`, {
+    method: "POST",
+    headers: authHeaders(),
+    body: JSON.stringify({ type: "domain", name: domain }),
+  });
+  return handleResponse<number>(res);
+}
+
+export async function deleteDomainPrincipal(domain: string): Promise<void> {
+  const res = await fetch(`${getApiUrl()}/api/principal/${encodeURIComponent(domain)}`, {
+    method: "DELETE",
+    headers: authHeaders(),
+  });
+  await handleResponse<null>(res);
+}
+
+export interface DkimResult {
+  id: string;
+  algorithm: string;
+  domain: string;
+  selector: string;
+}
+
+export async function generateDkim(
+  domain: string,
+  algorithm: "RSA" | "Ed25519",
+): Promise<DkimResult> {
+  const res = await fetch(`${getApiUrl()}/api/dkim`, {
+    method: "POST",
+    headers: authHeaders(),
+    body: JSON.stringify({ id: null, algorithm, domain, selector: null }),
+  });
+  return handleResponse<DkimResult>(res);
+}
+
+export interface StalwartDnsRecord {
+  type: string;
+  name: string;
+  content: string;
+}
+
+export async function getDnsRecords(domain: string): Promise<StalwartDnsRecord[]> {
+  const res = await fetch(`${getApiUrl()}/api/dns/records/${encodeURIComponent(domain)}`, {
+    headers: authHeaders(),
+  });
+  return handleResponse<StalwartDnsRecord[]>(res);
+}

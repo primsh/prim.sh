@@ -150,6 +150,60 @@ export interface WebhookPayload {
   timestamp: string;
 }
 
+// ─── Domain types (R-9) ──────────────────────────────────────────────
+
+export interface DnsRecord {
+  type: string;
+  name: string;
+  content: string;
+  priority?: number;
+}
+
+export interface RegisterDomainRequest {
+  domain: string;
+}
+
+export interface DomainResponse {
+  id: string;
+  domain: string;
+  status: string;
+  owner_wallet: string;
+  created_at: string;
+  verified_at: string | null;
+  required_records: DnsRecord[];
+  dkim_records?: DnsRecord[];
+}
+
+export interface DomainListResponse {
+  domains: DomainResponse[];
+  total: number;
+  page: number;
+  per_page: number;
+}
+
+export interface DeleteDomainResponse {
+  id: string;
+  deleted: true;
+  warning?: string;
+}
+
+export interface VerificationResult {
+  type: string;
+  name: string;
+  expected: string;
+  found: string | null;
+  pass: boolean;
+}
+
+export interface VerifyDomainResponse {
+  id: string;
+  domain: string;
+  status: string;
+  verified_at: string | null;
+  verification_results?: VerificationResult[];
+  dkim_records?: DnsRecord[];
+}
+
 // ─── JMAP context (used by R-5/R-6) ────────────────────────────────────
 
 export type { JmapContext } from "./context.ts";

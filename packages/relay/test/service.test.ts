@@ -13,6 +13,10 @@ vi.mock("../src/stalwart", () => ({
   },
   createPrincipal: vi.fn(),
   deletePrincipal: vi.fn(),
+  createDomainPrincipal: vi.fn(),
+  deleteDomainPrincipal: vi.fn(),
+  generateDkim: vi.fn(),
+  getDnsRecords: vi.fn(() => []),
 }));
 
 vi.mock("../src/crypto", () => ({
@@ -65,6 +69,10 @@ vi.mock("../src/webhook-delivery", () => ({
   dispatchWebhookDeliveries: vi.fn(),
 }));
 
+vi.mock("../src/dns-check", () => ({
+  verifyDns: vi.fn(),
+}));
+
 vi.mock("../src/db", () => {
   const rows = new Map<string, Record<string, unknown>>();
   const webhooks = new Map<string, Record<string, unknown>>();
@@ -108,9 +116,16 @@ vi.mock("../src/db", () => {
       return [...webhooks.values()].filter((w) => w.mailbox_id === mailboxId && w.status === "active");
     }),
     getWebhookById: vi.fn((id: string) => webhooks.get(id) ?? null),
-    deleteWebhookRow: vi.fn((id: string) => {
-      webhooks.delete(id);
-    }),
+    deleteWebhookRow: vi.fn((id: string) => { webhooks.delete(id); }),
+    getDomainByName: vi.fn(() => null),
+    getDomainById: vi.fn(() => null),
+    insertDomain: vi.fn(),
+    getDomainsByOwner: vi.fn(() => []),
+    countDomainsByOwner: vi.fn(() => 0),
+    updateDomainVerification: vi.fn(),
+    updateDomainProvisioned: vi.fn(),
+    deleteDomainRow: vi.fn(),
+    countMailboxesByDomain: vi.fn(() => 0),
     _rows: rows,
     _webhooks: webhooks,
   };
