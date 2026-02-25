@@ -49,6 +49,10 @@
 - R-1: `tasks/completed/r-1-stalwart-docker-deploy-2026-02-24.md`
 - SP-1: `tasks/completed/sp-1-spawn-spec-2026-02-24.md`
 - B-1: `tasks/completed/b-1-batch-1-team-execution-2026-02-24.md`
+- W-3: `tasks/active/w-3-balance-queries-2026-02-24.md`
+- W-4: `tasks/active/w-4-send-usdc-2026-02-24.md`
+- W-5: `tasks/active/w-5-x402-client-2026-02-24.md`
+- SP-2: `tasks/active/sp-2-vm-provisioning-2026-02-24.md`
 - Umbrella: `tasks/active/batch-execution-umbrella-2026-02-24.md`
 
 ## Backlog — Future Primitives
