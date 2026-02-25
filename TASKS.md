@@ -59,6 +59,7 @@
 - W-8: `tasks/completed/w-8-execution-journal-2026-02-24.md`
 - W-9: `tasks/completed/w-9-circuit-breaker-2026-02-24.md`
 - SP-3/SP-4: `tasks/completed/sp-3-sp-4-lifecycle-ssh-2026-02-24.md`
+- R-2: `tasks/active/r-2-stalwart-domain-tls-2026-02-24.md`
 - Umbrella: `tasks/active/batch-execution-umbrella-2026-02-24.md`
 
 ## Backlog — Future Primitives
