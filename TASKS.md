@@ -78,6 +78,7 @@
 - D-2→D-7: `tasks/active/d-2-domain-sh-rename-search-2026-02-25.md`
 - ST-1: `tasks/completed/st-1-bucket-crud-cloudflare-r2.md`
 - R-5: `tasks/completed/r-5-read-messages-jmap-2026-02-25.md`
+- R-6: `tasks/active/r-6-send-messages-jmap-2026-02-25.md`
 - Umbrella: `tasks/active/batch-execution-umbrella-2026-02-24.md`
 
 ## Backlog — Future Primitives
