@@ -49,6 +49,7 @@
 - R-1: `tasks/active/r-1-stalwart-docker-deploy-2026-02-24.md`
 - SP-1: `tasks/active/sp-1-spawn-spec-2026-02-24.md`
 - B-1: `tasks/active/b-1-batch-1-team-execution-2026-02-24.md`
+- Umbrella: `tasks/active/batch-execution-umbrella-2026-02-24.md`
 
 ## Backlog — Future Primitives
 
