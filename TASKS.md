@@ -23,27 +23,27 @@
 | 17 | W-7 | Implement budget/spending policy engine | wallet/ | W-4 | Done |
 | 18 | W-8 | Port execution journal + idempotency from Railgunner | wallet/ | W-4 | Done |
 | 19 | W-9 | Port circuit breaker from Railgunner | wallet/ | W-4 | Done |
-| 20 | R-1 | Deploy Stalwart (Docker on Hetzner VPS) | relay/ | VPS account | Planned |
-| 21 | R-2 | Configure Stalwart: domain, DKIM, SPF, DMARC, ACME TLS | relay/ | R-1, D-1 | Open |
-| 22 | R-3 | Build relay.sh wrapper: mailbox creation (Stalwart REST API) | relay/ | R-2 | Open |
-| 23 | R-4 | Build relay.sh wrapper: OAuth token cache for JMAP auth per mailbox | relay/ | R-3 | Open |
-| 24 | R-5 | Build relay.sh wrapper: read messages (JMAP Email/query + Email/get) | relay/ | R-4 | Open |
-| 25 | R-6 | Build relay.sh wrapper: send messages (JMAP EmailSubmission/set) — receive-only first | relay/ | R-4 | Open |
-| 26 | R-7 | Build relay.sh wrapper: incoming mail webhooks (Stalwart MTA Hooks) | relay/ | R-2 | Open |
-| 27 | R-8 | Build relay.sh wrapper: mailbox TTL/expiry manager | relay/ | R-3 | Open |
-| 28 | R-9 | Build relay.sh wrapper: custom domain support | relay/ | R-2, D-1 | Open |
-| 29 | R-10 | Integrate x402 middleware (all endpoints gated by payment) | relay/ | R-3, P-4 | Open |
-| 30 | SP-1 | Write spawn.sh spec (Hetzner API wrapping, VM lifecycle, pricing) | specs/ | — | Done |
-| 31 | SP-2 | Build spawn.sh: VM provisioning via Hetzner Cloud API | spawn/ | SP-1 | Done |
-| 32 | SP-3 | Build spawn.sh: VM lifecycle (start, stop, destroy, resize) | spawn/ | SP-2 | Done |
-| 33 | SP-4 | Build spawn.sh: SSH key injection + initial setup | spawn/ | SP-2 | Done |
-| 34 | SP-5 | Integrate x402 middleware | spawn/ | SP-2, P-4 | Done |
-| 35 | B-1 | Batch 1: parallel agent team execution (W-2 + R-1 + SP-1) | cross-cutting | W-2 plan, R-1 plan, SP-1 plan | Done |
-| 36 | SP-6 | Abstract provider layer + multi-cloud support (AWS, GCP, Azure, Hetzner) | spawn/ | SP-4 | Open |
-| 37 | D-1 | Build dns.sh: zone + record CRUD via Cloudflare API | dns/ | P-4 | Open |
-| 38 | D-2 | Build dns.sh: batch operations + mail-setup convenience endpoint | dns/ | D-1 | Open |
-| 39 | D-3 | Build dns.sh: verification endpoint (NS + record propagation checks) | dns/ | D-1 | Open |
-| 40 | D-4 | Integrate x402 middleware | dns/ | D-1, P-4 | Open |
+| 20 | D-1 | Build dns.sh: zone + record CRUD via Cloudflare API | dns/ | P-4 | Open |
+| 21 | D-2 | Build dns.sh: batch operations + mail-setup convenience endpoint | dns/ | D-1 | Open |
+| 22 | D-3 | Build dns.sh: verification endpoint (NS + record propagation checks) | dns/ | D-1 | Open |
+| 23 | D-4 | Integrate x402 middleware | dns/ | D-1, P-4 | Open |
+| 24 | R-1 | Deploy Stalwart (Docker on DigitalOcean Droplet) | relay/ | DO account | Planned |
+| 25 | R-2 | Configure Stalwart: domain, DKIM, SPF, DMARC, ACME TLS | relay/ | R-1, D-1 | Open |
+| 26 | R-3 | Build relay.sh wrapper: mailbox creation (Stalwart REST API) | relay/ | R-2 | Open |
+| 27 | R-4 | Build relay.sh wrapper: OAuth token cache for JMAP auth per mailbox | relay/ | R-3 | Open |
+| 28 | R-5 | Build relay.sh wrapper: read messages (JMAP Email/query + Email/get) | relay/ | R-4 | Open |
+| 29 | R-6 | Build relay.sh wrapper: send messages (JMAP EmailSubmission/set) — receive-only first | relay/ | R-4 | Open |
+| 30 | R-7 | Build relay.sh wrapper: incoming mail webhooks (Stalwart MTA Hooks) | relay/ | R-2 | Open |
+| 31 | R-8 | Build relay.sh wrapper: mailbox TTL/expiry manager | relay/ | R-3 | Open |
+| 32 | R-9 | Build relay.sh wrapper: custom domain support | relay/ | R-2, D-1 | Open |
+| 33 | R-10 | Integrate x402 middleware (all endpoints gated by payment) | relay/ | R-3, P-4 | Open |
+| 34 | SP-1 | Write spawn.sh spec (Hetzner API wrapping, VM lifecycle, pricing) | specs/ | — | Done |
+| 35 | SP-2 | Build spawn.sh: VM provisioning via Hetzner Cloud API | spawn/ | SP-1 | Done |
+| 36 | SP-3 | Build spawn.sh: VM lifecycle (start, stop, destroy, resize) | spawn/ | SP-2 | Done |
+| 37 | SP-4 | Build spawn.sh: SSH key injection + initial setup | spawn/ | SP-2 | Done |
+| 38 | SP-5 | Integrate x402 middleware | spawn/ | SP-2, P-4 | Done |
+| 39 | B-1 | Batch 1: parallel agent team execution (W-2 + R-1 + SP-1) | cross-cutting | W-2 plan, R-1 plan, SP-1 plan | Done |
+| 40 | SP-6 | Abstract provider layer + multi-cloud support (DO, AWS, GCP, Hetzner) | spawn/ | SP-4 | Open |
 
 ## Plan Docs
 
