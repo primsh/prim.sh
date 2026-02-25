@@ -19,7 +19,7 @@ vi.mock("@agentstack/x402-middleware", () => ({
     },
 }));
 
-describe("dns.sh app", () => {
+describe("domain.sh app", () => {
   it("exposes a default export", async () => {
     const mod = await import("../src/index");
     expect(mod.default).toBeDefined();

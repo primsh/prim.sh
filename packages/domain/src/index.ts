@@ -10,6 +10,7 @@ import type {
   UpdateRecordRequest,
   RecordResponse,
   RecordListResponse,
+  DomainSearchResponse,
 } from "./api.ts";
 import {
   createZone,
@@ -21,12 +22,14 @@ import {
   getRecord,
   updateRecord,
   deleteRecord,
+  searchDomains,
 } from "./service.ts";
 
 const PAY_TO_ADDRESS = "0x0000000000000000000000000000000000000000";
 const NETWORK = "eip155:8453";
 
-const DNS_ROUTES = {
+const DOMAIN_ROUTES = {
+  "GET /v1/domains/search": "$0.001",
   "POST /v1/zones": "$0.05",
   "GET /v1/zones": "$0.001",
   "GET /v1/zones/[id]": "$0.001",
@@ -54,6 +57,10 @@ function cloudflareError(message: string): ApiError {
   return { error: { code: "cloudflare_error", message } };
 }
 
+function serviceUnavailable(message: string): ApiError {
+  return { error: { code: "service_unavailable", message } };
+}
+
 type AppVariables = { walletAddress: string | undefined };
 const app = new Hono<{ Variables: AppVariables }>();
 
@@ -65,13 +72,29 @@ app.use(
       network: NETWORK,
       freeRoutes: ["GET /"],
     },
-    { ...DNS_ROUTES },
+    { ...DOMAIN_ROUTES },
   ),
 );
 
 // GET / — health check (free)
 app.get("/", (c) => {
-  return c.json({ service: "dns.sh", status: "ok" });
+  return c.json({ service: "domain.sh", status: "ok" });
+});
+
+// GET /v1/domains/search — Check availability + pricing for domains
+app.get("/v1/domains/search", async (c) => {
+  const query = c.req.query("query");
+  if (!query) return c.json(invalidRequest("query parameter is required"), 400);
+
+  const tldsParam = c.req.query("tlds");
+  const tlds = tldsParam ? tldsParam.split(",").map((t) => t.trim()).filter(Boolean) : [];
+
+  const result = await searchDomains(query, tlds);
+  if (!result.ok) {
+    if (result.status === 503) return c.json(serviceUnavailable(result.message), 503);
+    return c.json(invalidRequest(result.message), 400);
+  }
+  return c.json(result.data as DomainSearchResponse, 200);
 });
 
 // POST /v1/zones — Create zone

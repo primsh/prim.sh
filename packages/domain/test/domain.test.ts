@@ -1,5 +1,5 @@
 /**
- * D-1 dns.sh tests: zone + record CRUD with ownership enforcement.
+ * D-1/D-2 domain.sh tests: zone + record CRUD with ownership enforcement, domain search.
  *
  * Tests the service layer directly (same pattern as spawn.sh).
  * x402 middleware is tested separately in @agentstack/x402-middleware.
@@ -10,7 +10,7 @@
 import { describe, expect, it, beforeEach, afterEach, vi } from "vitest";
 
 // Set env before imports
-process.env.DNS_DB_PATH = ":memory:";
+process.env.DOMAIN_DB_PATH = ":memory:";
 process.env.CLOUDFLARE_API_TOKEN = "test-cf-token";
 process.env.CLOUDFLARE_ACCOUNT_ID = "test-cf-account";
 
@@ -139,6 +139,7 @@ import {
   getRecord,
   updateRecord,
   deleteRecord,
+  searchDomains,
 } from "../src/service.ts";
 
 // ─── Fixtures ────────────────────────────────────────────────────────────
@@ -148,7 +149,7 @@ const OTHER = "0xCa11e900000000000000000000000000000000002";
 
 // ─── Tests ───────────────────────────────────────────────────────────────
 
-describe("dns.sh", () => {
+describe("domain.sh", () => {
   beforeEach(() => {
     resetDb();
     mockFetch.mockClear();
@@ -487,6 +488,76 @@ describe("dns.sh", () => {
       expect(result.ok).toBe(false);
       if (result.ok) return;
       expect(result.code).toBe("rate_limited");
+    });
+  });
+
+  // ─── Domain search ────────────────────────────────────────────────────
+
+  describe("domain search", () => {
+    afterEach(() => {
+      process.env.NAMESILO_API_KEY = "";
+    });
+
+    it("returns 503 when NAMESILO_API_KEY is not set", async () => {
+      process.env.NAMESILO_API_KEY = "";
+      const result = await searchDomains("example", ["com"]);
+      expect(result.ok).toBe(false);
+      if (result.ok) return;
+      expect(result.status).toBe(503);
+      expect(result.code).toBe("registrar_unavailable");
+    });
+
+    it("returns available domains with pricing when NAMESILO_API_KEY is set", async () => {
+      process.env.NAMESILO_API_KEY = "test-ns-key";
+
+      mockFetch.mockImplementationOnce(async () => {
+        return new Response(
+          JSON.stringify({
+            request: { operation: "checkRegisterAvailability", ip: "1.2.3.4" },
+            reply: {
+              code: 300,
+              detail: "success",
+              available: [
+                { domain: "prim.sh", available: "yes", price: "34.98", premium: "0" },
+              ],
+              unavailable: { domain: ["prim.com"] },
+            },
+          }),
+          { status: 200, headers: { "Content-Type": "application/json" } },
+        );
+      });
+
+      const result = await searchDomains("prim", ["sh", "com"]);
+      expect(result.ok).toBe(true);
+      if (!result.ok) return;
+      expect(result.data.results).toHaveLength(2);
+
+      const sh = result.data.results.find((r) => r.domain === "prim.sh");
+      expect(sh?.available).toBe(true);
+      expect(sh?.price?.register).toBe(34.98);
+
+      const com = result.data.results.find((r) => r.domain === "prim.com");
+      expect(com?.available).toBe(false);
+    });
+
+    it("uses default TLDs when tlds param is empty", async () => {
+      process.env.NAMESILO_API_KEY = "test-ns-key";
+
+      mockFetch.mockImplementationOnce(async () => {
+        return new Response(
+          JSON.stringify({
+            request: { operation: "checkRegisterAvailability", ip: "1.2.3.4" },
+            reply: { code: 300, detail: "success", available: [], unavailable: { domain: [] } },
+          }),
+          { status: 200, headers: { "Content-Type": "application/json" } },
+        );
+      });
+
+      const result = await searchDomains("test", []);
+      expect(result.ok).toBe(true);
+      if (!result.ok) return;
+      // Default TLDs: com, net, org, io, dev, sh
+      expect(result.data.results).toHaveLength(6);
     });
   });
 });

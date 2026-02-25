@@ -30,7 +30,7 @@ let _db: Database | null = null;
 export function getDb(): Database {
   if (_db) return _db;
 
-  const dbPath = process.env.DNS_DB_PATH ?? "./dns.db";
+  const dbPath = process.env.DOMAIN_DB_PATH ?? process.env.DNS_DB_PATH ?? "./domain.db";
   _db = new Database(dbPath);
 
   _db.run(`

@@ -31,8 +31,10 @@ import type {
   CreateRecordRequest,
   UpdateRecordRequest,
   RecordType,
+  DomainSearchResponse,
 } from "./api.ts";
 import type { ZoneRow, RecordRow } from "./db.ts";
+import { getRegistrar } from "./namesilo.ts";
 
 // ─── Constants ───────────────────────────────────────────────────────────
 
@@ -387,4 +389,33 @@ export async function deleteRecord(
   deleteRecordRow(recordId);
 
   return { ok: true, data: { status: "deleted" } };
+}
+
+// ─── Domain search ────────────────────────────────────────────────────────
+
+const DEFAULT_TLDS = ["com", "net", "org", "io", "dev", "sh"];
+
+export async function searchDomains(
+  query: string,
+  tlds: string[],
+): Promise<ServiceResult<DomainSearchResponse>> {
+  const registrar = getRegistrar();
+  if (!registrar) {
+    return {
+      ok: false,
+      status: 503,
+      code: "registrar_unavailable",
+      message: "NAMESILO_API_KEY is not configured — registrar features are unavailable",
+    };
+  }
+
+  const effectiveTlds = tlds.length > 0 ? tlds : DEFAULT_TLDS;
+  const domains = effectiveTlds.map((tld) => `${query}.${tld}`);
+
+  const results = await registrar.search(domains);
+
+  return {
+    ok: true,
+    data: { results },
+  };
 }

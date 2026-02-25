@@ -23,8 +23,8 @@
 | 17 | W-7 | Implement budget/spending policy engine | wallet/ | W-4 | done |
 | 18 | W-8 | Port execution journal + idempotency from Railgunner | wallet/ | W-4 | done |
 | 19 | W-9 | Port circuit breaker from Railgunner | wallet/ | W-4 | done |
-| 20 | D-1 | Build dns.sh: zone + record CRUD via Cloudflare API | packages/dns | P-4 | done |
-| 21 | D-2 | Rename dns.sh → domain.sh, add domain search endpoint (registrar availability API) | packages/dns→domain | D-1 | pending |
+| 20 | D-1 | Build dns.sh: zone + record CRUD via Cloudflare API | packages/domain | P-4 | done |
+| 21 | D-2 | Rename dns.sh → domain.sh, add domain search endpoint (registrar availability API) | packages/dns→domain | D-1 | done |
 | 22 | D-3 | Build domain.sh: domain registration endpoint (registrar purchase API) | packages/domain | D-2 | pending |
 | 23 | D-4 | Integrate x402 middleware | dns/ | D-1, P-4 | done |
 | 45 | D-5 | Build domain.sh: mail-setup convenience endpoint (MX+SPF+DMARC+DKIM in one call) | packages/domain | D-1 | pending |
@@ -89,7 +89,8 @@
 - R-2: `tasks/completed/r-2-stalwart-domain-tls-2026-02-24.md`
 - R-3: `tasks/completed/r-3-mailbox-creation-stalwart-rest.md`
 - R-4: `tasks/completed/r-4-jmap-auth-session-bootstrap.md`
-- D-2→D-8: `tasks/active/d-2-domain-sh-rename-search-2026-02-25.md`
+- D-2: `tasks/completed/d-2-domain-sh-rename-search-2026-02-25.md`
+- D-3→D-8: see same file (comprehensive plan covers all phases)
 - ST-1: `tasks/completed/st-1-bucket-crud-cloudflare-r2.md`
 - R-5: `tasks/completed/r-5-read-messages-jmap-2026-02-25.md`
 - ST-4: `tasks/completed/st-4-x402-middleware-store.md`

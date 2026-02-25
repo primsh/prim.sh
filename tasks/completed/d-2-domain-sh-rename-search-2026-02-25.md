@@ -311,6 +311,36 @@ Query the zone's authoritative NS directly (from Cloudflare's assigned nameserve
 
 **Resolver IP lookup:** Cloudflare's assigned nameservers are hostnames (e.g., `gene.ns.cloudflare.com`). `Resolver.setServers()` requires IP addresses. Resolve the NS hostnames to IPs first using the system resolver (`dns.resolve4`), then create the per-request resolver with those IPs.
 
+**Record type → resolver method mapping:**
+
+| Record type | `dns.Resolver` method | Return value | Compare to `content` |
+|-------------|----------------------|--------------|---------------------|
+| A | `resolve4(name)` | `string[]` (IPs) | Direct string match |
+| AAAA | `resolve6(name)` | `string[]` (IPs) | Direct string match |
+| CNAME | `resolveCname(name)` | `string[]` (targets) | Direct string match |
+| MX | `resolveMx(name)` | `{ priority, exchange }[]` | Match `exchange` to content, `priority` to priority field |
+| TXT | `resolveTxt(name)` | `string[][]` (chunks) | Join chunks per record (`chunks.join('')`), then match content |
+| NS | `resolveNs(name)` | `string[]` (nameservers) | Direct string match |
+| SRV | `resolveSrv(name)` | `{ name, port, priority, weight }[]` | Match all fields |
+| CAA | `resolveCaa(name)` | `{ critical, isdomain, issue, issuewild, iodef }` | Match tag + value |
+
+**TXT record gotcha:** DNS returns TXT records as arrays of 255-byte chunks (per RFC 4408). A single logical TXT record like an SPF string may be split across multiple chunks. Always join chunks before comparing: `record.join('')`.
+
+**Multi-value records:** A, AAAA, MX, TXT, NS can return multiple values. A record is "propagated" if `content` appears anywhere in the returned array — it's a set membership check, not an exact-array match.
+
+**Error handling per record:**
+
+| Condition | `propagated` value | `actual` value |
+|-----------|-------------------|----------------|
+| Resolver returns result matching content | `true` | The matching value |
+| Resolver returns result NOT matching content | `false` | First returned value (shows what's there instead) |
+| `ENOTFOUND` / `ENODATA` (record doesn't exist yet) | `false` | `null` |
+| `ETIMEOUT` / `ECONNREFUSED` (NS unreachable) | `false` | `"error:timeout"` or `"error:unreachable"` |
+
+**Timeout:** Set `resolver.setLocalAddress()` is not needed, but set a per-query timeout. Bun's `dns.Resolver` inherits from Node's — use `resolver.resolve4(name, { ttl: false })` and wrap in `Promise.race` with a 5-second timeout. Don't let one slow record block the entire verify response.
+
+**Concurrency within a request:** Resolve all records in parallel (`Promise.allSettled`), not sequentially. A zone with 20 records shouldn't take 20 × 5s worst case.
+
 **Partial verification:** Only checks records stored in domain.sh's SQLite. Records created outside domain.sh won't be verified.
 
 Route pricing: `$0.001`.
@@ -339,11 +369,55 @@ Request:
 }
 ```
 
-Maps to Cloudflare's `POST /zones/{zone_id}/dns_records/batch` endpoint. Execution order: delete → update → create (Cloudflare's semantics). All-or-nothing — if any op fails, none are applied.
+**Cloudflare batch API mapping:**
 
-Must also update domain.sh's SQLite to match: delete rows, update rows, insert rows. Wrap the local DB changes in a transaction so they stay consistent with Cloudflare.
+Cloudflare's batch endpoint uses different key names than our API:
 
-Add `batchDnsRecords` to `cloudflare.ts` wrapping the Cloudflare batch endpoint.
+| domain.sh key | Cloudflare key | CF required fields |
+|---------------|---------------|-------------------|
+| `create` | `posts` | `name`, `type`, `content` |
+| `update` | `patches` | `id` + changed fields only (partial update) |
+| `delete` | `deletes` | `id` only |
+
+Execution order (fixed by Cloudflare): `deletes` → `patches` → `puts` → `posts`.
+
+We use `patches` (not `puts`) for updates because agents send partial updates (just the fields that changed). `puts` would require all fields and reset unspecified ones to defaults.
+
+**Cloudflare batch request format:**
+```json
+{
+  "deletes": [{ "id": "cf-record-id-here" }],
+  "patches": [{ "id": "cf-record-id-here", "content": "198.51.100.5" }],
+  "posts": [{ "name": "www", "type": "A", "content": "198.51.100.4", "ttl": 3600 }]
+}
+```
+
+**Limit:** 200 operations per batch on Cloudflare free plan.
+
+**ID translation:** Agent sends domain.sh IDs (`r_x1y2z3`). The batch handler must:
+1. Look up each `r_` ID in SQLite → get the corresponding `cloudflare_id`
+2. Build the CF batch request using `cloudflare_id` values
+3. Map CF response back to domain.sh IDs
+
+For `create` (CF `posts`): response arrays are in the same order as request arrays. Zip by index to get the newly assigned `cloudflare_id` for each created record, then generate a domain.sh `r_` ID and insert into SQLite.
+
+**SQLite consistency strategy:**
+
+| Step | Action | On failure |
+|------|--------|-----------|
+| 1 | Validate all IDs exist and caller owns the zone | Return 400/403/404 before any side effects |
+| 2 | Call Cloudflare batch API | If CF fails → return 502, no SQLite changes (CF is atomic at DB level) |
+| 3 | CF succeeds → apply SQLite changes in a transaction | If SQLite transaction fails → log critical error, return 500. State is inconsistent (CF changed, SQLite didn't). This is a bug, not a normal flow. |
+
+**Key insight:** Cloudflare is the source of truth. If step 3 fails (SQLite write error after CF succeeds), the records exist in Cloudflare but not in domain.sh's DB. This is a rare edge case (SQLite write failures are unusual). The verify endpoint (D-6) would not see these records. Acceptable for v1 — a reconciliation job can fix it later if needed.
+
+**Validation before calling Cloudflare:**
+- All `update` and `delete` IDs must exist in SQLite and belong to this zone
+- All `create` entries must have valid `type`, `name`, `content`
+- MX `create` entries must include `priority`
+- Total operations (create + update + delete) must not exceed 200
+
+Add `batchDnsRecords` to `cloudflare.ts` wrapping `POST /zones/{zone_id}/dns_records/batch`.
 
 Response:
 ```json
@@ -440,5 +514,5 @@ Implemented as part of D-3. Broken out as D-7 in TASKS.md for tracking, but ship
 - [ ] Verify queries authoritative NS, not cached resolvers
 - [ ] Verify returns per-record propagation status
 - [ ] Batch operations are all-or-nothing (SQLite transaction + CF batch)
-- [ ] x402 middleware gates all new endpoints with correct pricing
+- [ ] x402 middleware gates all new endpoints with correct pricing (except register — app-level enforcement via `freeRoutes`)
 - [ ] For every boolean condition, verify both True and False paths are covered by tests

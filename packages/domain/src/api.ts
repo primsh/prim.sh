@@ -1,5 +1,5 @@
 /**
- * dns.sh API contract — request/response types and error envelope.
+ * domain.sh API contract — request/response types and error envelope.
  */
 
 // ─── Error envelope ───────────────────────────────────────────────────────
@@ -89,4 +89,23 @@ export interface UpdateRecordRequest {
 
 export interface RecordListResponse {
   records: RecordResponse[];
+}
+
+// ─── Domain search types ──────────────────────────────────────────────────
+
+export interface DomainSearchPrice {
+  register: number;
+  renew: number;
+  currency: string;
+}
+
+export interface DomainSearchResult {
+  domain: string;
+  available: boolean;
+  price?: DomainSearchPrice;
+  premium?: boolean;
+}
+
+export interface DomainSearchResponse {
+  results: DomainSearchResult[];
 }
