@@ -165,6 +165,42 @@ describe("stalwart client", () => {
       }
     });
 
+    it("maps 200 + fieldAlreadyExists body to 409 conflict", async () => {
+      globalThis.fetch = vi.fn().mockResolvedValue({
+        ok: true,
+        status: 200,
+        json: async () => ({ error: "fieldAlreadyExists" }),
+      });
+
+      try {
+        await createPrincipal({
+          type: "individual",
+          name: "dup",
+          secrets: ["p"],
+          emails: ["[email protected]"],
+        });
+      } catch (err) {
+        expect((err as StalwartError).code).toBe("conflict");
+        expect((err as StalwartError).statusCode).toBe(409);
+      }
+    });
+
+    it("maps 200 + unknown error body to 500 stalwart_error", async () => {
+      globalThis.fetch = vi.fn().mockResolvedValue({
+        ok: true,
+        status: 200,
+        json: async () => ({ error: "someUnexpectedError" }),
+      });
+
+      try {
+        await getPrincipal("x");
+      } catch (err) {
+        expect((err as StalwartError).code).toBe("stalwart_error");
+        expect((err as StalwartError).statusCode).toBe(500);
+        expect((err as StalwartError).message).toBe("someUnexpectedError");
+      }
+    });
+
     it("handles malformed JSON response", async () => {
       globalThis.fetch = vi.fn().mockResolvedValue({
         ok: false,

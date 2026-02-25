@@ -61,7 +61,10 @@ async function handleResponse<T>(res: Response): Promise<T> {
 
   // Stalwart sometimes returns 200 with an error body (e.g. fieldAlreadyExists)
   if (body.error) {
-    const status = body.error === "fieldAlreadyExists" ? 409 : 500;
+    const STALWART_ERROR_STATUS: Record<string, number> = {
+      fieldAlreadyExists: 409,
+    };
+    const status = STALWART_ERROR_STATUS[body.error] ?? 500;
     throw new StalwartError(status, mapStatusToCode(status), body.error);
   }
 
