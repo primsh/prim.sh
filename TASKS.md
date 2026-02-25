@@ -32,7 +32,7 @@
 | 47 | D-7 | Build domain.sh: auto-configure NS to Cloudflare after registration | packages/domain | D-3 | pending |
 | 24 | R-1 | Deploy Stalwart (Docker on DigitalOcean Droplet) | relay/ | DO account | done |
 | 25 | R-2 | Configure Stalwart: domain, DKIM, SPF, DMARC, ACME TLS | relay/ | R-1, D-1 | done |
-| 26 | R-3 | Build relay.sh wrapper: mailbox creation (Stalwart REST API) | relay/ | R-2 | pending |
+| 26 | R-3 | Build relay.sh wrapper: mailbox creation (Stalwart REST API) | relay/ | R-2 | done |
 | 27 | R-4 | Build relay.sh wrapper: OAuth token cache for JMAP auth per mailbox | relay/ | R-3 | pending |
 | 28 | R-5 | Build relay.sh wrapper: read messages (JMAP Email/query + Email/get) | relay/ | R-4 | pending |
 | 29 | R-6 | Build relay.sh wrapper: send messages (JMAP EmailSubmission/set) — receive-only first | relay/ | R-4 | pending |
@@ -73,7 +73,7 @@
 - D-1: `tasks/completed/d-1-dns-zone-record-crud-2026-02-24.md`
 - SP-6: `tasks/completed/sp-6-provider-abstraction-2026-02-24.md`
 - R-2: `tasks/completed/r-2-stalwart-domain-tls-2026-02-24.md`
-- R-3: `tasks/active/r-3-mailbox-creation-stalwart-rest.md`
+- R-3: `tasks/completed/r-3-mailbox-creation-stalwart-rest.md`
 - D-2→D-7: `tasks/active/d-2-domain-sh-rename-search-2026-02-25.md`
 - ST-1: `tasks/active/st-1-bucket-crud-cloudflare-r2.md`
 - Umbrella: `tasks/active/batch-execution-umbrella-2026-02-24.md`
@@ -225,6 +225,7 @@ ERC-8004 uses CAIP-10 wallet addresses as root identity. DIDs layer on top non-b
 - S-6 — "This page is for humans. The API is for agents." (2026-02-24)
 - R-1 — Stalwart Docker Compose on DigitalOcean Droplet ([STALWART_HOST]) (2026-02-24)
 - R-2 — prim.sh domain, Stalwart config, DKIM, SPF, DMARC, ACME TLS, admin lockdown (2026-02-25)
+- R-3 — relay.sh mailbox CRUD: Stalwart REST wrapper, SQLite ownership, 24 tests (2026-02-25)
 
 ### R-2 completion details (2026-02-25)
 
