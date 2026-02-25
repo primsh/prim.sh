@@ -2,12 +2,17 @@ import { randomBytes, createHash } from "node:crypto";
 import {
   insertMailbox,
   getMailboxById,
+  getMailboxByAddress,
   getMailboxesByOwner,
   getMailboxesByOwnerAll,
   countMailboxesByOwner,
   countMailboxesByOwnerAll,
   deleteMailboxRow,
   updateExpiresAt,
+  insertWebhook,
+  getWebhooksByMailbox,
+  getWebhookById,
+  deleteWebhookRow,
 } from "./db.ts";
 import {
   StalwartError,
@@ -18,6 +23,8 @@ import { encryptPassword } from "./crypto.ts";
 import { discoverSession, buildBasicAuth, JmapError, queryEmails, getEmail, sendEmail } from "./jmap.ts";
 import { getJmapContext } from "./context.ts";
 import { expireMailbox } from "./expiry.ts";
+import { verifySignature } from "./webhook-delivery.ts";
+import { dispatchWebhookDeliveries } from "./webhook-delivery.ts";
 import type {
   ServiceResult,
   MailboxResponse,
@@ -31,6 +38,11 @@ import type {
   EmailAddress,
   SendMessageRequest,
   SendMessageResponse,
+  RegisterWebhookRequest,
+  WebhookResponse,
+  WebhookListResponse,
+  DeleteWebhookResponse,
+  WebhookPayload,
 } from "./api.ts";
 import type { MailboxRow } from "./db.ts";
 
@@ -478,4 +490,161 @@ export async function renewMailbox(
   if (!row) return { ok: false, status: 404, code: "not_found", message: "Mailbox not found" };
 
   return { ok: true, data: rowToResponse(row) };
+}
+
+// ─── Webhooks (R-7) ──────────────────────────────────────────────────
+
+function webhookToResponse(row: import("./db.ts").WebhookRow): WebhookResponse {
+  const events: string[] = JSON.parse(row.events);
+  return {
+    id: row.id,
+    url: row.url,
+    events,
+    status: row.status,
+    created_at: new Date(row.created_at).toISOString(),
+  };
+}
+
+export async function registerWebhook(
+  mailboxId: string,
+  callerWallet: string,
+  request: RegisterWebhookRequest,
+): Promise<ServiceResult<WebhookResponse>> {
+  const check = checkOwnership(mailboxId, callerWallet);
+  if (!check.ok) return check;
+
+  if (!request.url || request.url.trim() === "") {
+    return { ok: false, status: 400, code: "invalid_request", message: "url is required" };
+  }
+
+  const allowHttp = process.env.NODE_ENV === "test" || process.env.RELAY_ALLOW_HTTP_WEBHOOKS === "1";
+  if (!request.url.startsWith("https://") && !(allowHttp && request.url.startsWith("http://"))) {
+    return { ok: false, status: 400, code: "invalid_request", message: "url must use HTTPS" };
+  }
+
+  const events = request.events ?? ["message.received"];
+  const validEvents = ["message.received"];
+  for (const e of events) {
+    if (!validEvents.includes(e)) {
+      return { ok: false, status: 400, code: "invalid_request", message: `Unsupported event: ${e}` };
+    }
+  }
+
+  const secretEnc = request.secret ? encryptPassword(request.secret) : null;
+  const id = `wh_${randomBytes(4).toString("hex")}`;
+  const now = Date.now();
+
+  insertWebhook({
+    id,
+    mailbox_id: mailboxId,
+    owner_wallet: callerWallet,
+    url: request.url,
+    secret_enc: secretEnc,
+    events: JSON.stringify(events),
+    created_at: now,
+  });
+
+  const row = getWebhookById(id);
+  if (!row) throw new Error("Failed to retrieve webhook after insert");
+
+  return { ok: true, data: webhookToResponse(row) };
+}
+
+export function listWebhooks(
+  mailboxId: string,
+  callerWallet: string,
+): ServiceResult<WebhookListResponse> {
+  const check = checkOwnership(mailboxId, callerWallet);
+  if (!check.ok) return check;
+
+  const rows = getWebhooksByMailbox(mailboxId);
+  return {
+    ok: true,
+    data: {
+      webhooks: rows.map(webhookToResponse),
+      total: rows.length,
+    },
+  };
+}
+
+export function deleteWebhook(
+  mailboxId: string,
+  callerWallet: string,
+  webhookId: string,
+): ServiceResult<DeleteWebhookResponse> {
+  const check = checkOwnership(mailboxId, callerWallet);
+  if (!check.ok) return check;
+
+  const wh = getWebhookById(webhookId);
+  if (!wh || wh.mailbox_id !== mailboxId) {
+    return { ok: false, status: 404, code: "not_found", message: "Webhook not found" };
+  }
+
+  deleteWebhookRow(webhookId);
+  return { ok: true, data: { id: webhookId, deleted: true } };
+}
+
+// ─── Ingest handler (R-7) ────────────────────────────────────────────
+
+interface IngestResult {
+  accepted: boolean;
+  reason?: string;
+}
+
+export async function handleIngestEvent(
+  rawBody: string,
+  signature: string | null,
+): Promise<ServiceResult<IngestResult>> {
+  // Verify HMAC signature from Stalwart
+  const secret = process.env.STALWART_WEBHOOK_SECRET ?? "";
+  if (secret) {
+    if (!signature || !verifySignature(secret, rawBody, signature)) {
+      return { ok: false, status: 401, code: "forbidden", message: "Invalid signature" };
+    }
+  }
+
+  let events: Array<{ type: string; data: Record<string, unknown> }>;
+  try {
+    const parsed = JSON.parse(rawBody);
+    events = Array.isArray(parsed) ? parsed : [parsed];
+  } catch {
+    return { ok: false, status: 400, code: "invalid_request", message: "Invalid JSON" };
+  }
+
+  for (const event of events) {
+    if (event.type !== "message-ingest.ham" && event.type !== "message-ingest.spam") {
+      continue;
+    }
+
+    const recipients = (event.data?.rcptTo ?? event.data?.recipients ?? []) as string[];
+    for (const rcpt of recipients) {
+      const address = typeof rcpt === "string" ? rcpt : "";
+      if (!address) continue;
+
+      const mbxRow = getMailboxByAddress(address);
+      if (!mbxRow) continue;
+
+      const webhooks = getWebhooksByMailbox(mbxRow.id);
+      if (webhooks.length === 0) continue;
+
+      // Build payload from event data — skip JMAP fetch for speed
+      const payload: WebhookPayload = {
+        event: "message.received",
+        mailbox_id: mbxRow.id,
+        message_id: (event.data?.messageId as string) ?? "",
+        from: { name: null, email: (event.data?.from as string) ?? "" },
+        to: [{ name: null, email: address }],
+        subject: (event.data?.subject as string) ?? "",
+        preview: "",
+        received_at: new Date().toISOString(),
+        size: (event.data?.size as number) ?? 0,
+        has_attachment: false,
+        timestamp: new Date().toISOString(),
+      };
+
+      dispatchWebhookDeliveries(webhooks, payload);
+    }
+  }
+
+  return { ok: true, data: { accepted: true } };
 }

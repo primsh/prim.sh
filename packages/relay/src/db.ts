@@ -60,6 +60,38 @@ export function getDb(): Database {
     _db.run("ALTER TABLE mailboxes ADD COLUMN cleanup_attempts INTEGER NOT NULL DEFAULT 0");
   } catch { /* column already exists */ }
 
+  // R-7: webhooks tables
+  _db.run(`
+    CREATE TABLE IF NOT EXISTS webhooks (
+      id            TEXT PRIMARY KEY,
+      mailbox_id    TEXT NOT NULL,
+      owner_wallet  TEXT NOT NULL,
+      url           TEXT NOT NULL,
+      secret_enc    TEXT,
+      events        TEXT NOT NULL DEFAULT '["message.received"]',
+      status        TEXT NOT NULL DEFAULT 'active',
+      consecutive_failures INTEGER NOT NULL DEFAULT 0,
+      created_at    INTEGER NOT NULL,
+      FOREIGN KEY (mailbox_id) REFERENCES mailboxes(id) ON DELETE CASCADE
+    )
+  `);
+
+  _db.run(`
+    CREATE TABLE IF NOT EXISTS webhooks_log (
+      id            INTEGER PRIMARY KEY AUTOINCREMENT,
+      webhook_id    TEXT NOT NULL,
+      message_id    TEXT,
+      status_code   INTEGER,
+      attempt       INTEGER NOT NULL DEFAULT 1,
+      delivered_at  INTEGER,
+      error         TEXT,
+      created_at    INTEGER NOT NULL
+    )
+  `);
+
+  _db.run("CREATE INDEX IF NOT EXISTS idx_webhooks_mailbox ON webhooks(mailbox_id)");
+  _db.run("CREATE INDEX IF NOT EXISTS idx_webhooks_log_webhook ON webhooks_log(webhook_id)");
+
   _db.run("CREATE INDEX IF NOT EXISTS idx_mailboxes_owner ON mailboxes(owner_wallet)");
   _db.run("CREATE INDEX IF NOT EXISTS idx_mailboxes_address ON mailboxes(address)");
   _db.run("CREATE INDEX IF NOT EXISTS idx_mailboxes_expiry ON mailboxes(status, expires_at)");
@@ -234,4 +266,99 @@ export function countMailboxesByOwnerAll(owner: string): number {
     )
     .get(owner) as { count: number } | null;
   return row?.count ?? 0;
+}
+
+export function getMailboxByAddress(address: string): MailboxRow | null {
+  const db = getDb();
+  return db.query<MailboxRow, [string]>("SELECT * FROM mailboxes WHERE address = ?").get(address) ?? null;
+}
+
+// ─── Webhook queries (R-7) ────────────────────────────────────────────
+
+export interface WebhookRow {
+  id: string;
+  mailbox_id: string;
+  owner_wallet: string;
+  url: string;
+  secret_enc: string | null;
+  events: string;
+  status: string;
+  consecutive_failures: number;
+  created_at: number;
+}
+
+export interface WebhookLogRow {
+  id: number;
+  webhook_id: string;
+  message_id: string | null;
+  status_code: number | null;
+  attempt: number;
+  delivered_at: number | null;
+  error: string | null;
+  created_at: number;
+}
+
+export function insertWebhook(params: {
+  id: string;
+  mailbox_id: string;
+  owner_wallet: string;
+  url: string;
+  secret_enc: string | null;
+  events: string;
+  created_at: number;
+}): void {
+  const db = getDb();
+  db.query(
+    "INSERT INTO webhooks (id, mailbox_id, owner_wallet, url, secret_enc, events, created_at) VALUES (?, ?, ?, ?, ?, ?, ?)",
+  ).run(params.id, params.mailbox_id, params.owner_wallet, params.url, params.secret_enc, params.events, params.created_at);
+}
+
+export function getWebhooksByMailbox(mailboxId: string): WebhookRow[] {
+  const db = getDb();
+  return db.query<WebhookRow, [string]>(
+    "SELECT * FROM webhooks WHERE mailbox_id = ? AND status = 'active'",
+  ).all(mailboxId);
+}
+
+export function getWebhookById(id: string): WebhookRow | null {
+  const db = getDb();
+  return db.query<WebhookRow, [string]>("SELECT * FROM webhooks WHERE id = ?").get(id) ?? null;
+}
+
+export function deleteWebhookRow(id: string): void {
+  const db = getDb();
+  db.query("DELETE FROM webhooks WHERE id = ?").run(id);
+}
+
+export function updateWebhookStatus(id: string, status: string): void {
+  const db = getDb();
+  db.query("UPDATE webhooks SET status = ? WHERE id = ?").run(status, id);
+}
+
+export function incrementWebhookFailures(id: string): number {
+  const db = getDb();
+  db.query("UPDATE webhooks SET consecutive_failures = consecutive_failures + 1 WHERE id = ?").run(id);
+  const row = db.query<{ consecutive_failures: number }, [string]>(
+    "SELECT consecutive_failures FROM webhooks WHERE id = ?",
+  ).get(id) as { consecutive_failures: number } | null;
+  return row?.consecutive_failures ?? 0;
+}
+
+export function resetWebhookFailures(id: string): void {
+  const db = getDb();
+  db.query("UPDATE webhooks SET consecutive_failures = 0 WHERE id = ?").run(id);
+}
+
+export function insertWebhookLog(params: {
+  webhook_id: string;
+  message_id: string | null;
+  status_code: number | null;
+  attempt: number;
+  delivered_at: number | null;
+  error: string | null;
+}): void {
+  const db = getDb();
+  db.query(
+    "INSERT INTO webhooks_log (webhook_id, message_id, status_code, attempt, delivered_at, error, created_at) VALUES (?, ?, ?, ?, ?, ?, ?)",
+  ).run(params.webhook_id, params.message_id, params.status_code, params.attempt, params.delivered_at, params.error, Date.now());
 }

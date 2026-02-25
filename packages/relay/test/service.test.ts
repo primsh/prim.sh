@@ -60,13 +60,22 @@ vi.mock("../src/expiry", () => ({
   }),
 }));
 
+vi.mock("../src/webhook-delivery", () => ({
+  verifySignature: vi.fn(() => true),
+  dispatchWebhookDeliveries: vi.fn(),
+}));
+
 vi.mock("../src/db", () => {
   const rows = new Map<string, Record<string, unknown>>();
+  const webhooks = new Map<string, Record<string, unknown>>();
   return {
     insertMailbox: vi.fn((params: Record<string, unknown>) => {
       rows.set(params.id as string, { ...params, status: "active", stalwart_cleanup_failed: 0, cleanup_attempts: 0 });
     }),
     getMailboxById: vi.fn((id: string) => rows.get(id) ?? null),
+    getMailboxByAddress: vi.fn((address: string) => {
+      return [...rows.values()].find((r) => r.address === address) ?? null;
+    }),
     getMailboxesByOwner: vi.fn((owner: string, limit: number, _offset: number) => {
       return [...rows.values()]
         .filter((r) => r.owner_wallet === owner && r.status === "active")
@@ -92,11 +101,23 @@ vi.mock("../src/db", () => {
       const row = rows.get(id);
       if (row) row.expires_at = expiresAt;
     }),
+    insertWebhook: vi.fn((params: Record<string, unknown>) => {
+      webhooks.set(params.id as string, { ...params, status: "active", consecutive_failures: 0 });
+    }),
+    getWebhooksByMailbox: vi.fn((mailboxId: string) => {
+      return [...webhooks.values()].filter((w) => w.mailbox_id === mailboxId && w.status === "active");
+    }),
+    getWebhookById: vi.fn((id: string) => webhooks.get(id) ?? null),
+    deleteWebhookRow: vi.fn((id: string) => {
+      webhooks.delete(id);
+    }),
     _rows: rows,
+    _webhooks: webhooks,
   };
 });
 
-import { createMailbox, listMailboxes, getMailbox, deleteMailbox, listMessages, getMessage, sendMessage, renewMailbox } from "../src/service";
+import { createMailbox, listMailboxes, getMailbox, deleteMailbox, listMessages, getMessage, sendMessage, renewMailbox, registerWebhook, listWebhooks, deleteWebhook, handleIngestEvent } from "../src/service";
+import { verifySignature, dispatchWebhookDeliveries } from "../src/webhook-delivery";
 import { createPrincipal, deletePrincipal, StalwartError } from "../src/stalwart";
 import { JmapError, queryEmails, getEmail, sendEmail } from "../src/jmap";
 import { getJmapContext } from "../src/context";
@@ -137,7 +158,10 @@ describe("relay service", () => {
     vi.clearAllMocks();
     // biome-ignore lint/suspicious/noExplicitAny: accessing mock internals
     ((dbMock as any)._rows as Map<string, unknown>).clear();
+    // biome-ignore lint/suspicious/noExplicitAny: accessing mock internals
+    ((dbMock as any)._webhooks as Map<string, unknown>).clear();
     process.env.RELAY_DEFAULT_DOMAIN = "relay.prim.sh";
+    process.env.NODE_ENV = "test";
   });
 
   describe("createMailbox", () => {
@@ -795,6 +819,215 @@ describe("relay service", () => {
       if (!result.ok) {
         expect(result.code).toBe("invalid_request");
       }
+    });
+  });
+
+  describe("registerWebhook (R-7)", () => {
+    it("creates webhook with wh_ prefix ID", async () => {
+      seedRow("mbx_test", WALLET_A);
+
+      const result = await registerWebhook("mbx_test", WALLET_A, {
+        url: "http://localhost:3000/hook",
+      });
+
+      expect(result.ok).toBe(true);
+      if (!result.ok) return;
+      expect(result.data.id).toMatch(/^wh_[0-9a-f]{8}$/);
+      expect(result.data.url).toBe("http://localhost:3000/hook");
+      expect(result.data.events).toEqual(["message.received"]);
+      expect(result.data.status).toBe("active");
+    });
+
+    it("returns not_found for wrong wallet", async () => {
+      seedRow("mbx_test", WALLET_A);
+
+      const result = await registerWebhook("mbx_test", WALLET_B, {
+        url: "http://localhost:3000/hook",
+      });
+
+      expect(result.ok).toBe(false);
+      if (!result.ok) expect(result.code).toBe("not_found");
+    });
+
+    it("rejects non-HTTPS URLs in production", async () => {
+      seedRow("mbx_test", WALLET_A);
+      process.env.NODE_ENV = "";
+      process.env.RELAY_ALLOW_HTTP_WEBHOOKS = "0";
+
+      const result = await registerWebhook("mbx_test", WALLET_A, {
+        url: "http://example.com/hook",
+      });
+
+      expect(result.ok).toBe(false);
+      if (!result.ok) expect(result.code).toBe("invalid_request");
+
+      // Restore
+      process.env.NODE_ENV = "test";
+    });
+
+    it("rejects unsupported event types", async () => {
+      seedRow("mbx_test", WALLET_A);
+
+      const result = await registerWebhook("mbx_test", WALLET_A, {
+        url: "http://localhost:3000/hook",
+        events: ["message.bounced"],
+      });
+
+      expect(result.ok).toBe(false);
+      if (!result.ok) expect(result.message).toContain("message.bounced");
+    });
+
+    it("encrypts secret when provided", async () => {
+      seedRow("mbx_test", WALLET_A);
+
+      const result = await registerWebhook("mbx_test", WALLET_A, {
+        url: "http://localhost:3000/hook",
+        secret: "my-secret",
+      });
+
+      expect(result.ok).toBe(true);
+      // Secret should be encrypted in the DB (mock encrypts as "encrypted:...")
+      // biome-ignore lint/suspicious/noExplicitAny: accessing mock internals
+      const webhookStore = (dbMock as any)._webhooks as Map<string, Record<string, unknown>>;
+      const stored = [...webhookStore.values()][0];
+      expect(stored?.secret_enc).toBe("encrypted:my-secret");
+    });
+
+    it("defaults events to message.received", async () => {
+      seedRow("mbx_test", WALLET_A);
+
+      const result = await registerWebhook("mbx_test", WALLET_A, {
+        url: "http://localhost:3000/hook",
+      });
+
+      expect(result.ok).toBe(true);
+      if (!result.ok) return;
+      expect(result.data.events).toEqual(["message.received"]);
+    });
+  });
+
+  describe("listWebhooks (R-7)", () => {
+    it("returns webhooks for owned mailbox", async () => {
+      seedRow("mbx_test", WALLET_A);
+      await registerWebhook("mbx_test", WALLET_A, { url: "http://localhost:3000/hook1" });
+      await registerWebhook("mbx_test", WALLET_A, { url: "http://localhost:3000/hook2" });
+
+      const result = listWebhooks("mbx_test", WALLET_A);
+
+      expect(result.ok).toBe(true);
+      if (!result.ok) return;
+      expect(result.data.webhooks).toHaveLength(2);
+      expect(result.data.total).toBe(2);
+    });
+
+    it("returns not_found for wrong wallet", () => {
+      seedRow("mbx_test", WALLET_A);
+
+      const result = listWebhooks("mbx_test", WALLET_B);
+
+      expect(result.ok).toBe(false);
+      if (!result.ok) expect(result.code).toBe("not_found");
+    });
+  });
+
+  describe("deleteWebhook (R-7)", () => {
+    it("deletes webhook and returns success", async () => {
+      seedRow("mbx_test", WALLET_A);
+      const created = await registerWebhook("mbx_test", WALLET_A, {
+        url: "http://localhost:3000/hook",
+      });
+      if (!created.ok) return;
+
+      const result = deleteWebhook("mbx_test", WALLET_A, created.data.id);
+
+      expect(result.ok).toBe(true);
+      if (!result.ok) return;
+      expect(result.data.id).toBe(created.data.id);
+      expect(result.data.deleted).toBe(true);
+    });
+
+    it("returns not_found for wrong wallet", async () => {
+      seedRow("mbx_test", WALLET_A);
+      const created = await registerWebhook("mbx_test", WALLET_A, {
+        url: "http://localhost:3000/hook",
+      });
+      if (!created.ok) return;
+
+      const result = deleteWebhook("mbx_test", WALLET_B, created.data.id);
+
+      expect(result.ok).toBe(false);
+      if (!result.ok) expect(result.code).toBe("not_found");
+    });
+
+    it("returns not_found for non-existent webhook ID", () => {
+      seedRow("mbx_test", WALLET_A);
+
+      const result = deleteWebhook("mbx_test", WALLET_A, "wh_nonexist");
+
+      expect(result.ok).toBe(false);
+      if (!result.ok) expect(result.code).toBe("not_found");
+    });
+  });
+
+  describe("handleIngestEvent (R-7)", () => {
+    it("rejects invalid HMAC signature", async () => {
+      process.env.STALWART_WEBHOOK_SECRET = "test-secret";
+      (verifySignature as ReturnType<typeof vi.fn>).mockReturnValue(false);
+
+      const result = await handleIngestEvent('{"type":"message-ingest.ham"}', "bad-sig");
+
+      expect(result.ok).toBe(false);
+      if (!result.ok) {
+        expect(result.status).toBe(401);
+        expect(result.code).toBe("forbidden");
+      }
+
+      process.env.STALWART_WEBHOOK_SECRET = "";
+    });
+
+    it("ignores events for unknown addresses", async () => {
+      const event = JSON.stringify({
+        type: "message-ingest.ham",
+        data: { rcptTo: ["[email protected]"] },
+      });
+
+      const result = await handleIngestEvent(event, null);
+
+      expect(result.ok).toBe(true);
+      if (result.ok) expect(result.data.accepted).toBe(true);
+      expect(dispatchWebhookDeliveries).not.toHaveBeenCalled();
+    });
+
+    it("dispatches delivery for active webhooks", async () => {
+      seedRow("mbx_test", WALLET_A, { address: "[email protected]" });
+      await registerWebhook("mbx_test", WALLET_A, { url: "http://localhost:3000/hook" });
+
+      const event = JSON.stringify({
+        type: "message-ingest.ham",
+        data: { rcptTo: ["[email protected]"], subject: "Hello", from: "[email protected]" },
+      });
+
+      const result = await handleIngestEvent(event, null);
+
+      expect(result.ok).toBe(true);
+      expect(dispatchWebhookDeliveries).toHaveBeenCalledWith(
+        expect.arrayContaining([expect.objectContaining({ url: "http://localhost:3000/hook" })]),
+        expect.objectContaining({ event: "message.received", mailbox_id: "mbx_test" }),
+      );
+    });
+
+    it("does nothing if no webhooks registered", async () => {
+      seedRow("mbx_test", WALLET_A, { address: "[email protected]" });
+
+      const event = JSON.stringify({
+        type: "message-ingest.ham",
+        data: { rcptTo: ["[email protected]"] },
+      });
+
+      const result = await handleIngestEvent(event, null);
+
+      expect(result.ok).toBe(true);
+      expect(dispatchWebhookDeliveries).not.toHaveBeenCalled();
     });
   });
 

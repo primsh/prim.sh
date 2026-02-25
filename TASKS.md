@@ -36,7 +36,7 @@
 | 27 | R-4 | Build relay.sh wrapper: JMAP auth bridge + session bootstrap (Basic auth, no OAuth) | relay/ | R-3 | done |
 | 28 | R-5 | Build relay.sh wrapper: read messages (JMAP Email/query + Email/get) | relay/ | R-4 | done |
 | 29 | R-6 | Build relay.sh wrapper: send messages (JMAP EmailSubmission/set) — receive-only first | relay/ | R-4 | done |
-| 30 | R-7 | Build relay.sh wrapper: incoming mail webhooks (Stalwart MTA Hooks) | relay/ | R-2 | pending |
+| 30 | R-7 | Build relay.sh wrapper: incoming mail webhooks (Stalwart MTA Hooks) | relay/ | R-2 | done |
 | 31 | R-8 | Build relay.sh wrapper: mailbox TTL/expiry manager | relay/ | R-3 | done |
 | 32 | R-9 | Build relay.sh wrapper: custom domain support | relay/ | R-2, D-1 | pending |
 | 33 | R-10 | Integrate x402 middleware (all endpoints gated by payment) | relay/ | R-3, P-4 | pending |
@@ -83,9 +83,9 @@
 - ST-1: `tasks/completed/st-1-bucket-crud-cloudflare-r2.md`
 - R-5: `tasks/completed/r-5-read-messages-jmap-2026-02-25.md`
 - ST-4: `tasks/completed/st-4-x402-middleware-store.md`
-- R-6: `tasks/active/r-6-send-messages-jmap-2026-02-25.md`
-- R-7: `tasks/active/r-7-incoming-webhooks-mta-hooks.md`
-- R-8: `tasks/active/r-8-mailbox-ttl-expiry.md`
+- R-6: `tasks/completed/r-6-send-messages-jmap-2026-02-25.md`
+- R-7: `tasks/completed/r-7-incoming-webhooks-mta-hooks.md`
+- R-8: `tasks/completed/r-8-mailbox-ttl-expiry.md`
 - ST-3: `tasks/completed/st-3-storage-quota-usage.md`
 - TK-1/TK-2: implemented directly (no plan doc — plan provided in prompt)
 - P-5: `tasks/active/p-5-testnet-integration-testing.md`
@@ -247,6 +247,7 @@ ERC-8004 uses CAIP-10 wallet addresses as root identity. DIDs layer on top non-b
 - ST-4 — x402 middleware already integrated in ST-1/ST-2 (2026-02-25)
 - TK-1 — token.sh scaffold + deploy + query: factory ABI, CREATE2 salt, AES-256-GCM deployer keystore, SQLite deployments, 58 tests (2026-02-25)
 - TK-2 — token.sh mint + supply: mintable/not_mintable/forbidden/exceeds_max_supply decision table, on-chain totalSupply reads, 58 tests (2026-02-25)
+- R-7 — relay.sh incoming webhooks: webhook CRUD, HMAC signing, delivery with retry, Stalwart ingest handler, 125 tests (2026-02-25)
 
 ### R-2 completion details (2026-02-25)
 

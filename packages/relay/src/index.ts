@@ -4,12 +4,16 @@ import type {
   CreateMailboxRequest,
   RenewMailboxRequest,
   SendMessageRequest,
+  RegisterWebhookRequest,
   MailboxResponse,
   MailboxListResponse,
   DeleteMailboxResponse,
   EmailListResponse,
   EmailDetail,
   SendMessageResponse,
+  WebhookResponse,
+  WebhookListResponse,
+  DeleteWebhookResponse,
 } from "./api.ts";
 import {
   createMailbox,
@@ -20,6 +24,10 @@ import {
   getMessage,
   sendMessage,
   renewMailbox,
+  registerWebhook,
+  listWebhooks,
+  deleteWebhook,
+  handleIngestEvent,
 } from "./service.ts";
 
 function forbidden(message: string): ApiError {
@@ -184,6 +192,65 @@ app.post("/v1/mailboxes/:id/send", async (c) => {
     return c.json(serviceError(result.code, result.message), result.status as 502);
   }
   return c.json(result.data as SendMessageResponse, 200);
+});
+
+// POST /v1/mailboxes/:id/webhooks — Register webhook
+app.post("/v1/mailboxes/:id/webhooks", async (c) => {
+  const caller = c.get("walletAddress");
+  if (!caller) return c.json(forbidden("No wallet address in payment"), 403);
+
+  let body: RegisterWebhookRequest;
+  try {
+    body = await c.req.json<RegisterWebhookRequest>();
+  } catch {
+    return c.json(invalidRequest("Invalid JSON body"), 400);
+  }
+
+  const result = await registerWebhook(c.req.param("id"), caller, body);
+  if (!result.ok) {
+    if (result.code === "not_found") return c.json(notFound(result.message), 404);
+    if (result.code === "invalid_request") return c.json(invalidRequest(result.message), 400);
+    return c.json(serviceError(result.code, result.message), result.status as 502);
+  }
+  return c.json(result.data as WebhookResponse, 201);
+});
+
+// GET /v1/mailboxes/:id/webhooks — List webhooks
+app.get("/v1/mailboxes/:id/webhooks", (c) => {
+  const caller = c.get("walletAddress");
+  if (!caller) return c.json(forbidden("No wallet address in payment"), 403);
+
+  const result = listWebhooks(c.req.param("id"), caller);
+  if (!result.ok) {
+    if (result.code === "not_found") return c.json(notFound(result.message), 404);
+    return c.json(serviceError(result.code, result.message), result.status as 502);
+  }
+  return c.json(result.data as WebhookListResponse, 200);
+});
+
+// DELETE /v1/mailboxes/:id/webhooks/:whId — Delete webhook
+app.delete("/v1/mailboxes/:id/webhooks/:whId", (c) => {
+  const caller = c.get("walletAddress");
+  if (!caller) return c.json(forbidden("No wallet address in payment"), 403);
+
+  const result = deleteWebhook(c.req.param("id"), caller, c.req.param("whId"));
+  if (!result.ok) {
+    if (result.code === "not_found") return c.json(notFound(result.message), 404);
+    return c.json(serviceError(result.code, result.message), result.status as 502);
+  }
+  return c.json(result.data as DeleteWebhookResponse, 200);
+});
+
+// POST /internal/hooks/ingest — Stalwart webhook ingest (not x402-gated)
+app.post("/internal/hooks/ingest", async (c) => {
+  const rawBody = await c.req.text();
+  const signature = c.req.header("X-Signature") ?? null;
+
+  const result = await handleIngestEvent(rawBody, signature);
+  if (!result.ok) {
+    return c.json(serviceError(result.code, result.message), result.status as 401);
+  }
+  return c.json(result.data, 200);
 });
 
 export default app;

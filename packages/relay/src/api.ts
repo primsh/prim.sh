@@ -110,6 +110,46 @@ export interface SendMessageResponse {
   status: "sent";
 }
 
+// ─── Webhook types (R-7) ──────────────────────────────────────────────
+
+export interface RegisterWebhookRequest {
+  url: string;
+  secret?: string;
+  events?: string[];
+}
+
+export interface WebhookResponse {
+  id: string;
+  url: string;
+  events: string[];
+  status: string;
+  created_at: string;
+}
+
+export interface WebhookListResponse {
+  webhooks: WebhookResponse[];
+  total: number;
+}
+
+export interface DeleteWebhookResponse {
+  id: string;
+  deleted: true;
+}
+
+export interface WebhookPayload {
+  event: string;
+  mailbox_id: string;
+  message_id: string;
+  from: { name: string | null; email: string };
+  to: { name: string | null; email: string }[];
+  subject: string;
+  preview: string;
+  received_at: string;
+  size: number;
+  has_attachment: boolean;
+  timestamp: string;
+}
+
 // ─── JMAP context (used by R-5/R-6) ────────────────────────────────────
 
 export type { JmapContext } from "./context.ts";
