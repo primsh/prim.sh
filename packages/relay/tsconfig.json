@@ -8,5 +8,6 @@
       "bun:sqlite": ["./src/__mocks__/bun-sqlite.ts"]
     }
   },
-  "include": ["src", "test"]
+  "include": ["src", "test"],
+  "exclude": ["test/smoke-live.test.ts"]
 }

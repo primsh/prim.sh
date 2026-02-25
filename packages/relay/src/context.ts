@@ -44,7 +44,7 @@ export async function getJmapContext(
     };
   }
 
-  const authHeader = buildBasicAuth(row.address, password);
+  const authHeader = buildBasicAuth(row.stalwart_name, password);
 
   // Return cached session data if available
   if (row.jmap_api_url && row.jmap_account_id && row.jmap_identity_id && row.jmap_inbox_id) {

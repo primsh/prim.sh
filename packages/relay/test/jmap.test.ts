@@ -600,7 +600,7 @@ describe("jmap client", () => {
 
       const body = JSON.parse((globalThis.fetch as ReturnType<typeof vi.fn>).mock.calls[0][1].body);
       const subCreate = body.methodCalls[1][1].create.sub;
-      expect(subCreate.emailId).toBe("#e");
+      expect(subCreate.emailId).toBe("#draft");
     });
   });
 });

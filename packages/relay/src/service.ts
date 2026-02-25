@@ -212,7 +212,7 @@ export async function createMailbox(
     };
 
     try {
-      const authHeader = buildBasicAuth(address, password);
+      const authHeader = buildBasicAuth(username, password);
       const session = await discoverSession(authHeader);
       jmapData = {
         jmap_api_url: session.apiUrl,

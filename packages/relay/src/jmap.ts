@@ -97,10 +97,22 @@ export async function discoverSession(
 ): Promise<JmapSession> {
   const jmapUrl = baseUrl ?? getJmapBaseUrl();
 
-  // Step 1: GET /.well-known/jmap → apiUrl + accountId
-  const sessionRes = await fetch(`${jmapUrl}/.well-known/jmap`, {
+  // Step 1: GET /.well-known/jmap → follow redirect manually (auth header is
+  // stripped on 3xx by some runtimes). If we get a redirect, re-request with auth.
+  let sessionRes = await fetch(`${jmapUrl}/.well-known/jmap`, {
     headers: { Authorization: authHeader },
+    redirect: "manual",
   });
+
+  if (sessionRes.status >= 300 && sessionRes.status < 400) {
+    const location = sessionRes.headers.get("location");
+    if (location) {
+      const redirectUrl = location.startsWith("http") ? location : `${jmapUrl}${location}`;
+      sessionRes = await fetch(redirectUrl, {
+        headers: { Authorization: authHeader },
+      });
+    }
+  }
 
   if (!sessionRes.ok) {
     throw new JmapError(
@@ -254,6 +266,7 @@ export async function queryEmails(
         sort: [{ property: "receivedAt", isAscending: false }],
         limit: opts.limit,
         position: opts.position,
+        calculateTotal: true,
       },
       "q",
     ],
@@ -444,7 +457,7 @@ export async function sendEmail(
           create: {
             sub: {
               identityId: opts.identityId,
-              emailId: "#e",
+              emailId: "#draft",
               envelope: {
                 mailFrom: { email: opts.from.email },
                 rcptTo: allRecipients.map((r) => ({ email: r.email })),
