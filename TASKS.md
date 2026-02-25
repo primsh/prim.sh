@@ -90,7 +90,7 @@
 | 20 | E-5 | Verify Gmail inbox delivery (not spam) after warmup + PTR + DMARC changes | deploy/email | E-4 | pending |
 | 21 | E-6 | Verify Apple Mail / iCloud delivery after warmup | deploy/email | E-4 | pending |
 | 22 | E-7 | Upgrade DMARC back to `p=quarantine` once inbox delivery is consistent | Cloudflare DNS | E-5, E-6 | pending |
-| 23 | E-8 | Migrate mail domain from `relay.prim.sh` → `email.prim.sh`: DNS (A, MX, SPF, DMARC, DKIM x2, Google verification), Stalwart domain principal + DKIM keys, PTR update, ACME TLS, re-register Postmaster Tools. Keep relay.prim.sh records alive temporarily. Flip `EMAIL_DEFAULT_DOMAIN` env var. | deploy/email, Cloudflare DNS, Stalwart, DO | E-1, E-2, E-3 | pending |
+| 23 | E-8 | Migrate mail domain from `relay.prim.sh` → `email.prim.sh`: DNS (A, MX, SPF, DMARC, DKIM x2, Google verification), Stalwart domain principal + DKIM keys, PTR update, ACME TLS, re-register Postmaster Tools. Keep relay.prim.sh records alive temporarily. Flip `EMAIL_DEFAULT_DOMAIN` env var. | deploy/email, Cloudflare DNS, Stalwart, DO | E-1, E-2, E-3 | done |
 | 23 | M-1 | Build mem.sh: vector memory (Qdrant collections + upsert + query) + KV cache + x402 | packages/mem | — | done |
 | 9 | M-2 | mem.sh live smoke test: create collection → upsert docs → query → cache set/get/delete on Base Sepolia via x402 payment | packages/mem | M-1 | done |
 | 14 | M-3 | `prim mem` CLI subcommand: create-collection, list-collections, upsert, query, cache-set, cache-get, cache-del using keystore + x402-client | packages/keystore | M-1, KS-1 | pending |
