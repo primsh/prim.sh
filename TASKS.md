@@ -175,7 +175,7 @@ Plan doc: `tasks/active/v1-launch-plan-2026-02-25.md`
 
 | ID | Task | Owner | Depends on | Status |
 |---|---|---|---|---|
-| L-10 | Deploy Core 4 to VPS + run integration smoke test against live endpoints | Claude + Garric | L-8, L-9 | pending |
+| L-10 | Deploy Core 4 to VPS + run integration smoke test against live endpoints | Claude + Garric | L-8, L-9 | done |
 | L-11 | Compile `prim` binary for 4 platforms (`bun build --compile`) + upload to GitHub Release | Claude | L-4 | pending |
 | L-12 | Write install script (`curl prim.sh \| sh`) + per-primitive wrappers | Claude | L-11 | pending |
 | L-13 | Deploy landing site (`site/`) to Cloudflare Pages, wire `prim.sh` root domain | Garric + Claude | L-4 | pending |
