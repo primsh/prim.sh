@@ -63,6 +63,7 @@
 - W-8: `tasks/completed/w-8-execution-journal-2026-02-24.md`
 - W-9: `tasks/completed/w-9-circuit-breaker-2026-02-24.md`
 - SP-3/SP-4: `tasks/completed/sp-3-sp-4-lifecycle-ssh-2026-02-24.md`
+- D-1: `tasks/active/d-1-dns-zone-record-crud-2026-02-24.md`
 - R-2: `tasks/active/r-2-stalwart-domain-tls-2026-02-24.md`
 - Umbrella: `tasks/active/batch-execution-umbrella-2026-02-24.md`
 
@@ -153,11 +154,40 @@ x402 uses [EIP-3009 (Transfer With Authorization)](https://github.com/coinbase/x
 
 **Plan:**
 1. SP-6: Extract `CloudProvider` interface from current `hetzner.ts`, keep Hetzner as one implementation
-2. Add AWS EC2 provider (likely launch provider — best reseller story, t4g ARM pricing competitive with Hetzner)
-3. Agent chooses provider at server creation time (`provider: "aws" | "hetzner" | "gcp"`)
+2. Add DigitalOcean provider as launch provider (clearest reseller program, Partner Pod 5-25% discount, $4/mo Droplets)
+3. Agent chooses provider at server creation time (`provider: "digitalocean" | "hetzner" | "aws"`)
 4. Pricing varies by provider (pass-through cost + margin)
 
 **Action:** SP-6 added to task list. Decide launch provider after comparing real instance pricing and signup friction. Hetzner code is not wasted — it becomes one provider behind the interface.
+
+### Provider strategy — two-provider model (2026-02-24)
+
+**Problem:** Which cloud providers should AgentStack use? Evaluated AWS, GCP, Azure, DigitalOcean, Vultr, Linode, Hetzner, and Cloudflare across VPS, DNS, object storage, reseller TOS, and API quality.
+
+**Key findings:**
+- Only 3 of 27 primitives bind to a cloud provider API: spawn.sh (VPS), dns.sh (DNS), store.sh (object storage). Everything else either wraps a third-party service (Telnyx, Stripe, Brave, etc.) or just needs a VPS to run Bun.
+- Hyperscalers (AWS/GCP/Azure) charge for DNS per zone ($0.20-0.50/mo), have complex APIs, and are overkill for v1. Reserve as SP-6 provider options for enterprise agents.
+- Hetzner TOS prohibits reselling without written consent — compliance risk for spawn.sh.
+- Cloudflare DNS is best-in-class: free, batch operations (atomic multi-record create), DNSSEC, most mature API. Neither DO nor Vultr has batch ops.
+- DigitalOcean has the clearest reseller program (Partner Pod: 5%/15%/25% tiered discounts) and free DNS, but DNS lacks DNSSEC and batch operations.
+- Vultr is cheapest ($2.50/mo VPS) with 32 regions and DNSSEC, but partner program is opaque ("acceptance alone does not authorize resale").
+
+**Decision:**
+
+| Provider | Service | Primitives | Cost |
+|----------|---------|------------|------|
+| Cloudflare | DNS API | dns.sh | Free |
+| Cloudflare | R2 Object Storage | store.sh | Free first 10GB, $0.015/GB/mo after, no egress |
+| DigitalOcean | Droplets | spawn.sh (launch provider) | $4/mo smallest, 5-25% partner discount |
+| DigitalOcean | Droplets | AgentStack's own infra | 1-2 Droplets, $6-24/mo each |
+
+**Total fixed cost**: ~$12-48/mo (1-2 DO Droplets for all Bun services). DNS and R2 free at low volume.
+
+**Rationale:**
+- Two providers, clean separation: Cloudflare handles DNS + storage (free), DO handles compute (reseller-friendly).
+- spawn.sh launch provider changes from Hetzner → DO, resolving TOS risk. Hetzner stays as SP-6 option.
+- Cloudflare's batch DNS API is non-negotiable for D-2 mail-setup (5 records atomically in one call).
+- DO Partner Pod at Registered tier (5% discount) requires only $200 MRR from new customers. Strategic tier (25%) at $1M+ ARR.
 
 ### Wallet-first identity upgrade path (2026-02-24)
 ERC-8004 uses CAIP-10 wallet addresses as root identity. DIDs layer on top non-breaking: wallet address becomes `verificationMethod` in DID Document, `alsoKnownAs` bridges old→new. No smart contract changes. Current "wallet = identity" design is correct for v1. id.sh adds DID resolution later.
