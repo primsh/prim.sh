@@ -3,12 +3,15 @@
  */
 
 import type { CloudProvider } from "./provider.ts";
+import { createDigitalOceanProvider } from "./digitalocean.ts";
 import { createHetznerProvider } from "./hetzner.ts";
 
 const registry = new Map<string, CloudProvider>();
 
 function ensureDefaults(): void {
   if (registry.size > 0) return;
+  const digitalocean = createDigitalOceanProvider();
+  registry.set(digitalocean.name, digitalocean);
   const hetzner = createHetznerProvider();
   registry.set(hetzner.name, hetzner);
 }

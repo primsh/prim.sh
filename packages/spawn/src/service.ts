@@ -32,7 +32,7 @@ import type { ServerRow, SshKeyRow } from "./db.ts";
 
 // ─── Constants ────────────────────────────────────────────────────────────
 
-const DEFAULT_PROVIDER = "hetzner";
+const DEFAULT_PROVIDER = "digitalocean";
 const CREATION_DEPOSIT = "0.01";
 
 // ─── Helpers ─────────────────────────────────────────────────────────────

@@ -1,5 +1,6 @@
 /**
- * SP-2/SP-6 spawn.sh tests: server CRUD with provider abstraction and ownership enforcement.
+ * SP-2/SP-6/SP-7 spawn.sh tests: server CRUD with provider abstraction and ownership enforcement.
+ * Tests use DigitalOcean as the default provider.
  *
  * IMPORTANT: env vars must be set before any module import that touches db/providers.
  */
@@ -8,50 +9,52 @@ import { describe, expect, it, beforeEach, afterEach, vi } from "vitest";
 
 // Set env before imports
 process.env.SPAWN_DB_PATH = ":memory:";
+process.env.DO_API_TOKEN = "test-do-token";
 process.env.HETZNER_API_KEY = "test-hetzner-key";
 
-// ─── Hetzner API mock helpers ──────────────────────────────────────────────
+// ─── DO API mock helpers ─────────────────────────────────────────────────
 
-function makeHetznerSshKey(overrides: Partial<Record<string, unknown>> = {}): Record<string, unknown> {
+function makeDOSshKey(overrides: Partial<Record<string, unknown>> = {}): Record<string, unknown> {
   return {
     id: 55555,
     name: "my-key",
     fingerprint: "ab:cd:ef:00:11:22:33:44",
     public_key: "ssh-ed25519 AAAAC3NzaC test",
-    labels: { wallet: "0xCa11e900000000000000000000000000000000001" },
-    created: "2024-01-01T00:00:00Z",
     ...overrides,
   };
 }
 
-function makeHetznerServer(overrides: Partial<Record<string, unknown>> = {}): Record<string, unknown> {
+function makeDODroplet(overrides: Partial<Record<string, unknown>> = {}): Record<string, unknown> {
   return {
     id: 12345,
     name: "test-server",
-    status: "initializing",
-    public_net: {
-      ipv4: { ip: "1.2.3.4" },
-      ipv6: { ip: "2001:db8::1" },
+    status: "new",
+    networks: {
+      v4: [{ ip_address: "1.2.3.4", netmask: "255.255.255.0", gateway: "1.2.3.1", type: "public" }],
+      v6: [{ ip_address: "2001:db8::1", netmask: 64, gateway: "2001:db8::gw", type: "public" }],
     },
-    server_type: { name: "cx23" },
-    image: { name: "ubuntu-24.04" },
-    datacenter: { location: { name: "nbg1" } },
-    labels: { wallet: "0xCa11e900000000000000000000000000000000001" },
+    size_slug: "s-2vcpu-4gb",
+    image: { slug: "ubuntu-24-04-x64" },
+    region: { slug: "nyc3" },
+    tags: ["wallet:0xCa11e900000000000000000000000000000000001"],
     ...overrides,
   };
 }
 
-function makeHetznerAction(): Record<string, unknown> {
+function makeDOAction(overrides: Partial<Record<string, unknown>> = {}): Record<string, unknown> {
   return {
     id: 9999,
-    command: "create_server",
-    status: "running",
-    started: "2024-01-01T00:00:00Z",
-    finished: null,
+    type: "create_droplet",
+    status: "in-progress",
+    started_at: "2024-01-01T00:00:00Z",
+    completed_at: null,
+    resource_id: 12345,
+    resource_type: "droplet",
+    ...overrides,
   };
 }
 
-// Mock fetch: intercepts both x402 facilitator calls and Hetzner API calls
+// Mock fetch: intercepts both x402 facilitator calls and DO API calls
 const mockFetch = vi.fn(async (input: RequestInfo | URL, _init?: RequestInit) => {
   const url =
     typeof input === "string"
@@ -72,82 +75,62 @@ const mockFetch = vi.fn(async (input: RequestInfo | URL, _init?: RequestInit) =>
     );
   }
 
-  // Hetzner: POST /v1/servers
-  if (url === "https://api.hetzner.cloud/v1/servers" && _init?.method === "POST") {
+  // DO: POST /v2/droplets
+  if (url === "https://api.digitalocean.com/v2/droplets" && _init?.method === "POST") {
     return new Response(
       JSON.stringify({
-        server: makeHetznerServer(),
-        action: makeHetznerAction(),
+        droplet: makeDODroplet(),
+        links: { actions: [{ id: 9999 }] },
       }),
-      { status: 201, headers: { "Content-Type": "application/json" } },
+      { status: 202, headers: { "Content-Type": "application/json" } },
     );
   }
 
-  // Hetzner: DELETE /v1/servers/:id (not an action)
-  if (url.match(/^https:\/\/api\.hetzner\.cloud\/v1\/servers\/\d+$/) && _init?.method === "DELETE") {
+  // DO: DELETE /v2/droplets/:id
+  if (url.match(/^https:\/\/api\.digitalocean\.com\/v2\/droplets\/\d+$/) && _init?.method === "DELETE") {
     return new Response(null, { status: 204 });
   }
 
-  // Hetzner: POST /v1/servers/:id/actions/* (lifecycle actions)
-  if (url.match(/^https:\/\/api\.hetzner\.cloud\/v1\/servers\/\d+\/actions\//) && _init?.method === "POST") {
-    const isRebuild = url.endsWith("/rebuild");
-    if (isRebuild) {
-      return new Response(
-        JSON.stringify({
-          action: { id: 9998, command: "rebuild_server", status: "running", started: "2024-01-01T00:00:00Z", finished: null },
-          root_password: null,
-        }),
-        { status: 200, headers: { "Content-Type": "application/json" } },
-      );
-    }
+  // DO: POST /v2/droplets/:id/actions (lifecycle actions)
+  if (url.match(/^https:\/\/api\.digitalocean\.com\/v2\/droplets\/\d+\/actions$/) && _init?.method === "POST") {
+    const body = JSON.parse((_init?.body as string) ?? "{}") as Record<string, unknown>;
     return new Response(
       JSON.stringify({
-        action: { id: 9997, command: "server_action", status: "running", started: "2024-01-01T00:00:00Z", finished: null },
+        action: makeDOAction({ type: body.type as string, id: body.type === "rebuild" ? 9998 : 9997 }),
       }),
-      { status: 200, headers: { "Content-Type": "application/json" } },
-    );
-  }
-
-  // Hetzner: GET /v1/servers/:id (not a list)
-  if (
-    url.match(/^https:\/\/api\.hetzner\.cloud\/v1\/servers\/\d+$/) &&
-    (!_init?.method || _init.method === "GET")
-  ) {
-    return new Response(
-      JSON.stringify({ server: makeHetznerServer() }),
-      { status: 200, headers: { "Content-Type": "application/json" } },
-    );
-  }
-
-  // Hetzner: GET /v1/servers (list with label_selector)
-  if (url.startsWith("https://api.hetzner.cloud/v1/servers?") && (!_init?.method || _init.method === "GET")) {
-    return new Response(
-      JSON.stringify({
-        servers: [makeHetznerServer()],
-        meta: { pagination: { page: 1, per_page: 25, total_entries: 1 } },
-      }),
-      { status: 200, headers: { "Content-Type": "application/json" } },
-    );
-  }
-
-  // Hetzner: POST /v1/ssh_keys — create SSH key
-  if (url === "https://api.hetzner.cloud/v1/ssh_keys" && _init?.method === "POST") {
-    return new Response(
-      JSON.stringify({ ssh_key: makeHetznerSshKey() }),
       { status: 201, headers: { "Content-Type": "application/json" } },
     );
   }
 
-  // Hetzner: GET /v1/ssh_keys (list)
-  if (url.startsWith("https://api.hetzner.cloud/v1/ssh_keys") && (!_init?.method || _init.method === "GET")) {
+  // DO: GET /v2/droplets/:id
+  if (
+    url.match(/^https:\/\/api\.digitalocean\.com\/v2\/droplets\/\d+$/) &&
+    (!_init?.method || _init.method === "GET")
+  ) {
     return new Response(
-      JSON.stringify({ ssh_keys: [makeHetznerSshKey()] }),
+      JSON.stringify({ droplet: makeDODroplet() }),
       { status: 200, headers: { "Content-Type": "application/json" } },
     );
   }
 
-  // Hetzner: DELETE /v1/ssh_keys/:id
-  if (url.match(/^https:\/\/api\.hetzner\.cloud\/v1\/ssh_keys\/\d+$/) && _init?.method === "DELETE") {
+  // DO: POST /v2/account/keys — create SSH key
+  if (url === "https://api.digitalocean.com/v2/account/keys" && _init?.method === "POST") {
+    return new Response(
+      JSON.stringify({ ssh_key: makeDOSshKey() }),
+      { status: 201, headers: { "Content-Type": "application/json" } },
+    );
+  }
+
+  // DO: GET /v2/account/keys (list)
+  if (url.startsWith("https://api.digitalocean.com/v2/account/keys") && (!_init?.method || _init.method === "GET")) {
+    return new Response(
+      JSON.stringify({ ssh_keys: [makeDOSshKey()] }),
+      { status: 200, headers: { "Content-Type": "application/json" } },
+    );
+  }
+
+  // DO: DELETE /v2/account/keys/:id
+  if (url.match(/^https:\/\/api\.digitalocean\.com\/v2\/account\/keys\/\d+$/) && _init?.method === "DELETE") {
     return new Response(null, { status: 204 });
   }
 
@@ -186,25 +169,25 @@ const VALID_REQUEST: CreateServerRequest = {
   name: "my-server",
   type: "small",
   image: "ubuntu-24.04",
-  location: "nbg1",
+  location: "nyc3",
 };
 
 function insertTestServer(overrides: Partial<Parameters<typeof insertServer>[0]> = {}): string {
   const id = `srv_test${Math.random().toString(16).slice(2, 6)}`;
   insertServer({
     id,
-    provider: "hetzner",
+    provider: "digitalocean",
     provider_resource_id: "12345",
     owner_wallet: CALLER,
     name: "test-server",
     type: "small",
     image: "ubuntu-24.04",
-    location: "nbg1",
+    location: "nyc3",
     status: "running",
     public_ipv4: "1.2.3.4",
     public_ipv6: null,
     deposit_charged: "0.01",
-    deposit_daily_burn: "0.15",
+    deposit_daily_burn: "0.80",
     ...overrides,
   });
   return id;
@@ -214,7 +197,7 @@ function insertTestSshKey(overrides: Partial<Parameters<typeof insertSshKey>[0]>
   const id = `sk_test${Math.random().toString(16).slice(2, 6)}`;
   insertSshKey({
     id,
-    provider: "hetzner",
+    provider: "digitalocean",
     provider_resource_id: "55555",
     owner_wallet: CALLER,
     name: "my-key",
@@ -246,7 +229,7 @@ describe("createServer", () => {
     expect(result.data.server.owner_wallet).toBe(CALLER);
     expect(result.data.server.type).toBe("small");
     expect(result.data.server.name).toBe("my-server");
-    expect(result.data.server.provider).toBe("hetzner");
+    expect(result.data.server.provider).toBe("digitalocean");
     expect(result.data.server.provider_id).toBe("12345");
     expect(result.data.deposit_charged).toBe("0.01");
   });
@@ -259,31 +242,31 @@ describe("createServer", () => {
     const row = getServerById(result.data.server.id);
     expect(row).not.toBeNull();
     expect(row?.owner_wallet).toBe(CALLER);
-    expect(row?.provider).toBe("hetzner");
+    expect(row?.provider).toBe("digitalocean");
     expect(row?.provider_resource_id).toBe("12345");
   });
 
-  it("create server — calls Hetzner with correct payload including wallet label", async () => {
+  it("create server — calls DO with correct payload including wallet tag", async () => {
     await createServer(VALID_REQUEST, CALLER);
 
-    const hetznerCall = mockFetch.mock.calls.find(
+    const doCall = mockFetch.mock.calls.find(
       ([url, init]) =>
-        url === "https://api.hetzner.cloud/v1/servers" && (init as RequestInit)?.method === "POST",
+        url === "https://api.digitalocean.com/v2/droplets" && (init as RequestInit)?.method === "POST",
     );
-    expect(hetznerCall).toBeDefined();
+    expect(doCall).toBeDefined();
 
-    const body = JSON.parse((hetznerCall?.[1] as RequestInit)?.body as string) as Record<string, unknown>;
-    expect(body.server_type).toBe("cx23"); // small → cx23
-    expect(body.image).toBe("ubuntu-24.04");
-    expect(body.location).toBe("nbg1");
-    expect((body.labels as Record<string, string>).wallet).toBe(CALLER);
+    const body = JSON.parse((doCall?.[1] as RequestInit)?.body as string) as Record<string, unknown>;
+    expect(body.size).toBe("s-2vcpu-4gb"); // small → s-2vcpu-4gb
+    expect(body.image).toBe("ubuntu-24-04-x64"); // translated to DO slug
+    expect(body.region).toBe("nyc3");
+    expect(body.tags).toEqual([`wallet:${CALLER}`]);
   });
 
   it("create server with explicit provider — uses that provider", async () => {
-    const result = await createServer({ ...VALID_REQUEST, provider: "hetzner" }, CALLER);
+    const result = await createServer({ ...VALID_REQUEST, provider: "digitalocean" }, CALLER);
     expect(result.ok).toBe(true);
     if (!result.ok) return;
-    expect(result.data.server.provider).toBe("hetzner");
+    expect(result.data.server.provider).toBe("digitalocean");
   });
 
   it("create server with unknown provider — returns 400", async () => {
@@ -297,6 +280,14 @@ describe("createServer", () => {
 
   it("invalid type — returns 400 with invalid_request", async () => {
     const result = await createServer({ ...VALID_REQUEST, type: "xlarge" }, CALLER);
+    expect(result.ok).toBe(false);
+    if (result.ok) return;
+    expect(result.status).toBe(400);
+    expect(result.code).toBe("invalid_request");
+  });
+
+  it("arm-small not available on DO — returns 400", async () => {
+    const result = await createServer({ ...VALID_REQUEST, type: "arm-small" }, CALLER);
     expect(result.ok).toBe(false);
     if (result.ok) return;
     expect(result.status).toBe(400);
@@ -319,12 +310,12 @@ describe("createServer", () => {
     expect(result.code).toBe("invalid_request");
   });
 
-  it("Hetzner API failure — returns 502 with provider_error code", async () => {
+  it("DO API failure — returns 502 with provider_error code", async () => {
     mockFetch.mockImplementationOnce(async (input: RequestInfo | URL, init?: RequestInit) => {
       const url = typeof input === "string" ? input : input instanceof Request ? input.url : (input as URL).toString();
-      if (url === "https://api.hetzner.cloud/v1/servers" && (init as RequestInit)?.method === "POST") {
+      if (url === "https://api.digitalocean.com/v2/droplets" && (init as RequestInit)?.method === "POST") {
         return new Response(
-          JSON.stringify({ error: { code: "server_error", message: "Internal server error" } }),
+          JSON.stringify({ id: "server_error", message: "Internal server error" }),
           { status: 500, headers: { "Content-Type": "application/json" } },
         );
       }
@@ -387,7 +378,7 @@ describe("getServer", () => {
     expect(result.data.id).toBe(id);
     expect(result.data.owner_wallet).toBe(CALLER);
     expect(result.data.status).toBe("running");
-    expect(result.data.provider).toBe("hetzner");
+    expect(result.data.provider).toBe("digitalocean");
     expect(result.data.provider_id).toBe("12345");
   });
 
@@ -423,10 +414,10 @@ describe("deleteServer", () => {
     expect(result.data.status).toBe("deleted");
     expect(typeof result.data.deposit_refunded).toBe("string");
 
-    // Verify Hetzner delete was called
+    // Verify DO delete was called
     const deleteCall = mockFetch.mock.calls.find(
       ([url, init]) =>
-        (typeof url === "string" ? url : (url as Request).url).includes("/servers/12345") &&
+        (typeof url === "string" ? url : (url as Request).url).includes("/droplets/12345") &&
         (init as RequestInit)?.method === "DELETE",
     );
     expect(deleteCall).toBeDefined();
@@ -451,14 +442,14 @@ describe("deleteServer", () => {
     expect(result.code).toBe("forbidden");
   });
 
-  it("Hetzner delete failure — returns 502", async () => {
+  it("DO delete failure — returns 502", async () => {
     const id = insertTestServer({ owner_wallet: CALLER, provider_resource_id: "99999" });
 
     mockFetch.mockImplementationOnce(async (input: RequestInfo | URL, init?: RequestInit) => {
       const url = typeof input === "string" ? input : input instanceof Request ? input.url : (input as URL).toString();
-      if (url.includes("/servers/99999") && (init as RequestInit)?.method === "DELETE") {
+      if (url.includes("/droplets/99999") && (init as RequestInit)?.method === "DELETE") {
         return new Response(
-          JSON.stringify({ error: { code: "server_error", message: "Delete failed" } }),
+          JSON.stringify({ id: "server_error", message: "Delete failed" }),
           { status: 500, headers: { "Content-Type": "application/json" } },
         );
       }
@@ -476,22 +467,21 @@ describe("deleteServer", () => {
 
 describe("server type translation", () => {
   const typeMap: Record<string, string> = {
-    small: "cx23",
-    medium: "cx33",
-    large: "cx43",
-    "arm-small": "cax11",
+    small: "s-2vcpu-4gb",
+    medium: "s-4vcpu-8gb",
+    large: "s-8vcpu-16gb",
   };
 
-  for (const [spawnType, hetznerType] of Object.entries(typeMap)) {
-    it(`${spawnType} → ${hetznerType}`, async () => {
+  for (const [spawnType, doType] of Object.entries(typeMap)) {
+    it(`${spawnType} → ${doType}`, async () => {
       await createServer({ ...VALID_REQUEST, type: spawnType }, CALLER);
 
-      const hetznerCall = mockFetch.mock.calls.find(
+      const doCall = mockFetch.mock.calls.find(
         ([url, init]) =>
-          url === "https://api.hetzner.cloud/v1/servers" && (init as RequestInit)?.method === "POST",
+          url === "https://api.digitalocean.com/v2/droplets" && (init as RequestInit)?.method === "POST",
       );
-      const body = JSON.parse((hetznerCall?.[1] as RequestInit)?.body as string) as Record<string, unknown>;
-      expect(body.server_type).toBe(hetznerType);
+      const body = JSON.parse((doCall?.[1] as RequestInit)?.body as string) as Record<string, unknown>;
+      expect(body.size).toBe(doType);
 
       resetDb();
       mockFetch.mockClear();
@@ -524,9 +514,9 @@ describe("startServer", () => {
     const id = insertTestServer({ owner_wallet: CALLER, provider_resource_id: "77777" });
     mockFetch.mockImplementationOnce(async (input: RequestInfo | URL, init?: RequestInit) => {
       const url = typeof input === "string" ? input : input instanceof Request ? input.url : (input as URL).toString();
-      if (url.includes("/servers/77777/actions/") && (init as RequestInit)?.method === "POST") {
+      if (url.includes("/droplets/77777/actions") && (init as RequestInit)?.method === "POST") {
         return new Response(
-          JSON.stringify({ error: { code: "server_error", message: "Action failed" } }),
+          JSON.stringify({ id: "server_error", message: "Action failed" }),
           { status: 500, headers: { "Content-Type": "application/json" } },
         );
       }
@@ -613,7 +603,7 @@ describe("registerSshKey", () => {
     expect(result.data.id).toMatch(/^sk_[0-9a-f]{8}$/);
     expect(result.data.fingerprint).toBe("ab:cd:ef:00:11:22:33:44");
     expect(result.data.owner_wallet).toBe(CALLER);
-    expect(result.data.provider).toBe("hetzner");
+    expect(result.data.provider).toBe("digitalocean");
     expect(result.data.provider_id).toBe("55555");
   });
 

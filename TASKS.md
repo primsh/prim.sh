@@ -30,6 +30,7 @@
 | 45 | D-5 | Build domain.sh: mail-setup convenience endpoint (MX+SPF+DMARC+DKIM in one call) | packages/domain | D-1 | pending |
 | 46 | D-6 | Build domain.sh: verification endpoint (NS + record propagation checks) | packages/domain | D-1 | pending |
 | 47 | D-7 | Build domain.sh: auto-configure NS to Cloudflare after registration | packages/domain | D-3 | pending |
+| 48 | D-8 | Build domain.sh: batch record operations (atomic multi-record create/update/delete) | packages/domain | D-2 | pending |
 | 24 | R-1 | Deploy Stalwart (Docker on DigitalOcean Droplet) | relay/ | DO account | done |
 | 25 | R-2 | Configure Stalwart: domain, DKIM, SPF, DMARC, ACME TLS | relay/ | R-1, D-1 | done |
 | 26 | R-3 | Build relay.sh wrapper: mailbox creation (Stalwart REST API) | relay/ | R-2 | done |
@@ -49,6 +50,7 @@
 | 38 | SP-5 | Integrate x402 middleware | spawn/ | SP-2, P-4 | done |
 | 39 | B-1 | Batch 1: parallel agent team execution (W-2 + R-1 + SP-1) | cross-cutting | W-2 plan, R-1 plan, SP-1 plan | done |
 | 40 | SP-6 | Abstract provider layer + multi-cloud support (DO, AWS, GCP, Hetzner) | spawn/ | SP-4 | done |
+| 41 | SP-7 | DigitalOcean provider implementation + set as default | spawn/ | SP-6 | done |
 | 1 | ST-1 | Build store.sh: bucket CRUD via Cloudflare R2 API (create, list, get, delete; ownership; SQLite) | packages/store | P-4 | done |
 | 2 | ST-2 | Build store.sh: object CRUD via S3-compatible API (put, get, delete, list within owned buckets) | packages/store | ST-1 | done |
 | 3 | ST-3 | Build store.sh: storage quota + usage tracking (per-bucket limits, metering) | packages/store | ST-1 | done |
@@ -84,7 +86,7 @@
 - R-2: `tasks/completed/r-2-stalwart-domain-tls-2026-02-24.md`
 - R-3: `tasks/completed/r-3-mailbox-creation-stalwart-rest.md`
 - R-4: `tasks/completed/r-4-jmap-auth-session-bootstrap.md`
-- D-2→D-7: `tasks/active/d-2-domain-sh-rename-search-2026-02-25.md`
+- D-2→D-8: `tasks/active/d-2-domain-sh-rename-search-2026-02-25.md`
 - ST-1: `tasks/completed/st-1-bucket-crud-cloudflare-r2.md`
 - R-5: `tasks/completed/r-5-read-messages-jmap-2026-02-25.md`
 - ST-4: `tasks/completed/st-4-x402-middleware-store.md`
@@ -260,6 +262,7 @@ ERC-8004 uses CAIP-10 wallet addresses as root identity. DIDs layer on top non-b
 - ST-5 — testnet integration: getNetworkConfig() in x402-middleware, PRIM_NETWORK/PRIM_PAY_TO env vars, wallet+store wired to Sepolia, integration test script, 496 tests pass (2026-02-25)
 - R-10 — relay.sh x402 middleware: all 16 paid endpoints gated, health check + ingest webhook free, per-route pricing (2026-02-25)
 - R-11 — relay.sh live smoke test: 11 tests against live Stalwart (create → list → get → webhook → send → read → ingest → delete), JMAP over HTTPS tunnel (2026-02-25)
+- SP-7 — spawn.sh DigitalOcean provider: CloudProvider impl wrapping DO API v2, image translation, tag-based ownership, default provider switched from Hetzner to DO, 55 tests (2026-02-25)
 
 ### R-2 completion details (2026-02-25)
 
