@@ -53,6 +53,11 @@
 - W-4: `tasks/completed/w-4-send-usdc-2026-02-24.md`
 - W-5: `tasks/completed/w-5-x402-client-2026-02-24.md`
 - SP-2: `tasks/completed/sp-2-vm-provisioning-2026-02-24.md`
+- W-6: `tasks/active/w-6-funding-request-2026-02-24.md`
+- W-7: `tasks/active/w-7-policy-engine-2026-02-24.md`
+- W-8: `tasks/active/w-8-execution-journal-2026-02-24.md`
+- W-9: `tasks/active/w-9-circuit-breaker-2026-02-24.md`
+- SP-3/SP-4: `tasks/active/sp-3-sp-4-lifecycle-ssh-2026-02-24.md`
 - Umbrella: `tasks/active/batch-execution-umbrella-2026-02-24.md`
 
 ## Backlog — Future Primitives
