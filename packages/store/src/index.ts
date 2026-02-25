@@ -6,12 +6,19 @@ import type {
   CreateBucketResponse,
   BucketResponse,
   BucketListResponse,
+  PutObjectResponse,
+  ObjectListResponse,
+  DeleteObjectResponse,
 } from "./api.ts";
 import {
   createBucket,
   listBuckets,
   getBucket,
   deleteBucket,
+  putObject,
+  getObject,
+  deleteObject,
+  listObjects,
 } from "./service.ts";
 
 const PAY_TO_ADDRESS = "0x0000000000000000000000000000000000000000";
@@ -22,6 +29,10 @@ const STORE_ROUTES = {
   "GET /v1/buckets": "$0.001",
   "GET /v1/buckets/[id]": "$0.001",
   "DELETE /v1/buckets/[id]": "$0.01",
+  "PUT /v1/buckets/[id]/objects/*": "$0.001",
+  "GET /v1/buckets/[id]/objects": "$0.001",
+  "GET /v1/buckets/[id]/objects/*": "$0.001",
+  "DELETE /v1/buckets/[id]/objects/*": "$0.001",
 } as const;
 
 function forbidden(message: string): ApiError {
@@ -119,6 +130,86 @@ app.delete("/v1/buckets/:id", async (c) => {
     return c.json(r2Error(result.message), result.status as 502);
   }
   return c.json(result.data, 200);
+});
+
+// ─── Object routes ──────────────────────────────────────────────────────
+
+// PUT /v1/buckets/:id/objects/* — Upload object
+app.put("/v1/buckets/:id/objects/*", async (c) => {
+  const caller = c.get("walletAddress");
+  if (!caller) return c.json(forbidden("No wallet address in payment"), 403);
+
+  const key = decodeURIComponent(c.req.param("*") ?? "");
+  const contentType = c.req.header("Content-Type");
+  const body = c.req.raw.body;
+  if (!body) return c.json(invalidRequest("Request body is required"), 400);
+
+  const result = await putObject(c.req.param("id"), key, body, contentType, caller);
+  if (!result.ok) {
+    if (result.code === "invalid_request") return c.json(invalidRequest(result.message), 400);
+    if (result.status === 404) return c.json(notFound(result.message), 404);
+    if (result.status === 403) return c.json(forbidden(result.message), 403);
+    return c.json(r2Error(result.message), result.status as 502);
+  }
+  return c.json(result.data as PutObjectResponse, 200);
+});
+
+// GET /v1/buckets/:id/objects — List objects (must register before wildcard)
+app.get("/v1/buckets/:id/objects", async (c) => {
+  const caller = c.get("walletAddress");
+  if (!caller) return c.json(forbidden("No wallet address in payment"), 403);
+
+  const prefix = c.req.query("prefix") || undefined;
+  const limit = Math.min(Number(c.req.query("limit")) || 100, 1000);
+  const cursor = c.req.query("cursor") || undefined;
+
+  const result = await listObjects(c.req.param("id"), caller, prefix, limit, cursor);
+  if (!result.ok) {
+    if (result.status === 404) return c.json(notFound(result.message), 404);
+    if (result.status === 403) return c.json(forbidden(result.message), 403);
+    return c.json(r2Error(result.message), result.status as 502);
+  }
+  return c.json(result.data as ObjectListResponse, 200);
+});
+
+// GET /v1/buckets/:id/objects/* — Download object (streaming)
+app.get("/v1/buckets/:id/objects/*", async (c) => {
+  const caller = c.get("walletAddress");
+  if (!caller) return c.json(forbidden("No wallet address in payment"), 403);
+
+  const key = decodeURIComponent(c.req.param("*") ?? "");
+
+  const result = await getObject(c.req.param("id"), key, caller);
+  if (!result.ok) {
+    if (result.status === 404) return c.json(notFound(result.message), 404);
+    if (result.status === 403) return c.json(forbidden(result.message), 403);
+    return c.json(r2Error(result.message), result.status as 502);
+  }
+
+  return new Response(result.data.body, {
+    status: 200,
+    headers: {
+      "Content-Type": result.data.contentType,
+      "Content-Length": String(result.data.contentLength),
+      ETag: result.data.etag,
+    },
+  });
+});
+
+// DELETE /v1/buckets/:id/objects/* — Delete object
+app.delete("/v1/buckets/:id/objects/*", async (c) => {
+  const caller = c.get("walletAddress");
+  if (!caller) return c.json(forbidden("No wallet address in payment"), 403);
+
+  const key = decodeURIComponent(c.req.param("*") ?? "");
+
+  const result = await deleteObject(c.req.param("id"), key, caller);
+  if (!result.ok) {
+    if (result.status === 404) return c.json(notFound(result.message), 404);
+    if (result.status === 403) return c.json(forbidden(result.message), 403);
+    return c.json(r2Error(result.message), result.status as 502);
+  }
+  return c.json(result.data as DeleteObjectResponse, 200);
 });
 
 export default app;

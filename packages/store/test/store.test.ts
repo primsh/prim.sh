@@ -13,6 +13,8 @@ import { describe, expect, it, beforeEach, afterEach, vi } from "vitest";
 process.env.STORE_DB_PATH = ":memory:";
 process.env.CLOUDFLARE_API_TOKEN = "test-cf-token";
 process.env.CLOUDFLARE_ACCOUNT_ID = "test-cf-account";
+process.env.R2_ACCESS_KEY_ID = "test-r2-key";
+process.env.R2_SECRET_ACCESS_KEY = "test-r2-secret";
 
 // ─── Cloudflare API mock helpers ─────────────────────────────────────────
 
@@ -69,6 +71,63 @@ const mockFetch = vi.fn(async (input: RequestInfo | URL, _init?: RequestInit) =>
     );
   }
 
+  // ─── S3-compatible API mocks ──────────────────────────────────────────
+  const s3Match = url.match(/^https:\/\/test-cf-account\.r2\.cloudflarestorage\.com\/([^/?]+)(\/(.+?))?(\?.*)?$/);
+  if (s3Match) {
+    const _bucketName = s3Match[1];
+    const objectKey = s3Match[3];
+
+    // S3: PUT /{bucket}/{key} — upload object
+    if (method === "PUT" && objectKey) {
+      return new Response(null, {
+        status: 200,
+        headers: { ETag: '"abc123etag"', "Content-Length": "42" },
+      });
+    }
+
+    // S3: GET /{bucket}?list-type=2 — list objects
+    if (method === "GET" && !objectKey && url.includes("list-type=2")) {
+      const prefix = new URL(url).searchParams.get("prefix") ?? "";
+      const xml = `<?xml version="1.0" encoding="UTF-8"?>
+<ListBucketResult>
+  <IsTruncated>false</IsTruncated>
+  <Contents>
+    <Key>${prefix}file1.txt</Key>
+    <Size>100</Size>
+    <ETag>"etag1"</ETag>
+    <LastModified>2024-01-01T00:00:00Z</LastModified>
+  </Contents>
+  <Contents>
+    <Key>${prefix}file2.txt</Key>
+    <Size>200</Size>
+    <ETag>"etag2"</ETag>
+    <LastModified>2024-01-02T00:00:00Z</LastModified>
+  </Contents>
+</ListBucketResult>`;
+      return new Response(xml, {
+        status: 200,
+        headers: { "Content-Type": "application/xml" },
+      });
+    }
+
+    // S3: GET /{bucket}/{key} — download object
+    if (method === "GET" && objectKey) {
+      return new Response("file-content-here", {
+        status: 200,
+        headers: {
+          "Content-Type": "text/plain",
+          "Content-Length": "17",
+          ETag: '"abc123etag"',
+        },
+      });
+    }
+
+    // S3: DELETE /{bucket}/{key} — delete object
+    if (method === "DELETE" && objectKey) {
+      return new Response(null, { status: 204 });
+    }
+  }
+
   return new Response(JSON.stringify({ ok: true }), {
     status: 200,
     headers: { "Content-Type": "application/json" },
@@ -85,6 +144,11 @@ import {
   getBucket,
   deleteBucket,
   isValidBucketName,
+  putObject,
+  getObject,
+  deleteObject,
+  listObjects,
+  isValidObjectKey,
 } from "../src/service.ts";
 
 // ─── Fixtures ────────────────────────────────────────────────────────────
@@ -344,6 +408,201 @@ describe("store.sh", () => {
       expect(result.ok).toBe(false);
       if (result.ok) return;
       expect(result.code).toBe("r2_error");
+    });
+  });
+
+  // ─── Object key validation ──────────────────────────────────────────
+
+  describe("object key validation", () => {
+    it("valid keys pass", () => {
+      expect(isValidObjectKey("file.txt")).toBe(true);
+      expect(isValidObjectKey("folder/file.txt")).toBe(true);
+      expect(isValidObjectKey("a")).toBe(true);
+    });
+
+    it("empty key fails", () => {
+      expect(isValidObjectKey("")).toBe(false);
+    });
+
+    it("leading slash fails", () => {
+      expect(isValidObjectKey("/leading-slash")).toBe(false);
+    });
+
+    it("key > 1024 chars fails", () => {
+      expect(isValidObjectKey("a".repeat(1025))).toBe(false);
+    });
+
+    it("key exactly 1024 chars passes", () => {
+      expect(isValidObjectKey("a".repeat(1024))).toBe(true);
+    });
+  });
+
+  // ─── Object CRUD ──────────────────────────────────────────────────────
+
+  describe("objects", () => {
+    async function createTestBucket(): Promise<string> {
+      const result = await createBucket({ name: `obj-test-${Date.now()}` }, CALLER);
+      if (!result.ok) throw new Error("Setup failed: could not create bucket");
+      return result.data.bucket.id;
+    }
+
+    it("putObject — upload succeeds", async () => {
+      const bucketId = await createTestBucket();
+      const result = await putObject(bucketId, "hello.txt", "hello world", "text/plain", CALLER);
+      expect(result.ok).toBe(true);
+      if (!result.ok) return;
+      expect(result.data.key).toBe("hello.txt");
+      expect(result.data.etag).toBe('"abc123etag"');
+    });
+
+    it("putObject — nested key with slashes", async () => {
+      const bucketId = await createTestBucket();
+      const result = await putObject(bucketId, "folder/sub/file.txt", "data", "text/plain", CALLER);
+      expect(result.ok).toBe(true);
+      if (!result.ok) return;
+      expect(result.data.key).toBe("folder/sub/file.txt");
+    });
+
+    it("putObject — invalid key (empty) returns invalid_request", async () => {
+      const bucketId = await createTestBucket();
+      const result = await putObject(bucketId, "", "data", "text/plain", CALLER);
+      expect(result.ok).toBe(false);
+      if (result.ok) return;
+      expect(result.code).toBe("invalid_request");
+    });
+
+    it("putObject — invalid key (leading slash) returns invalid_request", async () => {
+      const bucketId = await createTestBucket();
+      const result = await putObject(bucketId, "/bad-key", "data", "text/plain", CALLER);
+      expect(result.ok).toBe(false);
+      if (result.ok) return;
+      expect(result.code).toBe("invalid_request");
+    });
+
+    it("putObject — invalid key (too long) returns invalid_request", async () => {
+      const bucketId = await createTestBucket();
+      const result = await putObject(bucketId, "a".repeat(1025), "data", "text/plain", CALLER);
+      expect(result.ok).toBe(false);
+      if (result.ok) return;
+      expect(result.code).toBe("invalid_request");
+    });
+
+    it("putObject — non-owner gets 403", async () => {
+      const bucketId = await createTestBucket();
+      const result = await putObject(bucketId, "hello.txt", "data", "text/plain", OTHER);
+      expect(result.ok).toBe(false);
+      if (result.ok) return;
+      expect(result.status).toBe(403);
+    });
+
+    it("putObject — nonexistent bucket returns 404", async () => {
+      const result = await putObject("b_nonexist", "hello.txt", "data", "text/plain", CALLER);
+      expect(result.ok).toBe(false);
+      if (result.ok) return;
+      expect(result.status).toBe(404);
+    });
+
+    it("getObject — download succeeds with correct content-type", async () => {
+      const bucketId = await createTestBucket();
+      const result = await getObject(bucketId, "hello.txt", CALLER);
+      expect(result.ok).toBe(true);
+      if (!result.ok) return;
+      expect(result.data.contentType).toBe("text/plain");
+      expect(result.data.etag).toBe('"abc123etag"');
+    });
+
+    it("getObject — non-owner gets 403", async () => {
+      const bucketId = await createTestBucket();
+      const result = await getObject(bucketId, "hello.txt", OTHER);
+      expect(result.ok).toBe(false);
+      if (result.ok) return;
+      expect(result.status).toBe(403);
+    });
+
+    it("getObject — nonexistent key returns 404", async () => {
+      const bucketId = await createTestBucket();
+      mockFetch.mockImplementationOnce(async () => {
+        return new Response("<Error><Code>NoSuchKey</Code><Message>The specified key does not exist.</Message></Error>", {
+          status: 404,
+          headers: { "Content-Type": "application/xml" },
+        });
+      });
+      const result = await getObject(bucketId, "missing.txt", CALLER);
+      expect(result.ok).toBe(false);
+      if (result.ok) return;
+      expect(result.status).toBe(404);
+      expect(result.code).toBe("not_found");
+    });
+
+    it("deleteObject — owner can delete", async () => {
+      const bucketId = await createTestBucket();
+      const result = await deleteObject(bucketId, "hello.txt", CALLER);
+      expect(result.ok).toBe(true);
+      if (!result.ok) return;
+      expect(result.data.status).toBe("deleted");
+    });
+
+    it("deleteObject — non-owner gets 403", async () => {
+      const bucketId = await createTestBucket();
+      const result = await deleteObject(bucketId, "hello.txt", OTHER);
+      expect(result.ok).toBe(false);
+      if (result.ok) return;
+      expect(result.status).toBe(403);
+    });
+
+    it("deleteObject — nonexistent bucket returns 404", async () => {
+      const result = await deleteObject("b_nonexist", "hello.txt", CALLER);
+      expect(result.ok).toBe(false);
+      if (result.ok) return;
+      expect(result.status).toBe(404);
+    });
+
+    it("deleteObject — S3 error propagation", async () => {
+      const bucketId = await createTestBucket();
+      mockFetch.mockImplementationOnce(async () => {
+        return new Response("<Error><Code>AccessDenied</Code><Message>Access Denied</Message></Error>", {
+          status: 403,
+          headers: { "Content-Type": "application/xml" },
+        });
+      });
+      const result = await deleteObject(bucketId, "hello.txt", CALLER);
+      expect(result.ok).toBe(false);
+      if (result.ok) return;
+      expect(result.code).toBe("forbidden");
+    });
+
+    it("listObjects — returns objects for bucket", async () => {
+      const bucketId = await createTestBucket();
+      const result = await listObjects(bucketId, CALLER);
+      expect(result.ok).toBe(true);
+      if (!result.ok) return;
+      expect(result.data.objects).toHaveLength(2);
+      expect(result.data.objects[0].key).toBe("file1.txt");
+      expect(result.data.objects[1].key).toBe("file2.txt");
+    });
+
+    it("listObjects — with prefix filter", async () => {
+      const bucketId = await createTestBucket();
+      const result = await listObjects(bucketId, CALLER, "docs/");
+      expect(result.ok).toBe(true);
+      if (!result.ok) return;
+      expect(result.data.meta.prefix).toBe("docs/");
+    });
+
+    it("listObjects — non-owner gets 403", async () => {
+      const bucketId = await createTestBucket();
+      const result = await listObjects(bucketId, OTHER);
+      expect(result.ok).toBe(false);
+      if (result.ok) return;
+      expect(result.status).toBe(403);
+    });
+
+    it("listObjects — pagination cursor", async () => {
+      const bucketId = await createTestBucket();
+      const result = await listObjects(bucketId, CALLER, undefined, 10, "some-cursor");
+      expect(result.ok).toBe(true);
+      if (!result.ok) return;
+      expect(result.data.is_truncated).toBe(false);
     });
   });
 

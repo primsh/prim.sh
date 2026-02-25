@@ -12,11 +12,20 @@ import {
   createBucket as cfCreateBucket,
   deleteBucket as cfDeleteBucket,
 } from "./cloudflare.ts";
+import {
+  putObject as s3PutObject,
+  getObject as s3GetObject,
+  deleteObject as s3DeleteObject,
+  listObjects as s3ListObjects,
+} from "./s3.ts";
 import type {
   BucketResponse,
   BucketListResponse,
   CreateBucketRequest,
   CreateBucketResponse,
+  PutObjectResponse,
+  DeleteObjectResponse,
+  ObjectListResponse,
 } from "./api.ts";
 import type { BucketRow } from "./db.ts";
 
@@ -63,6 +72,15 @@ export function isValidBucketName(name: string): boolean {
   if (!name || name.length < 3 || name.length > 63) return false;
   if (!/^[a-z0-9][a-z0-9-]*[a-z0-9]$/.test(name) && !/^[a-z0-9]{3}$/.test(name)) return false;
   if (name.includes("--")) return false;
+  return true;
+}
+
+// ─── Object key validation ───────────────────────────────────────────────
+
+export function isValidObjectKey(key: string): boolean {
+  if (key.length === 0 || key.length > 1024) return false;
+  if (key.includes("\0")) return false;
+  if (key.startsWith("/")) return false;
   return true;
 }
 
@@ -158,4 +176,128 @@ export async function deleteBucket(
   deleteBucketRow(bucketId);
 
   return { ok: true, data: { status: "deleted" } };
+}
+
+// ─── Object service ─────────────────────────────────────────────────────
+
+export async function putObject(
+  bucketId: string,
+  key: string,
+  body: ReadableStream | ArrayBuffer | string,
+  contentType: string | undefined,
+  callerWallet: string,
+): Promise<ServiceResult<PutObjectResponse>> {
+  const check = checkBucketOwnership(bucketId, callerWallet);
+  if (!check.ok) return check;
+
+  if (!isValidObjectKey(key)) {
+    return {
+      ok: false,
+      status: 400,
+      code: "invalid_request",
+      message: "Invalid object key. Must be 1-1024 chars, no null bytes, no leading slash.",
+    };
+  }
+
+  try {
+    const result = await s3PutObject(check.row.cf_name, key, body, contentType);
+    return { ok: true, data: { key, size: result.size, etag: result.etag } };
+  } catch (err) {
+    if (err instanceof CloudflareError) {
+      return { ok: false, status: err.statusCode, code: err.code, message: err.message };
+    }
+    throw err;
+  }
+}
+
+export async function getObject(
+  bucketId: string,
+  key: string,
+  callerWallet: string,
+): Promise<ServiceResult<{ body: ReadableStream; contentType: string; contentLength: number; etag: string }>> {
+  const check = checkBucketOwnership(bucketId, callerWallet);
+  if (!check.ok) return check;
+
+  if (!isValidObjectKey(key)) {
+    return {
+      ok: false,
+      status: 400,
+      code: "invalid_request",
+      message: "Invalid object key. Must be 1-1024 chars, no null bytes, no leading slash.",
+    };
+  }
+
+  try {
+    const result = await s3GetObject(check.row.cf_name, key);
+    return { ok: true, data: result };
+  } catch (err) {
+    if (err instanceof CloudflareError) {
+      return { ok: false, status: err.statusCode, code: err.code, message: err.message };
+    }
+    throw err;
+  }
+}
+
+export async function deleteObject(
+  bucketId: string,
+  key: string,
+  callerWallet: string,
+): Promise<ServiceResult<DeleteObjectResponse>> {
+  const check = checkBucketOwnership(bucketId, callerWallet);
+  if (!check.ok) return check;
+
+  if (!isValidObjectKey(key)) {
+    return {
+      ok: false,
+      status: 400,
+      code: "invalid_request",
+      message: "Invalid object key. Must be 1-1024 chars, no null bytes, no leading slash.",
+    };
+  }
+
+  try {
+    await s3DeleteObject(check.row.cf_name, key);
+    return { ok: true, data: { status: "deleted" } };
+  } catch (err) {
+    if (err instanceof CloudflareError) {
+      return { ok: false, status: err.statusCode, code: err.code, message: err.message };
+    }
+    throw err;
+  }
+}
+
+export async function listObjects(
+  bucketId: string,
+  callerWallet: string,
+  prefix?: string,
+  limit?: number,
+  cursor?: string,
+): Promise<ServiceResult<ObjectListResponse>> {
+  const check = checkBucketOwnership(bucketId, callerWallet);
+  if (!check.ok) return check;
+
+  const maxKeys = limit ?? 100;
+
+  try {
+    const result = await s3ListObjects(check.row.cf_name, prefix, maxKeys, cursor);
+    return {
+      ok: true,
+      data: {
+        objects: result.objects.map((o) => ({
+          key: o.key,
+          size: o.size,
+          etag: o.etag,
+          last_modified: o.lastModified,
+        })),
+        is_truncated: result.isTruncated,
+        next_cursor: result.nextToken,
+        meta: { prefix: prefix ?? null, limit: maxKeys },
+      },
+    };
+  } catch (err) {
+    if (err instanceof CloudflareError) {
+      return { ok: false, status: err.statusCode, code: err.code, message: err.message };
+    }
+    throw err;
+  }
 }

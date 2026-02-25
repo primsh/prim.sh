@@ -74,6 +74,9 @@ importers:
       '@agentstack/x402-middleware':
         specifier: workspace:*
         version: link:../x402-middleware
+      aws4fetch:
+        specifier: ^1.0.20
+        version: 1.0.20
       hono:
         specifier: ^4.4.7
         version: 4.12.2
@@ -585,6 +588,9 @@ packages:
 
   assertion-error@1.1.0:
     resolution: {integrity: sha512-jgsaNduz+ndvGyFt3uSuWqvy4lCnIJiovtouQN5JZHOKCS2QuhEdbcQHFhVksz2N2U9hXJo8odG7ETyWlEeuDw==}
+
+  aws4fetch@1.0.20:
+    resolution: {integrity: sha512-/djoAN709iY65ETD6LKCtyyEI04XIBP5xVvfmNxsEP0uJB5tyaGBztSryRr4HqMStr9R06PisQE7m9zDTXKu6g==}
 
   cac@6.7.14:
     resolution: {integrity: sha512-b6Ilus+c3RrdDk+JhLKUAQfzzgLEPy6wcXqS7f/xe1EETvsDP6GORG7SFuOs6cID5YkqchW/LXZbX5bc8j7ZcQ==}
@@ -1314,6 +1320,8 @@ snapshots:
   apg-js@4.4.0: {}
 
   assertion-error@1.1.0: {}
+
+  aws4fetch@1.0.20: {}
 
   cac@6.7.14: {}
 

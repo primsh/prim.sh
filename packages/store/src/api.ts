@@ -49,3 +49,32 @@ export interface BucketListResponse {
     total: number;
   };
 }
+
+// ─── Object types ─────────────────────────────────────────────────────────
+
+export interface ObjectResponse {
+  key: string;
+  size: number;
+  etag: string;
+  last_modified: string;
+}
+
+export interface ObjectListResponse {
+  objects: ObjectResponse[];
+  is_truncated: boolean;
+  next_cursor: string | null;
+  meta: {
+    prefix: string | null;
+    limit: number;
+  };
+}
+
+export interface PutObjectResponse {
+  key: string;
+  size: number;
+  etag: string;
+}
+
+export interface DeleteObjectResponse {
+  status: "deleted";
+}
