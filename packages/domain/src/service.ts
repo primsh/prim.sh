@@ -42,9 +42,11 @@ import type {
   MailSetupRequest,
   MailSetupResponse,
   MailSetupRecordResult,
+  VerifyResponse,
 } from "./api.ts";
 import type { ZoneRow, RecordRow } from "./db.ts";
 import { getRegistrar } from "./namesilo.ts";
+import { verifyNameservers, verifyRecords } from "./dns-verify.ts";
 
 // ─── Constants ───────────────────────────────────────────────────────────
 
@@ -704,6 +706,37 @@ export async function batchRecords(
       created: createdRows.map(rowToRecordResponse),
       updated: updatedRows.map(rowToRecordResponse),
       deleted: deleteRows.map(({ primId }) => ({ id: primId })),
+    },
+  };
+}
+
+// ─── Zone verification ────────────────────────────────────────────────────
+
+export async function verifyZone(
+  zoneId: string,
+  callerWallet: string,
+): Promise<ServiceResult<VerifyResponse>> {
+  const check = checkZoneOwnership(zoneId, callerWallet);
+  if (!check.ok) return check;
+
+  const expectedNs: string[] = JSON.parse(check.row.nameservers) as string[];
+  const [nsResult, records] = await Promise.all([
+    verifyNameservers(check.row.domain, expectedNs),
+    Promise.resolve(getRecordsByZone(zoneId)),
+  ]);
+
+  const recordResults = await verifyRecords(records, expectedNs);
+
+  const allPropagated =
+    nsResult.propagated && recordResults.every((r) => r.propagated);
+
+  return {
+    ok: true,
+    data: {
+      domain: check.row.domain,
+      nameservers: nsResult,
+      records: recordResults,
+      all_propagated: allPropagated,
     },
   };
 }

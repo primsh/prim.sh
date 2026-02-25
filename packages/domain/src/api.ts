@@ -147,6 +147,29 @@ export interface BatchRecordsResponse {
   deleted: { id: string }[];
 }
 
+// ─── Verify types ──────────────────────────────────────────────────────────
+
+export interface NsVerifyResult {
+  expected: string[];
+  actual: string[];
+  propagated: boolean;
+}
+
+export interface RecordVerifyResult {
+  type: RecordType;
+  name: string;
+  expected: string;
+  actual: string | null;
+  propagated: boolean;
+}
+
+export interface VerifyResponse {
+  domain: string;
+  nameservers: NsVerifyResult;
+  records: RecordVerifyResult[];
+  all_propagated: boolean;
+}
+
 // ─── Mail setup types ──────────────────────────────────────────────────────
 
 export interface DkimKey {

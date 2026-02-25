@@ -15,6 +15,7 @@ import type {
   BatchRecordsResponse,
   MailSetupRequest,
   MailSetupResponse,
+  VerifyResponse,
 } from "./api.ts";
 import {
   createZone,
@@ -29,6 +30,7 @@ import {
   searchDomains,
   batchRecords,
   mailSetup,
+  verifyZone,
 } from "./service.ts";
 
 const PAY_TO_ADDRESS = "0x0000000000000000000000000000000000000000";
@@ -40,6 +42,7 @@ const DOMAIN_ROUTES = {
   "GET /v1/zones": "$0.001",
   "GET /v1/zones/[id]": "$0.001",
   "DELETE /v1/zones/[id]": "$0.01",
+  "GET /v1/zones/[zone_id]/verify": "$0.001",
   "POST /v1/zones/[zone_id]/mail-setup": "$0.005",
   "POST /v1/zones/[zone_id]/records/batch": "$0.005",
   "POST /v1/zones/[zone_id]/records": "$0.001",
@@ -164,6 +167,19 @@ app.delete("/v1/zones/:id", async (c) => {
     return c.json(cloudflareError(result.message), result.status as 502);
   }
   return c.json(result.data, 200);
+});
+
+// GET /v1/zones/:zone_id/verify — Check DNS propagation (NS + all records)
+app.get("/v1/zones/:zone_id/verify", async (c) => {
+  const caller = c.get("walletAddress");
+  if (!caller) return c.json(forbidden("No wallet address in payment"), 403);
+
+  const result = await verifyZone(c.req.param("zone_id"), caller);
+  if (!result.ok) {
+    if (result.status === 404) return c.json(notFound(result.message), 404);
+    return c.json(forbidden(result.message), 403);
+  }
+  return c.json(result.data as VerifyResponse, 200);
 });
 
 // POST /v1/zones/:zone_id/mail-setup — Configure mail DNS records (MX+SPF+DMARC+DKIM)

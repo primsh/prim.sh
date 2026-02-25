@@ -7,7 +7,7 @@
  * IMPORTANT: env vars must be set before any module import that touches db/cloudflare.
  */
 
-import { describe, expect, it, beforeEach, afterEach, vi } from "vitest";
+import { describe, expect, it, beforeEach, afterEach, vi, type MockInstance } from "vitest";
 
 // Set env before imports
 process.env.DOMAIN_DB_PATH = ":memory:";
@@ -158,6 +158,25 @@ const mockFetch = vi.fn(async (input: RequestInfo | URL, _init?: RequestInit) =>
 
 vi.stubGlobal("fetch", mockFetch);
 
+// ─── DNS mock (node:dns/promises Resolver) ────────────────────────────────
+
+// Per-method return values, configurable per-test
+const dnsResolverMock = {
+  resolve4: vi.fn<() => Promise<string[]>>(),
+  resolve6: vi.fn<() => Promise<string[]>>(),
+  resolveCname: vi.fn<() => Promise<string[]>>(),
+  resolveMx: vi.fn<() => Promise<{ priority: number; exchange: string }[]>>(),
+  resolveTxt: vi.fn<() => Promise<string[][]>>(),
+  resolveNs: vi.fn<() => Promise<string[]>>(),
+  resolveSrv: vi.fn<() => Promise<{ name: string; port: number; priority: number; weight: number }[]>>(),
+  resolveCaa: vi.fn<() => Promise<unknown[]>>(),
+  setServers: vi.fn(),
+};
+
+vi.mock("node:dns/promises", () => ({
+  Resolver: vi.fn(() => dnsResolverMock),
+}));
+
 // Import after env + fetch stub
 import { resetDb, getZoneById, getRecordById, getRecordsByZone } from "../src/db.ts";
 import {
@@ -173,6 +192,7 @@ import {
   searchDomains,
   batchRecords,
   mailSetup,
+  verifyZone,
 } from "../src/service.ts";
 
 // ─── Fixtures ────────────────────────────────────────────────────────────
@@ -187,6 +207,8 @@ describe("domain.sh", () => {
     resetDb();
     mockFetch.mockClear();
     cfDnsRecordsMock = [];
+    // Reset DNS resolver mocks
+    Object.values(dnsResolverMock).forEach((m) => (m as MockInstance).mockReset());
   });
 
   afterEach(() => {
@@ -1000,6 +1022,226 @@ describe("domain.sh", () => {
       expect(result.ok).toBe(false);
       if (result.ok) return;
       expect(result.code).toBe("cloudflare_error");
+    });
+  });
+
+  // ─── Zone verification ────────────────────────────────────────────────────
+
+  describe("zone verify", () => {
+    let zoneId: string;
+
+    beforeEach(async () => {
+      const result = await createZone({ domain: "example.com" }, CALLER);
+      if (!result.ok) throw new Error("Failed to create test zone");
+      zoneId = result.data.zone.id;
+      // Default DNS mock: NS resolves correctly, resolve4 returns an IP (for NS IP lookups)
+      dnsResolverMock.resolveNs.mockResolvedValue(["ns1.cloudflare.com", "ns2.cloudflare.com"]);
+      dnsResolverMock.resolve4.mockResolvedValue(["1.1.1.1"]);
+    });
+
+    it("non-owner gets 403", async () => {
+      const result = await verifyZone(zoneId, OTHER);
+      expect(result.ok).toBe(false);
+      if (result.ok) return;
+      expect(result.status).toBe(403);
+    });
+
+    it("nonexistent zone returns 404", async () => {
+      const result = await verifyZone("z_nonexistent", CALLER);
+      expect(result.ok).toBe(false);
+      if (result.ok) return;
+      expect(result.status).toBe(404);
+    });
+
+    it("NS propagated — exact match (same order)", async () => {
+      dnsResolverMock.resolveNs.mockResolvedValue(["ns1.cloudflare.com", "ns2.cloudflare.com"]);
+      const result = await verifyZone(zoneId, CALLER);
+      expect(result.ok).toBe(true);
+      if (!result.ok) return;
+      expect(result.data.nameservers.propagated).toBe(true);
+    });
+
+    it("NS propagated — order-independent match", async () => {
+      dnsResolverMock.resolveNs.mockResolvedValue(["ns2.cloudflare.com", "ns1.cloudflare.com"]);
+      const result = await verifyZone(zoneId, CALLER);
+      expect(result.ok).toBe(true);
+      if (!result.ok) return;
+      expect(result.data.nameservers.propagated).toBe(true);
+    });
+
+    it("NS not propagated — different NS returned", async () => {
+      dnsResolverMock.resolveNs.mockResolvedValue(["ns1.registrar.com", "ns2.registrar.com"]);
+      const result = await verifyZone(zoneId, CALLER);
+      expect(result.ok).toBe(true);
+      if (!result.ok) return;
+      expect(result.data.nameservers.propagated).toBe(false);
+    });
+
+    it("NS ETIMEOUT → actual is [error:timeout], propagated false", async () => {
+      const err = Object.assign(new Error("timeout"), { code: "ETIMEOUT" });
+      dnsResolverMock.resolveNs.mockRejectedValue(err);
+      const result = await verifyZone(zoneId, CALLER);
+      expect(result.ok).toBe(true);
+      if (!result.ok) return;
+      expect(result.data.nameservers.propagated).toBe(false);
+      expect(result.data.nameservers.actual).toEqual(["error:timeout"]);
+    });
+
+    it("zone with no records returns empty records array", async () => {
+      const result = await verifyZone(zoneId, CALLER);
+      expect(result.ok).toBe(true);
+      if (!result.ok) return;
+      expect(result.data.records).toHaveLength(0);
+    });
+
+    it("all_propagated true when NS and all records propagated", async () => {
+      await createRecord(zoneId, { type: "A", name: "example.com", content: "1.2.3.4" }, CALLER);
+      dnsResolverMock.resolveNs.mockResolvedValue(["ns1.cloudflare.com", "ns2.cloudflare.com"]);
+      dnsResolverMock.resolve4
+        .mockResolvedValueOnce(["1.1.1.1"]) // ns1 IP
+        .mockResolvedValueOnce(["1.0.0.1"]) // ns2 IP
+        .mockResolvedValueOnce(["1.2.3.4"]); // A record
+      const result = await verifyZone(zoneId, CALLER);
+      expect(result.ok).toBe(true);
+      if (!result.ok) return;
+      expect(result.data.all_propagated).toBe(true);
+    });
+
+    it("all_propagated false when NS propagated but record is not", async () => {
+      await createRecord(zoneId, { type: "A", name: "example.com", content: "1.2.3.4" }, CALLER);
+      dnsResolverMock.resolve4
+        .mockResolvedValueOnce(["1.1.1.1"]) // ns1 IP
+        .mockResolvedValueOnce(["1.0.0.1"]) // ns2 IP
+        .mockResolvedValueOnce(["9.9.9.9"]); // A record — wrong
+      const result = await verifyZone(zoneId, CALLER);
+      expect(result.ok).toBe(true);
+      if (!result.ok) return;
+      expect(result.data.all_propagated).toBe(false);
+    });
+
+    it("A record propagated — content in resolve4 results", async () => {
+      await createRecord(zoneId, { type: "A", name: "example.com", content: "1.2.3.4" }, CALLER);
+      dnsResolverMock.resolve4
+        .mockResolvedValueOnce(["1.1.1.1"])
+        .mockResolvedValueOnce(["1.0.0.1"])
+        .mockResolvedValueOnce(["1.2.3.4"]);
+      const result = await verifyZone(zoneId, CALLER);
+      expect(result.ok).toBe(true);
+      if (!result.ok) return;
+      expect(result.data.records[0].propagated).toBe(true);
+      expect(result.data.records[0].actual).toBe("1.2.3.4");
+    });
+
+    it("A record not propagated — wrong IP returned", async () => {
+      await createRecord(zoneId, { type: "A", name: "example.com", content: "1.2.3.4" }, CALLER);
+      dnsResolverMock.resolve4
+        .mockResolvedValueOnce(["1.1.1.1"])
+        .mockResolvedValueOnce(["1.0.0.1"])
+        .mockResolvedValueOnce(["9.9.9.9"]);
+      const result = await verifyZone(zoneId, CALLER);
+      expect(result.ok).toBe(true);
+      if (!result.ok) return;
+      expect(result.data.records[0].propagated).toBe(false);
+      expect(result.data.records[0].actual).toBe("9.9.9.9");
+    });
+
+    it("A record ENOTFOUND → actual null, propagated false", async () => {
+      await createRecord(zoneId, { type: "A", name: "example.com", content: "1.2.3.4" }, CALLER);
+      const err = Object.assign(new Error("not found"), { code: "ENOTFOUND" });
+      dnsResolverMock.resolve4
+        .mockResolvedValueOnce(["1.1.1.1"])
+        .mockResolvedValueOnce(["1.0.0.1"])
+        .mockRejectedValueOnce(err);
+      const result = await verifyZone(zoneId, CALLER);
+      expect(result.ok).toBe(true);
+      if (!result.ok) return;
+      expect(result.data.records[0].propagated).toBe(false);
+      expect(result.data.records[0].actual).toBeNull();
+    });
+
+    it("A record ETIMEOUT → actual error:timeout", async () => {
+      await createRecord(zoneId, { type: "A", name: "example.com", content: "1.2.3.4" }, CALLER);
+      const err = Object.assign(new Error("timeout"), { code: "ETIMEOUT" });
+      dnsResolverMock.resolve4
+        .mockResolvedValueOnce(["1.1.1.1"])
+        .mockResolvedValueOnce(["1.0.0.1"])
+        .mockRejectedValueOnce(err);
+      const result = await verifyZone(zoneId, CALLER);
+      expect(result.ok).toBe(true);
+      if (!result.ok) return;
+      expect(result.data.records[0].actual).toBe("error:timeout");
+    });
+
+    it("A record ECONNREFUSED → actual error:unreachable", async () => {
+      await createRecord(zoneId, { type: "A", name: "example.com", content: "1.2.3.4" }, CALLER);
+      const err = Object.assign(new Error("refused"), { code: "ECONNREFUSED" });
+      dnsResolverMock.resolve4
+        .mockResolvedValueOnce(["1.1.1.1"])
+        .mockResolvedValueOnce(["1.0.0.1"])
+        .mockRejectedValueOnce(err);
+      const result = await verifyZone(zoneId, CALLER);
+      expect(result.ok).toBe(true);
+      if (!result.ok) return;
+      expect(result.data.records[0].actual).toBe("error:unreachable");
+    });
+
+    it("TXT chunks joined before comparison — propagated true", async () => {
+      await createRecord(zoneId, { type: "TXT", name: "example.com", content: "v=spf1 a:mail.example.com -all" }, CALLER);
+      dnsResolverMock.resolve4
+        .mockResolvedValueOnce(["1.1.1.1"])
+        .mockResolvedValueOnce(["1.0.0.1"]);
+      dnsResolverMock.resolveTxt.mockResolvedValue([["v=spf1 ", "a:mail.example.com -all"]]);
+      const result = await verifyZone(zoneId, CALLER);
+      expect(result.ok).toBe(true);
+      if (!result.ok) return;
+      expect(result.data.records[0].propagated).toBe(true);
+    });
+
+    it("TXT different content → propagated false", async () => {
+      await createRecord(zoneId, { type: "TXT", name: "example.com", content: "v=spf1 a:mail.example.com -all" }, CALLER);
+      dnsResolverMock.resolve4
+        .mockResolvedValueOnce(["1.1.1.1"])
+        .mockResolvedValueOnce(["1.0.0.1"]);
+      dnsResolverMock.resolveTxt.mockResolvedValue([["v=spf1 old -all"]]);
+      const result = await verifyZone(zoneId, CALLER);
+      expect(result.ok).toBe(true);
+      if (!result.ok) return;
+      expect(result.data.records[0].propagated).toBe(false);
+    });
+
+    it("MX exchange + priority match → propagated true", async () => {
+      await createRecord(zoneId, { type: "MX", name: "example.com", content: "mail.example.com", priority: 10 }, CALLER);
+      dnsResolverMock.resolve4
+        .mockResolvedValueOnce(["1.1.1.1"])
+        .mockResolvedValueOnce(["1.0.0.1"]);
+      dnsResolverMock.resolveMx.mockResolvedValue([{ priority: 10, exchange: "mail.example.com" }]);
+      const result = await verifyZone(zoneId, CALLER);
+      expect(result.ok).toBe(true);
+      if (!result.ok) return;
+      expect(result.data.records[0].propagated).toBe(true);
+    });
+
+    it("MX exchange matches but priority differs → propagated false", async () => {
+      await createRecord(zoneId, { type: "MX", name: "example.com", content: "mail.example.com", priority: 10 }, CALLER);
+      dnsResolverMock.resolve4
+        .mockResolvedValueOnce(["1.1.1.1"])
+        .mockResolvedValueOnce(["1.0.0.1"]);
+      dnsResolverMock.resolveMx.mockResolvedValue([{ priority: 20, exchange: "mail.example.com" }]);
+      const result = await verifyZone(zoneId, CALLER);
+      expect(result.ok).toBe(true);
+      if (!result.ok) return;
+      expect(result.data.records[0].propagated).toBe(false);
+    });
+
+    it("NS IPs unresolvable → all records get error:ns_unresolvable", async () => {
+      await createRecord(zoneId, { type: "A", name: "example.com", content: "1.2.3.4" }, CALLER);
+      const err = Object.assign(new Error("ENOTFOUND"), { code: "ENOTFOUND" });
+      dnsResolverMock.resolve4.mockRejectedValue(err);
+      const result = await verifyZone(zoneId, CALLER);
+      expect(result.ok).toBe(true);
+      if (!result.ok) return;
+      expect(result.data.records[0].actual).toBe("error:ns_unresolvable");
+      expect(result.data.records[0].propagated).toBe(false);
     });
   });
 
