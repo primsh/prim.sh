@@ -129,14 +129,14 @@ app.get("/v1/servers", (c) => {
 });
 
 // GET /v1/servers/:id — Get server
-app.get("/v1/servers/:id", (c) => {
+app.get("/v1/servers/:id", async (c) => {
   const caller = c.get("walletAddress");
   if (!caller) {
     return c.json(forbidden("No wallet address in payment"), 403);
   }
 
   const id = c.req.param("id");
-  const result = getServer(id, caller);
+  const result = await getServer(id, caller);
 
   if (!result.ok) {
     if (result.status === 404) return c.json(notFound(result.message), 404);

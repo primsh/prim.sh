@@ -259,14 +259,32 @@ export function listServers(
   };
 }
 
-export function getServer(
+export async function getServer(
   serverId: string,
   callerWallet: string,
-): ServiceResult<ServerResponse> {
+): Promise<ServiceResult<ServerResponse>> {
   const check = checkServerOwnership(serverId, callerWallet);
   if (!check.ok) return check;
 
-  return { ok: true, data: rowToServerResponse(check.row) };
+  const { row } = check;
+
+  // Refresh status from provider if not in a terminal state
+  if (row.status !== "destroying" && row.status !== "deleted") {
+    try {
+      const provider = getProvider(row.provider);
+      const live = await provider.getServer(row.provider_resource_id);
+      if (live.status !== row.status || live.ipv4 !== row.public_ipv4) {
+        updateServerStatus(row.id, live.status, live.ipv4, live.ipv6);
+        row.status = live.status;
+        row.public_ipv4 = live.ipv4;
+        row.public_ipv6 = live.ipv6;
+      }
+    } catch {
+      // Provider unreachable — return stale DB data rather than failing
+    }
+  }
+
+  return { ok: true, data: rowToServerResponse(row) };
 }
 
 export async function deleteServer(

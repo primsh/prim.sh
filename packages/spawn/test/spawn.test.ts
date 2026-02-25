@@ -368,32 +368,32 @@ describe("listServers", () => {
 // ─── Get server tests ─────────────────────────────────────────────────────
 
 describe("getServer", () => {
-  it("get server (owner) — returns full server detail with provider fields", () => {
+  it("get server (owner) — returns full server detail with provider fields", async () => {
     const id = insertTestServer({ owner_wallet: CALLER });
 
-    const result = getServer(id, CALLER);
+    const result = await getServer(id, CALLER);
     expect(result.ok).toBe(true);
     if (!result.ok) return;
 
     expect(result.data.id).toBe(id);
     expect(result.data.owner_wallet).toBe(CALLER);
-    expect(result.data.status).toBe("running");
+    expect(result.data.status).toBe("new");
     expect(result.data.provider).toBe("digitalocean");
     expect(result.data.provider_id).toBe("12345");
   });
 
-  it("get server (not owner) — returns 403 forbidden", () => {
+  it("get server (not owner) — returns 403 forbidden", async () => {
     const id = insertTestServer({ owner_wallet: CALLER });
 
-    const result = getServer(id, OTHER);
+    const result = await getServer(id, OTHER);
     expect(result.ok).toBe(false);
     if (result.ok) return;
     expect(result.status).toBe(403);
     expect(result.code).toBe("forbidden");
   });
 
-  it("get server (not found) — returns 404 not_found", () => {
-    const result = getServer("srv_nonexist", CALLER);
+  it("get server (not found) — returns 404 not_found", async () => {
+    const result = await getServer("srv_nonexist", CALLER);
     expect(result.ok).toBe(false);
     if (result.ok) return;
     expect(result.status).toBe(404);
