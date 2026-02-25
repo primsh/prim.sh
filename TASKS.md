@@ -39,7 +39,7 @@
 | 30 | R-7 | Build relay.sh wrapper: incoming mail webhooks (Stalwart MTA Hooks) | relay/ | R-2 | done |
 | 31 | R-8 | Build relay.sh wrapper: mailbox TTL/expiry manager | relay/ | R-3 | done |
 | 32 | R-9 | Build relay.sh wrapper: custom domain support | relay/ | R-2, D-1 | done |
-| 33 | R-11 | Local smoke test: SSH tunnel to Stalwart, run relay.sh, test full flow (create mailbox → send → read → webhook) | relay/ | R-6 | pending |
+| 33 | R-11 | Local smoke test: SSH tunnel to Stalwart, run relay.sh, test full flow (create mailbox → send → read → webhook) | relay/ | R-6 | done |
 | 34 | R-10 | Integrate x402 middleware (all endpoints gated by payment) | relay/ | R-3, P-4 | done |
 | 34 | SP-1 | Write spawn.sh spec (Hetzner API wrapping, VM lifecycle, pricing) | specs/ | — | done |
 | 35 | SP-2 | Build spawn.sh: VM provisioning via Hetzner Cloud API | spawn/ | SP-1 | done |
@@ -93,6 +93,7 @@
 - TK-1/TK-2: implemented directly (no plan doc — plan provided in prompt)
 - TK-4: `tasks/active/tk-4-factory-contract-testnet.md`
 - ST-5: `tasks/completed/st-5-testnet-integration-testing.md`
+- R-11: `tasks/active/r-11-local-smoke-test.md`
 - Umbrella: `tasks/active/batch-execution-umbrella-2026-02-24.md`
 
 ## Backlog — Future Primitives
