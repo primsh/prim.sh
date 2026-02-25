@@ -220,6 +220,29 @@ export interface VerifyResponse {
   nameservers: NsVerifyResult;
   records: RecordVerifyResult[];
   all_propagated: boolean;
+  zone_status: ZoneStatus | null;
+}
+
+// ─── Registration status types ─────────────────────────────────────────────
+
+export interface RegistrationStatusResponse {
+  domain: string;
+  purchased: true;
+  zone_id: string | null;
+  zone_status: ZoneStatus | null;
+  ns_configured_at_registrar: boolean;
+  ns_propagated: boolean;
+  ns_expected: string[];
+  ns_actual: string[];
+  zone_active: boolean;
+  all_ready: boolean;
+  next_action: string | null;
+}
+
+export interface ActivateResponse {
+  zone_id: string;
+  status: ZoneStatus;
+  activation_requested: true;
 }
 
 // ─── Mail setup types ──────────────────────────────────────────────────────

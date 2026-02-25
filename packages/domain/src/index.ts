@@ -23,6 +23,8 @@ import type {
   RecoverRequest,
   RecoverResponse,
   ConfigureNsResponse,
+  RegistrationStatusResponse,
+  ActivateResponse,
 } from "./api.ts";
 import {
   createZone,
@@ -42,6 +44,8 @@ import {
   registerDomain,
   recoverRegistration,
   configureNs,
+  getRegistrationStatus,
+  activateZone,
   centsToAtomicUsdc,
 } from "./service.ts";
 import { getQuoteById } from "./db.ts";
@@ -55,10 +59,12 @@ const facilitatorClient = new HTTPFacilitatorClient({ url: FACILITATOR_URL });
 const DOMAIN_ROUTES = {
   "GET /v1/domains/search": "$0.001",
   "POST /v1/domains/quote": "$0.001",
+  "GET /v1/domains/[domain]/status": "$0.001",
   "POST /v1/zones": "$0.05",
   "GET /v1/zones": "$0.001",
   "GET /v1/zones/[id]": "$0.001",
   "DELETE /v1/zones/[id]": "$0.01",
+  "PUT /v1/zones/[zone_id]/activate": "$0.001",
   "GET /v1/zones/[zone_id]/verify": "$0.001",
   "POST /v1/zones/[zone_id]/mail-setup": "$0.005",
   "POST /v1/zones/[zone_id]/records/batch": "$0.005",
@@ -274,6 +280,21 @@ app.post("/v1/domains/:domain/configure-ns", async (c) => {
   return c.json(result.data as ConfigureNsResponse, 200);
 });
 
+// GET /v1/domains/:domain/status — Registration status (post-registration pipeline)
+app.get("/v1/domains/:domain/status", async (c) => {
+  const caller = c.get("walletAddress");
+  if (!caller) return c.json(forbidden("No wallet address in payment"), 403);
+
+  const domain = c.req.param("domain");
+  const result = await getRegistrationStatus(domain, caller);
+  if (!result.ok) {
+    if (result.status === 404) return c.json(notFound(result.message), 404);
+    if (result.status === 403) return c.json(forbidden(result.message), 403);
+    return c.json({ error: { code: result.code, message: result.message } }, result.status as 400);
+  }
+  return c.json(result.data as RegistrationStatusResponse, 200);
+});
+
 // GET /v1/domains/search — Check availability + pricing for domains
 app.get("/v1/domains/search", async (c) => {
   const query = c.req.query("query");
@@ -325,11 +346,11 @@ app.get("/v1/zones", (c) => {
 });
 
 // GET /v1/zones/:id — Get zone
-app.get("/v1/zones/:id", (c) => {
+app.get("/v1/zones/:id", async (c) => {
   const caller = c.get("walletAddress");
   if (!caller) return c.json(forbidden("No wallet address in payment"), 403);
 
-  const result = getZone(c.req.param("id"), caller);
+  const result = await getZone(c.req.param("id"), caller);
   if (!result.ok) {
     if (result.status === 404) return c.json(notFound(result.message), 404);
     return c.json(forbidden(result.message), 403);
@@ -362,6 +383,21 @@ app.get("/v1/zones/:zone_id/verify", async (c) => {
     return c.json(forbidden(result.message), 403);
   }
   return c.json(result.data as VerifyResponse, 200);
+});
+
+// PUT /v1/zones/:zone_id/activate — Request CF to immediately re-check NS activation
+app.put("/v1/zones/:zone_id/activate", async (c) => {
+  const caller = c.get("walletAddress");
+  if (!caller) return c.json(forbidden("No wallet address in payment"), 403);
+
+  const result = await activateZone(c.req.param("zone_id"), caller);
+  if (!result.ok) {
+    if (result.status === 404) return c.json(notFound(result.message), 404);
+    if (result.status === 403) return c.json(forbidden(result.message), 403);
+    if (result.status === 429) return c.json({ error: { code: result.code, message: result.message } }, 429);
+    return c.json(cloudflareError(result.message), result.status as 502);
+  }
+  return c.json(result.data as ActivateResponse, 200);
 });
 
 // POST /v1/zones/:zone_id/mail-setup — Configure mail DNS records (MX+SPF+DMARC+DKIM)

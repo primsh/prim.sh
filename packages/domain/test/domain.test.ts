@@ -73,10 +73,26 @@ const mockFetch = vi.fn(async (input: RequestInfo | URL, _init?: RequestInit) =>
     );
   }
 
+  // CF: GET /zones/:id — get zone (for status refresh)
+  if (url.match(/\/client\/v4\/zones\/[^/]+$/) && method === "GET") {
+    return new Response(
+      JSON.stringify({ success: true, errors: [], result: makeCfZone() }),
+      { status: 200, headers: { "Content-Type": "application/json" } },
+    );
+  }
+
   // CF: DELETE /zones/:id — delete zone
   if (url.match(/\/client\/v4\/zones\/[^/]+$/) && method === "DELETE") {
     return new Response(
       JSON.stringify({ success: true, errors: [], result: { id: "cf-zone-001" } }),
+      { status: 200, headers: { "Content-Type": "application/json" } },
+    );
+  }
+
+  // CF: PUT /zones/:id/activation_check — trigger activation check
+  if (url.match(/\/client\/v4\/zones\/[^/]+\/activation_check$/) && method === "PUT") {
+    return new Response(
+      JSON.stringify({ success: true, errors: [], result: makeCfZone({ status: "active" }) }),
       { status: 200, headers: { "Content-Type": "application/json" } },
     );
   }
@@ -218,12 +234,13 @@ vi.mock("node:dns/promises", () => ({
 }));
 
 // Import after env + fetch stub
-import { resetDb, getZoneById, getRecordById, getRecordsByZone, getRegistrationByDomain } from "../src/db.ts";
+import { resetDb, getZoneById, getRecordById, getRecordsByZone, getRegistrationByDomain, insertZone, insertRegistration, insertQuote } from "../src/db.ts";
 import {
   createZone,
   listZones,
   getZone,
   deleteZone,
+  refreshZoneStatus,
   createRecord,
   listRecords,
   getRecord,
@@ -237,6 +254,8 @@ import {
   registerDomain,
   recoverRegistration,
   configureNs,
+  getRegistrationStatus,
+  activateZone,
   usdToCents,
   centsToAtomicUsdc,
   centsToUsd,
@@ -345,7 +364,7 @@ describe("domain.sh", () => {
       const created = await createZone({ domain: "example.com" }, CALLER);
       if (!created.ok) return;
 
-      const result = getZone(created.data.zone.id, CALLER);
+      const result = await getZone(created.data.zone.id, CALLER);
       expect(result.ok).toBe(true);
       if (!result.ok) return;
       expect(result.data.domain).toBe("example.com");
@@ -355,14 +374,14 @@ describe("domain.sh", () => {
       const created = await createZone({ domain: "example.com" }, CALLER);
       if (!created.ok) return;
 
-      const result = getZone(created.data.zone.id, OTHER);
+      const result = await getZone(created.data.zone.id, OTHER);
       expect(result.ok).toBe(false);
       if (result.ok) return;
       expect(result.status).toBe(403);
     });
 
-    it("get zone — nonexistent returns 404", () => {
-      const result = getZone("z_nonexist", CALLER);
+    it("get zone — nonexistent returns 404", async () => {
+      const result = await getZone("z_nonexist", CALLER);
       expect(result.ok).toBe(false);
       if (result.ok) return;
       expect(result.status).toBe(404);
@@ -1651,6 +1670,430 @@ describe("domain.sh", () => {
       expect(result.ok).toBe(false);
       if (result.ok) return;
       expect(result.status).toBe(404);
+    });
+  });
+
+  // ─── Zone status refresh ──────────────────────────────────────────────────
+
+  describe("zone status refresh (getZone auto-refresh)", () => {
+    it("pending zone: CF returns active → getZone returns active, DB updated", async () => {
+      const created = await createZone({ domain: "example.com" }, CALLER);
+      if (!created.ok) throw new Error("setup failed");
+      const zoneId = created.data.zone.id;
+
+      // Mock CF GET /zones/:id to return "active"
+      mockFetch.mockImplementationOnce(async () =>
+        new Response(
+          JSON.stringify({ success: true, errors: [], result: makeCfZone({ status: "active" }) }),
+          { status: 200, headers: { "Content-Type": "application/json" } },
+        ),
+      );
+
+      const result = await getZone(zoneId, CALLER);
+      expect(result.ok).toBe(true);
+      if (!result.ok) return;
+      expect(result.data.status).toBe("active");
+
+      // DB updated
+      const row = getZoneById(zoneId);
+      expect(row?.status).toBe("active");
+    });
+
+    it("active zone: CF is NOT called", async () => {
+      // Insert a zone directly with status "active"
+      const zoneId = "z_active_test";
+      insertZone({
+        id: zoneId,
+        cloudflare_id: "cf-zone-active",
+        domain: "active.com",
+        owner_wallet: CALLER,
+        status: "active",
+        nameservers: ["ns1.cloudflare.com", "ns2.cloudflare.com"],
+      });
+
+      const callsBefore = mockFetch.mock.calls.length;
+      const result = await getZone(zoneId, CALLER);
+      expect(result.ok).toBe(true);
+      if (!result.ok) return;
+      expect(result.data.status).toBe("active");
+
+      // No new CF calls made (no GET /zones/:id)
+      const cfGetCalls = mockFetch.mock.calls
+        .slice(callsBefore)
+        .filter(([_url, init]) => {
+          const u = typeof _url === "string" ? _url : (_url as URL).toString();
+          return u.match(/\/client\/v4\/zones\/[^/]+$/) && (!init?.method || init.method === "GET");
+        });
+      expect(cfGetCalls).toHaveLength(0);
+    });
+
+    it("refreshZoneStatus: pending → active updates DB", async () => {
+      const created = await createZone({ domain: "example.com" }, CALLER);
+      if (!created.ok) throw new Error("setup failed");
+      const zoneId = created.data.zone.id;
+
+      mockFetch.mockImplementationOnce(async () =>
+        new Response(
+          JSON.stringify({ success: true, errors: [], result: makeCfZone({ status: "active" }) }),
+          { status: 200, headers: { "Content-Type": "application/json" } },
+        ),
+      );
+
+      const result = await refreshZoneStatus(zoneId, CALLER);
+      expect(result.ok).toBe(true);
+      if (!result.ok) return;
+      expect(result.data.status).toBe("active");
+      expect(getZoneById(zoneId)?.status).toBe("active");
+    });
+
+    it("refreshZoneStatus: already active → no CF call, returns active", async () => {
+      const zoneId = "z_refresh_active";
+      insertZone({
+        id: zoneId,
+        cloudflare_id: "cf-zone-refresh-active",
+        domain: "refreshactive.com",
+        owner_wallet: CALLER,
+        status: "active",
+        nameservers: [],
+      });
+
+      const callsBefore = mockFetch.mock.calls.length;
+      const result = await refreshZoneStatus(zoneId, CALLER);
+      expect(result.ok).toBe(true);
+      if (!result.ok) return;
+      expect(result.data.status).toBe("active");
+
+      // No new fetch calls
+      expect(mockFetch.mock.calls.length).toBe(callsBefore);
+    });
+
+    it("refreshZoneStatus: 404 for nonexistent zone", async () => {
+      const result = await refreshZoneStatus("z_nonexist", CALLER);
+      expect(result.ok).toBe(false);
+      if (result.ok) return;
+      expect(result.status).toBe(404);
+    });
+
+    it("refreshZoneStatus: 403 for wrong wallet", async () => {
+      const created = await createZone({ domain: "example.com" }, CALLER);
+      if (!created.ok) throw new Error("setup failed");
+
+      const result = await refreshZoneStatus(created.data.zone.id, OTHER);
+      expect(result.ok).toBe(false);
+      if (result.ok) return;
+      expect(result.status).toBe(403);
+    });
+  });
+
+  // ─── verifyZone with zone_status ──────────────────────────────────────────
+
+  describe("verifyZone zone_status field", () => {
+    let zoneId: string;
+
+    beforeEach(async () => {
+      const result = await createZone({ domain: "example.com" }, CALLER);
+      if (!result.ok) throw new Error("setup failed");
+      zoneId = result.data.zone.id;
+      dnsResolverMock.resolveNs.mockResolvedValue(["ns1.cloudflare.com", "ns2.cloudflare.com"]);
+      dnsResolverMock.resolve4.mockResolvedValue(["1.1.1.1"]);
+    });
+
+    it("zone_status is 'active' when CF returns active during verify", async () => {
+      mockFetch.mockImplementationOnce(async () =>
+        new Response(
+          JSON.stringify({ success: true, errors: [], result: makeCfZone({ status: "active" }) }),
+          { status: 200, headers: { "Content-Type": "application/json" } },
+        ),
+      );
+
+      const result = await verifyZone(zoneId, CALLER);
+      expect(result.ok).toBe(true);
+      if (!result.ok) return;
+      expect(result.data.zone_status).toBe("active");
+      // DB updated
+      expect(getZoneById(zoneId)?.status).toBe("active");
+    });
+
+    it("zone_status is 'pending' when CF returns pending during verify", async () => {
+      // Default mock returns pending — no override needed
+      const result = await verifyZone(zoneId, CALLER);
+      expect(result.ok).toBe(true);
+      if (!result.ok) return;
+      expect(result.data.zone_status).toBe("pending");
+    });
+
+    it("all_propagated behavior unchanged (still about DNS propagation)", async () => {
+      const result = await verifyZone(zoneId, CALLER);
+      expect(result.ok).toBe(true);
+      if (!result.ok) return;
+      // NS match → propagated true, no records → all_propagated true
+      expect(result.data.all_propagated).toBe(true);
+    });
+
+    it("CF error during status refresh — verify still returns result with local zone_status", async () => {
+      mockFetch.mockImplementationOnce(async () =>
+        new Response(
+          JSON.stringify({ success: false, errors: [{ code: 1000, message: "CF down" }] }),
+          { status: 500, headers: { "Content-Type": "application/json" } },
+        ),
+      );
+
+      const result = await verifyZone(zoneId, CALLER);
+      expect(result.ok).toBe(true);
+      if (!result.ok) return;
+      // Falls back to local DB status
+      expect(result.data.zone_status).toBe("pending");
+    });
+  });
+
+  // ─── CF activation trigger ────────────────────────────────────────────────
+
+  describe("activate zone (PUT /v1/zones/:id/activate)", () => {
+    let zoneId: string;
+
+    beforeEach(async () => {
+      const result = await createZone({ domain: "example.com" }, CALLER);
+      if (!result.ok) throw new Error("setup failed");
+      zoneId = result.data.zone.id;
+    });
+
+    it("returns activation_requested=true with active status when CF returns active", async () => {
+      // Default mock for activation_check returns active
+      const result = await activateZone(zoneId, CALLER);
+      expect(result.ok).toBe(true);
+      if (!result.ok) return;
+      expect(result.data.activation_requested).toBe(true);
+      expect(result.data.status).toBe("active");
+      expect(result.data.zone_id).toBe(zoneId);
+    });
+
+    it("DB status updated to active after CF returns active", async () => {
+      await activateZone(zoneId, CALLER);
+      expect(getZoneById(zoneId)?.status).toBe("active");
+    });
+
+    it("returns 404 for unknown zone_id", async () => {
+      const result = await activateZone("z_nonexist", CALLER);
+      expect(result.ok).toBe(false);
+      if (result.ok) return;
+      expect(result.status).toBe(404);
+    });
+
+    it("returns 403 for wrong wallet", async () => {
+      const result = await activateZone(zoneId, OTHER);
+      expect(result.ok).toBe(false);
+      if (result.ok) return;
+      expect(result.status).toBe(403);
+    });
+
+    it("returns 429 when CF rate-limits the activation check", async () => {
+      mockFetch.mockImplementationOnce(async () =>
+        new Response(
+          JSON.stringify({ success: false, errors: [{ code: 429, message: "Rate limited" }] }),
+          { status: 429, headers: { "Content-Type": "application/json" } },
+        ),
+      );
+
+      const result = await activateZone(zoneId, CALLER);
+      expect(result.ok).toBe(false);
+      if (result.ok) return;
+      expect(result.status).toBe(429);
+      expect(result.code).toBe("rate_limited");
+    });
+  });
+
+  // ─── Registration status endpoint ─────────────────────────────────────────
+
+  describe("getRegistrationStatus", () => {
+    beforeEach(() => {
+      process.env.NAMESILO_API_KEY = "test-ns-key";
+      dnsResolverMock.resolveNs.mockResolvedValue(["ns1.cloudflare.com", "ns2.cloudflare.com"]);
+      dnsResolverMock.resolve4.mockResolvedValue(["1.1.1.1"]);
+    });
+
+    afterEach(() => {
+      process.env.NAMESILO_API_KEY = "";
+    });
+
+    // Helper: create a fully registered domain (NameSilo + CF + NS all succeed)
+    async function createFullRegistration(domain: string): Promise<string> {
+      const q = await quoteDomain({ domain }, CALLER);
+      if (!q.ok) throw new Error("quote failed");
+      const r = await registerDomain(q.data.quote_id, CALLER);
+      if (!r.ok) throw new Error("register failed");
+      return domain;
+    }
+
+    it("404 for unknown domain", async () => {
+      const result = await getRegistrationStatus("unknown.com", CALLER);
+      expect(result.ok).toBe(false);
+      if (result.ok) return;
+      expect(result.status).toBe(404);
+    });
+
+    it("403 for wrong wallet", async () => {
+      await createFullRegistration("example.com");
+
+      const result = await getRegistrationStatus("example.com", OTHER);
+      expect(result.ok).toBe(false);
+      if (result.ok) return;
+      expect(result.status).toBe(403);
+    });
+
+    it("zone_id null + next_action=recover when no zone created", async () => {
+      // Insert registration without zone_id (simulate CF failure during register)
+      insertQuote({
+        id: "q_nozone",
+        domain: "nozone.com",
+        years: 1,
+        registrar_cost_cents: 995,
+        margin_cents: 149,
+        total_cents: 1144,
+        caller_wallet: CALLER,
+        expires_at: Date.now() + 900000,
+      });
+      insertRegistration({
+        id: "reg_nozone",
+        domain: "nozone.com",
+        quote_id: "q_nozone",
+        recovery_token: "rt_nozone",
+        namesilo_order_id: "ord_nozone",
+        zone_id: null,
+        ns_configured: false,
+        owner_wallet: CALLER,
+        total_cents: 1144,
+      });
+
+      const result = await getRegistrationStatus("nozone.com", CALLER);
+      expect(result.ok).toBe(true);
+      if (!result.ok) return;
+      expect(result.data.zone_id).toBeNull();
+      expect(result.data.next_action).toContain("recover");
+      expect(result.data.all_ready).toBe(false);
+    });
+
+    it("ns_configured=false → next_action includes configure-ns", async () => {
+      // Register with NS failing
+      const q = await quoteDomain({ domain: "example.com" }, CALLER);
+      if (!q.ok) throw new Error("quote failed");
+
+      mockFetch
+        .mockImplementationOnce(async () =>
+          // NameSilo register — success
+          new Response(
+            JSON.stringify({ request: { operation: "registerDomain", ip: "1.2.3.4" }, reply: { code: 300, detail: "success" } }),
+            { status: 200, headers: { "Content-Type": "application/json" } },
+          ),
+        )
+        .mockImplementationOnce(async () =>
+          // CF zone — success
+          new Response(
+            JSON.stringify({ success: true, errors: [], result: makeCfZone({ name: "example.com" }) }),
+            { status: 200, headers: { "Content-Type": "application/json" } },
+          ),
+        )
+        .mockImplementationOnce(async () =>
+          // NS change — fail
+          new Response(
+            JSON.stringify({ request: { operation: "changeNameServers", ip: "1.2.3.4" }, reply: { code: 999, detail: "NS error" } }),
+            { status: 200, headers: { "Content-Type": "application/json" } },
+          ),
+        );
+      await registerDomain(q.data.quote_id, CALLER);
+
+      // CF status refresh returns pending (default mock)
+      const result = await getRegistrationStatus("example.com", CALLER);
+      expect(result.ok).toBe(true);
+      if (!result.ok) return;
+      expect(result.data.ns_configured_at_registrar).toBe(false);
+      expect(result.data.next_action).toContain("configure-ns");
+    });
+
+    it("NS set but not propagated, zone pending → next_action=wait for NS propagation", async () => {
+      await createFullRegistration("example.com");
+      // DNS mock: NS not yet propagated (returns wrong NS)
+      dnsResolverMock.resolveNs.mockResolvedValue(["ns1.registrar.com", "ns2.registrar.com"]);
+      // CF status refresh returns pending (default mock)
+
+      const result = await getRegistrationStatus("example.com", CALLER);
+      expect(result.ok).toBe(true);
+      if (!result.ok) return;
+      expect(result.data.ns_configured_at_registrar).toBe(true);
+      expect(result.data.ns_propagated).toBe(false);
+      expect(result.data.zone_status).toBe("pending");
+      expect(result.data.next_action).toContain("NS propagation");
+      expect(result.data.all_ready).toBe(false);
+    });
+
+    it("NS propagated, zone still pending → next_action=wait for Cloudflare activation", async () => {
+      await createFullRegistration("example.com");
+      // NS propagated (default mock: NS match)
+      // CF status: pending (default mock returns pending)
+
+      const result = await getRegistrationStatus("example.com", CALLER);
+      expect(result.ok).toBe(true);
+      if (!result.ok) return;
+      expect(result.data.ns_propagated).toBe(true);
+      expect(result.data.zone_status).toBe("pending");
+      expect(result.data.next_action).toContain("Cloudflare activation");
+      expect(result.data.all_ready).toBe(false);
+    });
+
+    it("zone active → all_ready=true, next_action=null", async () => {
+      await createFullRegistration("example.com");
+      // CF GET /zones/:id returns active
+      mockFetch.mockImplementationOnce(async () =>
+        new Response(
+          JSON.stringify({ success: true, errors: [], result: makeCfZone({ status: "active" }) }),
+          { status: 200, headers: { "Content-Type": "application/json" } },
+        ),
+      );
+
+      const result = await getRegistrationStatus("example.com", CALLER);
+      expect(result.ok).toBe(true);
+      if (!result.ok) return;
+      expect(result.data.zone_status).toBe("active");
+      expect(result.data.zone_active).toBe(true);
+      expect(result.data.all_ready).toBe(true);
+      expect(result.data.next_action).toBeNull();
+    });
+
+    it("zone active but NS not propagated → all_ready=true (CF authoritative)", async () => {
+      await createFullRegistration("example.com");
+      dnsResolverMock.resolveNs.mockResolvedValue(["ns1.registrar.com"]); // not propagated
+      mockFetch.mockImplementationOnce(async () =>
+        new Response(
+          JSON.stringify({ success: true, errors: [], result: makeCfZone({ status: "active" }) }),
+          { status: 200, headers: { "Content-Type": "application/json" } },
+        ),
+      );
+
+      const result = await getRegistrationStatus("example.com", CALLER);
+      expect(result.ok).toBe(true);
+      if (!result.ok) return;
+      expect(result.data.zone_status).toBe("active");
+      expect(result.data.ns_propagated).toBe(false);
+      expect(result.data.all_ready).toBe(true); // CF is authoritative
+      expect(result.data.next_action).toBeNull();
+    });
+
+    it("response includes ns_expected and ns_actual", async () => {
+      await createFullRegistration("example.com");
+
+      const result = await getRegistrationStatus("example.com", CALLER);
+      expect(result.ok).toBe(true);
+      if (!result.ok) return;
+      expect(result.data.ns_expected).toHaveLength(2);
+      expect(result.data.ns_actual).toBeDefined();
+    });
+
+    it("purchased=true always", async () => {
+      await createFullRegistration("example.com");
+
+      const result = await getRegistrationStatus("example.com", CALLER);
+      expect(result.ok).toBe(true);
+      if (!result.ok) return;
+      expect(result.data.purchased).toBe(true);
     });
   });
 

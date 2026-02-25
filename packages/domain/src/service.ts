@@ -5,6 +5,7 @@ import {
   getZoneByDomain,
   getZonesByOwner,
   countZonesByOwner,
+  updateZoneStatus,
   deleteZoneRow,
   insertRecord,
   getRecordById,
@@ -24,7 +25,9 @@ import {
 import {
   CloudflareError,
   createZone as cfCreateZone,
+  getZone as cfGetZone,
   deleteZone as cfDeleteZone,
+  triggerActivationCheck as cfTriggerActivationCheck,
   createDnsRecord as cfCreateRecord,
   updateDnsRecord as cfUpdateRecord,
   deleteDnsRecord as cfDeleteRecord,
@@ -33,6 +36,7 @@ import {
 } from "./cloudflare.ts";
 import type { CfBatchResult, CfDnsRecord } from "./cloudflare.ts";
 import type {
+  ZoneStatus,
   ZoneResponse,
   ZoneListResponse,
   CreateZoneRequest,
@@ -54,6 +58,8 @@ import type {
   RegisterResponse,
   RecoverResponse,
   ConfigureNsResponse,
+  RegistrationStatusResponse,
+  ActivateResponse,
 } from "./api.ts";
 import type { ZoneRow, RecordRow } from "./db.ts";
 import { getRegistrar, NameSiloError } from "./namesilo.ts";
@@ -198,12 +204,46 @@ export function listZones(
   };
 }
 
-export function getZone(
+export async function refreshZoneStatus(
   zoneId: string,
   callerWallet: string,
-): ServiceResult<ZoneResponse> {
+): Promise<ServiceResult<ZoneResponse>> {
   const check = checkZoneOwnership(zoneId, callerWallet);
   if (!check.ok) return check;
+
+  // Skip CF call if already active (avoid unnecessary API hits)
+  if (check.row.status === "active") {
+    return { ok: true, data: rowToZoneResponse(check.row) };
+  }
+
+  try {
+    const cfZone = await cfGetZone(check.row.cloudflare_id);
+    if (cfZone.status !== check.row.status) {
+      updateZoneStatus(zoneId, cfZone.status);
+    }
+    const updatedRow = getZoneById(zoneId);
+    if (!updatedRow) throw new Error("Zone not found after status update");
+    return { ok: true, data: rowToZoneResponse(updatedRow) };
+  } catch (err) {
+    if (err instanceof CloudflareError) {
+      return { ok: false, status: err.statusCode, code: err.code, message: err.message };
+    }
+    throw err;
+  }
+}
+
+export async function getZone(
+  zoneId: string,
+  callerWallet: string,
+): Promise<ServiceResult<ZoneResponse>> {
+  const check = checkZoneOwnership(zoneId, callerWallet);
+  if (!check.ok) return check;
+
+  // Auto-refresh pending zones — sync with CF for latest activation status
+  if (check.row.status === "pending") {
+    return refreshZoneStatus(zoneId, callerWallet);
+  }
+
   return { ok: true, data: rowToZoneResponse(check.row) };
 }
 
@@ -1057,6 +1097,21 @@ export async function verifyZone(
   const allPropagated =
     nsResult.propagated && recordResults.every((r) => r.propagated);
 
+  // Refresh zone status from CF if still pending
+  let zoneStatus: ZoneStatus = check.row.status as ZoneStatus;
+  if (check.row.status === "pending") {
+    try {
+      const cfZone = await cfGetZone(check.row.cloudflare_id);
+      const newStatus = cfZone.status as ZoneStatus;
+      if (newStatus !== check.row.status) {
+        updateZoneStatus(zoneId, newStatus);
+        zoneStatus = newStatus;
+      }
+    } catch {
+      // CF error during status refresh — use existing local status
+    }
+  }
+
   return {
     ok: true,
     data: {
@@ -1064,8 +1119,135 @@ export async function verifyZone(
       nameservers: nsResult,
       records: recordResults,
       all_propagated: allPropagated,
+      zone_status: zoneStatus,
     },
   };
+}
+
+// ─── Registration status ──────────────────────────────────────────────────
+
+export async function getRegistrationStatus(
+  domain: string,
+  callerWallet: string,
+): Promise<ServiceResult<RegistrationStatusResponse>> {
+  const reg = getRegistrationByDomain(domain);
+  if (!reg) {
+    return { ok: false, status: 404, code: "not_found", message: "Registration not found" };
+  }
+  if (reg.owner_wallet !== callerWallet) {
+    return { ok: false, status: 403, code: "forbidden", message: "Forbidden" };
+  }
+
+  // No CF zone created yet
+  if (!reg.zone_id) {
+    return {
+      ok: true,
+      data: {
+        domain,
+        purchased: true,
+        zone_id: null,
+        zone_status: null,
+        ns_configured_at_registrar: reg.ns_configured === 1,
+        ns_propagated: false,
+        ns_expected: [],
+        ns_actual: [],
+        zone_active: false,
+        all_ready: false,
+        next_action: `call POST /v1/domains/${domain}/recover`,
+      },
+    };
+  }
+
+  const zoneRow = getZoneById(reg.zone_id);
+  if (!zoneRow) {
+    return { ok: false, status: 404, code: "not_found", message: "Zone not found" };
+  }
+
+  const expectedNs: string[] = JSON.parse(zoneRow.nameservers) as string[];
+
+  // Live NS check + zone status refresh (if pending) in parallel
+  let zoneStatus: ZoneStatus = zoneRow.status as ZoneStatus;
+  const [nsResult] = await Promise.all([
+    verifyNameservers(domain, expectedNs),
+    (async () => {
+      if (zoneRow.status === "pending") {
+        try {
+          const cfZone = await cfGetZone(zoneRow.cloudflare_id);
+          const newStatus = cfZone.status as ZoneStatus;
+          if (newStatus !== zoneRow.status) {
+            // reg.zone_id is non-null — checked at the top of this function
+            updateZoneStatus(reg.zone_id as string, newStatus);
+            zoneStatus = newStatus;
+          }
+        } catch {
+          // CF error — use local status
+        }
+      }
+    })(),
+  ]);
+
+  const nsConfigured = reg.ns_configured === 1;
+  const zoneActive = zoneStatus === "active";
+  const allReady = zoneActive; // CF activation is the source of truth
+
+  // Compute next_action per decision table
+  let nextAction: string | null = null;
+  if (!nsConfigured) {
+    nextAction = `call POST /v1/domains/${domain}/configure-ns`;
+  } else if (!nsResult.propagated && zoneStatus === "pending") {
+    nextAction = "wait for NS propagation";
+  } else if (nsResult.propagated && zoneStatus === "pending") {
+    nextAction = "wait for Cloudflare activation";
+  }
+  // zone_status === "active" → nextAction stays null
+
+  return {
+    ok: true,
+    data: {
+      domain,
+      purchased: true,
+      zone_id: reg.zone_id,
+      zone_status: zoneStatus,
+      ns_configured_at_registrar: nsConfigured,
+      ns_propagated: nsResult.propagated,
+      ns_expected: expectedNs,
+      ns_actual: nsResult.actual,
+      zone_active: zoneActive,
+      all_ready: allReady,
+      next_action: nextAction,
+    },
+  };
+}
+
+// ─── Zone activation trigger ──────────────────────────────────────────────
+
+export async function activateZone(
+  zoneId: string,
+  callerWallet: string,
+): Promise<ServiceResult<ActivateResponse>> {
+  const check = checkZoneOwnership(zoneId, callerWallet);
+  if (!check.ok) return check;
+
+  try {
+    const cfZone = await cfTriggerActivationCheck(check.row.cloudflare_id);
+    if (cfZone.status !== check.row.status) {
+      updateZoneStatus(zoneId, cfZone.status);
+    }
+    const updatedRow = getZoneById(zoneId);
+    return {
+      ok: true,
+      data: {
+        zone_id: zoneId,
+        status: ((updatedRow?.status ?? cfZone.status) as ZoneStatus),
+        activation_requested: true,
+      },
+    };
+  } catch (err) {
+    if (err instanceof CloudflareError) {
+      return { ok: false, status: err.statusCode, code: err.code, message: err.message };
+    }
+    throw err;
+  }
 }
 
 // ─── Domain search ────────────────────────────────────────────────────────

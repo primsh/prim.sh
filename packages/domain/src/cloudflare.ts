@@ -127,6 +127,15 @@ export async function deleteZone(zoneId: string): Promise<void> {
   await handleResponse<unknown>(res);
 }
 
+export async function triggerActivationCheck(zoneId: string): Promise<CfZone> {
+  const res = await fetch(`${BASE_URL}/zones/${zoneId}/activation_check`, {
+    method: "PUT",
+    headers: authHeaders(),
+  });
+  const body = await handleResponse<CfZone>(res);
+  return body.result;
+}
+
 // ─── DNS record functions ────────────────────────────────────────────────
 
 export async function createDnsRecord(
