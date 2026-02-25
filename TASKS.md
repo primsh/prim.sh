@@ -60,7 +60,7 @@
 | 7 | TK-4 | Evaluate wrapping Thirdweb/Zora vs custom factory; fix TS bugs (stale cap check, missing tx confirmation); testnet validation | packages/token | TK-2 | pending |
 | 8 | TK-3 | Build token.sh: Uniswap pool creation (liquidity coordination with wallet.sh) | packages/token | TK-4 | pending |
 | 8 | ST-5 | Testnet integration testing: env-configurable network (`PRIM_NETWORK`), Base Sepolia x402 end-to-end, wallet.sh ↔ store.sh | cross-cutting | ST-4, W-5 | done |
-| 9 | R-13 | Fix outbound email delivery: check Stalwart SMTP logs, unblock DO port 25 (or request removal), verify SPF/DKIM/rDNS, confirm delivery to external address | deploy/email | R-12 | pending |
+| 9 | R-13 | Fix outbound email delivery: check Stalwart SMTP logs, unblock DO port 25 (or request removal), verify SPF/DKIM/rDNS, confirm delivery to external address | deploy/email | R-12 | done |
 | 9 | W-10 | Non-custodial refactor: strip keystore, EIP-191 signature registration, remove send/swap, publish `@prim/x402-client` | specs/, packages/wallet, packages/x402-client | W-5 | done |
 | 10 | XC-1 | Build @prim/x402-client: agent-side x402 fetch wrapper (privateKey + signer modes) | packages/x402-client | — | done |
 | 11 | FC-1 | Build faucet.sh: Circle USDC drip + treasury ETH drip (testnet only) | packages/faucet | — | done |
@@ -273,6 +273,8 @@ ERC-8004 uses CAIP-10 wallet addresses as root identity. DIDs layer on top non-b
 - W-10 — non-custodial refactor: strip keystore+encrypted_key, EIP-191 signature registration, remove send/swap/history, fund-request approve returns address+amount (non-custodial), ADR at specs/adr-wallet-custody.md, 82 wallet tests (2026-02-25)
 - XC-1 — @prim/x402-client: agent-side x402 fetch wrapper, privateKey+signer modes, max payment cap, auto-detect network, 14 tests (2026-02-25)
 - FC-1 — faucet.sh: Circle USDC drip + treasury ETH drip, testnet-only guard, in-memory rate limiting, 18 tests (2026-02-25)
+- R-13 — outbound email delivery confirmed: port 25 open on DO droplet, SPF/DKIM/DMARC pass, Gmail accepted with signed-by+mailed-by relay.prim.sh, TLS (2026-02-25)
+- R-14 — custom usernames, permanent mailboxes (null expires_at), rename relay → email across all packages/site/docs, 162 tests (2026-02-25)
 
 ### R-2 completion details (2026-02-25)
 
