@@ -11,18 +11,8 @@ import {
   getSshKeysByOwner,
   deleteSshKeyRow,
 } from "./db.ts";
-import {
-  createHetznerServer,
-  deleteHetznerServer,
-  powerOnServer,
-  shutdownServer,
-  rebootServer as rebootHetznerServer,
-  changeServerType,
-  rebuildServer as rebuildHetznerServer,
-  createHetznerSshKey,
-  deleteHetznerSshKey,
-  HetznerError,
-} from "./hetzner.ts";
+import { getProvider } from "./providers.ts";
+import { ProviderError, type CloudProvider } from "./provider.ts";
 import type {
   CreateServerRequest,
   CreateServerResponse,
@@ -38,66 +28,28 @@ import type {
   SshKeyResponse,
   SshKeyListResponse,
 } from "./api.ts";
-import { SPAWN_SERVER_TYPES, SPAWN_IMAGES, SPAWN_LOCATIONS } from "./api.ts";
 import type { ServerRow, SshKeyRow } from "./db.ts";
-
-// ─── Helpers ─────────────────────────────────────────────────────────────
-
-function generateSshKeyId(): string {
-  return `sk_${randomBytes(4).toString("hex")}`;
-}
-
-function rowToSshKeyResponse(row: SshKeyRow): SshKeyResponse {
-  return {
-    id: row.id,
-    hetzner_id: row.hetzner_id,
-    name: row.name,
-    fingerprint: row.fingerprint,
-    owner_wallet: row.owner_wallet,
-    created_at: new Date(row.created_at).toISOString(),
-  };
-}
-
-function mapActionResponse(action: { id: number; command: string; status: string; started: string; finished: string | null }) {
-  return {
-    id: action.id,
-    command: action.command,
-    status: action.status,
-    started_at: action.started,
-    finished_at: action.finished,
-  };
-}
 
 // ─── Constants ────────────────────────────────────────────────────────────
 
-const HETZNER_TYPE_MAP: Record<string, string> = {
-  small: "cx23",
-  medium: "cx33",
-  large: "cx43",
-  "arm-small": "cax11",
-};
-
-// Daily burn rates in USDC (as decimal strings)
-const DAILY_BURN_MAP: Record<string, string> = {
-  small: "0.15",
-  medium: "0.22",
-  large: "0.40",
-  "arm-small": "0.16",
-};
-
-// Upfront deposit charged per server creation (in USDC)
+const DEFAULT_PROVIDER = "hetzner";
 const CREATION_DEPOSIT = "0.01";
 
-// ─── Helpers ──────────────────────────────────────────────────────────────
+// ─── Helpers ─────────────────────────────────────────────────────────────
 
 function generateServerId(): string {
   return `srv_${randomBytes(4).toString("hex")}`;
 }
 
+function generateSshKeyId(): string {
+  return `sk_${randomBytes(4).toString("hex")}`;
+}
+
 function rowToServerResponse(row: ServerRow): ServerResponse {
   return {
     id: row.id,
-    hetzner_id: row.hetzner_id,
+    provider: row.provider,
+    provider_id: row.provider_resource_id,
     name: row.name,
     type: row.type,
     status: row.status as ServerResponse["status"],
@@ -107,6 +59,18 @@ function rowToServerResponse(row: ServerRow): ServerResponse {
       ipv4: row.public_ipv4 ? { ip: row.public_ipv4 } : null,
       ipv6: row.public_ipv6 ? { ip: row.public_ipv6 } : null,
     },
+    owner_wallet: row.owner_wallet,
+    created_at: new Date(row.created_at).toISOString(),
+  };
+}
+
+function rowToSshKeyResponse(row: SshKeyRow): SshKeyResponse {
+  return {
+    id: row.id,
+    provider: row.provider,
+    provider_id: row.provider_resource_id,
+    name: row.name,
+    fingerprint: row.fingerprint,
     owner_wallet: row.owner_wallet,
     created_at: new Date(row.created_at).toISOString(),
   };
@@ -152,66 +116,81 @@ export async function createServer(
     };
   }
 
-  // Validate type
-  if (!SPAWN_SERVER_TYPES.includes(request.type)) {
+  // Resolve provider
+  const providerName = request.provider ?? DEFAULT_PROVIDER;
+  let provider: CloudProvider;
+  try {
+    provider = getProvider(providerName);
+  } catch {
     return {
       ok: false,
       status: 400,
       code: "invalid_request",
-      message: `Invalid server type. Must be one of: ${SPAWN_SERVER_TYPES.join(", ")}`,
+      message: `Unknown provider: ${providerName}`,
+    };
+  }
+
+  // Validate type against provider capabilities
+  const serverTypes = provider.serverTypes();
+  const typeInfo = serverTypes.find((t) => t.name === request.type);
+  if (!typeInfo) {
+    return {
+      ok: false,
+      status: 400,
+      code: "invalid_request",
+      message: `Invalid server type. Must be one of: ${serverTypes.map((t) => t.name).join(", ")}`,
     };
   }
 
   // Validate image
-  if (!SPAWN_IMAGES.includes(request.image)) {
+  const images = provider.images();
+  if (!images.includes(request.image)) {
     return {
       ok: false,
       status: 400,
       code: "invalid_request",
-      message: `Invalid image. Must be one of: ${SPAWN_IMAGES.join(", ")}`,
+      message: `Invalid image. Must be one of: ${images.join(", ")}`,
     };
   }
 
   // Validate location
-  if (!SPAWN_LOCATIONS.includes(request.location)) {
+  const locations = provider.locations();
+  if (!locations.includes(request.location)) {
     return {
       ok: false,
       status: 400,
       code: "invalid_request",
-      message: `Invalid location. Must be one of: ${SPAWN_LOCATIONS.join(", ")}`,
+      message: `Invalid location. Must be one of: ${locations.join(", ")}`,
     };
   }
 
   const spawnId = generateServerId();
-  const hetznerType = HETZNER_TYPE_MAP[request.type];
-  const dailyBurn = DAILY_BURN_MAP[request.type];
 
   try {
-    const hetznerResult = await createHetznerServer({
+    const result = await provider.createServer({
       name: request.name,
-      server_type: hetznerType,
+      type: typeInfo.providerType,
       image: request.image,
       location: request.location,
-      ssh_keys: request.ssh_keys,
+      sshKeyIds: request.ssh_keys,
       labels: { wallet: callerWallet },
-      user_data: request.user_data,
+      userData: request.user_data,
     });
-
-    const { server: hs, action: ha } = hetznerResult;
 
     insertServer({
       id: spawnId,
-      hetzner_id: hs.id,
+      provider: providerName,
+      provider_resource_id: result.server.providerResourceId,
       owner_wallet: callerWallet,
       name: request.name,
       type: request.type,
       image: request.image,
       location: request.location,
       status: "initializing",
-      public_ipv4: hs.public_net?.ipv4?.ip ?? null,
-      public_ipv6: hs.public_net?.ipv6?.ip ?? null,
+      public_ipv4: result.server.ipv4,
+      public_ipv6: result.server.ipv6,
       deposit_charged: CREATION_DEPOSIT,
-      deposit_daily_burn: dailyBurn,
+      deposit_daily_burn: typeInfo.dailyBurn,
     });
 
     const row = getServerById(spawnId);
@@ -222,18 +201,18 @@ export async function createServer(
       data: {
         server: rowToServerResponse(row),
         action: {
-          id: ha.id,
-          command: ha.command,
-          status: ha.status,
-          started_at: ha.started,
-          finished_at: ha.finished,
+          id: result.action.id,
+          command: result.action.command,
+          status: result.action.status,
+          started_at: result.action.startedAt,
+          finished_at: result.action.finishedAt,
         },
         deposit_charged: CREATION_DEPOSIT,
         deposit_remaining: "0.00",
       },
     };
   } catch (err) {
-    if (err instanceof HetznerError) {
+    if (err instanceof ProviderError) {
       return {
         ok: false,
         status: 502,
@@ -284,9 +263,10 @@ export async function deleteServer(
   const { row } = check;
 
   try {
-    await deleteHetznerServer(row.hetzner_id);
+    const provider = getProvider(row.provider);
+    await provider.deleteServer(row.provider_resource_id);
   } catch (err) {
-    if (err instanceof HetznerError) {
+    if (err instanceof ProviderError) {
       return {
         ok: false,
         status: 502,
@@ -299,9 +279,6 @@ export async function deleteServer(
 
   updateServerStatus(serverId, "destroying");
 
-  // Calculate deposit refund: charged minus accrued burn
-  // For SP-2, we record deposit_charged but don't track actual accrued burn yet
-  // Refund = 0 since full deposit covers API cost
   const depositRefunded = "0.00";
 
   return {
@@ -323,10 +300,22 @@ export async function startServer(
   if (!check.ok) return check;
 
   try {
-    const result = await powerOnServer(check.row.hetzner_id);
-    return { ok: true, data: { action: mapActionResponse(result.action) } };
+    const provider = getProvider(check.row.provider);
+    const action = await provider.startServer(check.row.provider_resource_id);
+    return {
+      ok: true,
+      data: {
+        action: {
+          id: action.id,
+          command: action.command,
+          status: action.status,
+          started_at: action.startedAt,
+          finished_at: action.finishedAt,
+        },
+      },
+    };
   } catch (err) {
-    if (err instanceof HetznerError) {
+    if (err instanceof ProviderError) {
       return { ok: false, status: 502, code: err.code, message: err.message };
     }
     throw err;
@@ -341,10 +330,22 @@ export async function stopServer(
   if (!check.ok) return check;
 
   try {
-    const result = await shutdownServer(check.row.hetzner_id);
-    return { ok: true, data: { action: mapActionResponse(result.action) } };
+    const provider = getProvider(check.row.provider);
+    const action = await provider.stopServer(check.row.provider_resource_id);
+    return {
+      ok: true,
+      data: {
+        action: {
+          id: action.id,
+          command: action.command,
+          status: action.status,
+          started_at: action.startedAt,
+          finished_at: action.finishedAt,
+        },
+      },
+    };
   } catch (err) {
-    if (err instanceof HetznerError) {
+    if (err instanceof ProviderError) {
       return { ok: false, status: 502, code: err.code, message: err.message };
     }
     throw err;
@@ -359,10 +360,22 @@ export async function rebootServer(
   if (!check.ok) return check;
 
   try {
-    const result = await rebootHetznerServer(check.row.hetzner_id);
-    return { ok: true, data: { action: mapActionResponse(result.action) } };
+    const provider = getProvider(check.row.provider);
+    const action = await provider.rebootServer(check.row.provider_resource_id);
+    return {
+      ok: true,
+      data: {
+        action: {
+          id: action.id,
+          command: action.command,
+          status: action.status,
+          started_at: action.startedAt,
+          finished_at: action.finishedAt,
+        },
+      },
+    };
   } catch (err) {
-    if (err instanceof HetznerError) {
+    if (err instanceof ProviderError) {
       return { ok: false, status: 502, code: err.code, message: err.message };
     }
     throw err;
@@ -377,30 +390,42 @@ export async function resizeServer(
   const check = checkServerOwnership(serverId, callerWallet);
   if (!check.ok) return check;
 
-  if (!SPAWN_SERVER_TYPES.includes(request.type)) {
+  const provider = getProvider(check.row.provider);
+  const serverTypes = provider.serverTypes();
+  const typeInfo = serverTypes.find((t) => t.name === request.type);
+
+  if (!typeInfo) {
     return {
       ok: false,
       status: 400,
       code: "invalid_request",
-      message: `Invalid server type. Must be one of: ${SPAWN_SERVER_TYPES.join(", ")}`,
+      message: `Invalid server type. Must be one of: ${serverTypes.map((t) => t.name).join(", ")}`,
     };
   }
 
-  const hetznerType = HETZNER_TYPE_MAP[request.type];
-
   try {
-    const result = await changeServerType(check.row.hetzner_id, hetznerType, request.upgrade_disk ?? false);
+    const action = await provider.resizeServer(
+      check.row.provider_resource_id,
+      typeInfo.providerType,
+      request.upgrade_disk ?? false,
+    );
     updateServerTypeAndImage(serverId, request.type);
     return {
       ok: true,
       data: {
-        action: mapActionResponse(result.action),
+        action: {
+          id: action.id,
+          command: action.command,
+          status: action.status,
+          started_at: action.startedAt,
+          finished_at: action.finishedAt,
+        },
         new_type: request.type,
         deposit_delta: "0.00",
       },
     };
   } catch (err) {
-    if (err instanceof HetznerError) {
+    if (err instanceof ProviderError) {
       return { ok: false, status: 502, code: err.code, message: err.message };
     }
     throw err;
@@ -415,27 +440,36 @@ export async function rebuildServer(
   const check = checkServerOwnership(serverId, callerWallet);
   if (!check.ok) return check;
 
-  if (!SPAWN_IMAGES.includes(request.image)) {
+  const provider = getProvider(check.row.provider);
+  const images = provider.images();
+
+  if (!images.includes(request.image)) {
     return {
       ok: false,
       status: 400,
       code: "invalid_request",
-      message: `Invalid image. Must be one of: ${SPAWN_IMAGES.join(", ")}`,
+      message: `Invalid image. Must be one of: ${images.join(", ")}`,
     };
   }
 
   try {
-    const result = await rebuildHetznerServer(check.row.hetzner_id, request.image);
+    const result = await provider.rebuildServer(check.row.provider_resource_id, request.image);
     updateServerTypeAndImage(serverId, undefined, request.image);
     return {
       ok: true,
       data: {
-        action: mapActionResponse(result.action),
-        root_password: result.root_password,
+        action: {
+          id: result.action.id,
+          command: result.action.command,
+          status: result.action.status,
+          started_at: result.action.startedAt,
+          finished_at: result.action.finishedAt,
+        },
+        root_password: result.rootPassword,
       },
     };
   } catch (err) {
-    if (err instanceof HetznerError) {
+    if (err instanceof ProviderError) {
       return { ok: false, status: 502, code: err.code, message: err.message };
     }
     throw err;
@@ -447,6 +481,7 @@ export async function rebuildServer(
 export async function registerSshKey(
   request: CreateSshKeyRequest,
   callerWallet: string,
+  providerName?: string,
 ): Promise<ServiceResult<SshKeyResponse>> {
   if (!request.name || !request.public_key) {
     return {
@@ -457,22 +492,35 @@ export async function registerSshKey(
     };
   }
 
+  const resolvedProvider = providerName ?? DEFAULT_PROVIDER;
+  let provider: CloudProvider;
   try {
-    const hetznerResult = await createHetznerSshKey({
+    provider = getProvider(resolvedProvider);
+  } catch {
+    return {
+      ok: false,
+      status: 400,
+      code: "invalid_request",
+      message: `Unknown provider: ${resolvedProvider}`,
+    };
+  }
+
+  try {
+    const result = await provider.createSshKey({
       name: request.name,
-      public_key: request.public_key,
+      publicKey: request.public_key,
       labels: { wallet: callerWallet },
     });
 
-    const { ssh_key: hk } = hetznerResult;
     const skId = generateSshKeyId();
 
     insertSshKey({
       id: skId,
-      hetzner_id: hk.id,
+      provider: resolvedProvider,
+      provider_resource_id: result.providerResourceId,
       owner_wallet: callerWallet,
-      name: hk.name,
-      fingerprint: hk.fingerprint,
+      name: result.name,
+      fingerprint: result.fingerprint,
     });
 
     const row = getSshKeyById(skId);
@@ -480,7 +528,7 @@ export async function registerSshKey(
 
     return { ok: true, data: rowToSshKeyResponse(row) };
   } catch (err) {
-    if (err instanceof HetznerError) {
+    if (err instanceof ProviderError) {
       return { ok: false, status: 502, code: err.code, message: err.message };
     }
     throw err;
@@ -507,9 +555,10 @@ export async function deleteSshKey(
   }
 
   try {
-    await deleteHetznerSshKey(row.hetzner_id);
+    const provider = getProvider(row.provider);
+    await provider.deleteSshKey(row.provider_resource_id);
   } catch (err) {
-    if (err instanceof HetznerError) {
+    if (err instanceof ProviderError) {
       return { ok: false, status: 502, code: err.code, message: err.message };
     }
     throw err;

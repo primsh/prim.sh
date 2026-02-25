@@ -43,7 +43,7 @@
 | 37 | SP-4 | Build spawn.sh: SSH key injection + initial setup | spawn/ | SP-2 | done |
 | 38 | SP-5 | Integrate x402 middleware | spawn/ | SP-2, P-4 | done |
 | 39 | B-1 | Batch 1: parallel agent team execution (W-2 + R-1 + SP-1) | cross-cutting | W-2 plan, R-1 plan, SP-1 plan | done |
-| 40 | SP-6 | Abstract provider layer + multi-cloud support (DO, AWS, GCP, Hetzner) | spawn/ | SP-4 | pending |
+| 40 | SP-6 | Abstract provider layer + multi-cloud support (DO, AWS, GCP, Hetzner) | spawn/ | SP-4 | done |
 
 ## Plan Docs
 
@@ -64,7 +64,7 @@
 - W-9: `tasks/completed/w-9-circuit-breaker-2026-02-24.md`
 - SP-3/SP-4: `tasks/completed/sp-3-sp-4-lifecycle-ssh-2026-02-24.md`
 - D-1: `tasks/active/d-1-dns-zone-record-crud-2026-02-24.md`
-- SP-6: `tasks/active/sp-6-provider-abstraction-2026-02-24.md`
+- SP-6: `tasks/completed/sp-6-provider-abstraction-2026-02-24.md`
 - R-2: `tasks/active/r-2-stalwart-domain-tls-2026-02-24.md`
 - Umbrella: `tasks/active/batch-execution-umbrella-2026-02-24.md`
 
@@ -188,4 +188,5 @@ ERC-8004 uses CAIP-10 wallet addresses as root identity. DIDs layer on top non-b
 - P-2 — llms.txt routes wired in `site/serve.py` (2026-02-24)
 - P-1 — llms.txt root + per-primitive files (2026-02-24)
 
+- SP-6 — provider abstraction: CloudProvider interface, Hetzner implementation, provider registry (2026-02-24)
 - S-6 — "This page is for humans. The API is for agents." (2026-02-24)

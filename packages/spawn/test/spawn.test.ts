@@ -1,7 +1,7 @@
 /**
- * SP-2 spawn.sh tests: server CRUD with Hetzner API mock and ownership enforcement.
+ * SP-2/SP-6 spawn.sh tests: server CRUD with provider abstraction and ownership enforcement.
  *
- * IMPORTANT: env vars must be set before any module import that touches db/hetzner.
+ * IMPORTANT: env vars must be set before any module import that touches db/providers.
  */
 
 import { describe, expect, it, beforeEach, afterEach, vi } from "vitest";
@@ -193,7 +193,8 @@ function insertTestServer(overrides: Partial<Parameters<typeof insertServer>[0]>
   const id = `srv_test${Math.random().toString(16).slice(2, 6)}`;
   insertServer({
     id,
-    hetzner_id: 12345,
+    provider: "hetzner",
+    provider_resource_id: "12345",
     owner_wallet: CALLER,
     name: "test-server",
     type: "small",
@@ -213,7 +214,8 @@ function insertTestSshKey(overrides: Partial<Parameters<typeof insertSshKey>[0]>
   const id = `sk_test${Math.random().toString(16).slice(2, 6)}`;
   insertSshKey({
     id,
-    hetzner_id: 55555,
+    provider: "hetzner",
+    provider_resource_id: "55555",
     owner_wallet: CALLER,
     name: "my-key",
     fingerprint: "ab:cd:ef:00:11:22:33:44",
@@ -244,10 +246,12 @@ describe("createServer", () => {
     expect(result.data.server.owner_wallet).toBe(CALLER);
     expect(result.data.server.type).toBe("small");
     expect(result.data.server.name).toBe("my-server");
+    expect(result.data.server.provider).toBe("hetzner");
+    expect(result.data.server.provider_id).toBe("12345");
     expect(result.data.deposit_charged).toBe("0.01");
   });
 
-  it("create server — persists to SQLite", async () => {
+  it("create server — persists to SQLite with provider fields", async () => {
     const result = await createServer(VALID_REQUEST, CALLER);
     expect(result.ok).toBe(true);
     if (!result.ok) return;
@@ -255,7 +259,8 @@ describe("createServer", () => {
     const row = getServerById(result.data.server.id);
     expect(row).not.toBeNull();
     expect(row?.owner_wallet).toBe(CALLER);
-    expect(row?.hetzner_id).toBe(12345);
+    expect(row?.provider).toBe("hetzner");
+    expect(row?.provider_resource_id).toBe("12345");
   });
 
   it("create server — calls Hetzner with correct payload including wallet label", async () => {
@@ -274,8 +279,24 @@ describe("createServer", () => {
     expect((body.labels as Record<string, string>).wallet).toBe(CALLER);
   });
 
+  it("create server with explicit provider — uses that provider", async () => {
+    const result = await createServer({ ...VALID_REQUEST, provider: "hetzner" }, CALLER);
+    expect(result.ok).toBe(true);
+    if (!result.ok) return;
+    expect(result.data.server.provider).toBe("hetzner");
+  });
+
+  it("create server with unknown provider — returns 400", async () => {
+    const result = await createServer({ ...VALID_REQUEST, provider: "nonexistent" }, CALLER);
+    expect(result.ok).toBe(false);
+    if (result.ok) return;
+    expect(result.status).toBe(400);
+    expect(result.code).toBe("invalid_request");
+    expect(result.message).toContain("Unknown provider");
+  });
+
   it("invalid type — returns 400 with invalid_request", async () => {
-    const result = await createServer({ ...VALID_REQUEST, type: "xlarge" as never }, CALLER);
+    const result = await createServer({ ...VALID_REQUEST, type: "xlarge" }, CALLER);
     expect(result.ok).toBe(false);
     if (result.ok) return;
     expect(result.status).toBe(400);
@@ -283,7 +304,7 @@ describe("createServer", () => {
   });
 
   it("invalid image — returns 400 with invalid_request", async () => {
-    const result = await createServer({ ...VALID_REQUEST, image: "windows-11" as never }, CALLER);
+    const result = await createServer({ ...VALID_REQUEST, image: "windows-11" }, CALLER);
     expect(result.ok).toBe(false);
     if (result.ok) return;
     expect(result.status).toBe(400);
@@ -298,7 +319,7 @@ describe("createServer", () => {
     expect(result.code).toBe("invalid_request");
   });
 
-  it("Hetzner API failure — returns 502 with hetzner_error code", async () => {
+  it("Hetzner API failure — returns 502 with provider_error code", async () => {
     mockFetch.mockImplementationOnce(async (input: RequestInfo | URL, init?: RequestInit) => {
       const url = typeof input === "string" ? input : input instanceof Request ? input.url : (input as URL).toString();
       if (url === "https://api.hetzner.cloud/v1/servers" && (init as RequestInit)?.method === "POST") {
@@ -314,7 +335,7 @@ describe("createServer", () => {
     expect(result.ok).toBe(false);
     if (result.ok) return;
     expect(result.status).toBe(502);
-    expect(result.code).toBe("hetzner_error");
+    expect(result.code).toBe("provider_error");
   });
 });
 
@@ -356,7 +377,7 @@ describe("listServers", () => {
 // ─── Get server tests ─────────────────────────────────────────────────────
 
 describe("getServer", () => {
-  it("get server (owner) — returns full server detail", () => {
+  it("get server (owner) — returns full server detail with provider fields", () => {
     const id = insertTestServer({ owner_wallet: CALLER });
 
     const result = getServer(id, CALLER);
@@ -366,6 +387,8 @@ describe("getServer", () => {
     expect(result.data.id).toBe(id);
     expect(result.data.owner_wallet).toBe(CALLER);
     expect(result.data.status).toBe("running");
+    expect(result.data.provider).toBe("hetzner");
+    expect(result.data.provider_id).toBe("12345");
   });
 
   it("get server (not owner) — returns 403 forbidden", () => {
@@ -390,8 +413,8 @@ describe("getServer", () => {
 // ─── Delete server tests ──────────────────────────────────────────────────
 
 describe("deleteServer", () => {
-  it("delete server (owner) — calls Hetzner delete and returns deleted status", async () => {
-    const id = insertTestServer({ owner_wallet: CALLER, hetzner_id: 12345 });
+  it("delete server (owner) — calls provider delete and returns deleted status", async () => {
+    const id = insertTestServer({ owner_wallet: CALLER, provider_resource_id: "12345" });
 
     const result = await deleteServer(id, CALLER);
     expect(result.ok).toBe(true);
@@ -429,7 +452,7 @@ describe("deleteServer", () => {
   });
 
   it("Hetzner delete failure — returns 502", async () => {
-    const id = insertTestServer({ owner_wallet: CALLER, hetzner_id: 99999 });
+    const id = insertTestServer({ owner_wallet: CALLER, provider_resource_id: "99999" });
 
     mockFetch.mockImplementationOnce(async (input: RequestInfo | URL, init?: RequestInit) => {
       const url = typeof input === "string" ? input : input instanceof Request ? input.url : (input as URL).toString();
@@ -461,7 +484,7 @@ describe("server type translation", () => {
 
   for (const [spawnType, hetznerType] of Object.entries(typeMap)) {
     it(`${spawnType} → ${hetznerType}`, async () => {
-      await createServer({ ...VALID_REQUEST, type: spawnType as CreateServerRequest["type"] }, CALLER);
+      await createServer({ ...VALID_REQUEST, type: spawnType }, CALLER);
 
       const hetznerCall = mockFetch.mock.calls.find(
         ([url, init]) =>
@@ -480,11 +503,11 @@ describe("server type translation", () => {
 
 describe("startServer", () => {
   it("start server (owner) — returns 200 with action object", async () => {
-    const id = insertTestServer({ owner_wallet: CALLER, hetzner_id: 12345 });
+    const id = insertTestServer({ owner_wallet: CALLER, provider_resource_id: "12345" });
     const result = await startServer(id, CALLER);
     expect(result.ok).toBe(true);
     if (!result.ok) return;
-    expect(result.data.action.id).toBe(9997);
+    expect(result.data.action.id).toBe("9997");
     expect(typeof result.data.action.status).toBe("string");
   });
 
@@ -497,8 +520,8 @@ describe("startServer", () => {
     expect(result.code).toBe("forbidden");
   });
 
-  it("Hetzner action failure — returns 502", async () => {
-    const id = insertTestServer({ owner_wallet: CALLER, hetzner_id: 77777 });
+  it("Provider action failure — returns 502", async () => {
+    const id = insertTestServer({ owner_wallet: CALLER, provider_resource_id: "77777" });
     mockFetch.mockImplementationOnce(async (input: RequestInfo | URL, init?: RequestInit) => {
       const url = typeof input === "string" ? input : input instanceof Request ? input.url : (input as URL).toString();
       if (url.includes("/servers/77777/actions/") && (init as RequestInit)?.method === "POST") {
@@ -519,37 +542,37 @@ describe("startServer", () => {
 
 describe("stopServer", () => {
   it("stop server (owner) — returns 200 with action object", async () => {
-    const id = insertTestServer({ owner_wallet: CALLER, hetzner_id: 12345 });
+    const id = insertTestServer({ owner_wallet: CALLER, provider_resource_id: "12345" });
     const result = await stopServer(id, CALLER);
     expect(result.ok).toBe(true);
     if (!result.ok) return;
-    expect(result.data.action.id).toBe(9997);
+    expect(result.data.action.id).toBe("9997");
   });
 });
 
 describe("rebootServer", () => {
   it("reboot server (owner) — returns 200 with action object", async () => {
-    const id = insertTestServer({ owner_wallet: CALLER, hetzner_id: 12345 });
+    const id = insertTestServer({ owner_wallet: CALLER, provider_resource_id: "12345" });
     const result = await rebootServer(id, CALLER);
     expect(result.ok).toBe(true);
     if (!result.ok) return;
-    expect(result.data.action.id).toBe(9997);
+    expect(result.data.action.id).toBe("9997");
   });
 });
 
 describe("resizeServer", () => {
   it("resize server (valid type) — returns 200 with action and new_type", async () => {
-    const id = insertTestServer({ owner_wallet: CALLER, hetzner_id: 12345 });
+    const id = insertTestServer({ owner_wallet: CALLER, provider_resource_id: "12345" });
     const result = await resizeServer(id, CALLER, { type: "medium" });
     expect(result.ok).toBe(true);
     if (!result.ok) return;
     expect(result.data.new_type).toBe("medium");
-    expect(typeof result.data.action.id).toBe("number");
+    expect(typeof result.data.action.id).toBe("string");
   });
 
   it("resize server (invalid type) — returns 400", async () => {
     const id = insertTestServer({ owner_wallet: CALLER });
-    const result = await resizeServer(id, CALLER, { type: "xlarge" as never });
+    const result = await resizeServer(id, CALLER, { type: "xlarge" });
     expect(result.ok).toBe(false);
     if (result.ok) return;
     expect(result.status).toBe(400);
@@ -559,17 +582,17 @@ describe("resizeServer", () => {
 
 describe("rebuildServer", () => {
   it("rebuild server (valid image) — returns 200 with action", async () => {
-    const id = insertTestServer({ owner_wallet: CALLER, hetzner_id: 12345 });
+    const id = insertTestServer({ owner_wallet: CALLER, provider_resource_id: "12345" });
     const result = await rebuildServer(id, CALLER, { image: "debian-12" });
     expect(result.ok).toBe(true);
     if (!result.ok) return;
-    expect(result.data.action.id).toBe(9998);
+    expect(result.data.action.id).toBe("9998");
     expect(result.data.root_password).toBeNull();
   });
 
   it("rebuild server (invalid image) — returns 400", async () => {
     const id = insertTestServer({ owner_wallet: CALLER });
-    const result = await rebuildServer(id, CALLER, { image: "windows-11" as never });
+    const result = await rebuildServer(id, CALLER, { image: "windows-11" });
     expect(result.ok).toBe(false);
     if (result.ok) return;
     expect(result.status).toBe(400);
@@ -590,6 +613,8 @@ describe("registerSshKey", () => {
     expect(result.data.id).toMatch(/^sk_[0-9a-f]{8}$/);
     expect(result.data.fingerprint).toBe("ab:cd:ef:00:11:22:33:44");
     expect(result.data.owner_wallet).toBe(CALLER);
+    expect(result.data.provider).toBe("hetzner");
+    expect(result.data.provider_id).toBe("55555");
   });
 
   it("register SSH key — missing fields returns 400", async () => {
@@ -620,8 +645,8 @@ describe("listSshKeys", () => {
 });
 
 describe("deleteSshKey", () => {
-  it("delete SSH key (owner) — removes from SQLite and calls Hetzner delete", async () => {
-    const id = insertTestSshKey({ owner_wallet: CALLER, hetzner_id: 55555 });
+  it("delete SSH key (owner) — removes from SQLite and calls provider delete", async () => {
+    const id = insertTestSshKey({ owner_wallet: CALLER, provider_resource_id: "55555" });
 
     const result = await deleteSshKey(id, CALLER);
     expect(result.ok).toBe(true);

@@ -16,7 +16,7 @@ export const ERROR_CODES = [
   "forbidden",
   "invalid_request",
   "insufficient_deposit",
-  "hetzner_error",
+  "provider_error",
   "rate_limited",
   "not_implemented",
 ] as const;
@@ -34,24 +34,14 @@ export type ServerStatus =
   | "destroying"
   | "deleted";
 
-// ─── Server types and images ───────────────────────────────────────────────
-
-export const SPAWN_SERVER_TYPES = ["small", "medium", "large", "arm-small"] as const;
-export type SpawnServerType = (typeof SPAWN_SERVER_TYPES)[number];
-
-export const SPAWN_IMAGES = ["ubuntu-24.04", "ubuntu-22.04", "debian-12", "fedora-41"] as const;
-export type SpawnImage = (typeof SPAWN_IMAGES)[number];
-
-export const SPAWN_LOCATIONS = ["nbg1", "fsn1", "hel1", "ash", "hil"] as const;
-export type SpawnLocation = (typeof SPAWN_LOCATIONS)[number];
-
 // ─── Create server ─────────────────────────────────────────────────────────
 
 export interface CreateServerRequest {
   name: string;
-  type: SpawnServerType;
-  image: SpawnImage;
-  location: SpawnLocation;
+  type: string;
+  image: string;
+  location: string;
+  provider?: string;
   ssh_keys?: string[];
   user_data?: string;
 }
@@ -63,7 +53,8 @@ export interface PublicNet {
 
 export interface ServerResponse {
   id: string;
-  hetzner_id: number;
+  provider: string;
+  provider_id: string;
   name: string;
   type: string;
   status: ServerStatus;
@@ -75,7 +66,7 @@ export interface ServerResponse {
 }
 
 export interface ActionResponse {
-  id: number;
+  id: string;
   command: string;
   status: string;
   started_at: string;
@@ -116,7 +107,7 @@ export interface ActionOnlyResponse {
 }
 
 export interface ResizeRequest {
-  type: SpawnServerType;
+  type: string;
   upgrade_disk?: boolean;
 }
 
@@ -127,7 +118,7 @@ export interface ResizeResponse {
 }
 
 export interface RebuildRequest {
-  image: SpawnImage;
+  image: string;
 }
 
 export interface RebuildResponse {
@@ -144,7 +135,8 @@ export interface CreateSshKeyRequest {
 
 export interface SshKeyResponse {
   id: string;
-  hetzner_id: number;
+  provider: string;
+  provider_id: string;
   name: string;
   fingerprint: string;
   owner_wallet: string;

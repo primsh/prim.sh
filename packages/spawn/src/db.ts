@@ -2,7 +2,8 @@ import { Database } from "bun:sqlite";
 
 export interface SshKeyRow {
   id: string;
-  hetzner_id: number;
+  provider: string;
+  provider_resource_id: string;
   owner_wallet: string;
   name: string;
   fingerprint: string;
@@ -11,7 +12,8 @@ export interface SshKeyRow {
 
 export interface ServerRow {
   id: string;
-  hetzner_id: number;
+  provider: string;
+  provider_resource_id: string;
   owner_wallet: string;
   name: string;
   type: string;
@@ -36,34 +38,36 @@ export function getDb(): Database {
 
   _db.run(`
     CREATE TABLE IF NOT EXISTS servers (
-      id                TEXT PRIMARY KEY,
-      hetzner_id        INTEGER NOT NULL,
-      owner_wallet      TEXT NOT NULL,
-      name              TEXT NOT NULL,
-      type              TEXT NOT NULL,
-      image             TEXT NOT NULL,
-      location          TEXT NOT NULL,
-      status            TEXT NOT NULL,
-      public_ipv4       TEXT,
-      public_ipv6       TEXT,
-      deposit_charged   TEXT NOT NULL,
-      deposit_daily_burn TEXT NOT NULL,
-      created_at        INTEGER NOT NULL,
-      updated_at        INTEGER NOT NULL
+      id                  TEXT PRIMARY KEY,
+      provider            TEXT NOT NULL DEFAULT 'hetzner',
+      provider_resource_id TEXT NOT NULL,
+      owner_wallet        TEXT NOT NULL,
+      name                TEXT NOT NULL,
+      type                TEXT NOT NULL,
+      image               TEXT NOT NULL,
+      location            TEXT NOT NULL,
+      status              TEXT NOT NULL,
+      public_ipv4         TEXT,
+      public_ipv6         TEXT,
+      deposit_charged     TEXT NOT NULL,
+      deposit_daily_burn  TEXT NOT NULL,
+      created_at          INTEGER NOT NULL,
+      updated_at          INTEGER NOT NULL
     )
   `);
 
   _db.run("CREATE INDEX IF NOT EXISTS idx_servers_owner_wallet ON servers(owner_wallet)");
-  _db.run("CREATE INDEX IF NOT EXISTS idx_servers_hetzner_id ON servers(hetzner_id)");
+  _db.run("CREATE INDEX IF NOT EXISTS idx_servers_provider_resource_id ON servers(provider_resource_id)");
 
   _db.run(`
     CREATE TABLE IF NOT EXISTS ssh_keys (
-      id            TEXT PRIMARY KEY,
-      hetzner_id    INTEGER NOT NULL,
-      owner_wallet  TEXT NOT NULL,
-      name          TEXT NOT NULL,
-      fingerprint   TEXT NOT NULL,
-      created_at    INTEGER NOT NULL
+      id                  TEXT PRIMARY KEY,
+      provider            TEXT NOT NULL DEFAULT 'hetzner',
+      provider_resource_id TEXT NOT NULL,
+      owner_wallet        TEXT NOT NULL,
+      name                TEXT NOT NULL,
+      fingerprint         TEXT NOT NULL,
+      created_at          INTEGER NOT NULL
     )
   `);
 
@@ -78,7 +82,8 @@ export function resetDb(): void {
 
 export function insertServer(params: {
   id: string;
-  hetzner_id: number;
+  provider: string;
+  provider_resource_id: string;
   owner_wallet: string;
   name: string;
   type: string;
@@ -94,12 +99,13 @@ export function insertServer(params: {
   const now = Date.now();
   db.query(
     `INSERT INTO servers (
-      id, hetzner_id, owner_wallet, name, type, image, location, status,
+      id, provider, provider_resource_id, owner_wallet, name, type, image, location, status,
       public_ipv4, public_ipv6, deposit_charged, deposit_daily_burn, created_at, updated_at
-    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
   ).run(
     params.id,
-    params.hetzner_id,
+    params.provider,
+    params.provider_resource_id,
     params.owner_wallet,
     params.name,
     params.type,
@@ -173,7 +179,8 @@ export function updateServerTypeAndImage(id: string, type?: string, image?: stri
 
 export function insertSshKey(params: {
   id: string;
-  hetzner_id: number;
+  provider: string;
+  provider_resource_id: string;
   owner_wallet: string;
   name: string;
   fingerprint: string;
@@ -181,8 +188,8 @@ export function insertSshKey(params: {
   const db = getDb();
   const now = Date.now();
   db.query(
-    "INSERT INTO ssh_keys (id, hetzner_id, owner_wallet, name, fingerprint, created_at) VALUES (?, ?, ?, ?, ?, ?)",
-  ).run(params.id, params.hetzner_id, params.owner_wallet, params.name, params.fingerprint, now);
+    "INSERT INTO ssh_keys (id, provider, provider_resource_id, owner_wallet, name, fingerprint, created_at) VALUES (?, ?, ?, ?, ?, ?, ?)",
+  ).run(params.id, params.provider, params.provider_resource_id, params.owner_wallet, params.name, params.fingerprint, now);
 }
 
 export function getSshKeyById(id: string): SshKeyRow | null {

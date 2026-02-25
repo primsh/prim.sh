@@ -61,8 +61,8 @@ function invalidRequest(message: string): ApiError {
   return { error: { code: "invalid_request", message } };
 }
 
-function hetznerError(message: string): ApiError {
-  return { error: { code: "hetzner_error", message } };
+function providerError(message: string): ApiError {
+  return { error: { code: "provider_error", message } };
 }
 
 type AppVariables = { walletAddress: string | undefined };
@@ -104,7 +104,7 @@ app.post("/v1/servers", async (c) => {
     if (result.status === 400) return c.json(invalidRequest(result.message), 400);
     if (result.status === 403) return c.json(forbidden(result.message), 403);
     if (result.status === 404) return c.json(notFound(result.message), 404);
-    return c.json(hetznerError(result.message), result.status as 502);
+    return c.json(providerError(result.message), result.status as 502);
   }
   return c.json(result.data as CreateServerResponse, 201);
 });
@@ -155,7 +155,7 @@ app.delete("/v1/servers/:id", async (c) => {
   if (!result.ok) {
     if (result.status === 404) return c.json(notFound(result.message), 404);
     if (result.status === 403) return c.json(forbidden(result.message), 403);
-    return c.json(hetznerError(result.message), result.status as 502);
+    return c.json(providerError(result.message), result.status as 502);
   }
   return c.json(result.data as DeleteServerResponse, 200);
 });
@@ -169,7 +169,7 @@ app.post("/v1/servers/:id/start", async (c) => {
   if (!result.ok) {
     if (result.status === 404) return c.json(notFound(result.message), 404);
     if (result.status === 403) return c.json(forbidden(result.message), 403);
-    return c.json(hetznerError(result.message), result.status as 502);
+    return c.json(providerError(result.message), result.status as 502);
   }
   return c.json(result.data as ActionOnlyResponse, 200);
 });
@@ -183,7 +183,7 @@ app.post("/v1/servers/:id/stop", async (c) => {
   if (!result.ok) {
     if (result.status === 404) return c.json(notFound(result.message), 404);
     if (result.status === 403) return c.json(forbidden(result.message), 403);
-    return c.json(hetznerError(result.message), result.status as 502);
+    return c.json(providerError(result.message), result.status as 502);
   }
   return c.json(result.data as ActionOnlyResponse, 200);
 });
@@ -197,7 +197,7 @@ app.post("/v1/servers/:id/reboot", async (c) => {
   if (!result.ok) {
     if (result.status === 404) return c.json(notFound(result.message), 404);
     if (result.status === 403) return c.json(forbidden(result.message), 403);
-    return c.json(hetznerError(result.message), result.status as 502);
+    return c.json(providerError(result.message), result.status as 502);
   }
   return c.json(result.data as ActionOnlyResponse, 200);
 });
@@ -219,7 +219,7 @@ app.post("/v1/servers/:id/resize", async (c) => {
     if (result.status === 400) return c.json(invalidRequest(result.message), 400);
     if (result.status === 404) return c.json(notFound(result.message), 404);
     if (result.status === 403) return c.json(forbidden(result.message), 403);
-    return c.json(hetznerError(result.message), result.status as 502);
+    return c.json(providerError(result.message), result.status as 502);
   }
   return c.json(result.data as ResizeResponse, 200);
 });
@@ -241,7 +241,7 @@ app.post("/v1/servers/:id/rebuild", async (c) => {
     if (result.status === 400) return c.json(invalidRequest(result.message), 400);
     if (result.status === 404) return c.json(notFound(result.message), 404);
     if (result.status === 403) return c.json(forbidden(result.message), 403);
-    return c.json(hetznerError(result.message), result.status as 502);
+    return c.json(providerError(result.message), result.status as 502);
   }
   return c.json(result.data as RebuildResponse, 200);
 });
@@ -261,7 +261,7 @@ app.post("/v1/ssh-keys", async (c) => {
   const result = await registerSshKey(body, caller);
   if (!result.ok) {
     if (result.status === 400) return c.json(invalidRequest(result.message), 400);
-    return c.json(hetznerError(result.message), result.status as 502);
+    return c.json(providerError(result.message), result.status as 502);
   }
   return c.json(result.data as SshKeyResponse, 201);
 });
@@ -284,7 +284,7 @@ app.delete("/v1/ssh-keys/:id", async (c) => {
   if (!result.ok) {
     if (result.status === 404) return c.json(notFound(result.message), 404);
     if (result.status === 403) return c.json(forbidden(result.message), 403);
-    return c.json(hetznerError(result.message), result.status as 502);
+    return c.json(providerError(result.message), result.status as 502);
   }
   return c.json(result.data, 200);
 });
