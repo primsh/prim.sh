@@ -265,23 +265,24 @@ describe("put from file", () => {
   });
 
   it("--content-type flag overrides inferred type", async () => {
+    // .json infers application/json; flag overrides to text/csv — proves override, not just fallback
     vi.mocked(statSync).mockReturnValue({ size: 5 } as ReturnType<typeof statSync>);
-    vi.mocked(readFileSync).mockReturnValue(Buffer.from("bytes") as unknown as string);
-    mockFetch.mockResolvedValue(okPut("blob"));
+    vi.mocked(readFileSync).mockReturnValue(Buffer.from("a,b,c") as unknown as string);
+    mockFetch.mockResolvedValue(okPut("report"));
 
     await runStoreCommand("put", [
       "store",
       "put",
       "bkt_123",
-      "blob",
-      "--file=./blob.bin",
-      "--content-type=application/octet-stream",
+      "report",
+      "--file=./data.json",
+      "--content-type=text/csv",
     ]);
 
     expect(mockFetch).toHaveBeenCalledWith(
       expect.anything(),
       expect.objectContaining({
-        headers: expect.objectContaining({ "Content-Type": "application/octet-stream" }),
+        headers: expect.objectContaining({ "Content-Type": "text/csv" }),
       }),
     );
   });

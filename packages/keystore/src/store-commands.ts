@@ -1,6 +1,8 @@
 import { readFileSync, statSync } from "node:fs";
 import { writeFile } from "node:fs/promises";
 import { extname } from "node:path";
+import { createInterface } from "node:readline/promises";
+import { stdin as rlInput, stdout as rlOutput } from "node:process";
 import { createPrimFetch } from "@prim/x402-client";
 import { getConfig } from "./config.ts";
 
@@ -22,6 +24,17 @@ function getFlag(name: string, argv: string[]): string | undefined {
 
 function hasFlag(name: string, argv: string[]): boolean {
   return argv.some((a) => a === `--${name}` || a.startsWith(`--${name}=`));
+}
+
+/** Same semantics as wallet's resolvePassphrase: prompts if bare --passphrase with no value. */
+async function resolvePassphrase(argv: string[]): Promise<string | undefined> {
+  if (!hasFlag("passphrase", argv)) return undefined;
+  const value = getFlag("passphrase", argv);
+  if (value) return value; // --passphrase=VALUE
+  const rl = createInterface({ input: rlInput, output: rlOutput });
+  const result = await rl.question("Passphrase: ");
+  rl.close();
+  return result;
 }
 
 export function resolveStoreUrl(argv: string[]): string {
@@ -75,12 +88,15 @@ async function handleError(res: Response): Promise<never> {
 export async function runStoreCommand(sub: string, argv: string[]): Promise<void> {
   const baseUrl = resolveStoreUrl(argv);
   const walletFlag = getFlag("wallet", argv);
-  const passphraseFlag = getFlag("passphrase", argv);
+  const passphrase = await resolvePassphrase(argv);
   const maxPaymentFlag = getFlag("max-payment", argv);
   const quiet = hasFlag("quiet", argv);
   const config = await getConfig();
   const primFetch = createPrimFetch({
-    keystore: walletFlag ? { address: walletFlag, passphrase: passphraseFlag } : true,
+    keystore:
+      walletFlag !== undefined || passphrase !== undefined
+        ? { address: walletFlag, passphrase }
+        : true,
     maxPayment: maxPaymentFlag ?? "1.00",
     network: config.network,
   });
