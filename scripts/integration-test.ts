@@ -6,7 +6,7 @@
  *   1. Generate private key locally (agent-side)
  *   2. Register wallet via EIP-191 signature
  *   3. Fund via faucet.sh (Circle USDC drip)
- *   4. Exercise store.sh endpoints via @prim/x402-client
+ *   4. Exercise store.sh endpoints via @primsh/x402-client
  *
  * Usage:
  *   source .env.testnet && bun run scripts/integration-test.ts
@@ -28,9 +28,11 @@ const DRY_RUN = process.argv.includes("--dry-run");
 const WALLET_PORT = Number(process.env.WALLET_PORT ?? "3001");
 const FAUCET_PORT = Number(process.env.FAUCET_PORT ?? "3003");
 const STORE_PORT = Number(process.env.STORE_PORT ?? "3002");
+const SPAWN_PORT = Number(process.env.SPAWN_PORT ?? "3004");
 const WALLET_URL = `http://localhost:${WALLET_PORT}`;
 const FAUCET_URL = `http://localhost:${FAUCET_PORT}`;
 const STORE_URL = `http://localhost:${STORE_PORT}`;
+const SPAWN_URL = `http://localhost:${SPAWN_PORT}`;
 
 // ─── Preflight checks ───────────────────────────────────────────────────
 
@@ -52,6 +54,8 @@ if (network !== "eip155:84532") {
   process.exit(1);
 }
 
+const HAS_DO_TOKEN = !!process.env.DO_API_TOKEN;
+
 if (DRY_RUN) {
   console.log("✓ Dry-run mode. wallet.sh + faucet.sh will start.");
 } else {
@@ -60,6 +64,9 @@ if (DRY_RUN) {
   requireEnv("CLOUDFLARE_ACCOUNT_ID");
   requireEnv("R2_ACCESS_KEY_ID");
   requireEnv("R2_SECRET_ACCESS_KEY");
+  if (!HAS_DO_TOKEN) {
+    console.log("  ⚠ DO_API_TOKEN not set — spawn.sh tests will be skipped");
+  }
   console.log("✓ All env vars present. Network: Base Sepolia (eip155:84532)");
 }
 
@@ -121,6 +128,8 @@ function cleanup() {
 // ─── Test helpers ────────────────────────────────────────────────────────
 
 let testBucketId: string | null = null;
+let testServerId: string | null = null;
+let testSshKeyId: string | null = null;
 let walletAddress: string | null = null;
 let agentPrivateKey: `0x${string}` | null = null;
 const steps: { name: string; passed: boolean; error?: string }[] = [];
@@ -151,6 +160,9 @@ async function main() {
   await startService("faucet.sh", "packages/faucet/src/index.ts", FAUCET_PORT);
   if (!DRY_RUN) {
     await startService("store.sh", "packages/store/src/index.ts", STORE_PORT);
+    if (HAS_DO_TOKEN) {
+      await startService("spawn.sh", "packages/spawn/src/index.ts", SPAWN_PORT);
+    }
   }
 
   console.log("\n─── Running integration tests ──────────────────────────────\n");
@@ -257,7 +269,7 @@ async function main() {
     return;
   }
 
-  // 4. Create x402 fetch using @prim/x402-client
+  // 4. Create x402 fetch using @primsh/x402-client
   const { createPrimFetch } = await import("../packages/x402-client/src/index.ts");
   const primFetch = createPrimFetch({
     privateKey: agentPrivateKey,
@@ -272,71 +284,163 @@ async function main() {
       body: JSON.stringify({ name: `test-${Date.now()}` }),
     });
     if (!res.ok) throw new Error(`POST /v1/buckets → ${res.status}: ${await res.text()}`);
-    const data = (await res.json()) as { id: string; name: string };
-    testBucketId = data.id;
+    const data = (await res.json()) as { bucket: { id: string; name: string } };
+    testBucketId = data.bucket.id;
     console.log(`(bucket: ${testBucketId})`);
   });
 
   if (!testBucketId) {
-    console.log("  Skipping object tests — no bucket created.");
-    return;
+    console.log("  Skipping store object tests — no bucket created.");
   }
 
-  // 6. Upload object
-  await step("Upload object via x402", async () => {
-    const res = await primFetch(
-      `${STORE_URL}/v1/buckets/${testBucketId}/objects/test.txt`,
-      {
-        method: "PUT",
-        headers: { "Content-Type": "text/plain", "Content-Length": "13" },
-        body: "hello testnet",
-      },
-    );
-    if (!res.ok) throw new Error(`PUT object → ${res.status}: ${await res.text()}`);
-    const data = (await res.json()) as { key: string };
-    if (data.key !== "test.txt") throw new Error(`Expected key "test.txt", got "${data.key}"`);
-  });
+  if (testBucketId) {
+    // 6. Upload object
+    await step("Upload object via x402", async () => {
+      const res = await primFetch(
+        `${STORE_URL}/v1/buckets/${testBucketId}/objects/test.txt`,
+        {
+          method: "PUT",
+          headers: { "Content-Type": "text/plain", "Content-Length": "13" },
+          body: "hello testnet",
+        },
+      );
+      if (!res.ok) throw new Error(`PUT object → ${res.status}: ${await res.text()}`);
+      const data = (await res.json()) as { key: string };
+      if (data.key !== "test.txt") throw new Error(`Expected key "test.txt", got "${data.key}"`);
+    });
 
-  // 7. Download object — verify body
-  await step("Download object via x402", async () => {
-    const res = await primFetch(
-      `${STORE_URL}/v1/buckets/${testBucketId}/objects/test.txt`,
-      { method: "GET" },
-    );
-    if (!res.ok) throw new Error(`GET object → ${res.status}: ${await res.text()}`);
-    const body = await res.text();
-    if (body !== "hello testnet") throw new Error(`Expected "hello testnet", got "${body}"`);
-  });
+    // 7. Download object — verify body
+    await step("Download object via x402", async () => {
+      const res = await primFetch(
+        `${STORE_URL}/v1/buckets/${testBucketId}/objects/test.txt`,
+        { method: "GET" },
+      );
+      if (!res.ok) throw new Error(`GET object → ${res.status}: ${await res.text()}`);
+      const body = await res.text();
+      if (body !== "hello testnet") throw new Error(`Expected "hello testnet", got "${body}"`);
+    });
 
-  // 8. Get quota
-  await step("Get quota via x402", async () => {
-    const res = await primFetch(
-      `${STORE_URL}/v1/buckets/${testBucketId}/quota`,
-      { method: "GET" },
-    );
-    if (!res.ok) throw new Error(`GET quota → ${res.status}: ${await res.text()}`);
-    const data = (await res.json()) as { usage_bytes: number };
-    if (data.usage_bytes !== 13) throw new Error(`Expected usage_bytes=13, got ${data.usage_bytes}`);
-  });
+    // 8. Get quota
+    await step("Get quota via x402", async () => {
+      const res = await primFetch(
+        `${STORE_URL}/v1/buckets/${testBucketId}/quota`,
+        { method: "GET" },
+      );
+      if (!res.ok) throw new Error(`GET quota → ${res.status}: ${await res.text()}`);
+      const data = (await res.json()) as { usage_bytes: number };
+      if (data.usage_bytes !== 13) throw new Error(`Expected usage_bytes=13, got ${data.usage_bytes}`);
+    });
 
-  // 9. Delete object
-  await step("Delete object via x402", async () => {
-    const res = await primFetch(
-      `${STORE_URL}/v1/buckets/${testBucketId}/objects/test.txt`,
-      { method: "DELETE" },
-    );
-    if (!res.ok) throw new Error(`DELETE object → ${res.status}: ${await res.text()}`);
-  });
+    // 9. Delete object
+    await step("Delete object via x402", async () => {
+      const res = await primFetch(
+        `${STORE_URL}/v1/buckets/${testBucketId}/objects/test.txt`,
+        { method: "DELETE" },
+      );
+      if (!res.ok) throw new Error(`DELETE object → ${res.status}: ${await res.text()}`);
+    });
 
-  // 10. Delete bucket
-  await step("Delete bucket via x402", async () => {
-    const res = await primFetch(
-      `${STORE_URL}/v1/buckets/${testBucketId}`,
-      { method: "DELETE" },
-    );
-    if (!res.ok) throw new Error(`DELETE bucket → ${res.status}: ${await res.text()}`);
-    testBucketId = null; // Prevent cleanup from trying to delete again
-  });
+    // 10. Delete bucket
+    await step("Delete bucket via x402", async () => {
+      const res = await primFetch(
+        `${STORE_URL}/v1/buckets/${testBucketId}`,
+        { method: "DELETE" },
+      );
+      if (!res.ok) throw new Error(`DELETE bucket → ${res.status}: ${await res.text()}`);
+      testBucketId = null; // Prevent cleanup from trying to delete again
+    });
+  }
+
+  // ─── spawn.sh tests (requires DO_API_TOKEN) ────────────────────────────
+
+  if (!HAS_DO_TOKEN) {
+    console.log("\n  Skipping spawn.sh tests — no DO_API_TOKEN");
+  } else {
+  console.log("\n─── spawn.sh x402 integration ──────────────────────────────\n");
+
+  {
+    // 11. Register SSH key via x402
+    await step("Register SSH key via x402", async () => {
+      const { execSync } = await import("node:child_process");
+      const { mkdtempSync, readFileSync, rmSync } = await import("node:fs");
+      const { join } = await import("node:path");
+      const { tmpdir } = await import("node:os");
+
+      const dir = mkdtempSync(join(tmpdir(), "prim-integ-"));
+      const keyPath = join(dir, "id_ed25519");
+      execSync(`ssh-keygen -t ed25519 -f ${keyPath} -N "" -q`);
+      const pubKey = readFileSync(`${keyPath}.pub`, "utf-8").trim();
+      rmSync(dir, { recursive: true });
+
+      const res = await primFetch(`${SPAWN_URL}/v1/ssh-keys`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name: `integ-test-${Date.now()}`, public_key: pubKey }),
+      });
+      if (!res.ok) throw new Error(`POST /v1/ssh-keys → ${res.status}: ${await res.text()}`);
+      const data = (await res.json()) as { id: string; name: string };
+      testSshKeyId = data.id;
+      console.log(`(key: ${testSshKeyId})`);
+    });
+
+    // 12. Create server via x402
+    await step("Create server via x402", async () => {
+      const res = await primFetch(`${SPAWN_URL}/v1/servers`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name: `integ-${Date.now()}`,
+          type: "small",
+          image: "ubuntu-24.04",
+          location: "nyc3",
+          ssh_keys: testSshKeyId ? [testSshKeyId] : [],
+        }),
+      });
+      if (!res.ok) throw new Error(`POST /v1/servers → ${res.status}: ${await res.text()}`);
+      const data = (await res.json()) as { server: { id: string; name: string; status: string } };
+      testServerId = data.server.id;
+      console.log(`(server: ${testServerId})`);
+    });
+
+    if (testServerId) {
+      // 13. Poll until active
+      await step("Poll server until active (up to 120s)", async () => {
+        const deadline = Date.now() + 120_000;
+        while (Date.now() < deadline) {
+          const res = await primFetch(`${SPAWN_URL}/v1/servers/${testServerId}`);
+          if (!res.ok) throw new Error(`GET server → ${res.status}: ${await res.text()}`);
+          const data = (await res.json()) as { status: string; public_net: { ipv4: { ip: string | null } | null } };
+          if (data.status === "active") {
+            console.log(`(active, ip: ${data.public_net?.ipv4?.ip})`);
+            return;
+          }
+          await sleep(5_000);
+        }
+        throw new Error("Server did not become active within 120s");
+      });
+
+      // 14. Delete server via x402
+      await step("Delete server via x402", async () => {
+        const res = await primFetch(`${SPAWN_URL}/v1/servers/${testServerId}`, {
+          method: "DELETE",
+        });
+        if (!res.ok) throw new Error(`DELETE server → ${res.status}: ${await res.text()}`);
+        testServerId = null; // Prevent cleanup from trying again
+      });
+    }
+
+    // 15. Delete SSH key via x402
+    if (testSshKeyId) {
+      await step("Delete SSH key via x402", async () => {
+        const res = await primFetch(`${SPAWN_URL}/v1/ssh-keys/${testSshKeyId}`, {
+          method: "DELETE",
+        });
+        if (!res.ok) throw new Error(`DELETE ssh-key → ${res.status}: ${await res.text()}`);
+        testSshKeyId = null;
+      });
+    }
+  }
+  } // else (HAS_DO_TOKEN)
 }
 
 // ─── Run with cleanup ────────────────────────────────────────────────────
@@ -346,16 +450,35 @@ try {
 } catch (err) {
   console.error("\n✗ Fatal error:", err instanceof Error ? err.message : err);
 } finally {
-  // Cleanup: delete test bucket if still exists
-  if (testBucketId && agentPrivateKey) {
-    console.log(`\n  Cleaning up test bucket ${testBucketId}...`);
-    try {
-      const { createPrimFetch } = await import("../packages/x402-client/src/index.ts");
-      const primFetch = createPrimFetch({ privateKey: agentPrivateKey, maxPayment: "1.00" });
-      await primFetch(`${STORE_URL}/v1/buckets/${testBucketId}`, { method: "DELETE" });
-      console.log("  ✓ Cleaned up");
-    } catch {
-      console.log("  ✗ Cleanup failed (bucket may still exist)");
+  // Cleanup: delete orphaned resources
+  if (agentPrivateKey && (testBucketId || testServerId || testSshKeyId)) {
+    console.log("\n  Cleaning up...");
+    const { createPrimFetch } = await import("../packages/x402-client/src/index.ts");
+    const primFetch = createPrimFetch({ privateKey: agentPrivateKey, maxPayment: "1.00" });
+
+    if (testServerId) {
+      try {
+        await primFetch(`${SPAWN_URL}/v1/servers/${testServerId}`, { method: "DELETE" });
+        console.log("  ✓ Cleaned up server");
+      } catch {
+        console.log("  ✗ Server cleanup failed (may still exist on DO)");
+      }
+    }
+    if (testSshKeyId) {
+      try {
+        await primFetch(`${SPAWN_URL}/v1/ssh-keys/${testSshKeyId}`, { method: "DELETE" });
+        console.log("  ✓ Cleaned up SSH key");
+      } catch {
+        console.log("  ✗ SSH key cleanup failed");
+      }
+    }
+    if (testBucketId) {
+      try {
+        await primFetch(`${STORE_URL}/v1/buckets/${testBucketId}`, { method: "DELETE" });
+        console.log("  ✓ Cleaned up bucket");
+      } catch {
+        console.log("  ✗ Bucket cleanup failed");
+      }
     }
   }
 

@@ -1,5 +1,5 @@
 {
-  "name": "@agentstack/x402-middleware",
+  "name": "@primsh/x402-middleware",
   "version": "0.0.0",
   "private": false,
   "type": "module",

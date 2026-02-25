@@ -3,7 +3,7 @@ import { writeFile } from "node:fs/promises";
 import { extname } from "node:path";
 import { createInterface } from "node:readline/promises";
 import { stdin as rlInput, stdout as rlOutput } from "node:process";
-import { createPrimFetch } from "@prim/x402-client";
+import { createPrimFetch } from "@primsh/x402-client";
 import { getConfig } from "./config.ts";
 
 async function readStdin(): Promise<Buffer> {

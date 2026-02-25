@@ -2,7 +2,7 @@
  * D-1/D-2 domain.sh tests: zone + record CRUD with ownership enforcement, domain search.
  *
  * Tests the service layer directly (same pattern as spawn.sh).
- * x402 middleware is tested separately in @agentstack/x402-middleware.
+ * x402 middleware is tested separately in @primsh/x402-middleware.
  *
  * IMPORTANT: env vars must be set before any module import that touches db/cloudflare.
  */

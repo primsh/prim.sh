@@ -1,5 +1,5 @@
 {
-  "name": "@prim/keystore",
+  "name": "@primsh/keystore",
   "version": "0.0.0",
   "private": false,
   "type": "module",
@@ -15,8 +15,8 @@
     "check": "pnpm lint && pnpm typecheck && pnpm test"
   },
   "dependencies": {
-    "@agentstack/x402-middleware": "workspace:*",
-    "@prim/x402-client": "workspace:*",
+    "@primsh/x402-middleware": "workspace:*",
+    "@primsh/x402-client": "workspace:*",
     "viem": "^2.21.0"
   },
   "devDependencies": {

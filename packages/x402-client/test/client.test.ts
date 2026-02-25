@@ -1,5 +1,5 @@
 /**
- * @prim/x402-client tests.
+ * @primsh/x402-client tests.
  *
  * Mocks:
  * - global fetch to simulate 402 -> 200 flows
@@ -38,9 +38,9 @@ vi.mock("viem", async (importOriginal) => {
   };
 });
 
-// Mock @prim/keystore — configured per-test via vi.mocked(loadAccount)
+// Mock @primsh/keystore — configured per-test via vi.mocked(loadAccount)
 const mockLoadAccount = vi.fn();
-vi.mock("@prim/keystore", () => ({
+vi.mock("@primsh/keystore", () => ({
   loadAccount: mockLoadAccount,
 }));
 

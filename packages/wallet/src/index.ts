@@ -1,5 +1,5 @@
 import { Hono } from "hono";
-import { createAgentStackMiddleware, getNetworkConfig } from "@agentstack/x402-middleware";
+import { createAgentStackMiddleware, getNetworkConfig } from "@primsh/x402-middleware";
 import type {
   WalletRegisterRequest,
   WalletListResponse,

@@ -1,5 +1,5 @@
 {
-  "name": "@agentstack/domain",
+  "name": "@primsh/domain",
   "version": "0.0.0",
   "private": false,
   "type": "module",
@@ -14,7 +14,7 @@
     "check": "pnpm lint && pnpm typecheck && pnpm test"
   },
   "dependencies": {
-    "@agentstack/x402-middleware": "workspace:*",
+    "@primsh/x402-middleware": "workspace:*",
     "@x402/core": "^2.4.0",
     "hono": "^4.4.7"
   },

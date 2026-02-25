@@ -1,6 +1,6 @@
 import { randomBytes } from "node:crypto";
 import { isAddress, getAddress, verifyMessage } from "viem";
-import { getNetworkConfig } from "@agentstack/x402-middleware";
+import { getNetworkConfig } from "@primsh/x402-middleware";
 import {
   insertWallet,
   getWalletByAddress,

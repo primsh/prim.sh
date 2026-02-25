@@ -1,5 +1,5 @@
 {
-  "name": "@prim/x402-client",
+  "name": "@primsh/x402-client",
   "version": "0.0.0",
   "private": false,
   "type": "module",
@@ -14,8 +14,8 @@
     "check": "pnpm lint && pnpm typecheck && pnpm test"
   },
   "dependencies": {
-    "@agentstack/x402-middleware": "workspace:*",
-    "@prim/keystore": "workspace:*",
+    "@primsh/x402-middleware": "workspace:*",
+    "@primsh/keystore": "workspace:*",
     "@x402/evm": "^2.4.0",
     "viem": "^2.21.0"
   },

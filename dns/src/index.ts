@@ -1,5 +1,5 @@
 import { Hono } from "hono";
-import { createAgentStackMiddleware } from "@agentstack/x402-middleware";
+import { createAgentStackMiddleware } from "@primsh/x402-middleware";
 import type {
   ApiError,
   ZoneCreateRequest,

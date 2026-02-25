@@ -8,7 +8,7 @@
 
 import { describe, it, expect, vi, beforeEach, afterEach, type MockInstance } from "vitest";
 
-vi.mock("@prim/x402-client", () => ({
+vi.mock("@primsh/x402-client", () => ({
   createPrimFetch: vi.fn(),
 }));
 
@@ -33,7 +33,7 @@ vi.mock("node:fs/promises", async (importOriginal) => {
   };
 });
 
-import { createPrimFetch } from "@prim/x402-client";
+import { createPrimFetch } from "@primsh/x402-client";
 import { statSync, readFileSync } from "node:fs";
 import { writeFile } from "node:fs/promises";
 import { getConfig } from "../src/config.ts";

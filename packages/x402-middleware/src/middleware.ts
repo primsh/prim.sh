@@ -12,7 +12,8 @@ import type {
 } from "./types.ts";
 
 const DEFAULT_NETWORK: Network = "eip155:8453";
-const DEFAULT_FACILITATOR_URL = "https://x402.org/facilitator";
+const DEFAULT_FACILITATOR_URL =
+  process.env.FACILITATOR_URL ?? "https://facilitator.payai.network";
 const WALLET_ADDRESS_KEY = "walletAddress";
 
 function normalizeRouteConfigEntry(

@@ -5,7 +5,7 @@ import { createPublicClient, http } from "viem";
 import { base, baseSepolia } from "viem/chains";
 import { privateKeyToAccount } from "viem/accounts";
 import type { LocalAccount } from "viem";
-import { getNetworkConfig } from "@agentstack/x402-middleware";
+import { getNetworkConfig } from "@primsh/x402-middleware";
 import type { CreatePrimFetchConfig } from "./types.ts";
 
 function getViemChain(chainId: number) {
@@ -33,7 +33,7 @@ function formatUsdc(atomic: bigint): string {
 async function resolveKeystoreAccount(
   keystore: NonNullable<CreatePrimFetchConfig["keystore"]>,
 ): Promise<LocalAccount> {
-  const { loadAccount } = await import("@prim/keystore");
+  const { loadAccount } = await import("@primsh/keystore");
   const opts = keystore === true ? {} : (keystore as { address?: string; passphrase?: string });
   return loadAccount(opts.address, { passphrase: opts.passphrase });
 }

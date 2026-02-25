@@ -14,7 +14,7 @@ vi.mock("hono", () => {
   return { Hono: MockHono };
 });
 
-vi.mock("@agentstack/x402-middleware", () => ({
+vi.mock("@primsh/x402-middleware", () => ({
   createAgentStackMiddleware:
     () =>
     async (_c: unknown, next: () => Promise<void>): Promise<void> => {

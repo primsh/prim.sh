@@ -1,5 +1,5 @@
 {
-  "name": "@agentstack/dns",
+  "name": "@primsh/dns",
   "version": "0.0.0",
   "private": false,
   "type": "module",

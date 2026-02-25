@@ -2,7 +2,7 @@
  * ST-1 store.sh tests: bucket CRUD with ownership enforcement.
  *
  * Tests the service layer directly (same pattern as dns.sh).
- * x402 middleware is tested separately in @agentstack/x402-middleware.
+ * x402 middleware is tested separately in @primsh/x402-middleware.
  *
  * IMPORTANT: env vars must be set before any module import that touches db/cloudflare.
  */

@@ -1,5 +1,5 @@
 /**
- * @prim/keystore tests.
+ * @primsh/keystore tests.
  *
  * All tests use PRIM_HOME env override → isolated temp dir, never touches real ~/.prim/.
  * PRIM_SCRYPT_N=1024 keeps scrypt fast for test runs.
@@ -18,7 +18,7 @@ vi.mock("viem", async (importOriginal) => {
   };
 });
 
-vi.mock("@agentstack/x402-middleware", () => ({
+vi.mock("@primsh/x402-middleware", () => ({
   getNetworkConfig: vi.fn(() => ({
     network: "eip155:84532",
     chainId: 84532,

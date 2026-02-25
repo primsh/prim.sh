@@ -1,5 +1,5 @@
 import { Hono } from "hono";
-import { createAgentStackMiddleware, getNetworkConfig } from "@agentstack/x402-middleware";
+import { createAgentStackMiddleware, getNetworkConfig } from "@primsh/x402-middleware";
 import type {
   ApiError,
   CreateBucketRequest,
@@ -63,6 +63,12 @@ function r2Error(message: string): ApiError {
 
 function quotaExceeded(message: string): ApiError {
   return { error: { code: "quota_exceeded", message } };
+}
+
+/** Extract object key from wildcard path — Hono 4.x doesn't capture `*` as a param. */
+function extractObjectKey(c: { req: { path: string } }): string {
+  const match = c.req.path.match(/\/objects\/(.+)/);
+  return match ? decodeURIComponent(match[1]) : "";
 }
 
 type AppVariables = { walletAddress: string | undefined };
@@ -153,7 +159,7 @@ app.put("/v1/buckets/:id/objects/*", async (c) => {
   const caller = c.get("walletAddress");
   if (!caller) return c.json(forbidden("No wallet address in payment"), 403);
 
-  const key = decodeURIComponent(c.req.param("*") ?? "");
+  const key = extractObjectKey(c);
   const contentType = c.req.header("Content-Type");
   const body = c.req.raw.body;
   if (!body) return c.json(invalidRequest("Request body is required"), 400);
@@ -196,7 +202,7 @@ app.get("/v1/buckets/:id/objects/*", async (c) => {
   const caller = c.get("walletAddress");
   if (!caller) return c.json(forbidden("No wallet address in payment"), 403);
 
-  const key = decodeURIComponent(c.req.param("*") ?? "");
+  const key = extractObjectKey(c);
 
   const result = await getObject(c.req.param("id"), key, caller);
   if (!result.ok) {
@@ -220,7 +226,7 @@ app.delete("/v1/buckets/:id/objects/*", async (c) => {
   const caller = c.get("walletAddress");
   if (!caller) return c.json(forbidden("No wallet address in payment"), 403);
 
-  const key = decodeURIComponent(c.req.param("*") ?? "");
+  const key = extractObjectKey(c);
 
   const result = await deleteObject(c.req.param("id"), key, caller);
   if (!result.ok) {

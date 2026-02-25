@@ -82,7 +82,7 @@
 | 15 | ST-12 | Build store.sh: bucket event webhooks — HMAC-signed callbacks on object create/delete, retry queue, same pattern as email.sh R-7 | packages/store | ST-2 | pending |
 | 15 | ST-13 | Build store.sh: object metadata + tagging — custom key-value metadata on put, returned on get, tag-based filtering on list | packages/store | ST-2 | pending |
 | 15 | SE-1 | Build search.sh: web search, news search, extract via Tavily (stateless proxy, x402 gated) | packages/search | — | done |
-| 15 | P-6 | `prim` binary publishing + install scripts: `bun build --compile`, host binary, `curl prim.sh/install \| sh`, per-primitive install wrappers | packages/keystore, site/ | ST-6 | pending |
+| 15 | P-6 | `prim` binary publishing + install scripts: `bun build --compile`, host binary, `curl prim.sh/install \| sh`, per-primitive install wrappers | packages/keystore, site/ | ST-6 | pending (→ L-11/L-12) |
 | 16 | E-1 | Set PTR record for mail server IP ([STALWART_HOST] → mail.relay.prim.sh) | deploy/email | — | done |
 | 17 | E-2 | Downgrade DMARC to `p=none` temporarily while domain reputation is zero | Cloudflare DNS | — | done |
 | 18 | E-3 | Register relay.prim.sh with Google Postmaster Tools (DNS TXT verification) | Cloudflare DNS, Google | E-1 | pending |
@@ -90,6 +90,7 @@
 | 20 | E-5 | Verify Gmail inbox delivery (not spam) after warmup + PTR + DMARC changes | deploy/email | E-4 | pending |
 | 21 | E-6 | Verify Apple Mail / iCloud delivery after warmup | deploy/email | E-4 | pending |
 | 22 | E-7 | Upgrade DMARC back to `p=quarantine` once inbox delivery is consistent | Cloudflare DNS | E-5, E-6 | pending |
+| — | E-8 | Migrate mail domain from `relay.prim.sh` → `email.prim.sh` (DNS, DKIM, Stalwart principal, PTR, TLS cert). Do after deliverability is solid — resets reputation. Code already supports it via `EMAIL_DEFAULT_DOMAIN` env var. | deploy/email, Cloudflare DNS | E-7 | deferred |
 | 23 | M-1 | Build mem.sh: vector memory (Qdrant collections + upsert + query) + KV cache + x402 | packages/mem | — | done |
 
 ## Plan Docs
@@ -139,6 +140,45 @@
 - ST-6: `tasks/active/st-6-prim-store-cli-2026-02-25.md`
 - SE-1: `tasks/completed/se-1-search-sh-plan-2026-02-25.md`
 - M-1: `tasks/completed/m-1-mem-sh-vector-cache-2026-02-25.md`
+- V1 Launch: `tasks/active/v1-launch-plan-2026-02-25.md`
+
+## V1 Launch (scope: L)
+
+Plan doc: `tasks/active/v1-launch-plan-2026-02-25.md`
+
+### Wave 0: Cleanup (blocks everything)
+
+| ID | Task | Owner | Depends on | Status |
+|---|---|---|---|---|
+| L-1 | Redact secrets from TASKS.md + task files (Stalwart creds, server IP) | Claude | — | pending |
+| L-2 | Rename all packages `@agentstack/*` + `@prim/*` → `@primsh/*` (12 packages + all imports) | Claude | — | pending |
+| L-3 | Audit .gitignore + CLAUDE.md for public readiness | Claude | — | pending |
+
+### Wave 1: Foundation
+
+| ID | Task | Owner | Depends on | Status |
+|---|---|---|---|---|
+| L-4 | Create GitHub org `useprim` + repo `prim.sh` (private), push clean code | Garric | L-1, L-2 | pending |
+| L-5 | Register `@primsh` npm org | Garric | — | done |
+| L-6 | Write GitHub Actions CI workflow (`.github/workflows/ci.yml` + `release.yml`) | Claude | L-4 | pending |
+| L-7 | Provision DigitalOcean VPS for Core 4 services | Garric | — | pending |
+| L-8 | Write deploy scripts: systemd services + Caddyfile + setup.sh | Claude | — | pending |
+| L-9 | Wire DNS A records (`*.prim.sh` → VPS) + set env vars on VPS | Garric | L-7 | pending |
+
+### Wave 2: Go Live
+
+| ID | Task | Owner | Depends on | Status |
+|---|---|---|---|---|
+| L-10 | Deploy Core 4 to VPS + run integration smoke test against live endpoints | Claude + Garric | L-8, L-9 | pending |
+| L-11 | Compile `prim` binary for 4 platforms (`bun build --compile`) + upload to GitHub Release | Claude | L-4 | pending |
+| L-12 | Write install script (`curl prim.sh \| sh`) + per-primitive wrappers | Claude | L-11 | pending |
+| L-13 | Deploy landing site (`site/`) to Cloudflare Pages, wire `prim.sh` root domain | Garric + Claude | L-4 | pending |
+
+### Wave 3: Token + Public
+
+| ID | Task | Owner | Depends on | Status |
+|---|---|---|---|---|
+| L-14 | Check ticker availability on BaseScan, deploy $PRIM/$PRIMSH/$PRIMITIVESHELL defensively, create Uniswap pool, make repo public | Garric + token dev | L-10 | pending |
 
 ## Backlog — Future Primitives
 

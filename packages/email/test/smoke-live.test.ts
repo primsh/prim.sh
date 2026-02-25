@@ -7,7 +7,7 @@
  *   - Required env vars set (see below)
  *
  * Run:
- *   pnpm -F @agentstack/email test:smoke
+ *   pnpm -F @primsh/email test:smoke
  *
  * Required env vars:
  *   STALWART_API_URL            — e.g. http://localhost:8080

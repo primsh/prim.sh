@@ -1,5 +1,5 @@
 {
-  "name": "@agentstack/email",
+  "name": "@primsh/email",
   "version": "0.0.0",
   "private": false,
   "type": "module",
@@ -15,7 +15,7 @@
     "check": "pnpm lint && pnpm typecheck && pnpm test"
   },
   "dependencies": {
-    "@agentstack/x402-middleware": "workspace:*",
+    "@primsh/x402-middleware": "workspace:*",
     "hono": "^4.4.7"
   },
   "devDependencies": {

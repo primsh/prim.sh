@@ -1,6 +1,6 @@
 import { Hono } from "hono";
 import type { ContentfulStatusCode } from "hono/utils/http-status";
-import { createAgentStackMiddleware } from "@agentstack/x402-middleware";
+import { createAgentStackMiddleware } from "@primsh/x402-middleware";
 import type {
   ApiError,
   CreateTokenRequest,

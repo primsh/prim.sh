@@ -22,7 +22,7 @@ pnpm -r test                             # Tests only
 pnpm -r lint                             # Biome lint
 
 # Landing pages (current, pre-monorepo)
-python serve.py                           # Serves on 100.91.44.60:8892
+python serve.py                           # Serves locally
 # After P-3: python site/serve.py
 ```
 

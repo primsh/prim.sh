@@ -2,7 +2,7 @@ import { createWalletClient, http, parseEther } from "viem";
 import { baseSepolia } from "viem/chains";
 import { privateKeyToAccount } from "viem/accounts";
 import type { Address, Hex } from "viem";
-import { getNetworkConfig } from "@agentstack/x402-middleware";
+import { getNetworkConfig } from "@primsh/x402-middleware";
 
 export interface DripResult {
   txHash: string;
@@ -42,9 +42,19 @@ export async function dripUsdc(address: string): Promise<DripResult> {
     throw new Error(`Circle faucet error (${response.status}): ${text}`);
   }
 
-  const data = (await response.json()) as Record<string, string>;
+  // Circle returns 204 No Content on success (fire-and-forget, no tx hash)
+  let txHash = "pending";
+  if (response.status !== 204) {
+    try {
+      const data = (await response.json()) as Record<string, string>;
+      txHash = data.txHash ?? data.transactionHash ?? "pending";
+    } catch {
+      // Empty body — that's fine
+    }
+  }
+
   return {
-    txHash: data.txHash ?? data.transactionHash ?? "pending",
+    txHash,
     amount: "10.00",
     currency: "USDC",
     chain: netConfig.network,

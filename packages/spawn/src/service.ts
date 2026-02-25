@@ -166,13 +166,29 @@ export async function createServer(
 
   const spawnId = generateServerId();
 
+  // Resolve internal SSH key IDs (sk_...) to provider resource IDs
+  let providerSshKeyIds: string[] | undefined;
+  if (request.ssh_keys?.length) {
+    providerSshKeyIds = [];
+    for (const keyId of request.ssh_keys) {
+      const keyRow = getSshKeyById(keyId);
+      if (!keyRow) {
+        return { ok: false, status: 404, code: "not_found", message: `SSH key not found: ${keyId}` };
+      }
+      if (keyRow.owner_wallet !== callerWallet) {
+        return { ok: false, status: 403, code: "forbidden", message: `SSH key not owned by caller: ${keyId}` };
+      }
+      providerSshKeyIds.push(keyRow.provider_resource_id);
+    }
+  }
+
   try {
     const result = await provider.createServer({
       name: request.name,
       type: typeInfo.providerType,
       image: request.image,
       location: request.location,
-      sshKeyIds: request.ssh_keys,
+      sshKeyIds: providerSshKeyIds,
       labels: { wallet: callerWallet },
       userData: request.user_data,
     });

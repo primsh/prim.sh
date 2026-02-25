@@ -1,6 +1,6 @@
 import { Hono } from "hono";
 import { isAddress, getAddress } from "viem";
-import { getNetworkConfig } from "@agentstack/x402-middleware";
+import { getNetworkConfig } from "@primsh/x402-middleware";
 import { RateLimiter } from "./rate-limit.ts";
 import { dripUsdc, dripEth } from "./service.ts";
 

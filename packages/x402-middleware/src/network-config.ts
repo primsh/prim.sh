@@ -26,6 +26,19 @@ const NETWORKS: Record<string, NetworkConfig> = {
 const DEFAULT_NETWORK = "eip155:8453";
 
 /**
+ * Known x402 facilitators that support Base + Base Sepolia.
+ * Set FACILITATOR_URL env var to switch. Default is Coinbase CDP.
+ */
+export const FACILITATORS = {
+  cdp: "https://api.cdp.coinbase.com/platform/v2/x402",
+  payai: "https://facilitator.payai.network",
+  corbits: "https://facilitator.corbits.dev",
+  "0xmeta": "https://facilitator.0xmeta.ai/v1",
+  dexter: "https://x402.dexter.cash",
+  kobaru: "https://gateway.kobaru.io",
+} as const;
+
+/**
  * Returns chain-dependent constants for the given network.
  *
  * Resolution order: explicit `network` param > `PRIM_NETWORK` env var > mainnet default.
