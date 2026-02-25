@@ -37,7 +37,7 @@
 | 31 | SP-2 | Build spawn.sh: VM provisioning via Hetzner Cloud API | spawn/ | SP-1 | Done |
 | 32 | SP-3 | Build spawn.sh: VM lifecycle (start, stop, destroy, resize) | spawn/ | SP-2 | Done |
 | 33 | SP-4 | Build spawn.sh: SSH key injection + initial setup | spawn/ | SP-2 | Done |
-| 34 | SP-5 | Integrate x402 middleware | spawn/ | SP-2, P-4 | Open |
+| 34 | SP-5 | Integrate x402 middleware | spawn/ | SP-2, P-4 | Done |
 | 35 | B-1 | Batch 1: parallel agent team execution (W-2 + R-1 + SP-1) | cross-cutting | W-2 plan, R-1 plan, SP-1 plan | Done |
 | 36 | SP-6 | Abstract provider layer + multi-cloud support (AWS, GCP, Azure, Hetzner) | spawn/ | SP-4 | Open |
 
@@ -159,6 +159,7 @@ ERC-8004 uses CAIP-10 wallet addresses as root identity. DIDs layer on top non-b
 
 ## Done
 
+- SP-5 — x402 middleware already integrated in SP-2 (2026-02-24)
 - W-6 — funding request: agent→owner CRUD, approve triggers sendUsdc (2026-02-24)
 - W-7 — policy engine: maxPerTx/maxPerDay, daily reset, per-wallet pause/resume (2026-02-24)
 - W-8 — execution journal: events, dead letters, tryClaim, history endpoint (2026-02-24)
