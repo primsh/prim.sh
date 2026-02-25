@@ -15,6 +15,32 @@ vi.mock("../src/stalwart", () => ({
   deletePrincipal: vi.fn(),
 }));
 
+vi.mock("../src/crypto", () => ({
+  encryptPassword: vi.fn((p: string) => `encrypted:${p}`),
+}));
+
+vi.mock("../src/jmap", () => ({
+  JmapError: class JmapError extends Error {
+    statusCode: number;
+    code: string;
+    constructor(statusCode: number, code: string, message: string) {
+      super(message);
+      this.name = "JmapError";
+      this.statusCode = statusCode;
+      this.code = code;
+    }
+  },
+  discoverSession: vi.fn().mockResolvedValue({
+    apiUrl: "https://mail.relay.prim.sh/jmap/",
+    accountId: "acc_1",
+    identityId: "id_1",
+    inboxId: "mb_inbox",
+    draftsId: "mb_drafts",
+    sentId: "mb_sent",
+  }),
+  buildBasicAuth: vi.fn(() => "Basic mock"),
+}));
+
 vi.mock("../src/db", () => {
   const rows = new Map<string, Record<string, unknown>>();
   return {

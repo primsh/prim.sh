@@ -11,6 +11,8 @@ import {
   createPrincipal,
   deletePrincipal,
 } from "./stalwart.ts";
+import { encryptPassword } from "./crypto.ts";
+import { discoverSession, buildBasicAuth, JmapError } from "./jmap.ts";
 import type {
   ServiceResult,
   MailboxResponse,
@@ -88,6 +90,7 @@ export async function createMailbox(
 
   const password = generatePassword();
   const passwordHash = hashPassword(password);
+  const passwordEnc = encryptPassword(password);
   const now = Date.now();
   const expiresAt = now + DEFAULT_TTL_MS;
 
@@ -116,6 +119,39 @@ export async function createMailbox(
       throw err;
     }
 
+    // Bootstrap JMAP session (best-effort — don't fail mailbox creation if JMAP is unreachable)
+    let jmapData: {
+      jmap_api_url: string | null;
+      jmap_account_id: string | null;
+      jmap_identity_id: string | null;
+      jmap_inbox_id: string | null;
+      jmap_drafts_id: string | null;
+      jmap_sent_id: string | null;
+    } = {
+      jmap_api_url: null,
+      jmap_account_id: null,
+      jmap_identity_id: null,
+      jmap_inbox_id: null,
+      jmap_drafts_id: null,
+      jmap_sent_id: null,
+    };
+
+    try {
+      const authHeader = buildBasicAuth(address, password);
+      const session = await discoverSession(authHeader);
+      jmapData = {
+        jmap_api_url: session.apiUrl,
+        jmap_account_id: session.accountId,
+        jmap_identity_id: session.identityId,
+        jmap_inbox_id: session.inboxId,
+        jmap_drafts_id: session.draftsId,
+        jmap_sent_id: session.sentId,
+      };
+    } catch (err) {
+      if (!(err instanceof JmapError)) throw err;
+      // JMAP bootstrap failed — mailbox is still usable, session will be discovered lazily
+    }
+
     const id = generateId();
 
     insertMailbox({
@@ -125,9 +161,11 @@ export async function createMailbox(
       domain,
       owner_wallet: callerWallet,
       password_hash: passwordHash,
+      password_enc: passwordEnc,
       quota: 0,
       created_at: now,
       expires_at: expiresAt,
+      ...jmapData,
     });
 
     const row = getMailboxById(id);

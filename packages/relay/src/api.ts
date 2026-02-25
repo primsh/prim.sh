@@ -56,3 +56,8 @@ export interface DeleteMailboxResponse {
   id: string;
   deleted: true;
 }
+
+// ─── JMAP context (used by R-5/R-6) ────────────────────────────────────
+
+export type { JmapContext } from "./context.ts";
+export type { JmapSession } from "./jmap.ts";

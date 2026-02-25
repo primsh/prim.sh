@@ -33,7 +33,7 @@
 | 24 | R-1 | Deploy Stalwart (Docker on DigitalOcean Droplet) | relay/ | DO account | done |
 | 25 | R-2 | Configure Stalwart: domain, DKIM, SPF, DMARC, ACME TLS | relay/ | R-1, D-1 | done |
 | 26 | R-3 | Build relay.sh wrapper: mailbox creation (Stalwart REST API) | relay/ | R-2 | done |
-| 27 | R-4 | Build relay.sh wrapper: JMAP auth bridge + session bootstrap (Basic auth, no OAuth) | relay/ | R-3 | pending |
+| 27 | R-4 | Build relay.sh wrapper: JMAP auth bridge + session bootstrap (Basic auth, no OAuth) | relay/ | R-3 | done |
 | 28 | R-5 | Build relay.sh wrapper: read messages (JMAP Email/query + Email/get) | relay/ | R-4 | pending |
 | 29 | R-6 | Build relay.sh wrapper: send messages (JMAP EmailSubmission/set) — receive-only first | relay/ | R-4 | pending |
 | 30 | R-7 | Build relay.sh wrapper: incoming mail webhooks (Stalwart MTA Hooks) | relay/ | R-2 | pending |
@@ -74,7 +74,7 @@
 - SP-6: `tasks/completed/sp-6-provider-abstraction-2026-02-24.md`
 - R-2: `tasks/completed/r-2-stalwart-domain-tls-2026-02-24.md`
 - R-3: `tasks/completed/r-3-mailbox-creation-stalwart-rest.md`
-- R-4: `tasks/active/r-4-jmap-auth-session-bootstrap.md`
+- R-4: `tasks/completed/r-4-jmap-auth-session-bootstrap.md`
 - D-2→D-7: `tasks/active/d-2-domain-sh-rename-search-2026-02-25.md`
 - ST-1: `tasks/active/st-1-bucket-crud-cloudflare-r2.md`
 - Umbrella: `tasks/active/batch-execution-umbrella-2026-02-24.md`
@@ -227,6 +227,7 @@ ERC-8004 uses CAIP-10 wallet addresses as root identity. DIDs layer on top non-b
 - R-1 — Stalwart Docker Compose on DigitalOcean Droplet ([STALWART_HOST]) (2026-02-24)
 - R-2 — prim.sh domain, Stalwart config, DKIM, SPF, DMARC, ACME TLS, admin lockdown (2026-02-25)
 - R-3 — relay.sh mailbox CRUD: Stalwart REST wrapper, SQLite ownership, 24 tests (2026-02-25)
+- R-4 — JMAP auth bridge: AES-256-GCM password encryption, session discovery, context provider, 43 tests (2026-02-25)
 
 ### R-2 completion details (2026-02-25)
 
