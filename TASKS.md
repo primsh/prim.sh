@@ -142,6 +142,7 @@
 - Umbrella: `tasks/active/batch-execution-umbrella-2026-02-24.md`
 - ST-6: `tasks/active/st-6-prim-store-cli-2026-02-25.md`
 - SE-1: `tasks/completed/se-1-search-sh-plan-2026-02-25.md`
+- TK-6: `tasks/active/tk-6-mint-ownership-bug-2026-02-25.md`
 - M-1: `tasks/completed/m-1-mem-sh-vector-cache-2026-02-25.md`
 - M-2: `tasks/active/m-2-mem-live-smoke-test-2026-02-25.md`
 - E-8: `tasks/active/e-8-email-domain-migration-2026-02-25.md`
