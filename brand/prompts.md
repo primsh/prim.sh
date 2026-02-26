@@ -80,6 +80,64 @@ Target: X/Twitter header (1500x500, 3:1 ratio).
 Ultra-wide panoramic image, 3:1 aspect ratio. Seven horizontal spray paint stripes on pure black background. Each stripe a different neon color: green, blue, coral, orange, purple, cyan, pink. Paint drips at edges, overspray particles between stripes. Raw street art texture. No text, no symbols. Very wide composition, stripes spanning the full width. 1500x500 pixels.
 ```
 
+### Iteration 2-4 — banner-api-v2 through v4 (API)
+**Model:** gemini-2.0-flash-exp-image-generation (API) + crop/resize
+**Feedback:** v2 (stripes, even spacing, drips) decent but pixelated after crop. v3 (scattered strokes) organic but pixelated. **v4 (neon tube lines) best** — clean glow, staggered, tech feel. All generated ~square, required crop to 3:1.
+
+---
+
+## Asset 4: GitHub Social Preview (1280x640)
+
+### Iteration 1 — social-preview-v1.jpg
+**Model:** gemini-2.0-flash-exp-image-generation (API)
+**Feedback:** Good composition (>| left, text right). Text rendering OK but not perfect monospace. Green a bit dark. Acceptable.
+
+---
+
+## Asset 5: README Hero (~800px wide)
+
+### Iteration 1 — readme-hero-v1.jpg
+**Model:** gemini-2.0-flash-exp-image-generation (API)
+**Feedback:** Chunky chevron, bar has splatter interference. Green vivid. Squarish.
+
+### Iteration 2-3 — readme-hero-v2.jpg, readme-hero-v3.jpg
+**Model:** gemini-3-pro-image-preview (API)
+**Feedback:** **v3 is the standout.** Huge quality jump from Gemini 3 Pro. Realistic wall grain, crisp pixel-block splatter (purple/pink/coral/gold), vivid green, well-proportioned >|. User: "ohhhhhh thats dope!"
+
+---
+
+## Asset 6: Website Hero (full-width)
+
+### Iteration 1-3 — website-hero-v1/v2/v3.jpg
+**Model:** gemini-3-pro-image-preview (API)
+**Feedback:** v1 (centered, sparse symmetric) clean. **v2 (pixel trail rightward) standout** — narrative feel, >| emitting digital debris. v3 (constellation) spacious, cosmic. All three strong.
+
+---
+
+## Asset 7-9: X Launch Teasers (square 1:1)
+
+### Teaser 1 — x-teaser-1-closer.jpg ("Every service requires a human. This one doesn't.")
+**Model:** gemini-3-pro-image-preview (API)
+**Feedback:** Text rendered clean. Green > on left, white monospace text on right. Dark concrete wall. Ready to post.
+
+### Teaser 2 — x-teaser-2-prims.jpg (27 dots grid)
+**Model:** gemini-3-pro-image-preview (API)
+**Feedback:** 25 glowing spray paint dots in a 5x5 grid, each a different neon color. Visual metaphor for prims as a color palette of services. Strong.
+
+### Teaser 3 — x-teaser-3-logo.jpg (>| logo square)
+**Model:** gemini-3-pro-image-preview (API)
+**Feedback:** Crisp pixel blocks, heavy drips, vivid green/cyan on concrete. User: "ohhhhhh that last one is dope!"
+
+---
+
+## Generation Notes
+
+**Always use `gemini-3-pro-image-preview`** — dramatically better quality than Flash (realistic wall texture, proper colors, crisp detail).
+
+**Helper script:** `brand/generate.sh "<prompt>" <output-name>` — saves to `brand/assets/<name>.jpg`, opens in Chrome.
+
+**Model tends to generate square images** regardless of aspect ratio in prompt. For banners (3:1), generate and crop with `sips`.
+
 ---
 
 ## Unused prompts
