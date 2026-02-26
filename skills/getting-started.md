@@ -171,6 +171,10 @@ Once onboarded:
 - **store.prim.sh** — Create buckets, store objects. See `skills/store.md`.
 - **spawn.prim.sh** — Provision VPS servers. See `skills/spawn.md`.
 - **search.prim.sh** — Web search and URL extraction. See `skills/search.md`.
+- **email.prim.sh** — Create mailboxes, send/receive email, webhooks. See `skills/email.md`.
+- **mem.prim.sh** — Vector memory (semantic search) and key-value cache. See `skills/mem.md`.
+- **domain.prim.sh** — Domain registration, DNS zones, mail DNS setup. See `skills/domain.md`.
+- **token.prim.sh** — Deploy ERC-20 tokens, create Uniswap V3 pools. See `skills/token.md`.
 - **Multi-primitive workflows** — See `skills/multi-prim.md`.
 
 ---
@@ -191,3 +195,16 @@ Once onboarded:
 | spawn_server_delete | $0.005 (+ deposit refund) |
 | search_web, search_news | $0.01 |
 | search_extract | $0.005 |
+| email_mailbox_create | $0.05 |
+| email_send | $0.01 |
+| email reads/lists | $0.001 |
+| mem_collection_create | $0.01 |
+| mem_upsert, mem_query | $0.001 |
+| mem_cache ops | $0.0001 |
+| domain_zone_create | $0.05 |
+| domain_register | Dynamic (quote-based) |
+| domain DNS reads/writes | $0.001 |
+| token_deploy | $1.00 |
+| token_mint | $0.10 |
+| token_pool_create | $0.50 |
+| token reads | $0.001 |

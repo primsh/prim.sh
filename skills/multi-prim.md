@@ -19,6 +19,24 @@ tools:
   - search_web
   - search_news
   - search_extract
+  - email_mailbox_create
+  - email_send
+  - email_domain_register
+  - email_domain_verify
+  - mem_collection_create
+  - mem_upsert
+  - mem_query
+  - domain_search
+  - domain_quote
+  - domain_register
+  - domain_zone_create
+  - domain_zone_mail_setup
+  - domain_zone_verify
+  - domain_zone_activate
+  - domain_record_create
+  - token_deploy
+  - token_mint
+  - token_pool_create
 ---
 
 # Multi-Primitive Workflows
@@ -275,3 +293,154 @@ Combine web + news search, extract top results, avoid duplicates.
 
 **Partial extraction failure in research pipeline:**
 - `search_extract` returns 200 even when some URLs fail. Check `failed[]` and either retry those URLs or skip them. Do not treat a non-empty `failed[]` as a fatal error.
+
+---
+
+## 7. Agent identity: wallet → email → custom domain
+
+Complete identity setup for an autonomous agent.
+
+```
+1. wallet_register
+   → agent has a wallet address
+
+2. email_mailbox_create
+   - username: "my-agent"
+   → address: "my-agent@email.prim.sh"
+
+3. domain_search
+   - query: "myagent"
+   - tlds: ["sh", "ai", "xyz"]
+   → find available domain
+
+4. domain_quote
+   - domain: "myagent.sh"
+   → quote_id, total_cost_usd
+
+5. domain_register
+   - quote_id: <from step 4>
+   → domain registered, zone_id returned
+
+6. domain_zone_activate
+   - zone_id: <from step 5>
+   → zone active on Cloudflare
+
+7. domain_zone_mail_setup
+   - zone_id: <zone_id>
+   - mail_server: "mail.email.prim.sh"
+   - mail_server_ip: "..."
+   → MX + SPF + DKIM records created
+
+8. email_domain_register
+   - domain: "myagent.sh"
+   → custom email domain registered
+
+9. email_domain_verify
+   - domain_id: <from step 8>
+   → verify DNS records propagated
+```
+
+Agent now has: wallet (0x...) + email (agent@myagent.sh) + custom domain (myagent.sh).
+
+---
+
+## 8. Knowledge base: search → mem
+
+Search the web and build a semantic knowledge base for later retrieval.
+
+```
+1. mem_collection_create
+   - name: "research-x402"
+   → collection_id
+
+2. search_web
+   - query: "x402 payment protocol"
+   - max_results: 10
+   → results with content
+
+3. For each result:
+   mem_upsert
+   - collection_id: <from step 1>
+   - documents: [{text: result.content, metadata: {url: result.url, title: result.title}}]
+   → documents stored with embeddings
+
+4. Later, query semantically:
+   mem_query
+   - collection_id: <collection_id>
+   - text: "how does payment signing work?"
+   - top_k: 5
+   → ranked matches with scores
+```
+
+Unlike store (raw bytes), mem provides semantic search — query by meaning, not by key.
+
+---
+
+## 9. Token launch: deploy → pool → project site
+
+Launch a token with a Uniswap pool and a project domain.
+
+```
+1. token_deploy
+   - name: "AgentCoin"
+   - symbol: "AGT"
+   - initialSupply: "1000000000000000000000000"  (1M tokens, 18 decimals)
+   - mintable: true
+   → token_id, contractAddress, txHash
+
+2. token_pool_create
+   - token_id: <from step 1>
+   - pricePerToken: "0.001"
+   - feeTier: 3000
+   → poolAddress, txHash
+
+3. domain_search
+   - query: "agentcoin"
+   → find available domain
+
+4. domain_quote + domain_register
+   → register agentcoin.xyz
+
+5. domain_zone_create + domain_record_create
+   - type: "A", name: "@", content: <server IP>
+   → DNS pointing to project site
+
+6. spawn_server_create
+   - name: "agentcoin-site"
+   → server hosting the project page
+```
+
+---
+
+## 10. Custom email domain: domain → email
+
+Register a domain and set it up for email receiving.
+
+```
+1. domain_quote + domain_register
+   - domain: "myproject.sh"
+   → zone_id, nameservers
+
+2. domain_zone_mail_setup
+   - zone_id: <zone_id>
+   - mail_server: "mail.email.prim.sh"
+   - mail_server_ip: <email server IP>
+   → MX, SPF, DKIM records created
+
+3. domain_zone_verify
+   - zone_id: <zone_id>
+   → verify all records propagated
+
+4. email_domain_register
+   - domain: "myproject.sh"
+   → domain registered with email.prim.sh
+
+5. email_domain_verify
+   - domain_id: <from step 4>
+   → verification results (check all pass)
+
+6. email_mailbox_create
+   - username: "hello"
+   - domain: "myproject.sh"
+   → address: "hello@myproject.sh"
+```
