@@ -151,6 +151,7 @@
 - M-1: `tasks/completed/m-1-mem-sh-vector-cache-2026-02-25.md`
 - M-2: `tasks/active/m-2-mem-live-smoke-test-2026-02-25.md`
 - E-8: `tasks/active/e-8-email-domain-migration-2026-02-25.md`
+- L-31: `tasks/active/l-31-deploy-access-invite-flow-2026-02-26.md`
 - V1 Launch: `tasks/active/v1-launch-plan-2026-02-25.md`
 
 ## V1 Launch (scope: L)
@@ -183,13 +184,31 @@ Plan doc: `tasks/active/v1-launch-plan-2026-02-25.md`
 | L-10 | Deploy Core 4 to VPS + run integration smoke test against live endpoints | Claude + Garric | L-8, L-9 | done |
 | L-13 | Deploy landing site (`site/`) to Cloudflare Pages, wire `prim.sh` root domain | Garric + Claude | L-4 | done |
 | L-16 | Wallet allowlist: x402-middleware rejects wallets not in allowlist; env-configurable `PRIM_ALLOWLIST` (comma-separated addresses), skip if unset | Claude | L-10 | done |
-| L-17 | Invite codes: `POST /v1/invites` (admin-only) generates code, `POST /v1/invites/redeem` adds wallet to allowlist. SQLite table in wallet.sh | Claude | L-16 | pending |
+| L-17 | Invite codes on wallet.prim.sh: `POST /v1/invites` (allowlisted wallet generates code), `POST /v1/invites/redeem` (new wallet + code → auto-added to allowlist). Viral loop. SQLite table. | Claude | L-16 | done (→ L-31, implemented as CF Worker) |
 | L-18 | Default storage caps: per-wallet bucket limit (10), default per-bucket quota (100MB), per-wallet total storage cap (1GB). Reject uploads/creates above limits | Claude | L-10 | done |
 | L-19 | Spawn per-wallet caps: max 3 concurrent servers per wallet, max `small` type only during beta. Reject creates above limits | Claude | L-10 | done |
 | L-20 | Persist faucet rate limiter to SQLite (currently in-memory, lost on restart) | Claude | L-10 | done |
 | L-21 | Redeploy VPS after L-16 through L-20 + re-run smoke test | Claude | L-16, L-18, L-19, L-20 | done |
 
-### Wave 3: Mainnet + Binary
+### Wave 3: Access + Community
+
+| ID | Task | Owner | Depends on | Status |
+|---|---|---|---|---|
+| L-23 | Agent-friendly 403: include `access_url` + actionable message in allowlist denial response | Claude | L-16 | done |
+| L-24 | Access request endpoint: `POST /v1/access/request` on wallet.sh — agent submits wallet address, stored in SQLite queue for review. `GET /v1/access/requests` (admin) to list pending. `POST /v1/access/requests/:id/approve` adds to allowlist | Claude | L-23 | done (→ L-31, implemented as CF Worker) |
+| L-25 | Access landing page: `prim.sh/access` — human-readable form + documents the API. Agents call API directly, humans use the form | Claude | L-31 | pending |
+| L-31 | Deploy access request + invite flow: CF Worker (`workers/platform/`) to Cloudflare at `api.prim.sh`, VPS wallet internal endpoints (`/internal/allowlist/*`), `PRIM_INTERNAL_KEY` shared secret, D1 database, dynamic SQLite allowlist on wallet service, seed existing wallets, verify full flow | Claude + Garric | L-17, L-24 | done (access request submitted + approved in Asher test) |
+| L-26 | Community setup: create Discord server, prepare repo for public (`CONTRIBUTING.md`, issue templates, `LICENSE`), set up GitHub Discussions | Garric + Claude | — | pending |
+| L-28 | Agent feedback endpoint: `POST /api/feedback` on api.prim.sh — agent submits `{ type: "bug\|feature\|pain_point", title, body, wallet }`, creates GitHub Issue via API (labeled by type + `agent-reported`). Requires registered wallet. Validates type, checks allowlist via VPS internal API. | Claude | L-24 | done |
+| L-29 | GH Action: auto-dedupe issues + PRs. On new issue: fuzzy-match title against open issues, label + link duplicates. On stale (30d no activity): auto-close with comment. On bot PRs: auto-merge if CI passes. | Claude | L-26 | pending |
+| L-30 | Update llms.txt to document feedback endpoint and access request flow so agents discover them from the catalog | Claude | L-24, L-28 | done (access request + CLI getting started documented) |
+| L-32 | Faucet treasury fallback: when Circle API rate-limits (429), fall back to direct USDC transfer from pre-funded treasury wallet. Deployed + treasury funded with Sepolia ETH for gas. | Claude | FC-1 | done |
+| L-33 | Fix `prim wallet create` OpenSSL scrypt memory limit crash (Bun + node crypto compat issue) | Claude | KS-1 | pending |
+| L-34 | Fix CLI `--flag value` parsing: `getFlag` only accepts `--flag=value` syntax, not `--flag value` with space. Usage hints should match actual behavior. | Claude | KS-1 | done |
+| L-35 | Agent access request e2e test: fresh wallet → register → hit paid endpoint → get 403 → agent discovers `access_url` → POSTs access request → admin approves → agent retries → success. Verify the full autonomous flow. | Claude + Garric | L-31 | pending |
+| L-36 | Launch readiness smoke test: full Asher run with fresh wallet through CLI — `prim wallet create` → `prim faucet usdc` → `prim store create-bucket` → `prim store put` → `prim store get`. All steps must succeed without hand-written code. | Claude + Garric | L-33, L-34 | pending |
+
+### Wave 4: Mainnet + Binary
 
 | ID | Task | Owner | Depends on | Status |
 |---|---|---|---|---|
@@ -197,12 +216,13 @@ Plan doc: `tasks/active/v1-launch-plan-2026-02-25.md`
 | L-11 | Compile `prim` binary for 4 platforms (`bun build --compile`) + upload to GitHub Release | Claude | L-4 | pending |
 | L-12 | Write install script (`curl prim.sh \| sh`) + per-primitive wrappers | Claude | L-11 | pending |
 
-### Wave 4: Token + Public
+### Wave 5: Token + Public
 
 | ID | Task | Owner | Depends on | Status |
 |---|---|---|---|---|
 | L-15 | Pre-public checklist: rotate Stalwart admin password + `relay-wrapper` API key, verify no secrets in git history (`git log -p \| grep`), confirm .env files gitignored | Garric | L-10 | pending |
-| L-14 | Check ticker availability on BaseScan, deploy $PRIM/$PRIMSH/$PRIMITIVESHELL defensively, create Uniswap pool, make repo public | Garric + token dev | L-15 | pending |
+| L-27 | Register $PRIM ticker defensively on BaseScan ASAP (before repo goes public). Deploy token contract early, pool later | Garric | — | pending |
+| L-14 | Full token launch: create Uniswap pool, fund liquidity, make repo public, announce | Garric + Claude | L-15, L-26, L-27 | pending |
 
 ## Backlog — Future Primitives
 

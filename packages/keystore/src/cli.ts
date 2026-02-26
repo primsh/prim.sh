@@ -7,13 +7,17 @@ import { getDefaultAddress, setDefaultAddress } from "./config.ts";
 import { getUsdcBalance } from "./balance.ts";
 import { decryptFromV3 } from "./crypto.ts";
 import type { KeystoreFile } from "./types.ts";
+import pkg from "../package.json";
 
 const argv = process.argv.slice(2);
 
 function getFlag(name: string): string | undefined {
-  for (const arg of argv) {
-    if (arg.startsWith(`--${name}=`)) return arg.slice(`--${name}=`.length);
-    if (arg === `--${name}`) return ""; // boolean flag (no value)
+  for (let i = 0; i < argv.length; i++) {
+    if (argv[i].startsWith(`--${name}=`)) return argv[i].slice(`--${name}=`.length);
+    if (argv[i] === `--${name}`) {
+      if (i + 1 < argv.length && !argv[i + 1].startsWith("--")) return argv[i + 1];
+      return ""; // boolean flag
+    }
   }
   return undefined;
 }
@@ -38,6 +42,11 @@ async function resolvePassphrase(): Promise<string | undefined> {
 }
 
 async function main() {
+  if (argv[0] === "--version" || argv[0] === "-v") {
+    console.log(pkg.version);
+    process.exit(0);
+  }
+
   const group = argv[0];
   const subcommand = argv[1];
 
@@ -52,10 +61,48 @@ async function main() {
     return;
   }
 
+  if (group === "spawn") {
+    try {
+      const { runSpawnCommand } = await import("./spawn-commands.ts");
+      await runSpawnCommand(subcommand, argv);
+    } catch (err) {
+      console.error(`Error: ${err instanceof Error ? err.message : String(err)}`);
+      process.exit(1);
+    }
+    return;
+  }
+
+  if (group === "faucet") {
+    try {
+      const { runFaucetCommand } = await import("./faucet-commands.ts");
+      await runFaucetCommand(subcommand, argv);
+    } catch (err) {
+      console.error(`Error: ${err instanceof Error ? err.message : String(err)}`);
+      process.exit(1);
+    }
+    return;
+  }
+
+  if (group === "admin") {
+    try {
+      const { runAdminCommand } = await import("./admin-commands.ts");
+      await runAdminCommand(subcommand, argv);
+    } catch (err) {
+      console.error(`Error: ${err instanceof Error ? err.message : String(err)}`);
+      process.exit(1);
+    }
+    return;
+  }
+
   if (group !== "wallet") {
-    console.log("Usage: prim <wallet|store> <subcommand>");
+    console.log("Usage: prim <wallet|store|spawn|faucet|admin> <subcommand>");
+    console.log("       prim --version");
+    console.log("");
     console.log("  prim wallet <create|list|balance|import|export|default|remove>");
-    console.log("  prim store <create-bucket|ls|put|get|rm|rm-bucket|quota>");
+    console.log("  prim store  <create-bucket|ls|put|get|rm|rm-bucket|quota>");
+    console.log("  prim spawn  <create|ls|get|rm|reboot|stop|start|ssh-key>");
+    console.log("  prim faucet <usdc|eth|status>");
+    console.log("  prim admin  <list-requests|approve|deny|add-wallet|remove-wallet>");
     process.exit(1);
   }
 

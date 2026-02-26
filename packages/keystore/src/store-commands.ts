@@ -15,9 +15,12 @@ async function readStdin(): Promise<Buffer> {
 }
 
 function getFlag(name: string, argv: string[]): string | undefined {
-  for (const arg of argv) {
-    if (arg.startsWith(`--${name}=`)) return arg.slice(`--${name}=`.length);
-    if (arg === `--${name}`) return "";
+  for (let i = 0; i < argv.length; i++) {
+    if (argv[i].startsWith(`--${name}=`)) return argv[i].slice(`--${name}=`.length);
+    if (argv[i] === `--${name}`) {
+      if (i + 1 < argv.length && !argv[i + 1].startsWith("--")) return argv[i + 1];
+      return ""; // boolean flag
+    }
   }
   return undefined;
 }
