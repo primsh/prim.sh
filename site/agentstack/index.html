@@ -3,7 +3,8 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>prim.sh — The agent-native cloud</title>
+<title>prim.sh</title>
+<link rel="icon" type="image/jpeg" href="/assets/favicon.jpg">
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
 :root{--bg:#0a0a0a;--surface:#111;--border:#1a1a1a;--text:#e0e0e0;--muted:#666;--code-bg:#0d0d0d;--green:#00ff88;--blue:#6C8EFF;--red:#FF6B6B;--purple:#B388FF;--orange:#FFB74D;--cyan:#4DD0E1;--yellow:#FFD54F;--pink:#FF80AB;--gold:#FFC107;--teal:#80CBC4;--magenta:#F50057;--lime:#C6FF00;--coral:#FF3D00;--indigo:#3D5AFE;--violet:#D500F9;--azure:#00BCD4;--brown:#795548;--emerald:#00E676;--slate:#607D8B;--white:#fff;--wallet:#8BC34A;--mem:#00ACC1;--infer:#FF7043;--watch:#78909C;--trace:#AB47BC;--browse:#64B5F6;--auth:#FFCA28;--code:#26C6DA}
@@ -73,16 +74,19 @@ footer .links{margin-top:0.5rem;display:flex;flex-wrap:wrap;justify-content:cent
 footer .links a{color:var(--muted)}
 .cta-section{text-align:center;padding:4rem 2rem}
 
+.logomark{width:calc(100% + 4rem);margin-left:-2rem;height:auto;display:block;margin-bottom:0.5rem}
+.wordmark{font-size:1.1rem;color:var(--muted);margin-bottom:0.75rem;letter-spacing:0.08em}
 @media(max-width:900px){.products{grid-template-columns:repeat(2,1fr)}}
-@media(max-width:600px){.logo{font-size:2.5rem}.tagline{font-size:1.1rem}.products{grid-template-columns:1fr}pre{font-size:0.75rem}}
+@media(max-width:600px){.logomark{font-size:3.5rem}.logo{font-size:2.5rem}.tagline{font-size:1.1rem}.products{grid-template-columns:1fr}pre{font-size:0.75rem}}
 </style>
 </head>
 <body>
 
 <div class="hero">
-  <div class="logo">prim.sh</div>
-  <div class="tagline">The agent-native cloud.</div>
-  <div class="sub"><strong>Twenty-seven primitives.</strong> The complete infrastructure layer for autonomous agents. No signup. No GUI. No KYC. x402 payments. One token, every service.</div>
+  <img class="logomark" src="/assets/hero.jpg" alt=">|">
+  <div class="wordmark">prim.sh</div>
+  <div class="tagline">The agent-native stack.</div>
+  <div class="sub">Infinite primitives. Zero signup. One payment token.</div>
 
   <div class="products">
     <div class="product p1">
@@ -255,7 +259,7 @@ footer .links a{color:var(--muted)}
     <p>Agents need infrastructure. Not dashboards, not consoles, not onboarding wizards — <strong>infrastructure as API calls.</strong></p>
     <p>Today, every cloud service requires a human to create an account. An agent can't sign up for AWS. It can't verify an email. It can't provide a credit card. <strong>The entire cloud is gated by human identity.</strong></p>
     <p>prim.sh removes the gate. <strong>x402 payment is the only credential.</strong> Pay and compute. Pay and store. Pay and send. No accounts, no sessions, no cookies. Every request is self-contained.</p>
-    <p>Twenty-seven primitives. The complete stack. <strong>One payment token works everywhere.</strong></p>
+    <p>Infinite primitives. The complete stack. <strong>One payment token works everywhere.</strong></p>
   </div>
 </section>
 
@@ -293,13 +297,13 @@ footer .links a{color:var(--muted)}
 </section>
 
 <div class="cta-section">
-  <h2 style="margin-bottom:0.5rem">The cloud was built for humans.<br>This one isn't.</h2>
-  <p style="color:var(--muted);margin-bottom:2rem;max-width:500px;margin-left:auto;margin-right:auto">Twenty-seven primitives. Zero signup. One payment token.</p>
-  <p style="color:var(--muted);font-size:0.85rem;margin-top:1rem"><code style="color:var(--green)">curl https://api.prim.sh/spawn/v1/plans</code></p>
+  <h2 style="margin-bottom:0.5rem">Every service requires a human.<br>This one doesn't.</h2>
+  <p style="color:var(--muted);margin-bottom:2rem;max-width:500px;margin-left:auto;margin-right:auto">Infinite primitives. Zero signup. One payment token.</p>
+  <p style="color:var(--muted);font-size:0.85rem;margin-top:1rem"><code style="color:var(--green)">curl https://prim.prim.sh/spawn/v1/plans</code></p>
 </div>
 
 <footer>
-  <div>prim.sh — the agent-native cloud</div>
+  <div>prim.sh — the agent-native stack</div>
   <div class="links">
     <a href="/spawn" style="color:var(--green)">spawn</a>
     <a href="/store" style="color:var(--orange)">store</a>
@@ -321,7 +325,7 @@ footer .links a{color:var(--muted)}
     <a href="/id" style="color:var(--emerald)">id</a>
     <a href="/corp" style="color:var(--slate)">corp</a>
   </div>
-  <div style="margin-top:0.75rem;font-size:0.8rem">The cloud was built for humans. This one isn't.</div>
+  <div style="margin-top:0.75rem;font-size:0.8rem">Every service requires a human. This one doesn't.</div>
   <div style="margin-top:0.5rem;font-size:0.75rem;color:#444">This page is for humans. The API is for agents.</div>
 </footer>
 

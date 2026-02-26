@@ -29,6 +29,9 @@ scripts/.env.*
 *.log
 server.log
 
+# Brand assets (large binaries)
+brand/assets/
+
 # OS
 .DS_Store
 Thumbs.db

@@ -19,7 +19,7 @@ Navigation-level overview. Links to each primitive's detailed docs.
 ```markdown
 # AgentStack
 
-> The agent-native cloud. Infrastructure primitives for autonomous agents.
+> The agent-native stack. Infrastructure primitives for autonomous agents.
 > No signup. No GUI. No KYC. x402 payment is the only credential.
 
 AgentStack provides 26 independent infrastructure primitives. Each accepts

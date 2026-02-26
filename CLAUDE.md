@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## What This Is
 
-**AgentStack** — the agent-native cloud. A collection of 27 independent infrastructure primitives where the customer is the agent, not the human. Every primitive accepts x402 payment (USDC on Base) as the sole authentication mechanism. No signup, no GUI, no KYC.
+**Prim** (`prim.sh`) — the agent-native stack. A simple shell around existing services that require human signup flows, made accessible to agents through a single payment protocol. 27 independent infrastructure primitives. x402 payment (USDC on Base) is the sole auth. No signup, no GUI, no KYC. See `BRAND.md` for naming conventions.
 
 The project has two layers:
 1. **Marketing site** — Static HTML landing pages (current state, `site/` equivalent)

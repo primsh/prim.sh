@@ -223,13 +223,20 @@ Plan doc: `tasks/active/v1-launch-plan-2026-02-25.md`
 | L-26 | Community setup: create Discord server, prepare repo for public (`CONTRIBUTING.md`, issue templates, `LICENSE`), set up GitHub Discussions | Garric + Claude | — | pending |
 | L-29 | GH Action: auto-dedupe issues + PRs. On new issue: fuzzy-match title against open issues, label + link duplicates. On stale (30d no activity): auto-close with comment. On bot PRs: auto-merge if CI passes. | Claude | L-26 | pending |
 | L-35 | Agent access request e2e test: fresh wallet → register → hit paid endpoint → get 403 → agent discovers `access_url` → POSTs access request → admin approves → agent retries → success. Verify the full autonomous flow. | Claude + Garric | L-31 | pending |
+| L-37 | Finalize brand assets: pick final logo/favicon/banner/heroes from candidates in `brand/assets/`, export favicon to `.ico`/32x32/16x16, crop banner to 1500x500, name finals as `final-*` | Garric | — | pending |
+| L-38 | Set brand assets on platforms: GitHub org avatar + repo social preview, X profile pic + banner (@onprim), Discord server icon. Use finals from L-37 | Garric | L-37 | pending |
+| L-39 | Write public README.md: hero image, name + tagline, one-liner, "Getting started" (wallet → faucet → first API call), primitive table with status, link to `prim.sh/llms.txt`. Should read like the site but for devs scrolling GitHub | Claude | L-37 | pending |
+| L-40 | Legal minimum: Terms of Service + Privacy Policy pages. Even minimal/template versions — required before public launch. Host at `prim.sh/terms` and `prim.sh/privacy` | Garric + Claude | — | pending |
+| L-41 | Human docs: `prim.sh/docs` getting-started guide for humans. Complements `llms.txt` (for agents). Wallet setup, faucet, first API call, per-primitive examples | Claude | L-39 | pending |
+| L-42 | Draft X launch content: tweet copy for each teaser image (closer, prims grid, logo), launch thread script (what Prim is → why → demo → CTA), pin strategy | Garric + Claude | L-37 | pending |
+| L-43 | Update `site/agentstack/` → `site/prim/` or set as canonical landing page. Current homepage still references "agentstack" in directory name. Clean up stale placeholder links in primitive landing pages | Claude | — | pending |
 
 ### Wave 6: Token + Public
 
 | ID | Task | Owner | Depends on | Status |
 |---|---|---|---|---|
 | L-27 | Register $PRIM ticker defensively on BaseScan ASAP (before repo goes public). Deploy token contract early, pool later | Garric | — | pending |
-| L-14 | Full token launch: create Uniswap pool, fund liquidity, make repo public, announce | Garric + Claude | L-15, L-26, L-27 | pending |
+| L-14 | Full token launch: create Uniswap pool, fund liquidity, make repo public, announce | Garric + Claude | L-15, L-26, L-27, L-37, L-39, L-40 | pending |
 
 ## Backlog — Future Primitives
 

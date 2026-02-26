@@ -1,6 +1,6 @@
 # AgentStack Platform Spec
 
-> The agent-native cloud. 26 primitives. One wallet. Zero signup.
+> The agent-native stack. 27 primitives. One wallet. Zero signup.
 
 ## Vision
 
