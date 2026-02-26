@@ -34,13 +34,18 @@ const LIVE_SERVICES = [
   "email.prim.sh",
 ] as const;
 
-const DNS_SUBDOMAINS = [
+// Must resolve — services are live
+const DNS_LIVE = [
   "wallet.prim.sh",
   "store.prim.sh",
   "faucet.prim.sh",
   "spawn.prim.sh",
   "search.prim.sh",
   "email.prim.sh",
+] as const;
+
+// Warn only — not yet deployed
+const DNS_PLANNED = [
   "token.prim.sh",
   "mem.prim.sh",
   "domain.prim.sh",
@@ -217,7 +222,7 @@ async function checkEndpoints() {
 async function checkDns() {
   header("DNS");
 
-  for (const host of DNS_SUBDOMAINS) {
+  for (const host of DNS_LIVE) {
     try {
       const addrs = await resolve4(host);
       if (addrs.includes(VPS_IP)) {
@@ -228,6 +233,19 @@ async function checkDns() {
     } catch (err) {
       const msg = err instanceof Error ? err.message : String(err);
       fail(host, msg.slice(0, 80));
+    }
+  }
+
+  for (const host of DNS_PLANNED) {
+    try {
+      const addrs = await resolve4(host);
+      if (addrs.includes(VPS_IP)) {
+        pass(host, `${VPS_IP} (not yet deployed)`);
+      } else {
+        warn(host, `resolves to ${addrs.join(", ")} (expected ${VPS_IP})`);
+      }
+    } catch {
+      warn(host, "not yet deployed");
     }
   }
 }
@@ -241,20 +259,20 @@ function checkBlockers() {
   let blockerCount = 0;
 
   for (const id of BLOCKER_IDS) {
-    // Match row containing this task ID with pending/backlog status
-    const pattern = new RegExp(
-      `^\\|[^|]*\\|\\s*${id.replace("-", "\\-")}\\s*\\|(.+?)\\|[^|]*\\|\\s*(pending|backlog)`,
+    const escapedId = id.replace("-", "\\-");
+    // ID is first column: | L-15 | task... | ... | pending |
+    const pendingPattern = new RegExp(
+      `^\\|\\s*${escapedId}\\s*\\|(.+?)\\|[^|]*\\|\\s*(pending|backlog)`,
       "m",
     );
-    const match = content.match(pattern);
+    const match = content.match(pendingPattern);
     if (match) {
       const task = match[1].trim().slice(0, 70);
       fail(`${id}: ${task}`);
       blockerCount++;
     } else {
-      // Check if it exists as done
       const donePattern = new RegExp(
-        `^\\|[^|]*\\|\\s*${id.replace("-", "\\-")}\\s*\\|.+?\\|[^|]*\\|\\s*done`,
+        `^\\|\\s*${escapedId}\\s*\\|.+?\\|[^|]*\\|\\s*done`,
         "m",
       );
       if (donePattern.test(content)) {
