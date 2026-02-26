@@ -6,9 +6,9 @@ Tasks that block repo going public + mainnet switchover.
 
 | ID | Task | Scope | Depends on | Status |
 |---|---|---|---|---|
-| L-15 | Pre-public checklist: rotate Stalwart admin password + `relay-wrapper` API key, verify no secrets in git history, confirm .env files gitignored | Garric | L-10 | pending |
+| L-27 | **DO FIRST — before L-15.** Deploy $PRIM ERC-20 to Base mainnet now (scammers will clone the moment repo is public). Register ticker on BaseScan. Receive 100% supply to treasury wallet. Pool deferred. Needs: total supply, treasury wallet address | Garric | — | pending |
+| L-15 | Pre-public checklist: rotate Stalwart admin password + `relay-wrapper` API key, verify no secrets in git history, confirm .env files gitignored | Garric | L-27 | pending |
 | L-22 | Mainnet switchover: update VPS env files from `eip155:84532` → `eip155:8453`, set prod `PRIM_PAY_TO` treasury, fund facilitator with mainnet USDC | Garric | L-17 | pending |
-| L-27 | Register $PRIM ticker defensively on BaseScan ASAP (before repo goes public). Deploy token contract early, pool later | Garric | — | pending |
 | L-14 | Full token launch: create Uniswap pool, fund liquidity, make repo public, announce | Garric + Claude | L-15, L-26, L-27, L-37, L-39, L-40 | pending |
 | L-61 | Dynamic allowlist: all services query wallet.sh's allowlist via internal API instead of static `PRIM_ALLOWLIST` env var | Claude | L-31 | done |
 | L-69 | Pre-deployment readiness check script (`scripts/pre-deploy.ts <primitive>`) | Claude | — | done |
@@ -64,10 +64,12 @@ Not blocking public launch. Extensions, polish, business tooling.
 | L-57 | Upload `final-social-preview.jpg` as GitHub repo social preview | Garric | L-37 | pending |
 | L-60 | Pricing audit (superseded by BIZ-1) | — | L-22 | pending |
 | I-1 | Primitives status SOT: `primitives.yaml` + codegen script for llms.txt + README table | root, scripts/, site/ | — | done |
-| I-2 | Business observability: `pnpm report` — DO/CF/Tavily costs + x402 revenue | scripts/ | — | pending |
+| I-2 | Business observability (superseded by OBS-1) | scripts/ | — | done |
 | SITE-1 | SSR site: replace 27 per-prim HTML files with template + per-prim YAML, serve.ts renders on request, CF edge caches. Fixes CSS drift, single source for all page updates | site/, packages/*/prim.yaml | I-1 | pending |
 | BIZ-1 | Master pricing list: `specs/pricing.yaml` as SOT, codegen into llms.txt/skills | specs/ | — | done |
-| BIZ-2 | Expense dashboard: `bun scripts/expenses.ts` — DO/CF/Tavily costs + x402 revenue | scripts/ | — | pending |
+| OBS-1 | Service observability: `GET /v1/metrics` on each service (in-memory: req count, payment count, error count, p50/p99 latency) + `bun scripts/report.ts` pulling all services + DO costs + CF R2 + on-chain USDC revenue into one table + MCP tool. No GUI, no DB. **Parallelizable: spawn one agent per service for /v1/metrics, one agent for report.ts + MCP tool. 7 agents total, all independent.** Plan: `tasks/active/obs-1-metrics-report-2026-02-26.md` | Claude | — | pending |
+| BIZ-2 | Expense dashboard: `bun scripts/expenses.ts` — DO API + CF R2 + Tavily estimate + on-chain USDC revenue + fixed costs (VPS $24/mo, domain $50/yr, X $11/mo). Prints margin table per primitive. **Single agent, no parallelization needed.** | scripts/ | — | pending |
+| BIZ-3 | Cost transparency doc: `docs/costs.md` — full public-facing infra cost breakdown (VPS, domain, X, R2, Tavily, spawn pass-through) + per-call cost math + phased margin model (beta=cost, soft launch=cost+small margin, full launch=community-governed). Linked from site and README. **Single agent.** | docs/ | BIZ-2 | pending |
 
 ## Plan Docs
 
@@ -135,6 +137,9 @@ Not blocking public launch. Extensions, polish, business tooling.
 - V1 Launch: `tasks/active/v1-launch-plan-2026-02-25.md`
 - L-66: `tasks/active/l-66-package-as-plugins-2026-02-26.md`
 - L-72: `tasks/active/l-72-agent-interface-wave-2-2026-02-26.md`
+- OBS-1: `tasks/active/obs-1-metrics-report-2026-02-26.md`
+- SP-7: `tasks/active/sp-7-docker-provider-2026-02-26.md`
+- PRIM-2: `tasks/active/prim-2-token-utility-2026-02-26.md`
 
 ## V1 Launch (scope: L)
 
@@ -233,6 +238,7 @@ Plan doc: `tasks/active/v1-launch-plan-2026-02-25.md`
 |---|---|---|---|---|
 | L-50 | deploy.sh: PaaS prim above spawn.sh — push a container or repo URL, get a live endpoint. No server config. Wraps Dokku, Coolify, or similar self-hosted PaaS. Agent-native deploy pipeline. | Claude | — | backlog |
 | L-60 | Pricing audit: review x402 pricing across all primitives against real provider costs. Key risks: spawn.sh ($0.01 create vs $4/mo DO cost), token.sh ($1 deploy vs $10-50 mainnet gas). Consider recurring billing model for spawn, gas passthrough for token, margin analysis for store/email/search | Claude + Garric | L-22 | pending |
+| SP-7 | DockerProvider for spawn.sh: add Docker container tier as default (10–50× cheaper than full VMs). Implement `DockerProvider` behind existing `CloudProvider` interface. Containers on shared VPS host. Full VMs become explicit premium option. Pricing: ~$0.01–0.05/hr vs $4/mo/VM. **Sequential — needs plan review before implementation (architectural).** Plan: `tasks/active/sp-7-docker-provider-2026-02-26.md` | Claude | SP-6 | pending |
 
 ### Wave 5.5: Agent Interface Layer (blocks public launch)
 
@@ -254,8 +260,9 @@ All live primitives (wallet, store, spawn, faucet, search) need proper agent int
 
 | ID | Task | Owner | Depends on | Status |
 |---|---|---|---|---|
-| L-27 | Register $PRIM ticker defensively on BaseScan ASAP (before repo goes public). Deploy token contract early, pool later | Garric | — | pending |
-| L-14 | Full token launch: create Uniswap pool, fund liquidity, make repo public, announce | Garric + Claude | L-15, L-26, L-27, L-37, L-39, L-40 | pending |
+| L-27 | **DO FIRST.** Deploy $PRIM ERC-20 to Base mainnet (before repo is public — scammers clone immediately). Register ticker on BaseScan. Receive 100% supply to treasury wallet. Pool deferred. Needs: total supply, treasury wallet address | Garric | — | pending |
+| PRIM-2 | $PRIM utility design: define what holding $PRIM does (fee discounts, governance, access tiers, revenue share). Design doc only — no code. Must be decided before pool launch. Plan: `tasks/active/prim-2-token-utility-2026-02-26.md` | Garric + Claude | L-27 | pending |
+| L-14 | Full token launch: create Uniswap pool, fund liquidity, make repo public, announce. Seed pool conservatively ($2–3K USDC initially, not $20K — IL risk). | Garric + Claude | L-15, L-26, L-27, L-37, L-39, L-40, PRIM-2 | pending |
 
 ## Track.sh
 
