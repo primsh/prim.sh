@@ -91,12 +91,13 @@ Option A (fee discounts) can be added anytime as a complement to B/C.
 
 Total supply: 1,000,000,000 (1B) — large enough to feel accessible at low per-token price, small enough to not look like inflation bait.
 
-## Decisions needed from Garric before L-27
+## Decisions — LOCKED (2026-02-26)
 
-1. **Total supply** (recommend: 1B)
-2. **Treasury wallet address** (Base mainnet — receives 100% at deploy)
-3. **Token symbol**: `$PRIM` ✓ (confirmed)
-4. **Phase 1 utility stance**: Option E (TBD) or start with Option B?
+1. **Total supply**: 1,000,000,000 (1B) ✓
+2. **Treasury wallet**: fresh wallet created via wallet.sh (dogfood — clean separation from personal funds). Address TBD — create wallet first, then run L-27.
+3. **Token symbol**: `$PRIM` ✓
+4. **Decimals**: 18 ✓
+5. **Phase 1 utility**: Option E — hold supply silently. Docs say "$PRIM is the community token. Utility announced when the community has opinions."
 
 ## Execution guidance
 
