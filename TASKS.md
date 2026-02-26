@@ -157,6 +157,7 @@
 - L-36: `tasks/active/l-36-launch-readiness-smoke-test-2026-02-26.md`
 - X4-2: `tasks/active/x4-2-x402-client-retry-2026-02-25.md`
 - L-35: `tasks/active/l-35-access-request-e2e-test-2026-02-25.md`
+- Wave 5.5 (L-62→L-67): `tasks/active/wave-5.5-agent-interface-layer-2026-02-26.md`
 - L-48/L-49: covered by v1 launch plan update (search deploy)
 - V1 Launch: `tasks/active/v1-launch-plan-2026-02-25.md`
 
