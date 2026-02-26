@@ -26,7 +26,7 @@ a:hover{text-decoration:underline}
 
 .badges{display:flex;gap:1rem;flex-wrap:wrap;justify-content:center;margin-bottom:3rem}
 .badge{background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:0.5rem 1rem;font-size:0.85rem;color:var(--muted)}
-.badge strong{color:var(--green)}
+.badge strong{color:var(--green)}.badge.status-testing{background:rgba(0,200,80,0.08);border-color:rgba(0,200,80,0.3);color:#00c850}.badge.status-live{background:rgba(0,255,100,0.1);border-color:rgba(0,255,100,0.4);color:#00ff64}.badge.status-built{background:rgba(255,200,0,0.08);border-color:rgba(255,200,0,0.3);color:#ffc800}.badge.status-building{background:rgba(255,140,0,0.08);border-color:rgba(255,140,0,0.3);color:#ff8c00}.badge.status-soon{background:var(--surface);border-color:var(--border);color:var(--muted)}
 
 .scroll-hint{position:absolute;bottom:2rem;color:var(--muted);font-size:0.85rem;animation:pulse 2s infinite}
 @keyframes pulse{0%,100%{opacity:0.3}50%{opacity:1}}
