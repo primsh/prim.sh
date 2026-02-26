@@ -192,37 +192,42 @@ Plan doc: `tasks/active/v1-launch-plan-2026-02-25.md`
 | L-20 | Persist faucet rate limiter to SQLite (currently in-memory, lost on restart) | Claude | L-10 | done |
 | L-21 | Redeploy VPS after L-16 through L-20 + re-run smoke test | Claude | L-16, L-18, L-19, L-20 | done |
 
-### Wave 3: Access + Community
+### Wave 3: Access + Bugs
 
 | ID | Task | Owner | Depends on | Status |
 |---|---|---|---|---|
 | L-23 | Agent-friendly 403: include `access_url` + actionable message in allowlist denial response | Claude | L-16 | done |
 | L-24 | Access request endpoint: `POST /v1/access/request` on wallet.sh — agent submits wallet address, stored in SQLite queue for review. `GET /v1/access/requests` (admin) to list pending. `POST /v1/access/requests/:id/approve` adds to allowlist | Claude | L-23 | done (→ L-31, implemented as CF Worker) |
-| L-25 | Access landing page: `prim.sh/access` — human-readable form + documents the API. Agents call API directly, humans use the form | Claude | L-31 | pending |
 | L-31 | Deploy access request + invite flow: CF Worker (`workers/platform/`) to Cloudflare at `api.prim.sh`, VPS wallet internal endpoints (`/internal/allowlist/*`), `PRIM_INTERNAL_KEY` shared secret, D1 database, dynamic SQLite allowlist on wallet service, seed existing wallets, verify full flow | Claude + Garric | L-17, L-24 | done (access request submitted + approved in Asher test) |
-| L-26 | Community setup: create Discord server, prepare repo for public (`CONTRIBUTING.md`, issue templates, `LICENSE`), set up GitHub Discussions | Garric + Claude | — | pending |
 | L-28 | Agent feedback endpoint: `POST /api/feedback` on api.prim.sh — agent submits `{ type: "bug\|feature\|pain_point", title, body, wallet }`, creates GitHub Issue via API (labeled by type + `agent-reported`). Requires registered wallet. Validates type, checks allowlist via VPS internal API. | Claude | L-24 | done |
-| L-29 | GH Action: auto-dedupe issues + PRs. On new issue: fuzzy-match title against open issues, label + link duplicates. On stale (30d no activity): auto-close with comment. On bot PRs: auto-merge if CI passes. | Claude | L-26 | pending |
 | L-30 | Update llms.txt to document feedback endpoint and access request flow so agents discover them from the catalog | Claude | L-24, L-28 | done (access request + CLI getting started documented) |
 | L-32 | Faucet treasury fallback: when Circle API rate-limits (429), fall back to direct USDC transfer from pre-funded treasury wallet. Deployed + treasury funded with Sepolia ETH for gas. | Claude | FC-1 | done |
 | L-33 | Fix `prim wallet create` OpenSSL scrypt memory limit crash (Bun + node crypto compat issue) | Claude | KS-1 | done |
 | L-34 | Fix CLI `--flag value` parsing: `getFlag` only accepts `--flag=value` syntax, not `--flag value` with space. Usage hints should match actual behavior. | Claude | KS-1 | done |
-| L-35 | Agent access request e2e test: fresh wallet → register → hit paid endpoint → get 403 → agent discovers `access_url` → POSTs access request → admin approves → agent retries → success. Verify the full autonomous flow. | Claude + Garric | L-31 | pending |
 | L-36 | Launch readiness smoke test: full Asher run with fresh wallet through CLI — `prim wallet create` → `prim faucet usdc` → `prim store create-bucket` → `prim store put` → `prim store get`. All steps must succeed without hand-written code. | Claude + Garric | L-33, L-34 | done (script: scripts/smoke-cli.ts — run from VPS) |
 
-### Wave 4: Mainnet + Binary
+### Wave 4: Binary + Mainnet (critical path to launch)
 
 | ID | Task | Owner | Depends on | Status |
 |---|---|---|---|---|
-| L-22 | Mainnet switchover: update VPS env files from `eip155:84532` → `eip155:8453`, set prod `PRIM_PAY_TO` treasury, fund facilitator with mainnet USDC | Garric | L-17 | pending |
-| L-11 | Compile `prim` binary for 4 platforms (`bun build --compile`) + upload to GitHub Release | Claude | L-4 | pending |
+| L-11 | Compile `prim` binary for 4 platforms (`bun build --compile`) + upload to GitHub Release | Claude | L-4 | done |
 | L-12 | Write install script (`curl prim.sh \| sh`) + per-primitive wrappers | Claude | L-11 | pending |
+| L-22 | Mainnet switchover: update VPS env files from `eip155:84532` → `eip155:8453`, set prod `PRIM_PAY_TO` treasury, fund facilitator with mainnet USDC | Garric | L-17 | pending |
+| L-15 | Pre-public checklist: rotate Stalwart admin password + `relay-wrapper` API key, verify no secrets in git history (`git log -p \| grep`), confirm .env files gitignored | Garric | L-10 | pending |
 
-### Wave 5: Token + Public
+### Wave 5: Community + Polish
 
 | ID | Task | Owner | Depends on | Status |
 |---|---|---|---|---|
-| L-15 | Pre-public checklist: rotate Stalwart admin password + `relay-wrapper` API key, verify no secrets in git history (`git log -p \| grep`), confirm .env files gitignored | Garric | L-10 | pending |
+| L-25 | Access landing page: `prim.sh/access` — human-readable form + documents the API. Agents call API directly, humans use the form | Claude | L-31 | pending |
+| L-26 | Community setup: create Discord server, prepare repo for public (`CONTRIBUTING.md`, issue templates, `LICENSE`), set up GitHub Discussions | Garric + Claude | — | pending |
+| L-29 | GH Action: auto-dedupe issues + PRs. On new issue: fuzzy-match title against open issues, label + link duplicates. On stale (30d no activity): auto-close with comment. On bot PRs: auto-merge if CI passes. | Claude | L-26 | pending |
+| L-35 | Agent access request e2e test: fresh wallet → register → hit paid endpoint → get 403 → agent discovers `access_url` → POSTs access request → admin approves → agent retries → success. Verify the full autonomous flow. | Claude + Garric | L-31 | pending |
+
+### Wave 6: Token + Public
+
+| ID | Task | Owner | Depends on | Status |
+|---|---|---|---|---|
 | L-27 | Register $PRIM ticker defensively on BaseScan ASAP (before repo goes public). Deploy token contract early, pool later | Garric | — | pending |
 | L-14 | Full token launch: create Uniswap pool, fund liquidity, make repo public, announce | Garric + Claude | L-15, L-26, L-27 | pending |
 
