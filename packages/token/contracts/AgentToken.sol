@@ -8,12 +8,27 @@ import "@openzeppelin/contracts/access/Ownable.sol";
 /**
  * @title AgentToken
  * @notice Minimal ERC-20 for token.sh — inherits audited OZ v5 building blocks.
- *         Custom logic: configurable decimals, optional owner-only mint with supply cap.
+ *         Custom logic: configurable decimals, optional minter-controlled mint with supply cap.
+ *
+ * Ownership model:
+ *   owner  — the agent wallet (set via constructor owner_ param). Holds initial supply.
+ *             Can call transferOwnership, etc. Does NOT control minting.
+ *   minter — the token.sh deployer key (msg.sender at deploy time). Controls mint().
+ *             Separation allows token.sh to mint on behalf of the agent without the
+ *             agent exposing their private key to the server.
  */
 contract AgentToken is ERC20, ERC20Burnable, Ownable {
     uint8 private immutable _decimals;
     bool public mintable;
     uint256 public maxSupply;
+    address public minter;
+
+    error OnlyMinter();
+
+    modifier onlyMinter() {
+        if (msg.sender != minter) revert OnlyMinter();
+        _;
+    }
 
     constructor(
         string memory name_,
@@ -27,6 +42,7 @@ contract AgentToken is ERC20, ERC20Burnable, Ownable {
         _decimals = decimals_;
         mintable = mintable_;
         maxSupply = maxSupply_;
+        minter = msg.sender; // deployer key — can mint without being the on-chain owner
         _mint(owner_, initialSupply);
     }
 
@@ -35,10 +51,10 @@ contract AgentToken is ERC20, ERC20Burnable, Ownable {
     }
 
     /**
-     * @notice Mint additional tokens. Callable by owner only when mintable=true.
+     * @notice Mint additional tokens. Callable by minter (token.sh deployer key) only.
      *         If maxSupply > 0, minting is capped at maxSupply.
      */
-    function mint(address to, uint256 amount) external onlyOwner {
+    function mint(address to, uint256 amount) external onlyMinter {
         require(mintable, "AgentToken: not mintable");
         if (maxSupply > 0) {
             require(totalSupply() + amount <= maxSupply, "AgentToken: exceeds max supply");
