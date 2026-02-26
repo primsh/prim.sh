@@ -10,12 +10,12 @@ Tasks that block repo going public + mainnet switchover.
 | L-22 | Mainnet switchover: update VPS env files from `eip155:84532` → `eip155:8453`, set prod `PRIM_PAY_TO` treasury, fund facilitator with mainnet USDC | Garric | L-17 | pending |
 | L-27 | Register $PRIM ticker defensively on BaseScan ASAP (before repo goes public). Deploy token contract early, pool later | Garric | — | pending |
 | L-14 | Full token launch: create Uniswap pool, fund liquidity, make repo public, announce | Garric + Claude | L-15, L-26, L-27, L-37, L-39, L-40 | pending |
-| L-61 | Dynamic allowlist: all services query wallet.sh's allowlist via internal API instead of static `PRIM_ALLOWLIST` env var | Claude | L-31 | pending |
+| L-61 | Dynamic allowlist: all services query wallet.sh's allowlist via internal API instead of static `PRIM_ALLOWLIST` env var | Claude | L-31 | done |
 | L-69 | Pre-deployment readiness check script (`scripts/pre-deploy.ts <primitive>`) | Claude | — | done |
 | L-70 | Deploy token.sh to VPS: systemd unit, Caddy route, DNS A record, env vars, smoke test | Garric | L-69, TK-5 | pending |
 | L-71 | Deploy mem.sh to VPS: Qdrant instance, systemd unit, Caddy route, DNS A record, env vars, smoke test | Garric | L-69, M-2 | pending |
 | L-72 | Agent Interface Wave 2: extend OpenAPI, MCP tools, Skills, Plugins, CLI, llms.txt to email, mem, domain, token | Claude | L-62 | pending |
-| L-73 | Fix domain.sh freeRoutes: `POST /v1/domains/recover` and `POST /v1/domains/{domain}/configure-ns` missing from middleware config | Claude | — | pending |
+| L-73 | Fix domain.sh freeRoutes: `POST /v1/domains/recover` and `POST /v1/domains/{domain}/configure-ns` missing from middleware config | Claude | — | done |
 | E-4 | Domain warmup: send low-volume emails to engaged recipients, ramp over weeks | deploy/email | E-2, E-3 | pending |
 | E-5 | Verify Gmail inbox delivery (not spam) after warmup + PTR + DMARC changes | deploy/email | E-4 | pending |
 | E-6 | Verify Apple Mail / iCloud delivery after warmup | deploy/email | E-4 | pending |
@@ -181,7 +181,7 @@ Plan doc: `tasks/active/v1-launch-plan-2026-02-25.md`
 | L-32 | Faucet treasury fallback: when Circle API rate-limits (429), fall back to direct USDC transfer from pre-funded treasury wallet. Deployed + treasury funded with Sepolia ETH for gas. | Claude | FC-1 | done |
 | L-33 | Fix `prim wallet create` OpenSSL scrypt memory limit crash (Bun + node crypto compat issue) | Claude | KS-1 | done |
 | L-34 | Fix CLI `--flag value` parsing: `getFlag` only accepts `--flag=value` syntax, not `--flag value` with space. Usage hints should match actual behavior. | Claude | KS-1 | done |
-| L-61 | Dynamic allowlist: all services query wallet.sh's allowlist via internal API instead of static `PRIM_ALLOWLIST` env var. Currently access approval only updates wallet.sh's SQLite — every other service (store, spawn, search, faucet) has its own static env var list that requires manual edit + restart. Use `checkAllowlist` callback in x402-middleware to call `GET /internal/allowlist/check?address=X` on wallet.sh | Claude | L-31 | pending |
+| L-61 | Dynamic allowlist: all services query wallet.sh's allowlist via internal API instead of static `PRIM_ALLOWLIST` env var. Currently access approval only updates wallet.sh's SQLite — every other service (store, spawn, search, faucet) has its own static env var list that requires manual edit + restart. Use `checkAllowlist` callback in x402-middleware to call `GET /internal/allowlist/check?address=X` on wallet.sh | Claude | L-31 | done |
 | L-36 | Launch readiness smoke test: full Asher run with fresh wallet through CLI — `prim wallet create` → `prim faucet usdc` → `prim store create-bucket` → `prim store put` → `prim store get`. All steps must succeed without hand-written code. | Claude + Garric | L-33, L-34 | done (script: scripts/smoke-cli.ts — run from VPS) |
 
 ### Wave 4: Binary + Mainnet (critical path to launch)
@@ -245,7 +245,7 @@ All live primitives (wallet, store, spawn, faucet, search) need proper agent int
 | L-67 | Extend CLI to all live prims: `prim search`, `prim spawn`, `prim email` subcommands (generated or hand-written from OpenAPI specs) | Claude | L-62 | done |
 | L-68 | Deploy email.sh to VPS — systemd unit, Caddy route, setup/deploy scripts, smoke test | Garric | — | done |
 | L-72 | Agent Interface Wave 2: extend OpenAPI, MCP tools, Skills, Plugins, CLI, llms.txt to email, mem, domain, token (same pattern as L-62→L-67 for the original 5) | Claude | L-62 | pending |
-| L-73 | Fix domain.sh freeRoutes: `POST /v1/domains/recover` and `POST /v1/domains/{domain}/configure-ns` are free endpoints but missing from freeRoutes in middleware config, so they get 402'd | Claude | — | pending |
+| L-73 | Fix domain.sh freeRoutes: `POST /v1/domains/recover` and `POST /v1/domains/{domain}/configure-ns` are free endpoints but missing from freeRoutes in middleware config, so they get 402'd | Claude | — | done |
 
 ### Wave 6: Token + Public
 
