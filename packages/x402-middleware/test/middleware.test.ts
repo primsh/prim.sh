@@ -277,6 +277,13 @@ describe("Wallet allowlist", () => {
     expect(res.status).toBe(403);
   });
 
+  it("returns 402 (not 403) when allowlist is set but no payment header present", async () => {
+    const app = createAllowlistApp([ALLOWED_ADDRESS]);
+    const res = await app.request("/paid", { method: "GET" });
+    // Should get 402 so client can learn payment requirements, not 403
+    expect(res.status).toBe(402);
+  });
+
   it("skips allowlist check when PRIM_ALLOWLIST is empty string", async () => {
     process.env.PRIM_ALLOWLIST = "";
     const app = createAllowlistApp();

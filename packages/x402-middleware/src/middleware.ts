@@ -113,7 +113,8 @@ export function createAgentStackMiddleware(
   function denyWallet(c: Parameters<MiddlewareHandler>[0]): boolean {
     if (!allowlist) return false;
     const wallet = c.get(WALLET_ADDRESS_KEY) as string | undefined;
-    return !wallet || !allowlist.has(wallet.toLowerCase());
+    if (!wallet) return false; // No payment header yet — let x402 return 402
+    return !allowlist.has(wallet.toLowerCase());
   }
 
   if (Object.keys(effectiveRoutes).length === 0) {
