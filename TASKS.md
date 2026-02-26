@@ -208,7 +208,7 @@ Plan doc: `tasks/active/v1-launch-plan-2026-02-25.md`
 | L-33 | Fix `prim wallet create` OpenSSL scrypt memory limit crash (Bun + node crypto compat issue) | Claude | KS-1 | done |
 | L-34 | Fix CLI `--flag value` parsing: `getFlag` only accepts `--flag=value` syntax, not `--flag value` with space. Usage hints should match actual behavior. | Claude | KS-1 | done |
 | L-35 | Agent access request e2e test: fresh wallet → register → hit paid endpoint → get 403 → agent discovers `access_url` → POSTs access request → admin approves → agent retries → success. Verify the full autonomous flow. | Claude + Garric | L-31 | pending |
-| L-36 | Launch readiness smoke test: full Asher run with fresh wallet through CLI — `prim wallet create` → `prim faucet usdc` → `prim store create-bucket` → `prim store put` → `prim store get`. All steps must succeed without hand-written code. | Claude + Garric | L-33, L-34 | pending |
+| L-36 | Launch readiness smoke test: full Asher run with fresh wallet through CLI — `prim wallet create` → `prim faucet usdc` → `prim store create-bucket` → `prim store put` → `prim store get`. All steps must succeed without hand-written code. | Claude + Garric | L-33, L-34 | done (script: scripts/smoke-cli.ts — run from VPS) |
 
 ### Wave 4: Mainnet + Binary
 
