@@ -16,6 +16,7 @@ Tasks that block repo going public + mainnet switchover.
 | L-71 | Deploy mem.sh to VPS: Qdrant instance, systemd unit, Caddy route, DNS A record, env vars, smoke test | Garric | L-69, M-2 | pending |
 | L-72 | Agent Interface Wave 2: extend OpenAPI, MCP tools, Skills, Plugins, CLI, llms.txt to email, mem, domain, token | Claude | L-62 | done |
 | L-73 | Fix domain.sh freeRoutes: `POST /v1/domains/recover` and `POST /v1/domains/{domain}/configure-ns` missing from middleware config | Claude | — | done |
+| E-9 | Rename mail hostname: add DNS A record `mail.prim.sh → 157.230.187.207`, update `server.hostname` in Stalwart config, update `deploy/email/.env`, restart container, verify SMTP banner | deploy/email | — | pending |
 | E-4 | Domain warmup: send low-volume emails to engaged recipients, ramp over weeks | deploy/email | E-2, E-3 | pending |
 | E-5 | Verify Gmail inbox delivery (not spam) after warmup + PTR + DMARC changes | deploy/email | E-4 | pending |
 | E-6 | Verify Apple Mail / iCloud delivery after warmup | deploy/email | E-4 | pending |
@@ -62,7 +63,7 @@ Not blocking public launch. Extensions, polish, business tooling.
 | L-56 | Upload `final-x-banner.jpg` as X @useprim header image | Garric | L-37 | pending |
 | L-57 | Upload `final-social-preview.jpg` as GitHub repo social preview | Garric | L-37 | pending |
 | L-60 | Pricing audit (superseded by BIZ-1) | — | L-22 | pending |
-| I-1 | Primitives status SOT: `primitives.yaml` + codegen script for llms.txt + README table | root, scripts/, site/ | — | pending |
+| I-1 | Primitives status SOT: `primitives.yaml` + codegen script for llms.txt + README table | root, scripts/, site/ | — | done |
 | I-2 | Business observability: `pnpm report` — DO/CF/Tavily costs + x402 revenue | scripts/ | — | pending |
 | BIZ-1 | Master pricing list: `specs/pricing.yaml` as SOT, codegen into llms.txt/skills | specs/ | — | done |
 | BIZ-2 | Expense dashboard: `bun scripts/expenses.ts` — DO/CF/Tavily costs + x402 revenue | scripts/ | — | pending |
@@ -254,6 +255,15 @@ All live primitives (wallet, store, spawn, faucet, search) need proper agent int
 | L-27 | Register $PRIM ticker defensively on BaseScan ASAP (before repo goes public). Deploy token contract early, pool later | Garric | — | pending |
 | L-14 | Full token launch: create Uniswap pool, fund liquidity, make repo public, announce | Garric + Claude | L-15, L-26, L-27, L-37, L-39, L-40 | pending |
 
+## Track.sh
+
+| ID | Task | Scope | Depends on | Status |
+|---|---|---|---|---|
+| TR-1 | Build track.sh: `POST /v1/track` — multi-carrier package tracking via Shippo. Stateless, no SQLite. Provider-abstracted. $0.05/lookup | packages/track | — | done |
+| TR-2 | Smoke test + deploy track.sh: live Shippo call with real tracking number, systemd unit, Caddy route, DNS A record, env vars | deploy/, Claude + Garric | TR-1 | pending |
+
+Plan doc: `tasks/active/tr-1-track-sh-plan-2026-02-26.md`
+
 ## Backlog — Future Primitives
 
 | Primitive | Wraps | Notes |
@@ -280,6 +290,7 @@ All live primitives (wallet, store, spawn, faucet, search) need proper agent int
 | skills.sh | Custom marketplace + registry | Buy/sell agent skills (versioned manifests, trust/reputation, x402 billing). Start private-curated first |
 | mart.sh | Amazon/eBay API proxy | Heavy regulatory |
 | ship.sh | EasyPost or Shippo | |
+| track.sh | Shippo Tracking API | Multi-carrier package tracking (USPS, FedEx, UPS, DHL, etc.) by tracking number. Stateless lookup — distinct from ship.sh (label creation). Shippo: $0.02/lookup, self-serve signup. EasyPost is $0.01 but requires sales call. AfterShip is $239/mo minimum — incompatible with pay-per-use |
 | hands.sh | Custom gig platform | Heaviest regulatory burden |
 | pay.sh | Stripe + x402 bridge | Fiat payment bridge |
 | borrow.sh | Custom (on-chain escrow + interest) | Agent-to-agent USDC lending. Needs wallet.sh + id.sh |
