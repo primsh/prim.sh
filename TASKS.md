@@ -180,12 +180,12 @@ Plan doc: `tasks/active/v1-launch-plan-2026-02-25.md`
 | ID | Task | Owner | Depends on | Status |
 |---|---|---|---|---|
 | L-10 | Deploy Core 4 to VPS + run integration smoke test against live endpoints | Claude + Garric | L-8, L-9 | done |
-| L-13 | Deploy landing site (`site/`) to Cloudflare Pages, wire `prim.sh` root domain | Garric + Claude | L-4 | pending |
-| L-16 | Wallet allowlist: x402-middleware rejects wallets not in allowlist; env-configurable `PRIM_ALLOWLIST` (comma-separated addresses), skip if unset | Claude | L-10 | pending |
+| L-13 | Deploy landing site (`site/`) to Cloudflare Pages, wire `prim.sh` root domain | Garric + Claude | L-4 | done |
+| L-16 | Wallet allowlist: x402-middleware rejects wallets not in allowlist; env-configurable `PRIM_ALLOWLIST` (comma-separated addresses), skip if unset | Claude | L-10 | done |
 | L-17 | Invite codes: `POST /v1/invites` (admin-only) generates code, `POST /v1/invites/redeem` adds wallet to allowlist. SQLite table in wallet.sh | Claude | L-16 | pending |
-| L-18 | Default storage caps: per-wallet bucket limit (10), default per-bucket quota (100MB), per-wallet total storage cap (1GB). Reject uploads/creates above limits | Claude | L-10 | pending |
-| L-19 | Spawn per-wallet caps: max 3 concurrent servers per wallet, max `small` type only during beta. Reject creates above limits | Claude | L-10 | pending |
-| L-20 | Persist faucet rate limiter to SQLite (currently in-memory, lost on restart) | Claude | L-10 | pending |
+| L-18 | Default storage caps: per-wallet bucket limit (10), default per-bucket quota (100MB), per-wallet total storage cap (1GB). Reject uploads/creates above limits | Claude | L-10 | done |
+| L-19 | Spawn per-wallet caps: max 3 concurrent servers per wallet, max `small` type only during beta. Reject creates above limits | Claude | L-10 | done |
+| L-20 | Persist faucet rate limiter to SQLite (currently in-memory, lost on restart) | Claude | L-10 | done |
 | L-21 | Redeploy VPS after L-16 through L-20 + re-run smoke test | Claude | L-16, L-17, L-18, L-19, L-20 | pending |
 
 ### Wave 3: Mainnet + Binary
