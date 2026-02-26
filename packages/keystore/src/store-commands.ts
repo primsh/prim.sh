@@ -5,6 +5,7 @@ import { createInterface } from "node:readline/promises";
 import { stdin as rlInput, stdout as rlOutput } from "node:process";
 import { createPrimFetch } from "@primsh/x402-client";
 import { getConfig } from "./config.ts";
+import { getFlag, hasFlag } from "./flags.ts";
 
 async function readStdin(): Promise<Buffer> {
   const chunks: Buffer[] = [];
@@ -12,21 +13,6 @@ async function readStdin(): Promise<Buffer> {
     chunks.push(Buffer.from(chunk as Uint8Array));
   }
   return Buffer.concat(chunks);
-}
-
-function getFlag(name: string, argv: string[]): string | undefined {
-  for (let i = 0; i < argv.length; i++) {
-    if (argv[i].startsWith(`--${name}=`)) return argv[i].slice(`--${name}=`.length);
-    if (argv[i] === `--${name}`) {
-      if (i + 1 < argv.length && !argv[i + 1].startsWith("--")) return argv[i + 1];
-      return ""; // boolean flag
-    }
-  }
-  return undefined;
-}
-
-function hasFlag(name: string, argv: string[]): boolean {
-  return argv.some((a) => a === `--${name}` || a.startsWith(`--${name}=`));
 }
 
 /** Same semantics as wallet's resolvePassphrase: prompts if bare --passphrase with no value. */

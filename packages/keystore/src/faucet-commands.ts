@@ -1,19 +1,5 @@
 import { getDefaultAddress } from "./config.ts";
-
-function getFlag(name: string, argv: string[]): string | undefined {
-  for (let i = 0; i < argv.length; i++) {
-    if (argv[i].startsWith(`--${name}=`)) return argv[i].slice(`--${name}=`.length);
-    if (argv[i] === `--${name}`) {
-      if (i + 1 < argv.length && !argv[i + 1].startsWith("--")) return argv[i + 1];
-      return ""; // boolean flag
-    }
-  }
-  return undefined;
-}
-
-function hasFlag(name: string, argv: string[]): boolean {
-  return argv.some((a) => a === `--${name}` || a.startsWith(`--${name}=`));
-}
+import { getFlag, hasFlag } from "./flags.ts";
 
 export function resolveFaucetUrl(argv: string[]): string {
   const flag = getFlag("url", argv);

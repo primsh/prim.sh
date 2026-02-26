@@ -7,24 +7,10 @@ import { getDefaultAddress, setDefaultAddress } from "./config.ts";
 import { getUsdcBalance } from "./balance.ts";
 import { decryptFromV3 } from "./crypto.ts";
 import type { KeystoreFile } from "./types.ts";
+import { getFlag, hasFlag } from "./flags.ts";
 import pkg from "../package.json";
 
 const argv = process.argv.slice(2);
-
-function getFlag(name: string): string | undefined {
-  for (let i = 0; i < argv.length; i++) {
-    if (argv[i].startsWith(`--${name}=`)) return argv[i].slice(`--${name}=`.length);
-    if (argv[i] === `--${name}`) {
-      if (i + 1 < argv.length && !argv[i + 1].startsWith("--")) return argv[i + 1];
-      return ""; // boolean flag
-    }
-  }
-  return undefined;
-}
-
-function hasFlag(name: string): boolean {
-  return argv.some((a) => a === `--${name}` || a.startsWith(`--${name}=`));
-}
 
 async function promptPassphrase(prompt = "Passphrase: "): Promise<string> {
   const rl = createInterface({ input, output });
@@ -35,8 +21,8 @@ async function promptPassphrase(prompt = "Passphrase: "): Promise<string> {
 
 /** Returns the passphrase if --passphrase flag is present, undefined otherwise. */
 async function resolvePassphrase(): Promise<string | undefined> {
-  if (!hasFlag("passphrase")) return undefined;
-  const value = getFlag("passphrase");
+  if (!hasFlag("passphrase", argv)) return undefined;
+  const value = getFlag("passphrase", argv);
   if (value) return value; // --passphrase=VALUE
   return promptPassphrase(); // --passphrase (interactive)
 }
@@ -109,7 +95,7 @@ async function main() {
   try {
     switch (subcommand) {
       case "create": {
-        const label = getFlag("label");
+        const label = getFlag("label", argv);
         const passphrase = await resolvePassphrase();
         const { address } = await createKey({ label, passphrase });
         console.log(`Created wallet: ${address}`);
@@ -162,7 +148,7 @@ async function main() {
           );
           process.exit(1);
         }
-        const label = getFlag("label");
+        const label = getFlag("label", argv);
         const passphrase = await resolvePassphrase();
 
         let privateKey: `0x${string}`;
