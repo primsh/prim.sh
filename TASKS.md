@@ -24,7 +24,7 @@ Tasks that block repo going public + mainnet switchover.
 | TK-7 | `prim token` CLI subcommand: deploy, list, get, mint, pool commands using keystore + x402-client | packages/keystore | TK-3, KS-1 | done |
 | M-3 | `prim mem` CLI subcommand: create-collection, list-collections, upsert, query, cache-set, cache-get, cache-del | packages/keystore | M-1, KS-1 | done |
 | P-6 | `prim` binary publishing + install scripts: `bun build --compile`, host binaries in Cloudflare R2 public bucket (`prim-releases`) served via `dl.prim.sh`, install script at `prim.sh/install`. Keeps repo private during beta. | packages/keystore, site/, Cloudflare | ST-6 | done |
-| SEC-1 | Infra hardening: fail2ban, SSH key-only, unattended-upgrades on VPS | deploy/ | — | pending |
+| SEC-1 | Infra hardening: fail2ban, SSH key-only, unattended-upgrades on VPS | deploy/ | — | done |
 | SEC-2 | Caddy security headers: HSTS, X-Frame-Options, X-Content-Type-Options, CSP | deploy/prim/Caddyfile | — | done |
 | SEC-3 | Edge rate limiting: Caddy rate_limit or CF WAF for health/registration endpoints | deploy/, Cloudflare | — | pending |
 | SEC-4 | Dependency audit: `pnpm audit` in CI, pin critical deps | .github/workflows/ci.yml | — | done |
@@ -65,6 +65,7 @@ Not blocking public launch. Extensions, polish, business tooling.
 | L-60 | Pricing audit (superseded by BIZ-1) | — | L-22 | pending |
 | I-1 | Primitives status SOT: `primitives.yaml` + codegen script for llms.txt + README table | root, scripts/, site/ | — | done |
 | I-2 | Business observability: `pnpm report` — DO/CF/Tavily costs + x402 revenue | scripts/ | — | pending |
+| SITE-1 | SSR site: replace 27 per-prim HTML files with template + per-prim YAML, serve.ts renders on request, CF edge caches. Fixes CSS drift, single source for all page updates | site/, packages/*/prim.yaml | I-1 | pending |
 | BIZ-1 | Master pricing list: `specs/pricing.yaml` as SOT, codegen into llms.txt/skills | specs/ | — | done |
 | BIZ-2 | Expense dashboard: `bun scripts/expenses.ts` — DO/CF/Tavily costs + x402 revenue | scripts/ | — | pending |
 
@@ -128,6 +129,7 @@ Not blocking public launch. Extensions, polish, business tooling.
 - L-35: `tasks/active/l-35-access-request-e2e-test-2026-02-25.md`
 - Wave 5.5 (L-62→L-67): `tasks/active/wave-5.5-agent-interface-layer-2026-02-26.md`
 - I-1: `tasks/active/i-1-primitives-sot-codegen-2026-02-26.md`
+- SITE-1: `tasks/active/site-1-ssr-2026-02-26.md`
 - L-69: implemented directly (no plan doc)
 - L-48/L-49: covered by v1 launch plan update (search deploy)
 - V1 Launch: `tasks/active/v1-launch-plan-2026-02-25.md`

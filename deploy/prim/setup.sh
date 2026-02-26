@@ -16,7 +16,7 @@ log() { echo "[setup] $*"; }
 # ── 1. System packages ────────────────────────────────────────────────────────
 log "Updating apt..."
 apt-get update -qq
-apt-get install -y -qq curl git ufw
+apt-get install -y -qq curl git ufw fail2ban unattended-upgrades
 
 # ── 2. Create prim user ───────────────────────────────────────────────────────
 if ! id "$PRIM_USER" &>/dev/null; then
@@ -258,7 +258,59 @@ ufw allow 587/tcp   # SMTP+STARTTLS (Stalwart submission)
 ufw allow 993/tcp   # IMAPS (Stalwart mail retrieval)
 ufw --force enable
 
-# ── 13. Enable and start services ────────────────────────────────────────────
+# ── 13. SSH hardening: key-only auth ─────────────────────────────────────────
+log "Hardening SSH..."
+SSHD_CONF="/etc/ssh/sshd_config"
+# Disable password auth; keep PAM for other pam modules (e.g. account/session)
+sed -i 's/^#*PasswordAuthentication.*/PasswordAuthentication no/' "$SSHD_CONF"
+sed -i 's/^#*ChallengeResponseAuthentication.*/ChallengeResponseAuthentication no/' "$SSHD_CONF"
+sed -i 's/^#*KbdInteractiveAuthentication.*/KbdInteractiveAuthentication no/' "$SSHD_CONF"
+# Drop in a sshd_config.d override as belt-and-suspenders
+mkdir -p /etc/ssh/sshd_config.d
+cat >/etc/ssh/sshd_config.d/99-prim-hardening.conf <<'EOF'
+PasswordAuthentication no
+ChallengeResponseAuthentication no
+KbdInteractiveAuthentication no
+PermitRootLogin prohibit-password
+EOF
+systemctl restart ssh 2>/dev/null || systemctl restart sshd 2>/dev/null || true
+
+# ── 14. fail2ban: protect SSH from brute-force ───────────────────────────────
+log "Configuring fail2ban..."
+cat >/etc/fail2ban/jail.d/prim-ssh.conf <<'EOF'
+[sshd]
+enabled  = true
+port     = ssh
+maxretry = 5
+findtime = 300
+bantime  = 3600
+EOF
+systemctl enable fail2ban
+systemctl restart fail2ban
+
+# ── 15. Unattended security upgrades ─────────────────────────────────────────
+log "Configuring unattended-upgrades..."
+cat >/etc/apt/apt.conf.d/20auto-upgrades <<'EOF'
+APT::Periodic::Update-Package-Lists "1";
+APT::Periodic::Unattended-Upgrade "1";
+APT::Periodic::AutocleanInterval "7";
+EOF
+cat >/etc/apt/apt.conf.d/51prim-unattended-upgrades <<'EOF'
+Unattended-Upgrade::Allowed-Origins {
+  "${distro_id}:${distro_codename}-security";
+  "${distro_id}ESMApps:${distro_codename}-apps-security";
+  "${distro_id}ESM:${distro_codename}-infra-security";
+};
+Unattended-Upgrade::AutoFixInterruptedDpkg "true";
+Unattended-Upgrade::MinimalSteps "true";
+Unattended-Upgrade::Remove-Unused-Kernel-Packages "true";
+Unattended-Upgrade::Remove-Unused-Dependencies "true";
+Unattended-Upgrade::Automatic-Reboot "false";
+EOF
+systemctl enable unattended-upgrades
+systemctl restart unattended-upgrades
+
+# ── 16. Enable and start services ────────────────────────────────────────────
 log "Enabling services..."
 for svc in "${SERVICES[@]}"; do
   systemctl enable "prim-$svc"
