@@ -104,6 +104,7 @@ CI, tooling, observability, pricing, cross-cutting platform work.
 | OPS-4 | Load test baseline: k6/artillery against health + store CRUD, document capacity | Claude | -- | pending | -- |
 | L-29 | GH Action: auto-dedupe issues, stale auto-close (30d), bot PR auto-merge if CI passes | Claude | -- | pending | -- |
 | L-15 | Pre-public checklist: rotate Stalwart admin password + relay-wrapper API key, verify no secrets in git history, confirm .env files gitignored | Garric | -- | pending | v1.0.0 |
+| I-2 | Migrate TASKS.md → tasks.json: define schema, convert data, update launch-status.ts + docs, optional TASKS.md codegen. Plan: `tasks/active/i-2-migrate-tasks-json-2026-02-26.md` | Claude | -- | pending | -- |
 
 ### INFRA-W2: Business (SRL)
 

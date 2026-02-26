@@ -160,3 +160,4 @@ A task needs a plan doc if any of:
 - OBS-1: `tasks/active/obs-1-metrics-report-2026-02-26.md`
 - SP-7: `tasks/active/sp-7-docker-provider-2026-02-26.md`
 - PRIM-2: `tasks/active/prim-2-token-utility-2026-02-26.md`
+- I-2: `tasks/active/i-2-migrate-tasks-json-2026-02-26.md`
