@@ -63,6 +63,9 @@ footer .links{margin-top:0.5rem}footer .links a{margin:0 0.75rem}
     <div class="badge"><strong>BYOD</strong> custom domains</div>
     <div class="badge">Part of <strong>prim.sh</strong></div>
   </div>
+<!-- BEGIN:PRIM:STATUS -->
+    <span class="badge status-built">○ Built — deploy pending</span>
+<!-- END:PRIM:STATUS -->
 </div>
 
 <section>
@@ -101,10 +104,12 @@ footer .links{margin-top:0.5rem}footer .links a{margin:0 0.75rem}
   <table class="pricing-table">
     <thead><tr><th>Resource</th><th>Cost</th><th>Notes</th></tr></thead>
     <tbody>
-      <tr><td>Subdomain (*.dns.sh)</td><td>$0.005/day</td><td>Auto-TLS included</td></tr>
-      <tr><td>Custom domain zone</td><td>$0.05/mo</td><td>Unlimited records</td></tr>
-      <tr><td>DNS queries</td><td>Free</td><td>First 1M/mo</td></tr>
-      <tr><td>TLS cert provisioning</td><td>Free</td><td>Let's Encrypt</td></tr>
+<!-- BEGIN:PRIM:PRICING -->
+      <tr><td>Domain registration</td><td>dynamic</td><td>Quoted via /quote</td></tr>
+      <tr><td>DNS zone</td><td>$0.05</td><td>Unlimited records</td></tr>
+      <tr><td>DNS record</td><td>$0.001</td><td>Per operation</td></tr>
+      <tr><td>DNS queries</td><td>free</td><td>First 1M/mo</td></tr>
+<!-- END:PRIM:PRICING -->
     </tbody>
   </table>
 </section>

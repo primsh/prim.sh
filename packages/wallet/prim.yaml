@@ -1,0 +1,24 @@
+id: wallet
+name: wallet.sh
+endpoint: wallet.prim.sh
+status: testing
+type: crypto
+card_class: p20
+description: "Agent wallets. Generate keys, hold USDC on Base, and pay any x402 invoice."
+port: 3001
+order: 1
+phantom: false
+env:
+  - PRIM_PAY_TO
+  - PRIM_NETWORK
+  - PRIM_INTERNAL_KEY
+pricing:
+  - op: "Wallet registration"
+    price: "free"
+    note: ""
+  - op: "API call"
+    price: "$0.001"
+    note: "Per request"
+  - op: "Policy update"
+    price: "$0.005"
+    note: ""

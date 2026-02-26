@@ -1,0 +1,291 @@
+# Root primitives registry.
+# Built primitives (with packages/) declare full metadata in packages/<id>/prim.yaml.
+# This file defines all primitives including unbuilt ones, and provides base
+# metadata that package yamls override.
+
+primitives:
+  # ── Built (full metadata in packages/<id>/prim.yaml) ──────────────────────
+  - id: wallet
+    name: wallet.sh
+    type: crypto
+    card_class: p20
+    order: 1
+    phantom: false
+
+  - id: faucet
+    name: faucet.sh
+    type: testnet
+    card_class: pfaucet
+    order: 2
+    phantom: false
+
+  - id: spawn
+    name: spawn.sh
+    type: compute
+    card_class: p1
+    order: 3
+    phantom: false
+
+  - id: store
+    name: store.sh
+    type: storage
+    card_class: p4
+    order: 4
+    phantom: false
+
+  - id: email
+    name: email.sh
+    type: email
+    card_class: p2
+    order: 5
+    phantom: false
+
+  - id: search
+    name: search.sh
+    type: search
+    card_class: p12
+    order: 6
+    phantom: false
+
+  - id: token
+    name: token.sh
+    type: defi
+    card_class: p9
+    order: 7
+    phantom: false
+
+  - id: mem
+    name: mem.sh
+    type: memory
+    card_class: p21
+    order: 8
+    phantom: false
+
+  - id: domain
+    name: domain.sh
+    type: domains
+    card_class: p6
+    order: 9
+    phantom: false
+
+  # ── Unbuilt (coming soon) ──────────────────────────────────────────────────
+  - id: deploy
+    name: deploy.sh
+    type: deploy
+    card_class: plaunch
+    description: "Push code, get an endpoint. Container or repo URL to live service. No server config."
+    status: coming_soon
+    order: 10
+    phantom: false
+
+  - id: ring
+    name: ring.sh
+    type: phone
+    card_class: p3
+    description: "Phone numbers via API. SMS, voice, TTS. No Twilio account needed."
+    status: coming_soon
+    order: 11
+    phantom: false
+    pricing:
+      - op: "Provision number"
+        price: "$0.03/day"
+        note: "US local. Intl varies."
+      - op: "Send SMS"
+        price: "$0.008"
+        note: "US domestic"
+      - op: "Receive SMS"
+        price: "$0.005"
+        note: "Webhook delivery included"
+      - op: "Outbound call"
+        price: "$0.015/min"
+        note: "US domestic"
+      - op: "Inbound call"
+        price: "$0.010/min"
+        note: "Webhook included"
+      - op: "TTS"
+        price: "$0.005/min"
+        note: "Multiple voices"
+      - op: "Call recording"
+        price: "$0.002/min"
+        note: "Stored 24h default"
+
+  - id: pipe
+    name: pipe.sh
+    type: messaging
+    card_class: p8
+    description: "Pub/sub channels, webhook relays, event queues. Agent-to-agent glue."
+    status: coming_soon
+    order: 12
+    phantom: false
+
+  - id: vault
+    name: vault.sh
+    type: secrets
+    card_class: p5
+    description: "Store API keys, tokens, credentials. Scoped access. Ephemeral or persistent."
+    status: coming_soon
+    order: 13
+    phantom: false
+
+  - id: cron
+    name: cron.sh
+    type: scheduling
+    card_class: p7
+    description: "Run code on a schedule without a server. Cron, intervals, one-shots."
+    status: coming_soon
+    order: 14
+    phantom: false
+
+  - id: code
+    name: code.sh
+    type: execution
+    card_class: p27
+    description: "Sandboxed code execution for agents. Short-lived jobs instead of long-lived servers."
+    status: coming_soon
+    order: 15
+    phantom: false
+
+  - id: browse
+    name: browse.sh
+    type: browser
+    card_class: p25
+    description: "Headless Chromium sessions for agents. Click, type, and capture pages via API."
+    status: coming_soon
+    order: 16
+    phantom: false
+
+  - id: watch
+    name: watch.sh
+    type: observability
+    card_class: p23
+    description: "Structured logs, metrics, and alerts so agents can observe and correct themselves."
+    status: coming_soon
+    order: 17
+    phantom: false
+
+  - id: trace
+    name: trace.sh
+    type: tracing
+    card_class: p24
+    description: "Distributed tracing across services. Follow a request from wallet to spawn to store."
+    status: coming_soon
+    order: 18
+    phantom: false
+
+  - id: auth
+    name: auth.sh
+    type: oauth
+    card_class: p26
+    description: "Managed OAuth broker. Connect to third-party APIs without giving agents passwords."
+    status: coming_soon
+    order: 19
+    phantom: false
+
+  - id: hive
+    name: hive.sh
+    type: social
+    card_class: p14
+    description: "Discover peers. Share knowledge. Establish reputation. A social graph for software."
+    status: coming_soon
+    order: 20
+    phantom: true
+
+  - id: id
+    name: id.sh
+    type: identity
+    card_class: p18
+    description: "Reputation scores. Know Your Agent. Verifiable credentials. Trust layer."
+    status: coming_soon
+    order: 21
+    phantom: true
+
+  - id: mart
+    name: mart.sh
+    type: commerce
+    card_class: p13
+    description: "Buy physical goods via API. x402 to fiat proxy. Headless checkout."
+    status: coming_soon
+    order: 22
+    phantom: true
+
+  - id: corp
+    name: corp.sh
+    type: compliance
+    card_class: p19
+    description: "Incorporation, tax, insurance. Legal entities for agents. The fiat bridge."
+    status: coming_soon
+    order: 23
+    phantom: true
+
+  - id: hands
+    name: hands.sh
+    type: labor
+    card_class: p17
+    description: "On-demand human labor. Physical tasks, verification, errands. Gig economy API."
+    status: coming_soon
+    order: 24
+    phantom: true
+
+  - id: pins
+    name: pins.sh
+    type: maps
+    card_class: p11
+    description: "Coordinates, places, and routing. No maps UI, just structured spatial data."
+    status: coming_soon
+    order: 25
+    phantom: true
+
+  # ── Backlog (not shown on index) ───────────────────────────────────────────
+  - id: infer
+    name: infer.sh
+    type: ai
+    description: "LLM inference via OpenRouter. Any model, any provider, one API."
+    status: coming_soon
+    order: 100
+    phantom: false
+    show_on_index: false
+
+  - id: seek
+    name: seek.sh
+    type: search
+    description: "Deep research agent. Multi-step search + synthesis."
+    status: coming_soon
+    order: 101
+    phantom: false
+    show_on_index: false
+
+  - id: docs
+    name: docs.sh
+    type: docs
+    description: "OpenAPI → MCP converter. Turn any API spec into agent tools."
+    status: coming_soon
+    order: 102
+    phantom: false
+    show_on_index: false
+
+  - id: ads
+    name: ads.sh
+    type: ads
+    description: "Programmatic advertising for agents. Buy and sell attention."
+    status: coming_soon
+    order: 103
+    phantom: false
+    show_on_index: false
+
+  - id: pay
+    name: pay.sh
+    type: payments
+    description: "Stripe + x402 bridge. Accept fiat payments from humans."
+    status: coming_soon
+    order: 104
+    phantom: false
+    show_on_index: false
+
+  - id: ship
+    name: ship.sh
+    type: logistics
+    description: "Shipping labels and tracking via EasyPost. Physical world logistics."
+    status: coming_soon
+    order: 105
+    phantom: false
+    show_on_index: false

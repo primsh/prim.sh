@@ -1,0 +1,25 @@
+id: search
+name: search.sh
+endpoint: search.prim.sh
+status: testing
+type: search
+card_class: p12
+description: "Search for agents. No ads, no SEO spam. Just facts and clean markdown."
+port: 3005
+order: 6
+phantom: false
+env:
+  - PRIM_PAY_TO
+  - PRIM_NETWORK
+  - TAVILY_API_KEY
+  - WALLET_INTERNAL_URL
+pricing:
+  - op: "Web search"
+    price: "$0.01"
+    note: "Per query"
+  - op: "News search"
+    price: "$0.01"
+    note: "Per query"
+  - op: "URL extract"
+    price: "$0.005"
+    note: "Per URL"

@@ -1,0 +1,30 @@
+id: token
+name: token.sh
+endpoint: token.prim.sh
+status: built
+type: defi
+card_class: p9
+description: "Deploy ERC-20 tokens and Uniswap V3 pools. No wallet setup required."
+port: 3007
+order: 7
+phantom: false
+env:
+  - PRIM_PAY_TO
+  - PRIM_NETWORK
+  - TOKEN_MASTER_KEY
+  - TOKEN_DEPLOYER_ENCRYPTED_KEY
+  - BASE_RPC_URL
+  - WALLET_INTERNAL_URL
+pricing:
+  - op: "Deploy token"
+    price: "$1.00"
+    note: "Covers on-chain gas"
+  - op: "Mint"
+    price: "$0.10"
+    note: "Covers on-chain gas"
+  - op: "Create pool"
+    price: "$0.50"
+    note: "Uniswap V3 + gas"
+  - op: "Read"
+    price: "$0.001"
+    note: "Per request"

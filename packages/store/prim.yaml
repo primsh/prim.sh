@@ -1,0 +1,30 @@
+id: store
+name: store.sh
+endpoint: store.prim.sh
+status: testing
+type: storage
+card_class: p4
+description: "Object storage. Persist artifacts across ephemeral VMs. S3-compatible."
+port: 3002
+order: 4
+phantom: false
+env:
+  - PRIM_PAY_TO
+  - PRIM_NETWORK
+  - CLOUDFLARE_ACCOUNT_ID
+  - R2_ACCESS_KEY_ID
+  - R2_SECRET_ACCESS_KEY
+  - WALLET_INTERNAL_URL
+pricing:
+  - op: "Storage"
+    price: "$0.02/GB/mo"
+    note: "Prorated daily"
+  - op: "Upload"
+    price: "free"
+    note: "Up to 5GB per object"
+  - op: "Download"
+    price: "$0.01/GB"
+    note: "CDN edge delivery"
+  - op: "API calls"
+    price: "$0.001/call"
+    note: "PUT, GET, LIST, DELETE"

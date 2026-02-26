@@ -100,113 +100,44 @@ Run prim <command> --help for options.
 
 ---
 
+<!-- BEGIN:PRIM:STATUS -->
 ## Live Primitives
 
-These are deployed and responding to requests.
-
-  wallet   https://wallet.prim.sh     Wallet registration (mostly free)
-  store    https://store.prim.sh      Object storage (S3-compatible buckets)
-  spawn    https://spawn.prim.sh      VPS provisioning (Hetzner Cloud)
-  faucet   https://faucet.prim.sh     Testnet USDC and ETH faucet (free)
-  search   https://search.prim.sh     Web search, news, URL extraction
-  email    https://email.prim.sh      Email mailboxes, send/receive, webhooks
-
-Full API references:
-  https://prim.sh/wallet/llms.txt
-  https://prim.sh/store/llms.txt
-  https://prim.sh/spawn/llms.txt
-  https://prim.sh/faucet/llms.txt
-  https://prim.sh/search/llms.txt
-  https://prim.sh/email/llms.txt
-
-### Endpoint summary
-
-wallet.prim.sh:
-  POST   /v1/wallets                           Register wallet (free)
-  GET    /v1/wallets                           List wallets ($0.001)
-  GET    /v1/wallets/:address                  Get wallet details ($0.001)
-  DELETE /v1/wallets/:address                  Deactivate wallet ($0.01)
-  POST   /v1/wallets/:address/fund-request     Create fund request ($0.001)
-  GET    /v1/wallets/:address/fund-requests    List fund requests ($0.001)
-  POST   /v1/fund-requests/:id/approve         Approve fund request ($0.01)
-  POST   /v1/fund-requests/:id/deny            Deny fund request ($0.001)
-  GET    /v1/wallets/:address/policy           Get spending policy ($0.001)
-  PUT    /v1/wallets/:address/policy           Update spending policy ($0.005)
-  POST   /v1/wallets/:address/pause            Pause wallet ($0.001)
-  POST   /v1/wallets/:address/resume           Resume wallet ($0.001)
-
-store.prim.sh:
-  POST   /v1/buckets                           Create bucket ($0.05)
-  GET    /v1/buckets                           List buckets ($0.001)
-  GET    /v1/buckets/:id                       Get bucket ($0.001)
-  DELETE /v1/buckets/:id                       Delete bucket ($0.01)
-  PUT    /v1/buckets/:id/objects/:key          Upload object ($0.001)
-  GET    /v1/buckets/:id/objects               List objects ($0.001)
-  GET    /v1/buckets/:id/objects/:key          Download object ($0.001)
-  DELETE /v1/buckets/:id/objects/:key          Delete object ($0.001)
-  GET    /v1/buckets/:id/quota                 Get quota ($0.001)
-  PUT    /v1/buckets/:id/quota                 Set quota ($0.01)
-  POST   /v1/buckets/:id/quota/reconcile       Reconcile usage ($0.05)
-
-spawn.prim.sh:
-  POST   /v1/servers                           Create server ($0.01)
-  GET    /v1/servers                           List servers ($0.001)
-  GET    /v1/servers/:id                       Get server ($0.001)
-  DELETE /v1/servers/:id                       Delete server ($0.005)
-  POST   /v1/servers/:id/start                 Start server ($0.002)
-  POST   /v1/servers/:id/stop                  Stop server ($0.002)
-  POST   /v1/servers/:id/reboot                Reboot server ($0.002)
-  POST   /v1/servers/:id/resize                Resize server ($0.01)
-  POST   /v1/servers/:id/rebuild               Rebuild server ($0.005)
-  POST   /v1/ssh-keys                          Register SSH key ($0.001)
-  GET    /v1/ssh-keys                          List SSH keys ($0.001)
-  DELETE /v1/ssh-keys/:id                      Delete SSH key ($0.001)
-
-faucet.prim.sh (all free):
-  POST   /v1/faucet/usdc                       Dispense 10 USDC (2hr cooldown)
-  POST   /v1/faucet/eth                        Dispense 0.01 ETH (1hr cooldown)
-  GET    /v1/faucet/status?address=0x...       Check rate limit status
-
-search.prim.sh:
-  POST   /v1/search                            Web search ($0.01)
-  POST   /v1/search/news                       News search ($0.01)
-  POST   /v1/extract                           Extract URL content ($0.005)
-
-email.prim.sh:
-  POST   /v1/mailboxes                         Create mailbox ($0.05)
-  GET    /v1/mailboxes                         List mailboxes ($0.001)
-  GET    /v1/mailboxes/:id                     Get mailbox ($0.001)
-  DELETE /v1/mailboxes/:id                     Delete mailbox ($0.001)
-  POST   /v1/mailboxes/:id/renew               Renew mailbox TTL ($0.001)
-  GET    /v1/mailboxes/:id/messages            List messages ($0.001)
-  GET    /v1/mailboxes/:id/messages/:msgId     Get message ($0.001)
-  POST   /v1/mailboxes/:id/send               Send email ($0.01)
-  POST   /v1/mailboxes/:id/webhooks           Register webhook ($0.001)
-  GET    /v1/mailboxes/:id/webhooks           List webhooks ($0.001)
-  DELETE /v1/mailboxes/:id/webhooks/:whId     Delete webhook ($0.001)
-  POST   /v1/domains                           Register custom domain ($0.05)
-  GET    /v1/domains                           List custom domains ($0.001)
-  GET    /v1/domains/:id                       Get domain ($0.001)
-  POST   /v1/domains/:id/verify               Verify domain DNS ($0.001)
-  DELETE /v1/domains/:id                       Delete domain ($0.001)
-
----
+- wallet.sh — wallet.prim.sh — Agent wallets. Generate keys, hold USDC on Base, and pay any x402 invoice.
+- faucet.sh — faucet.prim.sh — Free testnet USDC and ETH on demand. Fund your agent wallet and start building.
+- spawn.sh — spawn.prim.sh — VPS in one API call. Deploy, scale, destroy. Per-second billing.
+- store.sh — store.prim.sh — Object storage. Persist artifacts across ephemeral VMs. S3-compatible.
+- email.sh — email.prim.sh — Mailboxes on demand. Send, receive, webhook. Disposable or permanent.
+- search.sh — search.prim.sh — Search for agents. No ads, no SEO spam. Just facts and clean markdown.
 
 ## Built (Not Yet Deployed)
 
-These primitives are implemented but not yet live on the network.
-
-  mem      mem.prim.sh      Vector memory (Qdrant) and KV cache
-  domain   domain.prim.sh   Domain registration (NameSilo) and DNS (Cloudflare)
-  token    token.prim.sh    ERC-20 token deployment and Uniswap V3 pools
-
-Full API references (available now):
-  https://prim.sh/mem/llms.txt
-  https://prim.sh/domain/llms.txt
-
----
+- token.sh — Deploy ERC-20 tokens and Uniswap V3 pools. No wallet setup required.
+- mem.sh — Vector store and cache for agents. Persist long-term knowledge and session state.
+- domain.sh — Register domains, manage DNS, auto-TLS. Full domain lifecycle via API.
 
 ## Planned Primitives
 
-vault, cron, pipe, code, ring, browse, infer, docs, watch, trace,
-auth, id, pins, mart, ship, hands, pay, corp, hive, ads
+- deploy.sh — Push code, get an endpoint. Container or repo URL to live service. No server config.
+- ring.sh — Phone numbers via API. SMS, voice, TTS. No Twilio account needed.
+- pipe.sh — Pub/sub channels, webhook relays, event queues. Agent-to-agent glue.
+- vault.sh — Store API keys, tokens, credentials. Scoped access. Ephemeral or persistent.
+- cron.sh — Run code on a schedule without a server. Cron, intervals, one-shots.
+- code.sh — Sandboxed code execution for agents. Short-lived jobs instead of long-lived servers.
+- browse.sh — Headless Chromium sessions for agents. Click, type, and capture pages via API.
+- watch.sh — Structured logs, metrics, and alerts so agents can observe and correct themselves.
+- trace.sh — Distributed tracing across services. Follow a request from wallet to spawn to store.
+- auth.sh — Managed OAuth broker. Connect to third-party APIs without giving agents passwords.
+- hive.sh — Discover peers. Share knowledge. Establish reputation. A social graph for software.
+- id.sh — Reputation scores. Know Your Agent. Verifiable credentials. Trust layer.
+- mart.sh — Buy physical goods via API. x402 to fiat proxy. Headless checkout.
+- corp.sh — Incorporation, tax, insurance. Legal entities for agents. The fiat bridge.
+- hands.sh — On-demand human labor. Physical tasks, verification, errands. Gig economy API.
+- pins.sh — Coordinates, places, and routing. No maps UI, just structured spatial data.
+- infer.sh — LLM inference via OpenRouter. Any model, any provider, one API.
+- seek.sh — Deep research agent. Multi-step search + synthesis.
+- docs.sh — OpenAPI → MCP converter. Turn any API spec into agent tools.
+- ads.sh — Programmatic advertising for agents. Buy and sell attention.
+- pay.sh — Stripe + x402 bridge. Accept fiat payments from humans.
+- ship.sh — Shipping labels and tracking via EasyPost. Physical world logistics.
+<!-- END:PRIM:STATUS -->

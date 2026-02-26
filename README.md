@@ -14,7 +14,7 @@
   <a href="https://prim.sh">Website</a> &middot;
   <a href="https://prim.sh/llms.txt">llms.txt</a> &middot;
   <a href="https://discord.gg/Cy3UQt2z">Discord</a> &middot;
-  <a href="https://x.com/onprim">@onprim</a>
+  <a href="https://x.com/useprim">@useprim</a>
 </p>
 
 ---
@@ -51,29 +51,35 @@ No API keys. No signup. The wallet *is* the identity.
 
 ## Primitives
 
+<!-- BEGIN:PRIM:PRIMS -->
 | Primitive | What it does | Status |
 |-----------|-------------|--------|
-| [wallet.sh](https://wallet.prim.sh) | Agent wallet registration (EIP-191) | Live |
-| [store.sh](https://store.prim.sh) | Object storage (Cloudflare R2) | Live |
-| [spawn.sh](https://spawn.prim.sh) | VPS provisioning (DigitalOcean) | Live |
-| [faucet.sh](https://faucet.prim.sh) | Testnet USDC + ETH drip | Live |
-| [email.sh](https://email.prim.sh) | Email — send, receive, webhooks (Stalwart) | Built |
-| [domain.sh](https://domain.prim.sh) | DNS + domain registration (Cloudflare) | Built |
-| [search.sh](https://search.prim.sh) | Web search + extraction (Tavily) | Built |
-| [token.sh](https://token.prim.sh) | ERC-20 deploy + Uniswap V3 pools | Built |
-| [mem.sh](https://mem.prim.sh) | Vector memory (Qdrant) + KV cache | Built |
-| browse.sh | Headless browsing | Planned |
-| ring.sh | Voice + SMS (Telnyx) | Planned |
-| infer.sh | LLM inference routing | Planned |
-| code.sh | Sandboxed execution | Planned |
-| vault.sh | Secret storage | Planned |
-| cron.sh | Scheduled jobs | Planned |
-| pipe.sh | Message queues | Planned |
-| watch.sh | Monitoring + alerts | Planned |
-| trace.sh | Distributed tracing | Planned |
-| id.sh | On-chain identity | Planned |
-| pay.sh | Fiat payment bridge | Planned |
-| hive.sh | Agent discovery (A2A) | Planned |
+| [wallet.sh](https://wallet.prim.sh) | Agent wallets. Generate keys, hold USDC on Base, and pay any x402 invoice. | Live (testnet) |
+| [faucet.sh](https://faucet.prim.sh) | Free testnet USDC and ETH on demand. Fund your agent wallet and start building. | Live (testnet) |
+| [spawn.sh](https://spawn.prim.sh) | VPS in one API call. Deploy, scale, destroy. Per-second billing. | Live (testnet) |
+| [store.sh](https://store.prim.sh) | Object storage. Persist artifacts across ephemeral VMs. S3-compatible. | Live (testnet) |
+| [email.sh](https://email.prim.sh) | Mailboxes on demand. Send, receive, webhook. Disposable or permanent. | Live (testnet) |
+| [search.sh](https://search.prim.sh) | Search for agents. No ads, no SEO spam. Just facts and clean markdown. | Live (testnet) |
+| [token.sh](https://token.prim.sh) | Deploy ERC-20 tokens and Uniswap V3 pools. No wallet setup required. | Built |
+| [mem.sh](https://mem.prim.sh) | Vector store and cache for agents. Persist long-term knowledge and session state. | Built |
+| [domain.sh](https://domain.prim.sh) | Register domains, manage DNS, auto-TLS. Full domain lifecycle via API. | Built |
+| deploy.sh | Push code, get an endpoint. Container or repo URL to live service. No server config. | Coming soon |
+| ring.sh | Phone numbers via API. SMS, voice, TTS. No Twilio account needed. | Coming soon |
+| pipe.sh | Pub/sub channels, webhook relays, event queues. Agent-to-agent glue. | Coming soon |
+| vault.sh | Store API keys, tokens, credentials. Scoped access. Ephemeral or persistent. | Coming soon |
+| cron.sh | Run code on a schedule without a server. Cron, intervals, one-shots. | Coming soon |
+| code.sh | Sandboxed code execution for agents. Short-lived jobs instead of long-lived servers. | Coming soon |
+| browse.sh | Headless Chromium sessions for agents. Click, type, and capture pages via API. | Coming soon |
+| watch.sh | Structured logs, metrics, and alerts so agents can observe and correct themselves. | Coming soon |
+| trace.sh | Distributed tracing across services. Follow a request from wallet to spawn to store. | Coming soon |
+| auth.sh | Managed OAuth broker. Connect to third-party APIs without giving agents passwords. | Coming soon |
+| hive.sh | Discover peers. Share knowledge. Establish reputation. A social graph for software. | Coming soon |
+| id.sh | Reputation scores. Know Your Agent. Verifiable credentials. Trust layer. | Coming soon |
+| mart.sh | Buy physical goods via API. x402 to fiat proxy. Headless checkout. | Coming soon |
+| corp.sh | Incorporation, tax, insurance. Legal entities for agents. The fiat bridge. | Coming soon |
+| hands.sh | On-demand human labor. Physical tasks, verification, errands. Gig economy API. | Coming soon |
+| pins.sh | Coordinates, places, and routing. No maps UI, just structured spatial data. | Coming soon |
+<!-- END:PRIM:PRIMS -->
 
 See the full catalog at [prim.sh/llms.txt](https://prim.sh/llms.txt).
 

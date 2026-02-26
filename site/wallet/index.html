@@ -66,6 +66,9 @@ footer .links{margin-top:0.5rem}footer .links a{margin:0 0.75rem}
     <div class="badge"><strong>Owner</strong> funding</div>
     <div class="badge">Part of <strong>prim.sh</strong></div>
   </div>
+<!-- BEGIN:PRIM:STATUS -->
+    <span class="badge status-testing">● Live (testnet)</span>
+<!-- END:PRIM:STATUS -->
 </div>
 
 <section>
@@ -93,9 +96,11 @@ footer .links{margin-top:0.5rem}footer .links a{margin:0 0.75rem}
   <table class="pricing-table">
     <thead><tr><th>Action</th><th>Cost</th><th>Notes</th></tr></thead>
     <tbody>
-      <tr><td>Wallet creation</td><td>Free</td><td>No monthly fee</td></tr>
-      <tr><td>On-chain send</td><td>Gas + 0.1%</td><td>Min fee applies</td></tr>
-      <tr><td>x402 payment</td><td>Included</td><td>Markup in primitive price</td></tr>
+<!-- BEGIN:PRIM:PRICING -->
+      <tr><td>Wallet registration</td><td>free</td><td></td></tr>
+      <tr><td>API call</td><td>$0.001</td><td>Per request</td></tr>
+      <tr><td>Policy update</td><td>$0.005</td><td></td></tr>
+<!-- END:PRIM:PRICING -->
     </tbody>
   </table>
 </section>

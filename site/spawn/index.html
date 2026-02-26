@@ -110,6 +110,9 @@ footer .links a{margin:0 0.75rem}
     <div class="badge"><strong>CLI</strong> admin only</div>
     <div class="badge"><strong>OpenAI</strong> compatible</div>
   </div>
+<!-- BEGIN:PRIM:STATUS -->
+    <span class="badge status-testing">● Live (testnet)</span>
+<!-- END:PRIM:STATUS -->
 
   <div class="scroll-hint">↓ scroll</div>
 </div>
@@ -233,12 +236,13 @@ footer .links a{margin:0 0.75rem}
       <tr><th>Plan</th><th>CPU</th><th>RAM</th><th>Storage</th><th>$/hour</th></tr>
     </thead>
     <tbody>
-      <tr><td>s-1vcpu-512mb</td><td>1 vCPU</td><td>512 MB</td><td>10 GB</td><td>$0.007</td></tr>
-      <tr><td>s-1vcpu-1gb</td><td>1 vCPU</td><td>1 GB</td><td>25 GB</td><td>$0.012</td></tr>
-      <tr><td>s-2vcpu-4gb</td><td>2 vCPU</td><td>4 GB</td><td>50 GB</td><td>$0.036</td></tr>
-      <tr><td>s-4vcpu-8gb</td><td>4 vCPU</td><td>8 GB</td><td>100 GB</td><td>$0.071</td></tr>
-      <tr><td>s-8vcpu-16gb</td><td>8 vCPU</td><td>16 GB</td><td>200 GB</td><td>$0.143</td></tr>
-      <tr><td>gpu-a10-24gb</td><td>8 vCPU</td><td>32 GB</td><td>200 GB</td><td>$1.10</td></tr>
+<!-- BEGIN:PRIM:PRICING -->
+      <tr><td>Create server</td><td>$0.01</td><td>One-time provisioning</td></tr>
+      <tr><td>s-1vcpu-1gb</td><td>$0.012/hr</td><td></td></tr>
+      <tr><td>s-2vcpu-4gb</td><td>$0.036/hr</td><td></td></tr>
+      <tr><td>s-4vcpu-8gb</td><td>$0.071/hr</td><td></td></tr>
+      <tr><td>Bandwidth</td><td>$0.01/GB</td><td></td></tr>
+<!-- END:PRIM:PRICING -->
     </tbody>
   </table>
   <p style="color:var(--muted);font-size:0.85rem;margin-top:0.5rem">Bandwidth: $0.01/GB. Snapshots: $0.05/GB/mo. All prices in USD.</p>

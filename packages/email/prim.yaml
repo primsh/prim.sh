@@ -1,0 +1,33 @@
+id: email
+name: email.sh
+endpoint: email.prim.sh
+status: testing
+type: email
+card_class: p2
+description: "Mailboxes on demand. Send, receive, webhook. Disposable or permanent."
+port: 3006
+order: 5
+phantom: false
+env:
+  - PRIM_PAY_TO
+  - PRIM_NETWORK
+  - STALWART_URL
+  - STALWART_API_KEY
+  - EMAIL_DEFAULT_DOMAIN
+  - WALLET_INTERNAL_URL
+pricing:
+  - op: "Create mailbox"
+    price: "$0.05"
+    note: "24h TTL included"
+  - op: "Send email"
+    price: "$0.01"
+    note: "Up to 10MB"
+  - op: "Read messages"
+    price: "$0.001"
+    note: "Per request"
+  - op: "Webhook"
+    price: "$0.01"
+    note: "Setup + 3 retries"
+  - op: "Custom domain"
+    price: "$0.05"
+    note: "DNS verification required"

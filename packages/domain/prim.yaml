@@ -1,0 +1,30 @@
+id: domain
+name: domain.sh
+endpoint: domain.prim.sh
+status: built
+type: domains
+card_class: p6
+description: "Register domains, manage DNS, auto-TLS. Full domain lifecycle via API."
+port: 3009
+order: 9
+phantom: false
+env:
+  - PRIM_PAY_TO
+  - PRIM_NETWORK
+  - CLOUDFLARE_API_TOKEN
+  - CLOUDFLARE_ZONE_ID
+  - NAMESILO_API_KEY
+  - WALLET_INTERNAL_URL
+pricing:
+  - op: "Domain registration"
+    price: "dynamic"
+    note: "Quoted via /quote"
+  - op: "DNS zone"
+    price: "$0.05"
+    note: "Unlimited records"
+  - op: "DNS record"
+    price: "$0.001"
+    note: "Per operation"
+  - op: "DNS queries"
+    price: "free"
+    note: "First 1M/mo"

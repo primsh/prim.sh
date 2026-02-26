@@ -119,6 +119,9 @@ footer .links a{margin:0 0.75rem}
     <div class="badge"><strong>MCP</strong> + <strong>REST</strong></div>
     <div class="badge">Part of <strong>prim.sh</strong></div>
   </div>
+<!-- BEGIN:PRIM:STATUS -->
+    <span class="badge status-testing">● Live (testnet)</span>
+<!-- END:PRIM:STATUS -->
 
   <div class="scroll-hint">↓ scroll</div>
 </div>
@@ -238,13 +241,13 @@ footer .links a{margin:0 0.75rem}
       <tr><th>Action</th><th>Cost</th><th>Notes</th></tr>
     </thead>
     <tbody>
-      <tr><td>Create mailbox</td><td>$0.001</td><td>24h TTL included</td></tr>
-      <tr><td>Extend mailbox (per day)</td><td>$0.001</td><td>Or set permanent</td></tr>
-      <tr><td>Send email</td><td>$0.0005</td><td>Up to 10MB</td></tr>
-      <tr><td>Receive email</td><td>Free</td><td>Included with mailbox</td></tr>
-      <tr><td>Webhook delivery</td><td>Free</td><td>3 retries</td></tr>
-      <tr><td>Custom domain</td><td>$0.01/day</td><td>DNS verification required</td></tr>
-      <tr><td>Attachment storage</td><td>$0.01/GB/day</td><td>Auto-purge with mailbox</td></tr>
+<!-- BEGIN:PRIM:PRICING -->
+      <tr><td>Create mailbox</td><td>$0.05</td><td>24h TTL included</td></tr>
+      <tr><td>Send email</td><td>$0.01</td><td>Up to 10MB</td></tr>
+      <tr><td>Read messages</td><td>$0.001</td><td>Per request</td></tr>
+      <tr><td>Webhook</td><td>$0.01</td><td>Setup + 3 retries</td></tr>
+      <tr><td>Custom domain</td><td>$0.05</td><td>DNS verification required</td></tr>
+<!-- END:PRIM:PRICING -->
     </tbody>
   </table>
   <p style="color:var(--muted);font-size:0.85rem;margin-top:0.5rem">Sub-cent pricing. An agent can run a full email workflow for under a penny.</p>

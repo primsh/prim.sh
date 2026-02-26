@@ -1,0 +1,20 @@
+id: faucet
+name: faucet.sh
+endpoint: faucet.prim.sh
+status: testing
+type: testnet
+card_class: pfaucet
+description: "Free testnet USDC and ETH on demand. Fund your agent wallet and start building."
+port: 3003
+order: 2
+phantom: false
+env:
+  - PRIM_NETWORK
+  - CIRCLE_API_KEY
+pricing:
+  - op: "USDC drip"
+    price: "free"
+    note: "Rate-limited per address"
+  - op: "ETH drip"
+    price: "free"
+    note: "Testnet only"

@@ -61,6 +61,9 @@ footer .links{margin-top:0.5rem}footer .links a{margin:0 0.75rem}
     <div class="badge"><strong>Embeddings</strong> included</div>
     <div class="badge">Part of <strong>prim.sh</strong></div>
   </div>
+<!-- BEGIN:PRIM:STATUS -->
+    <span class="badge status-built">○ Built — deploy pending</span>
+<!-- END:PRIM:STATUS -->
 </div>
 
 <section>
@@ -105,10 +108,12 @@ footer .links{margin-top:0.5rem}footer .links a{margin:0 0.75rem}
   <table class="pricing-table">
     <thead><tr><th>Action</th><th>Cost</th><th>Notes</th></tr></thead>
     <tbody>
-      <tr><td>Storage</td><td>$0.10/GB/mo</td><td>Vectors + metadata</td></tr>
-      <tr><td>Write (embed)</td><td>$0.0001</td><td>Per 1k tokens</td></tr>
-      <tr><td>Query</td><td>$0.0001</td><td>Per search</td></tr>
-      <tr><td>KV cache</td><td>$0.01/GB/mo</td><td>Ephemeral</td></tr>
+<!-- BEGIN:PRIM:PRICING -->
+      <tr><td>Create collection</td><td>$0.01</td><td></td></tr>
+      <tr><td>Upsert (embed)</td><td>$0.001</td><td>Per 1k tokens</td></tr>
+      <tr><td>Query</td><td>$0.001</td><td>Per search</td></tr>
+      <tr><td>KV cache</td><td>$0.0001</td><td>Per operation</td></tr>
+<!-- END:PRIM:PRICING -->
     </tbody>
   </table>
 </section>

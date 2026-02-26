@@ -70,6 +70,9 @@ footer .links{margin-top:0.5rem}footer .links a{margin:0 0.75rem}
     <div class="badge"><strong>Signed</strong> URLs</div>
     <div class="badge">Part of <strong>prim.sh</strong></div>
   </div>
+<!-- BEGIN:PRIM:STATUS -->
+    <span class="badge status-testing">● Live (testnet)</span>
+<!-- END:PRIM:STATUS -->
 </div>
 
 <section>
@@ -101,11 +104,12 @@ footer .links{margin-top:0.5rem}footer .links a{margin:0 0.75rem}
   <table class="pricing-table">
     <thead><tr><th>Resource</th><th>Cost</th><th>Notes</th></tr></thead>
     <tbody>
+<!-- BEGIN:PRIM:PRICING -->
       <tr><td>Storage</td><td>$0.02/GB/mo</td><td>Prorated daily</td></tr>
-      <tr><td>Upload</td><td>Free</td><td>Up to 5GB per object</td></tr>
+      <tr><td>Upload</td><td>free</td><td>Up to 5GB per object</td></tr>
       <tr><td>Download</td><td>$0.01/GB</td><td>CDN edge delivery</td></tr>
-      <tr><td>Signed URLs</td><td>Free</td><td>Configurable expiry</td></tr>
-      <tr><td>S3 API calls</td><td>$0.005/1K</td><td>PUT, GET, LIST, DELETE</td></tr>
+      <tr><td>API calls</td><td>$0.001/call</td><td>PUT, GET, LIST, DELETE</td></tr>
+<!-- END:PRIM:PRICING -->
     </tbody>
   </table>
 </section>

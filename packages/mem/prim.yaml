@@ -1,0 +1,29 @@
+id: mem
+name: mem.sh
+endpoint: mem.prim.sh
+status: built
+type: memory
+card_class: p21
+description: "Vector store and cache for agents. Persist long-term knowledge and session state."
+port: 3008
+order: 8
+phantom: false
+env:
+  - PRIM_PAY_TO
+  - PRIM_NETWORK
+  - QDRANT_URL
+  - GOOGLE_API_KEY
+  - WALLET_INTERNAL_URL
+pricing:
+  - op: "Create collection"
+    price: "$0.01"
+    note: ""
+  - op: "Upsert (embed)"
+    price: "$0.001"
+    note: "Per 1k tokens"
+  - op: "Query"
+    price: "$0.001"
+    note: "Per search"
+  - op: "KV cache"
+    price: "$0.0001"
+    note: "Per operation"

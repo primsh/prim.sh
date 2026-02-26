@@ -43,5 +43,8 @@ jobs:
       - name: Build x402-middleware
         run: pnpm --filter @primsh/x402-middleware build
 
+      - name: Check generated files
+        run: pnpm gen:check
+
       - name: Test
         run: pnpm -r test

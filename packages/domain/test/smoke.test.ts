@@ -17,6 +17,7 @@ vi.mock("@primsh/x402-middleware", () => ({
     async (_c: unknown, next: () => Promise<void>): Promise<void> => {
       await next();
     },
+  createWalletAllowlistChecker: () => async (_address: string) => true,
 }));
 
 describe("domain.sh app", () => {

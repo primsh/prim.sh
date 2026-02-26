@@ -8,14 +8,17 @@
     "typecheck": "pnpm -r typecheck",
     "test": "pnpm -r test",
     "check": "pnpm -r lint && pnpm -r typecheck && pnpm -r test",
-    "build:binaries": "pnpm --filter @primsh/keystore build:binaries"
+    "build:binaries": "pnpm --filter @primsh/keystore build:binaries",
+    "gen:prims": "bun scripts/gen-prims.ts",
+    "gen:check": "bun scripts/gen-prims.ts --check"
   },
   "devDependencies": {
     "@biomejs/biome": "^1.9.0",
     "@coinbase/cdp-sdk": "^1.44.1",
     "typescript": "^5.6.3",
     "viem": "^2.21.0",
-    "vitest": "^1.6.1"
+    "vitest": "^1.6.1",
+    "yaml": "^2.8.2"
   },
   "engines": {
     "bun": ">=1.0.0",

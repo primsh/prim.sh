@@ -27,6 +27,9 @@ importers:
       vitest:
         specifier: ^1.6.1
         version: 1.6.1(@types/node@25.3.0)
+      yaml:
+        specifier: ^2.8.2
+        version: 2.8.2
 
   packages/domain:
     dependencies:
@@ -219,6 +222,25 @@ importers:
       viem:
         specifier: ^2.21.0
         version: 2.46.3(bufferutil@4.1.0)(typescript@5.9.3)(utf-8-validate@5.0.10)(zod@3.25.76)
+    devDependencies:
+      '@x402/core':
+        specifier: ^2.4.0
+        version: 2.4.0
+      typescript:
+        specifier: ^5.6.3
+        version: 5.9.3
+      vitest:
+        specifier: ^1.6.1
+        version: 1.6.1(@types/node@25.3.0)
+
+  packages/track:
+    dependencies:
+      '@primsh/x402-middleware':
+        specifier: workspace:*
+        version: link:../x402-middleware
+      hono:
+        specifier: ^4.4.7
+        version: 4.12.2
     devDependencies:
       '@x402/core':
         specifier: ^2.4.0
@@ -2089,6 +2111,11 @@ packages:
       utf-8-validate:
         optional: true
 
+  yaml@2.8.2:
+    resolution: {integrity: sha512-mplynKqc1C2hTVYxd0PU2xQAc22TI1vShAYGksCCfxbn/dFwnHTNi1bvYsBTkhdUNtGIf5xNOg938rrSSYvS9A==}
+    engines: {node: '>= 14.6'}
+    hasBin: true
+
   yocto-queue@1.2.2:
     resolution: {integrity: sha512-4LCcse/U2MHZ63HAJVE+v71o7yOdIe4cZ70Wpf8D/IyjDKYQLV5GD46B+hSTjJsvV5PztjvHoU580EftxjDZFQ==}
     engines: {node: '>=12.20'}
@@ -3920,6 +3947,8 @@ snapshots:
     optionalDependencies:
       bufferutil: 4.1.0
       utf-8-validate: 5.0.10
+
+  yaml@2.8.2: {}
 
   yocto-queue@1.2.2: {}
 
