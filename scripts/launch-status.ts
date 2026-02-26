@@ -77,6 +77,11 @@ function fail(label: string, detail?: string) {
   failures++;
 }
 
+function pending(label: string, detail?: string) {
+  console.log(`  ⏳ ${label}${detail ? ` — ${detail}` : ""}`);
+  failures++;
+}
+
 function warn(label: string, detail?: string) {
   console.log(`  ⚠️  ${label}${detail ? ` — ${detail}` : ""}`);
 }
@@ -182,7 +187,7 @@ function parseTasks(): { lane1: LaneCounts; lane2: LaneCounts } {
 
   if (lane1.total > 0) {
     const detail = `${lane1.done} done / ${lane1.pending} pending of ${lane1.total}`;
-    if (lane1.pending > 0) fail(`Lane 1 (Launch): ${detail}`);
+    if (lane1.pending > 0) pending(`Lane 1 (Launch): ${detail}`);
     else pass(`Lane 1 (Launch): ${detail}`);
   } else {
     warn("Lane 1 (Launch): no tasks found", "check TASKS.md format");
@@ -273,7 +278,7 @@ function checkBlockers() {
     );
     const match = content.match(pendingPattern);
     if (match) {
-      fail(`${id}: ${match[1].trim()}`);
+      pending(`${id}: ${match[1].trim()}`);
       blockerCount++;
     } else {
       const donePattern = new RegExp(
