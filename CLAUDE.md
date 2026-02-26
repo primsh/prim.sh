@@ -29,7 +29,7 @@ python serve.py                           # Serves locally
 ## Project Structure (after P-3 monorepo setup)
 
 ```
-agentstack/
+prim/
 ├── packages/
 │   ├── x402-middleware/      # @primsh/x402-middleware (shared)
 │   ├── wallet/               # @primsh/wallet (wallet.sh)
@@ -83,6 +83,25 @@ Social: hive, ads
 2. email.sh — Email (wraps Stalwart, receive-only first)
 3. spawn.sh — VPS provisioning (wraps Hetzner)
 4. llms.txt — Machine-readable primitive catalog
+
+## Smoke Test Standard
+
+Every primitive package has two test files:
+
+- **`test/smoke.test.ts`** — Unit-level smoke tests. Included in `pnpm test`. Uses Hono test client + `vi.mock` (no real API keys). Must pass in CI.
+- **`test/smoke-live.test.ts`** — Live integration tests against real providers. Excluded from default `pnpm test`. Run via `pnpm test:smoke`.
+
+### 5-check contract (`smoke.test.ts`)
+
+Reference implementation: `packages/track/test/smoke.test.ts`
+
+1. App default export is defined
+2. `GET /` → 200 + `{ service: "<name>.sh", status: "ok" }`
+3. `POST /v1/<route>` without payment header → 402 (x402 middleware active)
+4. `POST /v1/<route>` with mocked service layer → 200 with valid response shape
+5. `POST /v1/<route>` with invalid/empty body → 400
+
+Check 4 mocks the service module (`vi.mock("../src/service.ts")`), not the HTTP layer. Checks 3 and 5 verify that middleware and validation are wired correctly without needing a payment.
 
 ## Landing Page Design System
 

@@ -51,7 +51,6 @@ components:
                 - invalid_request
                 - r2_error
                 - rate_limited
-                - bucket_name_taken
                 - quota_exceeded
                 - bucket_limit_exceeded
                 - storage_limit_exceeded

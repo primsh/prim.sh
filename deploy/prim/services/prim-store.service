@@ -1,5 +1,5 @@
 [Unit]
-Description=prim.sh store service
+Description=prim.sh store.sh service
 After=network.target
 
 [Service]

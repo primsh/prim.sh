@@ -1,0 +1,121 @@
+/**
+ * scripts/lib/primitives.ts — Shared primitives loader
+ *
+ * Single source of truth for loading and filtering the primitives registry.
+ * Used by gen-prims.ts, pre-deploy.ts, launch-status.ts, gate-check.ts, deploy-prim.ts.
+ */
+
+import { readFileSync, existsSync, readdirSync } from "node:fs";
+import { join, resolve } from "node:path";
+import { parse as parseYaml } from "yaml";
+
+// ── Types ──────────────────────────────────────────────────────────────────
+
+export type PrimStatus = "idea" | "planning" | "building" | "testing" | "deployed" | "live";
+
+export interface PricingRow {
+  op: string;
+  price: string;
+  note?: string;
+}
+
+export interface GateConfig {
+  coverage_threshold?: number;  // default 80
+  allow_todo?: boolean;          // default false
+  skip_smoke?: boolean;          // default false
+  approved_by?: string;          // required for deployed → live
+}
+
+export interface DeployConfig {
+  max_body_size?: string;        // default "1MB"
+  systemd_after?: string[];      // extra After= units
+  extra_caddy?: string[];        // additional Caddy blocks
+}
+
+export interface Primitive {
+  id: string;
+  name: string;
+  endpoint?: string;
+  status: PrimStatus;
+  type: string;
+  card_class: string;
+  description: string;
+  port?: number;
+  order: number;
+  phantom?: boolean;
+  show_on_index?: boolean;
+  env?: string[];
+  pricing?: PricingRow[];
+  gates?: GateConfig;
+  deploy?: DeployConfig;
+}
+
+// ── Loader ─────────────────────────────────────────────────────────────────
+
+export function loadPrimitives(root?: string): Primitive[] {
+  const ROOT = root ?? resolve(new URL("../..", import.meta.url).pathname);
+
+  // 1. Load root registry
+  const rootYaml = readFileSync(join(ROOT, "primitives.yaml"), "utf8");
+  const rootData = parseYaml(rootYaml) as { primitives: Partial<Primitive>[] };
+  const rootMap = new Map<string, Partial<Primitive>>();
+  for (const p of rootData.primitives) {
+    if (p.id) rootMap.set(p.id, p);
+  }
+
+  // 2. Load package yamls, merge over root
+  const packagesDir = join(ROOT, "packages");
+  const packageDirs = readdirSync(packagesDir, { withFileTypes: true })
+    .filter((d) => d.isDirectory())
+    .map((d) => d.name);
+
+  for (const dir of packageDirs) {
+    const yamlPath = join(packagesDir, dir, "prim.yaml");
+    if (!existsSync(yamlPath)) continue;
+    const data = parseYaml(readFileSync(yamlPath, "utf8")) as Partial<Primitive>;
+    if (!data.id) continue;
+    const base = rootMap.get(data.id) ?? {};
+    rootMap.set(data.id, { ...base, ...data });
+  }
+
+  // 3. Sort by order, apply defaults
+  return Array.from(rootMap.values())
+    .map((p) => ({
+      show_on_index: true,
+      phantom: false,
+      ...p,
+    }))
+    .sort((a, b) => (a.order ?? 999) - (b.order ?? 999)) as Primitive[];
+}
+
+// ── Defaults ───────────────────────────────────────────────────────────────
+
+export function getDeployConfig(p: Primitive): Required<DeployConfig> {
+  return {
+    max_body_size: p.deploy?.max_body_size ?? "1MB",
+    systemd_after: p.deploy?.systemd_after ?? [],
+    extra_caddy: p.deploy?.extra_caddy ?? [],
+  };
+}
+
+export function getGateOverrides(p: Primitive): Required<GateConfig> {
+  return {
+    coverage_threshold: p.gates?.coverage_threshold ?? 80,
+    allow_todo: p.gates?.allow_todo ?? false,
+    skip_smoke: p.gates?.skip_smoke ?? false,
+    approved_by: p.gates?.approved_by ?? "",
+  };
+}
+
+// ── Filters ────────────────────────────────────────────────────────────────
+
+/** Primitives on VPS (status = deployed or live) */
+export function deployed(prims: Primitive[]): Primitive[] {
+  return prims.filter((p) => p.status === "deployed" || p.status === "live");
+}
+
+/** Primitives that have a packages/<id>/ directory */
+export function withPackage(prims: Primitive[], root: string): Primitive[] {
+  const packagesDir = join(root, "packages");
+  return prims.filter((p) => existsSync(join(packagesDir, p.id)));
+}

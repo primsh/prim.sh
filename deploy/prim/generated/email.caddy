@@ -1,0 +1,13 @@
+email.prim.sh {
+    import security_headers
+    request_body {
+        max_size 25MB
+    }
+    reverse_proxy localhost:3006
+}
+
+mail.email.prim.sh {
+    import security_headers
+    request_body { max_size 25MB }
+    reverse_proxy localhost:8080
+}

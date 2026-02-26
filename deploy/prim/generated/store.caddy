@@ -1,0 +1,7 @@
+store.prim.sh {
+    import security_headers
+    request_body {
+        max_size 128MB
+    }
+    reverse_proxy localhost:3002
+}

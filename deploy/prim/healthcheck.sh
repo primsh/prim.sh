@@ -5,14 +5,16 @@
 
 set -euo pipefail
 
+# BEGIN:PRIM:ENDPOINTS
 ENDPOINTS=(
   "https://wallet.prim.sh"
-  "https://store.prim.sh"
   "https://faucet.prim.sh"
   "https://spawn.prim.sh"
-  "https://search.prim.sh"
+  "https://store.prim.sh"
   "https://email.prim.sh"
+  "https://search.prim.sh"
 )
+# END:PRIM:ENDPOINTS
 
 STATE_DIR="/var/lib/prim/health"
 LOG_FILE="/var/log/prim-health.log"

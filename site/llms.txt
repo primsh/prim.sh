@@ -115,6 +115,7 @@ Run prim <command> --help for options.
 - token.sh — Deploy ERC-20 tokens and Uniswap V3 pools. No wallet setup required.
 - mem.sh — Vector store and cache for agents. Persist long-term knowledge and session state.
 - domain.sh — Register domains, manage DNS, auto-TLS. Full domain lifecycle via API.
+- track.sh — Package tracking for agents. USPS, FedEx, UPS, DHL and 1000+ carriers. Status, ETA, full event history.
 
 ## Planned Primitives
 

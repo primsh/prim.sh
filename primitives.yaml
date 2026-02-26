@@ -74,7 +74,7 @@ primitives:
     type: deploy
     card_class: plaunch
     description: "Push code, get an endpoint. Container or repo URL to live service. No server config."
-    status: coming_soon
+    status: idea
     order: 10
     phantom: false
 
@@ -83,7 +83,7 @@ primitives:
     type: phone
     card_class: p3
     description: "Phone numbers via API. SMS, voice, TTS. No Twilio account needed."
-    status: coming_soon
+    status: idea
     order: 11
     phantom: false
     pricing:
@@ -114,7 +114,7 @@ primitives:
     type: messaging
     card_class: p8
     description: "Pub/sub channels, webhook relays, event queues. Agent-to-agent glue."
-    status: coming_soon
+    status: idea
     order: 12
     phantom: false
 
@@ -123,7 +123,7 @@ primitives:
     type: secrets
     card_class: p5
     description: "Store API keys, tokens, credentials. Scoped access. Ephemeral or persistent."
-    status: coming_soon
+    status: idea
     order: 13
     phantom: false
 
@@ -132,7 +132,7 @@ primitives:
     type: scheduling
     card_class: p7
     description: "Run code on a schedule without a server. Cron, intervals, one-shots."
-    status: coming_soon
+    status: idea
     order: 14
     phantom: false
 
@@ -141,7 +141,7 @@ primitives:
     type: execution
     card_class: p27
     description: "Sandboxed code execution for agents. Short-lived jobs instead of long-lived servers."
-    status: coming_soon
+    status: idea
     order: 15
     phantom: false
 
@@ -150,7 +150,7 @@ primitives:
     type: browser
     card_class: p25
     description: "Headless Chromium sessions for agents. Click, type, and capture pages via API."
-    status: coming_soon
+    status: idea
     order: 16
     phantom: false
 
@@ -159,7 +159,7 @@ primitives:
     type: observability
     card_class: p23
     description: "Structured logs, metrics, and alerts so agents can observe and correct themselves."
-    status: coming_soon
+    status: idea
     order: 17
     phantom: false
 
@@ -168,7 +168,7 @@ primitives:
     type: tracing
     card_class: p24
     description: "Distributed tracing across services. Follow a request from wallet to spawn to store."
-    status: coming_soon
+    status: idea
     order: 18
     phantom: false
 
@@ -177,7 +177,7 @@ primitives:
     type: oauth
     card_class: p26
     description: "Managed OAuth broker. Connect to third-party APIs without giving agents passwords."
-    status: coming_soon
+    status: idea
     order: 19
     phantom: false
 
@@ -186,7 +186,7 @@ primitives:
     type: social
     card_class: p14
     description: "Discover peers. Share knowledge. Establish reputation. A social graph for software."
-    status: coming_soon
+    status: idea
     order: 20
     phantom: true
 
@@ -195,7 +195,7 @@ primitives:
     type: identity
     card_class: p18
     description: "Reputation scores. Know Your Agent. Verifiable credentials. Trust layer."
-    status: coming_soon
+    status: idea
     order: 21
     phantom: true
 
@@ -204,7 +204,7 @@ primitives:
     type: commerce
     card_class: p13
     description: "Buy physical goods via API. x402 to fiat proxy. Headless checkout."
-    status: coming_soon
+    status: idea
     order: 22
     phantom: true
 
@@ -213,7 +213,7 @@ primitives:
     type: compliance
     card_class: p19
     description: "Incorporation, tax, insurance. Legal entities for agents. The fiat bridge."
-    status: coming_soon
+    status: idea
     order: 23
     phantom: true
 
@@ -222,7 +222,7 @@ primitives:
     type: labor
     card_class: p17
     description: "On-demand human labor. Physical tasks, verification, errands. Gig economy API."
-    status: coming_soon
+    status: idea
     order: 24
     phantom: true
 
@@ -231,7 +231,7 @@ primitives:
     type: maps
     card_class: p11
     description: "Coordinates, places, and routing. No maps UI, just structured spatial data."
-    status: coming_soon
+    status: idea
     order: 25
     phantom: true
 
@@ -240,7 +240,7 @@ primitives:
     name: infer.sh
     type: ai
     description: "LLM inference via OpenRouter. Any model, any provider, one API."
-    status: coming_soon
+    status: idea
     order: 100
     phantom: false
     show_on_index: false
@@ -249,7 +249,7 @@ primitives:
     name: seek.sh
     type: search
     description: "Deep research agent. Multi-step search + synthesis."
-    status: coming_soon
+    status: idea
     order: 101
     phantom: false
     show_on_index: false
@@ -258,7 +258,7 @@ primitives:
     name: docs.sh
     type: docs
     description: "OpenAPI → MCP converter. Turn any API spec into agent tools."
-    status: coming_soon
+    status: idea
     order: 102
     phantom: false
     show_on_index: false
@@ -267,7 +267,7 @@ primitives:
     name: ads.sh
     type: ads
     description: "Programmatic advertising for agents. Buy and sell attention."
-    status: coming_soon
+    status: idea
     order: 103
     phantom: false
     show_on_index: false
@@ -276,7 +276,7 @@ primitives:
     name: pay.sh
     type: payments
     description: "Stripe + x402 bridge. Accept fiat payments from humans."
-    status: coming_soon
+    status: idea
     order: 104
     phantom: false
     show_on_index: false
@@ -285,7 +285,7 @@ primitives:
     name: ship.sh
     type: logistics
     description: "Shipping labels and tracking via EasyPost. Physical world logistics."
-    status: coming_soon
+    status: idea
     order: 105
     phantom: false
     show_on_index: false

@@ -1,5 +1,5 @@
 [Unit]
-Description=prim.sh faucet service
+Description=prim.sh faucet.sh service
 After=network.target
 
 [Service]

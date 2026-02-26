@@ -18,6 +18,7 @@
 import { execSync } from "node:child_process";
 import { readFileSync } from "node:fs";
 import { resolve4 } from "node:dns/promises";
+import { loadPrimitives, deployed } from "./lib/primitives.js";
 // Tasks (parseTasks) intentionally removed — blockers list captures what gates launch
 
 // ─── Config ──────────────────────────────────────────────────────────────
@@ -25,24 +26,10 @@ import { resolve4 } from "node:dns/promises";
 const VPS_IP = "157.230.187.207";
 const FETCH_TIMEOUT = 10_000;
 
-const LIVE_SERVICES = [
-  "wallet.prim.sh",
-  "store.prim.sh",
-  "faucet.prim.sh",
-  "spawn.prim.sh",
-  "search.prim.sh",
-  "email.prim.sh",
-] as const;
-
-// Must resolve — services are live
-const DNS_LIVE = [
-  "wallet.prim.sh",
-  "store.prim.sh",
-  "faucet.prim.sh",
-  "spawn.prim.sh",
-  "search.prim.sh",
-  "email.prim.sh",
-] as const;
+// Derived from prim.yaml status=deployed|live — no hardcoded list
+const LIVE_SERVICES = deployed(loadPrimitives()).map(
+  (p) => p.endpoint ?? `${p.id}.prim.sh`,
+);
 
 // Critical-path task IDs that block public launch
 const BLOCKER_IDS = [
@@ -173,7 +160,7 @@ async function checkEndpoints() {
 async function checkDns() {
   header("📡", "DNS");
 
-  for (const host of DNS_LIVE) {
+  for (const host of LIVE_SERVICES) {
     try {
       const addrs = await resolve4(host);
       if (addrs.includes(VPS_IP)) {

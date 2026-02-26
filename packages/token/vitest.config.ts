@@ -10,5 +10,11 @@ export default defineConfig({
   test: {
     environment: "node",
     exclude: ["contracts/**", "node_modules/**"],
+    coverage: {
+      provider: "v8",
+      reporter: ["text", "json"],
+      include: ["src/**/*.ts"],
+      exclude: ["src/**/*.test.ts"],
+    },
   },
 });

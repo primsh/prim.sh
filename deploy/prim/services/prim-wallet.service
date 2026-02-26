@@ -1,5 +1,5 @@
 [Unit]
-Description=prim.sh wallet service
+Description=prim.sh wallet.sh service
 After=network.target
 
 [Service]

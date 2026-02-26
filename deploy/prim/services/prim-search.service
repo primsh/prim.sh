@@ -1,5 +1,5 @@
 [Unit]
-Description=prim.sh search service
+Description=prim.sh search.sh service
 After=network.target
 
 [Service]

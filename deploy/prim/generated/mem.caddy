@@ -1,0 +1,7 @@
+mem.prim.sh {
+    import security_headers
+    request_body {
+        max_size 1MB
+    }
+    reverse_proxy localhost:3008
+}

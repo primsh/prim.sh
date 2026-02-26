@@ -1,5 +1,5 @@
 [Unit]
-Description=prim.sh spawn service
+Description=prim.sh spawn.sh service
 After=network.target
 
 [Service]

@@ -16,7 +16,7 @@ Run from repository root unless noted.
 - `pnpm typecheck`: runs `tsc --noEmit` in each package.
 - `pnpm test`: runs Vitest suites in all packages.
 - `pnpm check`: full quality gate (`lint + typecheck + test`).
-- `pnpm --filter @agentstack/x402-middleware build`: build distributable `dist/` output for middleware package.
+- `pnpm --filter @primsh/x402-middleware build`: build distributable `dist/` output for middleware package.
 - `python3 site/serve.py`: serves static pages using the route map in `site/serve.py`.
 
 ## Coding Style & Naming Conventions

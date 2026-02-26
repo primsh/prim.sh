@@ -64,6 +64,7 @@ No API keys. No signup. The wallet *is* the identity.
 | [mem.sh](https://mem.prim.sh) | Vector store and cache for agents. Persist long-term knowledge and session state. | Built |
 | [domain.sh](https://domain.prim.sh) | Register domains, manage DNS, auto-TLS. Full domain lifecycle via API. | Built |
 | deploy.sh | Push code, get an endpoint. Container or repo URL to live service. No server config. | Coming soon |
+| [track.sh](https://track.prim.sh) | Package tracking for agents. USPS, FedEx, UPS, DHL and 1000+ carriers. Status, ETA, full event history. | Built |
 | ring.sh | Phone numbers via API. SMS, voice, TTS. No Twilio account needed. | Coming soon |
 | pipe.sh | Pub/sub channels, webhook relays, event queues. Agent-to-agent glue. | Coming soon |
 | vault.sh | Store API keys, tokens, credentials. Scoped access. Ephemeral or persistent. | Coming soon |

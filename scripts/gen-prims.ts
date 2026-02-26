@@ -10,76 +10,16 @@
  *   bun scripts/gen-prims.ts --check  # diff against disk, exit 1 if any file would change
  */
 
-import { readFileSync, writeFileSync, existsSync, readdirSync } from "node:fs";
+import { readFileSync, writeFileSync, existsSync } from "node:fs";
 import { join, resolve } from "node:path";
-import { parse as parseYaml } from "yaml";
+import { loadPrimitives, deployed, type Primitive } from "./lib/primitives.js";
 
 const ROOT = resolve(import.meta.dir, "..");
 const CHECK_MODE = process.argv.includes("--check");
 
-// ── Types ──────────────────────────────────────────────────────────────────
-
-interface PricingRow {
-  op: string;
-  price: string;
-  note?: string;
-}
-
-interface Primitive {
-  id: string;
-  name: string;
-  endpoint?: string;
-  status: "coming_soon" | "building" | "built" | "testing" | "production";
-  type: string;
-  card_class: string;
-  description: string;
-  port?: number;
-  order: number;
-  phantom?: boolean;
-  show_on_index?: boolean;
-  env?: string[];
-  pricing?: PricingRow[];
-}
-
-// ── Load + merge primitives ────────────────────────────────────────────────
-
-function loadPrimitives(): Primitive[] {
-  // 1. Load root registry
-  const rootYaml = readFileSync(join(ROOT, "primitives.yaml"), "utf8");
-  const rootData = parseYaml(rootYaml) as { primitives: Partial<Primitive>[] };
-  const rootMap = new Map<string, Partial<Primitive>>();
-  for (const p of rootData.primitives) {
-    if (p.id) rootMap.set(p.id, p);
-  }
-
-  // 2. Load package yamls, merge over root
-  const packagesDir = join(ROOT, "packages");
-  const packageDirs = readdirSync(packagesDir, { withFileTypes: true })
-    .filter((d) => d.isDirectory())
-    .map((d) => d.name);
-
-  for (const dir of packageDirs) {
-    const yamlPath = join(packagesDir, dir, "prim.yaml");
-    if (!existsSync(yamlPath)) continue;
-    const data = parseYaml(readFileSync(yamlPath, "utf8")) as Partial<Primitive>;
-    if (!data.id) continue;
-    const base = rootMap.get(data.id) ?? {};
-    rootMap.set(data.id, { ...base, ...data });
-  }
-
-  // 3. Sort by order, apply defaults
-  return Array.from(rootMap.values())
-    .map((p) => ({
-      show_on_index: true,
-      phantom: false,
-      ...p,
-    }))
-    .sort((a, b) => (a.order ?? 999) - (b.order ?? 999)) as Primitive[];
-}
-
 // ── Marker injection ───────────────────────────────────────────────────────
 
-type CommentStyle = "html" | "js";
+type CommentStyle = "html" | "js" | "bash";
 
 function inject(
   filePath: string,
@@ -90,7 +30,9 @@ function inject(
   const [open, close] =
     style === "html"
       ? [`<!-- BEGIN:PRIM:${section} -->`, `<!-- END:PRIM:${section} -->`]
-      : [`// BEGIN:PRIM:${section}`, `// END:PRIM:${section}`];
+      : style === "bash"
+        ? [`# BEGIN:PRIM:${section}`, `# END:PRIM:${section}`]
+        : [`// BEGIN:PRIM:${section}`, `// END:PRIM:${section}`];
 
   const original = readFileSync(filePath, "utf8");
   const openIdx = original.indexOf(open);
@@ -139,17 +81,18 @@ function genCards(prims: Primitive[]): string {
   const cards = prims.filter((p) => p.show_on_index !== false);
   return cards
     .map((p) => {
-      const isActive = p.status === "testing" || p.status === "production";
+      const isDeployed = p.status === "deployed" || p.status === "live";
+      const hasCode = p.status === "building" || p.status === "testing";
       const cls = [
         "product",
         p.card_class,
-        !isActive && !p.phantom ? "soon" : "",
+        !isDeployed && !hasCode && !p.phantom ? "soon" : "",
         p.phantom ? "phantom" : "",
       ]
         .filter(Boolean)
         .join(" ");
 
-      const link = isActive
+      const link = isDeployed
         ? `      <a href="/${p.id}" class="product-link">→ ${p.name}</a>`
         : `      <span class="soon-label">soon</span>`;
 
@@ -164,9 +107,9 @@ ${link}
 }
 
 function genLlmsTxtSections(prims: Primitive[]): string {
-  const live = prims.filter((p) => p.status === "testing" || p.status === "production");
-  const built = prims.filter((p) => p.status === "built");
-  const planned = prims.filter((p) => p.status === "coming_soon" || p.status === "building");
+  const live = prims.filter((p) => p.status === "deployed" || p.status === "live");
+  const built = prims.filter((p) => p.status === "building" || p.status === "testing");
+  const planned = prims.filter((p) => p.status === "idea" || p.status === "planning");
 
   const fmtLive = (p: Primitive) =>
     `- ${p.name} — ${p.endpoint ?? `${p.id}.prim.sh`} — ${p.description}`;
@@ -184,11 +127,11 @@ function genReadmeTable(prims: Primitive[]): string {
     .filter((p) => p.show_on_index !== false)
     .map((p) => {
       const statusLabel =
-        p.status === "testing"
+        p.status === "deployed"
           ? "Live (testnet)"
-          : p.status === "production"
+          : p.status === "live"
             ? "Live"
-            : p.status === "built"
+            : p.status === "building" || p.status === "testing"
               ? "Built"
               : "Coming soon";
       const link = p.endpoint ? `[${p.name}](https://${p.endpoint})` : p.name;
@@ -207,18 +150,20 @@ function genPreDeployEnvs(prims: Primitive[]): string {
 
 function genStatusBadge(p: Primitive): string {
   const labels: Record<string, string> = {
-    testing: "● Live (testnet)",
-    production: "● Live",
-    built: "○ Built — deploy pending",
-    building: "◌ In development",
-    coming_soon: "◌ Coming soon",
+    deployed: "● Live (testnet)",
+    live: "● Live",
+    testing: "○ Built — testing",
+    building: "○ Built — deploy pending",
+    planning: "◌ In planning",
+    idea: "◌ Coming soon",
   };
   const classes: Record<string, string> = {
-    testing: "status-testing",
-    production: "status-live",
-    built: "status-built",
-    building: "status-building",
-    coming_soon: "status-soon",
+    deployed: "status-testing",
+    live: "status-live",
+    testing: "status-built",
+    building: "status-built",
+    planning: "status-building",
+    idea: "status-soon",
   };
   const label = labels[p.status] ?? p.status;
   const cls = classes[p.status] ?? "status-soon";
@@ -230,6 +175,19 @@ function genPricingRows(p: Primitive): string {
   return p.pricing
     .map((row) => `      <tr><td>${row.op}</td><td>${row.price}</td><td>${row.note ?? ""}</td></tr>`)
     .join("\n");
+}
+
+function genBashServices(prims: Primitive[]): string {
+  const ids = deployed(prims).map((p) => p.id);
+  return `SERVICES=(${ids.join(" ")})`;
+}
+
+function genBashEndpoints(prims: Primitive[]): string {
+  const lines = deployed(prims).map((p) => {
+    const host = p.endpoint ?? `${p.id}.prim.sh`;
+    return `  "https://${host}"`;
+  });
+  return `ENDPOINTS=(\n${lines.join("\n")}\n)`;
 }
 
 // ── Main ───────────────────────────────────────────────────────────────────
@@ -250,7 +208,16 @@ applyOrCheck(join(ROOT, "README.md"), "PRIMS", genReadmeTable(prims));
 // 4. scripts/pre-deploy.ts — env arrays
 applyOrCheck(join(ROOT, "scripts/pre-deploy.ts"), "ENV", genPreDeployEnvs(prims), "js");
 
-// 5. Per-page status badge + pricing
+// 5. deploy/prim/deploy.sh — SERVICES array
+applyOrCheck(join(ROOT, "deploy/prim/deploy.sh"), "SERVICES", genBashServices(prims), "bash");
+
+// 6. deploy/prim/setup.sh — SERVICES array
+applyOrCheck(join(ROOT, "deploy/prim/setup.sh"), "SERVICES", genBashServices(prims), "bash");
+
+// 7. deploy/prim/healthcheck.sh — ENDPOINTS array
+applyOrCheck(join(ROOT, "deploy/prim/healthcheck.sh"), "ENDPOINTS", genBashEndpoints(prims), "bash");
+
+// 8. Per-page status badge + pricing
 for (const p of prims) {
   const pagePath = join(ROOT, "site", p.id, "index.html");
   if (!existsSync(pagePath)) continue;

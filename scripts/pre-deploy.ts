@@ -22,24 +22,19 @@ import { execSync } from "node:child_process";
 import { existsSync } from "node:fs";
 import { resolve } from "node:path";
 import { resolve4 } from "node:dns/promises";
+import { loadPrimitives } from "./lib/primitives.js";
 
 // ─── Config ──────────────────────────────────────────────────────────────────
 
 const VPS_IP = "157.230.187.207";
 
-const PRIMITIVES = [
-  "wallet",
-  "store",
-  "spawn",
-  "faucet",
-  "search",
-  "email",
-  "token",
-  "mem",
-  "domain",
-] as const;
+const _prims = loadPrimitives();
+const PRIMITIVES = _prims.filter((p) => p.port).map((p) => p.id);
+const PORTS: Record<string, number> = Object.fromEntries(
+  _prims.filter((p) => p.port).map((p) => [p.id, p.port!]),
+);
 
-type Primitive = (typeof PRIMITIVES)[number];
+type Primitive = string;
 
 // BEGIN:PRIM:ENV
 const REQUIRED_ENV: Record<Primitive, string[]> = {
@@ -52,20 +47,9 @@ const REQUIRED_ENV: Record<Primitive, string[]> = {
   token: ["PRIM_PAY_TO", "PRIM_NETWORK", "TOKEN_MASTER_KEY", "TOKEN_DEPLOYER_ENCRYPTED_KEY", "BASE_RPC_URL", "WALLET_INTERNAL_URL"],
   mem: ["PRIM_PAY_TO", "PRIM_NETWORK", "QDRANT_URL", "GOOGLE_API_KEY", "WALLET_INTERNAL_URL"],
   domain: ["PRIM_PAY_TO", "PRIM_NETWORK", "CLOUDFLARE_API_TOKEN", "CLOUDFLARE_ZONE_ID", "NAMESILO_API_KEY", "WALLET_INTERNAL_URL"],
+  track: ["PRIM_PAY_TO", "PRIM_NETWORK", "TRACKINGMORE_API_KEY", "WALLET_INTERNAL_URL"],
 };
 // END:PRIM:ENV
-
-const PORTS: Record<Primitive, number> = {
-  wallet: 3001,
-  store: 3002,
-  faucet: 3003,
-  spawn: 3004,
-  search: 3005,
-  email: 3006,
-  token: 3007,
-  mem: 3008,
-  domain: 3009,
-};
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
@@ -343,7 +327,7 @@ async function checkDns(primitive: Primitive) {
 async function main() {
   const primitive = process.argv[2] as Primitive | undefined;
 
-  if (!primitive || !(PRIMITIVES as readonly string[]).includes(primitive)) {
+  if (!primitive || !PRIMITIVES.includes(primitive)) {
     console.error(`\nUsage: bun scripts/pre-deploy.ts <primitive>`);
     console.error(`\nKnown primitives: ${PRIMITIVES.join(", ")}\n`);
     process.exit(1);

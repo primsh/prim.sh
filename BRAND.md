@@ -46,11 +46,11 @@ No exclamation marks. No "we're excited." No "getting started is easy." State wh
 | Domain | `prim.sh` | Primary. All primitives are subdomains (`wallet.prim.sh`, `store.prim.sh`, etc.) |
 | GitHub | `primsh` | Org. Main repo: `primsh/prim.sh` |
 | npm | `@primsh` | All packages: `@primsh/wallet`, `@primsh/store`, etc. |
-| X | `@onprim` | "On Prim" — build on Prim, run on Prim |
+| X | `@useprim` | Handle. Display name: **Prim** (not "Prim.sh" or "Primitive Shell") |
 | Discord | Prim | Server display name. Proper noun, capitalized. |
 
 `primsh` is the URL-safe slug of `prim.sh`. Used where dots aren't allowed.
-`onprim` is the social handle. Reads as "on-prem" at first glance — intentional. Familiar, slightly subversive for an API-first stack.
+`useprim` is the social handle. Direct and imperative — matches the brand voice.
 
 ## Usage
 
@@ -100,10 +100,10 @@ Dark-mode. Monospace.
 ## Principles
 
 1. **Built for agents** — the agent is the customer, not the developer. No human in the loop at runtime.
-2. **Pain points are prims** — if a feature requires a human to operate, that's a primitive pain point — and we build the prim for it.
+2. **Pain points are primitives** — if a feature requires a human to operate, that's a primitive pain point — and we build the prim for it.
 3. **No GUI** — every action is an API call. The site is for humans. The API is for agents.
 4. **No signup** — x402 payment is the entire auth flow. First request creates the resource.
-5. **No KYC** — agents don't have passports. Payment proves intent.
-6. **Ephemeral by default** — resources expire. Extend what you need, let the rest go.
+5. **Pay, don't prove** — agents don't have passports. Payment proves intent.
+6. **No lock-in** — use what you need, leave when you're done. No contracts, no minimums.
 7. **Composable** — use one prim or all twenty-seven. No coupling, no bundling.
-8. **Sub-cent pricing** — micropayments via x402. A verification SMS: $0.01. A disposable mailbox: $0.001.
+8. **Pay per call** — micropayments via x402. Every request is priced individually. No subscriptions, no metering.

@@ -10,10 +10,13 @@
     "check": "pnpm -r lint && pnpm -r typecheck && pnpm -r test",
     "build:binaries": "pnpm --filter @primsh/keystore build:binaries",
     "gen:prims": "bun scripts/gen-prims.ts",
-    "gen:check": "bun scripts/gen-prims.ts --check"
+    "gen:check": "bun scripts/gen-prims.ts --check",
+    "gate": "bun scripts/gate-check.ts",
+    "deploy:prim": "bun scripts/deploy-prim.ts"
   },
   "devDependencies": {
     "@biomejs/biome": "^1.9.0",
+    "@vitest/coverage-v8": "^1.6.1",
     "@coinbase/cdp-sdk": "^1.44.1",
     "typescript": "^5.6.3",
     "viem": "^2.21.0",
