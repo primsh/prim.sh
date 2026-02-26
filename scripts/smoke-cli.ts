@@ -4,24 +4,25 @@
  *
  * Creates an ephemeral PRIM_HOME (isolated from real ~/.prim/) and runs:
  *   1. prim wallet create
- *   2. prim faucet usdc
- *   3. Poll prim wallet balance until funded (≤60s)
- *   4. prim store create-bucket
- *   5. prim store put
- *   6. prim store get  (verify content round-trips correctly)
- *   7. prim store rm   (cleanup)
- *   8. prim store rm-bucket (cleanup)
+ *   2. prim wallet register     (EIP-191 registration with wallet.prim.sh)
+ *   3. prim faucet usdc         (429 rate-limit is non-fatal; continue if already funded)
+ *   4. Poll prim wallet balance until funded (≤60s)
+ *   5. prim store create-bucket
+ *   6. prim store put
+ *   7. prim store get           (verify content round-trips correctly)
+ *   8. prim store rm            (cleanup — also in finally trap)
+ *   9. prim store rm-bucket     (cleanup — also in finally trap)
+ *
+ * Note: this script runs against packages/keystore/src/cli.ts via `bun run`.
+ * Once L-11 (compiled binary) is done, swap CLI_PATH → path to compiled `prim` binary.
  *
  * Run from VPS (public DNS resolves *.prim.sh):
  *   PATH=/home/prim/.bun/bin:$PATH bun run scripts/smoke-cli.ts
  *
- * Or locally with URL overrides against a local stack:
- *   PRIM_FAUCET_URL=http://localhost:3003 PRIM_STORE_URL=http://localhost:3002 \
- *     bun run scripts/smoke-cli.ts
- *
- * Env vars (forwarded to prim subprocesses):
+ * URL overrides (forwarded to prim subprocesses via env):
+ *   PRIM_WALLET_URL  — override wallet URL (default: https://wallet.prim.sh)
  *   PRIM_FAUCET_URL  — override faucet URL (default: https://faucet.prim.sh)
- *   PRIM_STORE_URL   — override store URL (default: https://store.prim.sh)
+ *   PRIM_STORE_URL   — override store URL  (default: https://store.prim.sh)
  */
 
 import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
@@ -106,14 +107,29 @@ try {
     process.exit(1);
   }
 
-  // 2. Faucet USDC
-  await step("prim faucet usdc", async () => {
-    const txHash = await prim("faucet", "usdc", "--quiet");
-    if (!txHash.startsWith("0x")) throw new Error(`Expected tx hash, got: ${txHash}`);
-    process.stdout.write(`(${txHash.slice(0, 18)}...) `);
+  // 2. Register with wallet.prim.sh (required before x402 payments)
+  await step("prim wallet register", async () => {
+    const out = await prim("wallet", "register");
+    process.stdout.write(`(${out}) `);
   });
 
-  // 3. Poll balance until funded
+  // 3. Faucet USDC — rate-limit (429) is non-fatal; balance poll handles the rest
+  await step("prim faucet usdc", async () => {
+    try {
+      const txHash = await prim("faucet", "usdc", "--quiet");
+      if (!txHash.startsWith("0x")) throw new Error(`Expected tx hash, got: ${txHash}`);
+      process.stdout.write(`(${txHash.slice(0, 18)}...) `);
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : String(err);
+      if (msg.includes("rate_limited") || msg.includes("rate limited")) {
+        process.stdout.write("(rate-limited — will check balance) ");
+        return; // non-fatal: continue to balance poll
+      }
+      throw err;
+    }
+  });
+
+  // 4. Poll balance until funded
   await step("poll balance until funded (≤60s)", async () => {
     const deadline = Date.now() + 60_000;
     while (Date.now() < deadline) {
@@ -128,7 +144,7 @@ try {
     throw new Error("Wallet still unfunded after 60s — faucet may be slow or rate-limited");
   });
 
-  // 4. Create bucket
+  // 5. Create bucket
   await step("prim store create-bucket", async () => {
     const name = `smoke-${Date.now()}`;
     bucketId = await prim("store", "create-bucket", `--name=${name}`, "--quiet");
@@ -141,12 +157,12 @@ try {
     const tmpFile = join(PRIM_HOME, "smoke.txt");
     writeFileSync(tmpFile, PAYLOAD, "utf-8");
 
-    // 5. Put object
+    // 6. Put object
     await step("prim store put", async () => {
       await prim("store", "put", bucketId, "smoke.txt", `--file=${tmpFile}`, "--quiet");
     });
 
-    // 6. Get object and verify round-trip
+    // 7. Get object and verify round-trip
     await step("prim store get (verify content)", async () => {
       const content = await prim("store", "get", bucketId, "smoke.txt");
       if (content !== PAYLOAD) {
@@ -154,18 +170,28 @@ try {
       }
     });
 
-    // 7. Cleanup: object
+    // 8. Cleanup: object
     await step("prim store rm (cleanup)", async () => {
       await prim("store", "rm", bucketId, "smoke.txt", "--quiet");
     });
 
-    // 8. Cleanup: bucket
+    // 9. Cleanup: bucket
     await step("prim store rm-bucket (cleanup)", async () => {
       await prim("store", "rm-bucket", bucketId, "--quiet");
       bucketId = "";
     });
   }
 } finally {
+  // Cleanup trap: delete bucket even if killed mid-run
+  if (bucketId) {
+    try {
+      await prim("store", "rm", bucketId, "smoke.txt", "--quiet");
+    } catch { /* object may not exist */ }
+    try {
+      await prim("store", "rm-bucket", bucketId, "--quiet");
+    } catch { /* bucket may not exist */ }
+  }
+
   rmSync(PRIM_HOME, { recursive: true, force: true });
 
   console.log("\n─── Summary ─────────────────────────────────────────────────\n");

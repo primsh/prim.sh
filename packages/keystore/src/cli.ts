@@ -84,7 +84,7 @@ async function main() {
     console.log("Usage: prim <wallet|store|spawn|faucet|admin> <subcommand>");
     console.log("       prim --version");
     console.log("");
-    console.log("  prim wallet <create|list|balance|import|export|default|remove>");
+    console.log("  prim wallet <create|register|list|balance|import|export|default|remove>");
     console.log("  prim store  <create-bucket|ls|put|get|rm|rm-bucket|quota>");
     console.log("  prim spawn  <create|ls|get|rm|reboot|stop|start|ssh-key>");
     console.log("  prim faucet <usdc|eth|status>");
@@ -205,8 +205,31 @@ async function main() {
         break;
       }
 
+      case "register": {
+        // EIP-191 registration with wallet.prim.sh
+        const walletUrl = getFlag("url", argv) ?? process.env.PRIM_WALLET_URL ?? "https://wallet.prim.sh";
+        const passphrase = await resolvePassphrase();
+        const account = await loadAccount(undefined, { passphrase });
+        const address = account.address;
+        const timestamp = new Date().toISOString();
+        const message = `Register ${address} with prim.sh at ${timestamp}`;
+        const signature = await account.signMessage({ message });
+        const res = await fetch(`${walletUrl}/v1/wallets`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ address, signature, timestamp }),
+        });
+        if (res.status === 409) {
+          console.log(`Already registered: ${address}`);
+          break;
+        }
+        if (!res.ok) throw new Error(`${res.status}: ${await res.text()}`);
+        console.log(`Registered: ${address}`);
+        break;
+      }
+
       default:
-        console.log("Usage: prim wallet <create|list|balance|import|export|default|remove>");
+        console.log("Usage: prim wallet <create|register|list|balance|import|export|default|remove>");
         process.exit(1);
     }
   } catch (err) {
