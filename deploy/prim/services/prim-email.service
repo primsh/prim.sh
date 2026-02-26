@@ -1,0 +1,15 @@
+[Unit]
+Description=prim.sh email service
+After=network.target
+
+[Service]
+Type=simple
+User=prim
+WorkingDirectory=/opt/prim
+EnvironmentFile=/etc/prim/email.env
+ExecStart=/home/prim/.bun/bin/bun run packages/email/src/index.ts
+Restart=on-failure
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target

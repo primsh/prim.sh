@@ -32,6 +32,7 @@ const STORE_URL = "https://store.prim.sh";
 const FAUCET_URL = "https://faucet.prim.sh";
 const SPAWN_URL = "https://spawn.prim.sh";
 const SEARCH_URL = "https://search.prim.sh";
+const EMAIL_URL = "https://email.prim.sh";
 
 const HAS_DO_TOKEN = !!process.env.DO_API_TOKEN;
 const HAS_CIRCLE_KEY = !!process.env.CIRCLE_API_KEY;
@@ -68,6 +69,7 @@ async function main() {
     ["faucet.prim.sh", FAUCET_URL],
     ["spawn.prim.sh", SPAWN_URL],
     ["search.prim.sh", SEARCH_URL],
+    ["email.prim.sh", EMAIL_URL],
   ] as const) {
     await step(`Health: ${name}`, async () => {
       const res = await fetch(url, { signal: AbortSignal.timeout(10_000) });
@@ -227,6 +229,47 @@ async function main() {
       bucketId = null;
     });
   }
+
+  // ─── Search via x402 ───────────────────────────────────
+
+  console.log("\n─── Search (x402) ──────────────────────────────────────────\n");
+
+  await step("Web search via x402", async () => {
+    const res = await primFetch(`${SEARCH_URL}/v1/search`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ query: "TypeScript programming language", max_results: 3 }),
+    });
+    if (!res.ok) throw new Error(`${res.status}: ${await res.text()}`);
+    const data = (await res.json()) as { results: { title: string; url: string }[] };
+    if (!data.results?.length) throw new Error("No search results returned");
+    console.log(`(${data.results.length} results) `);
+  });
+
+  await step("News search via x402", async () => {
+    const res = await primFetch(`${SEARCH_URL}/v1/search/news`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ query: "artificial intelligence", max_results: 3 }),
+    });
+    if (!res.ok) throw new Error(`${res.status}: ${await res.text()}`);
+    const data = (await res.json()) as { results: { title: string; url: string }[] };
+    if (!data.results?.length) throw new Error("No news results returned");
+    console.log(`(${data.results.length} results) `);
+  });
+
+  await step("URL extract via x402", async () => {
+    const res = await primFetch(`${SEARCH_URL}/v1/extract`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ urls: "https://www.typescriptlang.org", format: "markdown" }),
+    });
+    if (!res.ok) throw new Error(`${res.status}: ${await res.text()}`);
+    const data = (await res.json()) as { results: { url: string; content: string }[] };
+    if (!data.results?.length) throw new Error("No extract results returned");
+    if (!data.results[0].content) throw new Error("Extract content is empty");
+    console.log(`(${data.results[0].content.length} chars) `);
+  });
 
   // ─── Spawn (optional) ──────────────────────────────────────────────
 

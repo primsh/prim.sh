@@ -9,7 +9,7 @@ REPO_URL="https://github.com/useprim/prim.sh"
 REPO_DIR="/opt/prim"
 PRIM_USER="prim"
 ENV_DIR="/etc/prim"
-SERVICES=(wallet store faucet spawn search)
+SERVICES=(wallet store faucet spawn search email)
 
 log() { echo "[setup] $*"; }
 
@@ -184,6 +184,29 @@ PRIM_NETWORK=eip155:8453
 
 # Tavily API key (https://tavily.com)
 TAVILY_API_KEY=your_tavily_api_key
+EOF
+        ;;
+      email)
+        cat >"$ENV_FILE" <<'EOF'
+# Required env vars for prim-email.service
+# Docs: packages/email/src/index.ts
+
+PORT=3006
+
+# x402 payment recipient address (your treasury wallet)
+PRIM_PAY_TO=0xYOUR_TREASURY_ADDRESS
+
+# Chain: eip155:8453 (Base mainnet) or eip155:84532 (Base Sepolia)
+PRIM_NETWORK=eip155:8453
+
+# Stalwart Mail Server connection
+STALWART_API_URL=http://localhost:8080
+STALWART_API_CREDENTIALS=your_base64_credentials
+STALWART_JMAP_URL=https://mail.email.prim.sh
+STALWART_WEBHOOK_SECRET=your_webhook_secret
+
+# Email domain
+EMAIL_DEFAULT_DOMAIN=email.prim.sh
 EOF
         ;;
     esac

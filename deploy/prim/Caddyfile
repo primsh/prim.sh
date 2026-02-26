@@ -17,3 +17,7 @@ spawn.prim.sh {
 search.prim.sh {
     reverse_proxy localhost:3005
 }
+
+email.prim.sh {
+    reverse_proxy localhost:3006
+}

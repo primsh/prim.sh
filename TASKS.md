@@ -268,6 +268,7 @@ All live primitives (wallet, store, spawn, faucet, search) need proper agent int
 | L-65 | Write Skills (markdown + YAML) per primitive: workflow knowledge, when/why to use each prim, error handling patterns, multi-prim workflows (e.g. "register wallet → fund → create bucket") | Claude | L-62 | pending |
 | L-66 | Package as Plugins: bundle MCP server + Skill per primitive into installable plugin. `prim install store` drops MCP config + skill into agent's environment | Claude | L-64, L-65 | pending |
 | L-67 | Extend CLI to all live prims: `prim search`, `prim spawn`, `prim email` subcommands (generated or hand-written from OpenAPI specs) | Claude | L-62 | pending |
+| L-68 | Deploy email.sh to VPS — systemd unit, Caddy route, setup/deploy scripts, smoke test | Garric | — | done |
 
 ### Wave 6: Token + Public
 
