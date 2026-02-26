@@ -37,7 +37,7 @@ vi.mock("../src/jmap", () => {
   return {
     JmapError,
     discoverSession: vi.fn().mockResolvedValue({
-      apiUrl: "https://mail.email.prim.sh/jmap/",
+      apiUrl: "https://mail.prim.sh/jmap/",
       accountId: "acc_1",
       identityId: "id_1",
       inboxId: "mb_inbox",
@@ -476,7 +476,7 @@ describe("email service", () => {
 
   describe("listMessages", () => {
     const MOCK_CTX = {
-      apiUrl: "https://mail.email.prim.sh/jmap/",
+      apiUrl: "https://mail.prim.sh/jmap/",
       accountId: "acc_1",
       identityId: "id_1",
       inboxId: "mb_inbox",
@@ -615,7 +615,7 @@ describe("email service", () => {
 
   describe("getMessage", () => {
     const MOCK_CTX = {
-      apiUrl: "https://mail.email.prim.sh/jmap/",
+      apiUrl: "https://mail.prim.sh/jmap/",
       accountId: "acc_1",
       identityId: "id_1",
       inboxId: "mb_inbox",
@@ -697,7 +697,7 @@ describe("email service", () => {
 
   describe("sendMessage", () => {
     const MOCK_CTX = {
-      apiUrl: "https://mail.email.prim.sh/jmap/",
+      apiUrl: "https://mail.prim.sh/jmap/",
       accountId: "acc_1",
       identityId: "id_1",
       inboxId: "mb_inbox",
@@ -1181,7 +1181,7 @@ describe("email service", () => {
       (getJmapContext as ReturnType<typeof vi.fn>).mockResolvedValue({
         ok: true,
         data: {
-          apiUrl: "https://mail.email.prim.sh/jmap/",
+          apiUrl: "https://mail.prim.sh/jmap/",
           accountId: "acc_1",
           identityId: "id_1",
           inboxId: "mb_inbox",

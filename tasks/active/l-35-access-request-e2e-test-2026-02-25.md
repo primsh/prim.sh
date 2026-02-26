@@ -37,7 +37,7 @@ A single script that proves the full autonomous access flow works end-to-end aga
 │     └─ Capture: request ID
 │
 ├─ Step 6: Admin approves the request (automated)
-│     └─ POST api.prim.sh/api/access/requests/{id}/approve (x-admin-key header)
+│     └─ POST api.prim.sh/access/requests/{id}/approve (x-admin-key header)
 │     └─ Assert: status === 200
 │     └─ Assert: body.status === "approved"
 │
@@ -107,7 +107,7 @@ Option 2 is simpler. `createPrimFetch` returns the retry response as-is. If the 
 The script calls the admin approve endpoint directly:
 
 ```
-POST https://api.prim.sh/api/access/requests/{id}/approve
+POST https://api.prim.sh/access/requests/{id}/approve
 Headers: { "x-admin-key": PRIM_ADMIN_KEY }
 ```
 
@@ -180,7 +180,7 @@ step("Submit access request")
   → assert 201, capture id
 
 step("Admin approve")
-  → POST api.prim.sh/api/access/requests/{id}/approve (x-admin-key)
+  → POST api.prim.sh/access/requests/{id}/approve (x-admin-key)
   → assert 200, body.status === "approved"
 
 step("Retry paid endpoint → expect 200")

@@ -71,7 +71,7 @@ footer a{color:var(--muted)}footer a:hover{color:var(--text)}
   <h2>Have an invite code?</h2>
   <p>Invite codes skip the queue. Redeem one directly:</p>
   <pre><code><span class="cm"># Redeem an invite code</span>
-<span class="w">curl -X POST https://api.prim.sh/api/invites/redeem \
+<span class="w">curl -X POST https://api.prim.sh/invites/redeem \
   -H "Content-Type: application/json" \
   -d '{"code":"<span class="ac">your-invite-code</span>","wallet":"<span class="ac">0x...</span>"}'</span>
 
@@ -91,7 +91,7 @@ footer a{color:var(--muted)}footer a:hover{color:var(--text)}
 }</span>
 
 <span class="cm"># Submit access request (public, no auth)</span>
-<span class="w">curl -X POST https://api.prim.sh/api/access/request \
+<span class="w">curl -X POST https://api.prim.sh/access/request \
   -H "Content-Type: application/json" \
   -d '{"wallet":"<span class="ac">0x...</span>","reason":"<span class="ac">building X agent</span>"}'</span>
 
@@ -130,7 +130,7 @@ form.addEventListener('submit', async (e) => {
   msg.style.display = 'none';
 
   try {
-    const res = await fetch('https://api.prim.sh/api/access/request', {
+    const res = await fetch('https://api.prim.sh/access/request', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ wallet, ...(reason && { reason }) }),

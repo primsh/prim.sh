@@ -1,6 +1,6 @@
 import { Hono } from "hono";
 import { bodyLimit } from "hono/body-limit";
-import { createAgentStackMiddleware, getNetworkConfig, metricsMiddleware, metricsHandler } from "@primsh/x402-middleware";
+import { createAgentStackMiddleware, getNetworkConfig, metricsMiddleware, metricsHandler, requestIdMiddleware } from "@primsh/x402-middleware";
 import { addToAllowlist, removeFromAllowlist, isAllowed, createAllowlistChecker } from "@primsh/x402-middleware/allowlist-db";
 import { join } from "node:path";
 import type {
@@ -65,6 +65,8 @@ function notFound(message: string): ApiError {
 
 type AppVariables = { walletAddress: string | undefined };
 const app = new Hono<{ Variables: AppVariables }>();
+
+app.use("*", requestIdMiddleware());
 
 app.use("*", bodyLimit({
   maxSize: 1024 * 1024,

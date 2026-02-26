@@ -17,7 +17,7 @@
  *   EMAIL_DB_PATH               — e.g. /tmp/email-smoke.db
  *   STALWART_WEBHOOK_SECRET     — HMAC secret for ingest endpoint
  *   EMAIL_ALLOW_HTTP_WEBHOOKS   — set to "1"
- *   NODE_TLS_REJECT_UNAUTHORIZED — set to "0" (cert is for mail.email.prim.sh, not localhost)
+ *   NODE_TLS_REJECT_UNAUTHORIZED — set to "0" (cert is for mail.prim.sh, not localhost)
  */
 
 import { describe, it, expect, beforeAll, afterAll } from "bun:test";

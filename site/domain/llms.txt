@@ -87,7 +87,7 @@ prim domain zone verify ZONE_ID
 
 ```bash
 prim domain zone mail-setup ZONE_ID \
-  --mail-server mail.email.prim.sh \
+  --mail-server mail.prim.sh \
   --mail-server-ip 1.2.3.4 \
   --dkim-rsa-selector mail \
   --dkim-rsa-key "MIIBIjAN..."

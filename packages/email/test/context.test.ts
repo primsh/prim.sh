@@ -53,7 +53,7 @@ function seedMailbox(overrides: Record<string, unknown> = {}) {
     quota: 0,
     created_at: Date.now(),
     expires_at: Date.now() + 86400000,
-    jmap_api_url: "https://mail.email.prim.sh/jmap/",
+    jmap_api_url: "https://mail.prim.sh/jmap/",
     jmap_account_id: "acc_1",
     jmap_identity_id: "id_1",
     jmap_inbox_id: "mb_inbox",
@@ -80,7 +80,7 @@ describe("getJmapContext", () => {
 
     expect(result.ok).toBe(true);
     if (result.ok) {
-      expect(result.data.apiUrl).toBe("https://mail.email.prim.sh/jmap/");
+      expect(result.data.apiUrl).toBe("https://mail.prim.sh/jmap/");
       expect(result.data.accountId).toBe("acc_1");
       expect(result.data.identityId).toBe("id_1");
       expect(result.data.inboxId).toBe("mb_inbox");
@@ -101,7 +101,7 @@ describe("getJmapContext", () => {
     });
 
     (discoverSession as ReturnType<typeof vi.fn>).mockResolvedValue({
-      apiUrl: "https://mail.email.prim.sh/jmap/",
+      apiUrl: "https://mail.prim.sh/jmap/",
       accountId: "acc_new",
       identityId: "id_new",
       inboxId: "mb_inbox_new",

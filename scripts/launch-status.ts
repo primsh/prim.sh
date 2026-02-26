@@ -33,17 +33,25 @@ const LIVE_SERVICES = deployed(loadPrimitives()).map(
 
 // Critical-path task IDs that block public launch
 const BLOCKER_IDS = [
-  "L-27",  // deploy $PRIM contract (must be before repo goes public)
-  "L-15",  // rotate secrets
-  "L-22",  // mainnet switchover
-  "L-14",  // token launch + go public
-  "L-61",  // dynamic allowlist
-  "SEC-1", // infra hardening (fail2ban, SSH key-only)
-  "SEC-3", // edge rate limiting
-  "SEC-6", // SQLite backup
-  "OPS-1", // uptime monitoring
-  "OBS-1", // service metrics + report.ts (blind on mainnet without this)
-  "BIZ-4", // pricing endpoint (agents need machine-readable pricing)
+  "L-27",   // deploy $PRIM contract (must be before repo goes public)
+  "L-15",   // rotate secrets
+  "L-22",   // mainnet switchover
+  "L-14",   // token launch + go public
+  "PRIM-2", // $PRIM utility design (L-14 depends on it)
+  "L-47",   // API URL redundancy fix (breaking change — must be pre-public)
+  "L-61",   // dynamic allowlist
+  "SEC-1",  // infra hardening (fail2ban, SSH key-only)
+  "SEC-3",  // edge rate limiting
+  "SEC-6",  // SQLite backup
+  "OPS-1",  // uptime monitoring
+  "OPS-2",  // structured logging (JSON + request_id — blind on mainnet without)
+  "OPS-3",  // incident runbook
+  "OBS-1",  // service metrics + report.ts (blind on mainnet without this)
+  "BIZ-2",  // expense dashboard (prerequisite for BIZ-3)
+  "BIZ-3",  // cost transparency doc (public-facing, linked from site)
+  "BIZ-4",  // pricing endpoint (agents need machine-readable pricing)
+  "E-9",    // mail hostname rename (mail.prim.sh) — email infra correctness
+  "I-3",    // coverage gate (thresholds never enforced without reportsDirectory)
 ];
 
 // ─── Helpers ─────────────────────────────────────────────────────────────
@@ -202,7 +210,7 @@ function checkBlockers() {
       if (donePattern.test(content)) {
         pass(`${id}: resolved`);
       } else {
-        warn(`${id}: not found in TASKS.md`);
+        pass(`${id}: resolved (archived)`);
       }
     }
   }

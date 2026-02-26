@@ -27,6 +27,7 @@ vi.mock("@primsh/x402-middleware", () => ({
   }),
   metricsMiddleware: () => async (_c: unknown, next: () => Promise<void>) => { await next(); },
   metricsHandler: () => (_c: unknown) => new Response("{}"),
+  requestIdMiddleware: () => async (_c: unknown, next: () => Promise<void>) => { await next(); },
 }));
 
 describe("store.sh app", () => {

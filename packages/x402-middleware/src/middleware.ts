@@ -10,6 +10,9 @@ import type {
   AgentStackRouteConfig,
   RouteConfig as AgentStackRouteConfigEntry,
 } from "./types.ts";
+import { createLogger } from "./logger.js";
+
+const log = createLogger("x402-middleware", { module: "allowlist" });
 
 const DEFAULT_NETWORK: Network = "eip155:8453";
 const DEFAULT_FACILITATOR_URL =
@@ -36,14 +39,14 @@ export function createWalletAllowlistChecker(walletInternalUrl: string): (addres
         clearTimeout(timer);
       }
       if (!res.ok) {
-        console.warn(`[allowlist] wallet.sh returned ${res.status} for ${address} — denying`);
+        log.warn("wallet.sh allowlist check returned non-OK", { address, status: res.status });
         return false;
       }
       const body = (await res.json()) as { allowed: boolean };
       return body.allowed === true;
     } catch (err) {
       const reason = err instanceof Error && err.name === "AbortError" ? "timeout" : String(err);
-      console.warn(`[allowlist] wallet.sh check failed (${reason}) for ${address} — denying`);
+      log.warn("wallet.sh allowlist check failed", { address, reason });
       return false;
     }
   };

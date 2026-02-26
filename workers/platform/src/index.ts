@@ -50,8 +50,8 @@ async function callVpsAllowlist(
 
 // ─── Access requests ───────────────────────────────────────────────────────
 
-// POST /api/access/request — Submit access request (public)
-app.post("/api/access/request", async (c) => {
+// POST /access/request — Submit access request (public)
+app.post("/access/request", async (c) => {
   let body: { wallet?: string; reason?: string };
   try {
     body = await c.req.json();
@@ -73,8 +73,8 @@ app.post("/api/access/request", async (c) => {
   return c.json({ id, status: "pending" }, 201);
 });
 
-// GET /api/access/requests — List pending requests (admin)
-app.get("/api/access/requests", async (c) => {
+// GET /access/requests — List pending requests (admin)
+app.get("/access/requests", async (c) => {
   if (!isAdmin(c)) return c.json({ error: "Unauthorized" }, 401);
 
   const status = c.req.query("status") ?? "pending";
@@ -87,8 +87,8 @@ app.get("/api/access/requests", async (c) => {
   return c.json({ requests: result.results }, 200);
 });
 
-// POST /api/access/requests/:id/approve — Approve request (admin)
-app.post("/api/access/requests/:id/approve", async (c) => {
+// POST /access/requests/:id/approve — Approve request (admin)
+app.post("/access/requests/:id/approve", async (c) => {
   if (!isAdmin(c)) return c.json({ error: "Unauthorized" }, 401);
 
   const id = c.req.param("id");
@@ -123,8 +123,8 @@ app.post("/api/access/requests/:id/approve", async (c) => {
   return c.json({ id, status: "approved", wallet: row.wallet }, 200);
 });
 
-// POST /api/access/requests/:id/deny — Deny request (admin)
-app.post("/api/access/requests/:id/deny", async (c) => {
+// POST /access/requests/:id/deny — Deny request (admin)
+app.post("/access/requests/:id/deny", async (c) => {
   if (!isAdmin(c)) return c.json({ error: "Unauthorized" }, 401);
 
   const id = c.req.param("id");
@@ -158,8 +158,8 @@ app.post("/api/access/requests/:id/deny", async (c) => {
 
 // ─── Invite codes ──────────────────────────────────────────────────────────
 
-// POST /api/invites — Create invite code (requires wallet proof via payment header)
-app.post("/api/invites", async (c) => {
+// POST /invites — Create invite code (requires wallet proof via payment header)
+app.post("/invites", async (c) => {
   // Extract wallet from payment-signature header to prove identity
   const paymentHeader = c.req.header("payment-signature") ?? c.req.header("x-payment");
   if (!paymentHeader) {
@@ -191,8 +191,8 @@ app.post("/api/invites", async (c) => {
   return c.json({ code, created_by: wallet.toLowerCase() }, 201);
 });
 
-// POST /api/invites/redeem — Redeem invite code
-app.post("/api/invites/redeem", async (c) => {
+// POST /invites/redeem — Redeem invite code
+app.post("/invites/redeem", async (c) => {
   let body: { code?: string; wallet?: string };
   try {
     body = await c.req.json();
@@ -237,8 +237,8 @@ app.post("/api/invites/redeem", async (c) => {
 
 // ─── Feedback ──────────────────────────────────────────────────────────────
 
-// POST /api/feedback — Create GitHub issue
-app.post("/api/feedback", async (c) => {
+// POST /feedback — Create GitHub issue
+app.post("/feedback", async (c) => {
   const token = c.env.GITHUB_TOKEN;
   if (!token) {
     return c.json({ error: "Feedback not configured" }, 501);

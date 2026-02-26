@@ -11,7 +11,7 @@ export interface DnsCheckResult {
   found: string | null;
 }
 
-const MAIL_HOST = process.env.EMAIL_MAIL_HOST ?? "mail.email.prim.sh";
+const MAIL_HOST = process.env.EMAIL_MAIL_HOST ?? "mail.prim.sh";
 
 export async function checkMx(domain: string): Promise<DnsCheckResult> {
   const expected = MAIL_HOST;

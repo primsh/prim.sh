@@ -47,7 +47,7 @@ export async function runAdminCommand(sub: string, argv: string[]): Promise<void
   switch (sub) {
     case "list-requests": {
       const status = getFlag("status", argv) || "pending";
-      const res = await fetch(`${apiUrl}/api/access/requests?status=${status}`, {
+      const res = await fetch(`${apiUrl}/access/requests?status=${status}`, {
         headers: { "X-Admin-Key": adminKey },
       });
       if (!res.ok) return handleError(res);
@@ -71,7 +71,7 @@ export async function runAdminCommand(sub: string, argv: string[]): Promise<void
         process.stderr.write("Usage: prim admin approve REQUEST_ID\n");
         process.exit(1);
       }
-      const res = await fetch(`${apiUrl}/api/access/requests/${requestId}/approve`, {
+      const res = await fetch(`${apiUrl}/access/requests/${requestId}/approve`, {
         method: "POST",
         headers: { "X-Admin-Key": adminKey },
       });
@@ -88,7 +88,7 @@ export async function runAdminCommand(sub: string, argv: string[]): Promise<void
         process.exit(1);
       }
       const reason = getFlag("reason", argv);
-      const res = await fetch(`${apiUrl}/api/access/requests/${requestId}/deny`, {
+      const res = await fetch(`${apiUrl}/access/requests/${requestId}/deny`, {
         method: "POST",
         headers: {
           "X-Admin-Key": adminKey,

@@ -1,7 +1,9 @@
 import { createPublicClient, http, formatUnits } from "viem";
 import { base, baseSepolia } from "viem/chains";
 import type { Address } from "viem";
-import { getNetworkConfig } from "@primsh/x402-middleware";
+import { getNetworkConfig, createLogger } from "@primsh/x402-middleware";
+
+const log = createLogger("wallet.sh", { module: "balance" });
 
 const USDC_DECIMALS = 6;
 
@@ -52,7 +54,7 @@ export async function getUsdcBalance(address: Address): Promise<{ balance: strin
 
     return { balance, funded };
   } catch (err) {
-    console.warn("[balance] RPC query failed for", address, err);
+    log.warn("RPC query failed", { address, error: String(err) });
     return { balance: "0.00", funded: false };
   }
 }

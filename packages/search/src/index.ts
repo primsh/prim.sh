@@ -1,6 +1,6 @@
 import { Hono } from "hono";
 import { bodyLimit } from "hono/body-limit";
-import { createAgentStackMiddleware, createWalletAllowlistChecker, getNetworkConfig, metricsMiddleware, metricsHandler } from "@primsh/x402-middleware";
+import { createAgentStackMiddleware, createWalletAllowlistChecker, getNetworkConfig, metricsMiddleware, metricsHandler, requestIdMiddleware } from "@primsh/x402-middleware";
 import type { SearchRequest, ExtractRequest, ApiError } from "./api.ts";
 import { searchWeb, searchNews, extractUrls } from "./service.ts";
 
@@ -30,6 +30,8 @@ function rateLimited(message: string): ApiError {
 
 type AppVariables = { walletAddress: string | undefined };
 const app = new Hono<{ Variables: AppVariables }>();
+
+app.use("*", requestIdMiddleware());
 
 app.use("*", bodyLimit({
   maxSize: 1024 * 1024,

@@ -190,7 +190,7 @@ Do NOT use store for:
 
 - Registered wallet (\`wallet_register\`)
 - Wallet funded with USDC on Base (\`faucet_usdc\` on testnet)
-- Wallet on access allowlist (private beta — if you get 403 \`wallet_not_allowed\`, request access at \`POST https://api.prim.sh/api/access/request\`)
+- Wallet on access allowlist (private beta — if you get 403 \`wallet_not_allowed\`, request access at \`POST https://api.prim.sh/access/request\`)
 
 ## Common workflows
 
@@ -729,7 +729,7 @@ Do NOT use email for:
 
 - Registered wallet (\`wallet_register\`)
 - Wallet funded with USDC on Base (\`faucet_usdc\` on testnet)
-- Wallet on access allowlist (private beta — if you get 403 \`wallet_not_allowed\`, request access at \`POST https://api.prim.sh/api/access/request\`)
+- Wallet on access allowlist (private beta — if you get 403 \`wallet_not_allowed\`, request access at \`POST https://api.prim.sh/access/request\`)
 
 ## Common workflows
 
@@ -1099,7 +1099,7 @@ Do NOT use domain for:
 
 2. domain_zone_mail_setup
    - zone_id: <from step 1>
-   - mail_server: "mail.email.prim.sh"
+   - mail_server: "mail.prim.sh"
    - mail_server_ip: <prim mail server IP>
    → sets MX, SPF, DMARC records pointing to email.prim.sh
 
@@ -1205,7 +1205,7 @@ Do NOT use token for:
 
 - Registered wallet (\`wallet_register\`)
 - Wallet funded with USDC on Base (\`faucet_usdc\` on testnet)
-- Wallet on access allowlist (private beta — if you get 403 \`wallet_not_allowed\`, request access at \`POST https://api.prim.sh/api/access/request\`)
+- Wallet on access allowlist (private beta — if you get 403 \`wallet_not_allowed\`, request access at \`POST https://api.prim.sh/access/request\`)
 
 ## Common workflows
 

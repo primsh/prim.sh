@@ -174,7 +174,7 @@ async function main() {
 
   if (requestId) {
     await step("Admin approve request", async () => {
-      const res = await fetch(`${API_URL}/api/access/requests/${requestId}/approve`, {
+      const res = await fetch(`${API_URL}/access/requests/${requestId}/approve`, {
         method: "POST",
         headers: { "x-admin-key": PRIM_ADMIN_KEY as string },
         signal: AbortSignal.timeout(10_000),

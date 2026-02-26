@@ -90,7 +90,7 @@ describe("wallet.sh API", () => {
     expect(res.headers.get("Payment-Required")).toBeTruthy();
   });
 
-  it("paid route with invalid payment signature returns 402", async () => {
+  it("paid route with unregistered wallet returns 403", async () => {
     const paymentPayload = {
       x402Version: 2,
       scheme: "exact",
@@ -114,6 +114,7 @@ describe("wallet.sh API", () => {
       headers: { "Payment-Signature": header },
     });
 
-    expect(res.status).toBe(402);
+    // Allowlist gate rejects unregistered wallets before x402 payment validation
+    expect(res.status).toBe(403);
   });
 });

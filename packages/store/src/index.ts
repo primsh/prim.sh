@@ -1,6 +1,6 @@
 import { Hono } from "hono";
 import { bodyLimit } from "hono/body-limit";
-import { createAgentStackMiddleware, createWalletAllowlistChecker, getNetworkConfig, metricsMiddleware, metricsHandler } from "@primsh/x402-middleware";
+import { createAgentStackMiddleware, createWalletAllowlistChecker, getNetworkConfig, metricsMiddleware, metricsHandler, requestIdMiddleware } from "@primsh/x402-middleware";
 import type {
   ApiError,
   CreateBucketRequest,
@@ -84,6 +84,8 @@ function extractObjectKey(c: { req: { path: string } }): string {
 
 type AppVariables = { walletAddress: string | undefined };
 const app = new Hono<{ Variables: AppVariables }>();
+
+app.use("*", requestIdMiddleware());
 
 // Body size limit — skip for object PUT (streaming uploads to R2 can exceed 1MB)
 app.use("*", async (c, next) => {

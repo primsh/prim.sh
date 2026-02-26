@@ -34,7 +34,7 @@ vi.mock("../src/jmap", () => ({
     }
   },
   discoverSession: vi.fn().mockResolvedValue({
-    apiUrl: "https://mail.email.prim.sh/jmap/",
+    apiUrl: "https://mail.prim.sh/jmap/",
     accountId: "acc_1",
     identityId: "id_1",
     inboxId: "mb_inbox",
@@ -253,7 +253,7 @@ describe("custom domains (R-9)", () => {
 
       (verifyDns as ReturnType<typeof vi.fn>).mockResolvedValue({
         allPass: true,
-        mx: { pass: true, expected: "mail.email.prim.sh", found: "mail.email.prim.sh" },
+        mx: { pass: true, expected: "mail.prim.sh", found: "mail.prim.sh" },
         spf: { pass: true, expected: "include:email.prim.sh", found: "v=spf1 include:email.prim.sh -all" },
         dmarc: { pass: true, expected: "v=DMARC1", found: "v=DMARC1; p=quarantine" },
       });
@@ -280,7 +280,7 @@ describe("custom domains (R-9)", () => {
 
       (verifyDns as ReturnType<typeof vi.fn>).mockResolvedValue({
         allPass: false,
-        mx: { pass: false, expected: "mail.email.prim.sh", found: null },
+        mx: { pass: false, expected: "mail.prim.sh", found: null },
         spf: { pass: true, expected: "include:email.prim.sh", found: "v=spf1 include:email.prim.sh -all" },
         dmarc: { pass: true, expected: "v=DMARC1", found: "v=DMARC1; p=quarantine" },
       });
@@ -302,7 +302,7 @@ describe("custom domains (R-9)", () => {
 
       (verifyDns as ReturnType<typeof vi.fn>).mockResolvedValue({
         allPass: false,
-        mx: { pass: true, expected: "mail.email.prim.sh", found: "mail.email.prim.sh" },
+        mx: { pass: true, expected: "mail.prim.sh", found: "mail.prim.sh" },
         spf: { pass: false, expected: "include:email.prim.sh", found: null },
         dmarc: { pass: true, expected: "v=DMARC1", found: "v=DMARC1; p=quarantine" },
       });
@@ -345,7 +345,7 @@ describe("custom domains (R-9)", () => {
 
       (verifyDns as ReturnType<typeof vi.fn>).mockResolvedValue({
         allPass: true,
-        mx: { pass: true, expected: "mail.email.prim.sh", found: "mail.email.prim.sh" },
+        mx: { pass: true, expected: "mail.prim.sh", found: "mail.prim.sh" },
         spf: { pass: true, expected: "include:email.prim.sh", found: "v=spf1 include:email.prim.sh -all" },
         dmarc: { pass: true, expected: "v=DMARC1", found: "v=DMARC1; p=quarantine" },
       });

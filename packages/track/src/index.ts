@@ -4,6 +4,7 @@ import {
   createAgentStackMiddleware,
   createWalletAllowlistChecker,
   getNetworkConfig,
+  requestIdMiddleware,
 } from "@primsh/x402-middleware";
 import type { ApiError } from "./api.ts";
 import type { TrackRequest } from "./api.ts";
@@ -37,6 +38,8 @@ function rateLimited(message: string): ApiError {
 
 type AppVariables = { walletAddress: string | undefined };
 const app = new Hono<{ Variables: AppVariables }>();
+
+app.use("*", requestIdMiddleware());
 
 app.use(
   "*",

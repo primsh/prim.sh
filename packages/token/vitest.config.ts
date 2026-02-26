@@ -11,6 +11,7 @@ export default defineConfig({
     environment: "node",
     exclude: ["contracts/**", "node_modules/**"],
     coverage: {
+      reportsDirectory: "./coverage",
       provider: "v8",
       reporter: ["text", "json", "json-summary"],
       include: ["src/**/*.ts"],

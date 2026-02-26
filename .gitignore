@@ -13,6 +13,7 @@ node_modules/
 .pnpm-store/
 dist/
 .turbo/
+coverage/
 
 # Env / data
 .env

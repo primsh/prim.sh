@@ -1,7 +1,7 @@
 import { Hono } from "hono";
 import { bodyLimit } from "hono/body-limit";
 import type { ContentfulStatusCode } from "hono/utils/http-status";
-import { createAgentStackMiddleware, createWalletAllowlistChecker, getNetworkConfig } from "@primsh/x402-middleware";
+import { createAgentStackMiddleware, createWalletAllowlistChecker, getNetworkConfig, requestIdMiddleware } from "@primsh/x402-middleware";
 import type {
   ApiError,
   CreateTokenRequest,
@@ -226,6 +226,8 @@ function poolExists(message: string): ApiError {
 
 type AppVariables = { walletAddress: string | undefined };
 const app = new Hono<{ Variables: AppVariables }>();
+
+app.use("*", requestIdMiddleware());
 
 app.use("*", bodyLimit({
   maxSize: 1024 * 1024,

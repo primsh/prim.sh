@@ -267,7 +267,7 @@ Combine web + news search, extract top results, avoid duplicates.
 ## Error handling across primitives
 
 **Wallet funded but still getting 402:**
-- Wallet must be on the access allowlist. Submit an access request via `POST https://api.prim.sh/api/access/request`.
+- Wallet must be on the access allowlist. Submit an access request via `POST https://api.prim.sh/access/request`.
 
 **store returns `quota_exceeded` during research pipeline:**
 ```
@@ -327,7 +327,7 @@ Complete identity setup for an autonomous agent.
 
 7. domain_zone_mail_setup
    - zone_id: <zone_id>
-   - mail_server: "mail.email.prim.sh"
+   - mail_server: "mail.prim.sh"
    - mail_server_ip: "..."
    → MX + SPF + DKIM records created
 
@@ -423,7 +423,7 @@ Register a domain and set it up for email receiving.
 
 2. domain_zone_mail_setup
    - zone_id: <zone_id>
-   - mail_server: "mail.email.prim.sh"
+   - mail_server: "mail.prim.sh"
    - mail_server_ip: <email server IP>
    → MX, SPF, DKIM records created
 

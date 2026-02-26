@@ -5,6 +5,7 @@ export default defineConfig({
     environment: "node",
     testTimeout: 30000,
     coverage: {
+      reportsDirectory: "./coverage",
       provider: "v8",
       reporter: ["text", "json", "json-summary"],
       include: ["src/**/*.ts"],

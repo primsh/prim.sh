@@ -25,7 +25,7 @@ export interface JmapSession {
 }
 
 function getJmapBaseUrl(): string {
-  return process.env.STALWART_JMAP_URL ?? "https://mail.email.prim.sh";
+  return process.env.STALWART_JMAP_URL ?? "https://mail.prim.sh";
 }
 
 export function buildBasicAuth(email: string, password: string): string {

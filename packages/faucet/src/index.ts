@@ -1,6 +1,6 @@
 import { Hono } from "hono";
 import { isAddress, getAddress } from "viem";
-import { getNetworkConfig, createWalletAllowlistChecker, metricsMiddleware, metricsHandler } from "@primsh/x402-middleware";
+import { getNetworkConfig, createWalletAllowlistChecker, metricsMiddleware, metricsHandler, requestIdMiddleware } from "@primsh/x402-middleware";
 import { RateLimiter } from "./rate-limit.ts";
 import { dripUsdc, dripEth } from "./service.ts";
 
@@ -8,6 +8,8 @@ const WALLET_INTERNAL_URL = process.env.WALLET_INTERNAL_URL ?? "http://127.0.0.1
 const checkAllowlist = createWalletAllowlistChecker(WALLET_INTERNAL_URL);
 
 const app = new Hono();
+
+app.use("*", requestIdMiddleware());
 
 app.use("*", metricsMiddleware());
 

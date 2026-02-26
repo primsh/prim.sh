@@ -1,4 +1,7 @@
 import { randomBytes } from "node:crypto";
+import { createLogger } from "@primsh/x402-middleware";
+
+const log = createLogger("domain.sh");
 import {
   insertZone,
   getZoneById,
@@ -743,7 +746,7 @@ export async function batchRecords(
       }
     });
   } catch (err) {
-    console.error("CRITICAL: batch SQLite transaction failed after CF batch succeeded", err);
+    log.error("batch SQLite transaction failed after CF batch succeeded", { error: String(err) });
     return { ok: false, status: 500, code: "internal_error", message: "Internal error applying batch — CF succeeded but local DB update failed" };
   }
 

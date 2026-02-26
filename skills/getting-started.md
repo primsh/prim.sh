@@ -102,7 +102,7 @@ Rate limit: 10 USDC per address per 2 hours. On 429, check `error.retryAfter` (s
 During private beta, wallets must be on the allowlist before using paid primitives. If any paid call returns 403 `wallet_not_allowed`:
 
 ```
-POST https://api.prim.sh/api/access/request
+POST https://api.prim.sh/access/request
 Content-Type: application/json
 
 {"wallet": "0xYourAddress", "reason": "Testing storage for research pipeline"}

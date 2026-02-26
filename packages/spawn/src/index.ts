@@ -1,6 +1,6 @@
 import { Hono } from "hono";
 import { bodyLimit } from "hono/body-limit";
-import { createAgentStackMiddleware, createWalletAllowlistChecker, metricsMiddleware, metricsHandler } from "@primsh/x402-middleware";
+import { createAgentStackMiddleware, createWalletAllowlistChecker, metricsMiddleware, metricsHandler, requestIdMiddleware } from "@primsh/x402-middleware";
 import type {
   CreateServerRequest,
   CreateServerResponse,
@@ -77,6 +77,8 @@ function providerError(message: string): ApiError {
 
 type AppVariables = { walletAddress: string | undefined };
 const app = new Hono<{ Variables: AppVariables }>();
+
+app.use("*", requestIdMiddleware());
 
 app.use("*", bodyLimit({
   maxSize: 1024 * 1024,

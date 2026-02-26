@@ -746,8 +746,8 @@ export async function handleIngestEvent(
 
 // ─── Custom domains (R-9) ────────────────────────────────────────────
 
-const MAIL_HOST = process.env.EMAIL_MAIL_HOST ?? "mail.email.prim.sh";
-const RESERVED_DOMAINS = ["email.prim.sh", "prim.sh", "mail.email.prim.sh"];
+const MAIL_HOST = process.env.EMAIL_MAIL_HOST ?? "mail.prim.sh";
+const RESERVED_DOMAINS = ["email.prim.sh", "prim.sh", "mail.prim.sh", "mail.email.prim.sh"];
 
 function isValidDomain(domain: string): boolean {
   if (!domain || domain.length > 253) return false;
