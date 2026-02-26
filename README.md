@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="site/assets/readme-hero.jpg" alt="prim.sh" width="800">
+  <img src="site/assets/readme-hero.jpg" alt="prim.sh" width="100%">
 </p>
 
 <h3 align="center">prim.sh</h3>
