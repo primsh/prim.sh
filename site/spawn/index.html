@@ -78,11 +78,11 @@ footer .links a{margin:0 0.75rem}
   .flow-arrow{transform:rotate(90deg)}
   pre{font-size:0.75rem}
 }
-nav.sitenav{position:fixed;top:0;left:0;right:0;z-index:100;display:flex;align-items:center;gap:0.5rem;padding:0.6rem 1.5rem;background:rgba(10,10,10,0.85);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);border-bottom:1px solid var(--border);font-size:0.8rem}nav.sitenav a{color:var(--muted);text-decoration:none}nav.sitenav a:hover{color:var(--accent)}nav.sitenav .sep{color:#2a2a2a}nav.sitenav .cur{color:var(--accent)}.hero{padding-top:3rem}</style>
+.hero-hd{position:absolute;top:1.75rem;left:0;right:0;display:flex;justify-content:center;pointer-events:none;z-index:1}.hero-hd a{pointer-events:all;color:#444;text-decoration:none;font-size:0.8rem;letter-spacing:0.04em;border:1px solid #222;border-radius:20px;padding:0.3rem 1rem;transition:color 0.15s,border-color 0.15s}.hero-hd a:hover{color:var(--accent);border-color:var(--accent)}.hero-hd a span{color:var(--accent)}.hero-ft{position:absolute;bottom:1.75rem;left:0;right:0;display:flex;flex-direction:column;align-items:center;gap:0.4rem}.scroll-hint{color:var(--muted);font-size:0.8rem;animation:pulse 2s infinite}@keyframes pulse{0%,100%{opacity:0.3}50%{opacity:1}}</style>
 </head>
 <body>
-<nav class="sitenav"><a href="/">prim.sh</a><span class="sep">/</span><span class="cur">spawn.sh</span></nav>
 <div class="hero">
+  <div class="hero-hd"><a href="/">prim.sh / <span>spawn.sh</span></a></div>
   <div class="logo"><span>spawn</span>.sh</div>
   <div class="tagline">VPS for agents. By agents.</div>
   <div class="sub">No signup. No GUI. No KYC. Pay with x402. Deploy from code.</div>
