@@ -160,9 +160,11 @@
 - L-35: `tasks/active/l-35-access-request-e2e-test-2026-02-25.md`
 - Wave 5.5 (L-62→L-67): `tasks/active/wave-5.5-agent-interface-layer-2026-02-26.md`
 - I-1: `tasks/active/i-1-primitives-sot-codegen-2026-02-26.md`
+- L-69: `tasks/active/l-69-pre-deploy-check-2026-02-26.md`
 - L-48/L-49: covered by v1 launch plan update (search deploy)
 - V1 Launch: `tasks/active/v1-launch-plan-2026-02-25.md`
 - L-66: `tasks/active/l-66-package-as-plugins-2026-02-26.md`
+- L-72: `tasks/active/l-72-agent-interface-wave-2-2026-02-26.md`
 
 ## V1 Launch (scope: L)
 
@@ -224,8 +226,8 @@ Plan doc: `tasks/active/v1-launch-plan-2026-02-25.md`
 | L-48 | Deploy search.sh to VPS: systemd unit (prim-search:3005), Caddy route (search.prim.sh), DNS A record, `TAVILY_API_KEY` env var, smoke test live endpoint | Claude + Garric | SE-1, L-10 | done |
 | L-49 | Update llms.txt: move search.sh from "Built (not yet deployed)" to "Live primitives" section after L-48 deploy is verified | Claude | L-48 | done |
 | L-69 | Pre-deployment readiness check script (`scripts/pre-deploy.ts <primitive>`): unit tests pass, required env vars declared, external dependency reachable (Qdrant/RPC/etc), x402 pay-to address + network set, port not already allocated, DNS A record resolves to VPS. Exit 0 = go, exit 1 = no-go with failing checks listed | Claude | — | pending |
-| L-70 | Deploy token.sh to VPS: pre-deploy check (L-69), systemd unit (prim-token:3006), Caddy route (token.prim.sh), DNS A record, env vars (RPC_URL, DEPLOYER_KEY, PRIM_PAY_TO, PRIM_NETWORK), smoke test live endpoint | Garric | L-69, TK-5 | pending |
-| L-71 | Deploy mem.sh to VPS: pre-deploy check (L-69), Qdrant instance (Docker on VPS or managed), systemd unit (prim-mem:3007), Caddy route (mem.prim.sh), DNS A record, env vars (QDRANT_URL, PRIM_PAY_TO, PRIM_NETWORK), smoke test live endpoint | Garric | L-69, M-2 | pending |
+| L-70 | Deploy token.sh to VPS: pre-deploy check (L-69), systemd unit (prim-token:3007), Caddy route (token.prim.sh), DNS A record, env vars (TOKEN_MASTER_KEY, TOKEN_DEPLOYER_ENCRYPTED_KEY, BASE_RPC_URL, PRIM_PAY_TO), smoke test live endpoint | Garric | L-69, TK-5 | pending |
+| L-71 | Deploy mem.sh to VPS: pre-deploy check (L-69), Qdrant instance (Docker on VPS or managed), systemd unit (prim-mem:3008), Caddy route (mem.prim.sh), DNS A record, env vars (QDRANT_URL, GOOGLE_API_KEY, PRIM_PAY_TO), smoke test live endpoint | Garric | L-69, M-2 | pending |
 | L-22 | Mainnet switchover: update VPS env files from `eip155:84532` → `eip155:8453`, set prod `PRIM_PAY_TO` treasury, fund facilitator with mainnet USDC | Garric | L-17 | pending |
 | L-15 | Pre-public checklist: rotate Stalwart admin password + `relay-wrapper` API key, verify no secrets in git history (`git log -p \| grep`), confirm .env files gitignored | Garric | L-10 | pending |
 
@@ -275,6 +277,7 @@ All live primitives (wallet, store, spawn, faucet, search) need proper agent int
 | L-66 | Package as Plugins: bundle MCP server + Skill per primitive into installable plugin. `prim install store` drops MCP config + skill into agent's environment | Claude | L-64, L-65 | done |
 | L-67 | Extend CLI to all live prims: `prim search`, `prim spawn`, `prim email` subcommands (generated or hand-written from OpenAPI specs) | Claude | L-62 | done |
 | L-68 | Deploy email.sh to VPS — systemd unit, Caddy route, setup/deploy scripts, smoke test | Garric | — | done |
+| L-72 | Agent Interface Wave 2: extend OpenAPI, MCP tools, Skills, Plugins, CLI, llms.txt to email, mem, domain, token (same pattern as L-62→L-67 for the original 5) | Claude | L-62 | pending |
 
 ### Wave 6: Token + Public
 
