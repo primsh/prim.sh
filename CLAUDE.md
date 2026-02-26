@@ -111,7 +111,6 @@ Full conventions: `tasks/README.md`. Key rules for this project:
 
 | Abbrev | Scope |
 |--------|-------|
-| LNCH | Blocks going public + mainnet |
 | HRD | Code quality, security, reliability |
 | PRIMS | Feature work on specific services |
 | INFRA | CI, tooling, observability, cross-cutting |
@@ -122,7 +121,7 @@ Full conventions: `tasks/README.md`. Key rules for this project:
 
 | Prefix | Scope | Prefix | Scope |
 |--------|-------|--------|-------|
-| L | Launch blockers | H | Hardening |
+| L | Legacy launch (migrated) | HRD | Hardening |
 | W | wallet.sh | E | email.sh |
 | SP | spawn.sh | ST | store.sh |
 | TK | token.sh | D | domain.sh |

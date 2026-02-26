@@ -9,6 +9,11 @@
 | **Phase** | `####` | Annotated (PARA/SRL) | Group of tasks. Optional. |
 | **Task** | Table row | `Depends` column | Smallest unit of work. |
 
+**IDs**: Every wave, phase, and task has a unique ID.
+- Waves: `<SECTION>-W<n>` (e.g., `HRD-W1`, `PRIMS-W2`)
+- Phases: `<WAVE>-P<X>` (e.g., `HRD-W1-PA`, `HRD-W1-PB`)
+- Tasks: section prefix + number (e.g., `HRD-3`, `L-27`)
+
 **Lanes** are implicit, not a heading level. When a wave or phase is annotated **PARA**, each child is in a separate lane — meaning they MUST NOT touch the same files. When annotated **SRL**, children share a lane and execute sequentially.
 
 **Key rules:**
@@ -21,7 +26,6 @@
 
 | Abbrev | Header | Scope |
 |--------|--------|-------|
-| LNCH | Launch | Blocks going public + mainnet |
 | HRD | Hardening | Code quality, security, reliability |
 | PRIMS | Primitives | Feature work on specific services |
 | INFRA | Infrastructure | CI, tooling, observability, cross-cutting |
@@ -33,8 +37,8 @@
 All sections use:
 
 ```markdown
-| ID | Task | Owner | Depends | Status |
-|----|------|-------|---------|--------|
+| ID | Task | Owner | Depends | Status | Release |
+|----|------|-------|---------|--------|---------|
 ```
 
 - **ID**: Prefix + number. Existing IDs are frozen (never renamed).
@@ -42,6 +46,7 @@ All sections use:
 - **Owner**: `Garric`, `Claude`, `Garric + Claude`, or blank.
 - **Depends**: Comma-separated task IDs. `--` if none. Only list pending deps.
 - **Status**: `pending`, `in-progress`, `done`, `backlog`.
+- **Release**: Semver tag (e.g., `v1.0.0`) if the task blocks a release, `--` otherwise.
 
 ## ID Prefixes
 

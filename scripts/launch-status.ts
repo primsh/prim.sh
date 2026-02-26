@@ -1,15 +1,16 @@
 #!/usr/bin/env bun
 /**
- * Launch Readiness Dashboard
+ * Release Readiness Dashboard
  *
- * Shows only hard pre-launch requirements:
+ * Shows hard pre-release requirements:
  *   1. Tests     — all tests must pass
  *   2. Endpoints — all live services must respond
  *   3. DNS       — all live services must resolve to VPS
- *   4. Blockers  — critical-path tasks that gate launch
+ *   4. Blockers  — tasks tagged with the target release in TASKS.md
  *
  * Usage:
- *   bun scripts/launch-status.ts
+ *   bun scripts/launch-status.ts              # defaults to v1.0.0
+ *   bun scripts/launch-status.ts v2.0.0       # check a specific release
  *
  * Exit 0 = all checks pass + no blockers
  * Exit 1 = failures detected
@@ -19,10 +20,10 @@ import { execSync } from "node:child_process";
 import { readFileSync } from "node:fs";
 import { resolve4 } from "node:dns/promises";
 import { loadPrimitives, deployed } from "./lib/primitives.js";
-// Tasks (parseTasks) intentionally removed — blockers list captures what gates launch
 
 // ─── Config ──────────────────────────────────────────────────────────────
 
+const TARGET_RELEASE = process.argv[2] ?? "v1.0.0";
 const VPS_IP = "157.230.187.207";
 const FETCH_TIMEOUT = 10_000;
 
@@ -30,29 +31,6 @@ const FETCH_TIMEOUT = 10_000;
 const LIVE_SERVICES = deployed(loadPrimitives()).map(
   (p) => p.endpoint ?? `${p.id}.prim.sh`,
 );
-
-// Critical-path task IDs that block public launch
-const BLOCKER_IDS = [
-  "L-27",   // deploy $PRIM contract (must be before repo goes public)
-  "L-15",   // rotate secrets
-  "L-22",   // mainnet switchover
-  "L-14",   // token launch + go public
-  "PRIM-2", // $PRIM utility design (L-14 depends on it)
-  "L-47",   // API URL redundancy fix (breaking change — must be pre-public)
-  "L-61",   // dynamic allowlist
-  "SEC-1",  // infra hardening (fail2ban, SSH key-only)
-  "SEC-3",  // edge rate limiting
-  "SEC-6",  // SQLite backup
-  "OPS-1",  // uptime monitoring
-  "OPS-2",  // structured logging (JSON + request_id — blind on mainnet without)
-  "OPS-3",  // incident runbook
-  "OBS-1",  // service metrics + report.ts (blind on mainnet without this)
-  "BIZ-2",  // expense dashboard (prerequisite for BIZ-3)
-  "BIZ-3",  // cost transparency doc (public-facing, linked from site)
-  "BIZ-4",  // pricing endpoint (agents need machine-readable pricing)
-  "E-9",    // mail hostname rename (mail.prim.sh) — email infra correctness
-  "I-3",    // coverage gate (thresholds never enforced without reportsDirectory)
-];
 
 // ─── Helpers ─────────────────────────────────────────────────────────────
 
@@ -70,10 +48,6 @@ function fail(label: string, detail?: string) {
 function pending(label: string, detail?: string) {
   console.log(`  ⏳ ${label}${detail ? ` — ${detail}` : ""}`);
   failures++;
-}
-
-function warn(label: string, detail?: string) {
-  console.log(`  ⚠️  ${label}${detail ? ` — ${detail}` : ""}`);
 }
 
 function header(emoji: string, title: string) {
@@ -181,49 +155,46 @@ async function checkDns() {
       fail(host, msg.slice(0, 80));
     }
   }
-
 }
 
-// ─── 4. Blockers ─────────────────────────────────────────────────────────
+// ─── 4. Release Blockers ─────────────────────────────────────────────────
 
 function checkBlockers() {
-  header("🚧", "Blockers (critical path)");
+  header("🚧", `Blockers (${TARGET_RELEASE})`);
 
   const content = readFileSync("TASKS.md", "utf-8");
   let blockerCount = 0;
 
-  for (const id of BLOCKER_IDS) {
-    const escapedId = id.replace("-", "\\-");
-    const pendingPattern = new RegExp(
-      `^\\|\\s*${escapedId}\\s*\\|(.+?)\\|[^|]*\\|\\s*(pending|backlog)`,
-      "m",
-    );
-    const match = content.match(pendingPattern);
-    if (match) {
-      pending(`${id}: ${match[1].trim()}`);
-      blockerCount++;
+  // Match any task row with the target release in the Release column
+  // Table format: | ID | Task | Owner | Depends | Status | Release |
+  const rowPattern = /^\|\s*([^\|]+?)\s*\|(.+?)\|[^|]*\|[^|]*\|\s*(pending|in-progress|done|backlog)\s*\|\s*([^\|]*?)\s*\|/gm;
+
+  let match: RegExpExecArray | null;
+  while ((match = rowPattern.exec(content)) !== null) {
+    const id = match[1].trim();
+    const task = match[2].trim();
+    const status = match[3].trim();
+    const release = match[4].trim();
+
+    if (release !== TARGET_RELEASE) continue;
+
+    if (status === "done") {
+      pass(`${id}: resolved`);
     } else {
-      const donePattern = new RegExp(
-        `^\\|\\s*${escapedId}\\s*\\|.+?\\|[^|]*\\|\\s*done`,
-        "m",
-      );
-      if (donePattern.test(content)) {
-        pass(`${id}: resolved`);
-      } else {
-        pass(`${id}: resolved (archived)`);
-      }
+      pending(`${id}: ${task}`.slice(0, 160));
+      blockerCount++;
     }
   }
 
   if (blockerCount === 0) {
-    pass("No critical-path blockers");
+    pass(`No blockers for ${TARGET_RELEASE}`);
   }
 }
 
 // ─── Main ────────────────────────────────────────────────────────────────
 
 async function main() {
-  console.log("\n🚀 Prim Launch Readiness Dashboard\n");
+  console.log(`\n🚀 Prim Release Readiness — ${TARGET_RELEASE}\n`);
 
   checkTests();
   await checkEndpoints();
@@ -232,7 +203,7 @@ async function main() {
 
   console.log(`\n${"─".repeat(52)}`);
   if (failures === 0) {
-    console.log("  🟢 All checks passed — ready to launch.\n");
+    console.log("  🟢 All checks passed — ready to ship.\n");
     process.exit(0);
   } else {
     console.log(`  🔴 ${failures} check(s) failed — not ready.\n`);
