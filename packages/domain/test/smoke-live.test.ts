@@ -120,6 +120,7 @@ describe.skipIf(!HAS_CF)("domain.sh Cloudflare live smoke test", { timeout: 60_0
   it("5. list records — both records appear", async () => {
     const records = await listDnsRecords(p1ZoneId!);
 
+    expect(records.length).toBeGreaterThanOrEqual(2);
     const txt = records.find((r) => r.id === p1TxtRecordId);
     const mx = records.find((r) => r.id === p1MxRecordId);
     expect(txt).toBeDefined();
@@ -271,20 +272,23 @@ describe.skipIf(!HAS_CF)("domain.sh service layer live smoke test", { timeout: 9
     if (!result.ok) return;
 
     expect(result.data.records.length).toBeGreaterThanOrEqual(4);
+    const names = result.data.records.map((r) => r.name);
     const types = result.data.records.map((r) => r.type);
     expect(types).toContain("A");
     expect(types).toContain("MX");
-    expect(types).toContain("TXT"); // SPF
+    // Both SPF (domain TXT) and DMARC (_dmarc. prefix) must be created
+    expect(types.filter((t) => t === "TXT").length).toBeGreaterThanOrEqual(2);
+    expect(names.some((n) => n.startsWith("_dmarc."))).toBe(true);
   });
 
-  it("13. batchRecords — create 2 TXT records atomically", async () => {
+  it("13. batchRecords — create AAAA + delete MX from test 11", async () => {
     const result = await service.batchRecords(
       p2ZoneId!,
       {
         create: [
-          { type: "TXT", name: `_batch1.${p2Domain}`, content: "batch-record-1", ttl: 300 },
-          { type: "TXT", name: `_batch2.${p2Domain}`, content: "batch-record-2", ttl: 300 },
+          { type: "AAAA", name: `ipv6.${p2Domain}`, content: "2001:db8::1", ttl: 300 },
         ],
+        delete: [{ id: p2RecordId! }],
       },
       callerWallet,
     );
@@ -292,9 +296,11 @@ describe.skipIf(!HAS_CF)("domain.sh service layer live smoke test", { timeout: 9
     expect(result.ok).toBe(true);
     if (!result.ok) return;
 
-    expect(result.data.created).toHaveLength(2);
-    expect(result.data.updated).toHaveLength(0);
-    expect(result.data.deleted).toHaveLength(0);
+    expect(result.data.created).toHaveLength(1);
+    expect(result.data.created[0].type).toBe("AAAA");
+    expect(result.data.deleted).toHaveLength(1);
+    expect(result.data.deleted[0].id).toBe(p2RecordId);
+    p2RecordId = null; // Deleted
   });
 
   it("14. verifyZone — returns result (propagated=false expected for .example)", async () => {
