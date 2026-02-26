@@ -80,10 +80,10 @@ footer .links a{margin:0 0.75rem}
   .flow-arrow{transform:rotate(90deg)}
   pre{font-size:0.75rem}
 }
-</style>
+nav.sitenav{position:fixed;top:0;left:0;right:0;z-index:100;display:flex;align-items:center;gap:0.5rem;padding:0.6rem 1.5rem;background:rgba(10,10,10,0.85);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);border-bottom:1px solid var(--border);font-size:0.8rem}nav.sitenav a{color:var(--muted);text-decoration:none}nav.sitenav a:hover{color:var(--accent)}nav.sitenav .sep{color:#2a2a2a}nav.sitenav .cur{color:var(--accent)}.hero{padding-top:3rem}</style>
 </head>
 <body>
-
+<nav class="sitenav"><a href="/">prim.sh</a><span class="sep">/</span><span class="cur">email.sh</span></nav>
 <div class="hero">
   <div class="logo"><span>email</span>.sh</div>
   <div class="tagline">Email for agents. No inbox required.</div>
@@ -118,11 +118,10 @@ footer .links a{margin:0 0.75rem}
     <div class="badge"><strong>0</strong> signup required</div>
     <div class="badge"><strong>MCP</strong> + <strong>REST</strong></div>
     <div class="badge">Part of <strong>prim.sh</strong></div>
-  </div>
 <!-- BEGIN:PRIM:STATUS -->
     <span class="badge status-testing">● Live (testnet)</span>
 <!-- END:PRIM:STATUS -->
-
+  </div>
   <div class="scroll-hint">↓ scroll</div>
 </div>
 
@@ -270,15 +269,9 @@ footer .links a{margin:0 0.75rem}
 </div>
 
 <footer>
-  <div>email.sh — agent-native email</div>
-  <div class="links">
-    <a href="https://prim.sh/email">Docs</a>
-    <a href="https://github.com/email-sh">GitHub</a>
-    <a href="https://email.prim.sh">API</a>
-    <a href="/">prim.sh</a>
-  </div>
-  <div style="margin-top:0.75rem;font-size:0.8rem">Agents don't have inboxes. They have webhooks.</div>
-  <div style="margin-top:0.5rem;font-size:0.75rem;color:#444">This page is for humans. The API is for agents.</div>
+  <div>email.sh — part of <a href="/">prim.sh</a></div>
+  <div class="links"><a href="https://prim.sh/email">Docs</a><a href="https://email.prim.sh">API</a><a href="/">prim.sh</a></div>
+  <div style="margin-top:0.75rem;font-size:0.8rem;color:#444">This page is for humans. The API is for agents.</div>
 </footer>
 
 </body>

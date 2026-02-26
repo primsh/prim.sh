@@ -8,25 +8,25 @@
 *{margin:0;padding:0;box-sizing:border-box}
 :root{--bg:#0a0a0a;--surface:#111;--border:#1a1a1a;--green:#00ff88;--green-dim:#00cc6a;--green-glow:rgba(0,255,136,0.08);--text:#e0e0e0;--muted:#666;--code-bg:#0d0d0d}
 body{background:var(--bg);color:var(--text);font-family:'SF Mono',SFMono-Regular,'Cascadia Code',Consolas,monospace;line-height:1.6;overflow-x:hidden}
-a{color:var(--green);text-decoration:none}
+a{color:var(--accent);text-decoration:none}
 a:hover{text-decoration:underline}
 
 .hero{min-height:100vh;display:flex;flex-direction:column;justify-content:center;align-items:center;text-align:center;padding:2rem;position:relative}
-.hero::before{content:'';position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:600px;height:600px;background:radial-gradient(circle,var(--green-glow) 0%,transparent 70%);pointer-events:none}
+.hero::before{content:'';position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:600px;height:600px;background:radial-gradient(circle,var(--accent-glow) 0%,transparent 70%);pointer-events:none}
 
 .logo{font-size:3.5rem;font-weight:700;letter-spacing:-0.03em;margin-bottom:0.5rem}
-.logo span{color:var(--green)}
+.logo span{color:var(--accent)}
 .tagline{font-size:1.3rem;color:var(--muted);margin-bottom:0.5rem}
 .sub{font-size:1rem;color:var(--muted);margin-bottom:3rem;max-width:500px}
 
 .cmd-block{background:var(--code-bg);border:1px solid var(--border);border-radius:8px;padding:1.5rem 2rem;margin-bottom:3rem;text-align:left;max-width:620px;width:100%;position:relative}
-.cmd-block .prompt{color:var(--green);user-select:none}
+.cmd-block .prompt{color:var(--accent);user-select:none}
 .cmd-block .comment{color:#444}
 .cmd-block code{font-size:0.95rem;line-height:1.8}
 
 .badges{display:flex;gap:1rem;flex-wrap:wrap;justify-content:center;margin-bottom:3rem}
 .badge{background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:0.5rem 1rem;font-size:0.85rem;color:var(--muted)}
-.badge strong{color:var(--green)}.badge.status-testing{background:rgba(0,200,80,0.08);border-color:rgba(0,200,80,0.3);color:#00c850}.badge.status-live{background:rgba(0,255,100,0.1);border-color:rgba(0,255,100,0.4);color:#00ff64}.badge.status-built{background:rgba(255,200,0,0.08);border-color:rgba(255,200,0,0.3);color:#ffc800}.badge.status-building{background:rgba(255,140,0,0.08);border-color:rgba(255,140,0,0.3);color:#ff8c00}.badge.status-soon{background:var(--surface);border-color:var(--border);color:var(--muted)}
+.badge strong{color:var(--accent)}.badge.status-testing{background:rgba(0,200,80,0.08);border-color:rgba(0,200,80,0.3);color:#00c850}.badge.status-live{background:rgba(0,255,100,0.1);border-color:rgba(0,255,100,0.4);color:#00ff64}.badge.status-built{background:rgba(255,200,0,0.08);border-color:rgba(255,200,0,0.3);color:#ffc800}.badge.status-building{background:rgba(255,140,0,0.08);border-color:rgba(255,140,0,0.3);color:#ff8c00}.badge.status-soon{background:var(--surface);border-color:var(--border);color:var(--muted)}
 
 .scroll-hint{position:absolute;bottom:2rem;color:var(--muted);font-size:0.85rem;animation:pulse 2s infinite}
 @keyframes pulse{0%,100%{opacity:0.3}50%{opacity:1}}
@@ -69,7 +69,7 @@ footer .links a{margin:0 0.75rem}
 
 .cta-section{text-align:center;padding:4rem 2rem}
 .cta-btn{display:inline-block;background:var(--green);color:#000;padding:0.75rem 2rem;border-radius:6px;font-weight:700;font-size:1rem;font-family:inherit;transition:all 0.2s}
-.cta-btn:hover{background:var(--green-dim);text-decoration:none}
+.cta-btn:hover{background:var(--accent-dim);text-decoration:none}
 
 @media(max-width:600px){
   .logo{font-size:2.5rem}
@@ -78,10 +78,10 @@ footer .links a{margin:0 0.75rem}
   .flow-arrow{transform:rotate(90deg)}
   pre{font-size:0.75rem}
 }
-</style>
+nav.sitenav{position:fixed;top:0;left:0;right:0;z-index:100;display:flex;align-items:center;gap:0.5rem;padding:0.6rem 1.5rem;background:rgba(10,10,10,0.85);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);border-bottom:1px solid var(--border);font-size:0.8rem}nav.sitenav a{color:var(--muted);text-decoration:none}nav.sitenav a:hover{color:var(--accent)}nav.sitenav .sep{color:#2a2a2a}nav.sitenav .cur{color:var(--accent)}.hero{padding-top:3rem}</style>
 </head>
 <body>
-
+<nav class="sitenav"><a href="/">prim.sh</a><span class="sep">/</span><span class="cur">spawn.sh</span></nav>
 <div class="hero">
   <div class="logo"><span>spawn</span>.sh</div>
   <div class="tagline">VPS for agents. By agents.</div>
@@ -109,11 +109,10 @@ footer .links a{margin:0 0.75rem}
     <div class="badge"><strong>0</strong> signup required</div>
     <div class="badge"><strong>CLI</strong> admin only</div>
     <div class="badge"><strong>OpenAI</strong> compatible</div>
-  </div>
 <!-- BEGIN:PRIM:STATUS -->
     <span class="badge status-testing">● Live (testnet)</span>
 <!-- END:PRIM:STATUS -->
-
+  </div>
   <div class="scroll-hint">↓ scroll</div>
 </div>
 
@@ -303,14 +302,9 @@ footer .links a{margin:0 0.75rem}
 </div>
 
 <footer>
-  <div>spawn.sh — agent-native infrastructure</div>
-  <div class="links">
-    <a href="https://prim.sh/spawn">Docs</a>
-    <a href="https://github.com/spawn-sh">GitHub</a>
-    <a href="https://spawn.prim.sh">API</a>
-  </div>
-  <div style="margin-top:0.75rem;font-size:0.8rem">Agents don't have passports. They have payment receipts.</div>
-  <div style="margin-top:0.5rem;font-size:0.75rem;color:#444">This page is for humans. The API is for agents.</div>
+  <div>spawn.sh — part of <a href="/">prim.sh</a></div>
+  <div class="links"><a href="https://prim.sh/spawn">Docs</a><a href="https://spawn.prim.sh">API</a><a href="/">prim.sh</a></div>
+  <div style="margin-top:0.75rem;font-size:0.8rem;color:#444">This page is for humans. The API is for agents.</div>
 </footer>
 
 </body>

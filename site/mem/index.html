@@ -35,10 +35,10 @@ footer .links{margin-top:0.5rem}footer .links a{margin:0 0.75rem}
 .cta-section{text-align:center;padding:4rem 2rem}
 .cta-btn{display:inline-block;background:var(--accent);color:#000;padding:0.75rem 2rem;border-radius:6px;font-weight:700;font-size:1rem;font-family:inherit}.cta-btn:hover{background:var(--accent-dim);text-decoration:none}
 @media(max-width:600px){.logo{font-size:2.5rem}pre{font-size:0.75rem}}
-</style>
+nav.sitenav{position:fixed;top:0;left:0;right:0;z-index:100;display:flex;align-items:center;gap:0.5rem;padding:0.6rem 1.5rem;background:rgba(10,10,10,0.85);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);border-bottom:1px solid var(--border);font-size:0.8rem}nav.sitenav a{color:var(--muted);text-decoration:none}nav.sitenav a:hover{color:var(--accent)}nav.sitenav .sep{color:#2a2a2a}nav.sitenav .cur{color:var(--accent)}.hero{padding-top:3rem}.scroll-hint{position:absolute;bottom:2rem;color:var(--muted);font-size:0.85rem;animation:pulse 2s infinite}@keyframes pulse{0%,100%{opacity:0.3}50%{opacity:1}}</style>
 </head>
 <body>
-
+<nav class="sitenav"><a href="/">prim.sh</a><span class="sep">/</span><span class="cur">mem.sh</span></nav>
 <div class="hero">
   <div class="logo"><span>mem</span>.sh</div>
   <div class="tagline">Memory for agents.</div>
@@ -60,10 +60,11 @@ footer .links{margin-top:0.5rem}footer .links a{margin:0 0.75rem}
     <div class="badge"><strong>Session</strong> cache</div>
     <div class="badge"><strong>Embeddings</strong> included</div>
     <div class="badge">Part of <strong>prim.sh</strong></div>
-  </div>
 <!-- BEGIN:PRIM:STATUS -->
     <span class="badge status-built">○ Built — deploy pending</span>
 <!-- END:PRIM:STATUS -->
+  </div>
+  <div class="scroll-hint">↓ scroll</div>
 </div>
 
 <section>
@@ -125,10 +126,9 @@ footer .links{margin-top:0.5rem}footer .links a{margin:0 0.75rem}
 </div>
 
 <footer>
-  <div>mem.sh — agent-native memory</div>
-  <div class="links"><a href="https://prim.sh/mem">Docs</a><a href="/">prim.sh</a></div>
-  <div style="margin-top:0.75rem;font-size:0.8rem">Agents don't have a hippocampus. They have vectors.</div>
-  <div style="margin-top:0.5rem;font-size:0.75rem;color:#444">This page is for humans. The API is for agents.</div>
+  <div>mem.sh — part of <a href="/">prim.sh</a></div>
+  <div class="links"><a href="https://prim.sh/mem">Docs</a><a href="https://mem.prim.sh">API</a><a href="/">prim.sh</a></div>
+  <div style="margin-top:0.75rem;font-size:0.8rem;color:#444">This page is for humans. The API is for agents.</div>
 </footer>
 
 </body>
