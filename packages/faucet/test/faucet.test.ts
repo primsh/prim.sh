@@ -33,12 +33,34 @@ vi.mock("viem", async (importOriginal) => {
   };
 });
 
-// ─── Mock fetch (Circle Faucet API) ───────────────────────────────────────
+// ─── Mock fetch (Circle Faucet API + wallet.sh allowlist) ─────────────────
 
-const mockFetch = vi.fn<
+/** Underlying mock for Circle API calls — tests configure this via setupCircleSuccess/Error */
+const mockCircleFetch = vi.fn<
   [RequestInfo | URL, RequestInit | undefined],
   Promise<Response>
 >();
+
+/**
+ * Global fetch stub that routes:
+ *  - wallet.sh allowlist checks → auto-approve (always allowed in tests)
+ *  - everything else → mockCircleFetch (configured per-test)
+ */
+const mockFetch = vi.fn<
+  [RequestInfo | URL, RequestInit | undefined],
+  Promise<Response>
+>().mockImplementation((input, init) => {
+  const url = typeof input === "string" ? input : input instanceof URL ? input.toString() : (input as Request).url;
+  if (url.includes("/internal/allowlist/check")) {
+    return Promise.resolve(
+      new Response(JSON.stringify({ allowed: true }), {
+        status: 200,
+        headers: { "Content-Type": "application/json" },
+      }),
+    );
+  }
+  return mockCircleFetch(input, init);
+});
 vi.stubGlobal("fetch", mockFetch);
 
 // Import app and db helpers after env + mocks are set up
@@ -59,7 +81,7 @@ async function postJson(path: string, body: unknown): Promise<Response> {
 }
 
 function setupCircleSuccess(): void {
-  mockFetch.mockResolvedValue(
+  mockCircleFetch.mockResolvedValue(
     new Response(
       JSON.stringify({ txHash: "0xCircleTxHash123" }),
       { status: 200, headers: { "Content-Type": "application/json" } },
@@ -68,13 +90,13 @@ function setupCircleSuccess(): void {
 }
 
 function setupCircleError(status: number, body: string): void {
-  mockFetch.mockResolvedValue(new Response(body, { status }));
+  mockCircleFetch.mockResolvedValue(new Response(body, { status }));
 }
 
 // ─── Reset state between tests ────────────────────────────────────────────
 
 beforeEach(() => {
-  mockFetch.mockReset();
+  mockCircleFetch.mockReset();
   mockSendTransaction.mockReset();
   mockWriteContract.mockReset();
   process.env.PRIM_NETWORK = "eip155:84532";
