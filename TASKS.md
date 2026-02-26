@@ -20,9 +20,9 @@ Tasks that block repo going public + mainnet switchover.
 | E-5 | Verify Gmail inbox delivery (not spam) after warmup + PTR + DMARC changes | deploy/email | E-4 | pending |
 | E-6 | Verify Apple Mail / iCloud delivery after warmup | deploy/email | E-4 | pending |
 | E-7 | Upgrade DMARC back to `p=quarantine` once inbox delivery is consistent | Cloudflare DNS | E-5, E-6 | pending |
-| TK-7 | `prim token` CLI subcommand: deploy, list, get, mint, pool commands using keystore + x402-client | packages/keystore | TK-3, KS-1 | pending |
-| M-3 | `prim mem` CLI subcommand: create-collection, list-collections, upsert, query, cache-set, cache-get, cache-del | packages/keystore | M-1, KS-1 | pending |
-| P-6 | `prim` binary publishing + install scripts: `bun build --compile`, host binary, `curl prim.sh/install \| sh` | packages/keystore, site/ | ST-6 | pending |
+| TK-7 | `prim token` CLI subcommand: deploy, list, get, mint, pool commands using keystore + x402-client | packages/keystore | TK-3, KS-1 | done |
+| M-3 | `prim mem` CLI subcommand: create-collection, list-collections, upsert, query, cache-set, cache-get, cache-del | packages/keystore | M-1, KS-1 | done |
+| P-6 | `prim` binary publishing + install scripts: `bun build --compile`, host binaries in Cloudflare R2 public bucket (`prim-releases`) served via `dl.prim.sh`, install script at `prim.sh/install`. Keeps repo private during beta. | packages/keystore, site/, Cloudflare | ST-6 | pending |
 | SEC-1 | Infra hardening: fail2ban, SSH key-only, unattended-upgrades on VPS | deploy/ | — | pending |
 | SEC-2 | Caddy security headers: HSTS, X-Frame-Options, X-Content-Type-Options, CSP | deploy/prim/Caddyfile | — | pending |
 | SEC-3 | Edge rate limiting: Caddy rate_limit or CF WAF for health/registration endpoints | deploy/, Cloudflare | — | pending |
