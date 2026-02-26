@@ -9,9 +9,13 @@ import { storeTools, handleStoreTool } from "./tools/store.js";
 import { spawnTools, handleSpawnTool } from "./tools/spawn.js";
 import { faucetTools, handleFaucetTool } from "./tools/faucet.js";
 import { searchTools, handleSearchTool } from "./tools/search.js";
+import { emailTools, handleEmailTool } from "./tools/email.js";
+import { memTools, handleMemTool } from "./tools/mem.js";
+import { domainTools, handleDomainTool } from "./tools/domain.js";
+import { tokenTools, handleTokenTool } from "./tools/token.js";
 import { createMcpFetch, getBaseUrl } from "./x402.js";
 
-const PRIMITIVE_GROUPS = ["wallet", "store", "spawn", "faucet", "search"] as const;
+const PRIMITIVE_GROUPS = ["wallet", "store", "spawn", "faucet", "search", "email", "mem", "domain", "token"] as const;
 type Primitive = (typeof PRIMITIVE_GROUPS)[number];
 
 function isPrimitive(s: string): s is Primitive {
@@ -63,6 +67,10 @@ export async function startMcpServer(options: ServerOptions = {}): Promise<void>
     ...filterTools(spawnTools, "spawn", enabledPrimitives),
     ...filterTools(faucetTools, "faucet", enabledPrimitives),
     ...filterTools(searchTools, "search", enabledPrimitives),
+    ...filterTools(emailTools, "email", enabledPrimitives),
+    ...filterTools(memTools, "mem", enabledPrimitives),
+    ...filterTools(domainTools, "domain", enabledPrimitives),
+    ...filterTools(tokenTools, "token", enabledPrimitives),
   ];
 
   const server = new Server(
@@ -92,6 +100,18 @@ export async function startMcpServer(options: ServerOptions = {}): Promise<void>
     }
     if (name.startsWith("search_") && enabledPrimitives.includes("search")) {
       return handleSearchTool(name, toolArgs, primFetch, getBaseUrl("search"));
+    }
+    if (name.startsWith("email_") && enabledPrimitives.includes("email")) {
+      return handleEmailTool(name, toolArgs, primFetch, getBaseUrl("email"));
+    }
+    if (name.startsWith("mem_") && enabledPrimitives.includes("mem")) {
+      return handleMemTool(name, toolArgs, primFetch, getBaseUrl("mem"));
+    }
+    if (name.startsWith("domain_") && enabledPrimitives.includes("domain")) {
+      return handleDomainTool(name, toolArgs, primFetch, getBaseUrl("domain"));
+    }
+    if (name.startsWith("token_") && enabledPrimitives.includes("token")) {
+      return handleTokenTool(name, toolArgs, primFetch, getBaseUrl("token"));
     }
 
     return {

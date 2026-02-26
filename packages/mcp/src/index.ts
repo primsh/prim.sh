@@ -28,7 +28,7 @@ if (hasFlag("help") || hasFlag("h")) {
       "",
       "Options:",
       "  --primitives  Comma-separated list of primitives to expose.",
-      "                Default: wallet,store,spawn,faucet,search",
+      "                Default: wallet,store,spawn,faucet,search,email,mem,domain,token",
       "  --wallet      Wallet address override (also: PRIM_WALLET env var).",
       "",
     ].join("\n"),
@@ -48,7 +48,7 @@ if (primitivesFlag) {
   const invalid = parsed.filter((s) => !isPrimitive(s));
   if (invalid.length > 0) {
     process.stderr.write(
-      `Error: Unknown primitives: ${invalid.join(", ")}. Valid: wallet, store, spawn, faucet, search\n`,
+      `Error: Unknown primitives: ${invalid.join(", ")}. Valid: wallet, store, spawn, faucet, search, email, mem, domain, token\n`,
     );
     process.exit(1);
   }
