@@ -69,26 +69,26 @@ const BLOCKER_IDS = [
 let failures = 0;
 
 function pass(label: string, detail?: string) {
-  console.log(`  \u2713 ${label}${detail ? ` (${detail})` : ""}`);
+  console.log(`  ✅ ${label}${detail ? ` (${detail})` : ""}`);
 }
 
 function fail(label: string, detail?: string) {
-  console.log(`  \u2717 ${label}${detail ? ` — ${detail}` : ""}`);
+  console.log(`  ❌ ${label}${detail ? ` — ${detail}` : ""}`);
   failures++;
 }
 
 function warn(label: string, detail?: string) {
-  console.log(`  \u26A0 ${label}${detail ? ` — ${detail}` : ""}`);
+  console.log(`  ⚠️  ${label}${detail ? ` — ${detail}` : ""}`);
 }
 
-function header(title: string) {
-  console.log(`\n--- ${title} ${"─".repeat(56 - title.length)}\n`);
+function header(emoji: string, title: string) {
+  console.log(`\n${emoji} ${title}\n${"─".repeat(52)}\n`);
 }
 
 // ─── 1. Tests ────────────────────────────────────────────────────────────
 
 function checkTests() {
-  header("Tests");
+  header("🧪", "Tests");
   try {
     const output = execSync("pnpm -r test 2>&1", {
       cwd: process.cwd(),
@@ -96,14 +96,11 @@ function checkTests() {
       encoding: "utf-8",
     });
 
-    // Parse vitest output: "Tests  X passed (Y)" or "Test Files  X passed (Y)"
     const fileMatch = output.match(/Test Files\s+(\d+) passed/);
     const testMatch = output.match(/Tests\s+(\d+) passed/);
 
-    // Per-package: look for "packages/<name>" lines with pass/fail
     const pkgResults = new Map<string, boolean>();
     for (const line of output.split("\n")) {
-      // vitest outputs lines like " ✓ packages/wallet/..." or " × packages/wallet/..."
       const pkgMatch = line.match(/packages\/([^/]+)\//);
       if (pkgMatch) {
         const pkg = pkgMatch[1];
@@ -129,7 +126,6 @@ function checkTests() {
     }
   } catch (err) {
     const msg = err instanceof Error ? err.message : String(err);
-    // If tests fail, execSync throws. Try to parse partial output.
     if (typeof (err as { stdout?: string }).stdout === "string") {
       const stdout = (err as { stdout: string }).stdout;
       const failMatch = stdout.match(/(\d+) failed/);
@@ -154,7 +150,7 @@ interface LaneCounts {
 }
 
 function parseTasks(): { lane1: LaneCounts; lane2: LaneCounts } {
-  header("Tasks");
+  header("📋", "Tasks");
 
   const content = readFileSync("TASKS.md", "utf-8");
   const lines = content.split("\n");
@@ -172,7 +168,6 @@ function parseTasks(): { lane1: LaneCounts; lane2: LaneCounts } {
 
     if (!currentLane) continue;
 
-    // Match table rows: | ... | status |
     const rowMatch = line.match(/^\|(?![-\s]*\|)\s*.+\|\s*(done|pending|backlog|deferred)\b/i);
     if (rowMatch) {
       const status = rowMatch[1].toLowerCase();
@@ -205,7 +200,7 @@ function parseTasks(): { lane1: LaneCounts; lane2: LaneCounts } {
 // ─── 3. Live Endpoints ───────────────────────────────────────────────────
 
 async function checkEndpoints() {
-  header("Live Endpoints");
+  header("🌐", "Live Endpoints");
 
   for (const host of LIVE_SERVICES) {
     try {
@@ -232,7 +227,7 @@ async function checkEndpoints() {
 // ─── 4. DNS ──────────────────────────────────────────────────────────────
 
 async function checkDns() {
-  header("DNS");
+  header("📡", "DNS");
 
   for (const host of DNS_LIVE) {
     try {
@@ -265,22 +260,20 @@ async function checkDns() {
 // ─── 5. Blockers ─────────────────────────────────────────────────────────
 
 function checkBlockers() {
-  header("Blockers (critical path)");
+  header("🚧", "Blockers (critical path)");
 
   const content = readFileSync("TASKS.md", "utf-8");
   let blockerCount = 0;
 
   for (const id of BLOCKER_IDS) {
     const escapedId = id.replace("-", "\\-");
-    // ID is first column: | L-15 | task... | ... | pending |
     const pendingPattern = new RegExp(
       `^\\|\\s*${escapedId}\\s*\\|(.+?)\\|[^|]*\\|\\s*(pending|backlog)`,
       "m",
     );
     const match = content.match(pendingPattern);
     if (match) {
-      const task = match[1].trim().slice(0, 70);
-      fail(`${id}: ${task}`);
+      fail(`${id}: ${match[1].trim()}`);
       blockerCount++;
     } else {
       const donePattern = new RegExp(
@@ -303,7 +296,7 @@ function checkBlockers() {
 // ─── Main ────────────────────────────────────────────────────────────────
 
 async function main() {
-  console.log("\n=== Prim Launch Readiness Dashboard ===");
+  console.log("\n🚀 Prim Launch Readiness Dashboard\n");
 
   checkTests();
   parseTasks();
@@ -311,12 +304,12 @@ async function main() {
   await checkDns();
   checkBlockers();
 
-  header("Result");
+  console.log(`\n${"─".repeat(52)}`);
   if (failures === 0) {
-    console.log("  All checks passed.\n");
+    console.log("  🟢 All checks passed — ready to launch.\n");
     process.exit(0);
   } else {
-    console.log(`  ${failures} check(s) failed.\n`);
+    console.log(`  🔴 ${failures} check(s) failed — not ready.\n`);
     process.exit(1);
   }
 }
