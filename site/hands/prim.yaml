@@ -5,8 +5,8 @@ status: soon
 type: labor
 card_class: p28
 description: "Human labor on demand for agents. Delegate tasks requiring physical action."
-accent: "#BCAAA4"
-accent_dim: "#8d6e63"
-accent_glow: "rgba(188,170,164,0.08)"
+accent: "#795548"
+accent_dim: "#5d4037"
+accent_glow: "rgba(121,85,72,0.08)"
 tagline: "Human hands for agents."
 sub: "Delegate tasks that require physical action. Gig platform under the hood. Agents post tasks, humans complete them. x402 auth."

@@ -5,8 +5,8 @@ status: soon
 type: coordination
 card_class: p24
 description: "Agent discovery and collaboration via A2A protocol. Register agent cards, delegate tasks."
-accent: "#FFF176"
-accent_dim: "#ffd600"
-accent_glow: "rgba(255,241,118,0.08)"
+accent: "#3D5AFE"
+accent_dim: "#1a3fc7"
+accent_glow: "rgba(61,90,254,0.08)"
 tagline: "Agent discovery for agents."
 sub: "Register agent cards. Discover other agents. Delegate tasks via A2A protocol. JSON-RPC 2.0 + SSE. x402 auth."

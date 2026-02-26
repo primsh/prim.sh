@@ -5,8 +5,8 @@ status: soon
 type: auth
 card_class: p17
 description: "OAuth broker for agents. Get access tokens for external services without managing flows."
-accent: "#A5D6A7"
-accent_dim: "#4caf50"
-accent_glow: "rgba(165,214,167,0.08)"
+accent: "#FFCA28"
+accent_dim: "#ffa000"
+accent_glow: "rgba(255,202,40,0.08)"
 tagline: "OAuth for agents."
 sub: "Get access tokens for GitHub, Google, Slack, and more. Agent-initiated OAuth flows without a browser. x402 auth."

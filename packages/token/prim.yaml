@@ -29,9 +29,9 @@ pricing:
     price: "$0.001"
     note: "Per request"
 
-accent: "#CE93D8"
-accent_dim: "#ba68c8"
-accent_glow: "rgba(206,147,216,0.08)"
+accent: "#FFC107"
+accent_dim: "#ffa000"
+accent_glow: "rgba(255,193,7,0.08)"
 
 tagline: "Tokens for agents."
 sub: "Deploy ERC-20 tokens. Create Uniswap V3 pools. Mint supply. All via API, no wallet setup required."

@@ -5,8 +5,8 @@ status: soon
 type: legal
 card_class: p30
 description: "Business formation for agents. Incorporate LLCs and corporations via API."
-accent: "#B0BEC5"
-accent_dim: "#78909c"
-accent_glow: "rgba(176,190,197,0.08)"
+accent: "#607D8B"
+accent_dim: "#546e7a"
+accent_glow: "rgba(96,125,139,0.08)"
 tagline: "Business formation for agents."
 sub: "Incorporate an LLC or corporation. Stripe Atlas API under the hood. Agents forming legal entities. x402 auth."

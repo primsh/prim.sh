@@ -6,6 +6,7 @@ Hierarchy: Section (##) → Wave (###) → Phase (####) → Task (row)
 - Wave/Phase: optional grouping. Annotated PARA or SRL.
 - Lanes are implicit: PARA children are in separate lanes (no file conflicts). SRL children share a lane.
 - Task: table row. Depends column encodes serial ordering.
+- IDs: Waves = <SECTION>-W<n> (e.g. HRD-W1). Phases = <WAVE>-P<X> (e.g. HRD-W1-PA). Tasks = prefix-<n> (e.g. HRD-3).
 
 Table: | ID | Task | Owner | Depends | Status |
 Archival: done → tasks/completed/log.md, then removed from this file.
@@ -16,7 +17,7 @@ Full conventions: tasks/README.md
 
 Tasks that block repo going public + mainnet switchover.
 
-### Wave: Token + Public (SRL)
+### LNCH-W1: Token + Public (SRL)
 
 | ID | Task | Owner | Depends | Status |
 |----|------|-------|---------|--------|
@@ -26,7 +27,7 @@ Tasks that block repo going public + mainnet switchover.
 | L-15 | Pre-public checklist: rotate Stalwart admin password + relay-wrapper API key, verify no secrets in git history, confirm .env files gitignored | Garric | -- | pending |
 | L-14 | Full token launch: create Uniswap pool, fund liquidity, make repo public, announce. Seed pool conservatively ($2–3K USDC) | Garric + Claude | L-15, L-27, PRIM-2 | pending |
 
-### Wave: Service Deploys (PARA)
+### LNCH-W2: Service Deploys (PARA)
 
 | ID | Task | Owner | Depends | Status |
 |----|------|-------|---------|--------|
@@ -39,9 +40,9 @@ Tasks that block repo going public + mainnet switchover.
 
 Code quality, security, and reliability fixes from open-source readiness review.
 
-### Wave: Open-Source Readiness (PARA)
+### HRD-W1: Open-Source Readiness (PARA)
 
-#### Phase A: Service Layer + Middleware (SRL)
+#### HRD-W1-PA: Service Layer + Middleware (SRL)
 
 | ID | Task | Owner | Depends | Status |
 |----|------|-------|---------|--------|
@@ -50,14 +51,14 @@ Code quality, security, and reliability fixes from open-source readiness review.
 | HRD-8 | Standardize pagination: define shared response shape across all list endpoints. Plan: `tasks/active/hrd-8-pagination-standard.md` | Claude | HRD-4 | pending |
 | HRD-10 | Add per-wallet rate limiting to x402-middleware (configurable, default 60/min). Plan: `tasks/active/hrd-10-rate-limiting.md` | Claude | HRD-8 | pending |
 
-#### Phase B: Wallet DB Fixes (PARA)
+#### HRD-W1-PB: Wallet DB Fixes (PARA)
 
 | ID | Task | Owner | Depends | Status |
 |----|------|-------|---------|--------|
 | HRD-2 | Fix `allowlist-db.ts` DB handle leak: use singleton pattern from `wallet/db.ts` | Claude | -- | pending |
 | HRD-5 | Fix `setUTCHours(24)` in `wallet/src/db.ts` — use explicit date arithmetic | Claude | -- | pending |
 
-#### Phase C: Repo-Level Hygiene (PARA)
+#### HRD-W1-PC: Repo-Level Hygiene (PARA)
 
 | ID | Task | Owner | Depends | Status |
 |----|------|-------|---------|--------|
@@ -72,7 +73,7 @@ Code quality, security, and reliability fixes from open-source readiness review.
 
 Feature work on specific services.
 
-### Wave: store.sh (PARA)
+### PRIMS-W1: store.sh (PARA)
 
 | ID | Task | Owner | Depends | Status |
 |----|------|-------|---------|--------|
@@ -84,7 +85,7 @@ Feature work on specific services.
 | ST-12 | Bucket event webhooks: HMAC-signed callbacks on create/delete | Claude | -- | pending |
 | ST-13 | Object metadata + tagging: custom key-value metadata | Claude | -- | pending |
 
-### Wave: email.sh (SRL)
+### PRIMS-W2: email.sh (SRL)
 
 | ID | Task | Owner | Depends | Status |
 |----|------|-------|---------|--------|
@@ -93,13 +94,13 @@ Feature work on specific services.
 | E-6 | Verify Apple Mail / iCloud delivery after warmup | Claude | E-4 | pending |
 | E-7 | Upgrade DMARC back to `p=quarantine` once inbox delivery is consistent | Claude | E-5, E-6 | pending |
 
-### Wave: spawn.sh
+### PRIMS-W3: spawn.sh
 
 | ID | Task | Owner | Depends | Status |
 |----|------|-------|---------|--------|
 | SP-7 | DockerProvider: Docker container tier as default (10–50x cheaper than VMs). Plan: `tasks/active/sp-7-docker-provider-2026-02-26.md` | Claude | -- | pending |
 
-### Wave: track.sh
+### PRIMS-W4: track.sh
 
 | ID | Task | Owner | Depends | Status |
 |----|------|-------|---------|--------|
@@ -111,14 +112,14 @@ Feature work on specific services.
 
 CI, tooling, observability, pricing, cross-cutting platform work.
 
-### Wave: Tooling (PARA)
+### INFRA-W1: Tooling (PARA)
 
 | ID | Task | Owner | Depends | Status |
 |----|------|-------|---------|--------|
 | OPS-4 | Load test baseline: k6/artillery against health + store CRUD, document capacity | Claude | -- | pending |
 | L-29 | GH Action: auto-dedupe issues, stale auto-close (30d), bot PR auto-merge if CI passes | Claude | -- | pending |
 
-### Wave: Business (SRL)
+### INFRA-W2: Business (SRL)
 
 | ID | Task | Owner | Depends | Status |
 |----|------|-------|---------|--------|
@@ -130,7 +131,7 @@ CI, tooling, observability, pricing, cross-cutting platform work.
 
 Docs, Discord, brand assets, marketing.
 
-### Wave: Brand + Social (SRL)
+### COMM-W1: Brand + Social (SRL)
 
 | ID | Task | Owner | Depends | Status |
 |----|------|-------|---------|--------|
@@ -140,10 +141,11 @@ Docs, Discord, brand assets, marketing.
 | L-56 | Upload `final-x-banner.jpg` as X @useprim header image | Garric | -- | pending |
 | L-57 | Upload `final-social-preview.jpg` as GitHub repo social preview | Garric | -- | pending |
 
-### Wave: Content + Features (PARA)
+### COMM-W2: Content + Features (PARA)
 
 | ID | Task | Owner | Depends | Status |
 |----|------|-------|---------|--------|
+| L-72 | README brand sync: `scripts/gen-readme.ts` reads `brand.ts` and rewrites tagline + one-liner sections in README.md | Claude | -- | pending |
 | L-41 | Human docs: `prim.sh/docs` getting-started guide. Wallet setup, faucet, first API call, per-primitive examples | Claude | -- | pending |
 | L-42 | Draft X launch content: tweet copy per teaser image, launch thread script, pin strategy | Garric + Claude | -- | pending |
 | L-44 | Access form: add optional X handle + GitHub handle fields. Store in D1 `access_requests` table | Claude | -- | pending |

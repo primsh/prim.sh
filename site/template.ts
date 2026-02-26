@@ -137,7 +137,7 @@ const HTTP_METHODS = /^(POST|GET|PUT|DELETE|PATCH|HEAD|OPTIONS)\s/;
 function colorizeLine(line: string): string {
   if (line === "") return "";
   if (line.startsWith("#")) {
-    return `<span class="c">${esc(line)}</span>`;
+    return `<span class="cc">${esc(line)}</span>`;
   }
   if (line.startsWith("$")) {
     return `<span class="prompt">$</span>${esc(line.slice(1))}`;
@@ -148,7 +148,7 @@ function colorizeLine(line: string): string {
     const commentMatch = rest.match(/^(\s+)(#.*)$/);
     if (commentMatch) {
       const [, sp2, comment] = commentMatch;
-      return `<span class="a">${method}</span>${sp1}<span class="w">${esc(path)}</span>${sp2}<span class="m">${esc(comment)}</span>`;
+      return `<span class="a">${method}</span>${sp1}<span class="w">${esc(path)}</span>${sp2}<span class="mc">${esc(comment)}</span>`;
     }
     return `<span class="a">${method}</span>${sp1}<span class="w">${esc(path)}</span>${esc(rest)}`;
   }
@@ -254,12 +254,14 @@ function renderPricingSection(s: PricingSection): string {
     .join("\n");
   return `<section>
   <h2><span>Pricing</span></h2>${note}
+  <div class="pricing-card">
   <table class="pricing-table">
 ${thead}
     <tbody>
 ${rows}
     </tbody>
   </table>
+  </div>
 </section>`;
 }
 
@@ -269,12 +271,14 @@ function renderPricingFromTopLevel(rows: PricingRow[]): string {
     .join("\n");
   return `<section>
   <h2><span>Pricing</span></h2>
+  <div class="pricing-card">
   <table class="pricing-table">
     <thead><tr><th>Action</th><th>Cost</th><th>Notes</th></tr></thead>
     <tbody>
 ${rowsHtml}
     </tbody>
   </table>
+  </div>
 </section>`;
 }
 
@@ -347,7 +351,7 @@ ${inlineCSS(cfg.accent, cfg.accent_dim, cfg.accent_glow)}
   <div class="links"><a href="/">prim.sh</a></div>
   <div style="margin-top:0.75rem;font-size:0.8rem;color:#444">This page is for humans. The API is for agents.</div>
 </footer>
-<img src="/assets/banner.jpg" alt="" style="width:100%;display:block;margin:0;padding:0;-webkit-mask-image:linear-gradient(to bottom,rgba(0,0,0,0) 0%,rgba(0,0,0,1) 15%,rgba(0,0,0,1) 85%,rgba(0,0,0,0) 100%);mask-image:linear-gradient(to bottom,rgba(0,0,0,0) 0%,rgba(0,0,0,1) 15%,rgba(0,0,0,1) 85%,rgba(0,0,0,0) 100%)">
+<img src="/assets/banner.jpg" alt="" class="img-fade" style="width:100%;display:block;margin:0;padding:0">
 </body>
 </html>`;
 }
@@ -355,49 +359,8 @@ ${inlineCSS(cfg.accent, cfg.accent_dim, cfg.accent_glow)}
 // ── CSS ───────────────────────────────────────────────────────────────────────
 
 function inlineCSS(accent: string, accentDim: string, accentGlow: string): string {
-  return `<style>
-*{margin:0;padding:0;box-sizing:border-box}
-:root{--bg:#0a0a0a;--surface:#111;--border:#1a1a1a;--text:#e0e0e0;--muted:#666;--code-bg:#0d0d0d;--accent:${accent};--accent-dim:${accentDim};--accent-glow:${accentGlow}}
-body{background:var(--bg);color:var(--text);font-family:'SF Mono',SFMono-Regular,'Cascadia Code',Consolas,monospace;line-height:1.6;overflow-x:hidden}
-a{color:var(--accent);text-decoration:none}a:hover{text-decoration:underline}
-.hero{min-height:100vh;display:flex;flex-direction:column;padding:0 2rem 2rem;justify-content:flex-start;align-items:center;text-align:center;position:relative}
-.hero::before{content:'';position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:600px;height:600px;background:radial-gradient(circle,var(--accent-glow) 0%,transparent 70%);pointer-events:none}
-.logomark{width:calc(100% + 4rem);margin-left:-2rem;height:auto;display:block;margin-bottom:0.5rem;-webkit-mask-image:linear-gradient(to bottom,rgba(0,0,0,0) 0%,rgba(0,0,0,1) 15%,rgba(0,0,0,1) 85%,rgba(0,0,0,0) 100%);mask-image:linear-gradient(to bottom,rgba(0,0,0,0) 0%,rgba(0,0,0,1) 15%,rgba(0,0,0,1) 85%,rgba(0,0,0,0) 100%)}
-.hero-hd{position:absolute;top:1.75rem;left:0;right:0;display:flex;justify-content:center;pointer-events:none;z-index:1}.hero-hd a{pointer-events:all;color:#444;text-decoration:none;font-size:0.8rem;letter-spacing:0.04em;border:1px solid #222;border-radius:20px;padding:0.3rem 1rem;transition:color 0.15s,border-color 0.15s}.hero-hd a:hover{color:var(--accent);border-color:var(--accent)}.hero-hd a span{color:var(--accent)}
-.logo{font-size:3.5rem;font-weight:700;letter-spacing:-0.03em;margin-bottom:0.5rem;margin-top:2.5rem}.logo span{color:var(--accent)}
-.tagline{font-size:1.3rem;color:var(--muted);margin-bottom:0.5rem}
-.sub{font-size:1rem;color:var(--muted);margin-bottom:3rem;max-width:560px}
-.cmd-block{background:var(--code-bg);border:1px solid var(--border);border-radius:8px;padding:1.5rem 2rem;margin-bottom:3rem;text-align:left;max-width:640px;width:100%}
-.cmd-block .prompt{color:var(--accent);user-select:none}.cmd-block .comment{color:#444}
-.cmd-block code{font-size:0.95rem;line-height:1.8}
-.badges{display:flex;gap:1rem;flex-wrap:wrap;justify-content:center;margin-bottom:3rem}
-.badge{background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:0.5rem 1rem;font-size:0.85rem;color:var(--muted)}.badge strong{color:var(--accent)}.badge.status-testing{background:rgba(0,200,80,0.08);border-color:rgba(0,200,80,0.3);color:#00c850}.badge.status-live{background:rgba(0,255,100,0.1);border-color:rgba(0,255,100,0.4);color:#00ff64}.badge.status-built{background:rgba(255,200,0,0.08);border-color:rgba(255,200,0,0.3);color:#ffc800}.badge.status-building{background:rgba(255,140,0,0.08);border-color:rgba(255,140,0,0.3);color:#ff8c00}.badge.status-soon{background:var(--surface);border-color:var(--border);color:var(--muted)}
-.scroll-hint{color:var(--muted);font-size:0.8rem;animation:pulse 2s infinite}@keyframes pulse{0%,100%{opacity:0.3}50%{opacity:1}}
-section{max-width:900px;margin:0 auto;padding:4rem 2rem}
-h2{font-size:1.8rem;margin-bottom:1.5rem;font-weight:600;text-align:center}h2 span{color:var(--accent)}
-h3{font-size:1.1rem;margin-bottom:0.75rem;color:var(--accent)}
-.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:1.5rem;margin-bottom:2rem}
-.card{background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:1.5rem;box-shadow:0 0 20px var(--accent-glow)}
-.card p{color:var(--muted);font-size:0.9rem;margin-top:0.5rem}
-pre{background:var(--code-bg);border:1px solid var(--border);border-radius:8px;padding:1.5rem;overflow-x:auto;font-size:0.85rem;line-height:1.7;margin:1rem 0}
-.a{color:var(--accent)}.c{color:#444}.w{color:var(--text)}.m{color:var(--muted)}.prompt{color:var(--accent);user-select:none}
-.flow{display:flex;align-items:center;gap:1rem;flex-wrap:wrap;margin:2rem 0;justify-content:center}
-.flow-step{background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:1rem 1.25rem;text-align:center;min-width:140px}
-.flow-step .num{color:var(--accent);font-size:1.5rem;font-weight:700}
-.flow-step .label{color:var(--muted);font-size:0.85rem;margin-top:0.25rem}
-.flow-arrow{color:var(--accent);font-size:1.5rem}
-.manifesto{background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:2rem;margin:2rem 0}
-.manifesto p{color:var(--muted);font-size:0.95rem;margin-bottom:1rem}.manifesto p:last-child{margin-bottom:0}
-.manifesto strong{color:var(--text)}
-.pricing-table{width:100%;border-collapse:collapse;margin:1.5rem 0}
-.pricing-table th{text-align:left;color:var(--accent);padding:0.75rem;border-bottom:1px solid var(--border);font-weight:500}
-.pricing-table td{padding:0.75rem;border-bottom:1px solid var(--border);color:var(--muted)}.pricing-table td:first-child{color:var(--text)}
-footer{text-align:center;padding:3rem 2rem;color:var(--muted);font-size:0.85rem;border-top:1px solid var(--border)}
-footer .links{margin-top:0.5rem}footer .links a{margin:0 0.75rem}
-.cta-section{text-align:center;padding:4rem 2rem}
-.cta-btn{display:inline-block;background:var(--accent);color:#000;padding:0.75rem 2rem;border-radius:6px;font-weight:700;font-size:1rem;font-family:inherit}.cta-btn:hover{background:var(--accent-dim);text-decoration:none}
-@media(max-width:600px){.logo{font-size:2.5rem}.flow{flex-direction:column}.flow-arrow{transform:rotate(90deg)}pre{font-size:0.75rem}}
-</style>`;
+  return `<link rel="stylesheet" href="/assets/prim.css">
+<style>:root{--accent:${accent};--accent-dim:${accentDim};--accent-glow:${accentGlow}}</style>`;
 }
 
 // ── main render ───────────────────────────────────────────────────────────────
@@ -421,7 +384,7 @@ export function render(cfg: PrimConfig): string {
 
   // Hero example
   const heroBlock = cfg.hero_example
-    ? `  <div class="cmd-block"><code>\n${colorizeHeroBlock(cfg.hero_example.replace(/\n$/, ""))}\n  </code></div>`
+    ? `  <div class="cmd-block"><code>\n${colorizeHeroBlock(cfg.hero_example.replace(/\n$/, ""))}\n  </code><button class="copy-btn" onclick="const b=this,c=this.closest('.cmd-block').querySelector('code');navigator.clipboard.writeText(c.textContent.trim()).then(()=>{b.textContent='copied';b.classList.add('copied');setTimeout(()=>{b.textContent='copy';b.classList.remove('copied')},2000)})">copy</button></div>`
     : "";
 
   // Sections
@@ -462,7 +425,7 @@ ${heroBlock}
     ${badgesHtml}
   </div>
   <div class="scroll-hint">↓ scroll</div>
-  <img src="/assets/prims.jpg" alt="prim.sh primitives" style="width:calc(100% + 4rem);margin-left:-2rem;display:block;margin-top:2rem;-webkit-mask-image:linear-gradient(to bottom,rgba(0,0,0,0) 0%,rgba(0,0,0,1) 15%,rgba(0,0,0,1) 85%,rgba(0,0,0,0) 100%);mask-image:linear-gradient(to bottom,rgba(0,0,0,0) 0%,rgba(0,0,0,1) 15%,rgba(0,0,0,1) 85%,rgba(0,0,0,0) 100%)">
+  <img src="/assets/prims.jpg" alt="prim.sh primitives" class="img-fade" style="width:calc(100% + 4rem);margin-left:-2rem;display:block;margin-top:2rem">
 
 ${sectionsHtml}
 
@@ -473,7 +436,7 @@ ${ctaHtml}
   <div class="links"><a href="https://prim.sh/${cfg.id}">Docs</a><a href="https://${esc(cfg.endpoint)}">API</a><a href="/">prim.sh</a></div>
   <div style="margin-top:0.75rem;font-size:0.8rem;color:#444">This page is for humans. The API is for agents.</div>
 </footer>
-<img src="/assets/banner.jpg" alt="" style="width:100%;display:block;margin:0;padding:0;-webkit-mask-image:linear-gradient(to bottom,rgba(0,0,0,0) 0%,rgba(0,0,0,1) 15%,rgba(0,0,0,1) 85%,rgba(0,0,0,0) 100%);mask-image:linear-gradient(to bottom,rgba(0,0,0,0) 0%,rgba(0,0,0,1) 15%,rgba(0,0,0,1) 85%,rgba(0,0,0,0) 100%)">
+<img src="/assets/banner.jpg" alt="" class="img-fade" style="width:100%;display:block;margin:0;padding:0">
 </body>
 </html>`;
 }

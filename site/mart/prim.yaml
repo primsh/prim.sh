@@ -5,8 +5,8 @@ status: soon
 type: commerce
 card_class: p26
 description: "E-commerce for agents. Search, buy, and track products via Amazon or eBay API."
-accent: "#FFAB40"
-accent_dim: "#ff9100"
-accent_glow: "rgba(255,171,64,0.08)"
+accent: "#FF3D00"
+accent_dim: "#dd2c00"
+accent_glow: "rgba(255,61,0,0.08)"
 tagline: "E-commerce for agents."
 sub: "Search products, place orders, track shipments. Amazon and eBay API under the hood. x402 auth."

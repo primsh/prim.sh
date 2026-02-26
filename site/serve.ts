@@ -6,14 +6,20 @@ import { parse } from "yaml";
 import { readFileSync, existsSync, readdirSync } from "node:fs";
 import { resolve, join } from "node:path";
 import { render, type PrimConfig } from "./template.ts";
+import { BRAND } from "../brand.ts";
 
 const PORT = Number(process.env.PORT ?? 3000);
 const ROOT = resolve(import.meta.dir, "..");
 
 // ── static pages (not converted to YAML) ─────────────────────────────────────
 
+const INDEX_PATH = join(ROOT, "site/index.html");
+const INDEX_TEMPLATE = readFileSync(INDEX_PATH, "utf-8")
+  .replace("{{tagline}}", BRAND.tagline)
+  .replace("{{sub}}", BRAND.sub)
+  .replace("{{closer}}", BRAND.closer);
+
 const STATIC_ROUTES: Record<string, string> = {
-  "/": join(ROOT, "site/index.html"),
   "/terms": join(ROOT, "site/terms/index.html"),
   "/privacy": join(ROOT, "site/privacy/index.html"),
   "/access": join(ROOT, "site/access/index.html"),
@@ -104,6 +110,13 @@ const server = Bun.serve({
   fetch(req) {
     const url = new URL(req.url);
     const pathname = url.pathname;
+
+    // Home page — rendered with brand copy substitution
+    if (pathname === "/") {
+      return new Response(INDEX_TEMPLATE, {
+        headers: { "Content-Type": "text/html; charset=utf-8" },
+      });
+    }
 
     // Static exact routes
     if (STATIC_ROUTES[pathname]) {

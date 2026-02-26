@@ -5,8 +5,8 @@ status: soon
 type: messaging
 card_class: p10
 description: "Message queues for agents. Pub/sub channels. Fan-out, fan-in, and pipelines."
-accent: "#A5D6A7"
-accent_dim: "#66bb6a"
-accent_glow: "rgba(165,214,167,0.08)"
+accent: "#FF80AB"
+accent_dim: "#ff4081"
+accent_glow: "rgba(255,128,171,0.08)"
 tagline: "Message queues for agents."
 sub: "Pub/sub channels. Fan-out, fan-in, and pipelines. NATS or Redis Streams under the hood. x402 auth."
