@@ -1,6 +1,6 @@
 import { Hono } from "hono";
 import { bodyLimit } from "hono/body-limit";
-import { createAgentStackMiddleware, getNetworkConfig } from "@primsh/x402-middleware";
+import { createAgentStackMiddleware, getNetworkConfig, metricsMiddleware, metricsHandler } from "@primsh/x402-middleware";
 import { addToAllowlist, removeFromAllowlist, isAllowed, createAllowlistChecker } from "@primsh/x402-middleware/allowlist-db";
 import { join } from "node:path";
 import type {
@@ -71,6 +71,10 @@ app.use("*", bodyLimit({
   onError: (c) => c.json({ error: "Request too large" }, 413),
 }));
 
+app.use("*", metricsMiddleware());
+
+app.get("/v1/metrics", metricsHandler("wallet.prim.sh"));
+
 app.use(
   "*",
   createAgentStackMiddleware(
@@ -80,6 +84,8 @@ app.use(
       checkAllowlist: allowlistChecker,
       freeRoutes: [
         "GET /",
+        "GET /pricing",
+        "GET /v1/metrics",
         "POST /v1/wallets",
         "POST /v1/admin/circuit-breaker/pause",
         "POST /v1/admin/circuit-breaker/resume",
@@ -95,6 +101,28 @@ app.use(
 
 app.get("/", (c) => {
   return c.json({ service: "wallet.sh", status: "ok" });
+});
+
+// GET /pricing — machine-readable pricing (free)
+app.get("/pricing", (c) => {
+  return c.json({
+    service: "wallet.prim.sh",
+    currency: "USDC",
+    network: "eip155:8453",
+    routes: [
+      { method: "GET", path: "/v1/wallets", price_usdc: "0.001", description: "List wallets" },
+      { method: "GET", path: "/v1/wallets/{address}", price_usdc: "0.001", description: "Get wallet detail" },
+      { method: "DELETE", path: "/v1/wallets/{address}", price_usdc: "0.01", description: "Deactivate wallet" },
+      { method: "GET", path: "/v1/wallets/{address}/fund-requests", price_usdc: "0.001", description: "List fund requests" },
+      { method: "POST", path: "/v1/wallets/{address}/fund-request", price_usdc: "0.001", description: "Create fund request" },
+      { method: "POST", path: "/v1/fund-requests/{id}/approve", price_usdc: "0.01", description: "Approve fund request" },
+      { method: "POST", path: "/v1/fund-requests/{id}/deny", price_usdc: "0.001", description: "Deny fund request" },
+      { method: "GET", path: "/v1/wallets/{address}/policy", price_usdc: "0.001", description: "Get spending policy" },
+      { method: "PUT", path: "/v1/wallets/{address}/policy", price_usdc: "0.005", description: "Update spending policy" },
+      { method: "POST", path: "/v1/wallets/{address}/pause", price_usdc: "0.001", description: "Pause wallet" },
+      { method: "POST", path: "/v1/wallets/{address}/resume", price_usdc: "0.001", description: "Resume wallet" },
+    ],
+  });
 });
 
 // POST /v1/wallets — Register wallet via EIP-191 signature (FREE)

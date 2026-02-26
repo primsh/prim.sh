@@ -1,6 +1,6 @@
 import { Hono } from "hono";
 import { bodyLimit } from "hono/body-limit";
-import { createAgentStackMiddleware, createWalletAllowlistChecker, getNetworkConfig } from "@primsh/x402-middleware";
+import { createAgentStackMiddleware, createWalletAllowlistChecker, getNetworkConfig, metricsMiddleware, metricsHandler } from "@primsh/x402-middleware";
 import type {
   ApiError,
   CreateMailboxRequest,
@@ -248,7 +248,7 @@ app.use(
     {
       payTo: PAY_TO_ADDRESS,
       network: NETWORK,
-      freeRoutes: ["GET /", "GET /llms.txt", "POST /internal/hooks/ingest"],
+      freeRoutes: ["GET /", "GET /pricing", "GET /llms.txt", "POST /internal/hooks/ingest"],
       checkAllowlist,
     },
     { ...EMAIL_ROUTES },
@@ -258,6 +258,33 @@ app.use(
 // GET / — health check (free)
 app.get("/", (c) => {
   return c.json({ service: "email.sh", status: "ok" });
+});
+
+// GET /pricing — machine-readable pricing (free)
+app.get("/pricing", (c) => {
+  return c.json({
+    service: "email.prim.sh",
+    currency: "USDC",
+    network: "eip155:8453",
+    routes: [
+      { method: "POST", path: "/v1/mailboxes", price_usdc: "0.05", description: "Create mailbox" },
+      { method: "GET", path: "/v1/mailboxes", price_usdc: "0.001", description: "List mailboxes" },
+      { method: "GET", path: "/v1/mailboxes/{id}", price_usdc: "0.001", description: "Get mailbox" },
+      { method: "DELETE", path: "/v1/mailboxes/{id}", price_usdc: "0.01", description: "Delete mailbox" },
+      { method: "POST", path: "/v1/mailboxes/{id}/renew", price_usdc: "0.01", description: "Renew mailbox" },
+      { method: "GET", path: "/v1/mailboxes/{id}/messages", price_usdc: "0.001", description: "List messages" },
+      { method: "GET", path: "/v1/mailboxes/{id}/messages/{msgId}", price_usdc: "0.001", description: "Get message" },
+      { method: "POST", path: "/v1/mailboxes/{id}/send", price_usdc: "0.01", description: "Send email" },
+      { method: "POST", path: "/v1/mailboxes/{id}/webhooks", price_usdc: "0.01", description: "Register webhook" },
+      { method: "GET", path: "/v1/mailboxes/{id}/webhooks", price_usdc: "0.001", description: "List webhooks" },
+      { method: "DELETE", path: "/v1/mailboxes/{id}/webhooks/{whId}", price_usdc: "0.001", description: "Delete webhook" },
+      { method: "POST", path: "/v1/domains", price_usdc: "0.05", description: "Register custom domain" },
+      { method: "GET", path: "/v1/domains", price_usdc: "0.001", description: "List domains" },
+      { method: "GET", path: "/v1/domains/{id}", price_usdc: "0.001", description: "Get domain" },
+      { method: "POST", path: "/v1/domains/{id}/verify", price_usdc: "0.01", description: "Verify domain DNS" },
+      { method: "DELETE", path: "/v1/domains/{id}", price_usdc: "0.01", description: "Delete domain" },
+    ],
+  });
 });
 
 // GET /llms.txt — machine-readable API reference (free)

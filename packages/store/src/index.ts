@@ -1,6 +1,6 @@
 import { Hono } from "hono";
 import { bodyLimit } from "hono/body-limit";
-import { createAgentStackMiddleware, createWalletAllowlistChecker, getNetworkConfig } from "@primsh/x402-middleware";
+import { createAgentStackMiddleware, createWalletAllowlistChecker, getNetworkConfig, metricsMiddleware, metricsHandler } from "@primsh/x402-middleware";
 import type {
   ApiError,
   CreateBucketRequest,
@@ -96,13 +96,15 @@ app.use("*", async (c, next) => {
   })(c, next);
 });
 
+app.use("*", metricsMiddleware());
+
 app.use(
   "*",
   createAgentStackMiddleware(
     {
       payTo: PAY_TO_ADDRESS,
       network: NETWORK,
-      freeRoutes: ["GET /"],
+      freeRoutes: ["GET /", "GET /pricing", "GET /v1/metrics"],
       checkAllowlist,
     },
     { ...STORE_ROUTES },
@@ -112,6 +114,31 @@ app.use(
 // GET / — health check (free)
 app.get("/", (c) => {
   return c.json({ service: "store.sh", status: "ok" });
+});
+
+// GET /v1/metrics — operational metrics (free)
+app.get("/v1/metrics", metricsHandler("store.prim.sh"));
+
+// GET /pricing — machine-readable pricing (free)
+app.get("/pricing", (c) => {
+  return c.json({
+    service: "store.prim.sh",
+    currency: "USDC",
+    network: "eip155:8453",
+    routes: [
+      { method: "POST", path: "/v1/buckets", price_usdc: "0.05", description: "Create a bucket" },
+      { method: "GET", path: "/v1/buckets", price_usdc: "0.001", description: "List buckets" },
+      { method: "GET", path: "/v1/buckets/{id}", price_usdc: "0.001", description: "Get bucket" },
+      { method: "DELETE", path: "/v1/buckets/{id}", price_usdc: "0.01", description: "Delete bucket" },
+      { method: "PUT", path: "/v1/buckets/{id}/objects/*", price_usdc: "0.001", description: "Upload object" },
+      { method: "GET", path: "/v1/buckets/{id}/objects", price_usdc: "0.001", description: "List objects" },
+      { method: "GET", path: "/v1/buckets/{id}/objects/*", price_usdc: "0.001", description: "Download object" },
+      { method: "DELETE", path: "/v1/buckets/{id}/objects/*", price_usdc: "0.001", description: "Delete object" },
+      { method: "GET", path: "/v1/buckets/{id}/quota", price_usdc: "0.001", description: "Get quota and usage" },
+      { method: "PUT", path: "/v1/buckets/{id}/quota", price_usdc: "0.01", description: "Set quota" },
+      { method: "POST", path: "/v1/buckets/{id}/quota/reconcile", price_usdc: "0.05", description: "Reconcile usage" },
+    ],
+  });
 });
 
 // POST /v1/buckets — Create bucket

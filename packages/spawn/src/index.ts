@@ -1,6 +1,6 @@
 import { Hono } from "hono";
 import { bodyLimit } from "hono/body-limit";
-import { createAgentStackMiddleware, createWalletAllowlistChecker } from "@primsh/x402-middleware";
+import { createAgentStackMiddleware, createWalletAllowlistChecker, metricsMiddleware, metricsHandler } from "@primsh/x402-middleware";
 import type {
   CreateServerRequest,
   CreateServerResponse,
@@ -83,13 +83,15 @@ app.use("*", bodyLimit({
   onError: (c) => c.json({ error: "Request too large" }, 413),
 }));
 
+app.use("*", metricsMiddleware());
+
 app.use(
   "*",
   createAgentStackMiddleware(
     {
       payTo: PAY_TO_ADDRESS,
       network: NETWORK,
-      freeRoutes: ["GET /"],
+      freeRoutes: ["GET /", "GET /pricing", "GET /v1/metrics"],
       checkAllowlist,
     },
     { ...SPAWN_ROUTES },
@@ -99,6 +101,32 @@ app.use(
 // GET / — health check (free)
 app.get("/", (c) => {
   return c.json({ service: "spawn.sh", status: "ok" });
+});
+
+// GET /v1/metrics — operational metrics (free)
+app.get("/v1/metrics", metricsHandler("spawn.prim.sh"));
+
+// GET /pricing — machine-readable pricing (free)
+app.get("/pricing", (c) => {
+  return c.json({
+    service: "spawn.prim.sh",
+    currency: "USDC",
+    network: "eip155:8453",
+    routes: [
+      { method: "POST", path: "/v1/servers", price_usdc: "0.01", description: "Create server" },
+      { method: "GET", path: "/v1/servers", price_usdc: "0.001", description: "List servers" },
+      { method: "GET", path: "/v1/servers/{id}", price_usdc: "0.001", description: "Get server" },
+      { method: "DELETE", path: "/v1/servers/{id}", price_usdc: "0.005", description: "Delete server" },
+      { method: "POST", path: "/v1/servers/{id}/start", price_usdc: "0.002", description: "Start server" },
+      { method: "POST", path: "/v1/servers/{id}/stop", price_usdc: "0.002", description: "Stop server" },
+      { method: "POST", path: "/v1/servers/{id}/reboot", price_usdc: "0.002", description: "Reboot server" },
+      { method: "POST", path: "/v1/servers/{id}/resize", price_usdc: "0.01", description: "Resize server" },
+      { method: "POST", path: "/v1/servers/{id}/rebuild", price_usdc: "0.005", description: "Rebuild server" },
+      { method: "POST", path: "/v1/ssh-keys", price_usdc: "0.001", description: "Register SSH key" },
+      { method: "GET", path: "/v1/ssh-keys", price_usdc: "0.001", description: "List SSH keys" },
+      { method: "DELETE", path: "/v1/ssh-keys/{id}", price_usdc: "0.001", description: "Delete SSH key" },
+    ],
+  });
 });
 
 // POST /v1/servers — Create server

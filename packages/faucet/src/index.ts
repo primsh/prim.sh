@@ -1,6 +1,6 @@
 import { Hono } from "hono";
 import { isAddress, getAddress } from "viem";
-import { getNetworkConfig, createWalletAllowlistChecker } from "@primsh/x402-middleware";
+import { getNetworkConfig, createWalletAllowlistChecker, metricsMiddleware, metricsHandler } from "@primsh/x402-middleware";
 import { RateLimiter } from "./rate-limit.ts";
 import { dripUsdc, dripEth } from "./service.ts";
 
@@ -9,14 +9,18 @@ const checkAllowlist = createWalletAllowlistChecker(WALLET_INTERNAL_URL);
 
 const app = new Hono();
 
+app.use("*", metricsMiddleware());
+
+app.get("/v1/metrics", metricsHandler("faucet.prim.sh"));
+
 // Rate limiters (SQLite-backed, persist across restarts)
 const usdcLimiter = new RateLimiter("usdc", 2 * 60 * 60 * 1000); // 2 hours
 const ethLimiter = new RateLimiter("eth", 60 * 60 * 1000); // 1 hour
 
 // Testnet guard — refuse to serve on mainnet
 app.use("*", async (c, next) => {
-  // Allow health check on any network
-  if (c.req.path === "/" && c.req.method === "GET") {
+  // Allow health check and pricing on any network
+  if (c.req.method === "GET" && (c.req.path === "/" || c.req.path === "/pricing" || c.req.path === "/v1/metrics")) {
     return next();
   }
 
@@ -38,6 +42,20 @@ app.get("/", (c) => {
     status: "ok",
     network: config.network,
     testnet: config.isTestnet,
+  });
+});
+
+// GET /pricing — machine-readable pricing (free)
+app.get("/pricing", (c) => {
+  return c.json({
+    service: "faucet.prim.sh",
+    currency: "USDC",
+    network: "eip155:8453",
+    routes: [
+      { method: "POST", path: "/v1/faucet/usdc", price_usdc: "0", description: "Dispense test USDC (free, rate-limited)" },
+      { method: "POST", path: "/v1/faucet/eth", price_usdc: "0", description: "Dispense test ETH (free, rate-limited)" },
+      { method: "GET", path: "/v1/faucet/status", price_usdc: "0", description: "Rate limit status" },
+    ],
   });
 });
 

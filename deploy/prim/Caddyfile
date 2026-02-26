@@ -28,6 +28,10 @@ prim.sh {
     request_body {
         max_size 1MB
     }
+    handle /pricing.json {
+        root * /opt/prim/site
+        file_server
+    }
     reverse_proxy localhost:3000
 }
 

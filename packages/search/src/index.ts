@@ -1,6 +1,6 @@
 import { Hono } from "hono";
 import { bodyLimit } from "hono/body-limit";
-import { createAgentStackMiddleware, createWalletAllowlistChecker, getNetworkConfig } from "@primsh/x402-middleware";
+import { createAgentStackMiddleware, createWalletAllowlistChecker, getNetworkConfig, metricsMiddleware, metricsHandler } from "@primsh/x402-middleware";
 import type { SearchRequest, ExtractRequest, ApiError } from "./api.ts";
 import { searchWeb, searchNews, extractUrls } from "./service.ts";
 
@@ -36,13 +36,15 @@ app.use("*", bodyLimit({
   onError: (c) => c.json({ error: "Request too large" }, 413),
 }));
 
+app.use("*", metricsMiddleware());
+
 app.use(
   "*",
   createAgentStackMiddleware(
     {
       payTo: PAY_TO_ADDRESS,
       network: NETWORK,
-      freeRoutes: ["GET /"],
+      freeRoutes: ["GET /", "GET /pricing", "GET /v1/metrics"],
       checkAllowlist,
     },
     { ...SEARCH_ROUTES },
@@ -52,6 +54,20 @@ app.use(
 // GET / — health check (free)
 app.get("/", (c) => {
   return c.json({ service: "search.sh", status: "ok" });
+});
+
+// GET /pricing — machine-readable pricing (free)
+app.get("/pricing", (c) => {
+  return c.json({
+    service: "search.prim.sh",
+    currency: "USDC",
+    network: "eip155:8453",
+    routes: [
+      { method: "POST", path: "/v1/search", price_usdc: "0.01", description: "Web search" },
+      { method: "POST", path: "/v1/search/news", price_usdc: "0.01", description: "News search" },
+      { method: "POST", path: "/v1/extract", price_usdc: "0.005", description: "URL content extraction" },
+    ],
+  });
 });
 
 // POST /v1/search — Web search
