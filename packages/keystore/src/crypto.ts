@@ -4,12 +4,15 @@ import type { V3CryptoParams } from "./types.ts";
 
 /**
  * Scrypt N parameter. Set PRIM_SCRYPT_N=1024 in tests for speed.
- * Production default: 131072 (V3 standard).
+ * Production default: 16384 (16 MB, under OpenSSL's 32 MB hard limit).
+ * N=131072 (V3 standard) requires 128 MB and crashes under Bun/Node OpenSSL.
+ * MetaMask uses N=16384 for the same reason. Backward-compatible: decryptFromV3()
+ * reads N from the stored kdfparams, so old keystores decrypt fine.
  */
 function getScryptN(): number {
   const envN = process.env.PRIM_SCRYPT_N;
   if (envN) return Number.parseInt(envN, 10);
-  return 131072;
+  return 16384;
 }
 
 function deriveKey(password: string, salt: Buffer, n: number): Buffer {

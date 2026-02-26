@@ -41,6 +41,7 @@ import {
 import { getUsdcBalance } from "../src/balance.ts";
 import { getDefaultAddress, setDefaultAddress, getConfig } from "../src/config.ts";
 import { getDeviceKeyPath } from "../src/paths.ts";
+import { encryptToV3, decryptFromV3 } from "../src/crypto.ts";
 
 // Known test key (Hardhat account #0)
 const TEST_PRIVATE_KEY =
@@ -279,6 +280,24 @@ describe("V3 format", () => {
     expect(typeof file.crypto.ciphertext).toBe("string");
     expect(typeof file.crypto.mac).toBe("string");
     expect(file.crypto.kdfparams).toMatchObject({ r: 8, p: 1, dklen: 32 });
+  });
+
+  it("createKey succeeds with default scrypt N (no PRIM_SCRYPT_N env)", async () => {
+    // Regression guard: default N=16384 must fit under OpenSSL's 32 MB limit.
+    // If someone bumps the default back to 131072, this test fails.
+    delete process.env.PRIM_SCRYPT_N;
+    const { address } = await createKey();
+    expect(address).toMatch(/^0x[0-9a-fA-F]{40}$/);
+    process.env.PRIM_SCRYPT_N = "1024";
+  });
+
+  it("encrypt/decrypt round-trip at default N=16384", () => {
+    delete process.env.PRIM_SCRYPT_N;
+    const params = encryptToV3(TEST_PRIVATE_KEY, "test-password");
+    expect(params.kdfparams.n).toBe(16384);
+    const recovered = decryptFromV3(params, "test-password");
+    expect(recovered).toBe(TEST_PRIVATE_KEY);
+    process.env.PRIM_SCRYPT_N = "1024";
   });
 
   it("V3 keystore without prim block (geth/foundry import) uses passphrase mode", async () => {

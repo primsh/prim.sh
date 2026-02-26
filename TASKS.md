@@ -204,7 +204,7 @@ Plan doc: `tasks/active/v1-launch-plan-2026-02-25.md`
 | L-29 | GH Action: auto-dedupe issues + PRs. On new issue: fuzzy-match title against open issues, label + link duplicates. On stale (30d no activity): auto-close with comment. On bot PRs: auto-merge if CI passes. | Claude | L-26 | pending |
 | L-30 | Update llms.txt to document feedback endpoint and access request flow so agents discover them from the catalog | Claude | L-24, L-28 | done (access request + CLI getting started documented) |
 | L-32 | Faucet treasury fallback: when Circle API rate-limits (429), fall back to direct USDC transfer from pre-funded treasury wallet. Deployed + treasury funded with Sepolia ETH for gas. | Claude | FC-1 | done |
-| L-33 | Fix `prim wallet create` OpenSSL scrypt memory limit crash (Bun + node crypto compat issue) | Claude | KS-1 | pending |
+| L-33 | Fix `prim wallet create` OpenSSL scrypt memory limit crash (Bun + node crypto compat issue) | Claude | KS-1 | done |
 | L-34 | Fix CLI `--flag value` parsing: `getFlag` only accepts `--flag=value` syntax, not `--flag value` with space. Usage hints should match actual behavior. | Claude | KS-1 | done |
 | L-35 | Agent access request e2e test: fresh wallet → register → hit paid endpoint → get 403 → agent discovers `access_url` → POSTs access request → admin approves → agent retries → success. Verify the full autonomous flow. | Claude + Garric | L-31 | pending |
 | L-36 | Launch readiness smoke test: full Asher run with fresh wallet through CLI — `prim wallet create` → `prim faucet usdc` → `prim store create-bucket` → `prim store put` → `prim store get`. All steps must succeed without hand-written code. | Claude + Garric | L-33, L-34 | pending |
