@@ -48,9 +48,11 @@ describe.skipIf(!HAS_KEY)("search.sh Tavily live smoke test", { timeout: 30_000 
       include_answer: true,
     });
 
-    // answer is returned when the API generates a summary — not guaranteed for all tiers/queries
-    expect(result.answer === null || typeof result.answer === "string").toBe(true);
     expect(result.results.length).toBeGreaterThan(0);
+    // answer requires a paid tier — skip assertion if null
+    if (result.answer === null) return;
+    expect(typeof result.answer).toBe("string");
+    expect(result.answer.length).toBeGreaterThan(0);
   });
 
   it("3. news search", async () => {
@@ -64,11 +66,9 @@ describe.skipIf(!HAS_KEY)("search.sh Tavily live smoke test", { timeout: 30_000 
     const url = "https://www.typescriptlang.org";
     const result = await client.extract([url], "markdown");
 
-    // URL is either extracted or reported as failed — either way, the API processed it
-    expect(result.results.length + result.failed.length).toBe(1);
-    if (result.results.length === 1) {
-      expect(result.results[0].url).toBe(url);
-      expect(result.results[0].content).toBeTruthy();
-    }
+    expect(result.results.length).toBe(1);
+    expect(result.results[0].url).toBe(url);
+    expect(result.results[0].content).toBeTruthy();
+    expect(result.failed.length).toBe(0);
   });
 });

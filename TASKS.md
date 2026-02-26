@@ -144,7 +144,7 @@
 - Umbrella: `tasks/active/batch-execution-umbrella-2026-02-24.md`
 - ST-6: `tasks/active/st-6-prim-store-cli-2026-02-25.md`
 - SE-1: `tasks/completed/se-1-search-sh-plan-2026-02-25.md`
-- SE-2: `tasks/active/se-2-search-live-smoke-test-2026-02-25.md`
+- SE-2: `tasks/completed/se-2-search-live-smoke-test-2026-02-25.md`
 - D-9: `tasks/active/d-9-domain-live-smoke-test-2026-02-25.md`
 - TK-6: `tasks/active/tk-6-mint-ownership-bug-2026-02-25.md`
 - M-1: `tasks/completed/m-1-mem-sh-vector-cache-2026-02-25.md`
