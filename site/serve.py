@@ -6,7 +6,7 @@ from urllib.parse import urlparse
 
 BASE = os.path.dirname(os.path.abspath(__file__))
 ROUTES = {
-    "/": os.path.join(BASE, "agentstack", "index.html"),
+    "/": os.path.join(BASE, "index.html"),
     "/wallet": os.path.join(BASE, "wallet", "index.html"),
     "/spawn": os.path.join(BASE, "spawn", "index.html"),
     "/store": os.path.join(BASE, "store", "index.html"),
@@ -37,6 +37,7 @@ ROUTES = {
     "/access": os.path.join(BASE, "access", "index.html"),
     "/terms": os.path.join(BASE, "terms", "index.html"),
     "/privacy": os.path.join(BASE, "privacy", "index.html"),
+    "/install": os.path.join(BASE, "install.sh"),
 }
 
 
@@ -67,6 +68,8 @@ class H(http.server.BaseHTTPRequestHandler):
         if file_path.endswith(".html"):
             return "text/html; charset=utf-8"
         if file_path.endswith(".txt"):
+            return "text/plain; charset=utf-8"
+        if file_path.endswith(".sh"):
             return "text/plain; charset=utf-8"
         if file_path.endswith(".png"):
             return "image/png"

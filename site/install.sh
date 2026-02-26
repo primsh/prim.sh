@@ -1,9 +1,8 @@
 #!/bin/sh
 # Install script for the prim CLI
-# Usage: curl -fsSL prim.sh/install.sh | sh
+# Usage: curl -fsSL prim.sh/install | sh
 set -eu
 
-GITHUB_REPO="useprim/prim.sh"
 INSTALL_DIR="$HOME/.prim/bin"
 BIN="$INSTALL_DIR/prim"
 
@@ -30,7 +29,7 @@ case "$ARCH" in
 esac
 
 BINARY="prim-${OS}-${ARCH}"
-BASE_URL="https://github.com/${GITHUB_REPO}/releases/latest/download"
+BASE_URL="https://dl.prim.sh/latest"
 
 echo "Installing prim (${OS}-${ARCH})..."
 
