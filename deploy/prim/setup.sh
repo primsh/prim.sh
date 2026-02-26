@@ -9,7 +9,7 @@ REPO_URL="https://github.com/useprim/prim.sh"
 REPO_DIR="/opt/prim"
 PRIM_USER="prim"
 ENV_DIR="/etc/prim"
-SERVICES=(wallet store faucet spawn)
+SERVICES=(wallet store faucet spawn search)
 
 log() { echo "[setup] $*"; }
 
@@ -167,6 +167,23 @@ DO_API_TOKEN=your_digitalocean_api_token
 
 # Optional: custom SQLite path (defaults to ./spawn.db)
 # SPAWN_DB_PATH=/var/lib/prim/spawn.db
+EOF
+        ;;
+      search)
+        cat >"$ENV_FILE" <<'EOF'
+# Required env vars for prim-search.service
+# Docs: packages/search/src/index.ts
+
+PORT=3005
+
+# x402 payment recipient address (your treasury wallet)
+PRIM_PAY_TO=0xYOUR_TREASURY_ADDRESS
+
+# Chain: eip155:8453 (Base mainnet) or eip155:84532 (Base Sepolia)
+PRIM_NETWORK=eip155:8453
+
+# Tavily API key (https://tavily.com)
+TAVILY_API_KEY=your_tavily_api_key
 EOF
         ;;
     esac

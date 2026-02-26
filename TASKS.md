@@ -65,7 +65,7 @@
 | 8 | SP-8 | spawn.sh live smoke test against DigitalOcean (provider-direct, 9 tests) | packages/spawn | SP-7 | done |
 | 8 | SP-9 | spawn.sh x402 integration: add spawn to cross-primitive integration test, fix SSH key ID resolution bug, fix hardcoded mainnet | scripts/, packages/spawn | SP-7, ST-5 | done |
 | 7 | X4-1 | Investigate x402 facilitator "Settlement failed" on Base Sepolia — intermittent on-chain settlement failures block testnet testing | cross-cutting | ST-5 | done |
-| 8 | X4-2 | Add retry logic to `createPrimFetch` for facilitator `transaction_failed` responses (single retry with backoff) | packages/x402-client | X4-1 | pending |
+| 8 | X4-2 | Add retry logic to `createPrimFetch` for facilitator `transaction_failed` responses (single retry with backoff) | packages/x402-client | X4-1 | done |
 | 9 | TK-5 | token.sh live smoke test: deploy ERC-20 + create Uniswap V3 pool on Base Sepolia via x402 payment | packages/token | TK-3 | done |
 | 9 | TK-6 | Fix mint ownership bug: `mintTokens()` signs with deployer key but `Ownable(owner_)` is set to agent wallet — on-chain mint reverts | packages/token | TK-2 | done |
 | 9 | TK-7 | `prim token` CLI subcommand: deploy, list, get, mint, pool commands using keystore + x402-client | packages/keystore | TK-3, KS-1 | pending |
@@ -154,6 +154,9 @@
 - L-31: `tasks/active/l-31-deploy-access-invite-flow-2026-02-26.md`
 - L-33: `tasks/active/l-33-fix-scrypt-openssl-crash-2026-02-26.md`
 - L-36: `tasks/active/l-36-launch-readiness-smoke-test-2026-02-26.md`
+- X4-2: `tasks/active/x4-2-x402-client-retry-2026-02-25.md`
+- L-35: `tasks/active/l-35-access-request-e2e-test-2026-02-25.md`
+- L-48/L-49: covered by v1 launch plan update (search deploy)
 - V1 Launch: `tasks/active/v1-launch-plan-2026-02-25.md`
 
 ## V1 Launch (scope: L)
@@ -211,7 +214,9 @@ Plan doc: `tasks/active/v1-launch-plan-2026-02-25.md`
 | ID | Task | Owner | Depends on | Status |
 |---|---|---|---|---|
 | L-11 | Compile `prim` binary for 4 platforms (`bun build --compile`) + upload to GitHub Release | Claude | L-4 | done |
-| L-12 | Write install script (`curl prim.sh \| sh`) + per-primitive wrappers | Claude | L-11 | pending |
+| L-12 | Write install script (`curl prim.sh \| sh`) + per-primitive wrappers | Claude | L-11 | done |
+| L-48 | Deploy search.sh to VPS: systemd unit (prim-search:3005), Caddy route (search.prim.sh), DNS A record, `TAVILY_API_KEY` env var, smoke test live endpoint | Claude + Garric | SE-1, L-10 | done |
+| L-49 | Update llms.txt: move search.sh from "Built (not yet deployed)" to "Live primitives" section after L-48 deploy is verified | Claude | L-48 | pending |
 | L-22 | Mainnet switchover: update VPS env files from `eip155:84532` → `eip155:8453`, set prod `PRIM_PAY_TO` treasury, fund facilitator with mainnet USDC | Garric | L-17 | pending |
 | L-15 | Pre-public checklist: rotate Stalwart admin password + `relay-wrapper` API key, verify no secrets in git history (`git log -p \| grep`), confirm .env files gitignored | Garric | L-10 | pending |
 
@@ -219,17 +224,27 @@ Plan doc: `tasks/active/v1-launch-plan-2026-02-25.md`
 
 | ID | Task | Owner | Depends on | Status |
 |---|---|---|---|---|
-| L-25 | Access landing page: `prim.sh/access` — human-readable form + documents the API. Agents call API directly, humans use the form | Claude | L-31 | pending |
-| L-26 | Community setup: create Discord server, prepare repo for public (`CONTRIBUTING.md`, issue templates, `LICENSE`), set up GitHub Discussions | Garric + Claude | — | pending |
+| L-25 | Access landing page: `prim.sh/access` — human-readable form + documents the API. Agents call API directly, humans use the form | Claude | L-31 | done |
+| L-44 | Access form: add optional X handle + GitHub handle fields. Store in D1 `access_requests` table (new `handle` column). Pass through to admin list view. Helps vet requesters during private beta growth | Claude | L-25 | pending |
+| L-45 | Wallet ping on access approval: when admin approves a request, send a tiny USDC transfer (e.g. $0.001) to the wallet with calldata `prim.sh:access:approved:<request_id>` (hex-encoded). Agent verifies by checking `from == Prim treasury address` (published in llms.txt) + calldata prefix. Add treasury address to llms.txt as canonical discovery point | Claude | L-44 | pending |
+| L-46 | Per-page hero color variation: each primitive page's hero glow already uses the page accent color. Extend to all pages consistently (accent-colored radial gradient behind the logo/hero area). Part of L-43 cleanup | Claude | L-43 | pending |
+| L-47 | Clean up API URL redundancy: `api.prim.sh/api/*` has "api" twice. Restructure CF Worker routes to `api.prim.sh/*` (drop `/api` prefix). Update all docs, llms.txt, access page, and any hardcoded references. Breaking change — coordinate with L-22 mainnet switchover | Claude | L-22 | pending |
+| L-26 | Community setup: create Discord server, prepare repo for public (`CONTRIBUTING.md`, issue templates, `LICENSE`), set up GitHub Discussions | Garric + Claude | — | done (repo files written; Discord creation manual) |
 | L-29 | GH Action: auto-dedupe issues + PRs. On new issue: fuzzy-match title against open issues, label + link duplicates. On stale (30d no activity): auto-close with comment. On bot PRs: auto-merge if CI passes. | Claude | L-26 | pending |
-| L-35 | Agent access request e2e test: fresh wallet → register → hit paid endpoint → get 403 → agent discovers `access_url` → POSTs access request → admin approves → agent retries → success. Verify the full autonomous flow. | Claude + Garric | L-31 | pending |
-| L-37 | Finalize brand assets: pick final logo/favicon/banner/heroes from candidates in `brand/assets/`, export favicon to `.ico`/32x32/16x16, crop banner to 1500x500, name finals as `final-*` | Garric | — | pending |
-| L-38 | Set brand assets on platforms: GitHub org avatar + repo social preview, X profile pic + banner (@onprim), Discord server icon. Use finals from L-37 | Garric | L-37 | pending |
-| L-39 | Write public README.md: hero image, name + tagline, one-liner, "Getting started" (wallet → faucet → first API call), primitive table with status, link to `prim.sh/llms.txt`. Should read like the site but for devs scrolling GitHub | Claude | L-37 | pending |
-| L-40 | Legal minimum: Terms of Service + Privacy Policy pages. Even minimal/template versions — required before public launch. Host at `prim.sh/terms` and `prim.sh/privacy` | Garric + Claude | — | pending |
+| L-35 | Agent access request e2e test: fresh wallet → register → hit paid endpoint → get 403 → agent discovers `access_url` → POSTs access request → admin approves → agent retries → success. Verify the full autonomous flow. | Claude + Garric | L-31 | done |
+| L-37 | Finalize brand assets: pick final logo/favicon/banner/heroes from candidates in `brand/assets/`, export favicon to `.ico`/32x32/16x16, crop banner to 1500x500, name finals as `final-*` | Garric | — | done (finals named in `brand/assets/final-*`) |
+| L-38 | Set brand assets on platforms: GitHub org avatar + repo social preview, X profile pic + banner (@onprim), Discord server icon. Use finals from L-37 | Garric | L-37, L-54 | pending |
+| L-54 | Create Discord server: name "Prim", set icon to `final-logo.jpg`, create channels (#general, #bugs, #feature-requests, #announcements), generate permanent invite link | Garric | L-37 | pending |
+| L-55 | Upload `final-logo.jpg` as GitHub org avatar (primsh settings), X @onprim profile pic, Discord server icon | Garric | L-37, L-54 | pending |
+| L-56 | Upload `final-x-banner.jpg` as X @onprim header image | Garric | L-37 | pending |
+| L-57 | Upload `final-social-preview.jpg` as GitHub repo social preview (primsh/prim.sh → Settings → Social preview) | Garric | L-37 | pending |
+| L-58 | Set up `legal@prim.sh` and `privacy@prim.sh` email aliases (or forward to personal email). Referenced in `site/terms/index.html` and `site/privacy/index.html` | Garric | L-40 | pending |
+| L-59 | Update Discord invite link: replace placeholder `discord.gg/prim` in `README.md` and `.github/ISSUE_TEMPLATE/config.yml` with real invite URL | Claude | L-54 | pending |
+| L-39 | Write public README.md: hero image, name + tagline, one-liner, "Getting started" (wallet → faucet → first API call), primitive table with status, link to `prim.sh/llms.txt`. Should read like the site but for devs scrolling GitHub | Claude | L-37 | done |
+| L-40 | Legal minimum: Terms of Service + Privacy Policy pages. Even minimal/template versions — required before public launch. Host at `prim.sh/terms` and `prim.sh/privacy` | Garric + Claude | — | done |
 | L-41 | Human docs: `prim.sh/docs` getting-started guide for humans. Complements `llms.txt` (for agents). Wallet setup, faucet, first API call, per-primitive examples | Claude | L-39 | pending |
 | L-42 | Draft X launch content: tweet copy for each teaser image (closer, prims grid, logo), launch thread script (what Prim is → why → demo → CTA), pin strategy | Garric + Claude | L-37 | pending |
-| L-43 | Update `site/agentstack/` → `site/prim/` or set as canonical landing page. Current homepage still references "agentstack" in directory name. Clean up stale placeholder links in primitive landing pages | Claude | — | pending |
+| L-43 | Update `site/agentstack/` → `site/prim/` or set as canonical landing page. Current homepage still references "agentstack" in directory name. Clean up stale placeholder links in primitive landing pages | Claude | — | done (26 pages updated; directory rename deferred — symlink works for CF Pages) |
 
 ### Wave 6: Token + Public
 

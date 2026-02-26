@@ -13,3 +13,7 @@ faucet.prim.sh {
 spawn.prim.sh {
     reverse_proxy localhost:3004
 }
+
+search.prim.sh {
+    reverse_proxy localhost:3005
+}

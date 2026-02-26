@@ -31,6 +31,7 @@ const WALLET_URL = "https://wallet.prim.sh";
 const STORE_URL = "https://store.prim.sh";
 const FAUCET_URL = "https://faucet.prim.sh";
 const SPAWN_URL = "https://spawn.prim.sh";
+const SEARCH_URL = "https://search.prim.sh";
 
 const HAS_DO_TOKEN = !!process.env.DO_API_TOKEN;
 const HAS_CIRCLE_KEY = !!process.env.CIRCLE_API_KEY;
@@ -66,6 +67,7 @@ async function main() {
     ["store.prim.sh", STORE_URL],
     ["faucet.prim.sh", FAUCET_URL],
     ["spawn.prim.sh", SPAWN_URL],
+    ["search.prim.sh", SEARCH_URL],
   ] as const) {
     await step(`Health: ${name}`, async () => {
       const res = await fetch(url, { signal: AbortSignal.timeout(10_000) });
