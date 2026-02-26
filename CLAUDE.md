@@ -103,6 +103,50 @@ Reference implementation: `packages/track/test/smoke.test.ts`
 
 **Pattern**: `@primsh/x402-middleware` is mocked as a passthrough via `vi.mock` so the handler is reachable. Check 3 uses a `vi.fn()` spy on `createAgentStackMiddleware` to verify it was registered with the correct config — this is a structural test (middleware is wired), not a runtime test (middleware returns 402). The runtime 402 behavior is covered by the gate runner's `deployed → live` check, which POSTs to the live endpoint and asserts 402.
 
+## Task Management
+
+Full conventions: `tasks/README.md`. Key rules for this project:
+
+### Sections
+
+| Abbrev | Scope |
+|--------|-------|
+| LNCH | Blocks going public + mainnet |
+| HRD | Code quality, security, reliability |
+| PRIMS | Feature work on specific services |
+| INFRA | CI, tooling, observability, cross-cutting |
+| COMM | Docs, Discord, brand, marketing |
+| BKLG | Future primitives, deferred ideas |
+
+### ID Prefixes
+
+| Prefix | Scope | Prefix | Scope |
+|--------|-------|--------|-------|
+| L | Launch blockers | H | Hardening |
+| W | wallet.sh | E | email.sh |
+| SP | spawn.sh | ST | store.sh |
+| TK | token.sh | D | domain.sh |
+| SE | search.sh | TR | track.sh |
+| M | mem.sh | FC | faucet.sh |
+| OPS | Operations | OBS | Observability |
+| BIZ | Business | SEC | Security |
+| I | Internal tooling | SITE | Marketing site |
+| COM | Community | X4 | x402 middleware |
+
+### Completion workflow
+
+1. Update status to `done` in TASKS.md
+2. Append row to `tasks/completed/log.md`
+3. Remove row from TASKS.md
+4. If plan doc exists: `git mv tasks/active/<plan>.md tasks/completed/`
+
+### What does NOT belong in TASKS.md
+
+- Done tasks (go to `tasks/completed/log.md`)
+- Research notes (go to `tasks/research/`)
+- Milestone retrospectives (go to `tasks/completed/milestones.md`)
+- Plan doc indexes (live in `tasks/README.md`)
+
 ## Landing Page Design System
 
 Dark-mode, monospace, CSS custom properties:
