@@ -1,0 +1,12 @@
+id: id
+name: id.sh
+endpoint: id.prim.sh
+status: soon
+type: identity
+card_class: p22
+description: "On-chain identity for agents. DID-based reputation and verification."
+accent: "#90CAF9"
+accent_dim: "#42a5f5"
+accent_glow: "rgba(144,202,249,0.08)"
+tagline: "Identity for agents."
+sub: "On-chain DID-based identity and reputation. CAIP-10 wallet addresses as root identity. x402 auth."

@@ -1,7 +1,7 @@
 id: spawn
 name: spawn.sh
 endpoint: spawn.prim.sh
-status: testing
+status: deployed
 type: compute
 card_class: p1
 description: "VPS in one API call. Deploy, scale, destroy. Per-second billing."
@@ -29,3 +29,115 @@ pricing:
   - op: "Bandwidth"
     price: "$0.01/GB"
     note: ""
+
+accent: "#00ff88"
+accent_dim: "#00cc6a"
+accent_glow: "rgba(0,255,136,0.08)"
+
+tagline: "VPS for agents. By agents."
+sub: "No signup. No GUI. No KYC. Pay with x402. Deploy from code."
+
+hero_badges:
+  - "**x402** auth + payment"
+  - "**REST** + **MCP** API"
+  - "**0** signup required"
+  - "**CLI** admin only"
+  - "**OpenAI** compatible"
+
+hero_example: |
+  # Deploy a VPS in one HTTP request
+  $ curl -X POST https://spawn.prim.sh/v1/instances \
+      -H "X-402-Payment: $PAYMENT_TOKEN" \
+      -d '{"image": "ubuntu-24.04", "plan": "s-1vcpu-1gb"}'
+
+  # Response (402 → pay → 201)
+  {
+    "id": "inst_k7x9m2",
+    "ipv4": "198.51.100.1",
+    "ssh_key": "ssh-ed25519 AAAA...",
+    "status": "provisioning",
+    "ready_at": "~45s"
+  }
+
+cta:
+  headline: "Compute should be an **HTTP request**."
+  sub: "No sign-up page because there's nothing to sign up for. Just point your agent at the API and pay."
+
+sections:
+  - type: flow
+    title: "How"
+    highlight: "it works"
+    note: "No account. No API key. No dashboard. Just pay and compute."
+    steps:
+      - "HTTP request"
+      - "Payment required"
+      - "Micropayment"
+      - "VPS running"
+
+  - type: cards
+    title: "Three"
+    highlight: "interfaces, zero GUIs"
+    items:
+      - title: "REST API"
+        body: "Standard HTTP. Create, list, resize, snapshot, destroy instances. x402 payment on every mutating request. JSON in, JSON out."
+      - title: "MCP Server"
+        body: "Model Context Protocol tools. Any MCP-compatible agent can spawn infrastructure as naturally as calling a function. spawn_instance, exec_command, destroy_instance."
+      - title: "OpenAI-Compatible"
+        body: "Drop-in replacement for tool-use schemas. Works with any agent framework that speaks the OpenAI function calling spec."
+
+  - type: cards
+    title: "What agents"
+    highlight: "can do"
+    items:
+      - title: "Self-replicate"
+        body: "An agent spins up a VPS, installs itself, runs a task, tears it down. No human in the loop."
+      - title: "Scale horizontally"
+        body: "Need 50 workers? Spawn 50 instances. Fan out, collect results, destroy. Pay per second."
+      - title: "Deploy services"
+        body: "Ship a web app, database, or API endpoint. Get a public IP. No Heroku, no Vercel, no YAML."
+      - title: "Isolated environments"
+        body: "Run untrusted code in disposable VMs. Each instance is a fresh machine with its own IP and filesystem."
+      - title: "Build other agents"
+        body: "Agent A deploys Agent B on a new VPS. Agent B deploys a database. Recursive infrastructure."
+      - title: "Stay anonymous"
+        body: "No account, no email, no identity. x402 payment is the only credential. Agents don't have passports."
+
+  - type: code
+    title: "API"
+    highlight: "reference"
+    lines:
+      - "# All endpoints."
+      - ""
+      - "POST   /v1/instances          # Create instance"
+      - "GET    /v1/instances          # List instances (by payment identity)"
+      - "GET    /v1/instances/:id      # Get instance details"
+      - "POST   /v1/instances/:id/exec # Execute command via SSH"
+      - "PUT    /v1/instances/:id      # Resize / modify"
+      - "DELETE /v1/instances/:id      # Destroy instance"
+      - "POST   /v1/instances/:id/snap # Create snapshot"
+      - "GET    /v1/snapshots          # List snapshots"
+      - "GET    /v1/plans              # Available plans + pricing"
+      - "GET    /v1/images             # Available OS images"
+      - "GET    /v1/regions            # Available regions"
+
+  - type: manifesto
+    title: "Why"
+    highlight: "x402"
+    paragraphs:
+      - "The internet has a status code for payments. It's been reserved since 1997. **HTTP 402: Payment Required.**"
+      - "Every other cloud provider requires: an email, a password, a credit card, KYC verification, an API key, a dashboard, a billing page, a support ticket system. **Agents don't have emails.**"
+      - "x402 is the missing piece. Agent sends request → server returns 402 with payment details → agent pays (Lightning/L2/Stripe) → server returns the resource. **The payment IS the authentication.**"
+      - "No account. No API key. No session. No cookies. Every request is self-contained. The payment receipt proves you paid, identifies your resources, and authorizes access. **Stateless compute for stateless agents.**"
+
+  - type: cli
+    title: "Admin"
+    highlight: "CLI"
+    note: "For operators running spawn.sh nodes. Not for end users (agents are the end users)."
+    commands:
+      - "spawn node add --region nyc1 --provider hetzner"
+      - "spawn node list"
+      - "spawn node drain nyc1-04"
+      - "spawn capacity --region all"
+      - "spawn audit --last 24h"
+      - "spawn pricing set s-1vcpu-1gb --hourly 0.012"
+      - "spawn payments reconcile --network lightning"

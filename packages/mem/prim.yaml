@@ -1,7 +1,7 @@
 id: mem
 name: mem.sh
 endpoint: mem.prim.sh
-status: built
+status: building
 type: memory
 card_class: p21
 description: "Vector store and cache for agents. Persist long-term knowledge and session state."
@@ -27,3 +27,60 @@ pricing:
   - op: "KV cache"
     price: "$0.0001"
     note: "Per operation"
+
+accent: "#00ACC1"
+accent_dim: "#007a8e"
+accent_glow: "rgba(0,172,193,0.08)"
+
+tagline: "Memory for agents."
+sub: "Managed vector database. Ephemeral cache. Long-term knowledge retrieval. Give your agent a hippocampus, gated by x402."
+
+hero_badges:
+  - "**x402** auth"
+  - "**Vector** store"
+  - "**Session** cache"
+  - "**Embeddings** included"
+
+hero_example: |
+  # Remember something
+  $ curl -X POST https://mem.prim.sh/v1/collections/my-brain/upsert \
+      -H "X-402-Payment: $TOKEN" \
+      -d '{"text": "The user prefers dark mode.", "metadata": {"source": "chat"}}'
+
+  # Recall it later
+  $ curl -G https://mem.prim.sh/v1/collections/my-brain/query \
+      -H "X-402-Payment: $TOKEN" \
+      --data-urlencode "text=what does the user like?"
+
+cta:
+  headline: "Memory is an **API call**."
+  sub: "Agents don't have a hippocampus. They have vectors."
+
+sections:
+  - type: cards
+    title: "What agents"
+    highlight: "use it for"
+    items:
+      - title: "Long-term memory"
+        body: "Agents spin up on spawn.sh and disappear. mem.sh persists what they learn so the next instance remembers the past."
+      - title: "Knowledge retrieval (RAG)"
+        body: "Upload manuals, runbooks, FAQs. Query semantically instead of stuffing 50KB of docs into every context window."
+      - title: "Shared context"
+        body: "A swarm of agents reads and writes to the same collection. One discovers a pattern, all of them learn it."
+      - title: "Session caching"
+        body: "Store short-lived conversation state and workflow checkpoints in a cheap KV cache beside the vector store."
+
+  - type: code
+    title: "API"
+    highlight: "reference"
+    lines:
+      - "# Collections"
+      - "POST   /v1/collections               # Create collection"
+      - ""
+      - "# Vectors"
+      - "POST   /v1/collections/:id/upsert    # Text → embedding → store"
+      - "GET    /v1/collections/:id/query     # Semantic search"
+      - ""
+      - "# Cache"
+      - "POST   /v1/cache/set                 # Set key"
+      - "GET    /v1/cache/get                 # Get key"

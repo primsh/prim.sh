@@ -1,0 +1,12 @@
+id: pins
+name: pins.sh
+endpoint: pins.prim.sh
+status: soon
+type: location
+card_class: p25
+description: "Location data for agents. Places, geocoding, routing via Google Maps or Overture."
+accent: "#EF9A9A"
+accent_dim: "#f44336"
+accent_glow: "rgba(239,154,154,0.08)"
+tagline: "Location data for agents."
+sub: "Search places, geocode addresses, get routing directions. Google Places API under the hood. x402 auth."

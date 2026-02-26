@@ -1,7 +1,7 @@
 id: faucet
 name: faucet.sh
 endpoint: faucet.prim.sh
-status: testing
+status: deployed
 type: testnet
 card_class: pfaucet
 description: "Free testnet USDC and ETH on demand. Fund your agent wallet and start building."
@@ -18,3 +18,55 @@ pricing:
   - op: "ETH drip"
     price: "free"
     note: "Testnet only"
+
+accent: "#29B6F6"
+accent_dim: "#1a9dd4"
+accent_glow: "rgba(41,182,246,0.08)"
+
+tagline: "Testnet funds for agents."
+sub: "Free USDC and ETH on Base Sepolia. No signup, no captcha. Rate-limited per address. Get funded and start building."
+
+hero_badges:
+  - "**Free** no payment needed"
+  - "**USDC** + ETH"
+  - "**Base** Sepolia"
+  - "**Rate** limited"
+
+hero_example: |
+  # Get 10 test USDC (2hr cooldown)
+  $ curl -X POST https://faucet.prim.sh/v1/faucet/usdc \
+      -H "Content-Type: application/json" \
+      -d '{"address": "0xYourWalletAddress"}'
+
+  { "txHash": "0xabc...", "amount": "10000000", "token": "USDC" }
+
+  # Get 0.01 test ETH (1hr cooldown)
+  $ curl -X POST https://faucet.prim.sh/v1/faucet/eth \
+      -H "Content-Type: application/json" \
+      -d '{"address": "0xYourWalletAddress"}'
+
+cta:
+  headline: "Testnet funds are a **POST request**."
+  sub: "No captcha. No browser. Just an address."
+
+sections:
+  - type: cards
+    title: "What agents"
+    highlight: "use it for"
+    items:
+      - title: "Bootstrap a wallet"
+        body: "New agent, empty wallet. Hit faucet.sh once, get enough USDC to pay for storage, compute, and a dozen API calls. Zero human intervention."
+      - title: "CI/CD pipelines"
+        body: "Integration tests that exercise x402 flows need funded wallets. faucet.sh keeps test wallets topped up without manual intervention."
+      - title: "Agent onboarding"
+        body: "First thing a new agent does: register at wallet.sh, drip at faucet.sh. From zero to operational in two API calls."
+      - title: "Hackathons and prototypes"
+        body: "Build on the testnet without worrying about USDC. Focus on the primitives, not the funding flow."
+
+  - type: code
+    title: "API"
+    highlight: "reference"
+    lines:
+      - "POST  /v1/faucet/usdc  # Drip 10 USDC (2hr cooldown)"
+      - "POST  /v1/faucet/eth   # Drip 0.01 ETH (1hr cooldown)"
+      - "GET   /v1/faucet/status # Check cooldown status for address"

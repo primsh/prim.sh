@@ -1,0 +1,12 @@
+id: seek
+name: seek.sh
+endpoint: seek.prim.sh
+status: soon
+type: search
+card_class: p15
+description: "Deep search for agents. Brave Search API or SearXNG. Privacy-first results."
+accent: "#FFAB91"
+accent_dim: "#ff7043"
+accent_glow: "rgba(255,171,145,0.08)"
+tagline: "Deep search for agents."
+sub: "Privacy-first web search. Brave Search API. No tracking, no ads, no personalization. x402 auth."

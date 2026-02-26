@@ -1,0 +1,69 @@
+id: track
+name: track.sh
+endpoint: track.prim.sh
+status: building
+type: logistics
+card_class: p13
+accent: "#FF7043"
+accent_dim: "#e64a19"
+accent_glow: "rgba(255,112,67,0.08)"
+wraps: TrackingMore API
+description: "Package tracking for agents. USPS, FedEx, UPS, DHL and 1000+ carriers. Status, ETA, full event history."
+port: 3009
+order: 10
+phantom: false
+env:
+  - PRIM_PAY_TO
+  - PRIM_NETWORK
+  - TRACKINGMORE_API_KEY
+  - WALLET_INTERNAL_URL
+pricing:
+  - op: "Track package"
+    price: "$0.05"
+    note: "Per lookup"
+
+tagline: "Package tracking for agents."
+sub: "USPS, FedEx, UPS, DHL, and 1000+ carriers. Real-time status, ETA, full event history. Stateless lookup via x402."
+
+hero_badges:
+  - "**1000+** carriers"
+  - "**x402** auth"
+  - "**Stateless** lookup"
+  - "**Real-time** status"
+
+hero_example: |
+  # Track a package by tracking number
+  $ curl -X POST https://track.prim.sh/v1/track \
+      -H "X-402-Payment: $TOKEN" \
+      -d '{"tracking_number": "1Z999AA10123456784", "carrier": "ups"}'
+
+  {
+    "status": "in_transit",
+    "eta": "2026-03-01",
+    "location": "Louisville, KY",
+    "events": [{ "timestamp": "...", "description": "Departed facility" }]
+  }
+
+cta:
+  headline: "Package tracking is an **API call**."
+  sub: "Agents don't check tracking pages. They poll endpoints."
+
+sections:
+  - type: cards
+    title: "What agents"
+    highlight: "use it for"
+    items:
+      - title: "Order fulfillment"
+        body: "Agent places an order, gets a tracking number. Polls track.sh until delivered. Notifies the user via email.sh. Zero browser tabs."
+      - title: "Supply chain monitoring"
+        body: "Monitor shipments across multiple carriers in one API. Get structured status instead of parsing HTML from 1000 carrier sites."
+      - title: "Delivery alerts"
+        body: "Schedule a cron.sh job to check status daily. Trigger webhooks on status changes. Automated delivery pipeline."
+      - title: "Returns processing"
+        body: "Customer initiates return, agent tracks the inbound package. Trigger refund when carrier confirms receipt."
+
+  - type: code
+    title: "API"
+    highlight: "reference"
+    lines:
+      - "POST   /v1/track  # Track by tracking number + carrier"

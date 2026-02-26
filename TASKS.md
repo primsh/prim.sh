@@ -65,7 +65,7 @@ Not blocking public launch. Extensions, polish, business tooling.
 | L-60 | Pricing audit (superseded by BIZ-1) | — | L-22 | pending |
 | I-1 | Primitives status SOT: `primitives.yaml` + codegen script for llms.txt + README table | root, scripts/, site/ | — | done |
 | I-2 | Business observability (superseded by OBS-1) | scripts/ | — | done |
-| SITE-1 | SSR site: replace 27 per-prim HTML files with template + per-prim YAML, serve.ts renders on request, CF edge caches. Fixes CSS drift, single source for all page updates | site/, packages/*/prim.yaml | I-1 | pending |
+| SITE-1 | SSR site: replace 27 per-prim HTML files with template + per-prim YAML, serve.ts renders on request, CF edge caches. Fixes CSS drift, single source for all page updates | site/, packages/*/prim.yaml | I-1 | done |
 | BIZ-1 | Master pricing list: `specs/pricing.yaml` as SOT, codegen into llms.txt/skills | specs/ | — | done |
 | OBS-1 | Service observability: `GET /v1/metrics` on each service (in-memory: req count, payment count, error count, p50/p99 latency) + `bun scripts/report.ts` pulling all services + DO costs + CF R2 + on-chain USDC revenue into one table + MCP tool. No GUI, no DB. **Parallelizable: spawn one agent per service for /v1/metrics, one agent for report.ts + MCP tool. 7 agents total, all independent.** Plan: `tasks/active/obs-1-metrics-report-2026-02-26.md` | Claude | — | pending |
 | BIZ-2 | Expense dashboard: `bun scripts/expenses.ts` — DO API + CF R2 + Tavily estimate + on-chain USDC revenue + fixed costs (VPS $24/mo, domain $50/yr, X $11/mo). Prints margin table per primitive. **Single agent, no parallelization needed.** | scripts/ | — | pending |

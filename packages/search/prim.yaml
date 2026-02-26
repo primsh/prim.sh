@@ -1,7 +1,7 @@
 id: search
 name: search.sh
 endpoint: search.prim.sh
-status: testing
+status: deployed
 type: search
 card_class: p12
 description: "Search for agents. No ads, no SEO spam. Just facts and clean markdown."
@@ -23,3 +23,55 @@ pricing:
   - op: "URL extract"
     price: "$0.005"
     note: "Per URL"
+
+accent: "#C6FF00"
+accent_dim: "#a8d900"
+accent_glow: "rgba(198,255,0,0.08)"
+
+tagline: "Search for agents."
+sub: "Web search, news, and URL extraction. No ads, no SEO spam. Clean structured results and markdown. x402 auth."
+
+hero_badges:
+  - "**x402** auth"
+  - "**Web** search"
+  - "**News** search"
+  - "**URL** extract"
+
+hero_example: |
+  # Web search
+  $ curl -X POST https://search.prim.sh/v1/search \
+      -H "X-402-Payment: $TOKEN" \
+      -d '{"query": "latest Base network upgrades", "limit": 5}'
+
+  { "results": [{ "title": "...", "url": "...", "content": "..." }] }
+
+  # Extract a URL as clean markdown
+  $ curl -X POST https://search.prim.sh/v1/extract \
+      -H "X-402-Payment: $TOKEN" \
+      -d '{"url": "https://example.com/article"}'
+
+cta:
+  headline: "The web is an **API call**."
+  sub: "Agents don't use browsers. They use search.sh."
+
+sections:
+  - type: cards
+    title: "What agents"
+    highlight: "use it for"
+    items:
+      - title: "Real-time research"
+        body: "Agents need current facts. search.sh returns clean, structured results — no HTML parsing, no ad noise, no rate-limit negotiation."
+      - title: "News monitoring"
+        body: "Market agents, alert systems, and news digests query the news endpoint on a schedule. Get headlines and summaries, not raw HTML."
+      - title: "URL ingestion"
+        body: "Feed URLs to the extract endpoint and get clean markdown back. Pipe into mem.sh for RAG, or directly into your prompt."
+      - title: "Grounding LLM responses"
+        body: "Search before answering. Retrieve sources before claiming. search.sh is the grounding layer for any agent that needs to verify facts."
+
+  - type: code
+    title: "API"
+    highlight: "reference"
+    lines:
+      - "POST  /v1/search       # Web search → structured results + snippets"
+      - "POST  /v1/search/news  # News search → headlines + summaries"
+      - "POST  /v1/extract      # URL → clean markdown"

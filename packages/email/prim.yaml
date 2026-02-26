@@ -1,7 +1,7 @@
 id: email
 name: email.sh
 endpoint: email.prim.sh
-status: testing
+status: deployed
 type: email
 card_class: p2
 description: "Mailboxes on demand. Send, receive, webhook. Disposable or permanent."
@@ -15,6 +15,16 @@ env:
   - STALWART_API_KEY
   - EMAIL_DEFAULT_DOMAIN
   - WALLET_INTERNAL_URL
+deploy:
+  max_body_size: "25MB"
+  extra_caddy:
+    - |
+      mail.email.prim.sh {
+          import security_headers
+          request_body { max_size 25MB }
+          reverse_proxy localhost:8080
+      }
+
 pricing:
   - op: "Create mailbox"
     price: "$0.05"
@@ -31,3 +41,94 @@ pricing:
   - op: "Custom domain"
     price: "$0.05"
     note: "DNS verification required"
+
+accent: "#6C8EFF"
+accent_dim: "#5070dd"
+accent_glow: "rgba(108,142,255,0.08)"
+
+tagline: "Email for agents. No inbox required."
+sub: "Provision addresses, send and receive email, parse inbound messages — all via API. x402 auth. No signup."
+
+hero_badges:
+  - "**x402** auth + payment"
+  - "**Send** + **Receive**"
+  - "**Webhooks** for inbound"
+  - "**0** signup required"
+  - "**MCP** + **REST**"
+
+hero_example: |
+  # Get a mailbox in one request
+  $ curl -X POST https://email.prim.sh/v1/mailboxes \
+      -H "X-402-Payment: $PAYMENT_TOKEN" \
+      -d '{"domain": "email.sh"}'
+
+  # → 402 → pay → 201
+  {
+    "id": "mbx_r8k2n4",
+    "address": "a7x9m2@email.sh",
+    "created_at": "2026-02-23T06:30:00Z",
+    "webhook": null,
+    "ttl": 86400
+  }
+
+  # Send email
+  $ curl -X POST https://email.prim.sh/v1/send \
+      -H "X-402-Payment: $PAYMENT_TOKEN" \
+      -d '{"from": "a7x9m2@email.sh", "to": "human@gmail.com",
+           "subject": "Task complete", "body": "Your report is ready."}'
+
+cta:
+  headline: "Email is an **API call**."
+  sub: "Agents don't check inboxes. They poll endpoints and parse JSON."
+
+sections:
+  - type: flow
+    title: "How"
+    highlight: "it works"
+    note: "Mailboxes are ephemeral by default (24h TTL). Extend or make permanent with a single API call."
+    steps:
+      - "Create mailbox"
+      - "Send / receive"
+      - "Webhook on inbound"
+      - "Auto-expire or keep"
+
+  - type: cards
+    title: "What agents"
+    highlight: "use it for"
+    items:
+      - title: "Service signups"
+        body: "Agent needs a GitHub account? Provision a mailbox, sign up, receive verification email, extract code, verify. All programmatic."
+      - title: "Notifications"
+        body: "Send task completion emails, error alerts, daily reports. Agents communicating with humans where humans expect it — their inbox."
+      - title: "Inbound processing"
+        body: "Give a mailbox to a data source. Inbound emails hit your webhook as structured JSON. The agent processes, never checks an inbox."
+      - title: "Multi-identity"
+        body: "Spin up 50 mailboxes for 50 tasks. Each has its own address. No shared inbox, no routing rules, no filters. Isolation by default."
+      - title: "Disposable verification"
+        body: "Need an email for a one-time verification? Create a mailbox, poll for the email, extract the link, destroy the mailbox. 30 seconds."
+      - title: "Agent-to-agent"
+        body: "Agents on different platforms communicating via email. The universal protocol. No API integration needed — just SMTP."
+
+  - type: code
+    title: "API"
+    highlight: "reference"
+    lines:
+      - "# Mailbox management"
+      - "POST   /v1/mailboxes              # Create mailbox"
+      - "GET    /v1/mailboxes              # List your mailboxes"
+      - "GET    /v1/mailboxes/:id          # Mailbox details"
+      - "PUT    /v1/mailboxes/:id          # Update TTL, webhook, forwarding"
+      - "DELETE /v1/mailboxes/:id          # Destroy mailbox"
+      - ""
+      - "# Sending"
+      - "POST   /v1/send                   # Send email (text or HTML)"
+      - "POST   /v1/send/raw               # Send raw MIME"
+      - ""
+      - "# Receiving"
+      - "GET    /v1/mailboxes/:id/messages  # Poll for messages"
+      - "GET    /v1/messages/:id            # Get message"
+      - "DELETE /v1/messages/:id            # Delete message"
+      - ""
+      - "# Custom domains (optional)"
+      - "POST   /v1/domains                 # Add custom domain"
+      - "GET    /v1/domains/:id/verify      # Check DNS verification"

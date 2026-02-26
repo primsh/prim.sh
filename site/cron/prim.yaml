@@ -1,0 +1,12 @@
+id: cron
+name: cron.sh
+endpoint: cron.prim.sh
+status: soon
+type: scheduler
+card_class: p8
+description: "Scheduled jobs for agents. HTTP callbacks on a cron schedule. No servers needed."
+accent: "#80CBC4"
+accent_dim: "#4db6ac"
+accent_glow: "rgba(128,203,196,0.08)"
+tagline: "Scheduled jobs for agents."
+sub: "Register a cron expression and a callback URL. cron.sh fires HTTP requests on schedule. x402 auth."

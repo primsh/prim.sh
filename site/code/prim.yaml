@@ -1,0 +1,12 @@
+id: code
+name: code.sh
+endpoint: code.prim.sh
+status: soon
+type: execution
+card_class: p11
+description: "Sandboxed code execution for agents. Run untrusted code safely. x402 auth."
+accent: "#EF9A9A"
+accent_dim: "#ef5350"
+accent_glow: "rgba(239,154,154,0.08)"
+tagline: "Code execution for agents."
+sub: "Run arbitrary code in sandboxed environments. E2B or Firecracker under the hood. x402 auth. No server setup."

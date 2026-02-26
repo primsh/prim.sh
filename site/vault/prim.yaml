@@ -1,0 +1,12 @@
+id: vault
+name: vault.sh
+endpoint: vault.prim.sh
+status: soon
+type: secrets
+card_class: p7
+description: "Encrypted secrets store for agents. Store API keys, credentials, and private data."
+accent: "#FFD54F"
+accent_dim: "#ffb300"
+accent_glow: "rgba(255,213,79,0.08)"
+tagline: "Secrets for agents."
+sub: "Encrypted key-value store. Store API keys, credentials, and private data. x402 auth."

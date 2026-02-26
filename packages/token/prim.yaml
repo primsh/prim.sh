@@ -1,7 +1,7 @@
 id: token
 name: token.sh
 endpoint: token.prim.sh
-status: built
+status: building
 type: defi
 card_class: p9
 description: "Deploy ERC-20 tokens and Uniswap V3 pools. No wallet setup required."
@@ -28,3 +28,58 @@ pricing:
   - op: "Read"
     price: "$0.001"
     note: "Per request"
+
+accent: "#CE93D8"
+accent_dim: "#ba68c8"
+accent_glow: "rgba(206,147,216,0.08)"
+
+tagline: "Tokens for agents."
+sub: "Deploy ERC-20 tokens. Create Uniswap V3 pools. Mint supply. All via API, no wallet setup required."
+
+hero_badges:
+  - "**ERC-20** deploy"
+  - "**Uniswap V3** pools"
+  - "**x402** auth"
+  - "**Base** + Sepolia"
+
+hero_example: |
+  # Deploy an ERC-20 token
+  $ curl -X POST https://token.prim.sh/v1/tokens \
+      -H "X-402-Payment: $TOKEN" \
+      -d '{"name": "MyToken", "symbol": "MTK", "supply": 1000000}'
+
+  { "id": "tok_k8m2x7", "address": "0xabc...", "network": "eip155:84532" }
+
+  # Create a Uniswap V3 pool at $0.001/token
+  $ curl -X POST https://token.prim.sh/v1/tokens/tok_k8m2x7/pool \
+      -H "X-402-Payment: $TOKEN" \
+      -d '{"price_usdc": "0.001"}'
+
+cta:
+  headline: "Tokens are an **API call**."
+  sub: "Agents don't need MetaMask. They deploy contracts."
+
+sections:
+  - type: cards
+    title: "What agents"
+    highlight: "use it for"
+    items:
+      - title: "Project tokens"
+        body: "Deploy a named ERC-20 with custom supply and decimals. Set the agent wallet as owner. Start distributing."
+      - title: "Liquidity pools"
+        body: "Create a Uniswap V3 pool paired with USDC at a chosen price. Get pre-computed liquidity calldata."
+      - title: "Reward systems"
+        body: "Mint tokens to reward contributors, users, or other agents. Cap supply or allow unlimited minting."
+      - title: "On-chain coordination"
+        body: "Use tokens as reputation, voting weight, or stake in multi-agent systems. The token IS the credential."
+
+  - type: code
+    title: "API"
+    highlight: "reference"
+    lines:
+      - "POST   /v1/tokens              # Deploy ERC-20 token"
+      - "GET    /v1/tokens              # List your tokens"
+      - "GET    /v1/tokens/:id          # Token details + on-chain data"
+      - "POST   /v1/tokens/:id/mint     # Mint additional supply"
+      - "POST   /v1/tokens/:id/pool     # Create Uniswap V3 pool"
+      - "GET    /v1/tokens/:id/pool/liquidity-params  # Add liquidity calldata"

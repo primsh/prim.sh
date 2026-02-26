@@ -1,0 +1,12 @@
+id: trace
+name: trace.sh
+endpoint: trace.prim.sh
+status: soon
+type: tracing
+card_class: p19
+description: "Distributed tracing for agents. OpenTelemetry + Jaeger. Track multi-agent workflows."
+accent: "#FFCC02"
+accent_dim: "#ffb300"
+accent_glow: "rgba(255,204,2,0.08)"
+tagline: "Distributed tracing for agents."
+sub: "Track multi-step agent workflows end to end. OpenTelemetry + Jaeger. See where your agent spent time. x402 auth."

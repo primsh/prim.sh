@@ -1,7 +1,7 @@
 id: store
 name: store.sh
 endpoint: store.prim.sh
-status: testing
+status: deployed
 type: storage
 card_class: p4
 description: "Object storage. Persist artifacts across ephemeral VMs. S3-compatible."
@@ -28,3 +28,70 @@ pricing:
   - op: "API calls"
     price: "$0.001/call"
     note: "PUT, GET, LIST, DELETE"
+
+deploy:
+  max_body_size: "128MB"
+
+accent: "#FFB74D"
+accent_dim: "#e6a040"
+accent_glow: "rgba(255,183,77,0.08)"
+
+tagline: "Object storage for agents."
+sub: "Upload files, share artifacts between runs, persist state across ephemeral VMs. S3-compatible. x402 auth."
+
+hero_badges:
+  - "**x402** auth"
+  - "**S3** compatible"
+  - "**CDN** edge delivery"
+  - "**Signed** URLs"
+
+hero_example: |
+  # Upload a file
+  $ curl -X PUT https://store.prim.sh/v1/objects/results.json \
+      -H "X-402-Payment: $TOKEN" \
+      -H "Content-Type: application/json" \
+      -d @results.json
+
+  { "id": "obj_k9m2x7", "url": "https://cdn.store.sh/obj_k9m2x7", "size": 4096 }
+
+  # Create a bucket for a project
+  $ curl -X POST https://store.prim.sh/v1/buckets \
+      -H "X-402-Payment: $TOKEN" \
+      -d '{"name": "training-run-042", "ttl": 604800}'
+
+  # Share via signed URL (no auth needed to download)
+  $ curl -X POST https://store.prim.sh/v1/objects/obj_k9m2x7/share \
+      -H "X-402-Payment: $TOKEN" \
+      -d '{"expires": 3600}'
+
+cta:
+  headline: "Storage is an **API call**."
+  sub: "Agents don't have hard drives. They have store.sh."
+
+sections:
+  - type: cards
+    title: "What agents"
+    highlight: "use it for"
+    items:
+      - title: "Persist across VMs"
+        body: "spawn.sh VPS is ephemeral. Before destroying, upload artifacts to store.sh. Next VPS pulls them down. State survives infrastructure."
+      - title: "Share between agents"
+        body: "Agent A produces a dataset. Uploads to store.sh. Agent B on a different VPS downloads it. No shared filesystem needed."
+      - title: "Model artifacts"
+        body: "Training runs produce checkpoints, logs, weights. Store them with TTLs. Keep the best, let the rest expire."
+      - title: "Public hosting"
+        body: "Agent builds a static site. Uploads HTML/CSS/JS. Gets a CDN URL. Website deployed without a web server."
+
+  - type: code
+    title: "API"
+    highlight: "reference"
+    lines:
+      - "POST   /v1/buckets              # Create bucket"
+      - "GET    /v1/buckets              # List buckets"
+      - "DELETE /v1/buckets/:id          # Delete bucket + contents"
+      - "PUT    /v1/objects/:path        # Upload object"
+      - "GET    /v1/objects/:path        # Download object"
+      - "DELETE /v1/objects/:path        # Delete object"
+      - "GET    /v1/buckets/:id/objects  # List objects in bucket"
+      - "POST   /v1/objects/:path/share  # Generate signed URL"
+      - "PUT    /v1/s3/*                 # S3-compatible endpoint"

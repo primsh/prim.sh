@@ -1,0 +1,12 @@
+id: watch
+name: watch.sh
+endpoint: watch.prim.sh
+status: soon
+type: observability
+card_class: p18
+description: "OpenTelemetry collector for agents. Metrics, traces, and logs via API."
+accent: "#CE93D8"
+accent_dim: "#ab47bc"
+accent_glow: "rgba(206,147,216,0.08)"
+tagline: "Observability for agents."
+sub: "Ship metrics, traces, and logs from your agent. OpenTelemetry compatible. x402 auth. No infra required."

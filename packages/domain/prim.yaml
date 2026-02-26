@@ -1,7 +1,7 @@
 id: domain
 name: domain.sh
 endpoint: domain.prim.sh
-status: built
+status: building
 type: domains
 card_class: p6
 description: "Register domains, manage DNS, auto-TLS. Full domain lifecycle via API."
@@ -28,3 +28,69 @@ pricing:
   - op: "DNS queries"
     price: "free"
     note: "First 1M/mo"
+
+accent: "#4DD0E1"
+accent_dim: "#3ab8c7"
+accent_glow: "rgba(77,208,225,0.08)"
+
+tagline: "Domains for agents."
+sub: "Instant subdomains with auto-TLS. Or bring your own domain. DNS records via API. No registrar account needed."
+
+hero_badges:
+  - "**x402** auth"
+  - "**Auto** TLS"
+  - "**Instant** subdomains"
+  - "**BYOD** custom domains"
+
+hero_example: |
+  # Get a subdomain with TLS instantly
+  $ curl -X POST https://domain.prim.sh/v1/subdomains \
+      -H "X-402-Payment: $TOKEN" \
+      -d '{"name": "my-app", "target": "198.51.100.1"}'
+
+  { "domain": "my-app.prim.sh", "target": "198.51.100.1",
+    "tls": true, "cert_status": "provisioning" }
+
+  # Or manage DNS records for your own domain
+  $ curl -X POST https://domain.prim.sh/v1/zones/mysite.com/records \
+      -H "X-402-Payment: $TOKEN" \
+      -d '{"type": "A", "name": "@", "value": "198.51.100.1"}'
+
+cta:
+  headline: "A domain is an **API call**."
+  sub: "Agents don't register domains. They provision endpoints."
+
+sections:
+  - type: cards
+    title: "What agents"
+    highlight: "use it for"
+    items:
+      - title: "Instant deploy"
+        body: "Agent deploys app on spawn.sh, gets an IP. Points domain.sh subdomain at it. HTTPS in 30 seconds. No nginx config, no certbot."
+      - title: "Webhook endpoints"
+        body: "email.sh and ring.sh need webhook URLs. domain.sh gives them stable, TLS-secured hostnames instead of raw IPs that change on redeploy."
+      - title: "Service discovery"
+        body: "Agent A at api.prim.sh. Agent B at worker.prim.sh. They find each other by name, not IP. DNS is the original service mesh."
+      - title: "Custom domains"
+        body: "Agent builds a product, needs a real domain. Manage DNS records programmatically. Point, deploy, update — all via API."
+
+  - type: code
+    title: "API"
+    highlight: "reference"
+    lines:
+      - "# Managed subdomains"
+      - "POST   /v1/subdomains           # Create subdomain + auto-TLS"
+      - "GET    /v1/subdomains           # List your subdomains"
+      - "PUT    /v1/subdomains/:id       # Update target IP"
+      - "DELETE /v1/subdomains/:id       # Release subdomain"
+      - ""
+      - "# Custom domains"
+      - "POST   /v1/zones                # Add domain (returns NS records)"
+      - "GET    /v1/zones/:domain/verify # Check NS delegation"
+      - "POST   /v1/zones/:domain/records # Add DNS record"
+      - "GET    /v1/zones/:domain/records # List records"
+      - "PUT    /v1/records/:id          # Update record"
+      - "DELETE /v1/records/:id          # Delete record"
+      - ""
+      - "# TLS"
+      - "GET    /v1/subdomains/:id/cert  # Cert status + expiry"

@@ -1,7 +1,7 @@
 id: wallet
 name: wallet.sh
 endpoint: wallet.prim.sh
-status: testing
+status: deployed
 type: crypto
 card_class: p20
 description: "Agent wallets. Generate keys, hold USDC on Base, and pay any x402 invoice."
@@ -22,3 +22,61 @@ pricing:
   - op: "Policy update"
     price: "$0.005"
     note: ""
+
+accent: "#8BC34A"
+accent_dim: "#6a9e2a"
+accent_glow: "rgba(139,195,74,0.08)"
+
+tagline: "Wallets for agents."
+sub: "Create, fund, and spend from on-chain wallets. Base USDC first, multi-chain later. x402-native identity for every agent."
+
+hero_badges:
+  - "**Base** USDC"
+  - "**x402** native"
+  - "**Multi**-wallet"
+  - "**Owner** funding"
+
+hero_example: |
+  # Create a wallet
+  $ curl -X POST https://wallet.prim.sh/v1/wallets \
+      -H "X-402-Payment: $TOKEN"
+
+  { "address": "0xabc...", "network": "eip155:8453", "balances": { "USDC": "0.00" } }
+
+  # Send USDC on Base
+  $ curl -X POST https://wallet.prim.sh/v1/wallets/0xabc.../send \
+      -H "X-402-Payment: $TOKEN" \
+      -d '{"to": "0xdef...", "amount": "1.23", "asset": "USDC"}'
+
+  # Pay another primitive via x402
+  $ curl -X POST https://wallet.prim.sh/v1/x402/pay \
+      -H "X-402-Payment: $TOKEN" \
+      -d '{"url": "https://spawn.prim.sh/v1/instances", "max": "0.05"}'
+
+cta:
+  headline: "Wallets are an **API call**."
+  sub: "Agents don't KYC. They generate keys."
+
+sections:
+  - type: cards
+    title: "What agents"
+    highlight: "use it for"
+    items:
+      - title: "Service payments"
+        body: "Pay for spawn, relay, infer, and other primitives without human API keys. The wallet is the identity and the payment source."
+      - title: "Autonomous budgeting"
+        body: "Give agents their own wallets with limits. Let them decide when to spend on computation, storage, or data."
+      - title: "Multi-primitive flows"
+        body: "Spawn compute, call models, store artifacts, and ship goods — all from the same wallet address."
+      - title: "Owner funding"
+        body: "Humans top up wallets in fiat or crypto. Agents spend via x402 without touching custody or keys."
+
+  - type: code
+    title: "API"
+    highlight: "reference"
+    lines:
+      - "POST   /v1/wallets                 # Create wallet"
+      - "GET    /v1/wallets                 # List wallets"
+      - "GET    /v1/wallets/:address        # Wallet details"
+      - "POST   /v1/wallets/:address/send   # Send USDC"
+      - "POST   /v1/x402/pay               # Pay x402 invoice"
