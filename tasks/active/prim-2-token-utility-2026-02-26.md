@@ -1,8 +1,22 @@
 # PRIM-2: $PRIM Token Utility Design
 
 **Date:** 2026-02-26
-**Status:** pending — design doc, requires Garric decision before implementation
+**Status:** pending — blocked on ETH for gas (see L-27 blockers)
 **Owner:** Garric + Claude
+
+## L-27 Deploy Blockers (2026-02-26)
+
+Attempted to deploy $PRIM contract. Failed due to the following, which is a perfect encapsulation of why agent-native crypto infrastructure needs to exist:
+
+- **Coinbase**: bought ETH, got 24hr account hold + ID verification (DL upload + video selfie saying 3 random digits)
+- **Base Wallet**: only 0.0000028 ETH on Base (~$0.005) — not enough for gas
+- **Optimism bridge**: had $0.02 ETH on Optimism, tried to bridge via superbridge.app — below minimum bridge amount
+- **Polygon wallets**: 198 POL on remote machine, but bridging to Base requires copying keystores + multi-hop swap — over-engineered for a $1 problem
+- **Net result**: cannot get $1 of ETH onto Base without a 24hr wait
+
+Agents will not have this problem. Humans apparently will.
+
+**Unblocked when**: Coinbase hold clears (~24hrs from 2026-02-26 evening).
 **Depends on:** L-27 (contract deployed)
 
 ## Context
