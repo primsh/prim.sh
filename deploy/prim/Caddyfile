@@ -23,56 +23,12 @@
     }
 }
 
-prim.sh {
+domain.prim.sh {
     import security_headers
     request_body {
         max_size 1MB
     }
-    handle /pricing.json {
-        root * /opt/prim/site
-        file_server
-    }
-    reverse_proxy localhost:3000
-}
-
-wallet.prim.sh {
-    import security_headers
-    request_body {
-        max_size 1MB
-    }
-    reverse_proxy localhost:3001
-}
-
-store.prim.sh {
-    import security_headers
-    request_body {
-        max_size 128MB
-    }
-    reverse_proxy localhost:3002
-}
-
-faucet.prim.sh {
-    import security_headers
-    request_body {
-        max_size 1MB
-    }
-    reverse_proxy localhost:3003
-}
-
-spawn.prim.sh {
-    import security_headers
-    request_body {
-        max_size 1MB
-    }
-    reverse_proxy localhost:3004
-}
-
-search.prim.sh {
-    import security_headers
-    request_body {
-        max_size 1MB
-    }
-    reverse_proxy localhost:3005
+    reverse_proxy localhost:3009
 }
 
 email.prim.sh {
@@ -85,10 +41,56 @@ email.prim.sh {
 
 mail.email.prim.sh {
     import security_headers
-    request_body {
-        max_size 25MB
-    }
+    request_body { max_size 25MB }
     reverse_proxy localhost:8080
+}
+
+faucet.prim.sh {
+    import security_headers
+    request_body {
+        max_size 1MB
+    }
+    reverse_proxy localhost:3003
+}
+
+mem.prim.sh {
+    import security_headers
+    request_body {
+        max_size 1MB
+    }
+    reverse_proxy localhost:3008
+}
+
+search.prim.sh {
+    import security_headers
+    request_body {
+        max_size 1MB
+    }
+    reverse_proxy localhost:3005
+}
+
+spawn.prim.sh {
+    import security_headers
+    request_body {
+        max_size 1MB
+    }
+    reverse_proxy localhost:3004
+}
+
+store.prim.sh {
+    import security_headers
+    request_body {
+        max_size 128MB
+    }
+    reverse_proxy localhost:3002
+}
+
+token.prim.sh {
+    import security_headers
+    request_body {
+        max_size 1MB
+    }
+    reverse_proxy localhost:3007
 }
 
 track.prim.sh {
@@ -97,4 +99,12 @@ track.prim.sh {
         max_size 1MB
     }
     reverse_proxy localhost:3009
+}
+
+wallet.prim.sh {
+    import security_headers
+    request_body {
+        max_size 1MB
+    }
+    reverse_proxy localhost:3001
 }

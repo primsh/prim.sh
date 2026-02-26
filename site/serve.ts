@@ -121,6 +121,11 @@ const server = Bun.serve({
       return serveFile(join(ROOT, "site", pathname));
     }
 
+    // /pricing.json
+    if (pathname === "/pricing.json") {
+      return serveFile(join(ROOT, "site/pricing.json"));
+    }
+
     // /llms.txt
     if (pathname === "/llms.txt") {
       return serveFile(join(ROOT, "site/llms.txt"));
