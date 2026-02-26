@@ -46,15 +46,17 @@ const DNS_LIVE = [
 
 // Critical-path task IDs that block public launch
 const BLOCKER_IDS = [
+  "L-27",  // deploy $PRIM contract (must be before repo goes public)
   "L-15",  // rotate secrets
   "L-22",  // mainnet switchover
-  "L-27",  // register $PRIM ticker
   "L-14",  // token launch + go public
   "L-61",  // dynamic allowlist
   "SEC-1", // infra hardening (fail2ban, SSH key-only)
   "SEC-3", // edge rate limiting
   "SEC-6", // SQLite backup
   "OPS-1", // uptime monitoring
+  "OBS-1", // service metrics + report.ts (blind on mainnet without this)
+  "BIZ-4", // pricing endpoint (agents need machine-readable pricing)
 ];
 
 // ─── Helpers ─────────────────────────────────────────────────────────────
