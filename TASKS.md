@@ -31,6 +31,7 @@
 | 46 | D-6 | Build domain.sh: verification endpoint (NS + record propagation checks) | packages/domain | D-1 | done |
 | 47 | D-7 | Build domain.sh: auto-configure NS to Cloudflare after registration | packages/domain | D-3 | done |
 | 48 | D-8 | Build domain.sh: batch record operations (atomic multi-record create/update/delete) | packages/domain | D-2 | done |
+| 49 | D-9 | domain.sh live smoke test: real Cloudflare API calls (zone CRUD, record CRUD, mail-setup, verify, batch), optional NameSilo search + registration | packages/domain | D-8 | pending |
 | 24 | R-1 | Deploy Stalwart (Docker on DigitalOcean Droplet) | deploy/email | DO account | done |
 | 25 | R-2 | Configure Stalwart: domain, DKIM, SPF, DMARC, ACME TLS | deploy/email | R-1, D-1 | done |
 | 26 | R-3 | Build email.sh wrapper: mailbox creation (Stalwart REST API) | packages/email | R-2 | done |
@@ -144,6 +145,7 @@
 - ST-6: `tasks/active/st-6-prim-store-cli-2026-02-25.md`
 - SE-1: `tasks/completed/se-1-search-sh-plan-2026-02-25.md`
 - SE-2: `tasks/active/se-2-search-live-smoke-test-2026-02-25.md`
+- D-9: `tasks/active/d-9-domain-live-smoke-test-2026-02-25.md`
 - TK-6: `tasks/active/tk-6-mint-ownership-bug-2026-02-25.md`
 - M-1: `tasks/completed/m-1-mem-sh-vector-cache-2026-02-25.md`
 - M-2: `tasks/active/m-2-mem-live-smoke-test-2026-02-25.md`
