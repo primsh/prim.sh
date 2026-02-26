@@ -29,7 +29,7 @@ Tasks that block repo going public + mainnet switchover.
 | SEC-3 | Edge rate limiting: Caddy timeouts, header size limits, request body limits | deploy/, Cloudflare | — | done |
 | SEC-4 | Dependency audit: `pnpm audit` in CI, pin critical deps | .github/workflows/ci.yml | — | done |
 | SEC-5 | Input validation + request size limits (Hono body-limit middleware, 1MB default) | packages/* | — | done |
-| SEC-6 | SQLite backup: daily cron → R2, 30-day retention, restore procedure | deploy/prim/ | — | pending |
+| SEC-6 | SQLite backup: daily cron → R2, 30-day retention, restore procedure | deploy/prim/ | — | done |
 | SEC-7 | Secrets audit: no .env in git history, VPS file perms 600, rotation schedule | cross-cutting | — | done |
 | OPS-1 | Uptime monitoring: external health checks + alerting (BetterStack/UptimeRobot) | deploy/ | — | done |
 | OPS-2 | Structured logging: JSON logger with request_id, replace console.log | packages/* | — | pending |
