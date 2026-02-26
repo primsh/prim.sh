@@ -6,7 +6,7 @@
 <title>email.sh — Agent-Native Email</title>
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
-:root{--bg:#0a0a0a;--surface:#111;--border:#1a1a1a;--accent:#6C8EFF;--accent-dim:#5070dd;--accent-glow:rgba(108,142,255,0.08);--text:#e0e0e0;--muted:#666;--code-bg:#0d0d0d}
+:root{--bg:#0a0a0a;--surface:#111;--border:#1a1a1a;--accent:#6C8EFF;--accent-dim:#5070dd;--accent-glow:rgba(108,142,255,0.08)}
 body{background:var(--bg);color:var(--text);font-family:'SF Mono',SFMono-Regular,'Cascadia Code',Consolas,monospace;line-height:1.6;overflow-x:hidden}
 a{color:var(--accent);text-decoration:none}
 a:hover{text-decoration:underline}
@@ -32,12 +32,12 @@ a:hover{text-decoration:underline}
 @keyframes pulse{0%,100%{opacity:0.3}50%{opacity:1}}
 
 section{max-width:900px;margin:0 auto;padding:4rem 2rem}
-h2{font-size:1.8rem;margin-bottom:1.5rem;font-weight:600}
+h2{font-size:1.8rem;margin-bottom:1.5rem;font-weight:600;text-align:center}
 h2 span{color:var(--accent)}
 h3{font-size:1.1rem;margin-bottom:0.75rem;color:var(--accent)}
 
 .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:1.5rem;margin-bottom:2rem}
-.card{background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:1.5rem}
+.card{background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:1.5rem;box-shadow:0 0 20px var(--accent-glow)}
 .card p{color:var(--muted);font-size:0.9rem;margin-top:0.5rem}
 
 pre{background:var(--code-bg);border:1px solid var(--border);border-radius:8px;padding:1.5rem;overflow-x:auto;font-size:0.85rem;line-height:1.7;margin:1rem 0}

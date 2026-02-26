@@ -6,7 +6,7 @@
 <title>faucet.sh — Testnet USDC &amp; ETH</title>
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
-:root{--bg:#0a0a0a;--surface:#111;--border:#1a1a1a;--accent:#69F0AE;--accent-dim:#4dd68a;--accent-glow:rgba(105,240,174,0.08);--text:#e0e0e0;--muted:#666;--code-bg:#0d0d0d}
+:root{--bg:#0a0a0a;--surface:#111;--border:#1a1a1a;--accent:#29B6F6;--accent-dim:#1a9dd4;--accent-glow:rgba(41,182,246,0.08)}
 body{background:var(--bg);color:var(--text);font-family:'SF Mono',SFMono-Regular,'Cascadia Code',Consolas,monospace;line-height:1.6;overflow-x:hidden}
 a{color:var(--accent);text-decoration:none}a:hover{text-decoration:underline}
 .hero{min-height:100vh;display:flex;flex-direction:column;justify-content:center;align-items:center;text-align:center;padding:2rem;position:relative}
@@ -20,10 +20,10 @@ a{color:var(--accent);text-decoration:none}a:hover{text-decoration:underline}
 .badges{display:flex;gap:1rem;flex-wrap:wrap;justify-content:center;margin-bottom:3rem}
 .badge{background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:0.5rem 1rem;font-size:0.85rem;color:var(--muted)}.badge strong{color:var(--accent)}.badge.status-testing{background:rgba(0,200,80,0.08);border-color:rgba(0,200,80,0.3);color:#00c850}.badge.status-live{background:rgba(0,255,100,0.1);border-color:rgba(0,255,100,0.4);color:#00ff64}.badge.status-built{background:rgba(255,200,0,0.08);border-color:rgba(255,200,0,0.3);color:#ffc800}.badge.status-building{background:rgba(255,140,0,0.08);border-color:rgba(255,140,0,0.3);color:#ff8c00}.badge.status-soon{background:var(--surface);border-color:var(--border);color:var(--muted)}
 section{max-width:900px;margin:0 auto;padding:4rem 2rem}
-h2{font-size:1.8rem;margin-bottom:1.5rem;font-weight:600}h2 span{color:var(--accent)}
+h2{font-size:1.8rem;margin-bottom:1.5rem;font-weight:600;text-align:center}h2 span{color:var(--accent)}
 h3{font-size:1.1rem;margin-bottom:0.75rem;color:var(--accent)}
 .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:1.5rem;margin-bottom:2rem}
-.card{background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:1.5rem}
+.card{background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:1.5rem;box-shadow:0 0 20px var(--accent-glow)}
 .card p{color:var(--muted);font-size:0.9rem;margin-top:0.5rem}
 pre{background:var(--code-bg);border:1px solid var(--border);border-radius:8px;padding:1.5rem;overflow-x:auto;font-size:0.85rem;line-height:1.7;margin:1rem 0}
 .a{color:var(--accent)}.c{color:#444}.w{color:var(--text)}.m{color:var(--muted)}
