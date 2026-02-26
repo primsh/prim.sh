@@ -2,7 +2,7 @@
 import { createInterface } from "node:readline/promises";
 import { stdin as input, stdout as output } from "node:process";
 import { existsSync, readFileSync } from "node:fs";
-import { createKey, importKey, listKeys, exportKey, removeKey, loadKey } from "./keystore.ts";
+import { createKey, importKey, listKeys, exportKey, removeKey, loadKey, loadAccount } from "./keystore.ts";
 import { getDefaultAddress, setDefaultAddress } from "./config.ts";
 import { getUsdcBalance } from "./balance.ts";
 import { decryptFromV3 } from "./crypto.ts";
