@@ -14,7 +14,7 @@ Tasks that block repo going public + mainnet switchover.
 | L-69 | Pre-deployment readiness check script (`scripts/pre-deploy.ts <primitive>`) | Claude | — | done |
 | L-70 | Deploy token.sh to VPS: systemd unit, Caddy route, DNS A record, env vars, smoke test | Garric | L-69, TK-5 | pending |
 | L-71 | Deploy mem.sh to VPS: Qdrant instance, systemd unit, Caddy route, DNS A record, env vars, smoke test | Garric | L-69, M-2 | pending |
-| L-72 | Agent Interface Wave 2: extend OpenAPI, MCP tools, Skills, Plugins, CLI, llms.txt to email, mem, domain, token | Claude | L-62 | pending |
+| L-72 | Agent Interface Wave 2: extend OpenAPI, MCP tools, Skills, Plugins, CLI, llms.txt to email, mem, domain, token | Claude | L-62 | done |
 | L-73 | Fix domain.sh freeRoutes: `POST /v1/domains/recover` and `POST /v1/domains/{domain}/configure-ns` missing from middleware config | Claude | — | done |
 | E-4 | Domain warmup: send low-volume emails to engaged recipients, ramp over weeks | deploy/email | E-2, E-3 | pending |
 | E-5 | Verify Gmail inbox delivery (not spam) after warmup + PTR + DMARC changes | deploy/email | E-4 | pending |
@@ -244,7 +244,7 @@ All live primitives (wallet, store, spawn, faucet, search) need proper agent int
 | L-66 | Package as Plugins: bundle MCP server + Skill per primitive into installable plugin. `prim install store` drops MCP config + skill into agent's environment | Claude | L-64, L-65 | done |
 | L-67 | Extend CLI to all live prims: `prim search`, `prim spawn`, `prim email` subcommands (generated or hand-written from OpenAPI specs) | Claude | L-62 | done |
 | L-68 | Deploy email.sh to VPS — systemd unit, Caddy route, setup/deploy scripts, smoke test | Garric | — | done |
-| L-72 | Agent Interface Wave 2: extend OpenAPI, MCP tools, Skills, Plugins, CLI, llms.txt to email, mem, domain, token (same pattern as L-62→L-67 for the original 5) | Claude | L-62 | pending |
+| L-72 | Agent Interface Wave 2: extend OpenAPI, MCP tools, Skills, Plugins, CLI, llms.txt to email, mem, domain, token (same pattern as L-62→L-67 for the original 5) | Claude | L-62 | done |
 | L-73 | Fix domain.sh freeRoutes: `POST /v1/domains/recover` and `POST /v1/domains/{domain}/configure-ns` are free endpoints but missing from freeRoutes in middleware config, so they get 402'd | Claude | — | done |
 
 ### Wave 6: Token + Public
