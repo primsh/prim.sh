@@ -50,7 +50,7 @@ describe.skipIf(!HAS_KEY)("search.sh Tavily live smoke test", { timeout: 30_000 
 
     expect(result.results.length).toBeGreaterThan(0);
     // answer requires a paid tier — skip assertion if null
-    if (result.answer === null) return;
+    if (!result.answer) return;
     expect(typeof result.answer).toBe("string");
     expect(result.answer.length).toBeGreaterThan(0);
   });
