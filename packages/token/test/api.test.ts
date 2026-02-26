@@ -473,11 +473,12 @@ describe("token.sh", () => {
       return result.data.token.id;
     }
 
-    // Decision table:
-    // mintable=false, * , *                     → 400 not_mintable
-    // mintable=true, caller!=owner, *           → 403 forbidden
-    // mintable=true, caller==owner, exceeds cap → 422 exceeds_max_supply
-    // mintable=true, caller==owner, within cap  → 200 tx submitted
+    // Decision table (service layer — minter role is the deployer key via viem mock):
+    // mintable=false, * , *                                  → 400 not_mintable
+    // mintable=true, caller!=owner, *                        → 403 forbidden
+    // mintable=true, caller==owner, exceeds cap              → 422 exceeds_max_supply
+    // mintable=true, caller==owner, within cap, minter=true  → 200 tx submitted
+    // mintable=true, caller==owner, within cap, minter=false → 502 rpc_error (OnlyMinter on-chain)
 
     beforeEach(() => {
       // For mint tests, receipt has no contractAddress (it's a call, not a deploy)
@@ -632,6 +633,18 @@ describe("token.sh", () => {
     it("RPC error during mint → 502", async () => {
       const tokenId = await deployMintable();
       writeContractMock.mockRejectedValueOnce(new Error("nonce too low"));
+      const result = await mintTokens(tokenId, { to: CALLER, amount: "1000" }, CALLER);
+      expect(result.ok).toBe(false);
+      if (result.ok) return;
+      expect(result.status).toBe(502);
+      expect(result.code).toBe("rpc_error");
+    });
+
+    it("minter=false path: deployer revoked (OnlyMinter on-chain revert) → 502 rpc_error", async () => {
+      // Simulates agent calling setMinter(address(0)) — deployer is no longer the minter.
+      // writeContract throws an on-chain revert, service must return 502 rpc_error.
+      const tokenId = await deployMintable();
+      writeContractMock.mockRejectedValueOnce(new Error("OnlyMinter()"));
       const result = await mintTokens(tokenId, { to: CALLER, amount: "1000" }, CALLER);
       expect(result.ok).toBe(false);
       if (result.ok) return;

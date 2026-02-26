@@ -23,6 +23,8 @@ contract AgentToken is ERC20, ERC20Burnable, Ownable {
     uint256 public maxSupply;
     address public minter;
 
+    event MinterChanged(address indexed previousMinter, address indexed newMinter);
+
     error OnlyMinter();
 
     modifier onlyMinter() {
@@ -60,5 +62,14 @@ contract AgentToken is ERC20, ERC20Burnable, Ownable {
             require(totalSupply() + amount <= maxSupply, "AgentToken: exceeds max supply");
         }
         _mint(to, amount);
+    }
+
+    /**
+     * @notice Reassign or revoke the minter role. Callable by owner (agent wallet) only.
+     *         Set to address(0) to permanently revoke minting.
+     */
+    function setMinter(address newMinter) external onlyOwner {
+        emit MinterChanged(minter, newMinter);
+        minter = newMinter;
     }
 }

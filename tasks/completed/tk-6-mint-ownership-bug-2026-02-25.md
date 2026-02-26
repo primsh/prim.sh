@@ -1,7 +1,7 @@
 # TK-6: Fix mint ownership bug
 
 **Date:** 2026-02-25
-**Status:** planned
+**Status:** completed
 **Depends on:** TK-2 (done)
 
 ## Context
