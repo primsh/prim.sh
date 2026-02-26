@@ -32,7 +32,7 @@
 | 47 | D-7 | Build domain.sh: auto-configure NS to Cloudflare after registration | packages/domain | D-3 | done |
 | 48 | D-8 | Build domain.sh: batch record operations (atomic multi-record create/update/delete) | packages/domain | D-2 | done |
 | 49 | D-9 | domain.sh live smoke test: zone + record CRUD (create/get/list/update/batch/delete) via real Cloudflare API; optional NameSilo domain search | packages/domain | D-1 | done |
-| 49 | D-9 | domain.sh live smoke test: real Cloudflare API calls (zone CRUD, record CRUD, mail-setup, verify, batch), optional NameSilo search + registration | packages/domain | D-8 | pending |
+| 49 | D-9 | domain.sh live smoke test: real Cloudflare API calls (zone CRUD, record CRUD, mail-setup, verify, batch), optional NameSilo search + registration | packages/domain | D-8 | deferred — burns real Cloudflare zones + NameSilo registration costs |
 | 24 | R-1 | Deploy Stalwart (Docker on DigitalOcean Droplet) | deploy/email | DO account | done |
 | 25 | R-2 | Configure Stalwart: domain, DKIM, SPF, DMARC, ACME TLS | deploy/email | R-1, D-1 | done |
 | 26 | R-3 | Build email.sh wrapper: mailbox creation (Stalwart REST API) | packages/email | R-2 | done |
@@ -223,6 +223,9 @@ Plan doc: `tasks/active/v1-launch-plan-2026-02-25.md`
 | L-12 | Write install script (`curl prim.sh \| sh`) + per-primitive wrappers | Claude | L-11 | done |
 | L-48 | Deploy search.sh to VPS: systemd unit (prim-search:3005), Caddy route (search.prim.sh), DNS A record, `TAVILY_API_KEY` env var, smoke test live endpoint | Claude + Garric | SE-1, L-10 | done |
 | L-49 | Update llms.txt: move search.sh from "Built (not yet deployed)" to "Live primitives" section after L-48 deploy is verified | Claude | L-48 | done |
+| L-69 | Pre-deployment readiness check script (`scripts/pre-deploy.ts <primitive>`): unit tests pass, required env vars declared, external dependency reachable (Qdrant/RPC/etc), x402 pay-to address + network set, port not already allocated, DNS A record resolves to VPS. Exit 0 = go, exit 1 = no-go with failing checks listed | Claude | — | pending |
+| L-70 | Deploy token.sh to VPS: pre-deploy check (L-69), systemd unit (prim-token:3006), Caddy route (token.prim.sh), DNS A record, env vars (RPC_URL, DEPLOYER_KEY, PRIM_PAY_TO, PRIM_NETWORK), smoke test live endpoint | Garric | L-69, TK-5 | pending |
+| L-71 | Deploy mem.sh to VPS: pre-deploy check (L-69), Qdrant instance (Docker on VPS or managed), systemd unit (prim-mem:3007), Caddy route (mem.prim.sh), DNS A record, env vars (QDRANT_URL, PRIM_PAY_TO, PRIM_NETWORK), smoke test live endpoint | Garric | L-69, M-2 | pending |
 | L-22 | Mainnet switchover: update VPS env files from `eip155:84532` → `eip155:8453`, set prod `PRIM_PAY_TO` treasury, fund facilitator with mainnet USDC | Garric | L-17 | pending |
 | L-15 | Pre-public checklist: rotate Stalwart admin password + `relay-wrapper` API key, verify no secrets in git history (`git log -p \| grep`), confirm .env files gitignored | Garric | L-10 | pending |
 
@@ -269,7 +272,7 @@ All live primitives (wallet, store, spawn, faucet, search) need proper agent int
 | L-63 | Rewrite llms.txt as full plain-text API reference (xAI-style, not brochure). Every endpoint, every field, every error code. Per-primitive llms.txt files too. Should be enough for an agent to use the API without any other docs | Claude | L-62 | done |
 | L-64 | Generate MCP servers from OpenAPI specs: one MCP server per primitive (or unified). x402 payment signing baked in. Agent calls `store_create_bucket` as a tool, MCP server handles auth. Evaluate Stainless / openapi-mcp-codegen / FastMCP | Claude | L-62 | done |
 | L-65 | Write Skills (markdown + YAML) per primitive: workflow knowledge, when/why to use each prim, error handling patterns, multi-prim workflows (e.g. "register wallet → fund → create bucket") | Claude | L-62 | done |
-| L-66 | Package as Plugins: bundle MCP server + Skill per primitive into installable plugin. `prim install store` drops MCP config + skill into agent's environment | Claude | L-64, L-65 | pending |
+| L-66 | Package as Plugins: bundle MCP server + Skill per primitive into installable plugin. `prim install store` drops MCP config + skill into agent's environment | Claude | L-64, L-65 | done |
 | L-67 | Extend CLI to all live prims: `prim search`, `prim spawn`, `prim email` subcommands (generated or hand-written from OpenAPI specs) | Claude | L-62 | done |
 | L-68 | Deploy email.sh to VPS — systemd unit, Caddy route, setup/deploy scripts, smoke test | Garric | — | done |
 

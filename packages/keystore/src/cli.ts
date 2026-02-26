@@ -120,6 +120,39 @@ async function main() {
     return;
   }
 
+  if (group === "install") {
+    try {
+      const { runInstallCommand } = await import("./install-commands.ts");
+      await runInstallCommand(subcommand, argv);
+    } catch (err) {
+      console.error(`Error: ${err instanceof Error ? err.message : String(err)}`);
+      process.exit(1);
+    }
+    return;
+  }
+
+  if (group === "uninstall") {
+    try {
+      const { runUninstallCommand } = await import("./install-commands.ts");
+      await runUninstallCommand(subcommand, argv);
+    } catch (err) {
+      console.error(`Error: ${err instanceof Error ? err.message : String(err)}`);
+      process.exit(1);
+    }
+    return;
+  }
+
+  if (group === "skill") {
+    try {
+      const { runSkillCommand } = await import("./install-commands.ts");
+      await runSkillCommand(subcommand, argv);
+    } catch (err) {
+      console.error(`Error: ${err instanceof Error ? err.message : String(err)}`);
+      process.exit(1);
+    }
+    return;
+  }
+
   if (group === "admin") {
     try {
       const { runAdminCommand } = await import("./admin-commands.ts");
@@ -132,17 +165,20 @@ async function main() {
   }
 
   if (group !== "wallet") {
-    console.log("Usage: prim <wallet|store|spawn|email|faucet|search|mcp|admin> <subcommand>");
+    console.log("Usage: prim <command> <subcommand>");
     console.log("       prim --version");
     console.log("");
-    console.log("  prim wallet <create|register|list|balance|import|export|default|remove>");
-    console.log("  prim store  <create-bucket|ls|put|get|rm|rm-bucket|quota>");
-    console.log("  prim spawn  <create|ls|get|rm|reboot|stop|start|ssh-key>");
-    console.log("  prim email  <create|ls|get|rm|renew|inbox|read|send|webhook|domain>");
-    console.log("  prim faucet <usdc|eth|status>");
-    console.log("  prim search <web|news|extract>");
-    console.log("  prim mcp    [--primitives wallet,store,...] [--wallet 0x...]");
-    console.log("  prim admin  <list-requests|approve|deny|add-wallet|remove-wallet>");
+    console.log("  prim wallet    <create|register|list|balance|import|export|default|remove>");
+    console.log("  prim store     <create-bucket|ls|put|get|rm|rm-bucket|quota>");
+    console.log("  prim spawn     <create|ls|get|rm|reboot|stop|start|ssh-key>");
+    console.log("  prim email     <create|ls|get|rm|renew|inbox|read|send|webhook|domain>");
+    console.log("  prim faucet    <usdc|eth|status>");
+    console.log("  prim search    <web|news|extract>");
+    console.log("  prim mcp       [--primitives wallet,store,...] [--wallet 0x...]");
+    console.log("  prim admin     <list-requests|approve|deny|add-wallet|remove-wallet>");
+    console.log("  prim install   <primitive|all> [--agent claude|cursor|generic]");
+    console.log("  prim uninstall <primitive|all>");
+    console.log("  prim skill     <primitive>");
     process.exit(1);
   }
 
