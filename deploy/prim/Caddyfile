@@ -1,27 +1,47 @@
+(security_headers) {
+    header {
+        Strict-Transport-Security "max-age=31536000; includeSubDomains; preload"
+        X-Frame-Options "DENY"
+        X-Content-Type-Options "nosniff"
+        Referrer-Policy "strict-origin-when-cross-origin"
+        Content-Security-Policy "default-src 'none'; connect-src 'self'; frame-ancestors 'none'"
+        Permissions-Policy "geolocation=(), microphone=(), camera=()"
+        Server ""
+        -Server
+    }
+}
+
 wallet.prim.sh {
+    import security_headers
     reverse_proxy localhost:3001
 }
 
 store.prim.sh {
+    import security_headers
     reverse_proxy localhost:3002
 }
 
 faucet.prim.sh {
+    import security_headers
     reverse_proxy localhost:3003
 }
 
 spawn.prim.sh {
+    import security_headers
     reverse_proxy localhost:3004
 }
 
 search.prim.sh {
+    import security_headers
     reverse_proxy localhost:3005
 }
 
 email.prim.sh {
+    import security_headers
     reverse_proxy localhost:3006
 }
 
 mail.email.prim.sh {
+    import security_headers
     reverse_proxy localhost:8080
 }
