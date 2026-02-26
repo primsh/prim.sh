@@ -5,16 +5,17 @@
 | Level | Marker | Parallelism | Description |
 |-------|--------|-------------|-------------|
 | **Section** | `##` | None implied | Topical grouping. Two tasks in different sections CAN conflict. |
-| **Lane** | `###` | Parallel by definition | Independent track of work. Lanes cannot conflict. |
-| **Wave** | `####` | Annotated (PARA/SRL) | Group of phases within a lane. Optional. |
-| **Phase** | `#####` | Annotated (PARA/SRL) | Group of tasks within a wave. Optional. |
+| **Wave** | `###` | Annotated (PARA/SRL) | Group of phases. Optional. |
+| **Phase** | `####` | Annotated (PARA/SRL) | Group of tasks. Optional. |
 | **Task** | Table row | `Depends` column | Smallest unit of work. |
 
+**Lanes** are implicit, not a heading level. When a wave or phase is annotated **PARA**, each child is in a separate lane — meaning they MUST NOT touch the same files. When annotated **SRL**, children share a lane and execute sequentially.
+
 **Key rules:**
-- Lanes are always parallel. If two things can't run simultaneously (same files, same working copy), they belong in the same lane.
-- Within a lane, waves/phases/tasks can be PARA or SRL.
+- Lanes are a consequence of PARA annotations, not explicit headings.
+- PARA children cannot conflict (same files, same working copy) — if they do, they belong in the same SRL grouping.
 - The `Depends` column on tasks is the ground truth for serial ordering.
-- Sections are NOT lanes. Multiple lanes can exist in one section.
+- Sections are NOT parallelism boundaries. Multiple waves can exist in one section.
 
 ## Sections
 
@@ -47,7 +48,7 @@ All sections use:
 | Prefix | Scope |
 |--------|-------|
 | L | Launch blockers |
-| H | Hardening |
+| HRD | Hardening |
 | W | wallet.sh |
 | E | email.sh |
 | SP | spawn.sh |

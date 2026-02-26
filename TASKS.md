@@ -1,10 +1,10 @@
 # TASKS
 
 <!--
-Hierarchy: Section (##) → Lane (###) → Wave (####) → Phase (#####) → Task (row)
+Hierarchy: Section (##) → Wave (###) → Phase (####) → Task (row)
 - Section: topical grouping. NOT a parallelism boundary.
-- Lane: independent track. Parallel by definition — lanes cannot conflict.
-- Wave/Phase: optional grouping within a lane. Annotated PARA or SRL.
+- Wave/Phase: optional grouping. Annotated PARA or SRL.
+- Lanes are implicit: PARA children are in separate lanes (no file conflicts). SRL children share a lane.
 - Task: table row. Depends column encodes serial ordering.
 
 Table: | ID | Task | Owner | Depends | Status |
@@ -16,7 +16,7 @@ Full conventions: tasks/README.md
 
 Tasks that block repo going public + mainnet switchover.
 
-### Lane LNCH-1: Token + Public (SRL)
+### Wave: Token + Public (SRL)
 
 | ID | Task | Owner | Depends | Status |
 |----|------|-------|---------|--------|
@@ -26,7 +26,7 @@ Tasks that block repo going public + mainnet switchover.
 | L-15 | Pre-public checklist: rotate Stalwart admin password + relay-wrapper API key, verify no secrets in git history, confirm .env files gitignored | Garric | -- | pending |
 | L-14 | Full token launch: create Uniswap pool, fund liquidity, make repo public, announce. Seed pool conservatively ($2–3K USDC) | Garric + Claude | L-15, L-27, PRIM-2 | pending |
 
-### Lane LNCH-2: Service Deploys (PARA)
+### Wave: Service Deploys (PARA)
 
 | ID | Task | Owner | Depends | Status |
 |----|------|-------|---------|--------|
@@ -39,21 +39,32 @@ Tasks that block repo going public + mainnet switchover.
 
 Code quality, security, and reliability fixes from open-source readiness review.
 
-### Lane HRD-1: Open-Source Readiness (PARA)
+### Wave: Open-Source Readiness (PARA)
+
+#### Phase A: Service Layer + Middleware (SRL)
 
 | ID | Task | Owner | Depends | Status |
 |----|------|-------|---------|--------|
-| H-1 | Remove `*.db` + `server.log` from repo; scrub `.env.email` from git history | Garric | -- | pending |
-| H-2 | Fix `allowlist-db.ts` DB handle leak: use singleton pattern from `wallet/db.ts` | Claude | -- | pending |
-| H-3 | Expand wallet smoke test to 5-check contract (match `track/test/smoke.test.ts`) | Claude | -- | pending |
-| H-4 | Add try-catch around `JSON.parse` calls in service layers (wallet, email, store) | Claude | -- | pending |
-| H-5 | Fix `setUTCHours(24)` in `wallet/src/db.ts` — use explicit date arithmetic | Claude | -- | pending |
-| H-6 | Create `SECURITY.md` (referenced by CONTRIBUTING.md but missing) | Claude | -- | pending |
-| H-7 | Add `pnpm -r lint` + `pnpm -r typecheck` to `.github/workflows/ci.yml` | Claude | -- | pending |
-| H-8 | Standardize pagination: define shared response shape across all list endpoints | Claude | -- | pending |
-| H-9 | Add per-package `README.md` (purpose, install, API summary) | Claude | -- | pending |
-| H-10 | Add per-wallet rate limiting to x402-middleware (configurable, default 60/min) | Claude | -- | pending |
-| I-3 | Coverage gate: set `reportsDirectory` in each vitest.config.ts so gate runner enforces thresholds. 11 packages | Claude | -- | done |
+| HRD-3 | Expand wallet smoke test to 5-check contract (match `track/test/smoke.test.ts`) | Claude | -- | pending |
+| HRD-4 | Add try-catch around `JSON.parse` calls in service layers (wallet, email, store). Plan: `tasks/active/hrd-4-json-parse-safety.md` | Claude | HRD-3 | pending |
+| HRD-8 | Standardize pagination: define shared response shape across all list endpoints. Plan: `tasks/active/hrd-8-pagination-standard.md` | Claude | HRD-4 | pending |
+| HRD-10 | Add per-wallet rate limiting to x402-middleware (configurable, default 60/min). Plan: `tasks/active/hrd-10-rate-limiting.md` | Claude | HRD-8 | pending |
+
+#### Phase B: Wallet DB Fixes (PARA)
+
+| ID | Task | Owner | Depends | Status |
+|----|------|-------|---------|--------|
+| HRD-2 | Fix `allowlist-db.ts` DB handle leak: use singleton pattern from `wallet/db.ts` | Claude | -- | pending |
+| HRD-5 | Fix `setUTCHours(24)` in `wallet/src/db.ts` — use explicit date arithmetic | Claude | -- | pending |
+
+#### Phase C: Repo-Level Hygiene (PARA)
+
+| ID | Task | Owner | Depends | Status |
+|----|------|-------|---------|--------|
+| HRD-1 | Remove `*.db` + `server.log` from repo; scrub `.env.email` from git history | Garric | -- | pending |
+| HRD-6 | Create `SECURITY.md` (referenced by CONTRIBUTING.md but missing) | Claude | -- | pending |
+| HRD-7 | Add `pnpm -r lint` + `pnpm -r typecheck` to `.github/workflows/ci.yml` | Claude | -- | pending |
+| HRD-9 | Add per-package `README.md` (purpose, install, API summary) | Claude | -- | pending |
 
 ---
 
@@ -61,7 +72,7 @@ Code quality, security, and reliability fixes from open-source readiness review.
 
 Feature work on specific services.
 
-### Lane PRIMS-1: store.sh (PARA)
+### Wave: store.sh (PARA)
 
 | ID | Task | Owner | Depends | Status |
 |----|------|-------|---------|--------|
@@ -73,23 +84,22 @@ Feature work on specific services.
 | ST-12 | Bucket event webhooks: HMAC-signed callbacks on create/delete | Claude | -- | pending |
 | ST-13 | Object metadata + tagging: custom key-value metadata | Claude | -- | pending |
 
-### Lane PRIMS-2: email.sh (SRL)
+### Wave: email.sh (SRL)
 
 | ID | Task | Owner | Depends | Status |
 |----|------|-------|---------|--------|
-| E-9 | Rename mail hostname: DNS A record `mail.prim.sh`, update Stalwart config + deploy env, verify SMTP banner | Claude | -- | done |
-| E-4 | Domain warmup: send low-volume emails to engaged recipients, ramp over weeks | Claude | E-9 | pending |
+| E-4 | Domain warmup: send low-volume emails to engaged recipients, ramp over weeks | Claude | -- | pending |
 | E-5 | Verify Gmail inbox delivery (not spam) after warmup + PTR + DMARC changes | Claude | E-4 | pending |
 | E-6 | Verify Apple Mail / iCloud delivery after warmup | Claude | E-4 | pending |
 | E-7 | Upgrade DMARC back to `p=quarantine` once inbox delivery is consistent | Claude | E-5, E-6 | pending |
 
-### Lane PRIMS-3: spawn.sh
+### Wave: spawn.sh
 
 | ID | Task | Owner | Depends | Status |
 |----|------|-------|---------|--------|
 | SP-7 | DockerProvider: Docker container tier as default (10–50x cheaper than VMs). Plan: `tasks/active/sp-7-docker-provider-2026-02-26.md` | Claude | -- | pending |
 
-### Lane PRIMS-4: track.sh
+### Wave: track.sh
 
 | ID | Task | Owner | Depends | Status |
 |----|------|-------|---------|--------|
@@ -101,21 +111,17 @@ Feature work on specific services.
 
 CI, tooling, observability, pricing, cross-cutting platform work.
 
-### Lane INFRA-1: Tooling (PARA)
+### Wave: Tooling (PARA)
 
 | ID | Task | Owner | Depends | Status |
 |----|------|-------|---------|--------|
-| OPS-2 | Structured logging: JSON logger with request_id, replace console.log | Claude | -- | done |
 | OPS-4 | Load test baseline: k6/artillery against health + store CRUD, document capacity | Claude | -- | pending |
 | L-29 | GH Action: auto-dedupe issues, stale auto-close (30d), bot PR auto-merge if CI passes | Claude | -- | pending |
-| L-47 | Clean up API URL redundancy: `api.prim.sh/api/*` → `api.prim.sh/*`. Breaking change — coordinate with L-22 | Claude | L-22 | done |
 
-### Lane INFRA-2: Business (SRL)
+### Wave: Business (SRL)
 
 | ID | Task | Owner | Depends | Status |
 |----|------|-------|---------|--------|
-| BIZ-2 | Expense dashboard: `bun scripts/expenses.ts` — DO + CF R2 + Tavily + on-chain USDC + fixed costs. Margin table per primitive | Claude | -- | done |
-| BIZ-3 | Cost transparency doc: `docs/costs.md` — public infra cost breakdown + per-call cost math + phased margin model | Claude | BIZ-2 | done |
 | L-60 | Pricing audit: review x402 pricing against real provider costs. Risks: spawn ($0.01 create vs $4/mo DO), token ($1 deploy vs $10-50 gas) | Claude + Garric | L-22 | pending |
 
 ---
@@ -124,7 +130,7 @@ CI, tooling, observability, pricing, cross-cutting platform work.
 
 Docs, Discord, brand assets, marketing.
 
-### Lane COMM-1: Brand + Social (SRL)
+### Wave: Brand + Social (SRL)
 
 | ID | Task | Owner | Depends | Status |
 |----|------|-------|---------|--------|
@@ -134,7 +140,7 @@ Docs, Discord, brand assets, marketing.
 | L-56 | Upload `final-x-banner.jpg` as X @useprim header image | Garric | -- | pending |
 | L-57 | Upload `final-social-preview.jpg` as GitHub repo social preview | Garric | -- | pending |
 
-### Lane COMM-2: Content + Features (PARA)
+### Wave: Content + Features (PARA)
 
 | ID | Task | Owner | Depends | Status |
 |----|------|-------|---------|--------|
