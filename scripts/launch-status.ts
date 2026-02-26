@@ -52,7 +52,17 @@ const DNS_PLANNED = [
 ] as const;
 
 // Critical-path task IDs that block public launch
-const BLOCKER_IDS = ["L-15", "L-22", "L-27", "L-14", "L-61"];
+const BLOCKER_IDS = [
+  "L-15",  // rotate secrets
+  "L-22",  // mainnet switchover
+  "L-27",  // register $PRIM ticker
+  "L-14",  // token launch + go public
+  "L-61",  // dynamic allowlist
+  "SEC-1", // infra hardening (fail2ban, SSH key-only)
+  "SEC-3", // edge rate limiting
+  "SEC-6", // SQLite backup
+  "OPS-1", // uptime monitoring
+];
 
 // ─── Helpers ─────────────────────────────────────────────────────────────
 
@@ -176,13 +186,15 @@ function parseTasks(): { lane1: LaneCounts; lane2: LaneCounts } {
   const { lane1, lane2 } = counts;
 
   if (lane1.total > 0) {
-    pass(`Lane 1 (Launch): ${lane1.done} done / ${lane1.pending} pending of ${lane1.total}`);
+    const detail = `${lane1.done} done / ${lane1.pending} pending of ${lane1.total}`;
+    if (lane1.pending > 0) fail(`Lane 1 (Launch): ${detail}`);
+    else pass(`Lane 1 (Launch): ${detail}`);
   } else {
     warn("Lane 1 (Launch): no tasks found", "check TASKS.md format");
   }
 
   if (lane2.total > 0) {
-    pass(`Lane 2 (Post-Launch): ${lane2.done} done / ${lane2.pending} pending of ${lane2.total}`);
+    warn(`Lane 2 (Post-Launch): ${lane2.done} done / ${lane2.pending} pending of ${lane2.total}`);
   } else {
     warn("Lane 2 (Post-Launch): no tasks found", "check TASKS.md format");
   }
