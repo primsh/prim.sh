@@ -286,18 +286,24 @@ describe("V3 format", () => {
     // Regression guard: default N=16384 must fit under OpenSSL's 32 MB limit.
     // If someone bumps the default back to 131072, this test fails.
     delete process.env.PRIM_SCRYPT_N;
-    const { address } = await createKey();
-    expect(address).toMatch(/^0x[0-9a-fA-F]{40}$/);
-    process.env.PRIM_SCRYPT_N = "1024";
+    try {
+      const { address } = await createKey();
+      expect(address).toMatch(/^0x[0-9a-fA-F]{40}$/);
+    } finally {
+      process.env.PRIM_SCRYPT_N = "1024";
+    }
   });
 
   it("encrypt/decrypt round-trip at default N=16384", () => {
     delete process.env.PRIM_SCRYPT_N;
-    const params = encryptToV3(TEST_PRIVATE_KEY, "test-password");
-    expect(params.kdfparams.n).toBe(16384);
-    const recovered = decryptFromV3(params, "test-password");
-    expect(recovered).toBe(TEST_PRIVATE_KEY);
-    process.env.PRIM_SCRYPT_N = "1024";
+    try {
+      const params = encryptToV3(TEST_PRIVATE_KEY, "test-password");
+      expect(params.kdfparams.n).toBe(16384);
+      const recovered = decryptFromV3(params, "test-password");
+      expect(recovered).toBe(TEST_PRIVATE_KEY);
+    } finally {
+      process.env.PRIM_SCRYPT_N = "1024";
+    }
   });
 
   it("V3 keystore without prim block (geth/foundry import) uses passphrase mode", async () => {
