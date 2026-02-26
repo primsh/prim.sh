@@ -31,7 +31,7 @@ Tasks that block repo going public + mainnet switchover.
 | SEC-5 | Input validation + request size limits (Hono body-limit middleware, 1MB default) | packages/* | — | done |
 | SEC-6 | SQLite backup: daily cron → R2, 30-day retention, restore procedure | deploy/prim/ | — | pending |
 | SEC-7 | Secrets audit: no .env in git history, VPS file perms 600, rotation schedule | cross-cutting | — | done |
-| OPS-1 | Uptime monitoring: external health checks + alerting (BetterStack/UptimeRobot) | deploy/ | — | pending |
+| OPS-1 | Uptime monitoring: external health checks + alerting (BetterStack/UptimeRobot) | deploy/ | — | done |
 | OPS-2 | Structured logging: JSON logger with request_id, replace console.log | packages/* | — | pending |
 | OPS-3 | Incident runbook: restart procedures, log locations, common failures, escalation | docs/ops/ | — | pending |
 | OPS-4 | Load test baseline: k6/artillery against health + store CRUD, document capacity | scripts/, docs/ | — | pending |
