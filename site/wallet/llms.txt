@@ -1,38 +1,385 @@
 # wallet.prim.sh
 
-> Non-custodial wallet registration. Register your wallet address, then use it across all prim primitives.
+Non-custodial wallet registration for the prim.sh agent stack.
+Register your Ethereum address via EIP-191 signature. Use that wallet
+to pay for any prim primitive via x402 (USDC on Base Sepolia).
+No keys stored server-side.
 
 Base URL: https://wallet.prim.sh
-Auth: Wallet registration is free. Other endpoints require x402 (USDC on Base Sepolia).
+Auth: Free for registration. All other endpoints require x402 payment.
+Chain: Base Sepolia (eip155:84532) during beta.
+
+---
+
+## x402 Payment
+
+All paid endpoints follow this flow:
+  1. Make request normally.
+  2. Receive 402 with Payment-Required header:
+       Payment-Required: price=<amount> network=base payTo=<address>
+  3. Sign EIP-3009 transferWithAuthorization from your wallet.
+  4. Retry the same request with:
+       Payment-Signature: <base64-encoded signed authorization JSON>
+
+Use @x402/fetch (TypeScript) or any x402-compatible client to handle
+this automatically.
+
+Error envelope (all errors):
+  {"error": {"code": "<code>", "message": "<msg>", "details": {}}}
+
+Error codes:
+  not_found           Resource does not exist
+  forbidden           Caller does not own the resource
+  insufficient_balance  Not enough USDC
+  wallet_paused       Wallet is currently paused
+  policy_violation    Payment exceeds spending policy limits
+  duplicate_request   Already registered or already resolved
+  invalid_request     Missing or invalid fields
+  payment_required    x402 payment required
+  rate_limited        Too many requests
+  internal_error      Server error
+
+---
 
 ## Endpoints
 
-### Free (no payment required)
+### GET /
 
-- `GET /` — health check.
-- `POST /v1/wallets` — register a wallet via EIP-191 signature.
+Health check.
 
-### Paid (x402)
+Free.
 
-- `GET /v1/wallets` — list registered wallets. **$0.001**
-- `GET /v1/wallets/:address` — get wallet details. **$0.001**
-- `DELETE /v1/wallets/:address` — deactivate wallet. **$0.01**
-- `GET /v1/wallets/:address/fund-requests` — list fund requests. **$0.001**
-- `POST /v1/wallets/:address/fund-request` — create fund request. **$0.001**
-- `POST /v1/fund-requests/:id/approve` — approve fund request. **$0.01**
-- `POST /v1/fund-requests/:id/deny` — deny fund request. **$0.001**
-- `GET /v1/wallets/:address/policy` — get spending policy. **$0.001**
-- `PUT /v1/wallets/:address/policy` — update spending policy. **$0.005**
+Response (200):
+  service  string  "wallet.sh"
+  status   string  "ok"
 
-## Registration
+---
 
-Wallet registration uses EIP-191 signed messages. No keys are stored server-side.
+### POST /v1/wallets
 
-```bash
-# Register a wallet
-curl -X POST https://wallet.prim.sh/v1/wallets \
-  -H "Content-Type: application/json" \
-  -d '{"address": "0xYOUR_ADDRESS", "signature": "0xSIGNED_MESSAGE", "timestamp": "2026-02-25T00:00:00Z"}'
-```
+Register a wallet via EIP-191 signature.
 
-The message to sign: `Register <address> with prim.sh at <timestamp>`
+Free. No x402 required.
+
+Sign this message with your wallet:
+  Register <address> with prim.sh at <timestamp>
+
+where <address> is your checksummed address and <timestamp> is ISO 8601
+UTC. Timestamp must be within 5 minutes of server time.
+
+Request:
+  address    string   required  Ethereum address (0x... 42 chars)
+  signature  string   required  EIP-191 signature over the registration message
+  timestamp  string   required  ISO 8601 UTC timestamp used in signed message
+  chain      string   optional  Chain identifier, default "base"
+  label      string   optional  Human-readable label for this wallet
+
+Response (201):
+  address       string  Registered address
+  chain         string  Chain identifier
+  label         string?  Label if provided
+  registeredAt  string  ISO 8601 timestamp
+  createdAt     string  ISO 8601 timestamp
+
+Errors:
+  400  invalid_request    Missing fields or invalid signature format
+  403  forbidden          Signature does not match address
+  409  duplicate_request  Wallet already registered
+
+---
+
+### GET /v1/wallets
+
+List registered wallets owned by the calling wallet.
+
+Price: $0.001
+
+Pagination: cursor-based. Pass cursor from previous response as ?after=<cursor>.
+
+Query params:
+  limit  integer  optional  1-100, default 20
+  after  string   optional  Cursor from previous response
+
+Response (200):
+  wallets  array   Wallet list
+    .address    string   Ethereum address
+    .chain      string   Chain identifier
+    .balance    string   USDC balance (decimal string, e.g. "5.25")
+    .funded     boolean  Whether wallet has ever been funded
+    .paused     boolean  Whether wallet is currently paused
+    .createdAt  string   ISO 8601 timestamp
+  cursor   string?  Cursor for next page, null if last page
+
+Errors:
+  402  payment_required  x402 payment needed
+  403  forbidden         No wallet address in payment
+  429  rate_limited      Too many requests
+
+---
+
+### GET /v1/wallets/:address
+
+Get full wallet details including balance, policy, and status.
+
+Price: $0.001
+
+Path params:
+  address  string  required  Ethereum wallet address
+
+Response (200):
+  address    string   Ethereum address
+  chain      string   Chain identifier
+  balance    string   USDC balance (decimal string)
+  funded     boolean  Whether wallet has ever been funded
+  paused     boolean  Whether wallet is currently paused
+  createdBy  string   Address that registered this wallet (or self)
+  policy     object?  Spending policy, null if none set
+    .maxPerTx           string?   Max USDC per transaction, null = no limit
+    .maxPerDay          string?   Max USDC per day, null = no limit
+    .dailySpent         string    USDC spent today
+    .dailyResetAt       string    ISO 8601 timestamp when daily counter resets
+  createdAt  string   ISO 8601 timestamp
+
+Errors:
+  402  payment_required  x402 payment needed
+  403  forbidden         Caller does not own this wallet
+  404  not_found         Wallet not found
+
+---
+
+### DELETE /v1/wallets/:address
+
+Permanently deactivate a wallet. Irreversible. Pending fund requests cancelled.
+
+Price: $0.01
+
+Path params:
+  address  string  required  Ethereum wallet address
+
+Response (200):
+  address        string   Deactivated address
+  deactivated    boolean  Always true
+  deactivatedAt  string   ISO 8601 timestamp
+
+Errors:
+  402  payment_required  x402 payment needed
+  403  forbidden         Caller does not own this wallet
+  404  not_found         Wallet not found
+
+---
+
+### POST /v1/wallets/:address/fund-request
+
+Request USDC funding for a wallet. A human operator can approve or deny.
+
+Price: $0.001
+
+Path params:
+  address  string  required  Wallet address to fund
+
+Request:
+  amount  string  required  Requested USDC amount (e.g. "10.00")
+  reason  string  required  Human-readable reason for the funding request
+
+Response (200):
+  id             string  Fund request ID (e.g. "fr_abc123")
+  walletAddress  string  Wallet address the request is for
+  amount         string  Requested USDC amount
+  reason         string  Reason provided
+  status         string  "pending"
+  createdAt      string  ISO 8601 timestamp
+
+Errors:
+  400  invalid_request  Missing amount or reason
+  402  payment_required  x402 payment needed
+  403  forbidden         Caller does not own this wallet
+  404  not_found         Wallet not found
+  500  internal_error    Server error
+
+---
+
+### GET /v1/wallets/:address/fund-requests
+
+List all fund requests for a wallet.
+
+Price: $0.001
+
+Path params:
+  address  string  required  Wallet address
+
+Query params:
+  limit  integer  optional  1-100, default 20
+  after  string   optional  Cursor from previous response
+
+Response (200):
+  requests  array   Fund request list
+    .id             string  Fund request ID
+    .walletAddress  string  Wallet address
+    .amount         string  Requested USDC amount
+    .reason         string  Reason provided
+    .status         string  "pending" | "approved" | "denied"
+    .createdAt      string  ISO 8601 timestamp
+  cursor    string?  Cursor for next page, null if last page
+
+Errors:
+  402  payment_required  x402 payment needed
+  403  forbidden         Caller does not own this wallet
+  404  not_found         Wallet not found
+
+---
+
+### POST /v1/fund-requests/:id/approve
+
+Approve a pending fund request. Returns the address to send USDC to.
+
+Price: $0.01
+
+Path params:
+  id  string  required  Fund request ID
+
+Response (200):
+  id              string  Fund request ID
+  status          string  "approved"
+  fundingAddress  string  Send USDC to this address to fulfill the request
+  amount          string  Approved USDC amount
+  chain           string  Chain identifier
+  approvedAt      string  ISO 8601 timestamp
+
+Errors:
+  402  payment_required  x402 payment needed
+  403  forbidden         Caller not authorized to approve
+  404  not_found         Fund request not found
+  409  duplicate_request  Already approved or denied
+
+---
+
+### POST /v1/fund-requests/:id/deny
+
+Deny a pending fund request.
+
+Price: $0.001
+
+Path params:
+  id  string  required  Fund request ID
+
+Request:
+  reason  string  optional  Reason for denial
+
+Response (200):
+  id       string   Fund request ID
+  status   string   "denied"
+  reason   string?  Denial reason if provided, null otherwise
+  deniedAt  string  ISO 8601 timestamp
+
+Errors:
+  402  payment_required  x402 payment needed
+  403  forbidden         Caller not authorized to deny
+  404  not_found         Fund request not found
+  409  duplicate_request  Already approved or denied
+
+---
+
+### GET /v1/wallets/:address/policy
+
+Get the spending policy for a wallet.
+
+Price: $0.001
+
+Path params:
+  address  string  required  Wallet address
+
+Response (200):
+  walletAddress       string    Wallet address
+  maxPerTx            string?   Max USDC per tx, null = no limit
+  maxPerDay           string?   Max USDC per day, null = no limit
+  allowedPrimitives   array?    Allowed primitive hostnames, null = all allowed
+  dailySpent          string    USDC spent today (decimal string)
+  dailyResetAt        string    ISO 8601 timestamp when daily counter resets
+
+Errors:
+  402  payment_required  x402 payment needed
+  403  forbidden         Caller does not own this wallet
+  404  not_found         Wallet not found
+
+---
+
+### PUT /v1/wallets/:address/policy
+
+Update the spending policy for a wallet. All fields optional.
+Set a field to null to remove that limit.
+
+Price: $0.005
+
+Path params:
+  address  string  required  Wallet address
+
+Request:
+  maxPerTx           string?  optional  Max USDC per transaction, null = remove limit
+  maxPerDay          string?  optional  Max USDC per day, null = remove limit
+  allowedPrimitives  array?   optional  Allowed primitive hostnames, null = allow all
+
+Response (200):
+  walletAddress       string    Wallet address
+  maxPerTx            string?   Updated per-tx limit
+  maxPerDay           string?   Updated daily limit
+  allowedPrimitives   array?    Updated allowed primitives
+  dailySpent          string    USDC spent today
+  dailyResetAt        string    ISO 8601 timestamp when daily counter resets
+
+Errors:
+  400  invalid_request  Invalid JSON body or field values
+  402  payment_required  x402 payment needed
+  403  forbidden         Caller does not own this wallet
+  404  not_found         Wallet not found
+
+---
+
+### POST /v1/wallets/:address/pause
+
+Pause operations for a wallet. Temporarily halts spending without deactivating.
+
+Price: $0.001
+
+Path params:
+  address  string  required  Wallet address
+
+Request:
+  scope  string  optional  "all" | "send" | "swap", default "all"
+
+Response (200):
+  walletAddress  string   Wallet address
+  paused         boolean  true
+  scope          string   Scope that was paused
+  pausedAt       string   ISO 8601 timestamp
+
+Errors:
+  400  invalid_request  Invalid scope value
+  402  payment_required  x402 payment needed
+  403  forbidden         Caller does not own this wallet
+  404  not_found         Wallet not found
+
+---
+
+### POST /v1/wallets/:address/resume
+
+Resume operations for a paused wallet.
+
+Price: $0.001
+
+Path params:
+  address  string  required  Wallet address
+
+Request:
+  scope  string  optional  "all" | "send" | "swap", default "all"
+
+Response (200):
+  walletAddress  string   Wallet address
+  paused         boolean  false
+  scope          string   Scope that was resumed
+  resumedAt      string   ISO 8601 timestamp
+
+Errors:
+  400  invalid_request  Invalid scope value
+  402  payment_required  x402 payment needed
+  403  forbidden         Caller does not own this wallet
+  404  not_found         Wallet not found

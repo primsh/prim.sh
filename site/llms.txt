@@ -1,89 +1,189 @@
 # Prim
 
-> The agent-native stack. Infrastructure primitives for autonomous agents.
-> No signup. No GUI. No KYC. Pay with USDC, get resources.
+The agent-native stack. Infrastructure primitives for autonomous agents.
+No signup. No GUI. No KYC. Pay with USDC, get resources.
 
-Prim provides independent infrastructure primitives. Each accepts x402
-payment (USDC on Base) as authentication. An agent with a funded wallet
-can consume any primitive without human intervention.
+Status: Private beta on Base Sepolia testnet.
 
-**Status: Private beta on Base Sepolia testnet.**
+Prim provides 5 live infrastructure primitives, each accepting x402 payment
+(USDC on Base) as the sole authentication mechanism. An agent with a funded
+wallet can consume any primitive without human intervention.
 
-## Requesting access
+---
 
-This service is in private beta. If you get a 403 `wallet_not_allowed`
-response, you need to request access first.
+## Access (Private Beta)
 
-```
-POST https://api.prim.sh/api/access/request
-Content-Type: application/json
+All paid endpoints enforce an allowlist during beta. If you receive:
+  403 {"error": {"code": "wallet_not_allowed", "message": "..."}}
 
-{ "wallet": "0xYourWalletAddress", "reason": "optional reason" }
-```
+Request access:
 
-Response: `201 { "id": "abc123", "status": "pending" }`
+  POST https://api.prim.sh/api/access/request
+  Content-Type: application/json
 
-Your request will be reviewed. Once approved, your wallet is added to
-the allowlist and you can use all paid primitives.
+  {"wallet": "0xYourWalletAddress", "reason": "optional reason"}
 
-## How x402 payment works
+  → 201 {"id": "abc123", "status": "pending"}
 
-1. Call any endpoint. If payment is required, you get HTTP 402 with a
-   `PAYMENT-REQUIRED` header containing payment requirements (price, network, payTo).
-2. Sign an EIP-3009 `transferWithAuthorization` for the required amount.
-3. Retry the same request with a `PAYMENT-SIGNATURE` header containing the signed payment.
-4. The facilitator settles the payment on-chain. You get your response.
+Your request will be reviewed. Once approved, your wallet is allowlisted
+and all paid primitives become accessible.
 
-Use `@x402/fetch` (TypeScript) or any x402-compatible client to handle this automatically.
+---
 
-Chain: Base Sepolia (`eip155:84532`) during beta. Token: USDC.
+## x402 Payment
 
-## Getting started
+x402 is the payment protocol used by all prim paid endpoints.
+Implements EIP-3009 transferWithAuthorization for gasless USDC transfers.
 
-Install the CLI:
+Full flow:
 
-```bash
-curl -fsSL prim.sh/install.sh | sh
-```
+  1. Call any paid endpoint normally (no special headers).
+  2. Receive HTTP 402 with header:
+       Payment-Required: price=<amount> network=base payTo=<address>
+  3. Sign EIP-3009 transferWithAuthorization from your funded wallet.
+       Signed payload is a JSON object containing:
+         from           Your wallet address
+         to             The payTo address from the Payment-Required header
+         value          Amount in USDC atomic units (6 decimals)
+         validAfter     Unix timestamp (0 for immediate)
+         validBefore    Unix timestamp (expiry, ~5 min from now)
+         nonce          Random 32-byte hex
+         signature      ECDSA signature of the EIP-3009 struct hash
+  4. Retry the identical request with header:
+       Payment-Signature: <base64url-encoded JSON of the signed authorization>
+  5. Server verifies and settles. You receive your response.
 
-Then use it:
+Libraries that handle this automatically:
+  TypeScript: @x402/fetch (drop-in fetch replacement)
+  Any language: implement the 402→sign→retry loop manually
 
-```bash
-prim wallet create        # Generate and register a wallet
-prim faucet usdc          # Get 10 test USDC (free)
-prim store create-bucket  # Create a storage bucket (pays via x402)
-```
+Chain: eip155:84532 (Base Sepolia) during beta.
+Token: USDC (6 decimals).
 
-Run `prim <command> --help` for options. The CLI handles wallet
-management, x402 payment signing, and all primitive interactions.
+Common payment errors:
+  402  payment_required   No payment sent. Check Payment-Required header.
+  403  wallet_not_allowed  Wallet not on allowlist. Request access first.
+  403  wallet_paused       Wallet operations paused by policy.
+  403  policy_violation    Payment exceeds spending policy limits.
 
-If `prim` is not installed, use the HTTP API directly:
+---
 
-1. Generate a wallet (any EVM private key).
-2. Register it: `POST https://wallet.prim.sh/v1/wallets` (free, EIP-191 signature).
-3. Get test USDC: `POST https://faucet.prim.sh/v1/faucet/usdc` (free, rate-limited).
-4. Use any primitive — x402 payment happens automatically.
+## Getting Started
 
-## Live primitives
+### Option A: CLI (recommended)
 
-These are deployed and responding to requests now.
+  curl -fsSL prim.sh/install.sh | sh
 
-- [wallet.prim.sh](https://prim.sh/wallet/llms.txt) — wallet registration (free)
-- [store.prim.sh](https://prim.sh/store/llms.txt) — object storage (S3-compatible buckets and objects)
-- [spawn.prim.sh](https://prim.sh/spawn/llms.txt) — VPS provisioning (DigitalOcean)
-- [faucet.prim.sh](https://prim.sh/faucet/llms.txt) — testnet USDC and ETH faucet (free)
-- [search.prim.sh](https://prim.sh/search/llms.txt) — web search, news, URL extraction
+  prim wallet create        # Generate and register a wallet
+  prim faucet usdc          # Get 10 test USDC (free, 2hr cooldown)
+  prim faucet eth           # Get 0.01 test ETH (free, 1hr cooldown)
+  prim store create-bucket  # Create a storage bucket (pays via x402)
+  prim search web "query"   # Web search (pays via x402)
 
-## Built (not yet deployed)
+Run prim <command> --help for options.
+
+### Option B: HTTP directly
+
+  1. Generate an EVM private key (any standard wallet library).
+
+  2. Register the wallet (free):
+       POST https://wallet.prim.sh/v1/wallets
+       {"address": "0x...", "signature": "0x...", "timestamp": "2026-02-26T00:00:00Z"}
+
+       Message to sign: "Register <address> with prim.sh at <timestamp>"
+
+  3. Get test USDC (free):
+       POST https://faucet.prim.sh/v1/faucet/usdc
+       {"address": "0x..."}
+
+  4. Use any primitive. On 402, sign and retry with Payment-Signature header.
+
+---
+
+## Live Primitives
+
+These are deployed and responding to requests.
+
+  wallet   https://wallet.prim.sh     Wallet registration (mostly free)
+  store    https://store.prim.sh      Object storage (S3-compatible buckets)
+  spawn    https://spawn.prim.sh      VPS provisioning (Hetzner Cloud)
+  faucet   https://faucet.prim.sh     Testnet USDC and ETH faucet (free)
+  search   https://search.prim.sh     Web search, news, URL extraction
+
+Full API references:
+  https://prim.sh/wallet/llms.txt
+  https://prim.sh/store/llms.txt
+  https://prim.sh/spawn/llms.txt
+  https://prim.sh/faucet/llms.txt
+  https://prim.sh/search/llms.txt
+
+### Endpoint summary
+
+wallet.prim.sh:
+  POST   /v1/wallets                           Register wallet (free)
+  GET    /v1/wallets                           List wallets ($0.001)
+  GET    /v1/wallets/:address                  Get wallet details ($0.001)
+  DELETE /v1/wallets/:address                  Deactivate wallet ($0.01)
+  POST   /v1/wallets/:address/fund-request     Create fund request ($0.001)
+  GET    /v1/wallets/:address/fund-requests    List fund requests ($0.001)
+  POST   /v1/fund-requests/:id/approve         Approve fund request ($0.01)
+  POST   /v1/fund-requests/:id/deny            Deny fund request ($0.001)
+  GET    /v1/wallets/:address/policy           Get spending policy ($0.001)
+  PUT    /v1/wallets/:address/policy           Update spending policy ($0.005)
+  POST   /v1/wallets/:address/pause            Pause wallet ($0.001)
+  POST   /v1/wallets/:address/resume           Resume wallet ($0.001)
+
+store.prim.sh:
+  POST   /v1/buckets                           Create bucket ($0.05)
+  GET    /v1/buckets                           List buckets ($0.001)
+  GET    /v1/buckets/:id                       Get bucket ($0.001)
+  DELETE /v1/buckets/:id                       Delete bucket ($0.01)
+  PUT    /v1/buckets/:id/objects/:key          Upload object ($0.001)
+  GET    /v1/buckets/:id/objects               List objects ($0.001)
+  GET    /v1/buckets/:id/objects/:key          Download object ($0.001)
+  DELETE /v1/buckets/:id/objects/:key          Delete object ($0.001)
+  GET    /v1/buckets/:id/quota                 Get quota ($0.001)
+  PUT    /v1/buckets/:id/quota                 Set quota ($0.01)
+  POST   /v1/buckets/:id/quota/reconcile       Reconcile usage ($0.05)
+
+spawn.prim.sh:
+  POST   /v1/servers                           Create server ($0.01)
+  GET    /v1/servers                           List servers ($0.001)
+  GET    /v1/servers/:id                       Get server ($0.001)
+  DELETE /v1/servers/:id                       Delete server ($0.005)
+  POST   /v1/servers/:id/start                 Start server ($0.002)
+  POST   /v1/servers/:id/stop                  Stop server ($0.002)
+  POST   /v1/servers/:id/reboot                Reboot server ($0.002)
+  POST   /v1/servers/:id/resize                Resize server ($0.01)
+  POST   /v1/servers/:id/rebuild               Rebuild server ($0.005)
+  POST   /v1/ssh-keys                          Register SSH key ($0.001)
+  GET    /v1/ssh-keys                          List SSH keys ($0.001)
+  DELETE /v1/ssh-keys/:id                      Delete SSH key ($0.001)
+
+faucet.prim.sh (all free):
+  POST   /v1/faucet/usdc                       Dispense 10 USDC (2hr cooldown)
+  POST   /v1/faucet/eth                        Dispense 0.01 ETH (1hr cooldown)
+  GET    /v1/faucet/status?address=0x...       Check rate limit status
+
+search.prim.sh:
+  POST   /v1/search                            Web search ($0.01)
+  POST   /v1/search/news                       News search ($0.01)
+  POST   /v1/extract                           Extract URL content ($0.005)
+
+---
+
+## Built (Not Yet Deployed)
 
 These primitives are implemented but not yet live on the network.
 
-- [email.prim.sh](https://prim.sh/email/llms.txt) — email mailboxes, send/receive, webhooks
-- [mem.prim.sh](https://prim.sh/mem/llms.txt) — vector memory and KV cache
-- [domain.prim.sh](https://prim.sh/domain/llms.txt) — domains and DNS records
-- [token.prim.sh](https://prim.sh/token/llms.txt) — ERC-20 token deployment and Uniswap pools
+  email    email.prim.sh    Email mailboxes, send/receive, webhooks
+  mem      mem.prim.sh      Vector memory and KV cache
+  domain   domain.prim.sh   Domain registration and DNS records
+  token    token.prim.sh    ERC-20 token deployment and Uniswap pools
 
-## Planned
+---
+
+## Planned Primitives
 
 vault, cron, pipe, code, ring, browse, infer, docs, watch, trace,
 auth, id, pins, mart, ship, hands, pay, corp, hive, ads

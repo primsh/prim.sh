@@ -1,44 +1,340 @@
 # store.prim.sh
 
-> Object storage for agents. S3-compatible buckets and objects with x402 payment.
+Object storage for agents. S3-compatible buckets and objects with x402 payment.
+Create buckets, upload objects, download objects. Caller identity is derived
+from the x402 payment signature — no separate auth needed.
 
 Base URL: https://store.prim.sh
-Auth: x402 (USDC on Base Sepolia)
+Auth: x402 (USDC on Base Sepolia). GET / is free.
+Chain: Base Sepolia (eip155:84532) during beta.
+
+Limits (beta):
+  10 buckets per wallet
+  100 MB default per-bucket quota
+  1 GB total storage per wallet
+
+---
+
+## x402 Payment
+
+  1. Make request. Server returns 402 with Payment-Required header.
+  2. Sign EIP-3009 transferWithAuthorization.
+  3. Retry with Payment-Signature header (base64-encoded signed authorization).
+
+The wallet address extracted from the payment becomes the bucket owner.
+
+Error envelope:
+  {"error": {"code": "<code>", "message": "<msg>"}}
+
+Error codes:
+  not_found               Resource does not exist
+  forbidden               Bucket/object belongs to a different wallet
+  invalid_request         Missing or invalid fields
+  r2_error                Upstream R2 storage error
+  rate_limited            Too many requests
+  bucket_name_taken       Bucket name already exists for this wallet
+  quota_exceeded          Upload would exceed bucket quota
+  bucket_limit_exceeded   Wallet has reached 10 bucket limit
+  storage_limit_exceeded  Upload would exceed wallet 1 GB limit
+
+---
 
 ## Endpoints
 
-- `POST /v1/buckets` — create a bucket. **$0.05**
-- `GET /v1/buckets` — list your buckets. **$0.001**
-- `GET /v1/buckets/:id` — get bucket details. **$0.001**
-- `DELETE /v1/buckets/:id` — delete a bucket (must be empty). **$0.01**
-- `PUT /v1/buckets/:id/objects/:key` — upload an object. **$0.001**
-- `GET /v1/buckets/:id/objects` — list objects in a bucket. **$0.001**
-- `GET /v1/buckets/:id/objects/:key` — download an object. **$0.001**
-- `DELETE /v1/buckets/:id/objects/:key` — delete an object. **$0.001**
-- `GET /v1/buckets/:id/quota` — get quota and usage. **$0.001**
-- `PUT /v1/buckets/:id/quota` — set bucket quota. **$0.01**
+### GET /
 
-## Limits (beta)
+Health check.
 
-- 10 buckets per wallet
-- 100 MB default per-bucket quota
-- 1 GB total storage per wallet
+Free.
 
-## Examples
+Response (200):
+  service  string  "store.sh"
+  status   string  "ok"
 
-```bash
-# Create a bucket
-curl -X POST https://store.prim.sh/v1/buckets \
-  -H "Content-Type: application/json" \
-  -d '{"name": "agent-data"}'
-# → 402 Payment Required (sign and retry with PAYMENT-SIGNATURE header)
+---
 
-# Upload an object
-curl -X PUT https://store.prim.sh/v1/buckets/BUCKET_ID/objects/notes.txt \
-  -H "Content-Type: text/plain" \
-  -H "Content-Length: 13" \
-  --data-binary "hello world\n"
+### POST /v1/buckets
 
-# Download an object
-curl https://store.prim.sh/v1/buckets/BUCKET_ID/objects/notes.txt
-```
+Create a new storage bucket.
+
+Price: $0.05
+
+Request:
+  name      string  required  Bucket name. Unique per wallet. Alphanumeric, hyphens, underscores.
+  location  string  optional  Storage region (e.g. "us-east-1"). Defaults to primary region.
+
+Response (201):
+  bucket  object  Created bucket
+    .id            string   Bucket ID (UUID)
+    .name          string   Bucket name
+    .location      string?  Storage region, null = default
+    .owner_wallet  string   Ethereum address of owner
+    .quota_bytes   integer? Per-bucket quota in bytes, null = default (100 MB)
+    .usage_bytes   integer  Current usage in bytes
+    .created_at    string   ISO 8601 timestamp
+
+Errors:
+  400  invalid_request        Invalid bucket name or name already taken
+  402  payment_required       x402 payment needed
+  403  bucket_limit_exceeded  Wallet has reached 10 bucket limit or missing wallet
+  502  r2_error               Upstream R2 error
+
+---
+
+### GET /v1/buckets
+
+List all buckets owned by the calling wallet.
+
+Price: $0.001
+
+Query params:
+  limit  integer  optional  1-100, default 20
+  page   integer  optional  1-based page number, default 1
+
+Response (200):
+  buckets  array   Bucket list
+    .id            string   Bucket ID (UUID)
+    .name          string   Bucket name
+    .location      string?  Storage region
+    .owner_wallet  string   Owner address
+    .quota_bytes   integer? Quota in bytes
+    .usage_bytes   integer  Current usage in bytes
+    .created_at    string   ISO 8601 timestamp
+  meta  object  Pagination metadata
+    .page      integer  Current page number
+    .per_page  integer  Items per page
+    .total     integer  Total number of buckets
+
+Errors:
+  402  payment_required  x402 payment needed
+  403  forbidden         Missing wallet address in payment
+
+---
+
+### GET /v1/buckets/:id
+
+Get details for a single bucket. Caller must own the bucket.
+
+Price: $0.001
+
+Path params:
+  id  string  required  Bucket ID (UUID)
+
+Response (200):
+  id            string   Bucket ID
+  name          string   Bucket name
+  location      string?  Storage region
+  owner_wallet  string   Owner address
+  quota_bytes   integer? Quota in bytes
+  usage_bytes   integer  Current usage in bytes
+  created_at    string   ISO 8601 timestamp
+
+Errors:
+  402  payment_required  x402 payment needed
+  403  forbidden         Bucket belongs to a different wallet
+  404  not_found         Bucket not found
+
+---
+
+### DELETE /v1/buckets/:id
+
+Delete a bucket. Bucket must be empty first.
+
+Price: $0.01
+
+Path params:
+  id  string  required  Bucket ID (UUID)
+
+Response (200): {} (empty object)
+
+Errors:
+  402  payment_required  x402 payment needed
+  403  forbidden         Bucket belongs to a different wallet
+  404  not_found         Bucket not found
+  502  r2_error          Upstream R2 error
+
+---
+
+### PUT /v1/buckets/:id/objects/:key
+
+Upload an object. Key may include slashes (e.g. "notes/2026/feb.txt").
+Content-Length header is required. Fails with 413 if upload exceeds quota.
+
+Price: $0.001
+
+Path params:
+  id   string  required  Bucket ID (UUID)
+  key  string  required  Object key (path within bucket, slashes allowed)
+
+Headers:
+  Content-Length  integer  required  Size of body in bytes
+  Content-Type    string   optional  MIME type (stored and returned on download)
+
+Request body: Raw bytes (application/octet-stream).
+
+Response (200):
+  key   string  Object key as stored
+  size  integer  Object size in bytes
+  etag  string  ETag (MD5 hash)
+
+Errors:
+  400  invalid_request         Missing or invalid body
+  402  payment_required        x402 payment needed
+  403  forbidden               Bucket belongs to a different wallet
+  404  not_found               Bucket not found
+  411  invalid_request         Content-Length header missing
+  413  quota_exceeded          Upload would exceed bucket quota
+  413  storage_limit_exceeded  Upload would exceed wallet 1 GB limit
+  502  r2_error                Upstream R2 error
+
+---
+
+### GET /v1/buckets/:id/objects
+
+List objects in a bucket. Cursor-based pagination.
+
+Price: $0.001
+
+Path params:
+  id  string  required  Bucket ID (UUID)
+
+Query params:
+  prefix  string   optional  Filter by key prefix (e.g. "notes/")
+  limit   integer  optional  1-1000, default 100
+  cursor  string   optional  Cursor from previous response's next_cursor
+
+Response (200):
+  objects       array    Object list
+    .key           string   Object key
+    .size          integer  Size in bytes
+    .etag          string   ETag (MD5 hash)
+    .last_modified  string  ISO 8601 timestamp
+  is_truncated  boolean  true if more objects exist beyond this page
+  next_cursor   string?  Cursor for next page, null if is_truncated is false
+  meta  object  Request metadata
+    .prefix  string?  Applied prefix filter, null if none
+    .limit   integer  Limit applied to this response
+
+Errors:
+  402  payment_required  x402 payment needed
+  403  forbidden         Bucket belongs to a different wallet
+  404  not_found         Bucket not found
+  502  r2_error          Upstream R2 error
+
+---
+
+### GET /v1/buckets/:id/objects/:key
+
+Download an object. Response body is streamed directly.
+
+Price: $0.001
+
+Path params:
+  id   string  required  Bucket ID (UUID)
+  key  string  required  Object key (slashes allowed)
+
+Response (200): Raw object bytes (application/octet-stream).
+Response headers:
+  Content-Type    MIME type as stored
+  Content-Length  Size in bytes
+  ETag            MD5 hash
+
+Errors:
+  402  payment_required  x402 payment needed
+  403  forbidden         Bucket belongs to a different wallet
+  404  not_found         Bucket or object not found
+  502  r2_error          Upstream R2 error
+
+---
+
+### DELETE /v1/buckets/:id/objects/:key
+
+Delete an object from a bucket.
+
+Price: $0.001
+
+Path params:
+  id   string  required  Bucket ID (UUID)
+  key  string  required  Object key (slashes allowed)
+
+Response (200):
+  status  string  "deleted"
+
+Errors:
+  402  payment_required  x402 payment needed
+  403  forbidden         Bucket belongs to a different wallet
+  404  not_found         Bucket or object not found
+  502  r2_error          Upstream R2 error
+
+---
+
+### GET /v1/buckets/:id/quota
+
+Get quota and usage for a bucket.
+
+Price: $0.001
+
+Path params:
+  id  string  required  Bucket ID (UUID)
+
+Response (200):
+  bucket_id    string   Bucket ID
+  quota_bytes  integer? Quota in bytes, null = default (100 MB)
+  usage_bytes  integer  Current usage in bytes
+  usage_pct    number?  Usage percentage (0-100), null if quota_bytes is null
+
+Errors:
+  402  payment_required  x402 payment needed
+  403  forbidden         Bucket belongs to a different wallet
+  404  not_found         Bucket not found
+
+---
+
+### PUT /v1/buckets/:id/quota
+
+Set the storage quota for a bucket. Pass null to reset to default (100 MB).
+
+Price: $0.01
+
+Path params:
+  id  string  required  Bucket ID (UUID)
+
+Request:
+  quota_bytes  integer?  required  New quota in bytes, or null to reset to default (100 MB)
+
+Response (200):
+  bucket_id    string   Bucket ID
+  quota_bytes  integer? Updated quota in bytes
+  usage_bytes  integer  Current usage in bytes
+  usage_pct    number?  Usage percentage (0-100)
+
+Errors:
+  400  invalid_request  Invalid quota value
+  402  payment_required  x402 payment needed
+  403  forbidden         Bucket belongs to a different wallet
+  404  not_found         Bucket not found
+  502  r2_error          Upstream R2 error
+
+---
+
+### POST /v1/buckets/:id/quota/reconcile
+
+Recompute bucket usage by scanning actual R2 storage.
+Use when usage_bytes appears incorrect (e.g. after bulk delete).
+
+Price: $0.05
+
+Path params:
+  id  string  required  Bucket ID (UUID)
+
+Response (200):
+  bucket_id      string   Bucket ID
+  previous_bytes  integer  Usage recorded before reconciliation
+  actual_bytes    integer  Actual usage recomputed from R2
+  delta_bytes     integer  Difference (actual - previous). Negative = recorded was overstated.
+
+Errors:
+  402  payment_required  x402 payment needed
+  403  forbidden         Bucket belongs to a different wallet
+  404  not_found         Bucket not found
+  502  r2_error          Upstream R2 error

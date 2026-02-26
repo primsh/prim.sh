@@ -63,6 +63,63 @@ async function main() {
     return;
   }
 
+  if (group === "search") {
+    try {
+      const { runSearchCommand } = await import("./search-commands.ts");
+      await runSearchCommand(subcommand, argv);
+    } catch (err) {
+      console.error(`Error: ${err instanceof Error ? err.message : String(err)}`);
+      process.exit(1);
+    }
+    return;
+  }
+
+  if (group === "mcp") {
+    // Dispatch to @primsh/mcp package. Import path is resolved at runtime by Bun.
+    // Using a variable import path to avoid tsc rootDir restrictions on cross-package imports.
+    const mcpPath = new URL("../../mcp/src/server.ts", import.meta.url).href;
+    try {
+      // biome-ignore lint/suspicious/noExplicitAny: cross-package dynamic import
+      const mcpModule = await import(mcpPath) as any;
+      const { startMcpServer, isPrimitive } = mcpModule;
+      // mcp has no subcommand — flags start at argv[1], not argv[2]. Use hasFlag/getFlag from mcp index.ts pattern.
+      const mcpArgv = argv.slice(1); // ["--primitives", "faucet", ...]
+      function mcpGetFlag(name: string): string | undefined {
+        for (let i = 0; i < mcpArgv.length; i++) {
+          if (mcpArgv[i].startsWith(`--${name}=`)) return mcpArgv[i].slice(`--${name}=`.length);
+          if (mcpArgv[i] === `--${name}`) {
+            if (i + 1 < mcpArgv.length && !mcpArgv[i + 1].startsWith("--")) return mcpArgv[i + 1];
+            return "";
+          }
+        }
+        return undefined;
+      }
+      const primitivesFlag = mcpGetFlag("primitives");
+      const walletFlag = mcpGetFlag("wallet");
+      const VALID_PRIMITIVES = ["wallet", "store", "spawn", "faucet", "search"];
+      let primitives: string[] | undefined;
+      if (primitivesFlag) {
+        const parsed = primitivesFlag
+          .split(",")
+          .map((s: string) => s.trim())
+          .filter((s: string) => s.length > 0);
+        const invalid = parsed.filter((s: string) => !VALID_PRIMITIVES.includes(s));
+        if (invalid.length > 0) {
+          console.error(
+            `Error: Unknown primitives: ${invalid.join(", ")}. Valid: wallet, store, spawn, faucet, search`,
+          );
+          process.exit(1);
+        }
+        primitives = parsed;
+      }
+      await startMcpServer({ primitives, walletAddress: walletFlag ?? undefined });
+    } catch (err) {
+      console.error(`Error: ${err instanceof Error ? err.message : String(err)}`);
+      process.exit(1);
+    }
+    return;
+  }
+
   if (group === "admin") {
     try {
       const { runAdminCommand } = await import("./admin-commands.ts");
@@ -75,7 +132,7 @@ async function main() {
   }
 
   if (group !== "wallet") {
-    console.log("Usage: prim <wallet|store|spawn|email|faucet|admin> <subcommand>");
+    console.log("Usage: prim <wallet|store|spawn|email|faucet|search|mcp|admin> <subcommand>");
     console.log("       prim --version");
     console.log("");
     console.log("  prim wallet <create|register|list|balance|import|export|default|remove>");
@@ -83,6 +140,8 @@ async function main() {
     console.log("  prim spawn  <create|ls|get|rm|reboot|stop|start|ssh-key>");
     console.log("  prim email  <create|ls|get|rm|renew|inbox|read|send|webhook|domain>");
     console.log("  prim faucet <usdc|eth|status>");
+    console.log("  prim search <web|news|extract>");
+    console.log("  prim mcp    [--primitives wallet,store,...] [--wallet 0x...]");
     console.log("  prim admin  <list-requests|approve|deny|add-wallet|remove-wallet>");
     process.exit(1);
   }

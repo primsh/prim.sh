@@ -1,27 +1,123 @@
 # search.prim.sh
 
-> Web search for agents. Search the web, get news, extract content from URLs.
+Web search for agents. Search the web, get news, and extract content from URLs.
+All POST routes require x402 payment (USDC on Base Sepolia).
 
 Base URL: https://search.prim.sh
-Auth: x402 (USDC on Base Sepolia)
-Status: Built, not yet deployed.
+Auth: x402 (USDC on Base Sepolia). GET / is free.
+Chain: Base Sepolia (eip155:84532) during beta.
+
+---
+
+## x402 Payment
+
+  1. Make request. Server returns 402 with Payment-Required header.
+  2. Sign EIP-3009 transferWithAuthorization.
+  3. Retry with Payment-Signature header (base64-encoded signed authorization).
+
+Error envelope:
+  {"error": {"code": "<code>", "message": "<msg>"}}
+
+Error codes:
+  invalid_request  Missing or invalid fields
+  rate_limited     Too many requests (check Retry-After header)
+  provider_error   Upstream search provider unavailable
+
+---
 
 ## Endpoints
 
-- `POST /v1/search` — web search. **$0.01**
-- `POST /v1/search/news` — news search. **$0.01**
-- `POST /v1/extract` — extract content from a URL. **$0.005**
+### GET /
 
-## Examples
+Health check.
 
-```bash
-# Web search
-curl -X POST https://search.prim.sh/v1/search \
-  -H "Content-Type: application/json" \
-  -d '{"query": "latest Base L2 developments", "max_results": 5}'
+Free.
 
-# Extract content from a URL
-curl -X POST https://search.prim.sh/v1/extract \
-  -H "Content-Type: application/json" \
-  -d '{"url": "https://example.com/article"}'
-```
+Response (200):
+  service  string  "search.sh"
+  status   string  "ok"
+
+---
+
+### POST /v1/search
+
+Search the web and return ranked results. Optionally include an AI-generated
+answer summarizing the top results.
+
+Price: $0.01
+
+Request:
+  query           string   required  Search query string
+  max_results     integer  optional  1-20, default 10
+  search_depth    string   optional  "basic" | "advanced", default "basic"
+  country         string   optional  Two-letter ISO 3166-1 country code to bias results (e.g. "US")
+  time_range      string   optional  "day" | "week" | "month" | "year"
+  include_answer  boolean  optional  Include AI-generated answer. Default false.
+  include_domains  array   optional  Restrict results to these domains only (e.g. ["docs.base.org"])
+  exclude_domains  array   optional  Exclude results from these domains (e.g. ["reddit.com"])
+
+Response (200):
+  query          string  Search query echoed back
+  answer         string?  AI-generated answer. Only present if include_answer was true.
+  results        array   Search results
+    .title     string   Page title
+    .url       string   Page URL
+    .content   string   Snippet text extracted from the page
+    .score     number   Relevance score (0-1)
+    .published  string?  Publication date (ISO 8601), if available
+  response_time  number  Time taken in milliseconds
+
+Errors:
+  400  invalid_request  Missing or invalid query
+  402  payment_required  x402 payment needed
+  429  rate_limited      Too many requests. Check Retry-After response header.
+  502  provider_error    Upstream search provider unavailable
+
+---
+
+### POST /v1/search/news
+
+Search for recent news articles. Results biased toward news sources and ordered
+by recency. Use time_range to restrict to recent coverage.
+
+Price: $0.01
+
+Request: Same fields as POST /v1/search (see above)
+
+Response (200): Same structure as POST /v1/search (see above)
+
+Errors:
+  400  invalid_request  Missing or invalid query
+  402  payment_required  x402 payment needed
+  429  rate_limited      Too many requests
+  502  provider_error    Upstream search provider unavailable
+
+---
+
+### POST /v1/extract
+
+Extract readable content from one or more URLs. Returns cleaned text or markdown.
+Failed extractions (404, paywalled pages) are reported in the failed array —
+the request itself succeeds as long as at least one URL was attempted.
+
+Price: $0.005
+
+Request:
+  urls    string|array  required  URL (string) or array of URLs to extract content from
+  format  string        optional  "markdown" | "text", default "markdown"
+
+Response (200):
+  results        array  Successfully extracted pages
+    .url      string   The URL extracted
+    .content  string   Extracted content in requested format
+    .images   array    Image URLs found on the page (may be empty)
+  failed         array  Pages that could not be extracted
+    .url    string  The URL that failed
+    .error  string  Human-readable reason (e.g. "HTTP 404: page not found")
+  response_time  number  Time taken in milliseconds
+
+Errors:
+  400  invalid_request  Missing urls field or invalid URL format
+  402  payment_required  x402 payment needed
+  429  rate_limited      Too many requests
+  502  provider_error    Upstream extraction provider unavailable

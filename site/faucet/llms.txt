@@ -1,31 +1,112 @@
 # faucet.prim.sh
 
-> Testnet faucet. Get free USDC and ETH on Base Sepolia to test prim primitives.
+Testnet faucet for Base Sepolia. Dispenses free USDC and ETH to wallet
+addresses for testing prim primitives. No auth or payment required.
+Rate-limited by wallet address.
 
 Base URL: https://faucet.prim.sh
-Auth: None required (rate-limited by wallet address)
+Auth: None (free, rate-limited by address)
+Network: Base Sepolia (eip155:84532) only. Returns 403 on mainnet.
+
+Drip amounts:
+  USDC: 10 USDC per drip. Cooldown: 2 hours.
+  ETH:  0.01 ETH per drip. Cooldown: 1 hour.
+
+USDC source: Circle Faucet API, with treasury wallet ERC-20 transfer fallback.
+ETH source:  Treasury wallet.
+
+---
+
+## Error envelope
+
+  {"error": {"code": "<code>", "message": "<msg>", "retryAfter": <seconds>}}
+
+retryAfter is present only on 429 responses.
+
+---
 
 ## Endpoints
 
-- `GET /` — health check (shows network info).
-- `POST /v1/faucet/usdc` — dispense 1 test USDC. Rate limit: once per 2 hours.
-- `POST /v1/faucet/eth` — dispense 1 test ETH. Rate limit: once per 1 hour.
-- `GET /v1/faucet/status` — check rate limit status for an address.
+### GET /
 
-## Examples
+Health check. Returns network info. Always responds (no testnet guard).
 
-```bash
-# Get test USDC
-curl -X POST https://faucet.prim.sh/v1/faucet/usdc \
-  -H "Content-Type: application/json" \
-  -d '{"address": "0xYOUR_ADDRESS"}'
+Free.
 
-# Check when you can drip again
-curl "https://faucet.prim.sh/v1/faucet/status?address=0xYOUR_ADDRESS"
-```
+Response (200):
+  service  string   "faucet.sh"
+  status   string   "ok"
+  network  string   CAIP-2 chain identifier (e.g. "eip155:84532")
+  testnet  boolean  Whether configured for testnet
 
-## Notes
+---
 
-- Testnet only. Will not operate on mainnet.
-- USDC is dispensed via Circle testnet API.
-- ETH is dispensed from a treasury wallet.
+### POST /v1/faucet/usdc
+
+Dispense 10 test USDC on Base Sepolia.
+
+Free. Rate limit: once per 2 hours per address.
+
+Request:
+  address  string  required  EVM wallet address (0x... 42 chars)
+
+Response (200):
+  txHash    string  Transaction hash on Base Sepolia. May be "pending" if Circle
+                    returns 204 with no tx hash.
+  amount    string  Amount dispensed (e.g. "10.00")
+  currency  string  "USDC"
+  chain     string  CAIP-2 chain identifier (e.g. "eip155:84532")
+  source    string  "circle" | "treasury" — which backend dispensed the USDC
+
+Errors:
+  400  invalid_request  Missing or invalid address
+  403  mainnet_rejected  Faucet only operates on testnet
+  429  rate_limited      Address already dripped within 2 hours. retryAfter: seconds to wait.
+  502  faucet_error      Both Circle and treasury fallback failed
+
+---
+
+### POST /v1/faucet/eth
+
+Dispense 0.01 test ETH on Base Sepolia.
+
+Free. Rate limit: once per 1 hour per address.
+
+Request:
+  address  string  required  EVM wallet address (0x... 42 chars)
+
+Response (200):
+  txHash    string  Transaction hash on Base Sepolia
+  amount    string  Amount dispensed (e.g. "0.01")
+  currency  string  "ETH"
+  chain     string  CAIP-2 chain identifier (e.g. "eip155:84532")
+
+Errors:
+  400  invalid_request  Missing or invalid address
+  403  mainnet_rejected  Faucet only operates on testnet
+  429  rate_limited      Address already dripped within 1 hour. retryAfter: seconds to wait.
+  502  faucet_error      Treasury wallet failed to send ETH
+
+---
+
+### GET /v1/faucet/status
+
+Check rate limit status for a wallet address across both faucets.
+Call this before dripping to avoid 429s.
+
+Free.
+
+Query params:
+  address  string  required  EVM wallet address
+
+Response (200):
+  address  string  The queried address
+  usdc     object  USDC faucet availability
+    .available     boolean  Whether USDC faucet can be called right now
+    .retryAfterMs  integer  Milliseconds until rate limit resets. 0 if available.
+  eth      object  ETH faucet availability
+    .available     boolean  Whether ETH faucet can be called right now
+    .retryAfterMs  integer  Milliseconds until rate limit resets. 0 if available.
+
+Errors:
+  400  invalid_request  Missing or invalid address query param
