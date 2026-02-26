@@ -58,6 +58,17 @@ async function main() {
     return;
   }
 
+  if (group === "email") {
+    try {
+      const { runEmailCommand } = await import("./email-commands.ts");
+      await runEmailCommand(subcommand, argv);
+    } catch (err) {
+      console.error(`Error: ${err instanceof Error ? err.message : String(err)}`);
+      process.exit(1);
+    }
+    return;
+  }
+
   if (group === "faucet") {
     try {
       const { runFaucetCommand } = await import("./faucet-commands.ts");
@@ -81,12 +92,13 @@ async function main() {
   }
 
   if (group !== "wallet") {
-    console.log("Usage: prim <wallet|store|spawn|faucet|admin> <subcommand>");
+    console.log("Usage: prim <wallet|store|spawn|email|faucet|admin> <subcommand>");
     console.log("       prim --version");
     console.log("");
     console.log("  prim wallet <create|register|list|balance|import|export|default|remove>");
     console.log("  prim store  <create-bucket|ls|put|get|rm|rm-bucket|quota>");
     console.log("  prim spawn  <create|ls|get|rm|reboot|stop|start|ssh-key>");
+    console.log("  prim email  <create|ls|get|rm|renew|inbox|read|send|webhook|domain>");
     console.log("  prim faucet <usdc|eth|status>");
     console.log("  prim admin  <list-requests|approve|deny|add-wallet|remove-wallet>");
     process.exit(1);
