@@ -97,11 +97,11 @@ Reference implementation: `packages/track/test/smoke.test.ts`
 
 1. App default export is defined
 2. `GET /` → 200 + `{ service: "<name>.sh", status: "ok" }`
-3. `POST /v1/<route>` without payment header → 402 (x402 middleware active)
+3. x402 middleware is registered — spy asserts `createAgentStackMiddleware` was called with `payTo`, `freeRoutes: ["GET /"]`, and the paid route map
 4. `POST /v1/<route>` with mocked service layer → 200 with valid response shape
-5. `POST /v1/<route>` with invalid/empty body → 400
+5. `POST /v1/<route>` with missing/invalid input → 400
 
-Check 4 mocks the service module (`vi.mock("../src/service.ts")`), not the HTTP layer. Checks 3 and 5 verify that middleware and validation are wired correctly without needing a payment.
+**Pattern**: `@primsh/x402-middleware` is mocked as a passthrough via `vi.mock` so the handler is reachable. Check 3 uses a `vi.fn()` spy on `createAgentStackMiddleware` to verify it was registered with the correct config — this is a structural test (middleware is wired), not a runtime test (middleware returns 402). The runtime 402 behavior is covered by the gate runner's `deployed → live` check, which POSTs to the live endpoint and asserts 402.
 
 ## Landing Page Design System
 
