@@ -1,104 +1,71 @@
 # TASKS
 
-## Active
+## Lane 1: Launch
 
-| Priority | ID | Task | Scope | Depends on | Status |
-|---|---|---|---|---|---|
-| 1 | S-1 | Fix "Fourteen primitives" copy → "Nineteen" (manifesto x2 + CTA in `agentstack/index.html`) | site/index.html | — | done |
-| 2 | S-2 | Fix `.c` CSS class collision in `agentstack/index.html` (coral vs comment gray) | site/index.html | — | done |
-| 3 | S-3 | Add missing routes to `serve.py` (mem, infer, watch + new primitives: browse, auth, code, trace) | site/serve.py | — | done |
-| 4 | S-4 | Create landing pages for new primitives (browse, auth, code, trace) | site/ | — | done |
-| 5 | S-5 | Update landing page hero count to 26 primitives, add new primitive cards | site/index.html | — | done |
-| 6 | S-6 | Add "This page is for humans. The API is for agents." line to all landing pages | site/ | — | done |
-| 7 | P-1 | Write llms.txt (root) + per-primitive llms.txt files | site/ | — | done |
-| 8 | P-2 | Add llms.txt routes to serve.py (or replace with smarter static server) | site/serve.py | P-1 | done |
-| 9 | P-3 | Set up monorepo structure (pnpm workspaces, shared x402 middleware package) | root | — | done |
-| 10 | P-4 | Build shared x402 Hono middleware package | packages/x402-middleware | P-3 | done |
-| 11 | W-1 | Design wallet.sh API surface (finalize endpoints, request/response shapes) | specs/wallet.md | — | done |
-| 12 | W-2 | Implement wallet creation (local keypair generation, encrypted keystore) | wallet/ | W-1 | done |
-| 13 | W-3 | Implement balance queries (Base USDC via RPC) | wallet/ | W-2 | done |
-| 14 | W-4 | Implement send (USDC transfer on Base) | wallet/ | W-2 | done |
-| 15 | W-5 | Integrate x402 client (`@x402/fetch` wrapper) | wallet/ | W-2 | done |
-| 16 | W-6 | Implement funding request flow (agent → owner notification → approval) | wallet/ | W-4 | done |
-| 17 | W-7 | Implement budget/spending policy engine | wallet/ | W-4 | done |
-| 18 | W-8 | Port execution journal + idempotency from Railgunner | wallet/ | W-4 | done |
-| 19 | W-9 | Port circuit breaker from Railgunner | wallet/ | W-4 | done |
-| 20 | D-1 | Build dns.sh: zone + record CRUD via Cloudflare API | packages/domain | P-4 | done |
-| 21 | D-2 | Rename dns.sh → domain.sh, add domain search endpoint (registrar availability API) | packages/dns→domain | D-1 | done |
-| 22 | D-3 | Build domain.sh: domain registration endpoint (registrar purchase API) | packages/domain | D-2 | done |
-| 23 | D-4 | Integrate x402 middleware | dns/ | D-1, P-4 | done |
-| 45 | D-5 | Build domain.sh: mail-setup convenience endpoint (MX+SPF+DMARC+DKIM in one call) | packages/domain | D-1 | done |
-| 46 | D-6 | Build domain.sh: verification endpoint (NS + record propagation checks) | packages/domain | D-1 | done |
-| 47 | D-7 | Build domain.sh: auto-configure NS to Cloudflare after registration | packages/domain | D-3 | done |
-| 48 | D-8 | Build domain.sh: batch record operations (atomic multi-record create/update/delete) | packages/domain | D-2 | done |
-| 49 | D-9 | domain.sh live smoke test: zone + record CRUD (create/get/list/update/batch/delete) via real Cloudflare API; optional NameSilo domain search | packages/domain | D-1 | done |
-| 49 | D-9 | domain.sh live smoke test: real Cloudflare API calls (zone CRUD, record CRUD, mail-setup, verify, batch), optional NameSilo search + registration | packages/domain | D-8 | deferred — burns real Cloudflare zones + NameSilo registration costs |
-| 24 | R-1 | Deploy Stalwart (Docker on DigitalOcean Droplet) | deploy/email | DO account | done |
-| 25 | R-2 | Configure Stalwart: domain, DKIM, SPF, DMARC, ACME TLS | deploy/email | R-1, D-1 | done |
-| 26 | R-3 | Build email.sh wrapper: mailbox creation (Stalwart REST API) | packages/email | R-2 | done |
-| 27 | R-4 | Build email.sh wrapper: JMAP auth bridge + session bootstrap (Basic auth, no OAuth) | packages/email | R-3 | done |
-| 28 | R-5 | Build email.sh wrapper: read messages (JMAP Email/query + Email/get) | packages/email | R-4 | done |
-| 29 | R-6 | Build email.sh wrapper: send messages (JMAP EmailSubmission/set) — receive-only first | packages/email | R-4 | done |
-| 30 | R-7 | Build email.sh wrapper: incoming mail webhooks (Stalwart MTA Hooks) | packages/email | R-2 | done |
-| 31 | R-8 | Build email.sh wrapper: mailbox TTL/expiry manager | packages/email | R-3 | done |
-| 32 | R-9 | Build email.sh wrapper: custom domain support | packages/email | R-2, D-1 | done |
-| 33 | R-11 | Write local smoke test: vitest integration test against live Stalwart (create mailbox → send → read → webhook) | packages/email | R-6 | done |
-| 33 | R-12 | Run R-11 smoke test: SSH tunnel to Stalwart, execute test:smoke, verify full flow passes | packages/email | R-11 | done |
-| 34 | R-10 | Integrate x402 middleware (all endpoints gated by payment) | packages/email | R-3, P-4 | done |
-| 34 | SP-1 | Write spawn.sh spec (Hetzner API wrapping, VM lifecycle, pricing) | specs/ | — | done |
-| 35 | SP-2 | Build spawn.sh: VM provisioning via Hetzner Cloud API | spawn/ | SP-1 | done |
-| 36 | SP-3 | Build spawn.sh: VM lifecycle (start, stop, destroy, resize) | spawn/ | SP-2 | done |
-| 37 | SP-4 | Build spawn.sh: SSH key injection + initial setup | spawn/ | SP-2 | done |
-| 38 | SP-5 | Integrate x402 middleware | spawn/ | SP-2, P-4 | done |
-| 39 | B-1 | Batch 1: parallel agent team execution (W-2 + R-1 + SP-1) | cross-cutting | W-2 plan, R-1 plan, SP-1 plan | done |
-| 40 | SP-6 | Abstract provider layer + multi-cloud support (DO, AWS, GCP, Hetzner) | spawn/ | SP-4 | done |
-| 41 | SP-7 | DigitalOcean provider implementation + set as default | spawn/ | SP-6 | done |
-| 1 | ST-1 | Build store.sh: bucket CRUD via Cloudflare R2 API (create, list, get, delete; ownership; SQLite) | packages/store | P-4 | done |
-| 2 | ST-2 | Build store.sh: object CRUD via S3-compatible API (put, get, delete, list within owned buckets) | packages/store | ST-1 | done |
-| 3 | ST-3 | Build store.sh: storage quota + usage tracking (per-bucket limits, metering) | packages/store | ST-1 | done |
-| 4 | ST-4 | Integrate x402 middleware for store.sh | packages/store | ST-1, P-4 | done |
-| 5 | TK-1 | Build token.sh: scaffold + deploy + query (package, db, deployer keystore, factory ABI, CREATE2, service, routes, tests) | packages/token | P-4 | done |
-| 6 | TK-2 | Build token.sh: mint + supply (POST /mint, GET /supply, ownership + cap enforcement, tests) | packages/token | TK-1 | done |
-| 7 | TK-4 | OZ + viem deployContract: compile AgentToken.sol, replace factory, fix TS bugs (stale cap, missing receipt), Base Sepolia smoke test | packages/token | TK-2 | done |
-| 8 | TK-3 | Build token.sh: Uniswap pool creation (liquidity coordination with wallet.sh) | packages/token | TK-4 | done |
-| 8 | ST-5 | Testnet integration testing: env-configurable network (`PRIM_NETWORK`), Base Sepolia x402 end-to-end, wallet.sh ↔ store.sh | cross-cutting | ST-4, W-5 | done |
-| 8 | SP-8 | spawn.sh live smoke test against DigitalOcean (provider-direct, 9 tests) | packages/spawn | SP-7 | done |
-| 8 | SP-9 | spawn.sh x402 integration: add spawn to cross-primitive integration test, fix SSH key ID resolution bug, fix hardcoded mainnet | scripts/, packages/spawn | SP-7, ST-5 | done |
-| 7 | X4-1 | Investigate x402 facilitator "Settlement failed" on Base Sepolia — intermittent on-chain settlement failures block testnet testing | cross-cutting | ST-5 | done |
-| 8 | X4-2 | Add retry logic to `createPrimFetch` for facilitator `transaction_failed` responses (single retry with backoff) | packages/x402-client | X4-1 | done |
-| 9 | TK-5 | token.sh live smoke test: deploy ERC-20 + create Uniswap V3 pool on Base Sepolia via x402 payment | packages/token | TK-3 | done |
-| 9 | TK-6 | Fix mint ownership bug: `mintTokens()` signs with deployer key but `Ownable(owner_)` is set to agent wallet — on-chain mint reverts | packages/token | TK-2 | done |
-| 9 | TK-7 | `prim token` CLI subcommand: deploy, list, get, mint, pool commands using keystore + x402-client | packages/keystore | TK-3, KS-1 | pending |
-| 9 | R-13 | Fix outbound email delivery: check Stalwart SMTP logs, unblock DO port 25 (or request removal), verify SPF/DKIM/rDNS, confirm delivery to external address | deploy/email | R-12 | done |
-| 9 | W-10 | Non-custodial refactor: strip keystore, EIP-191 signature registration, remove send/swap, publish `@prim/x402-client` | specs/, packages/wallet, packages/x402-client | W-5 | done |
-| 10 | XC-1 | Build @prim/x402-client: agent-side x402 fetch wrapper (privateKey + signer modes) | packages/x402-client | — | done |
-| 11 | FC-1 | Build faucet.sh: Circle USDC drip + treasury ETH drip (testnet only) | packages/faucet | — | done |
-| 12 | R-14 | Custom usernames, permanent mailboxes, rename relay → email | packages/email, site/, specs/ | R-11 | done |
-| 13 | KS-1 | Build @prim/keystore: local key storage (~/.prim/keys/) + CLI + x402-client integration | packages/keystore, packages/x402-client | XC-1 | done |
-| 14 | ST-6 | `prim store` CLI: add store subcommands to prim binary (create-bucket, ls, put, get, rm, rm-bucket, quota) using keystore + x402-client | packages/keystore | KS-1, ST-2 | done |
-| 15 | ST-7 | Build store.sh: presigned URLs (GET + PUT) — time-limited signed R2 URLs for direct agent access, bypassing the service for large files | packages/store | ST-2 | pending |
-| 15 | ST-8 | Build store.sh: public buckets — per-bucket public-read flag, stable object URLs served directly from R2 | packages/store | ST-1 | pending |
-| 15 | ST-9 | Build store.sh: multipart upload — S3 multipart API (initiate, upload-part, complete, abort) for objects >5MB | packages/store | ST-2 | pending |
-| 15 | ST-10 | Build store.sh: object copy — copy object within or between owned buckets (same wallet) | packages/store | ST-2 | pending |
-| 15 | ST-11 | Build store.sh: lifecycle rules — per-bucket auto-expiry policies (max age in days, max object count, optional min-size floor) | packages/store | ST-3 | pending |
-| 15 | ST-12 | Build store.sh: bucket event webhooks — HMAC-signed callbacks on object create/delete, retry queue, same pattern as email.sh R-7 | packages/store | ST-2 | pending |
-| 15 | ST-13 | Build store.sh: object metadata + tagging — custom key-value metadata on put, returned on get, tag-based filtering on list | packages/store | ST-2 | pending |
-| 15 | SE-1 | Build search.sh: web search, news search, extract via Tavily (stateless proxy, x402 gated) | packages/search | — | done |
-| 15 | SE-2 | search.sh live smoke test: real Tavily API calls (web search + news + extract), same pattern as SP-8 | packages/search | SE-1 | done |
-| 15 | P-6 | `prim` binary publishing + install scripts: `bun build --compile`, host binary, `curl prim.sh/install \| sh`, per-primitive install wrappers | packages/keystore, site/ | ST-6 | pending (→ L-11/L-12) |
-| 16 | E-1 | Set PTR record for mail server IP ([STALWART_HOST] → mail.relay.prim.sh) | deploy/email | — | done |
-| 17 | E-2 | Downgrade DMARC to `p=none` temporarily while domain reputation is zero | Cloudflare DNS | — | done |
-| 18 | E-3 | Register relay.prim.sh with Google Postmaster Tools (DNS TXT verification) | Cloudflare DNS, Google | E-1 | done |
-| 19 | E-4 | Domain warmup: send low-volume emails to engaged recipients, ramp over weeks | deploy/email | E-2, E-3 | pending |
-| 20 | E-5 | Verify Gmail inbox delivery (not spam) after warmup + PTR + DMARC changes | deploy/email | E-4 | pending |
-| 21 | E-6 | Verify Apple Mail / iCloud delivery after warmup | deploy/email | E-4 | pending |
-| 22 | E-7 | Upgrade DMARC back to `p=quarantine` once inbox delivery is consistent | Cloudflare DNS | E-5, E-6 | pending |
-| 23 | E-8 | Migrate mail domain from `relay.prim.sh` → `email.prim.sh`: DNS (A, MX, SPF, DMARC, DKIM x2, Google verification), Stalwart domain principal + DKIM keys, PTR update, ACME TLS, re-register Postmaster Tools. Keep relay.prim.sh records alive temporarily. Flip `EMAIL_DEFAULT_DOMAIN` env var. | deploy/email, Cloudflare DNS, Stalwart, DO | E-1, E-2, E-3 | done |
-| 23 | M-1 | Build mem.sh: vector memory (Qdrant collections + upsert + query) + KV cache + x402 | packages/mem | — | done |
-| 9 | M-2 | mem.sh live smoke test: create collection → upsert docs → query → cache set/get/delete on Base Sepolia via x402 payment | packages/mem | M-1 | done |
-| 14 | M-3 | `prim mem` CLI subcommand: create-collection, list-collections, upsert, query, cache-set, cache-get, cache-del using keystore + x402-client | packages/keystore | M-1, KS-1 | pending |
-| 14 | R-15 | `prim email` CLI: mailbox CRUD, message inbox/read/send, webhook and domain management using keystore + x402-client | packages/keystore | R-6, KS-1 | done |
-| 16 | I-1 | Primitives status SOT: `primitives.yaml` + codegen script that regenerates llms.txt + README table. Status states: coming_soon → building → built → testing → production. CI check fails if generated output doesn't match committed files. | root, scripts/, site/, README.md | — | pending |
+Tasks that block repo going public + mainnet switchover.
+
+| ID | Task | Scope | Depends on | Status |
+|---|---|---|---|---|
+| L-15 | Pre-public checklist: rotate Stalwart admin password + `relay-wrapper` API key, verify no secrets in git history, confirm .env files gitignored | Garric | L-10 | pending |
+| L-22 | Mainnet switchover: update VPS env files from `eip155:84532` → `eip155:8453`, set prod `PRIM_PAY_TO` treasury, fund facilitator with mainnet USDC | Garric | L-17 | pending |
+| L-27 | Register $PRIM ticker defensively on BaseScan ASAP (before repo goes public). Deploy token contract early, pool later | Garric | — | pending |
+| L-14 | Full token launch: create Uniswap pool, fund liquidity, make repo public, announce | Garric + Claude | L-15, L-26, L-27, L-37, L-39, L-40 | pending |
+| L-61 | Dynamic allowlist: all services query wallet.sh's allowlist via internal API instead of static `PRIM_ALLOWLIST` env var | Claude | L-31 | pending |
+| L-69 | Pre-deployment readiness check script (`scripts/pre-deploy.ts <primitive>`) | Claude | — | pending |
+| L-70 | Deploy token.sh to VPS: systemd unit, Caddy route, DNS A record, env vars, smoke test | Garric | L-69, TK-5 | pending |
+| L-71 | Deploy mem.sh to VPS: Qdrant instance, systemd unit, Caddy route, DNS A record, env vars, smoke test | Garric | L-69, M-2 | pending |
+| L-72 | Agent Interface Wave 2: extend OpenAPI, MCP tools, Skills, Plugins, CLI, llms.txt to email, mem, domain, token | Claude | L-62 | pending |
+| L-73 | Fix domain.sh freeRoutes: `POST /v1/domains/recover` and `POST /v1/domains/{domain}/configure-ns` missing from middleware config | Claude | — | pending |
+| E-4 | Domain warmup: send low-volume emails to engaged recipients, ramp over weeks | deploy/email | E-2, E-3 | pending |
+| E-5 | Verify Gmail inbox delivery (not spam) after warmup + PTR + DMARC changes | deploy/email | E-4 | pending |
+| E-6 | Verify Apple Mail / iCloud delivery after warmup | deploy/email | E-4 | pending |
+| E-7 | Upgrade DMARC back to `p=quarantine` once inbox delivery is consistent | Cloudflare DNS | E-5, E-6 | pending |
+| TK-7 | `prim token` CLI subcommand: deploy, list, get, mint, pool commands using keystore + x402-client | packages/keystore | TK-3, KS-1 | pending |
+| M-3 | `prim mem` CLI subcommand: create-collection, list-collections, upsert, query, cache-set, cache-get, cache-del | packages/keystore | M-1, KS-1 | pending |
+| P-6 | `prim` binary publishing + install scripts: `bun build --compile`, host binary, `curl prim.sh/install \| sh` | packages/keystore, site/ | ST-6 | pending |
+| SEC-1 | Infra hardening: fail2ban, SSH key-only, unattended-upgrades on VPS | deploy/ | — | pending |
+| SEC-2 | Caddy security headers: HSTS, X-Frame-Options, X-Content-Type-Options, CSP | deploy/prim/Caddyfile | — | pending |
+| SEC-3 | Edge rate limiting: Caddy rate_limit or CF WAF for health/registration endpoints | deploy/, Cloudflare | — | pending |
+| SEC-4 | Dependency audit: `pnpm audit` in CI, pin critical deps | .github/workflows/ci.yml | — | pending |
+| SEC-5 | Input validation + request size limits (Hono body-limit middleware, 1MB default) | packages/* | — | pending |
+| SEC-6 | SQLite backup: daily cron → R2, 30-day retention, restore procedure | deploy/prim/ | — | pending |
+| SEC-7 | Secrets audit: no .env in git history, VPS file perms 600, rotation schedule | cross-cutting | — | pending |
+| OPS-1 | Uptime monitoring: external health checks + alerting (BetterStack/UptimeRobot) | deploy/ | — | pending |
+| OPS-2 | Structured logging: JSON logger with request_id, replace console.log | packages/* | — | pending |
+| OPS-3 | Incident runbook: restart procedures, log locations, common failures, escalation | docs/ops/ | — | pending |
+| OPS-4 | Load test baseline: k6/artillery against health + store CRUD, document capacity | scripts/, docs/ | — | pending |
+
+## Lane 2: Post-Launch
+
+Not blocking public launch. Extensions, polish, business tooling.
+
+| ID | Task | Scope | Depends on | Status |
+|---|---|---|---|---|
+| ST-7 | Build store.sh: presigned URLs (GET + PUT) — time-limited signed R2 URLs for direct agent access | packages/store | ST-2 | pending |
+| ST-8 | Build store.sh: public buckets — per-bucket public-read flag, stable object URLs | packages/store | ST-1 | pending |
+| ST-9 | Build store.sh: multipart upload — S3 multipart API for objects >5MB | packages/store | ST-2 | pending |
+| ST-10 | Build store.sh: object copy — copy object within or between owned buckets | packages/store | ST-2 | pending |
+| ST-11 | Build store.sh: lifecycle rules — per-bucket auto-expiry policies | packages/store | ST-3 | pending |
+| ST-12 | Build store.sh: bucket event webhooks — HMAC-signed callbacks on create/delete | packages/store | ST-2 | pending |
+| ST-13 | Build store.sh: object metadata + tagging — custom key-value metadata | packages/store | ST-2 | pending |
+| L-29 | GH Action: auto-dedupe issues + PRs, stale auto-close, bot PR auto-merge | Claude | L-26 | pending |
+| L-41 | Human docs: `prim.sh/docs` getting-started guide for humans | Claude | L-39 | pending |
+| L-42 | Draft X launch content: tweet copy, launch thread script, pin strategy | Garric + Claude | L-37 | pending |
+| L-44 | Access form: add optional X handle + GitHub handle fields | Claude | L-25 | pending |
+| L-45 | Wallet ping on access approval: tiny USDC transfer with calldata `prim.sh:access:approved` | Claude | L-44 | pending |
+| L-46 | Per-page hero color variation: accent-colored radial gradient behind hero | Claude | L-43 | pending |
+| L-47 | Clean up API URL redundancy: `api.prim.sh/api/*` → `api.prim.sh/*` | Claude | L-22 | pending |
+| L-38 | Set brand assets on platforms: GitHub org, X @useprim, Discord | Garric | L-37, L-54 | pending |
+| L-50 | deploy.sh: PaaS prim above spawn.sh — push a container or repo URL, get a live endpoint | Claude | — | backlog |
+| L-54 | Create Discord server: name "Prim", channels, permanent invite link | Garric | L-37 | pending |
+| L-55 | Upload `final-logo.jpg` as GitHub org avatar, X @useprim profile pic, Discord server icon | Garric | L-37, L-54 | pending |
+| L-56 | Upload `final-x-banner.jpg` as X @useprim header image | Garric | L-37 | pending |
+| L-57 | Upload `final-social-preview.jpg` as GitHub repo social preview | Garric | L-37 | pending |
+| L-60 | Pricing audit (superseded by BIZ-1) | — | L-22 | pending |
+| I-1 | Primitives status SOT: `primitives.yaml` + codegen script for llms.txt + README table | root, scripts/, site/ | — | pending |
+| I-2 | Business observability: `pnpm report` — DO/CF/Tavily costs + x402 revenue | scripts/ | — | pending |
+| BIZ-1 | Master pricing list: `specs/pricing.yaml` as SOT, codegen into llms.txt/skills | specs/ | — | done |
+| BIZ-2 | Expense dashboard: `bun scripts/expenses.ts` — DO/CF/Tavily costs + x402 revenue | scripts/ | — | pending |
 
 ## Plan Docs
 
@@ -244,10 +211,10 @@ Plan doc: `tasks/active/v1-launch-plan-2026-02-25.md`
 | L-29 | GH Action: auto-dedupe issues + PRs. On new issue: fuzzy-match title against open issues, label + link duplicates. On stale (30d no activity): auto-close with comment. On bot PRs: auto-merge if CI passes. | Claude | L-26 | pending |
 | L-35 | Agent access request e2e test: fresh wallet → register → hit paid endpoint → get 403 → agent discovers `access_url` → POSTs access request → admin approves → agent retries → success. Verify the full autonomous flow. | Claude + Garric | L-31 | done |
 | L-37 | Finalize brand assets: pick final logo/favicon/banner/heroes from candidates in `brand/assets/`, export favicon to `.ico`/32x32/16x16, crop banner to 1500x500, name finals as `final-*` | Garric | — | done (finals named in `brand/assets/final-*`) |
-| L-38 | Set brand assets on platforms: GitHub org avatar + repo social preview, X profile pic + banner (@onprim), Discord server icon. Use finals from L-37 | Garric | L-37, L-54 | pending |
+| L-38 | Set brand assets on platforms: GitHub org avatar + repo social preview, X profile pic + banner (@useprim), Discord server icon. Use finals from L-37 | Garric | L-37, L-54 | pending |
 | L-54 | Create Discord server: name "Prim", set icon to `final-logo.jpg`, create channels (#general, #bugs, #feature-requests, #announcements), generate permanent invite link | Garric | L-37 | pending |
-| L-55 | Upload `final-logo.jpg` as GitHub org avatar (primsh settings), X @onprim profile pic, Discord server icon | Garric | L-37, L-54 | pending |
-| L-56 | Upload `final-x-banner.jpg` as X @onprim header image | Garric | L-37 | pending |
+| L-55 | Upload `final-logo.jpg` as GitHub org avatar (primsh settings), X @useprim profile pic, Discord server icon | Garric | L-37, L-54 | pending |
+| L-56 | Upload `final-x-banner.jpg` as X @useprim header image | Garric | L-37 | pending |
 | L-57 | Upload `final-social-preview.jpg` as GitHub repo social preview (primsh/prim.sh → Settings → Social preview) | Garric | L-37 | pending |
 | L-58 | Set up contact email for legal pages. `hello@prim.sh` mailbox on Stalwart. DNS: MX, SPF, DKIM (RSA+Ed25519), DMARC for root `prim.sh` | Claude | L-40 | done |
 | L-59 | Update Discord invite link: replace placeholder `discord.gg/prim` in `README.md` and `.github/ISSUE_TEMPLATE/config.yml` with real invite URL | Claude | L-54 | done |
@@ -278,6 +245,7 @@ All live primitives (wallet, store, spawn, faucet, search) need proper agent int
 | L-67 | Extend CLI to all live prims: `prim search`, `prim spawn`, `prim email` subcommands (generated or hand-written from OpenAPI specs) | Claude | L-62 | done |
 | L-68 | Deploy email.sh to VPS — systemd unit, Caddy route, setup/deploy scripts, smoke test | Garric | — | done |
 | L-72 | Agent Interface Wave 2: extend OpenAPI, MCP tools, Skills, Plugins, CLI, llms.txt to email, mem, domain, token (same pattern as L-62→L-67 for the original 5) | Claude | L-62 | pending |
+| L-73 | Fix domain.sh freeRoutes: `POST /v1/domains/recover` and `POST /v1/domains/{domain}/configure-ns` are free endpoints but missing from freeRoutes in middleware config, so they get 402'd | Claude | — | pending |
 
 ### Wave 6: Token + Public
 
