@@ -12,7 +12,7 @@ export default defineConfig({
     exclude: ["contracts/**", "node_modules/**"],
     coverage: {
       provider: "v8",
-      reporter: ["text", "json"],
+      reporter: ["text", "json", "json-summary"],
       include: ["src/**/*.ts"],
       exclude: ["src/**/*.test.ts"],
     },

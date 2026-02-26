@@ -11,7 +11,7 @@ import { execSync } from "node:child_process";
 import { existsSync, readFileSync } from "node:fs";
 import { join, resolve } from "node:path";
 import { resolve4 } from "node:dns/promises";
-import { loadPrimitives, getDeployConfig, getGateOverrides } from "./primitives.js";
+import { loadPrimitives, getGateOverrides } from "./primitives.js";
 
 export type GateTarget = "testing" | "deployed" | "live";
 
@@ -146,7 +146,6 @@ async function checkTestingToDeployed(
 
   const prims = loadPrimitives(root);
   const prim = prims.find((p) => p.id === primId);
-  const deployConfig = prim ? getDeployConfig(prim) : { max_body_size: "1MB", systemd_after: [], extra_caddy: [] };
 
   // 2. systemd unit exists
   const unitFile = join(root, `deploy/prim/services/prim-${primId}.service`);
@@ -249,7 +248,6 @@ async function checkDeployedToLive(
     }
   }
 
-  void warnings;
 }
 
 // ── External deps (shared) ─────────────────────────────────────────────────

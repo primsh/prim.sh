@@ -98,7 +98,7 @@ track.prim.sh {
     request_body {
         max_size 1MB
     }
-    reverse_proxy localhost:3009
+    reverse_proxy localhost:3010
 }
 
 wallet.prim.sh {

@@ -196,7 +196,7 @@ async function main() {
   // Gate check (testing → deployed)
   if (!SKIP_GATE && !CHECK_MODE) {
     console.log("Running gate check (testing → deployed)...");
-    const gate = await runGateCheck(primId, "testing");
+    const gate = await runGateCheck(primId, "deployed");
     if (!gate.pass) {
       console.log("\nGate FAILED:");
       for (const f of gate.failures) console.log(`  ✗ ${f}`);
