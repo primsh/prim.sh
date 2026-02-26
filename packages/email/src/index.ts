@@ -1,5 +1,5 @@
 import { Hono } from "hono";
-import { createAgentStackMiddleware, getNetworkConfig } from "@primsh/x402-middleware";
+import { createAgentStackMiddleware, createWalletAllowlistChecker, getNetworkConfig } from "@primsh/x402-middleware";
 import type {
   ApiError,
   CreateMailboxRequest,
@@ -191,6 +191,8 @@ All resources are scoped to the wallet address that paid to create them. Your wa
 const networkConfig = getNetworkConfig();
 const PAY_TO_ADDRESS = process.env.PRIM_PAY_TO ?? "0x0000000000000000000000000000000000000000";
 const NETWORK = networkConfig.network;
+const WALLET_INTERNAL_URL = process.env.WALLET_INTERNAL_URL ?? "http://127.0.0.1:3001";
+const checkAllowlist = createWalletAllowlistChecker(WALLET_INTERNAL_URL);
 
 const EMAIL_ROUTES = {
   "POST /v1/mailboxes": "$0.05",
@@ -241,6 +243,7 @@ app.use(
       payTo: PAY_TO_ADDRESS,
       network: NETWORK,
       freeRoutes: ["GET /", "GET /llms.txt", "POST /internal/hooks/ingest"],
+      checkAllowlist,
     },
     { ...EMAIL_ROUTES },
   ),

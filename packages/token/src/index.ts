@@ -1,6 +1,6 @@
 import { Hono } from "hono";
 import type { ContentfulStatusCode } from "hono/utils/http-status";
-import { createAgentStackMiddleware, getNetworkConfig } from "@primsh/x402-middleware";
+import { createAgentStackMiddleware, createWalletAllowlistChecker, getNetworkConfig } from "@primsh/x402-middleware";
 import type {
   ApiError,
   CreateTokenRequest,
@@ -18,9 +18,171 @@ import {
   getLiquidityParams,
 } from "./service.ts";
 
+const LLMS_TXT = `# token.prim.sh — API Reference
+
+> ERC-20 token deployment and management for AI agents. Deploy tokens, mint supply, create Uniswap V3 pools.
+
+Base URL: https://token.prim.sh
+Auth: x402 payment protocol (USDC on Base)
+Payment: Every non-free request returns 402 with payment requirements. Sign the payment and resend.
+
+## Quick Start
+
+1. POST /v1/tokens with name, symbol, initialSupply → get token id (deployStatus: "pending")
+2. Poll GET /v1/tokens/{id} until deployStatus is "confirmed"
+3. POST /v1/tokens/{id}/mint to mint additional tokens
+4. POST /v1/tokens/{id}/pool to create a Uniswap V3 liquidity pool
+5. GET /v1/tokens/{id}/pool/liquidity-params to get calldata for adding liquidity
+
+## Authentication
+
+All paid endpoints use x402. The flow:
+1. Send your request → get 402 response with payment requirements in headers
+2. Sign a USDC payment for the specified amount
+3. Resend request with X-PAYMENT header containing the signed payment
+
+Free endpoints (no payment required): GET /, GET /llms.txt
+
+## Token Amounts
+
+All token amounts (initialSupply, maxSupply, amount, totalSupply) are strings representing raw integer
+values in the token's smallest unit. For a token with 18 decimals: 1 token = "1000000000000000000".
+USDC has 6 decimals: $1 USDC = "1000000".
+
+## Endpoints
+
+### POST /v1/tokens — Deploy ERC-20 token ($1.00)
+
+Request body:
+  name           string        Token name (required)
+  symbol         string        Ticker symbol, e.g. "MTK" (required)
+  initialSupply  string        Initial supply in raw units (required)
+  decimals       number        Decimal places, default 18 (optional)
+  mintable       boolean       Allow future minting, default false (optional)
+  maxSupply      string|null   Max mintable supply in raw units, null = no cap (optional)
+
+Response 201: TokenResponse (deployStatus: "pending" — poll GET /v1/tokens/{id} until "confirmed")
+
+### GET /v1/tokens — List tokens ($0.001)
+
+Response 200:
+  tokens  TokenResponse[]
+
+### GET /v1/tokens/{id} — Get token details ($0.001)
+
+Response 200: TokenResponse
+
+TokenResponse shape:
+  id              string                   Token ID (UUID)
+  contractAddress string|null              Contract address (null while pending)
+  ownerWallet     string                   Owner wallet address
+  name            string                   Token name
+  symbol          string                   Token symbol
+  decimals        number                   Decimal places
+  initialSupply   string                   Initial supply in raw units
+  totalMinted     string                   Total minted so far in raw units
+  mintable        boolean                  Whether additional minting is allowed
+  maxSupply       string|null              Max supply in raw units or null
+  txHash          string                   Deploy transaction hash
+  deployStatus    "pending"|"confirmed"|"failed"
+  createdAt       string                   ISO 8601
+
+### POST /v1/tokens/{id}/mint — Mint additional tokens ($0.10)
+
+Token must be mintable. Caller must own the token.
+
+Request body:
+  to      string   Recipient address (required)
+  amount  string   Amount in raw units (required)
+
+Response 200:
+  txHash  string   Mint transaction hash
+  to      string   Recipient address
+  amount  string   Amount minted in raw units
+  status  "pending"
+
+### GET /v1/tokens/{id}/supply — Get total supply ($0.001)
+
+Returns live on-chain totalSupply by querying the contract.
+
+Response 200:
+  tokenId         string
+  contractAddress string
+  totalSupply     string   Raw units
+
+### POST /v1/tokens/{id}/pool — Create Uniswap V3 pool ($0.50)
+
+Creates and initializes a token/USDC pool. One pool per token maximum.
+
+Request body:
+  pricePerToken  string   Initial price in USDC per token (required), e.g. "0.001"
+  feeTier        number   Fee tier: 500 (0.05%), 3000 (0.3%), 10000 (1%), default 3000 (optional)
+
+Response 201:
+  poolAddress   string   Pool contract address
+  token0        string   token0 address
+  token1        string   token1 address (USDC)
+  fee           number   Fee tier
+  sqrtPriceX96  string   Initial sqrt price (Q64.96)
+  tick          number   Initial tick
+  txHash        string   Pool creation transaction hash
+
+### GET /v1/tokens/{id}/pool — Get pool details ($0.001)
+
+Response 200: PoolResponse (same shape as POST /v1/tokens/{id}/pool response)
+
+### GET /v1/tokens/{id}/pool/liquidity-params — Get liquidity parameters ($0.001)
+
+Returns calldata for adding liquidity. Submit the approvals[] on-chain before calling addLiquidity.
+
+Query params:
+  tokenAmount  string   Amount of tokens to add in raw units (required)
+  usdcAmount   string   Amount of USDC to add in raw units (required)
+
+Response 200:
+  positionManagerAddress  string                 Uniswap V3 NonfungiblePositionManager
+  token0                  string
+  token1                  string
+  fee                     number
+  tickLower               number
+  tickUpper               number
+  amount0Desired          string
+  amount1Desired          string
+  amount0Min              string                 Slippage protection
+  amount1Min              string                 Slippage protection
+  recipient               string                 Address to receive LP NFT
+  deadline                number                 Unix timestamp
+  approvals               Approval[]             Submit these before addLiquidity
+
+Approval shape:
+  token    string   Token to approve
+  spender  string   Spender (positionManagerAddress)
+  amount   string   Amount to approve in raw units
+
+## Error Format
+
+All errors return:
+  {"error": {"code": "error_code", "message": "Human-readable message"}}
+
+Error codes:
+  not_found          Token or pool not found (404)
+  forbidden          Token belongs to a different wallet (403)
+  invalid_request    Missing or invalid field (400)
+  not_mintable       Token was deployed with mintable: false (400)
+  exceeds_max_supply Mint would exceed maxSupply (422)
+  pool_exists        Pool already exists for this token (409)
+  rpc_error          Base RPC error (502)
+
+## Ownership
+
+All tokens are scoped to the wallet address that paid to create them. You can only access tokens your wallet owns.
+`;
+
 const networkConfig = getNetworkConfig();
 const PAY_TO_ADDRESS = process.env.PRIM_PAY_TO ?? "0x0000000000000000000000000000000000000000";
 const NETWORK = networkConfig.network;
+const WALLET_INTERNAL_URL = process.env.WALLET_INTERNAL_URL ?? "http://127.0.0.1:3001";
+const checkAllowlist = createWalletAllowlistChecker(WALLET_INTERNAL_URL);
 
 const TOKEN_ROUTES = {
   "POST /v1/tokens": "$1.00",
@@ -70,7 +232,8 @@ app.use(
     {
       payTo: PAY_TO_ADDRESS,
       network: NETWORK,
-      freeRoutes: ["GET /"],
+      freeRoutes: ["GET /", "GET /llms.txt"],
+      checkAllowlist,
     },
     { ...TOKEN_ROUTES },
   ),
@@ -79,6 +242,11 @@ app.use(
 // GET / — health check (free)
 app.get("/", (c) => {
   return c.json({ service: "token.sh", status: "ok" });
+});
+
+// GET /llms.txt — machine-readable API reference (free)
+app.get("/llms.txt", (c) => {
+  return c.text(LLMS_TXT);
 });
 
 // POST /v1/tokens — Deploy new ERC-20

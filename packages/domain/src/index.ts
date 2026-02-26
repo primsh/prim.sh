@@ -1,5 +1,5 @@
 import { Hono } from "hono";
-import { createAgentStackMiddleware, getNetworkConfig } from "@primsh/x402-middleware";
+import { createAgentStackMiddleware, createWalletAllowlistChecker, getNetworkConfig } from "@primsh/x402-middleware";
 
 const LLMS_TXT = `# domain.prim.sh — API Reference
 
@@ -245,6 +245,8 @@ import { getQuoteById } from "./db.ts";
 
 const PAY_TO_ADDRESS = process.env.PRIM_PAY_TO ?? "0x0000000000000000000000000000000000000000";
 const NETWORK = process.env.PRIM_NETWORK ?? "eip155:8453";
+const WALLET_INTERNAL_URL = process.env.WALLET_INTERNAL_URL ?? "http://127.0.0.1:3001";
+const checkAllowlist = createWalletAllowlistChecker(WALLET_INTERNAL_URL);
 
 const FACILITATOR_URL = process.env.FACILITATOR_URL ?? "https://facilitator.payai.network";
 const facilitatorClient = new HTTPFacilitatorClient({ url: FACILITATOR_URL });
@@ -298,6 +300,7 @@ app.use(
       payTo: PAY_TO_ADDRESS,
       network: NETWORK,
       freeRoutes: ["GET /", "GET /llms.txt", "POST /v1/domains/recover", "POST /v1/domains/[domain]/configure-ns"],
+      checkAllowlist,
     },
     { ...DOMAIN_ROUTES },
   ),

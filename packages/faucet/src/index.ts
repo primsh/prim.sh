@@ -1,8 +1,11 @@
 import { Hono } from "hono";
 import { isAddress, getAddress } from "viem";
-import { getNetworkConfig } from "@primsh/x402-middleware";
+import { getNetworkConfig, createWalletAllowlistChecker } from "@primsh/x402-middleware";
 import { RateLimiter } from "./rate-limit.ts";
 import { dripUsdc, dripEth } from "./service.ts";
+
+const WALLET_INTERNAL_URL = process.env.WALLET_INTERNAL_URL ?? "http://127.0.0.1:3001";
+const checkAllowlist = createWalletAllowlistChecker(WALLET_INTERNAL_URL);
 
 const app = new Hono();
 
@@ -54,18 +57,28 @@ app.post("/v1/faucet/usdc", async (c) => {
     return c.json({ error: { code: "invalid_request", message: "Invalid JSON body" } }, 400);
   }
 
+  if (!(await checkAllowlist(address.toLowerCase()))) {
+    return c.json({ error: { code: "wallet_not_allowed", message: "This service is in private beta" } }, 403);
+  }
+
   const rateCheck = usdcLimiter.check(address);
   if (!rateCheck.allowed) {
     const retryAfter = Math.ceil(rateCheck.retryAfterMs / 1000);
-    return c.json(
-      {
+    return new Response(
+      JSON.stringify({
         error: {
           code: "rate_limited",
           message: `Next drip in ${Math.ceil(retryAfter / 60)} minutes`,
           retryAfter,
         },
+      }),
+      {
+        status: 429,
+        headers: {
+          "Content-Type": "application/json",
+          "Retry-After": String(retryAfter),
+        },
       },
-      429,
     );
   }
 
@@ -95,18 +108,28 @@ app.post("/v1/faucet/eth", async (c) => {
     return c.json({ error: { code: "invalid_request", message: "Invalid JSON body" } }, 400);
   }
 
+  if (!(await checkAllowlist(address.toLowerCase()))) {
+    return c.json({ error: { code: "wallet_not_allowed", message: "This service is in private beta" } }, 403);
+  }
+
   const rateCheck = ethLimiter.check(address);
   if (!rateCheck.allowed) {
     const retryAfter = Math.ceil(rateCheck.retryAfterMs / 1000);
-    return c.json(
-      {
+    return new Response(
+      JSON.stringify({
         error: {
           code: "rate_limited",
           message: `Next drip in ${Math.ceil(retryAfter / 60)} minutes`,
           retryAfter,
         },
+      }),
+      {
+        status: 429,
+        headers: {
+          "Content-Type": "application/json",
+          "Retry-After": String(retryAfter),
+        },
       },
-      429,
     );
   }
 

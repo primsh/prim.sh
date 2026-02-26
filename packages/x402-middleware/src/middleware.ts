@@ -15,6 +15,39 @@ const DEFAULT_NETWORK: Network = "eip155:8453";
 const DEFAULT_FACILITATOR_URL =
   process.env.FACILITATOR_URL ?? "https://facilitator.payai.network";
 const WALLET_ADDRESS_KEY = "walletAddress";
+const WALLET_CHECK_TIMEOUT_MS = 2000;
+
+/**
+ * Creates a `checkAllowlist` callback that queries wallet.sh's internal API.
+ * Fail-closed: on timeout or network error, denies access and logs a warning.
+ *
+ * @param walletInternalUrl - Base URL for wallet.sh internal API (e.g. "http://127.0.0.1:3001")
+ */
+export function createWalletAllowlistChecker(walletInternalUrl: string): (address: string) => Promise<boolean> {
+  return async (address: string): Promise<boolean> => {
+    const url = `${walletInternalUrl}/internal/allowlist/check?address=${encodeURIComponent(address)}`;
+    try {
+      const controller = new AbortController();
+      const timer = setTimeout(() => controller.abort(), WALLET_CHECK_TIMEOUT_MS);
+      let res: Response;
+      try {
+        res = await fetch(url, { signal: controller.signal });
+      } finally {
+        clearTimeout(timer);
+      }
+      if (!res.ok) {
+        console.warn(`[allowlist] wallet.sh returned ${res.status} for ${address} — denying`);
+        return false;
+      }
+      const body = (await res.json()) as { allowed: boolean };
+      return body.allowed === true;
+    } catch (err) {
+      const reason = err instanceof Error && err.name === "AbortError" ? "timeout" : String(err);
+      console.warn(`[allowlist] wallet.sh check failed (${reason}) for ${address} — denying`);
+      return false;
+    }
+  };
+}
 
 function normalizeRouteConfigEntry(
   pattern: string,

@@ -1,5 +1,134 @@
 import { Hono } from "hono";
-import { createAgentStackMiddleware, getNetworkConfig } from "@primsh/x402-middleware";
+import { createAgentStackMiddleware, createWalletAllowlistChecker, getNetworkConfig } from "@primsh/x402-middleware";
+
+const LLMS_TXT = `# mem.prim.sh — API Reference
+
+> Vector memory and cache for agents. Semantic search collections backed by Qdrant with automatic text embedding, plus a lightweight key-value cache.
+
+Base URL: https://mem.prim.sh
+Auth: x402 payment protocol (USDC on Base)
+Payment: Every non-free request returns 402 with payment requirements. Sign the payment and resend.
+
+## Quick Start
+
+1. POST /v1/collections with {"name": "my-notes"} → get a collection id
+2. POST /v1/collections/{id}/upsert with {"documents": [{"text": "..."}]} → embed and store
+3. POST /v1/collections/{id}/query with {"text": "search query"} → find similar documents
+
+## Authentication
+
+All paid endpoints use x402. The flow:
+1. Send your request → get 402 response with payment requirements in headers
+2. Sign a USDC payment for the specified amount
+3. Resend request with X-PAYMENT header containing the signed payment
+
+Free endpoints (no payment required): GET /, GET /llms.txt
+
+## Endpoints
+
+### POST /v1/collections — Create collection ($0.01)
+
+Request body:
+  name      string   Collection name, unique per wallet (required)
+  distance  string   "Cosine" | "Euclid" | "Dot" (default: Cosine)
+  dimension number   Vector dimension (default: 1536)
+
+Response 201: CollectionResponse
+  id              string        Collection ID (UUID)
+  name            string        Collection name
+  owner_wallet    string        Wallet address that created it
+  dimension       number        Vector dimension
+  distance        string        Distance metric
+  document_count  number|null   Live Qdrant count (null in list responses)
+  created_at      string        ISO 8601
+
+Error 409: collection_name_taken
+
+### GET /v1/collections — List collections ($0.001)
+
+Query params:
+  limit  number  Default 20, max 100
+  page   number  Default 1
+
+Response 200: {collections: CollectionResponse[], meta: {page, per_page, total}}
+Note: document_count is null in list to avoid N+1 Qdrant calls.
+
+### GET /v1/collections/:id — Get collection ($0.001)
+
+Response 200: CollectionResponse with live document_count
+
+### DELETE /v1/collections/:id — Delete collection ($0.01)
+
+Permanently deletes the collection and all documents. Irreversible.
+Response 200: {}
+
+### POST /v1/collections/:id/upsert — Upsert documents ($0.001)
+
+Request body:
+  documents  UpsertDocument[]  (required)
+
+UpsertDocument:
+  id        string   UUID, auto-generated if omitted
+  text      string   Text to embed (required)
+  metadata  object   Arbitrary key-value metadata
+
+Response 200:
+  upserted  number    Count of documents upserted
+  ids       string[]  UUIDs of upserted documents (in input order)
+
+### POST /v1/collections/:id/query — Semantic query ($0.001)
+
+Request body:
+  text    string   Query text to embed (required)
+  top_k   number   Max results (default 10)
+  filter  object   Qdrant-native filter for metadata filtering
+
+Response 200:
+  matches  QueryMatch[]
+
+QueryMatch:
+  id        string  Document UUID
+  score     number  Similarity score (higher = more similar)
+  text      string  Stored text
+  metadata  object  Stored metadata
+
+Example filter: {"must": [{"key": "source", "match": {"value": "wikipedia"}}]}
+
+### PUT /v1/cache/:namespace/:key — Set cache entry ($0.0001)
+
+Namespace is scoped to the authenticated wallet.
+
+Request body:
+  value  any      Any JSON-serializable value (required)
+  ttl    number   TTL in seconds. Omit or null for permanent.
+
+Response 200: CacheGetResponse
+  namespace   string        Cache namespace
+  key         string        Cache key
+  value       any           Stored value
+  expires_at  string|null   ISO 8601 or null if permanent
+
+### GET /v1/cache/:namespace/:key — Get cache entry ($0.0001)
+
+Response 200: CacheGetResponse
+Error 404: entry not found or expired
+
+### DELETE /v1/cache/:namespace/:key — Delete cache entry ($0.0001)
+
+Response 200: {}
+
+## Error Format
+
+All errors return:
+  {"error": {"code": "error_code", "message": "Human-readable message"}}
+
+Error codes: not_found, forbidden, invalid_request, qdrant_error, embedding_error, rate_limited, collection_name_taken
+
+## Ownership
+
+All resources are scoped to the wallet address that paid to create them. Your wallet address is extracted from the x402 payment. You can only access collections and cache namespaces you created.
+`;
+
 import type {
   ApiError,
   CreateCollectionRequest,
@@ -27,6 +156,8 @@ import {
 const networkConfig = getNetworkConfig();
 const PAY_TO_ADDRESS = process.env.PRIM_PAY_TO ?? "0x0000000000000000000000000000000000000000";
 const NETWORK = networkConfig.network;
+const WALLET_INTERNAL_URL = process.env.WALLET_INTERNAL_URL ?? "http://127.0.0.1:3001";
+const checkAllowlist = createWalletAllowlistChecker(WALLET_INTERNAL_URL);
 
 const MEM_ROUTES = {
   "POST /v1/collections": "$0.01",
@@ -69,15 +200,23 @@ app.use(
     {
       payTo: PAY_TO_ADDRESS,
       network: NETWORK,
-      freeRoutes: ["GET /"],
+      freeRoutes: ["GET /", "GET /llms.txt"],
+      checkAllowlist,
     },
     { ...MEM_ROUTES },
   ),
 );
 
-// GET / — health check (free)
+// GET / — llms.txt (free)
 app.get("/", (c) => {
-  return c.json({ service: "mem.sh", status: "ok" });
+  c.header("Content-Type", "text/plain; charset=utf-8");
+  return c.body(LLMS_TXT);
+});
+
+// GET /llms.txt — machine-readable API reference (free)
+app.get("/llms.txt", (c) => {
+  c.header("Content-Type", "text/plain; charset=utf-8");
+  return c.body(LLMS_TXT);
 });
 
 // ─── Collection routes ────────────────────────────────────────────────────

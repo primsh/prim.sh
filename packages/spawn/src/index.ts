@@ -1,5 +1,5 @@
 import { Hono } from "hono";
-import { createAgentStackMiddleware } from "@primsh/x402-middleware";
+import { createAgentStackMiddleware, createWalletAllowlistChecker } from "@primsh/x402-middleware";
 import type {
   CreateServerRequest,
   CreateServerResponse,
@@ -36,6 +36,8 @@ import { getNetworkConfig } from "@primsh/x402-middleware";
 const networkConfig = getNetworkConfig();
 const PAY_TO_ADDRESS = process.env.PRIM_PAY_TO ?? "0x0000000000000000000000000000000000000000";
 const NETWORK = networkConfig.network;
+const WALLET_INTERNAL_URL = process.env.WALLET_INTERNAL_URL ?? "http://127.0.0.1:3001";
+const checkAllowlist = createWalletAllowlistChecker(WALLET_INTERNAL_URL);
 
 const SPAWN_ROUTES = {
   "POST /v1/servers": "$0.01",
@@ -82,6 +84,7 @@ app.use(
       payTo: PAY_TO_ADDRESS,
       network: NETWORK,
       freeRoutes: ["GET /"],
+      checkAllowlist,
     },
     { ...SPAWN_ROUTES },
   ),
