@@ -1,0 +1,108 @@
+# token.prim.sh
+
+> Token deployment for agents. Deploy ERC-20 contracts on Base, mint supply, create Uniswap V3 pools.
+
+Base URL: https://token.prim.sh
+Auth: x402 (USDC on Base Sepolia)
+Status: Built, not yet deployed to prim.sh network.
+
+---
+
+## x402 Payment
+
+All endpoints require x402 payment. The MCP server and CLI handle this automatically. For raw HTTP, follow the standard x402 flow (see https://prim.sh/llms.txt for full protocol details).
+
+---
+
+## Endpoints
+
+### Token management
+
+- `POST /v1/tokens` — Deploy a new ERC-20. Fields: name, symbol, initialSupply (required); decimals (default 18), mintable (default false), maxSupply. Returns token with deployStatus: "pending". **$1.00**
+- `GET /v1/tokens` — List tokens deployed by the authenticated wallet. **$0.001**
+- `GET /v1/tokens/:id` — Get token details: deployStatus, contractAddress, supply, pool. **$0.001**
+- `POST /v1/tokens/:id/mint` — Mint additional tokens. Requires mintable=true. Fields: to (address), amount (raw units). **$0.10**
+- `GET /v1/tokens/:id/supply` — Live on-chain total supply from contract. **$0.001**
+
+### Uniswap V3 pool
+
+- `POST /v1/tokens/:id/pool` — Create and initialize a Uniswap V3 pool paired with USDC. Fields: pricePerToken, feeTier (500|3000|10000, default 3000). One pool per token. **$0.50**
+- `GET /v1/tokens/:id/pool` — Get pool details: poolAddress, token0, token1, fee, sqrtPriceX96, tick. **$0.001**
+- `GET /v1/tokens/:id/pool/liquidity-params` — Get calldata for adding liquidity. Params: tokenAmount, usdcAmount. Returns approvals[] and position manager params. **$0.001**
+
+---
+
+## Common patterns
+
+### Deploy a token
+
+```bash
+prim token deploy \
+  --name "AgentCoin" \
+  --symbol "AGT" \
+  --supply "1000000000000000000000000" \
+  --mintable
+# → {"id": "tok_...", "deployStatus": "pending", "contractAddress": null}
+
+# Poll until confirmed
+prim token get TOKEN_ID
+# → {"deployStatus": "confirmed", "contractAddress": "0x..."}
+```
+
+### Mint additional supply
+
+```bash
+prim token mint TOKEN_ID \
+  --amount "500000000000000000000" \
+  --to 0xRecipientAddress
+# → {"txHash": "0x...", "status": "pending"}
+```
+
+### Create a Uniswap V3 pool
+
+```bash
+# IMPORTANT: poll token_get until deployStatus is "confirmed" first
+
+prim token pool create TOKEN_ID --price 0.001
+# → {"poolAddress": "0x...", "txHash": "0x...", "fee": 3000}
+
+# Get liquidity params for adding liquidity
+prim token pool params TOKEN_ID \
+  --token-amount 1000000000000000000000 \
+  --usdc-amount 1000000
+# → {"approvals": [...], "positionManagerAddress": "0x...", "tickLower": ..., ...}
+```
+
+---
+
+## Important notes
+
+- **Deploy is asynchronous.** Poll `GET /v1/tokens/:id` until `deployStatus: "confirmed"` before minting or creating a pool. This typically takes 2-10 seconds on Base.
+- **All supply values are strings.** Pass raw integer values as strings (e.g. `"1000000000000000000"` for 1 token with 18 decimals). Never pass numbers — precision loss.
+- **USDC has 6 decimals.** $1 USDC = `"1000000"` in raw units.
+- **One pool per token.** `POST /v1/tokens/:id/pool` returns 409 `pool_exists` if already created.
+- **Approvals required.** The `liquidity-params` response includes `approvals[]` — submit each on-chain before calling addLiquidity.
+
+---
+
+## Error codes
+
+- `invalid_request` — Missing required field or invalid value.
+- `not_mintable` (400) — Token deployed with mintable=false. Cannot mint.
+- `exceeds_max_supply` (422) — Mint would exceed maxSupply.
+- `pool_exists` (409) — Pool already exists for this token. Use GET to retrieve it.
+- `not_found` (404) — Token ID does not exist.
+- `forbidden` (403) — Token belongs to a different wallet.
+- `rpc_error` (502) — Base RPC error. Retry after a short wait.
+
+---
+
+## MCP tools
+
+Install with: `prim install token`
+
+Tools: token_deploy, token_list, token_get, token_mint, token_supply,
+token_pool_create, token_pool_get, token_pool_liquidity_params
+
+Skill: https://prim.sh/token/llms.txt
+OpenAPI: https://prim.sh/specs/openapi/token.yaml

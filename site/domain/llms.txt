@@ -1,33 +1,134 @@
-# dns.sh
+# domain.prim.sh
 
-> Domains for agents. Manage DNS records and certificates via API.
+> Domains for agents. Register domains via NameSilo, manage Cloudflare DNS zones, configure records.
 
-Base URL: https://dns.prim.sh  
-Auth: x402 (USDC on Base, chain `eip155:8453`)
-Status: Coming soon. This primitive is not yet available.
+Base URL: https://domain.prim.sh
+Auth: x402 (USDC on Base Sepolia)
+Status: Built, not yet deployed to prim.sh network.
+
+---
+
+## x402 Payment
+
+All endpoints require x402 payment. The MCP server and CLI handle this automatically. For raw HTTP, follow the standard x402 flow (see https://prim.sh/llms.txt for full protocol details).
+
+Free endpoints (no payment required):
+- `POST /v1/domains/recover` — Retry zone setup after partial registration failure.
+- `POST /v1/domains/:domain/configure-ns` — Retry NS configuration at registrar.
+
+---
 
 ## Endpoints
 
-- `POST /v1/zones` — create a DNS zone.
-- `GET /v1/zones` — list zones.
-- `POST /v1/zones/:id/records` — create or update a record.
-- `DELETE /v1/zones/:id/records/:record_id` — delete a record.
-- `POST /v1/zones/:id/certificates` — request TLS certificates.
+### Domain registration
 
-## Pricing
+- `GET /v1/domains/search` — Check availability and pricing for a domain query. Params: query, tlds. **$0.001**
+- `POST /v1/domains/quote` — Get a 15-minute price quote. Fields: domain, years. **$0.001**
+- `POST /v1/domains/register` — Register domain using a quote_id. Returns zone_id, nameservers, recovery_token. **dynamic (from quote)**
+- `POST /v1/domains/recover` — Retry Cloudflare zone setup after partial failure. Fields: recovery_token. **free**
+- `GET /v1/domains/:domain/status` — Full post-registration pipeline status (ns_propagated, zone_active, all_ready). **$0.001**
+- `POST /v1/domains/:domain/configure-ns` — Retry NS configuration at NameSilo. **free**
 
-- Zones: per-zone per month.  
-- Records: included up to a quota, then per-record.  
-- Certificates: per-certificate issuance fee.
+### DNS zones
 
-See human docs at `https://prim.sh/dns` for exact limits.
+- `POST /v1/zones` — Create a Cloudflare DNS zone. Fields: domain. Returns nameservers. **$0.05**
+- `GET /v1/zones` — List zones (paginated). **$0.001**
+- `GET /v1/zones/:zoneId` — Get zone details. **$0.001**
+- `DELETE /v1/zones/:zoneId` — Delete zone and all records. Irreversible. **$0.01**
+- `PUT /v1/zones/:zoneId/activate` — Request Cloudflare NS re-check for faster activation. **$0.001**
+- `GET /v1/zones/:zoneId/verify` — Check DNS propagation for all zone records. **$0.001**
+- `POST /v1/zones/:zoneId/mail-setup` — Configure MX, SPF, DMARC, DKIM in one call. Idempotent. **$0.01**
 
-## Examples
+### DNS records
+
+- `POST /v1/zones/:zoneId/records` — Create a DNS record (A, AAAA, CNAME, MX, TXT, SRV, CAA, NS). **$0.001**
+- `GET /v1/zones/:zoneId/records` — List all records in a zone. **$0.001**
+- `GET /v1/zones/:zoneId/records/:recordId` — Get a single record. **$0.001**
+- `PUT /v1/zones/:zoneId/records/:recordId` — Update a record. **$0.001**
+- `DELETE /v1/zones/:zoneId/records/:recordId` — Delete a record. **$0.001**
+- `POST /v1/zones/:zoneId/records/batch` — Create, update, and delete records in one request. **$0.01**
+
+---
+
+## Common patterns
+
+### Search → Quote → Register
 
 ```bash
-# Add an A record
-curl -X POST https://dns.prim.sh/v1/zones/$ZONE_ID/records \
-  -H "X-402-Payment: $TOKEN" \
-  -d '{"type": "A", "name": "api", "content": "203.0.113.10", "ttl": 300}'
+# Search availability
+prim domain search myagent --tlds com,xyz,io
+# → DOMAIN                              PRICE        PREMIUM
+# → myagent.xyz                         $1.50
+
+# Quote (valid 15 minutes)
+prim domain quote myagent.xyz
+# → {"quote_id": "q_...", "domain": "myagent.xyz", "total_cost_usd": 1.50, "expires_at": "..."}
+
+# Register (pays from quote)
+prim domain register myagent.xyz
+# → {"domain": "myagent.xyz", "zone_id": "z_...", "nameservers": [...], "recovery_token": "..."}
+# IMPORTANT: save the recovery_token
 ```
 
+### Create zone and add records
+
+```bash
+prim domain zone create --zone example.com
+# → {"zone": {"id": "z_...", "name_servers": ["ns1.cloudflare.com", ...]}}
+
+prim domain record add ZONE_ID --type A --name @ --content 203.0.113.42
+prim domain record add ZONE_ID --type CNAME --name www --content example.com
+
+prim domain zone verify ZONE_ID
+# → {"all_propagated": true, "records": [...]}
+```
+
+### Mail DNS setup
+
+```bash
+prim domain zone mail-setup ZONE_ID \
+  --mail-server mail.email.prim.sh \
+  --mail-server-ip 1.2.3.4 \
+  --dkim-rsa-selector mail \
+  --dkim-rsa-key "MIIBIjAN..."
+# → Creates A, MX, SPF TXT, DMARC TXT, DKIM TXT records in one call
+```
+
+### Batch record changes
+
+```json
+POST /v1/zones/ZONE_ID/records/batch
+{
+  "create": [{"type": "CNAME", "name": "api", "content": "example.com"}],
+  "update": [{"id": "rec_abc", "content": "new-ip"}],
+  "delete": [{"id": "rec_xyz"}]
+}
+```
+
+---
+
+## Error codes
+
+- `invalid_request` — Missing fields or invalid domain name.
+- `domain_taken` (400) — Zone already exists for this domain.
+- `not_found` (404) — Zone, record, or quote not found.
+- `forbidden` (403) — Resource belongs to a different wallet.
+- `quote_expired` (410) — Quote older than 15 minutes. Call domain_quote again.
+- `registrar_error` (502) — NameSilo error. Check domain_status — domain may still be registered.
+- `cloudflare_error` (502) — Cloudflare API error. Use domain_recover with recovery_token if during registration.
+- `rate_limited` (429) — Too many zone_activate calls. Wait before retrying.
+
+---
+
+## MCP tools
+
+Install with: `prim install domain`
+
+Tools: domain_search, domain_quote, domain_register, domain_recover, domain_status,
+domain_configure_ns, domain_zone_create, domain_zone_list, domain_zone_get,
+domain_zone_delete, domain_zone_activate, domain_zone_verify, domain_zone_mail_setup,
+domain_record_create, domain_record_list, domain_record_get, domain_record_update,
+domain_record_delete, domain_record_batch
+
+Skill: https://prim.sh/domain/llms.txt
+OpenAPI: https://prim.sh/specs/openapi/domain.yaml

@@ -6,43 +6,105 @@ Base URL: https://mem.prim.sh
 Auth: x402 (USDC on Base Sepolia)
 Status: Built, not yet deployed to prim.sh network.
 
+---
+
+## x402 Payment
+
+All endpoints require x402 payment. The MCP server and CLI handle this automatically. For raw HTTP, follow the standard x402 flow (see https://prim.sh/llms.txt for full protocol details).
+
+---
+
 ## Endpoints
 
 ### Vector collections
 
-- `POST /v1/collections` — create a vector collection. **$0.01**
-- `GET /v1/collections` — list collections. **$0.001**
-- `GET /v1/collections/:id` — get collection with document count. **$0.001**
-- `DELETE /v1/collections/:id` — delete a collection. **$0.01**
-- `POST /v1/collections/:id/upsert` — embed and store documents. **$0.001**
-- `POST /v1/collections/:id/query` — semantic search. **$0.001**
+- `POST /v1/collections` — Create a vector collection. Fields: name (required), distance (Cosine|Euclid|Dot), dimension. **$0.01**
+- `GET /v1/collections` — List collections (paginated). document_count is null in list — use GET for live count. **$0.001**
+- `GET /v1/collections/:id` — Get collection with live document_count from Qdrant. **$0.001**
+- `DELETE /v1/collections/:id` — Delete collection and all documents. Irreversible. **$0.01**
+- `POST /v1/collections/:id/upsert` — Embed and store documents. Each document: {id?, text, metadata?}. Existing IDs are replaced. **$0.001**
+- `POST /v1/collections/:id/query` — Semantic search. Fields: text (required), top_k, filter (Qdrant native). **$0.001**
 
 ### KV cache
 
-- `PUT /v1/cache/:namespace/:key` — set a cache entry. **$0.0001**
-- `GET /v1/cache/:namespace/:key` — get a cache entry. **$0.0001**
-- `DELETE /v1/cache/:namespace/:key` — delete a cache entry. **$0.0001**
+- `PUT /v1/cache/:namespace/:key` — Store a value. Fields: value (required), ttl (seconds, optional). **$0.0001**
+- `GET /v1/cache/:namespace/:key` — Retrieve value. Returns 404 if missing or expired. **$0.0001**
+- `DELETE /v1/cache/:namespace/:key` — Delete a cache entry. **$0.0001**
 
-## Examples
+---
+
+## Common patterns
+
+### Create a semantic memory collection
 
 ```bash
-# Create a collection
+# Create collection
 curl -X POST https://mem.prim.sh/v1/collections \
   -H "Content-Type: application/json" \
-  -d '{"name": "my-brain"}'
+  -d '{"name": "research-notes"}'
+# → {"id": "col_...", "name": "research-notes", "distance": "Cosine", "dimension": 1536}
 
-# Store a memory
-curl -X POST https://mem.prim.sh/v1/collections/COLLECTION_ID/upsert \
+# Upsert documents
+curl -X POST https://mem.prim.sh/v1/collections/COL_ID/upsert \
   -H "Content-Type: application/json" \
-  -d '{"documents": [{"id": "doc1", "text": "The user prefers dark mode", "metadata": {"source": "chat"}}]}'
+  -d '{"documents": [{"text": "Transformers use self-attention.", "metadata": {"source": "paper"}}]}'
+# → {"upserted": 1, "ids": ["uuid..."]}
 
-# Search memories
-curl -X POST https://mem.prim.sh/v1/collections/COLLECTION_ID/query \
+# Query semantically
+curl -X POST https://mem.prim.sh/v1/collections/COL_ID/query \
   -H "Content-Type: application/json" \
-  -d '{"query": "user preferences", "limit": 5}'
-
-# Cache a value
-curl -X PUT https://mem.prim.sh/v1/cache/session/current-task \
-  -H "Content-Type: application/json" \
-  -d '{"value": "researching Base L2"}'
+  -d '{"text": "how does attention work?", "top_k": 5}'
+# → {"matches": [{"id": "...", "score": 0.92, "text": "...", "metadata": {...}}]}
 ```
+
+### KV cache
+
+```bash
+# Store a value (permanent)
+curl -X PUT https://mem.prim.sh/v1/cache/agent-state/current-task \
+  -H "Content-Type: application/json" \
+  -d '{"value": {"task": "research", "step": 3}}'
+
+# Store with TTL (expires in 1 hour)
+curl -X PUT https://mem.prim.sh/v1/cache/session/token \
+  -H "Content-Type: application/json" \
+  -d '{"value": "abc123", "ttl": 3600}'
+
+# Retrieve
+curl https://mem.prim.sh/v1/cache/agent-state/current-task
+# → {"namespace": "...", "key": "...", "value": {...}, "expires_at": null}
+```
+
+### Metadata filtering
+
+```json
+{
+  "text": "attention mechanisms",
+  "top_k": 5,
+  "filter": {"must": [{"key": "source", "match": {"value": "paper"}}]}
+}
+```
+
+---
+
+## Error codes
+
+- `collection_name_taken` (409) — Name already exists for this wallet. Use a different name or list existing collections.
+- `invalid_request` (400) — Missing required fields or malformed body.
+- `not_found` (404) — Collection or cache entry does not exist.
+- `forbidden` (403) — Resource belongs to a different wallet.
+- `qdrant_error` (502) — Upstream Qdrant error. Retry after a short wait.
+- `embedding_error` (502) — Embedding model error. Check text is non-empty and not too long.
+- `rate_limited` (429) — Too many requests. Back off and retry.
+
+---
+
+## MCP tools
+
+Install with: `prim install mem`
+
+Tools: mem_collection_create, mem_collection_list, mem_collection_get, mem_collection_delete,
+mem_upsert, mem_query, mem_cache_put, mem_cache_get, mem_cache_delete
+
+Skill: https://prim.sh/mem/llms.txt
+OpenAPI: https://prim.sh/specs/openapi/mem.yaml

@@ -5,7 +5,7 @@ No signup. No GUI. No KYC. Pay with USDC, get resources.
 
 Status: Private beta on Base Sepolia testnet.
 
-Prim provides 5 live infrastructure primitives, each accepting x402 payment
+Prim provides 6 live infrastructure primitives, each accepting x402 payment
 (USDC on Base) as the sole authentication mechanism. An agent with a funded
 wallet can consume any primitive without human intervention.
 
@@ -109,6 +109,7 @@ These are deployed and responding to requests.
   spawn    https://spawn.prim.sh      VPS provisioning (Hetzner Cloud)
   faucet   https://faucet.prim.sh     Testnet USDC and ETH faucet (free)
   search   https://search.prim.sh     Web search, news, URL extraction
+  email    https://email.prim.sh      Email mailboxes, send/receive, webhooks
 
 Full API references:
   https://prim.sh/wallet/llms.txt
@@ -116,6 +117,7 @@ Full API references:
   https://prim.sh/spawn/llms.txt
   https://prim.sh/faucet/llms.txt
   https://prim.sh/search/llms.txt
+  https://prim.sh/email/llms.txt
 
 ### Endpoint summary
 
@@ -170,16 +172,37 @@ search.prim.sh:
   POST   /v1/search/news                       News search ($0.01)
   POST   /v1/extract                           Extract URL content ($0.005)
 
+email.prim.sh:
+  POST   /v1/mailboxes                         Create mailbox ($0.05)
+  GET    /v1/mailboxes                         List mailboxes ($0.001)
+  GET    /v1/mailboxes/:id                     Get mailbox ($0.001)
+  DELETE /v1/mailboxes/:id                     Delete mailbox ($0.001)
+  POST   /v1/mailboxes/:id/renew               Renew mailbox TTL ($0.001)
+  GET    /v1/mailboxes/:id/messages            List messages ($0.001)
+  GET    /v1/mailboxes/:id/messages/:msgId     Get message ($0.001)
+  POST   /v1/mailboxes/:id/send               Send email ($0.01)
+  POST   /v1/mailboxes/:id/webhooks           Register webhook ($0.001)
+  GET    /v1/mailboxes/:id/webhooks           List webhooks ($0.001)
+  DELETE /v1/mailboxes/:id/webhooks/:whId     Delete webhook ($0.001)
+  POST   /v1/domains                           Register custom domain ($0.05)
+  GET    /v1/domains                           List custom domains ($0.001)
+  GET    /v1/domains/:id                       Get domain ($0.001)
+  POST   /v1/domains/:id/verify               Verify domain DNS ($0.001)
+  DELETE /v1/domains/:id                       Delete domain ($0.001)
+
 ---
 
 ## Built (Not Yet Deployed)
 
 These primitives are implemented but not yet live on the network.
 
-  email    email.prim.sh    Email mailboxes, send/receive, webhooks
-  mem      mem.prim.sh      Vector memory and KV cache
-  domain   domain.prim.sh   Domain registration and DNS records
-  token    token.prim.sh    ERC-20 token deployment and Uniswap pools
+  mem      mem.prim.sh      Vector memory (Qdrant) and KV cache
+  domain   domain.prim.sh   Domain registration (NameSilo) and DNS (Cloudflare)
+  token    token.prim.sh    ERC-20 token deployment and Uniswap V3 pools
+
+Full API references (available now):
+  https://prim.sh/mem/llms.txt
+  https://prim.sh/domain/llms.txt
 
 ---
 

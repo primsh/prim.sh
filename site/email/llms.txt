@@ -4,44 +4,113 @@
 
 Base URL: https://email.prim.sh
 Auth: x402 (USDC on Base Sepolia)
-Status: Built, not yet deployed to prim.sh network.
+Status: Live (private beta).
+
+---
+
+## x402 Payment
+
+All endpoints except health checks require x402 payment. The MCP server and CLI handle this automatically. For raw HTTP, follow the standard x402 flow (see https://prim.sh/llms.txt for full protocol details).
+
+---
 
 ## Endpoints
 
 ### Mailboxes
 
-- `POST /v1/mailboxes` — create a mailbox (permanent or with TTL).
-- `GET /v1/mailboxes` — list mailboxes.
-- `GET /v1/mailboxes/:id` — get mailbox metadata.
-- `DELETE /v1/mailboxes/:id` — delete a mailbox.
+- `POST /v1/mailboxes` — Create a mailbox. Optional: username, domain, ttl_ms. **$0.05**
+- `GET /v1/mailboxes` — List mailboxes (paginated). **$0.001**
+- `GET /v1/mailboxes/:id` — Get mailbox metadata including expires_at. **$0.001**
+- `DELETE /v1/mailboxes/:id` — Permanently delete a mailbox and all messages. **$0.001**
+- `POST /v1/mailboxes/:id/renew` — Extend mailbox TTL by ttl_ms. **$0.001**
 
 ### Messages
 
-- `POST /v1/mailboxes/:id/send` — send an email.
-- `GET /v1/mailboxes/:id/messages` — list received messages.
-- `GET /v1/messages/:id` — fetch a single message.
+- `GET /v1/mailboxes/:id/messages` — List messages (newest first, position-based pagination). **$0.001**
+- `GET /v1/mailboxes/:id/messages/:msgId` — Get full message including textBody and htmlBody. **$0.001**
+- `POST /v1/mailboxes/:id/send` — Send email. Requires to, subject, and body or html. **$0.01**
 
 ### Webhooks
 
-- `POST /v1/webhooks` — register an incoming message webhook (HMAC-signed delivery).
-- `GET /v1/webhooks` — list webhooks.
-- `DELETE /v1/webhooks/:id` — delete a webhook.
+- `POST /v1/mailboxes/:id/webhooks` — Register webhook URL for message.received events. Optional secret for HMAC signing. **$0.001**
+- `GET /v1/mailboxes/:id/webhooks` — List webhooks for a mailbox. **$0.001**
+- `DELETE /v1/mailboxes/:id/webhooks/:whId` — Delete a webhook. **$0.001**
 
-## Examples
+### Custom Domains
+
+- `POST /v1/domains` — Register a custom domain. Returns required_records for DNS. **$0.05**
+- `GET /v1/domains` — List registered domains (paginated). **$0.001**
+- `GET /v1/domains/:id` — Get domain details and verification status. **$0.001**
+- `POST /v1/domains/:id/verify` — Verify DNS records. On success: status → verified, dkim_records returned. **$0.001**
+- `DELETE /v1/domains/:id` — Remove domain registration. **$0.001**
+
+---
+
+## Common patterns
+
+### Create temporary inbox and poll for messages
 
 ```bash
-# Create a permanent mailbox with custom username
-curl -X POST https://email.prim.sh/v1/mailboxes \
-  -H "Content-Type: application/json" \
-  -d '{"username": "my-agent", "domain": "email.prim.sh"}'
+# Create mailbox (x402 payment handled by CLI)
+prim email mailbox create
+# → {"id": "mbx_...", "address": "abc123@mail.prim.sh", "expires_at": "..."}
 
-# Send an email
-curl -X POST https://email.prim.sh/v1/mailboxes/MBX_ID/send \
-  -H "Content-Type: application/json" \
-  -d '{"to": "[email protected]", "subject": "Hello", "body": "Hello from my agent"}'
+# List messages
+prim email messages MBX_ID
+# → {"messages": [...], "total": N}
 
-# Register a webhook for incoming mail
-curl -X POST https://email.prim.sh/v1/webhooks \
-  -H "Content-Type: application/json" \
-  -d '{"mailbox_id": "MBX_ID", "url": "https://my-agent.example/inbox", "secret": "webhook-secret"}'
+# Get specific message
+prim email message MBX_ID MSG_ID
+# → {"from": "...", "subject": "...", "textBody": "...", "htmlBody": "..."}
 ```
+
+### Send email
+
+```bash
+prim email send MBX_ID --to user@example.com --subject "Hello" --body "Message text"
+# → {"message_id": "...", "status": "sent"}
+```
+
+### Register webhook for real-time delivery
+
+```bash
+prim email webhook add MBX_ID --url https://myagent.example.com/hooks/email --secret whsec_abc
+# Webhook fires on message.received with X-Prim-Signature header for verification
+```
+
+### Custom domain setup
+
+```bash
+prim email domain add myproject.com
+# → required_records: [{type: "MX", ...}, {type: "TXT", ...}]
+# Add records to your DNS, then:
+prim email domain verify DOMAIN_ID
+# → dkim_records returned; add those to DNS too
+```
+
+---
+
+## Error codes
+
+- `invalid_request` (400) — Missing fields, invalid characters, or malformed request.
+- `username_taken` (409) — Username already in use on that domain. Omit for random generation.
+- `conflict` (409) — Domain already registered, or duplicate webhook URL.
+- `not_found` (404) — Mailbox, message, webhook, or domain not found.
+- `forbidden` (403) — Resource owned by a different wallet.
+- `expired` (410) — Mailbox expired. Renew with `POST /v1/mailboxes/:id/renew`.
+- `stalwart_error` (502) — Upstream Stalwart mail server error. Retry.
+- `jmap_error` (502) — JMAP submission error. Retry.
+
+---
+
+## MCP tools
+
+Install with: `prim install email`
+
+Tools: email_mailbox_create, email_mailbox_list, email_mailbox_get, email_mailbox_delete,
+email_mailbox_renew, email_messages_list, email_message_get, email_send,
+email_webhook_create, email_webhook_list, email_webhook_delete,
+email_domain_register, email_domain_list, email_domain_get, email_domain_verify, email_domain_delete
+
+Skill: https://prim.sh/email/llms.txt
+OpenAPI: https://prim.sh/specs/openapi/email.yaml
