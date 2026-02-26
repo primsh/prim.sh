@@ -5,6 +5,7 @@ import {
   getBucketByCfName,
   getBucketsByOwner,
   countBucketsByOwner,
+  getTotalStorageByOwner,
   deleteBucketRow,
   getQuota as dbGetQuota,
   setQuota as dbSetQuota,
@@ -12,6 +13,11 @@ import {
   decrementUsage,
   setUsage,
 } from "./db.ts";
+
+// ─── Per-wallet limits (configurable via env) ─────────────────────────────
+const MAX_BUCKETS_PER_WALLET = Number(process.env.STORE_MAX_BUCKETS_PER_WALLET ?? 10);
+const DEFAULT_BUCKET_QUOTA = Number(process.env.STORE_DEFAULT_BUCKET_QUOTA ?? 104857600); // 100MB
+const MAX_STORAGE_PER_WALLET = Number(process.env.STORE_MAX_STORAGE_PER_WALLET ?? 1073741824); // 1GB
 import {
   CloudflareError,
   createBucket as cfCreateBucket,
@@ -109,6 +115,16 @@ export async function createBucket(
     };
   }
 
+  const bucketCount = countBucketsByOwner(callerWallet);
+  if (bucketCount >= MAX_BUCKETS_PER_WALLET) {
+    return {
+      ok: false,
+      status: 403,
+      code: "bucket_limit_exceeded",
+      message: `Max ${MAX_BUCKETS_PER_WALLET} buckets per wallet`,
+    };
+  }
+
   const existing = getBucketByCfName(request.name);
   if (existing) {
     return {
@@ -130,6 +146,9 @@ export async function createBucket(
       owner_wallet: callerWallet,
       location: cfBucket.location ?? request.location ?? null,
     });
+
+    // Apply default quota
+    dbSetQuota(bucketId, DEFAULT_BUCKET_QUOTA);
 
     const row = getBucketById(bucketId);
     if (!row) throw new Error("Failed to retrieve bucket after insert");
@@ -243,6 +262,20 @@ export async function putObject(
         status: 413,
         code: "quota_exceeded",
         message: `Upload would exceed bucket quota (${quota_bytes} bytes). Current usage: ${usage_bytes}, incoming: ${incomingSize}.`,
+      };
+    }
+  }
+
+  // Per-wallet total storage cap enforcement
+  if (incomingSize > 0) {
+    const totalWalletUsage = getTotalStorageByOwner(callerWallet);
+    const netDelta = incomingSize - oldSize;
+    if (totalWalletUsage + netDelta > MAX_STORAGE_PER_WALLET) {
+      return {
+        ok: false,
+        status: 413,
+        code: "storage_limit_exceeded",
+        message: "Total storage limit exceeded (1GB)",
       };
     }
   }

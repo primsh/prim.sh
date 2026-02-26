@@ -19,6 +19,8 @@ export const ERROR_CODES = [
   "provider_error",
   "rate_limited",
   "not_implemented",
+  "server_limit_exceeded",
+  "type_not_allowed",
 ] as const;
 
 export type ErrorCode = (typeof ERROR_CODES)[number];

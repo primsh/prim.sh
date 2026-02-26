@@ -75,6 +75,14 @@ export function countBucketsByOwner(owner: string): number {
   return row?.count ?? 0;
 }
 
+export function getTotalStorageByOwner(owner: string): number {
+  const db = getDb();
+  const row = db
+    .query<{ total: number }, [string]>("SELECT COALESCE(SUM(usage_bytes), 0) as total FROM buckets WHERE owner_wallet = ?")
+    .get(owner) as { total: number } | null;
+  return row?.total ?? 0;
+}
+
 export function insertBucket(params: {
   id: string;
   cf_name: string;

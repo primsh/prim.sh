@@ -1,27 +1,30 @@
-interface RateLimitEntry {
-  lastDrip: number;
-  windowMs: number;
-}
+import { getLastDrip, upsertDrip, cleanupOldEntries } from "./db.ts";
+
+const CLEANUP_INTERVAL_MS = 24 * 60 * 60 * 1000; // 24 hours
 
 export class RateLimiter {
-  private entries = new Map<string, RateLimitEntry>();
+  constructor(
+    private resource: string,
+    private windowMs: number,
+  ) {}
 
-  constructor(private windowMs: number) {}
+  check(address: string): { allowed: boolean; retryAfterMs: number } {
+    cleanupOldEntries(CLEANUP_INTERVAL_MS);
 
-  check(key: string): { allowed: boolean; retryAfterMs: number } {
-    const now = Date.now();
-    const entry = this.entries.get(key);
-    if (!entry) {
+    const lastDrip = getLastDrip(address, this.resource);
+    if (lastDrip === null) {
       return { allowed: true, retryAfterMs: 0 };
     }
-    const elapsed = now - entry.lastDrip;
+
+    const elapsed = Date.now() - lastDrip;
     if (elapsed >= this.windowMs) {
       return { allowed: true, retryAfterMs: 0 };
     }
+
     return { allowed: false, retryAfterMs: this.windowMs - elapsed };
   }
 
-  record(key: string): void {
-    this.entries.set(key, { lastDrip: Date.now(), windowMs: this.windowMs });
+  record(address: string): void {
+    upsertDrip(address, this.resource, Date.now());
   }
 }

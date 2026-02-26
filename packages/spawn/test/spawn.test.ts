@@ -278,20 +278,20 @@ describe("createServer", () => {
     expect(result.message).toContain("Unknown provider");
   });
 
-  it("invalid type — returns 400 with invalid_request", async () => {
+  it("invalid type — blocked by beta allowlist returns 403 type_not_allowed", async () => {
     const result = await createServer({ ...VALID_REQUEST, type: "xlarge" }, CALLER);
     expect(result.ok).toBe(false);
     if (result.ok) return;
-    expect(result.status).toBe(400);
-    expect(result.code).toBe("invalid_request");
+    expect(result.status).toBe(403);
+    expect(result.code).toBe("type_not_allowed");
   });
 
-  it("arm-small not available on DO — returns 400", async () => {
+  it("arm-small not available on DO — blocked by beta allowlist returns 403 type_not_allowed", async () => {
     const result = await createServer({ ...VALID_REQUEST, type: "arm-small" }, CALLER);
     expect(result.ok).toBe(false);
     if (result.ok) return;
-    expect(result.status).toBe(400);
-    expect(result.code).toBe("invalid_request");
+    expect(result.status).toBe(403);
+    expect(result.code).toBe("type_not_allowed");
   });
 
   it("invalid image — returns 400 with invalid_request", async () => {
@@ -308,6 +308,57 @@ describe("createServer", () => {
     if (result.ok) return;
     expect(result.status).toBe(400);
     expect(result.code).toBe("invalid_request");
+  });
+
+  it("server limit exceeded — returns 403 with server_limit_exceeded code", async () => {
+    // Insert 3 active servers for the caller
+    insertTestServer({ owner_wallet: CALLER, status: "running" });
+    insertTestServer({ owner_wallet: CALLER, status: "initializing" });
+    insertTestServer({ owner_wallet: CALLER, status: "off" });
+
+    const result = await createServer(VALID_REQUEST, CALLER);
+    expect(result.ok).toBe(false);
+    if (result.ok) return;
+    expect(result.status).toBe(403);
+    expect(result.code).toBe("server_limit_exceeded");
+    expect(result.message).toBe("Max 3 concurrent servers per wallet");
+  });
+
+  it("server limit — deleted/archived/destroying servers do not count", async () => {
+    // Insert 3 servers in terminal states — should not count toward cap
+    insertTestServer({ owner_wallet: CALLER, status: "deleted" });
+    insertTestServer({ owner_wallet: CALLER, status: "archived" });
+    insertTestServer({ owner_wallet: CALLER, status: "destroying" });
+
+    const result = await createServer(VALID_REQUEST, CALLER);
+    expect(result.ok).toBe(true);
+  });
+
+  it("server limit — other wallets' servers do not count toward cap", async () => {
+    // Insert 3 active servers for OTHER wallet — should not affect CALLER
+    insertTestServer({ owner_wallet: OTHER, status: "running" });
+    insertTestServer({ owner_wallet: OTHER, status: "running" });
+    insertTestServer({ owner_wallet: OTHER, status: "running" });
+
+    const result = await createServer(VALID_REQUEST, CALLER);
+    expect(result.ok).toBe(true);
+  });
+
+  it("type not allowed — non-small type returns 403 with type_not_allowed code", async () => {
+    const result = await createServer({ ...VALID_REQUEST, type: "medium" }, CALLER);
+    expect(result.ok).toBe(false);
+    if (result.ok) return;
+    expect(result.status).toBe(403);
+    expect(result.code).toBe("type_not_allowed");
+    expect(result.message).toContain("small");
+  });
+
+  it("type not allowed — large type returns 403 with type_not_allowed code", async () => {
+    const result = await createServer({ ...VALID_REQUEST, type: "large" }, CALLER);
+    expect(result.ok).toBe(false);
+    if (result.ok) return;
+    expect(result.status).toBe(403);
+    expect(result.code).toBe("type_not_allowed");
   });
 
   it("DO API failure — returns 502 with provider_error code", async () => {
@@ -474,7 +525,13 @@ describe("server type translation", () => {
 
   for (const [spawnType, doType] of Object.entries(typeMap)) {
     it(`${spawnType} → ${doType}`, async () => {
+      // Allow all types for these provider-level translation tests
+      const origAllowed = process.env.SPAWN_ALLOWED_TYPES;
+      process.env.SPAWN_ALLOWED_TYPES = "small,medium,large,arm-small";
+
       await createServer({ ...VALID_REQUEST, type: spawnType }, CALLER);
+
+      process.env.SPAWN_ALLOWED_TYPES = origAllowed;
 
       const doCall = mockFetch.mock.calls.find(
         ([url, init]) =>

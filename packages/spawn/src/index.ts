@@ -56,6 +56,10 @@ function forbidden(message: string): ApiError {
   return { error: { code: "forbidden", message } };
 }
 
+function serviceError(code: string, message: string): ApiError {
+  return { error: { code, message } };
+}
+
 function notFound(message: string): ApiError {
   return { error: { code: "not_found", message } };
 }
@@ -105,7 +109,7 @@ app.post("/v1/servers", async (c) => {
   const result = await createServer(body, caller);
   if (!result.ok) {
     if (result.status === 400) return c.json(invalidRequest(result.message), 400);
-    if (result.status === 403) return c.json(forbidden(result.message), 403);
+    if (result.status === 403) return c.json(serviceError(result.code, result.message), 403);
     if (result.status === 404) return c.json(notFound(result.message), 404);
     return c.json(providerError(result.message), result.status as 502);
   }

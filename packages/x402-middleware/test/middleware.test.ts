@@ -1,4 +1,4 @@
-import { describe, expect, it, beforeAll, afterAll, vi } from "vitest";
+import { describe, expect, it, beforeAll, afterAll, vi, beforeEach, afterEach } from "vitest";
 import { Hono } from "hono";
 import {
   createAgentStackMiddleware,
@@ -166,6 +166,125 @@ describe("AgentStack x402 middleware", () => {
 
     const body = await res.json();
     expect(body.walletAddress).toBeUndefined();
+  });
+});
+
+describe("Wallet allowlist", () => {
+  const ALLOWED_ADDRESS = "0xAllowedAddress";
+
+  function makePaymentHeader(from: string) {
+    const paymentPayload = {
+      x402Version: 2,
+      scheme: "exact",
+      network: TEST_NETWORK,
+      payload: {
+        authorization: {
+          from,
+          to: TEST_PAY_TO,
+          value: "1000",
+          validAfter: "0",
+          validBefore: "9999999999",
+          nonce: "0xnonce",
+        },
+        signature: "0xsignature",
+      },
+    };
+    return encodePaymentSignatureHeader(paymentPayload as unknown as never);
+  }
+
+  function createAllowlistApp(allowlist?: string[]) {
+    const app = new Hono();
+    app.use(
+      "*",
+      createAgentStackMiddleware(
+        {
+          payTo: TEST_PAY_TO,
+          network: TEST_NETWORK,
+          facilitatorUrl: "https://x402.example",
+          freeRoutes: ["GET /free"],
+          allowlist,
+        },
+        routes,
+      ),
+    );
+    app.get("/free", (c) => c.json({ route: "free", walletAddress: c.get("walletAddress") }));
+    app.get("/paid", (c) => c.json({ route: "paid", walletAddress: c.get("walletAddress") }));
+    return app;
+  }
+
+  afterEach(() => {
+    delete process.env.PRIM_ALLOWLIST;
+  });
+
+  it("allows wallet on allowlist", async () => {
+    const app = createAllowlistApp([ALLOWED_ADDRESS]);
+    const res = await app.request("/free", {
+      method: "GET",
+      headers: { "PAYMENT-SIGNATURE": makePaymentHeader(ALLOWED_ADDRESS) },
+    });
+    expect(res.status).toBe(200);
+    const body = await res.json();
+    expect(body.walletAddress).toBe(ALLOWED_ADDRESS);
+  });
+
+  it("blocks wallet not on allowlist with 403", async () => {
+    const app = createAllowlistApp([ALLOWED_ADDRESS]);
+    const res = await app.request("/free", {
+      method: "GET",
+      headers: { "PAYMENT-SIGNATURE": makePaymentHeader("0xOtherAddress") },
+    });
+    expect(res.status).toBe(403);
+    const body = await res.json();
+    expect(body.error).toBe("wallet_not_allowed");
+    expect(body.message).toBe("This service is in private beta");
+  });
+
+  it("allows all wallets when no allowlist is set", async () => {
+    const app = createAllowlistApp(undefined);
+    const res = await app.request("/free", {
+      method: "GET",
+      headers: { "PAYMENT-SIGNATURE": makePaymentHeader("0xAnyAddress") },
+    });
+    expect(res.status).toBe(200);
+  });
+
+  it("performs case-insensitive address comparison", async () => {
+    const app = createAllowlistApp(["0xallowedaddress"]);
+    const res = await app.request("/free", {
+      method: "GET",
+      headers: { "PAYMENT-SIGNATURE": makePaymentHeader("0xALLOWEDADDRESS") },
+    });
+    expect(res.status).toBe(200);
+  });
+
+  it("reads allowlist from PRIM_ALLOWLIST env var", async () => {
+    process.env.PRIM_ALLOWLIST = `${ALLOWED_ADDRESS},0xOther`;
+    const app = createAllowlistApp();
+    const res = await app.request("/free", {
+      method: "GET",
+      headers: { "PAYMENT-SIGNATURE": makePaymentHeader(ALLOWED_ADDRESS) },
+    });
+    expect(res.status).toBe(200);
+  });
+
+  it("blocks wallet not in PRIM_ALLOWLIST env var", async () => {
+    process.env.PRIM_ALLOWLIST = ALLOWED_ADDRESS;
+    const app = createAllowlistApp();
+    const res = await app.request("/free", {
+      method: "GET",
+      headers: { "PAYMENT-SIGNATURE": makePaymentHeader("0xNotAllowed") },
+    });
+    expect(res.status).toBe(403);
+  });
+
+  it("skips allowlist check when PRIM_ALLOWLIST is empty string", async () => {
+    process.env.PRIM_ALLOWLIST = "";
+    const app = createAllowlistApp();
+    const res = await app.request("/free", {
+      method: "GET",
+      headers: { "PAYMENT-SIGNATURE": makePaymentHeader("0xAnyAddress") },
+    });
+    expect(res.status).toBe(200);
   });
 });
 

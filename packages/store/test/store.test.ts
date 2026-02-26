@@ -628,7 +628,8 @@ describe("store.sh", () => {
     async function createTestBucketWithQuota(quotaBytes: number | null): Promise<string> {
       const result = await createBucket({ name: `quota-test-${Date.now()}` }, CALLER);
       if (!result.ok) throw new Error("Setup failed");
-      if (quotaBytes !== null) dbSetQuota(result.data.bucket.id, quotaBytes);
+      // Always set quota explicitly to override the default applied by createBucket
+      dbSetQuota(result.data.bucket.id, quotaBytes);
       return result.data.bucket.id;
     }
 
@@ -812,9 +813,11 @@ describe("store.sh", () => {
       expect(result.data.usage_pct).toBe(50);
     });
 
-    it("returns usage_pct null when unlimited", async () => {
+    it("returns usage_pct null when quota is explicitly removed", async () => {
       const created = await createBucket({ name: `usage-null-${Date.now()}` }, CALLER);
       if (!created.ok) return;
+      // Remove quota explicitly to test unlimited case
+      dbSetQuota(created.data.bucket.id, null);
       const result = getUsage(created.data.bucket.id, CALLER);
       expect(result.ok).toBe(true);
       if (!result.ok) return;
@@ -867,14 +870,112 @@ describe("store.sh", () => {
   });
 
   describe("BucketResponse includes quota fields", () => {
-    it("new bucket has quota_bytes null and usage_bytes 0", async () => {
+    it("new bucket has default quota (100MB) and usage_bytes 0", async () => {
       const created = await createBucket({ name: `bucket-quota-${Date.now()}` }, CALLER);
       if (!created.ok) return;
       const result = getBucket(created.data.bucket.id, CALLER);
       expect(result.ok).toBe(true);
       if (!result.ok) return;
-      expect(result.data.quota_bytes).toBeNull();
+      expect(result.data.quota_bytes).toBe(104857600);
       expect(result.data.usage_bytes).toBe(0);
+    });
+  });
+
+  // ─── Per-wallet storage caps ─────────────────────────────────────────
+
+  describe("per-wallet limits", () => {
+    it("bucket limit — 10th bucket succeeds, 11th returns bucket_limit_exceeded", async () => {
+      // Override limit to 3 for test speed
+      process.env.STORE_MAX_BUCKETS_PER_WALLET = "3";
+      // Re-import to pick up env change isn't possible at module level — test by creating 3 then 4th
+      // Instead we rely on the module reading env at call time — it reads the constant at module load.
+      // We need to set env BEFORE module import. Since the module is already loaded, we test
+      // with the real default (10). Create 10, then verify 11th fails.
+      delete process.env.STORE_MAX_BUCKETS_PER_WALLET;
+
+      for (let i = 0; i < 10; i++) {
+        const r = await createBucket({ name: `limit-bucket-${i}` }, CALLER);
+        expect(r.ok).toBe(true);
+      }
+      const result = await createBucket({ name: "limit-bucket-overflow" }, CALLER);
+      expect(result.ok).toBe(false);
+      if (result.ok) return;
+      expect(result.status).toBe(403);
+      expect(result.code).toBe("bucket_limit_exceeded");
+    });
+
+    it("bucket limit — different wallet is independent", async () => {
+      for (let i = 0; i < 10; i++) {
+        await createBucket({ name: `caller-bucket-${i}` }, CALLER);
+      }
+      // OTHER wallet has 0 buckets — should succeed
+      const result = await createBucket({ name: "other-wallet-bucket" }, OTHER);
+      expect(result.ok).toBe(true);
+    });
+
+    it("default bucket quota — new bucket gets 100MB quota", async () => {
+      const result = await createBucket({ name: "default-quota-bucket" }, CALLER);
+      expect(result.ok).toBe(true);
+      if (!result.ok) return;
+      expect(result.data.bucket.quota_bytes).toBe(104857600);
+    });
+
+    it("per-wallet storage cap — upload rejected when total would exceed 1GB", async () => {
+      const created = await createBucket({ name: "storage-cap-bucket" }, CALLER);
+      if (!created.ok) throw new Error("Setup failed");
+      const bucketId = created.data.bucket.id;
+
+      // Remove per-bucket quota so only the per-wallet cap is tested
+      dbSetQuota(bucketId, null);
+
+      // Seed usage_bytes to just below 1GB
+      dbSetUsage(bucketId, 1073741823); // 1GB - 1 byte
+
+      // HEAD returns 0 (new object)
+      mockFetch.mockImplementationOnce(async () => new Response(null, { status: 404 }));
+
+      // Upload of 2 bytes — total would be 1GB + 1 byte → reject
+      const result = await putObject(bucketId, "overflow.txt", "ab", "text/plain", CALLER, 2);
+      expect(result.ok).toBe(false);
+      if (result.ok) return;
+      expect(result.status).toBe(413);
+      expect(result.code).toBe("storage_limit_exceeded");
+    });
+
+    it("per-wallet storage cap — upload allowed when total is well under 1GB", async () => {
+      const created = await createBucket({ name: "storage-exact-bucket" }, CALLER);
+      if (!created.ok) throw new Error("Setup failed");
+      const bucketId = created.data.bucket.id;
+
+      // Remove per-bucket quota so only the per-wallet cap is tested
+      dbSetQuota(bucketId, null);
+
+      // Upload 1 byte — well under 1GB
+      // HEAD returns 0 (new object)
+      mockFetch.mockImplementationOnce(async () => new Response(null, { status: 404 }));
+
+      const result = await putObject(bucketId, "small.txt", "x", "text/plain", CALLER, 1);
+      expect(result.ok).toBe(true);
+    });
+
+    it("per-wallet storage cap — overwrite delta counted correctly", async () => {
+      const created = await createBucket({ name: "storage-overwrite-bucket" }, CALLER);
+      if (!created.ok) throw new Error("Setup failed");
+      const bucketId = created.data.bucket.id;
+
+      // Remove per-bucket quota so only the per-wallet cap is tested
+      dbSetQuota(bucketId, null);
+
+      // Seed usage_bytes to 1GB - 10 bytes
+      dbSetUsage(bucketId, 1073741814);
+
+      // Overwrite: old object was 5 bytes, new is 10 bytes — net delta = 5 bytes
+      // total would be (1GB - 10) + 5 = 1GB - 5 → allowed
+      mockFetch.mockImplementationOnce(async () =>
+        new Response(null, { status: 200, headers: { "Content-Length": "5", ETag: '"old"' } }),
+      );
+      const result = await putObject(bucketId, "file.txt", "xxxxxxxxxx", "text/plain", CALLER, 10);
+      expect(result.ok).toBe(true);
     });
   });
 

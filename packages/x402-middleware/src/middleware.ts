@@ -43,6 +43,23 @@ function normalizeRouteConfigEntry(
   ];
 }
 
+function buildAllowlist(options: AgentStackMiddlewareOptions): Set<string> | null {
+  const raw: string[] = [];
+
+  if (options.allowlist && options.allowlist.length > 0) {
+    raw.push(...options.allowlist);
+  }
+
+  const envVar = process.env.PRIM_ALLOWLIST;
+  if (envVar && envVar.trim().length > 0) {
+    raw.push(...envVar.split(",").map((s) => s.trim()).filter(Boolean));
+  }
+
+  if (raw.length === 0) return null;
+
+  return new Set(raw.map((addr) => addr.toLowerCase()));
+}
+
 export function createAgentStackMiddleware(
   options: AgentStackMiddlewareOptions,
   routes: AgentStackRouteConfig,
@@ -50,6 +67,7 @@ export function createAgentStackMiddleware(
   const network: Network = (options.network ?? DEFAULT_NETWORK) as Network;
   const facilitatorUrl = options.facilitatorUrl ?? DEFAULT_FACILITATOR_URL;
   const freeRoutes = new Set(options.freeRoutes ?? []);
+  const allowlist = buildAllowlist(options);
 
   const effectiveRoutes: Record<string, RouteConfig> = {};
 
@@ -92,9 +110,18 @@ export function createAgentStackMiddleware(
     }
   }
 
+  function denyWallet(c: Parameters<MiddlewareHandler>[0]): boolean {
+    if (!allowlist) return false;
+    const wallet = c.get(WALLET_ADDRESS_KEY) as string | undefined;
+    return !wallet || !allowlist.has(wallet.toLowerCase());
+  }
+
   if (Object.keys(effectiveRoutes).length === 0) {
     return async (c: Parameters<MiddlewareHandler>[0], next: Parameters<MiddlewareHandler>[1]) => {
       extractWalletAddress(c);
+      if (denyWallet(c)) {
+        return c.json({ error: "wallet_not_allowed", message: "This service is in private beta" }, 403);
+      }
       await next();
     };
   }
@@ -113,6 +140,9 @@ export function createAgentStackMiddleware(
 
   return async (c, next) => {
     extractWalletAddress(c);
+    if (denyWallet(c)) {
+      return c.json({ error: "wallet_not_allowed", message: "This service is in private beta" }, 403);
+    }
     return payment(c, next);
   };
 }

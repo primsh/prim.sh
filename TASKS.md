@@ -178,11 +178,23 @@ Plan doc: `tasks/active/v1-launch-plan-2026-02-25.md`
 | ID | Task | Owner | Depends on | Status |
 |---|---|---|---|---|
 | L-10 | Deploy Core 4 to VPS + run integration smoke test against live endpoints | Claude + Garric | L-8, L-9 | done |
+| L-13 | Deploy landing site (`site/`) to Cloudflare Pages, wire `prim.sh` root domain | Garric + Claude | L-4 | pending |
+| L-16 | Wallet allowlist: x402-middleware rejects wallets not in allowlist; env-configurable `PRIM_ALLOWLIST` (comma-separated addresses), skip if unset | Claude | L-10 | pending |
+| L-17 | Invite codes: `POST /v1/invites` (admin-only) generates code, `POST /v1/invites/redeem` adds wallet to allowlist. SQLite table in wallet.sh | Claude | L-16 | pending |
+| L-18 | Default storage caps: per-wallet bucket limit (10), default per-bucket quota (100MB), per-wallet total storage cap (1GB). Reject uploads/creates above limits | Claude | L-10 | pending |
+| L-19 | Spawn per-wallet caps: max 3 concurrent servers per wallet, max `small` type only during beta. Reject creates above limits | Claude | L-10 | pending |
+| L-20 | Persist faucet rate limiter to SQLite (currently in-memory, lost on restart) | Claude | L-10 | pending |
+| L-21 | Redeploy VPS after L-16 through L-20 + re-run smoke test | Claude | L-16, L-17, L-18, L-19, L-20 | pending |
+
+### Wave 3: Mainnet + Binary
+
+| ID | Task | Owner | Depends on | Status |
+|---|---|---|---|---|
+| L-22 | Mainnet switchover: update VPS env files from `eip155:84532` → `eip155:8453`, set prod `PRIM_PAY_TO` treasury, fund facilitator with mainnet USDC | Garric | L-21 | pending |
 | L-11 | Compile `prim` binary for 4 platforms (`bun build --compile`) + upload to GitHub Release | Claude | L-4 | pending |
 | L-12 | Write install script (`curl prim.sh \| sh`) + per-primitive wrappers | Claude | L-11 | pending |
-| L-13 | Deploy landing site (`site/`) to Cloudflare Pages, wire `prim.sh` root domain | Garric + Claude | L-4 | pending |
 
-### Wave 3: Token + Public
+### Wave 4: Token + Public
 
 | ID | Task | Owner | Depends on | Status |
 |---|---|---|---|---|

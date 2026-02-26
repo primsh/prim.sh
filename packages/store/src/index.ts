@@ -65,6 +65,14 @@ function quotaExceeded(message: string): ApiError {
   return { error: { code: "quota_exceeded", message } };
 }
 
+function bucketLimitExceeded(message: string): ApiError {
+  return { error: { code: "bucket_limit_exceeded", message } };
+}
+
+function storageLimitExceeded(message: string): ApiError {
+  return { error: { code: "storage_limit_exceeded", message } };
+}
+
 /** Extract object key from wildcard path — Hono 4.x doesn't capture `*` as a param. */
 function extractObjectKey(c: { req: { path: string } }): string {
   const match = c.req.path.match(/\/objects\/(.+)/);
@@ -106,6 +114,7 @@ app.post("/v1/buckets", async (c) => {
   const result = await createBucket(body, caller);
   if (!result.ok) {
     if (result.code === "invalid_request" || result.code === "bucket_name_taken") return c.json(invalidRequest(result.message), 400);
+    if (result.code === "bucket_limit_exceeded") return c.json(bucketLimitExceeded(result.message), 403);
     if (result.status === 404) return c.json(notFound(result.message), 404);
     if (result.status === 403) return c.json(forbidden(result.message), 403);
     return c.json(r2Error(result.message), result.status as 502);
@@ -170,6 +179,7 @@ app.put("/v1/buckets/:id/objects/*", async (c) => {
   const result = await putObject(c.req.param("id"), key, body, contentType, caller, contentLength);
   if (!result.ok) {
     if (result.code === "quota_exceeded") return c.json(quotaExceeded(result.message), 413);
+    if (result.code === "storage_limit_exceeded") return c.json(storageLimitExceeded(result.message), 413);
     if (result.status === 411) return c.json(invalidRequest(result.message), 411);
     if (result.code === "invalid_request") return c.json(invalidRequest(result.message), 400);
     if (result.status === 404) return c.json(notFound(result.message), 404);

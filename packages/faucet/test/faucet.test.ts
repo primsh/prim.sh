@@ -12,6 +12,8 @@ process.env.CIRCLE_API_KEY = "test-api-key";
 process.env.FAUCET_TREASURY_KEY =
   "0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80";
 process.env.FAUCET_DRIP_ETH = "0.01";
+// Use in-memory SQLite for tests (isolated, no disk files)
+process.env.FAUCET_DB_PATH = ":memory:";
 
 // ─── Hoist mock fns so vi.mock factories can reference them ───────────────
 
@@ -39,8 +41,9 @@ const mockFetch = vi.fn<
 >();
 vi.stubGlobal("fetch", mockFetch);
 
-// Import app after env + mocks are set up
+// Import app and db helpers after env + mocks are set up
 import app from "../src/index.ts";
+import { resetDb, upsertDrip, getLastDrip, cleanupOldEntries } from "../src/db.ts";
 
 // ─── Test helpers ─────────────────────────────────────────────────────────
 
@@ -78,11 +81,9 @@ beforeEach(() => {
   process.env.FAUCET_TREASURY_KEY =
     "0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80";
   process.env.FAUCET_DRIP_ETH = "0.01";
+  // Reset SQLite DB between tests to ensure isolation
+  resetDb();
 });
-
-// We need to reset rate limiters between tests. Since they're module-level
-// singletons, we re-import the module fresh for rate-limit-sensitive tests.
-// For most tests, we just rely on unique addresses or accept that state carries.
 
 // ─── Health check ─────────────────────────────────────────────────────────
 
@@ -300,5 +301,49 @@ describe("GET /v1/faucet/status", () => {
     expect(res.status).toBe(400);
     const body = (await res.json()) as { error: { code: string } };
     expect(body.error.code).toBe("invalid_request");
+  });
+});
+
+// ─── SQLite persistence ───────────────────────────────────────────────────
+
+describe("SQLite rate limit persistence", () => {
+  it("records drip and reads it back within same session", () => {
+    const addr = "0xBcd4042DE499D14e55001CcbB24a551F3b954096";
+    const ts = Date.now();
+    upsertDrip(addr, "usdc", ts);
+
+    const result = getLastDrip(addr, "usdc");
+    expect(result).not.toBeNull();
+    expect(result).toBe(ts);
+  });
+
+  it("getLastDrip returns null for unknown address", () => {
+    const result = getLastDrip("0x0000000000000000000000000000000000000001", "usdc");
+    expect(result).toBeNull();
+  });
+
+  it("upsertDrip updates existing record", () => {
+    const addr = "0xdD2FD4581271e230360230F9337D5c0430Bf44C0";
+    const t1 = Date.now() - 1000;
+    upsertDrip(addr, "usdc", t1);
+
+    const t2 = Date.now();
+    upsertDrip(addr, "usdc", t2);
+
+    const result = getLastDrip(addr, "usdc");
+    expect(result).toBe(t2);
+  });
+
+  it("cleanupOldEntries removes stale rows", () => {
+    const addr = "0x8626f6940E2eb28930eFb4CeF49B2d1F2C9C1199";
+    // Insert a record that is 25 hours old
+    const oldTimestamp = Date.now() - 25 * 60 * 60 * 1000;
+    upsertDrip(addr, "eth", oldTimestamp);
+
+    // Cleanup entries older than 24h
+    cleanupOldEntries(24 * 60 * 60 * 1000);
+
+    const result = getLastDrip(addr, "eth");
+    expect(result).toBeNull();
   });
 });

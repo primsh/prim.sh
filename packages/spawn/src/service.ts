@@ -4,6 +4,7 @@ import {
   getServerById,
   getServersByOwner,
   countServersByOwner,
+  countActiveServersByOwner,
   updateServerStatus,
   updateServerTypeAndImage,
   insertSshKey,
@@ -34,6 +35,15 @@ import type { ServerRow, SshKeyRow } from "./db.ts";
 
 const DEFAULT_PROVIDER = "digitalocean";
 const CREATION_DEPOSIT = "0.01";
+function getMaxServersPerWallet(): number {
+  return Number(process.env.SPAWN_MAX_SERVERS_PER_WALLET ?? "3");
+}
+
+function getAllowedTypes(): Set<string> {
+  return new Set(
+    (process.env.SPAWN_ALLOWED_TYPES ?? "small").split(",").map((t) => t.trim()).filter(Boolean),
+  );
+}
 
 // ─── Helpers ─────────────────────────────────────────────────────────────
 
@@ -113,6 +123,27 @@ export async function createServer(
       status: 400,
       code: "invalid_request",
       message: "Server name must contain only alphanumeric characters and hyphens",
+    };
+  }
+
+  // Enforce beta type allowlist
+  if (!getAllowedTypes().has(request.type)) {
+    return {
+      ok: false,
+      status: 403,
+      code: "type_not_allowed",
+      message: "Only 'small' server type available during beta",
+    };
+  }
+
+  // Enforce per-wallet server cap
+  const activeCount = countActiveServersByOwner(callerWallet);
+  if (activeCount >= getMaxServersPerWallet()) {
+    return {
+      ok: false,
+      status: 403,
+      code: "server_limit_exceeded",
+      message: "Max 3 concurrent servers per wallet",
     };
   }
 

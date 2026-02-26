@@ -6,9 +6,9 @@ import { dripUsdc, dripEth } from "./service.ts";
 
 const app = new Hono();
 
-// Rate limiters
-const usdcLimiter = new RateLimiter(2 * 60 * 60 * 1000); // 2 hours
-const ethLimiter = new RateLimiter(60 * 60 * 1000); // 1 hour
+// Rate limiters (SQLite-backed, persist across restarts)
+const usdcLimiter = new RateLimiter("usdc", 2 * 60 * 60 * 1000); // 2 hours
+const ethLimiter = new RateLimiter("eth", 60 * 60 * 1000); // 1 hour
 
 // Testnet guard — refuse to serve on mainnet
 app.use("*", async (c, next) => {

@@ -10,6 +10,7 @@ export interface AgentStackMiddlewareOptions {
   network?: string;
   facilitatorUrl?: string;
   freeRoutes?: string[];
+  allowlist?: string[];
 }
 
 export type { Network, PaymentPayload, PaymentRequired } from "@x402/core/types";
