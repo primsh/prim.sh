@@ -3,7 +3,7 @@
 // Port 3000
 
 import { parse } from "yaml";
-import { readFileSync, existsSync } from "node:fs";
+import { readFileSync, existsSync, readdirSync } from "node:fs";
 import { resolve, join } from "node:path";
 import { render, type PrimConfig } from "./template.ts";
 
@@ -46,22 +46,16 @@ function discoverPrimIds(): string[] {
   const ids = new Set<string>();
 
   // Packages dir
-  try {
-    const entries = Bun.spawnSync(["ls", join(ROOT, "packages")]);
-    const pkgDirs = new TextDecoder().decode(entries.stdout).trim().split("\n");
-    for (const dir of pkgDirs) {
-      if (existsSync(join(ROOT, `packages/${dir}/prim.yaml`))) ids.add(dir);
-    }
-  } catch {}
+  const pkgDirs = readdirSync(join(ROOT, "packages"));
+  for (const dir of pkgDirs) {
+    if (existsSync(join(ROOT, `packages/${dir}/prim.yaml`))) ids.add(dir);
+  }
 
   // Site dir
-  try {
-    const entries = Bun.spawnSync(["ls", join(ROOT, "site")]);
-    const siteDirs = new TextDecoder().decode(entries.stdout).trim().split("\n");
-    for (const dir of siteDirs) {
-      if (existsSync(join(ROOT, `site/${dir}/prim.yaml`))) ids.add(dir);
-    }
-  } catch {}
+  const siteDirs = readdirSync(join(ROOT, "site"));
+  for (const dir of siteDirs) {
+    if (existsSync(join(ROOT, `site/${dir}/prim.yaml`))) ids.add(dir);
+  }
 
   return [...ids];
 }

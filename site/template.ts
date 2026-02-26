@@ -69,7 +69,7 @@ export interface PrimConfig {
   id: string;
   name: string;
   endpoint: string;
-  status: "testing" | "built" | "building" | "soon";
+  status: "deployed" | "testing" | "built" | "building" | "soon";
   type?: string;
   card_class?: string;
   description?: string;
@@ -108,6 +108,8 @@ function bold(s: string): string {
 /** Status badge label + class */
 function statusInfo(status: string): { cls: string; label: string } {
   switch (status) {
+    case "deployed":
+      return { cls: "status-live", label: "● Live" };
     case "testing":
       return { cls: "status-testing", label: "● Live (testnet)" };
     case "built":
@@ -117,11 +119,6 @@ function statusInfo(status: string): { cls: string; label: string } {
     default:
       return { cls: "status-soon", label: "○ Coming soon" };
   }
-}
-
-/** Render a badge string — "**Base** USDC" → proper HTML */
-function renderBadge(badge: string): string {
-  return `<div class="badge">${bold(esc(badge).replace(/&amp;\*\*/g, "**"))}</div>`;
 }
 
 /** Render a badge string preserving ** → bold */
