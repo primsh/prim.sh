@@ -82,6 +82,7 @@
 | 15 | ST-12 | Build store.sh: bucket event webhooks — HMAC-signed callbacks on object create/delete, retry queue, same pattern as email.sh R-7 | packages/store | ST-2 | pending |
 | 15 | ST-13 | Build store.sh: object metadata + tagging — custom key-value metadata on put, returned on get, tag-based filtering on list | packages/store | ST-2 | pending |
 | 15 | SE-1 | Build search.sh: web search, news search, extract via Tavily (stateless proxy, x402 gated) | packages/search | — | done |
+| 15 | SE-2 | search.sh live smoke test: real Tavily API calls (web search + news + extract), same pattern as SP-8 | packages/search | SE-1 | pending |
 | 15 | P-6 | `prim` binary publishing + install scripts: `bun build --compile`, host binary, `curl prim.sh/install \| sh`, per-primitive install wrappers | packages/keystore, site/ | ST-6 | pending (→ L-11/L-12) |
 | 16 | E-1 | Set PTR record for mail server IP ([STALWART_HOST] → mail.relay.prim.sh) | deploy/email | — | done |
 | 17 | E-2 | Downgrade DMARC to `p=none` temporarily while domain reputation is zero | Cloudflare DNS | — | done |
@@ -142,6 +143,7 @@
 - Umbrella: `tasks/active/batch-execution-umbrella-2026-02-24.md`
 - ST-6: `tasks/active/st-6-prim-store-cli-2026-02-25.md`
 - SE-1: `tasks/completed/se-1-search-sh-plan-2026-02-25.md`
+- SE-2: `tasks/active/se-2-search-live-smoke-test-2026-02-25.md`
 - TK-6: `tasks/active/tk-6-mint-ownership-bug-2026-02-25.md`
 - M-1: `tasks/completed/m-1-mem-sh-vector-cache-2026-02-25.md`
 - M-2: `tasks/active/m-2-mem-live-smoke-test-2026-02-25.md`
