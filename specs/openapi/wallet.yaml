@@ -1,0 +1,1358 @@
+openapi: 3.1.0
+info:
+  title: wallet.prim.sh API
+  version: 1.0.0
+  description: |
+    Non-custodial wallet registration for the prim.sh agent stack.
+
+    Register your Ethereum wallet address via EIP-191 signature. Once registered,
+    use that wallet to pay for any prim primitive via the x402 payment protocol
+    (USDC on Base). No keys are stored server-side.
+
+    ## x402 Payment Flow
+
+    All paid endpoints require an x402 payment signature:
+
+    1. Make the request normally — you will receive a `402 Payment Required` response
+       with a `Payment-Required` header containing price, network, and payTo address.
+    2. Sign an EIP-3009 `transferWithAuthorization` from your wallet.
+    3. Retry the request with a `Payment-Signature` header containing the signed authorization.
+
+    The `Payment-Required` header format:
+    ```
+    Payment-Required: price=<amount> network=base payTo=<address>
+    ```
+
+servers:
+  - url: https://wallet.prim.sh
+
+tags:
+  - name: free
+    description: Endpoints that do not require x402 payment
+  - name: paid
+    description: Endpoints that require x402 payment (USDC on Base)
+
+components:
+  securitySchemes:
+    x402:
+      type: apiKey
+      in: header
+      name: Payment-Signature
+      description: |
+        x402 payment signature. First request returns 402 with a `Payment-Required`
+        header containing price, network, and payTo address. Sign an EIP-3009
+        `transferWithAuthorization` from your registered wallet, then retry with
+        this header set to the signed authorization payload (base64-encoded JSON).
+
+  schemas:
+    Error:
+      type: object
+      required: [error]
+      properties:
+        error:
+          type: object
+          required: [code, message]
+          properties:
+            code:
+              type: string
+              enum:
+                - not_found
+                - forbidden
+                - insufficient_balance
+                - wallet_paused
+                - policy_violation
+                - duplicate_request
+                - invalid_request
+                - not_implemented
+                - payment_required
+                - rate_limited
+                - internal_error
+              description: Machine-readable error code
+            message:
+              type: string
+              description: Human-readable error message
+            details:
+              type: object
+              additionalProperties:
+                oneOf:
+                  - type: string
+                  - type: number
+                  - type: boolean
+                  - type: "null"
+              description: Optional additional error context
+
+    SpendingPolicy:
+      type: object
+      required: [maxPerTx, maxPerDay, dailySpent, dailyResetAt]
+      properties:
+        maxPerTx:
+          type: ["string", "null"]
+          description: Maximum USDC per transaction (e.g. "1.00"), or null for no limit
+          example: "1.00"
+        maxPerDay:
+          type: ["string", "null"]
+          description: Maximum USDC per day (e.g. "10.00"), or null for no limit
+          example: "10.00"
+        dailySpent:
+          type: string
+          description: USDC spent today so far
+          example: "0.005"
+        dailyResetAt:
+          type: string
+          format: date-time
+          description: ISO 8601 timestamp when the daily counter resets
+          example: "2026-02-27T00:00:00.000Z"
+
+    WalletListItem:
+      type: object
+      required: [address, chain, balance, funded, paused, createdAt]
+      properties:
+        address:
+          type: string
+          pattern: "^0x[a-fA-F0-9]{40}$"
+          description: Ethereum wallet address
+          example: "0xAbCd1234567890abcdef1234567890ABCDEF1234"
+        chain:
+          type: string
+          description: Chain identifier (e.g. "base", "base-sepolia")
+          example: "base"
+        balance:
+          type: string
+          description: Current USDC balance as a decimal string
+          example: "5.25"
+        funded:
+          type: boolean
+          description: Whether the wallet has ever been funded
+        paused:
+          type: boolean
+          description: Whether the wallet is currently paused
+        createdAt:
+          type: string
+          format: date-time
+          description: ISO 8601 timestamp when the wallet was registered
+          example: "2026-02-25T12:00:00.000Z"
+
+    WalletDetail:
+      type: object
+      required: [address, chain, balance, funded, paused, createdBy, policy, createdAt]
+      properties:
+        address:
+          type: string
+          pattern: "^0x[a-fA-F0-9]{40}$"
+          description: Ethereum wallet address
+          example: "0xAbCd1234567890abcdef1234567890ABCDEF1234"
+        chain:
+          type: string
+          description: Chain identifier
+          example: "base"
+        balance:
+          type: string
+          description: Current USDC balance as a decimal string
+          example: "5.25"
+        funded:
+          type: boolean
+          description: Whether the wallet has ever been funded
+        paused:
+          type: boolean
+          description: Whether the wallet is currently paused
+        createdBy:
+          type: string
+          description: Address of the wallet that registered this wallet (or self if self-registered)
+          example: "0xAbCd1234567890abcdef1234567890ABCDEF1234"
+        policy:
+          oneOf:
+            - $ref: "#/components/schemas/SpendingPolicy"
+            - type: "null"
+          description: Active spending policy, or null if none set
+        createdAt:
+          type: string
+          format: date-time
+          description: ISO 8601 timestamp when the wallet was registered
+          example: "2026-02-25T12:00:00.000Z"
+
+    FundRequest:
+      type: object
+      required: [id, walletAddress, amount, reason, status, createdAt]
+      properties:
+        id:
+          type: string
+          description: Unique fund request ID
+          example: "fr_abc123"
+        walletAddress:
+          type: string
+          pattern: "^0x[a-fA-F0-9]{40}$"
+          description: Wallet address the request is for
+          example: "0xAbCd1234567890abcdef1234567890ABCDEF1234"
+        amount:
+          type: string
+          description: Requested USDC amount as a decimal string
+          example: "10.00"
+        reason:
+          type: string
+          description: Human-readable reason for the funding request
+          example: "Need funds to run search queries for research task"
+        status:
+          type: string
+          enum: [pending, approved, denied]
+          description: Current status of the fund request
+        createdAt:
+          type: string
+          format: date-time
+          description: ISO 8601 timestamp when the request was created
+          example: "2026-02-25T12:00:00.000Z"
+
+    PolicyResponse:
+      type: object
+      required: [walletAddress, maxPerTx, maxPerDay, allowedPrimitives, dailySpent, dailyResetAt]
+      properties:
+        walletAddress:
+          type: string
+          pattern: "^0x[a-fA-F0-9]{40}$"
+          description: Wallet address the policy applies to
+          example: "0xAbCd1234567890abcdef1234567890ABCDEF1234"
+        maxPerTx:
+          type: ["string", "null"]
+          description: Maximum USDC per transaction, or null for no limit
+          example: "1.00"
+        maxPerDay:
+          type: ["string", "null"]
+          description: Maximum USDC per day, or null for no limit
+          example: "10.00"
+        allowedPrimitives:
+          type: ["array", "null"]
+          items:
+            type: string
+          description: Allowed primitive hostnames (e.g. ["store.prim.sh"]), or null for all primitives
+          example: ["store.prim.sh", "search.prim.sh"]
+        dailySpent:
+          type: string
+          description: USDC spent today so far
+          example: "0.005"
+        dailyResetAt:
+          type: string
+          format: date-time
+          description: ISO 8601 timestamp when the daily counter resets
+          example: "2026-02-27T00:00:00.000Z"
+
+paths:
+  /:
+    get:
+      operationId: healthCheck
+      summary: Health check
+      description: Returns service name and status. No payment required.
+      tags: [free]
+      security: []
+      responses:
+        "200":
+          description: Service is healthy
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [service, status]
+                properties:
+                  service:
+                    type: string
+                    example: "wallet.sh"
+                  status:
+                    type: string
+                    example: "ok"
+              example:
+                service: "wallet.sh"
+                status: "ok"
+
+  /v1/wallets:
+    post:
+      operationId: registerWallet
+      summary: Register a wallet
+      security: []
+      description: |
+        Register an Ethereum wallet address via EIP-191 signature. Free — no payment required.
+
+        The message to sign is:
+        ```
+        Register <address> with prim.sh at <timestamp>
+        ```
+        where `<address>` is your lowercase checksummed address and `<timestamp>` is an ISO 8601 UTC timestamp.
+
+        The timestamp must be within 5 minutes of server time to prevent replay attacks.
+
+        On success, the wallet is registered and can be used to pay for any prim primitive.
+        Returns 409 if the wallet is already registered.
+      tags: [free]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [address, signature, timestamp]
+              properties:
+                address:
+                  type: string
+                  pattern: "^0x[a-fA-F0-9]{40}$"
+                  description: Ethereum wallet address to register
+                  example: "0xAbCd1234567890abcdef1234567890ABCDEF1234"
+                signature:
+                  type: string
+                  description: EIP-191 signature over the registration message
+                  example: "0x1234...abcd"
+                timestamp:
+                  type: string
+                  format: date-time
+                  description: ISO 8601 UTC timestamp used in the signed message (must be within 5 min of now)
+                  example: "2026-02-25T12:00:00.000Z"
+                chain:
+                  type: string
+                  description: Chain identifier. Defaults to "base".
+                  example: "base"
+                label:
+                  type: string
+                  description: Optional human-readable label for this wallet
+                  example: "my-agent-wallet"
+            example:
+              address: "0xAbCd1234567890abcdef1234567890ABCDEF1234"
+              signature: "0x1234abcd..."
+              timestamp: "2026-02-25T12:00:00.000Z"
+              label: "my-agent-wallet"
+      responses:
+        "201":
+          description: Wallet registered successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [address, chain, label, registeredAt, createdAt]
+                properties:
+                  address:
+                    type: string
+                    pattern: "^0x[a-fA-F0-9]{40}$"
+                    example: "0xAbCd1234567890abcdef1234567890ABCDEF1234"
+                  chain:
+                    type: string
+                    example: "base"
+                  label:
+                    type: ["string", "null"]
+                    example: "my-agent-wallet"
+                  registeredAt:
+                    type: string
+                    format: date-time
+                    example: "2026-02-25T12:00:00.000Z"
+                  createdAt:
+                    type: string
+                    format: date-time
+                    example: "2026-02-25T12:00:00.000Z"
+              example:
+                address: "0xAbCd1234567890abcdef1234567890ABCDEF1234"
+                chain: "base"
+                label: "my-agent-wallet"
+                registeredAt: "2026-02-25T12:00:00.000Z"
+                createdAt: "2026-02-25T12:00:00.000Z"
+        "400":
+          description: Missing required fields or invalid signature
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+              example:
+                error:
+                  code: "invalid_request"
+                  message: "Missing required fields: address, signature, timestamp"
+        "403":
+          description: Signature verification failed
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+              example:
+                error:
+                  code: "forbidden"
+                  message: "Signature does not match address"
+        "409":
+          description: Wallet already registered
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+              example:
+                error:
+                  code: "duplicate_request"
+                  message: "Wallet already registered"
+
+    get:
+      operationId: listWallets
+      summary: List registered wallets
+      description: |
+        Returns a paginated list of wallets registered by the caller's address.
+        Only wallets registered by (or as) the paying wallet address are returned.
+
+        Uses cursor-based pagination. Pass the `cursor` from the previous response
+        as the `after` query parameter to get the next page.
+      tags: [paid]
+      security:
+        - x402: []
+      x-price: "$0.001"
+      parameters:
+        - name: limit
+          in: query
+          description: Number of wallets to return (1–100, default 20)
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 20
+          example: 20
+        - name: after
+          in: query
+          description: Cursor from a previous response for pagination
+          schema:
+            type: string
+          example: "eyJhZGRyZXNzIjoiMHgxMjM0In0="
+      responses:
+        "200":
+          description: List of wallets
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [wallets, cursor]
+                properties:
+                  wallets:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/WalletListItem"
+                  cursor:
+                    type: ["string", "null"]
+                    description: Opaque cursor for the next page, or null if this is the last page
+                    example: "eyJhZGRyZXNzIjoiMHhhYmNkIn0="
+              example:
+                wallets:
+                  - address: "0xAbCd1234567890abcdef1234567890ABCDEF1234"
+                    chain: "base"
+                    balance: "5.25"
+                    funded: true
+                    paused: false
+                    createdAt: "2026-02-25T12:00:00.000Z"
+                cursor: null
+        "402":
+          description: Payment required
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+              example:
+                error:
+                  code: "payment_required"
+                  message: "x402 payment required. See Payment-Required header."
+        "403":
+          description: No wallet address in payment
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+              example:
+                error:
+                  code: "forbidden"
+                  message: "No wallet address in payment"
+        "429":
+          description: Rate limited
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+              example:
+                error:
+                  code: "rate_limited"
+                  message: "Too many requests"
+
+  /v1/wallets/{address}:
+    parameters:
+      - name: address
+        in: path
+        required: true
+        description: Ethereum wallet address
+        schema:
+          type: string
+          pattern: "^0x[a-fA-F0-9]{40}$"
+        example: "0xAbCd1234567890abcdef1234567890ABCDEF1234"
+
+    get:
+      operationId: getWallet
+      summary: Get wallet details
+      description: |
+        Returns full details for a single wallet, including balance, policy, and status.
+        The calling wallet (identified by the x402 payment) must own or have created
+        the requested wallet address.
+      tags: [paid]
+      security:
+        - x402: []
+      x-price: "$0.001"
+      responses:
+        "200":
+          description: Wallet details
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/WalletDetail"
+              example:
+                address: "0xAbCd1234567890abcdef1234567890ABCDEF1234"
+                chain: "base"
+                balance: "5.25"
+                funded: true
+                paused: false
+                createdBy: "0xAbCd1234567890abcdef1234567890ABCDEF1234"
+                policy:
+                  maxPerTx: "1.00"
+                  maxPerDay: "10.00"
+                  dailySpent: "0.005"
+                  dailyResetAt: "2026-02-27T00:00:00.000Z"
+                createdAt: "2026-02-25T12:00:00.000Z"
+        "402":
+          description: Payment required
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "403":
+          description: Caller does not own this wallet
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+              example:
+                error:
+                  code: "forbidden"
+                  message: "No wallet address in payment"
+        "404":
+          description: Wallet not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+              example:
+                error:
+                  code: "not_found"
+                  message: "Wallet not found"
+
+    delete:
+      operationId: deactivateWallet
+      summary: Deactivate a wallet
+      description: |
+        Permanently deactivates the wallet. The calling wallet must own the address being deactivated.
+        Deactivated wallets cannot be reactivated. All pending fund requests are automatically cancelled.
+      tags: [paid]
+      security:
+        - x402: []
+      x-price: "$0.01"
+      responses:
+        "200":
+          description: Wallet deactivated
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [address, deactivated, deactivatedAt]
+                properties:
+                  address:
+                    type: string
+                    pattern: "^0x[a-fA-F0-9]{40}$"
+                    example: "0xAbCd1234567890abcdef1234567890ABCDEF1234"
+                  deactivated:
+                    type: boolean
+                    example: true
+                  deactivatedAt:
+                    type: string
+                    format: date-time
+                    example: "2026-02-25T12:05:00.000Z"
+              example:
+                address: "0xAbCd1234567890abcdef1234567890ABCDEF1234"
+                deactivated: true
+                deactivatedAt: "2026-02-25T12:05:00.000Z"
+        "402":
+          description: Payment required
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "403":
+          description: Caller does not own this wallet
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+              example:
+                error:
+                  code: "forbidden"
+                  message: "No wallet address in payment"
+        "404":
+          description: Wallet not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+              example:
+                error:
+                  code: "not_found"
+                  message: "Wallet not found"
+
+  /v1/wallets/{address}/fund-request:
+    parameters:
+      - name: address
+        in: path
+        required: true
+        description: Ethereum wallet address to create a fund request for
+        schema:
+          type: string
+          pattern: "^0x[a-fA-F0-9]{40}$"
+        example: "0xAbCd1234567890abcdef1234567890ABCDEF1234"
+
+    post:
+      operationId: createFundRequest
+      summary: Create a fund request
+      description: |
+        Request USDC funding for a wallet. Useful when an agent needs funds to operate
+        but cannot self-fund. A human operator can approve or deny the request.
+
+        The calling wallet must own the address being funded.
+      tags: [paid]
+      security:
+        - x402: []
+      x-price: "$0.001"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [amount, reason]
+              properties:
+                amount:
+                  type: string
+                  description: Requested USDC amount as a decimal string (e.g. "10.00")
+                  example: "10.00"
+                reason:
+                  type: string
+                  description: Human-readable reason for the funding request
+                  example: "Need funds to run search queries for research task"
+            example:
+              amount: "10.00"
+              reason: "Need funds to run search queries for research task"
+      responses:
+        "200":
+          description: Fund request created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/FundRequest"
+              example:
+                id: "fr_abc123"
+                walletAddress: "0xAbCd1234567890abcdef1234567890ABCDEF1234"
+                amount: "10.00"
+                reason: "Need funds to run search queries for research task"
+                status: "pending"
+                createdAt: "2026-02-25T12:00:00.000Z"
+        "400":
+          description: Missing required fields
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+              example:
+                error:
+                  code: "invalid_request"
+                  message: "Missing required fields: amount, reason"
+        "402":
+          description: Payment required
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "403":
+          description: Caller does not own this wallet
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+              example:
+                error:
+                  code: "forbidden"
+                  message: "No wallet address in payment"
+        "404":
+          description: Wallet not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+              example:
+                error:
+                  code: "not_found"
+                  message: "Wallet not found"
+        "500":
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+              example:
+                error:
+                  code: "internal_error"
+                  message: "Failed to create fund request"
+
+  /v1/wallets/{address}/fund-requests:
+    parameters:
+      - name: address
+        in: path
+        required: true
+        description: Ethereum wallet address
+        schema:
+          type: string
+          pattern: "^0x[a-fA-F0-9]{40}$"
+        example: "0xAbCd1234567890abcdef1234567890ABCDEF1234"
+
+    get:
+      operationId: listFundRequests
+      summary: List fund requests for a wallet
+      description: |
+        Returns a paginated list of all fund requests for the given wallet address.
+        The calling wallet must own the address.
+      tags: [paid]
+      security:
+        - x402: []
+      x-price: "$0.001"
+      parameters:
+        - name: limit
+          in: query
+          description: Number of requests to return (1–100, default 20)
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 20
+          example: 20
+        - name: after
+          in: query
+          description: Cursor from a previous response for pagination
+          schema:
+            type: string
+          example: "eyJpZCI6ImZyX2FiYzEyMyJ9"
+      responses:
+        "200":
+          description: List of fund requests
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [requests, cursor]
+                properties:
+                  requests:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/FundRequest"
+                  cursor:
+                    type: ["string", "null"]
+                    description: Opaque cursor for the next page, or null if this is the last page
+              example:
+                requests:
+                  - id: "fr_abc123"
+                    walletAddress: "0xAbCd1234567890abcdef1234567890ABCDEF1234"
+                    amount: "10.00"
+                    reason: "Need funds to run search queries for research task"
+                    status: "pending"
+                    createdAt: "2026-02-25T12:00:00.000Z"
+                cursor: null
+        "402":
+          description: Payment required
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "403":
+          description: Caller does not own this wallet
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+              example:
+                error:
+                  code: "forbidden"
+                  message: "No wallet address in payment"
+        "404":
+          description: Wallet not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+              example:
+                error:
+                  code: "not_found"
+                  message: "Wallet not found"
+
+  /v1/fund-requests/{id}/approve:
+    parameters:
+      - name: id
+        in: path
+        required: true
+        description: Fund request ID
+        schema:
+          type: string
+        example: "fr_abc123"
+
+    post:
+      operationId: approveFundRequest
+      summary: Approve a fund request
+      description: |
+        Approve a pending fund request. The calling wallet must be the operator/owner
+        that has authority to approve funding for the target wallet.
+
+        On approval, the funding address is returned — the requester should send
+        USDC to this address to fulfill the request.
+
+        Returns 409 if the request has already been approved or denied.
+      tags: [paid]
+      security:
+        - x402: []
+      x-price: "$0.01"
+      responses:
+        "200":
+          description: Fund request approved
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [id, status, fundingAddress, amount, chain, approvedAt]
+                properties:
+                  id:
+                    type: string
+                    example: "fr_abc123"
+                  status:
+                    type: string
+                    enum: [approved]
+                    example: "approved"
+                  fundingAddress:
+                    type: string
+                    pattern: "^0x[a-fA-F0-9]{40}$"
+                    description: Address to send USDC to in order to fulfill the request
+                    example: "0xAbCd1234567890abcdef1234567890ABCDEF1234"
+                  amount:
+                    type: string
+                    description: Approved USDC amount
+                    example: "10.00"
+                  chain:
+                    type: string
+                    example: "base"
+                  approvedAt:
+                    type: string
+                    format: date-time
+                    example: "2026-02-25T12:10:00.000Z"
+              example:
+                id: "fr_abc123"
+                status: "approved"
+                fundingAddress: "0xAbCd1234567890abcdef1234567890ABCDEF1234"
+                amount: "10.00"
+                chain: "base"
+                approvedAt: "2026-02-25T12:10:00.000Z"
+        "402":
+          description: Payment required
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "403":
+          description: Caller not authorized to approve this request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+              example:
+                error:
+                  code: "forbidden"
+                  message: "No wallet address in payment"
+        "404":
+          description: Fund request not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+              example:
+                error:
+                  code: "not_found"
+                  message: "Fund request not found"
+        "409":
+          description: Fund request already resolved
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+              example:
+                error:
+                  code: "duplicate_request"
+                  message: "Fund request has already been approved or denied"
+
+  /v1/fund-requests/{id}/deny:
+    parameters:
+      - name: id
+        in: path
+        required: true
+        description: Fund request ID
+        schema:
+          type: string
+        example: "fr_abc123"
+
+    post:
+      operationId: denyFundRequest
+      summary: Deny a fund request
+      description: |
+        Deny a pending fund request. The calling wallet must be the operator/owner
+        that has authority over the target wallet.
+
+        An optional reason can be provided. Returns 409 if the request has already
+        been approved or denied.
+      tags: [paid]
+      security:
+        - x402: []
+      x-price: "$0.001"
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                reason:
+                  type: string
+                  description: Optional reason for denying the request
+                  example: "Insufficient justification provided"
+            example:
+              reason: "Insufficient justification provided"
+      responses:
+        "200":
+          description: Fund request denied
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [id, status, reason, deniedAt]
+                properties:
+                  id:
+                    type: string
+                    example: "fr_abc123"
+                  status:
+                    type: string
+                    enum: [denied]
+                    example: "denied"
+                  reason:
+                    type: ["string", "null"]
+                    description: Denial reason if provided, otherwise null
+                    example: "Insufficient justification provided"
+                  deniedAt:
+                    type: string
+                    format: date-time
+                    example: "2026-02-25T12:10:00.000Z"
+              example:
+                id: "fr_abc123"
+                status: "denied"
+                reason: "Insufficient justification provided"
+                deniedAt: "2026-02-25T12:10:00.000Z"
+        "402":
+          description: Payment required
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "403":
+          description: Caller not authorized to deny this request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+              example:
+                error:
+                  code: "forbidden"
+                  message: "No wallet address in payment"
+        "404":
+          description: Fund request not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+              example:
+                error:
+                  code: "not_found"
+                  message: "Fund request not found"
+        "409":
+          description: Fund request already resolved
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+              example:
+                error:
+                  code: "duplicate_request"
+                  message: "Fund request has already been approved or denied"
+
+  /v1/wallets/{address}/policy:
+    parameters:
+      - name: address
+        in: path
+        required: true
+        description: Ethereum wallet address
+        schema:
+          type: string
+          pattern: "^0x[a-fA-F0-9]{40}$"
+        example: "0xAbCd1234567890abcdef1234567890ABCDEF1234"
+
+    get:
+      operationId: getPolicy
+      summary: Get spending policy
+      description: |
+        Returns the current spending policy for the wallet. The calling wallet must own
+        the address. Policy fields `maxPerTx`, `maxPerDay`, and `allowedPrimitives` are
+        null when no limit has been set.
+      tags: [paid]
+      security:
+        - x402: []
+      x-price: "$0.001"
+      responses:
+        "200":
+          description: Spending policy
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PolicyResponse"
+              example:
+                walletAddress: "0xAbCd1234567890abcdef1234567890ABCDEF1234"
+                maxPerTx: "1.00"
+                maxPerDay: "10.00"
+                allowedPrimitives: ["store.prim.sh", "search.prim.sh"]
+                dailySpent: "0.005"
+                dailyResetAt: "2026-02-27T00:00:00.000Z"
+        "402":
+          description: Payment required
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "403":
+          description: Caller does not own this wallet
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+              example:
+                error:
+                  code: "forbidden"
+                  message: "No wallet address in payment"
+        "404":
+          description: Wallet not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+              example:
+                error:
+                  code: "not_found"
+                  message: "Wallet not found"
+
+    put:
+      operationId: updatePolicy
+      summary: Update spending policy
+      description: |
+        Update the spending policy for the wallet. All fields are optional — only
+        provided fields are updated. Set a field to `null` explicitly to remove a limit.
+
+        The calling wallet must own the address.
+
+        `allowedPrimitives` is an array of primitive hostnames (e.g. `["store.prim.sh"]`).
+        Set to `null` to allow all primitives.
+      tags: [paid]
+      security:
+        - x402: []
+      x-price: "$0.005"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                maxPerTx:
+                  type: ["string", "null"]
+                  description: Maximum USDC per transaction. Pass null to remove the limit.
+                  example: "1.00"
+                maxPerDay:
+                  type: ["string", "null"]
+                  description: Maximum USDC per day. Pass null to remove the limit.
+                  example: "10.00"
+                allowedPrimitives:
+                  type: ["array", "null"]
+                  items:
+                    type: string
+                  description: Allowed primitive hostnames. Pass null to allow all.
+                  example: ["store.prim.sh", "search.prim.sh"]
+            example:
+              maxPerTx: "1.00"
+              maxPerDay: "10.00"
+              allowedPrimitives: ["store.prim.sh", "search.prim.sh"]
+      responses:
+        "200":
+          description: Updated spending policy
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PolicyResponse"
+              example:
+                walletAddress: "0xAbCd1234567890abcdef1234567890ABCDEF1234"
+                maxPerTx: "1.00"
+                maxPerDay: "10.00"
+                allowedPrimitives: ["store.prim.sh", "search.prim.sh"]
+                dailySpent: "0.005"
+                dailyResetAt: "2026-02-27T00:00:00.000Z"
+        "400":
+          description: Invalid policy values
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+              example:
+                error:
+                  code: "invalid_request"
+                  message: "Invalid JSON body"
+        "402":
+          description: Payment required
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "403":
+          description: Caller does not own this wallet
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+              example:
+                error:
+                  code: "forbidden"
+                  message: "No wallet address in payment"
+        "404":
+          description: Wallet not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+              example:
+                error:
+                  code: "not_found"
+                  message: "Wallet not found"
+
+  /v1/wallets/{address}/pause:
+    parameters:
+      - name: address
+        in: path
+        required: true
+        description: Ethereum wallet address
+        schema:
+          type: string
+          pattern: "^0x[a-fA-F0-9]{40}$"
+        example: "0xAbCd1234567890abcdef1234567890ABCDEF1234"
+
+    post:
+      operationId: pauseWallet
+      summary: Pause a wallet
+      description: |
+        Pause all or a subset of operations for a wallet. Use this to temporarily
+        halt spending without deactivating the wallet.
+
+        The calling wallet must own the address.
+
+        `scope` controls which operations are paused:
+        - `all` (default): pause everything
+        - `send`: pause outgoing transfers only
+        - `swap`: pause swap operations only
+      tags: [paid]
+      security:
+        - x402: []
+      x-price: "$0.001"
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                scope:
+                  type: string
+                  enum: [all, send, swap]
+                  default: all
+                  description: Which operations to pause
+                  example: "all"
+            example:
+              scope: "all"
+      responses:
+        "200":
+          description: Wallet paused
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [walletAddress, paused, scope, pausedAt]
+                properties:
+                  walletAddress:
+                    type: string
+                    pattern: "^0x[a-fA-F0-9]{40}$"
+                    example: "0xAbCd1234567890abcdef1234567890ABCDEF1234"
+                  paused:
+                    type: boolean
+                    example: true
+                  scope:
+                    type: string
+                    enum: [all, send, swap]
+                    example: "all"
+                  pausedAt:
+                    type: string
+                    format: date-time
+                    example: "2026-02-25T12:15:00.000Z"
+              example:
+                walletAddress: "0xAbCd1234567890abcdef1234567890ABCDEF1234"
+                paused: true
+                scope: "all"
+                pausedAt: "2026-02-25T12:15:00.000Z"
+        "400":
+          description: Invalid scope value
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+              example:
+                error:
+                  code: "invalid_request"
+                  message: "scope must be one of: all, send, swap"
+        "402":
+          description: Payment required
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "403":
+          description: Caller does not own this wallet
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+              example:
+                error:
+                  code: "forbidden"
+                  message: "No wallet address in payment"
+        "404":
+          description: Wallet not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+              example:
+                error:
+                  code: "not_found"
+                  message: "Wallet not found"
+
+  /v1/wallets/{address}/resume:
+    parameters:
+      - name: address
+        in: path
+        required: true
+        description: Ethereum wallet address
+        schema:
+          type: string
+          pattern: "^0x[a-fA-F0-9]{40}$"
+        example: "0xAbCd1234567890abcdef1234567890ABCDEF1234"
+
+    post:
+      operationId: resumeWallet
+      summary: Resume a paused wallet
+      description: |
+        Resume operations for a paused wallet. The scope must match the scope that was
+        used when pausing (or use `all` to resume everything).
+
+        The calling wallet must own the address.
+      tags: [paid]
+      security:
+        - x402: []
+      x-price: "$0.001"
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                scope:
+                  type: string
+                  enum: [all, send, swap]
+                  default: all
+                  description: Which operations to resume
+                  example: "all"
+            example:
+              scope: "all"
+      responses:
+        "200":
+          description: Wallet resumed
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [walletAddress, paused, scope, resumedAt]
+                properties:
+                  walletAddress:
+                    type: string
+                    pattern: "^0x[a-fA-F0-9]{40}$"
+                    example: "0xAbCd1234567890abcdef1234567890ABCDEF1234"
+                  paused:
+                    type: boolean
+                    example: false
+                  scope:
+                    type: string
+                    enum: [all, send, swap]
+                    example: "all"
+                  resumedAt:
+                    type: string
+                    format: date-time
+                    example: "2026-02-25T12:20:00.000Z"
+              example:
+                walletAddress: "0xAbCd1234567890abcdef1234567890ABCDEF1234"
+                paused: false
+                scope: "all"
+                resumedAt: "2026-02-25T12:20:00.000Z"
+        "400":
+          description: Invalid scope value
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+              example:
+                error:
+                  code: "invalid_request"
+                  message: "scope must be one of: all, send, swap"
+        "402":
+          description: Payment required
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "403":
+          description: Caller does not own this wallet
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+              example:
+                error:
+                  code: "forbidden"
+                  message: "No wallet address in payment"
+        "404":
+          description: Wallet not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+              example:
+                error:
+                  code: "not_found"
+                  message: "Wallet not found"

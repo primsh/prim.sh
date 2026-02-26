@@ -1,0 +1,369 @@
+openapi: 3.1.0
+
+info:
+  title: faucet.prim.sh API
+  version: 1.0.0
+  description: |
+    Testnet faucet for Base Sepolia. Dispenses free USDC and ETH to wallet addresses
+    for testing prim primitives. No auth required — rate-limited by wallet address.
+
+    - USDC: dispensed via Circle Faucet API, with treasury wallet fallback. 10 USDC per drip.
+    - ETH: dispensed from a treasury wallet. 0.01 ETH per drip.
+    - Testnet only. All endpoints except GET / return 403 on mainnet.
+
+servers:
+  - url: https://faucet.prim.sh
+
+paths:
+  /:
+    get:
+      operationId: healthCheck
+      summary: Health check
+      description: |
+        Returns service status and network info. This endpoint is exempt from the testnet
+        guard and responds on any network.
+      responses:
+        "200":
+          description: Service is healthy
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HealthResponse"
+              example:
+                service: faucet.sh
+                status: ok
+                network: eip155:84532
+                testnet: true
+
+  /v1/faucet/usdc:
+    post:
+      operationId: dripUsdc
+      summary: Dispense test USDC
+      description: |
+        Dispenses 10 test USDC on Base Sepolia to the given wallet address.
+
+        First attempts the Circle Faucet API. If Circle is unavailable or rate-limited,
+        falls back to a treasury wallet ERC-20 transfer.
+
+        Rate limit: once per 2 hours per address.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/DripRequest"
+            example:
+              address: "0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266"
+      responses:
+        "200":
+          description: USDC dispensed successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DripResult"
+              examples:
+                circle:
+                  summary: Dispensed via Circle
+                  value:
+                    txHash: "0xCircleTxHash123"
+                    amount: "10.00"
+                    currency: USDC
+                    chain: eip155:84532
+                    source: circle
+                treasury:
+                  summary: Dispensed via treasury fallback
+                  value:
+                    txHash: "0xTreasuryTxHash456"
+                    amount: "10.00"
+                    currency: USDC
+                    chain: eip155:84532
+                    source: treasury
+        "400":
+          $ref: "#/components/responses/InvalidRequest"
+        "403":
+          $ref: "#/components/responses/MainnetRejected"
+        "429":
+          $ref: "#/components/responses/RateLimited"
+        "502":
+          $ref: "#/components/responses/FaucetError"
+
+  /v1/faucet/eth:
+    post:
+      operationId: dripEth
+      summary: Dispense test ETH
+      description: |
+        Dispenses 0.01 test ETH on Base Sepolia to the given wallet address.
+        Funds come from a pre-funded treasury wallet.
+
+        Rate limit: once per 1 hour per address.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/DripRequest"
+            example:
+              address: "0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266"
+      responses:
+        "200":
+          description: ETH dispensed successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DripResult"
+              example:
+                txHash: "0xEthTxHash456"
+                amount: "0.01"
+                currency: ETH
+                chain: eip155:84532
+        "400":
+          $ref: "#/components/responses/InvalidRequest"
+        "403":
+          $ref: "#/components/responses/MainnetRejected"
+        "429":
+          $ref: "#/components/responses/RateLimited"
+        "502":
+          $ref: "#/components/responses/FaucetError"
+
+  /v1/faucet/status:
+    get:
+      operationId: getFaucetStatus
+      summary: Check rate limit status
+      description: |
+        Returns the current rate limit status for a wallet address across both
+        faucet types (USDC and ETH). Use this before dripping to avoid 429s.
+      parameters:
+        - name: address
+          in: query
+          required: true
+          description: EVM wallet address (checksummed or lowercase)
+          schema:
+            $ref: "#/components/schemas/EvmAddress"
+          example: "0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266"
+      responses:
+        "200":
+          description: Rate limit status for the address
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/StatusResponse"
+              examples:
+                available:
+                  summary: Both faucets available
+                  value:
+                    address: "0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266"
+                    usdc:
+                      available: true
+                      retryAfterMs: 0
+                    eth:
+                      available: true
+                      retryAfterMs: 0
+                rate_limited:
+                  summary: Both faucets on cooldown
+                  value:
+                    address: "0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266"
+                    usdc:
+                      available: false
+                      retryAfterMs: 4823000
+                    eth:
+                      available: false
+                      retryAfterMs: 1200000
+        "400":
+          $ref: "#/components/responses/InvalidRequest"
+
+components:
+  schemas:
+    EvmAddress:
+      type: string
+      description: EVM-compatible wallet address (42-char hex, checksummed or lowercase)
+      pattern: "^0x[0-9a-fA-F]{40}$"
+      example: "0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266"
+
+    DripRequest:
+      type: object
+      required:
+        - address
+      properties:
+        address:
+          $ref: "#/components/schemas/EvmAddress"
+
+    DripResult:
+      type: object
+      required:
+        - txHash
+        - amount
+        - currency
+        - chain
+      properties:
+        txHash:
+          type: string
+          description: |
+            Transaction hash on Base Sepolia. May be "pending" if Circle API returns 204
+            (fire-and-forget) with no tx hash in the response body.
+          example: "0xCircleTxHash123"
+        amount:
+          type: string
+          description: Human-readable amount dispensed (e.g. "10.00" for USDC, "0.01" for ETH)
+          example: "10.00"
+        currency:
+          type: string
+          enum:
+            - USDC
+            - ETH
+          description: Token dispensed
+        chain:
+          type: string
+          description: CAIP-2 chain identifier for the network
+          example: eip155:84532
+        source:
+          type: string
+          enum:
+            - circle
+            - treasury
+          description: |
+            Which backend dispensed the USDC. Present only on USDC drip responses.
+            "circle" = Circle Faucet API succeeded. "treasury" = fallback ERC-20 transfer.
+
+    StatusResponse:
+      type: object
+      required:
+        - address
+        - usdc
+        - eth
+      properties:
+        address:
+          $ref: "#/components/schemas/EvmAddress"
+        usdc:
+          $ref: "#/components/schemas/FaucetAvailability"
+        eth:
+          $ref: "#/components/schemas/FaucetAvailability"
+
+    FaucetAvailability:
+      type: object
+      required:
+        - available
+        - retryAfterMs
+      properties:
+        available:
+          type: boolean
+          description: Whether this faucet can be called right now for this address
+        retryAfterMs:
+          type: integer
+          description: |
+            Milliseconds until the rate limit window resets. 0 when available is true.
+          minimum: 0
+          example: 4823000
+
+    HealthResponse:
+      type: object
+      required:
+        - service
+        - status
+        - network
+        - testnet
+      properties:
+        service:
+          type: string
+          description: Service name
+          example: faucet.sh
+        status:
+          type: string
+          enum:
+            - ok
+          description: Always "ok" when the service is running
+        network:
+          type: string
+          description: CAIP-2 chain identifier for the configured network
+          example: eip155:84532
+        testnet:
+          type: boolean
+          description: Whether the service is configured for a testnet network
+
+    ErrorEnvelope:
+      type: object
+      required:
+        - error
+      properties:
+        error:
+          type: object
+          required:
+            - code
+            - message
+          properties:
+            code:
+              type: string
+              description: Machine-readable error code
+            message:
+              type: string
+              description: Human-readable error description
+            retryAfter:
+              type: integer
+              description: |
+                Seconds until the rate limit resets. Present only on 429 responses.
+              minimum: 1
+
+  responses:
+    InvalidRequest:
+      description: Missing or invalid request parameters
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorEnvelope"
+          examples:
+            invalid_address:
+              summary: Non-EVM address provided
+              value:
+                error:
+                  code: invalid_request
+                  message: Valid address required
+            invalid_json:
+              summary: Malformed JSON body
+              value:
+                error:
+                  code: invalid_request
+                  message: Invalid JSON body
+            missing_address_param:
+              summary: address query param missing
+              value:
+                error:
+                  code: invalid_request
+                  message: address query param required
+
+    MainnetRejected:
+      description: Faucet does not operate on mainnet
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorEnvelope"
+          example:
+            error:
+              code: mainnet_rejected
+              message: faucet.sh only operates on testnet
+
+    RateLimited:
+      description: Address has already received a drip within the rate limit window
+      headers:
+        Retry-After:
+          description: Seconds until the rate limit resets
+          schema:
+            type: integer
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorEnvelope"
+          example:
+            error:
+              code: rate_limited
+              message: Next drip in 90 minutes
+              retryAfter: 5400
+
+    FaucetError:
+      description: Both Circle API and treasury wallet failed to dispense funds
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorEnvelope"
+          example:
+            error:
+              code: faucet_error
+              message: "Circle failed (Circle faucet error (500): Internal Server Error); treasury also failed: RPC timeout"

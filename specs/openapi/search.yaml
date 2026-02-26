@@ -1,0 +1,494 @@
+openapi: 3.1.0
+
+info:
+  title: search.prim.sh API
+  version: 1.0.0
+  description: |
+    Web search for agents. Search the web, get news, and extract content from URLs.
+    Payment is via x402 (USDC on Base). GET / is free. All POST routes require x402 payment.
+
+servers:
+  - url: https://search.prim.sh
+
+security:
+  - x402: []
+
+components:
+  securitySchemes:
+    x402:
+      type: apiKey
+      in: header
+      name: Payment-Signature
+      description: |
+        EIP-3009 payment. Server returns 402 with payment requirements.
+        Client signs a USDC transfer and retries the request with the
+        Payment-Signature header containing the signed payment authorization.
+
+  schemas:
+    Error:
+      type: object
+      required: [error]
+      properties:
+        error:
+          type: object
+          required: [code, message]
+          properties:
+            code:
+              type: string
+              description: Machine-readable error code.
+              example: invalid_request
+            message:
+              type: string
+              description: Human-readable error description.
+              example: "query is required"
+
+    SearchRequest:
+      type: object
+      required: [query]
+      properties:
+        query:
+          type: string
+          description: Search query string.
+          example: "Base L2 gas prices"
+        max_results:
+          type: integer
+          description: Maximum number of results to return. Range 1–20.
+          minimum: 1
+          maximum: 20
+          default: 10
+          example: 5
+        search_depth:
+          type: string
+          enum: [basic, advanced]
+          description: Search depth. "advanced" uses more sources and costs more upstream compute.
+          default: basic
+          example: basic
+        country:
+          type: string
+          description: Two-letter ISO 3166-1 alpha-2 country code to bias results.
+          example: "US"
+        time_range:
+          type: string
+          enum: [day, week, month, year]
+          description: Restrict results to the given time range.
+          example: week
+        include_answer:
+          type: boolean
+          description: If true, the response includes an AI-generated answer summarizing the results.
+          default: false
+          example: true
+        include_domains:
+          type: array
+          items:
+            type: string
+          description: Restrict results to these domains only.
+          example: ["docs.base.org", "coinbase.com"]
+        exclude_domains:
+          type: array
+          items:
+            type: string
+          description: Exclude results from these domains.
+          example: ["reddit.com"]
+
+    SearchResult:
+      type: object
+      required: [title, url, content, score]
+      properties:
+        title:
+          type: string
+          description: Page title.
+          example: "Base L2 Gas Tracker"
+        url:
+          type: string
+          format: uri
+          description: Page URL.
+          example: "https://docs.base.org/gas"
+        content:
+          type: string
+          description: Snippet text extracted from the page.
+          example: "Current Base L2 gas prices are approximately 0.001 gwei..."
+        score:
+          type: number
+          format: float
+          description: Relevance score between 0 and 1.
+          minimum: 0
+          maximum: 1
+          example: 0.92
+        published:
+          type: string
+          description: Publication date of the page, if available (ISO 8601).
+          example: "2024-11-15T00:00:00Z"
+
+    SearchResponse:
+      type: object
+      required: [query, results, response_time]
+      properties:
+        query:
+          type: string
+          description: The search query echoed back.
+          example: "Base L2 gas prices"
+        answer:
+          type: string
+          description: AI-generated answer summarizing results. Only present if include_answer was true.
+          example: "Base L2 gas prices are currently very low, typically under 0.01 gwei."
+        results:
+          type: array
+          items:
+            $ref: "#/components/schemas/SearchResult"
+          description: List of search results.
+        response_time:
+          type: number
+          description: Time taken for the search in milliseconds.
+          example: 340
+
+    ExtractRequest:
+      type: object
+      required: [urls]
+      properties:
+        urls:
+          oneOf:
+            - type: string
+              format: uri
+              description: A single URL to extract content from.
+              example: "https://example.com/article"
+            - type: array
+              items:
+                type: string
+                format: uri
+              description: Multiple URLs to extract content from in one request.
+              example: ["https://example.com/article", "https://example.com/other"]
+          description: URL or array of URLs to extract content from.
+        format:
+          type: string
+          enum: [markdown, text]
+          description: Output format for extracted content.
+          default: markdown
+          example: markdown
+
+    ExtractResult:
+      type: object
+      required: [url, content]
+      properties:
+        url:
+          type: string
+          format: uri
+          description: The URL that was extracted.
+          example: "https://example.com/article"
+        content:
+          type: string
+          description: Extracted content in the requested format.
+          example: "# Article Title\n\nContent goes here..."
+        images:
+          type: array
+          items:
+            type: string
+            format: uri
+          description: Image URLs found on the page, if any.
+          example: ["https://example.com/image.png"]
+
+    FailedExtraction:
+      type: object
+      required: [url, error]
+      properties:
+        url:
+          type: string
+          format: uri
+          description: The URL that failed to extract.
+          example: "https://example.com/404"
+        error:
+          type: string
+          description: Human-readable error describing why the extraction failed.
+          example: "HTTP 404: page not found"
+
+    ExtractResponse:
+      type: object
+      required: [results, failed, response_time]
+      properties:
+        results:
+          type: array
+          items:
+            $ref: "#/components/schemas/ExtractResult"
+          description: Successfully extracted pages.
+        failed:
+          type: array
+          items:
+            $ref: "#/components/schemas/FailedExtraction"
+          description: Pages that could not be extracted.
+        response_time:
+          type: number
+          description: Time taken for the extraction in milliseconds.
+          example: 820
+
+paths:
+  /:
+    get:
+      operationId: healthCheck
+      summary: Health check
+      description: Returns service status. Free — no x402 payment required.
+      security: []
+      responses:
+        "200":
+          description: Service is up.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [service, status]
+                properties:
+                  service:
+                    type: string
+                    example: "search.sh"
+                  status:
+                    type: string
+                    example: "ok"
+              example:
+                service: "search.sh"
+                status: "ok"
+
+  /v1/search:
+    post:
+      operationId: searchWeb
+      summary: Web search
+      description: |
+        Search the web and return ranked results. Optionally include an AI-generated
+        answer summarizing the top results.
+      x-price: "$0.01"
+      security:
+        - x402: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SearchRequest"
+            example:
+              query: "Base L2 gas prices"
+              max_results: 5
+              include_answer: true
+      responses:
+        "200":
+          description: Search results.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SearchResponse"
+              example:
+                query: "Base L2 gas prices"
+                answer: "Base L2 gas prices are currently very low, typically under 0.01 gwei."
+                results:
+                  - title: "Base Gas Tracker"
+                    url: "https://docs.base.org/gas"
+                    content: "Current Base L2 gas prices..."
+                    score: 0.95
+                    published: "2024-11-15T00:00:00Z"
+                response_time: 340
+        "400":
+          description: Missing or invalid request fields.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+              example:
+                error:
+                  code: invalid_request
+                  message: "query is required"
+        "402":
+          description: x402 payment required. Sign a USDC payment and retry with Payment-Signature header.
+          content:
+            application/json:
+              schema:
+                type: object
+                description: x402 payment requirements.
+        "429":
+          description: Rate limited. Wait retryAfter seconds before retrying.
+          headers:
+            Retry-After:
+              schema:
+                type: integer
+              description: Seconds to wait before retrying.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+              example:
+                error:
+                  code: rate_limited
+                  message: "too many requests"
+        "502":
+          description: Upstream search provider error.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+              example:
+                error:
+                  code: provider_error
+                  message: "upstream provider unavailable"
+
+  /v1/search/news:
+    post:
+      operationId: searchNews
+      summary: News search
+      description: |
+        Search for recent news articles. Results are biased toward news sources and
+        ordered by recency. Use time_range to restrict to recent coverage.
+      x-price: "$0.01"
+      security:
+        - x402: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SearchRequest"
+            example:
+              query: "Base blockchain news"
+              max_results: 5
+              time_range: week
+      responses:
+        "200":
+          description: News search results.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SearchResponse"
+              example:
+                query: "Base blockchain news"
+                results:
+                  - title: "Coinbase Announces Base L2 Updates"
+                    url: "https://coinbase.com/blog/base-updates"
+                    content: "Coinbase announced new features for Base L2..."
+                    score: 0.88
+                    published: "2024-11-20T09:00:00Z"
+                response_time: 280
+        "400":
+          description: Missing or invalid request fields.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+              example:
+                error:
+                  code: invalid_request
+                  message: "query is required"
+        "402":
+          description: x402 payment required.
+          content:
+            application/json:
+              schema:
+                type: object
+                description: x402 payment requirements.
+        "429":
+          description: Rate limited.
+          headers:
+            Retry-After:
+              schema:
+                type: integer
+              description: Seconds to wait before retrying.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+              example:
+                error:
+                  code: rate_limited
+                  message: "too many requests"
+        "502":
+          description: Upstream search provider error.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+              example:
+                error:
+                  code: provider_error
+                  message: "upstream provider unavailable"
+
+  /v1/extract:
+    post:
+      operationId: extractUrls
+      summary: Extract URL content
+      description: |
+        Extract readable content from one or more URLs. Returns cleaned text or
+        markdown. Failed extractions (e.g. 404, paywalled pages) are reported
+        separately in the failed array — the request itself succeeds as long as
+        at least one URL was attempted.
+      x-price: "$0.005"
+      security:
+        - x402: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ExtractRequest"
+            examples:
+              single_url:
+                summary: Single URL
+                value:
+                  urls: "https://example.com/article"
+                  format: markdown
+              multiple_urls:
+                summary: Multiple URLs
+                value:
+                  urls:
+                    - "https://example.com/article"
+                    - "https://example.com/other"
+                  format: text
+      responses:
+        "200":
+          description: Extraction results. Check the failed array for URLs that could not be extracted.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ExtractResponse"
+              example:
+                results:
+                  - url: "https://example.com/article"
+                    content: "# Article Title\n\nContent goes here..."
+                    images:
+                      - "https://example.com/image.png"
+                failed: []
+                response_time: 820
+        "400":
+          description: Missing or invalid request fields.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+              example:
+                error:
+                  code: invalid_request
+                  message: "urls is required"
+        "402":
+          description: x402 payment required.
+          content:
+            application/json:
+              schema:
+                type: object
+                description: x402 payment requirements.
+        "429":
+          description: Rate limited.
+          headers:
+            Retry-After:
+              schema:
+                type: integer
+              description: Seconds to wait before retrying.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+              example:
+                error:
+                  code: rate_limited
+                  message: "too many requests"
+        "502":
+          description: Upstream extraction provider error.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+              example:
+                error:
+                  code: provider_error
+                  message: "upstream provider unavailable"

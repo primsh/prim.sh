@@ -1,0 +1,1069 @@
+openapi: 3.1.0
+
+info:
+  title: spawn.prim.sh API
+  version: 1.0.0
+  description: |
+    VPS for agents. Provision, manage, and destroy virtual machines via API.
+
+    ## Payment (x402)
+
+    All endpoints except `GET /` require x402 payment (USDC on Base).
+    Flow:
+    1. Make request — server responds `402 Payment Required` with a `Payment-Required` header.
+    2. Sign EIP-3009 `transferWithAuthorization` for the stated amount.
+    3. Retry with `Payment-Signature` header containing the signed payment.
+
+    ## Limits (beta)
+
+    - 3 concurrent servers per wallet
+    - `small` type only (1 vCPU, 1 GB RAM)
+
+servers:
+  - url: https://spawn.prim.sh
+
+security:
+  - x402: []
+
+components:
+  securitySchemes:
+    x402:
+      type: apiKey
+      in: header
+      name: Payment-Signature
+      description: |
+        EIP-3009 signed payment authorization. First request returns 402 with
+        Payment-Required header containing price, network, and payTo address.
+        Sign a `transferWithAuthorization`, retry with this header.
+
+  schemas:
+    Error:
+      type: object
+      required: [error]
+      properties:
+        error:
+          type: object
+          required: [code, message]
+          properties:
+            code:
+              type: string
+              enum:
+                - not_found
+                - forbidden
+                - invalid_request
+                - insufficient_deposit
+                - provider_error
+                - rate_limited
+                - not_implemented
+                - server_limit_exceeded
+                - type_not_allowed
+              description: Machine-readable error code.
+            message:
+              type: string
+              description: Human-readable error description.
+
+    ServerStatus:
+      type: string
+      enum:
+        - initializing
+        - running
+        - off
+        - rebuilding
+        - migrating
+        - destroying
+        - deleted
+      description: Current lifecycle state of the server.
+
+    PublicNet:
+      type: object
+      properties:
+        ipv4:
+          oneOf:
+            - type: object
+              required: [ip]
+              properties:
+                ip:
+                  type: [string, "null"]
+                  description: IPv4 address, or null if not yet assigned.
+            - type: "null"
+        ipv6:
+          oneOf:
+            - type: object
+              required: [ip]
+              properties:
+                ip:
+                  type: [string, "null"]
+                  description: IPv6 address, or null if not yet assigned.
+            - type: "null"
+
+    ActionResponse:
+      type: object
+      required: [id, command, status, started_at, finished_at]
+      properties:
+        id:
+          type: string
+          description: Action ID (provider-assigned).
+        command:
+          type: string
+          description: The command that triggered this action (e.g. "start", "stop").
+        status:
+          type: string
+          description: Action status (e.g. "running", "success", "error").
+        started_at:
+          type: string
+          format: date-time
+          description: ISO 8601 timestamp when the action started.
+        finished_at:
+          type: [string, "null"]
+          format: date-time
+          description: ISO 8601 timestamp when the action finished, or null if still running.
+
+    ServerResponse:
+      type: object
+      required:
+        - id
+        - provider
+        - provider_id
+        - name
+        - type
+        - status
+        - image
+        - location
+        - public_net
+        - owner_wallet
+        - created_at
+      properties:
+        id:
+          type: string
+          description: Prim server ID.
+        provider:
+          type: string
+          description: Underlying cloud provider (e.g. "hetzner").
+        provider_id:
+          type: string
+          description: Provider-assigned server ID.
+        name:
+          type: string
+          description: Server name.
+        type:
+          type: string
+          description: Server type (e.g. "small").
+        status:
+          $ref: "#/components/schemas/ServerStatus"
+        image:
+          type: string
+          description: OS image slug (e.g. "ubuntu-24.04").
+        location:
+          type: string
+          description: Data center location slug (e.g. "nyc3").
+        public_net:
+          $ref: "#/components/schemas/PublicNet"
+        owner_wallet:
+          type: string
+          description: Ethereum address of the wallet that owns this server.
+        created_at:
+          type: string
+          format: date-time
+          description: ISO 8601 creation timestamp.
+
+    SshKeyResponse:
+      type: object
+      required:
+        - id
+        - provider
+        - provider_id
+        - name
+        - fingerprint
+        - owner_wallet
+        - created_at
+      properties:
+        id:
+          type: string
+          description: Prim SSH key ID.
+        provider:
+          type: string
+          description: Underlying cloud provider.
+        provider_id:
+          type: string
+          description: Provider-assigned SSH key ID.
+        name:
+          type: string
+          description: Key name.
+        fingerprint:
+          type: string
+          description: SSH key fingerprint.
+        owner_wallet:
+          type: string
+          description: Ethereum address of the wallet that owns this key.
+        created_at:
+          type: string
+          format: date-time
+          description: ISO 8601 creation timestamp.
+
+paths:
+  /:
+    get:
+      operationId: healthCheck
+      summary: Health check
+      description: Returns service status. Free — no payment required.
+      security: []
+      responses:
+        "200":
+          description: Service is healthy.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [service, status]
+                properties:
+                  service:
+                    type: string
+                    example: spawn.sh
+                  status:
+                    type: string
+                    example: ok
+              example:
+                service: spawn.sh
+                status: ok
+
+  /v1/servers:
+    post:
+      operationId: createServer
+      summary: Create a server
+      description: |
+        Provisions a new VPS. Returns the server record and an action object
+        tracking provisioning progress. Poll `GET /v1/servers/{id}` until
+        `status` is `"running"` to get the assigned IP address.
+
+        Limit: 3 concurrent servers per wallet. Only `small` type is available
+        in beta.
+      x-price: "$0.01"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [name, type, image, location]
+              properties:
+                name:
+                  type: string
+                  description: Server name (provider-level label).
+                  example: my-server
+                type:
+                  type: string
+                  description: Server type slug. Only `small` is available in beta.
+                  example: small
+                image:
+                  type: string
+                  description: OS image slug.
+                  example: ubuntu-24.04
+                location:
+                  type: string
+                  description: Data center location slug.
+                  example: nyc3
+                provider:
+                  type: string
+                  description: Cloud provider. Defaults to Hetzner.
+                  example: hetzner
+                ssh_keys:
+                  type: array
+                  items:
+                    type: string
+                  description: Array of SSH key IDs (from `POST /v1/ssh-keys`) to install.
+                  example: ["key_abc123"]
+                user_data:
+                  type: string
+                  description: Cloud-init user data script to run on first boot.
+                  example: "#!/bin/bash\napt-get update"
+            example:
+              name: my-server
+              type: small
+              image: ubuntu-24.04
+              location: nyc3
+              ssh_keys: ["key_abc123"]
+      responses:
+        "201":
+          description: Server created. Poll status until `running`.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [server, action, deposit_charged, deposit_remaining]
+                properties:
+                  server:
+                    $ref: "#/components/schemas/ServerResponse"
+                  action:
+                    $ref: "#/components/schemas/ActionResponse"
+                  deposit_charged:
+                    type: string
+                    description: USDC amount charged for this server (decimal string).
+                  deposit_remaining:
+                    type: string
+                    description: Remaining USDC deposit balance (decimal string).
+              example:
+                server:
+                  id: srv_abc123
+                  provider: hetzner
+                  provider_id: "12345678"
+                  name: my-server
+                  type: small
+                  status: initializing
+                  image: ubuntu-24.04
+                  location: nyc3
+                  public_net:
+                    ipv4: {ip: null}
+                    ipv6: {ip: null}
+                  owner_wallet: "0xAbCd1234..."
+                  created_at: "2026-02-26T12:00:00Z"
+                action:
+                  id: act_xyz789
+                  command: create
+                  status: running
+                  started_at: "2026-02-26T12:00:00Z"
+                  finished_at: null
+                deposit_charged: "5.00"
+                deposit_remaining: "45.00"
+        "400":
+          description: Invalid request body.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+              example:
+                error:
+                  code: invalid_request
+                  message: "name is required"
+        "402":
+          description: Payment required. Sign and retry with Payment-Signature header.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "403":
+          description: Forbidden — wallet limit reached or missing payment.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+              example:
+                error:
+                  code: server_limit_exceeded
+                  message: "Wallet has reached the 3 concurrent server limit"
+        "502":
+          description: Provider error.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+              example:
+                error:
+                  code: provider_error
+                  message: "Hetzner API returned an error"
+
+    get:
+      operationId: listServers
+      summary: List servers
+      description: Returns all servers owned by the authenticated wallet, paginated.
+      x-price: "$0.001"
+      parameters:
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 20
+          description: Number of servers to return. Max 100.
+        - name: page
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+            default: 1
+          description: Page number (1-indexed).
+      responses:
+        "200":
+          description: Paginated list of servers.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [servers, meta]
+                properties:
+                  servers:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/ServerResponse"
+                  meta:
+                    type: object
+                    required: [page, per_page, total]
+                    properties:
+                      page:
+                        type: integer
+                        description: Current page number.
+                      per_page:
+                        type: integer
+                        description: Servers per page.
+                      total:
+                        type: integer
+                        description: Total number of servers.
+              example:
+                servers:
+                  - id: srv_abc123
+                    provider: hetzner
+                    provider_id: "12345678"
+                    name: my-server
+                    type: small
+                    status: running
+                    image: ubuntu-24.04
+                    location: nyc3
+                    public_net:
+                      ipv4: {ip: "1.2.3.4"}
+                      ipv6: {ip: "2001:db8::1"}
+                    owner_wallet: "0xAbCd1234..."
+                    created_at: "2026-02-26T12:00:00Z"
+                meta:
+                  page: 1
+                  per_page: 20
+                  total: 1
+        "402":
+          description: Payment required.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "403":
+          description: Forbidden.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
+  /v1/servers/{id}:
+    get:
+      operationId: getServer
+      summary: Get server
+      description: |
+        Returns full details for a single server. Poll this endpoint after
+        `createServer` until `status` is `"running"` and `public_net.ipv4.ip`
+        is non-null.
+      x-price: "$0.001"
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+          description: Prim server ID.
+          example: srv_abc123
+      responses:
+        "200":
+          description: Server details.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ServerResponse"
+              example:
+                id: srv_abc123
+                provider: hetzner
+                provider_id: "12345678"
+                name: my-server
+                type: small
+                status: running
+                image: ubuntu-24.04
+                location: nyc3
+                public_net:
+                  ipv4: {ip: "1.2.3.4"}
+                  ipv6: {ip: "2001:db8::1"}
+                owner_wallet: "0xAbCd1234..."
+                created_at: "2026-02-26T12:00:00Z"
+        "402":
+          description: Payment required.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "403":
+          description: Forbidden — server belongs to a different wallet.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "404":
+          description: Server not found.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+              example:
+                error:
+                  code: not_found
+                  message: "Server not found"
+
+    delete:
+      operationId: deleteServer
+      summary: Delete server
+      description: |
+        Destroys the server and releases its resources. Unused deposit is
+        refunded. The server transitions to `destroying` then `deleted` status.
+      x-price: "$0.005"
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+          description: Prim server ID.
+          example: srv_abc123
+      responses:
+        "200":
+          description: Server deletion initiated.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [status, deposit_refunded]
+                properties:
+                  status:
+                    type: string
+                    enum: [deleted]
+                    description: Always `"deleted"`.
+                  deposit_refunded:
+                    type: string
+                    description: USDC amount refunded to the wallet (decimal string).
+              example:
+                status: deleted
+                deposit_refunded: "3.50"
+        "402":
+          description: Payment required.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "403":
+          description: Forbidden — server belongs to a different wallet.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "404":
+          description: Server not found.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "502":
+          description: Provider error.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
+  /v1/servers/{id}/start:
+    post:
+      operationId: startServer
+      summary: Start server
+      description: Starts a stopped server. Returns an action tracking the operation.
+      x-price: "$0.002"
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+          description: Prim server ID.
+          example: srv_abc123
+      responses:
+        "200":
+          description: Start action initiated.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [action]
+                properties:
+                  action:
+                    $ref: "#/components/schemas/ActionResponse"
+              example:
+                action:
+                  id: act_start001
+                  command: start
+                  status: running
+                  started_at: "2026-02-26T13:00:00Z"
+                  finished_at: null
+        "402":
+          description: Payment required.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "403":
+          description: Forbidden.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "404":
+          description: Server not found.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "502":
+          description: Provider error.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
+  /v1/servers/{id}/stop:
+    post:
+      operationId: stopServer
+      summary: Stop server
+      description: Stops a running server (graceful shutdown). Returns an action tracking the operation.
+      x-price: "$0.002"
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+          description: Prim server ID.
+          example: srv_abc123
+      responses:
+        "200":
+          description: Stop action initiated.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [action]
+                properties:
+                  action:
+                    $ref: "#/components/schemas/ActionResponse"
+              example:
+                action:
+                  id: act_stop001
+                  command: stop
+                  status: running
+                  started_at: "2026-02-26T13:05:00Z"
+                  finished_at: null
+        "402":
+          description: Payment required.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "403":
+          description: Forbidden.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "404":
+          description: Server not found.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "502":
+          description: Provider error.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
+  /v1/servers/{id}/reboot:
+    post:
+      operationId: rebootServer
+      summary: Reboot server
+      description: Reboots a running server. Returns an action tracking the operation.
+      x-price: "$0.002"
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+          description: Prim server ID.
+          example: srv_abc123
+      responses:
+        "200":
+          description: Reboot action initiated.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [action]
+                properties:
+                  action:
+                    $ref: "#/components/schemas/ActionResponse"
+              example:
+                action:
+                  id: act_reboot001
+                  command: reboot
+                  status: running
+                  started_at: "2026-02-26T13:10:00Z"
+                  finished_at: null
+        "402":
+          description: Payment required.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "403":
+          description: Forbidden.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "404":
+          description: Server not found.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "502":
+          description: Provider error.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
+  /v1/servers/{id}/resize:
+    post:
+      operationId: resizeServer
+      summary: Resize server
+      description: |
+        Changes the server type (CPU/RAM). The server must be stopped first.
+        Returns the action and the new type. Deposit delta is charged or
+        refunded depending on whether the new type is larger or smaller.
+      x-price: "$0.01"
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+          description: Prim server ID.
+          example: srv_abc123
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [type]
+              properties:
+                type:
+                  type: string
+                  description: Target server type slug.
+                  example: medium
+                upgrade_disk:
+                  type: boolean
+                  description: Whether to upgrade the disk alongside the CPU/RAM. Irreversible if true.
+                  default: false
+            example:
+              type: medium
+              upgrade_disk: false
+      responses:
+        "200":
+          description: Resize action initiated.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [action, new_type, deposit_delta]
+                properties:
+                  action:
+                    $ref: "#/components/schemas/ActionResponse"
+                  new_type:
+                    type: string
+                    description: The target server type.
+                  deposit_delta:
+                    type: string
+                    description: USDC deposit change (positive = charged, negative = refunded).
+              example:
+                action:
+                  id: act_resize001
+                  command: resize
+                  status: running
+                  started_at: "2026-02-26T14:00:00Z"
+                  finished_at: null
+                new_type: medium
+                deposit_delta: "10.00"
+        "400":
+          description: Invalid request.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "402":
+          description: Payment required.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "403":
+          description: Forbidden.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "404":
+          description: Server not found.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "502":
+          description: Provider error.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
+  /v1/servers/{id}/rebuild:
+    post:
+      operationId: rebuildServer
+      summary: Rebuild server
+      description: |
+        Reinstalls the server from a fresh OS image. All data on the server is
+        destroyed. Returns an action and optionally a new root password if no
+        SSH keys are configured.
+      x-price: "$0.005"
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+          description: Prim server ID.
+          example: srv_abc123
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [image]
+              properties:
+                image:
+                  type: string
+                  description: OS image slug to rebuild with.
+                  example: debian-12
+            example:
+              image: debian-12
+      responses:
+        "200":
+          description: Rebuild action initiated.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [action, root_password]
+                properties:
+                  action:
+                    $ref: "#/components/schemas/ActionResponse"
+                  root_password:
+                    type: [string, "null"]
+                    description: New root password if no SSH keys are configured, otherwise null.
+              example:
+                action:
+                  id: act_rebuild001
+                  command: rebuild
+                  status: running
+                  started_at: "2026-02-26T14:30:00Z"
+                  finished_at: null
+                root_password: null
+        "400":
+          description: Invalid request.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "402":
+          description: Payment required.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "403":
+          description: Forbidden.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "404":
+          description: Server not found.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "502":
+          description: Provider error.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
+  /v1/ssh-keys:
+    post:
+      operationId: createSshKey
+      summary: Register SSH key
+      description: |
+        Registers a public SSH key with the provider. The returned `id` can be
+        passed in `ssh_keys` when creating a server to grant SSH access.
+      x-price: "$0.001"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [name, public_key]
+              properties:
+                name:
+                  type: string
+                  description: Human-readable label for this key.
+                  example: my-laptop
+                public_key:
+                  type: string
+                  description: The public key string (e.g. `ssh-ed25519 AAAA...`).
+                  example: "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAA..."
+            example:
+              name: my-laptop
+              public_key: "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAA..."
+      responses:
+        "201":
+          description: SSH key registered.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SshKeyResponse"
+              example:
+                id: key_abc123
+                provider: hetzner
+                provider_id: "99887766"
+                name: my-laptop
+                fingerprint: "SHA256:abc123..."
+                owner_wallet: "0xAbCd1234..."
+                created_at: "2026-02-26T10:00:00Z"
+        "400":
+          description: Invalid request.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+              example:
+                error:
+                  code: invalid_request
+                  message: "public_key is required"
+        "402":
+          description: Payment required.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "502":
+          description: Provider error.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
+    get:
+      operationId: listSshKeys
+      summary: List SSH keys
+      description: Returns all SSH keys registered by the authenticated wallet.
+      x-price: "$0.001"
+      responses:
+        "200":
+          description: List of SSH keys.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [ssh_keys]
+                properties:
+                  ssh_keys:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/SshKeyResponse"
+              example:
+                ssh_keys:
+                  - id: key_abc123
+                    provider: hetzner
+                    provider_id: "99887766"
+                    name: my-laptop
+                    fingerprint: "SHA256:abc123..."
+                    owner_wallet: "0xAbCd1234..."
+                    created_at: "2026-02-26T10:00:00Z"
+        "402":
+          description: Payment required.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "403":
+          description: Forbidden.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
+  /v1/ssh-keys/{id}:
+    delete:
+      operationId: deleteSshKey
+      summary: Delete SSH key
+      description: |
+        Removes an SSH key from the provider. Keys in use by active servers
+        will remain on those servers until they are rebuilt or the key is
+        manually removed.
+      x-price: "$0.001"
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+          description: Prim SSH key ID.
+          example: key_abc123
+      responses:
+        "200":
+          description: SSH key deleted.
+          content:
+            application/json:
+              schema:
+                type: object
+                description: Empty object on success.
+              example: {}
+        "402":
+          description: Payment required.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "403":
+          description: Forbidden — key belongs to a different wallet.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "404":
+          description: SSH key not found.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+              example:
+                error:
+                  code: not_found
+                  message: "SSH key not found"
+        "502":
+          description: Provider error.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"

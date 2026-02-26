@@ -1,0 +1,987 @@
+openapi: 3.1.0
+
+info:
+  title: store.prim.sh API
+  version: 1.0.0
+  description: |
+    Object storage for agents. S3-compatible buckets and objects with x402 payment (USDC on Base).
+
+    ## Authentication
+
+    All endpoints except `GET /` require x402 payment. The flow:
+    1. Make the request — server responds with `402 Payment Required` and a payment challenge.
+    2. Sign the EIP-3009 payment authorization with your wallet.
+    3. Retry the request with the `Payment-Signature` header set to the signed authorization.
+
+    The wallet address extracted from the payment signature becomes the caller identity (owner of buckets).
+
+    ## Limits (beta)
+
+    - 10 buckets per wallet
+    - 100 MB default per-bucket quota
+    - 1 GB total storage per wallet
+
+servers:
+  - url: https://store.prim.sh
+
+components:
+  securitySchemes:
+    x402:
+      type: apiKey
+      in: header
+      name: Payment-Signature
+      description: |
+        EIP-3009 signed payment authorization. Server issues a 402 challenge; client signs and retries.
+        See https://prim.sh/pay for the full x402 payment flow.
+
+  schemas:
+    Error:
+      type: object
+      required: [error]
+      properties:
+        error:
+          type: object
+          required: [code, message]
+          properties:
+            code:
+              type: string
+              enum:
+                - not_found
+                - forbidden
+                - invalid_request
+                - r2_error
+                - rate_limited
+                - bucket_name_taken
+                - quota_exceeded
+                - bucket_limit_exceeded
+                - storage_limit_exceeded
+              description: Machine-readable error code.
+            message:
+              type: string
+              description: Human-readable error message.
+
+    BucketResponse:
+      type: object
+      required: [id, name, location, owner_wallet, quota_bytes, usage_bytes, created_at]
+      properties:
+        id:
+          type: string
+          description: Unique bucket identifier (UUID).
+          example: "b1a2c3d4-e5f6-7890-abcd-ef1234567890"
+        name:
+          type: string
+          description: Bucket name (unique per wallet).
+          example: "agent-data"
+        location:
+          type: [string, "null"]
+          description: Storage region. null = default region.
+          example: null
+        owner_wallet:
+          type: string
+          pattern: "^0x[a-fA-F0-9]{40}$"
+          description: Ethereum address of the wallet that created this bucket.
+          example: "0xAbCd1234567890abcdef1234567890abCDEF1234"
+        quota_bytes:
+          type: ["integer", "null"]
+          description: Per-bucket storage quota in bytes. null = default quota (100 MB).
+          example: 104857600
+        usage_bytes:
+          type: integer
+          description: Current storage usage in bytes.
+          example: 2048
+        created_at:
+          type: string
+          format: date-time
+          description: ISO 8601 timestamp of bucket creation.
+          example: "2026-02-26T12:00:00.000Z"
+
+    ObjectResponse:
+      type: object
+      required: [key, size, etag, last_modified]
+      properties:
+        key:
+          type: string
+          description: Object key (path within the bucket).
+          example: "notes/2026/feb.txt"
+        size:
+          type: integer
+          description: Object size in bytes.
+          example: 1024
+        etag:
+          type: string
+          description: ETag (MD5 hash of object content).
+          example: '"d41d8cd98f00b204e9800998ecf8427e"'
+        last_modified:
+          type: string
+          format: date-time
+          description: ISO 8601 timestamp of last modification.
+          example: "2026-02-26T12:00:00.000Z"
+
+    QuotaResponse:
+      type: object
+      required: [bucket_id, quota_bytes, usage_bytes, usage_pct]
+      properties:
+        bucket_id:
+          type: string
+          description: Bucket identifier.
+          example: "b1a2c3d4-e5f6-7890-abcd-ef1234567890"
+        quota_bytes:
+          type: ["integer", "null"]
+          description: Storage quota in bytes. null = default quota (100 MB).
+          example: 104857600
+        usage_bytes:
+          type: integer
+          description: Current usage in bytes.
+          example: 2048
+        usage_pct:
+          type: ["number", "null"]
+          description: Usage as a percentage of quota (0–100). null if quota_bytes is null.
+          example: 0.002
+
+paths:
+  /:
+    get:
+      operationId: healthCheck
+      summary: Health check
+      description: Returns service status. Free — no x402 payment required.
+      responses:
+        "200":
+          description: Service is running.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [service, status]
+                properties:
+                  service:
+                    type: string
+                    example: "store.sh"
+                  status:
+                    type: string
+                    example: "ok"
+              example:
+                service: "store.sh"
+                status: "ok"
+
+  /v1/buckets:
+    post:
+      operationId: createBucket
+      summary: Create a bucket
+      description: |
+        Creates a new storage bucket owned by the paying wallet address.
+
+        Limits: 10 buckets per wallet. Bucket names must be unique per wallet.
+      security:
+        - x402: []
+      x-price: "$0.05"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [name]
+              properties:
+                name:
+                  type: string
+                  description: Bucket name. Must be unique per wallet. Alphanumeric, hyphens, underscores.
+                  example: "agent-data"
+                location:
+                  type: string
+                  description: Storage region (optional). Defaults to primary region.
+                  example: "us-east-1"
+            example:
+              name: "agent-data"
+      responses:
+        "201":
+          description: Bucket created.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [bucket]
+                properties:
+                  bucket:
+                    $ref: "#/components/schemas/BucketResponse"
+              example:
+                bucket:
+                  id: "b1a2c3d4-e5f6-7890-abcd-ef1234567890"
+                  name: "agent-data"
+                  location: null
+                  owner_wallet: "0xAbCd1234567890abcdef1234567890abCDEF1234"
+                  quota_bytes: 104857600
+                  usage_bytes: 0
+                  created_at: "2026-02-26T12:00:00.000Z"
+        "400":
+          description: Invalid request or bucket name already taken.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+              examples:
+                invalid_name:
+                  value:
+                    error:
+                      code: "invalid_request"
+                      message: "Bucket name contains invalid characters"
+                name_taken:
+                  value:
+                    error:
+                      code: "invalid_request"
+                      message: "Bucket name already exists"
+        "402":
+          description: x402 payment required.
+        "403":
+          description: Bucket limit reached (10 per wallet) or missing wallet.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+              example:
+                error:
+                  code: "bucket_limit_exceeded"
+                  message: "Wallet has reached the maximum of 10 buckets"
+        "502":
+          description: Upstream R2 storage error.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+              example:
+                error:
+                  code: "r2_error"
+                  message: "Failed to create bucket in R2"
+
+    get:
+      operationId: listBuckets
+      summary: List buckets
+      description: |
+        Returns all buckets owned by the paying wallet address.
+
+        Pagination is page-based. Default page size is 20, maximum is 100.
+      security:
+        - x402: []
+      x-price: "$0.001"
+      parameters:
+        - name: limit
+          in: query
+          description: Number of buckets per page (1–100, default 20).
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 20
+          example: 20
+        - name: page
+          in: query
+          description: Page number (1-based, default 1).
+          schema:
+            type: integer
+            minimum: 1
+            default: 1
+          example: 1
+      responses:
+        "200":
+          description: List of buckets.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [buckets, meta]
+                properties:
+                  buckets:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/BucketResponse"
+                  meta:
+                    type: object
+                    required: [page, per_page, total]
+                    properties:
+                      page:
+                        type: integer
+                        description: Current page number.
+                        example: 1
+                      per_page:
+                        type: integer
+                        description: Number of items per page.
+                        example: 20
+                      total:
+                        type: integer
+                        description: Total number of buckets.
+                        example: 3
+              example:
+                buckets:
+                  - id: "b1a2c3d4-e5f6-7890-abcd-ef1234567890"
+                    name: "agent-data"
+                    location: null
+                    owner_wallet: "0xAbCd1234567890abcdef1234567890abCDEF1234"
+                    quota_bytes: 104857600
+                    usage_bytes: 2048
+                    created_at: "2026-02-26T12:00:00.000Z"
+                meta:
+                  page: 1
+                  per_page: 20
+                  total: 1
+        "402":
+          description: x402 payment required.
+        "403":
+          description: Missing wallet address in payment.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
+  /v1/buckets/{id}:
+    get:
+      operationId: getBucket
+      summary: Get bucket details
+      description: Returns details for a single bucket. Caller must own the bucket.
+      security:
+        - x402: []
+      x-price: "$0.001"
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Bucket ID.
+          schema:
+            type: string
+          example: "b1a2c3d4-e5f6-7890-abcd-ef1234567890"
+      responses:
+        "200":
+          description: Bucket details.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/BucketResponse"
+              example:
+                id: "b1a2c3d4-e5f6-7890-abcd-ef1234567890"
+                name: "agent-data"
+                location: null
+                owner_wallet: "0xAbCd1234567890abcdef1234567890abCDEF1234"
+                quota_bytes: 104857600
+                usage_bytes: 2048
+                created_at: "2026-02-26T12:00:00.000Z"
+        "402":
+          description: x402 payment required.
+        "403":
+          description: Bucket belongs to a different wallet.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+              example:
+                error:
+                  code: "forbidden"
+                  message: "Bucket belongs to a different wallet"
+        "404":
+          description: Bucket not found.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+              example:
+                error:
+                  code: "not_found"
+                  message: "Bucket not found"
+
+    delete:
+      operationId: deleteBucket
+      summary: Delete a bucket
+      description: |
+        Deletes a bucket. The bucket must be empty before deletion.
+        Caller must own the bucket.
+      security:
+        - x402: []
+      x-price: "$0.01"
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Bucket ID.
+          schema:
+            type: string
+          example: "b1a2c3d4-e5f6-7890-abcd-ef1234567890"
+      responses:
+        "200":
+          description: Bucket deleted.
+          content:
+            application/json:
+              schema:
+                type: object
+              example: {}
+        "402":
+          description: x402 payment required.
+        "403":
+          description: Bucket belongs to a different wallet.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "404":
+          description: Bucket not found.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "502":
+          description: Upstream R2 storage error.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
+  /v1/buckets/{id}/objects:
+    get:
+      operationId: listObjects
+      summary: List objects in a bucket
+      description: |
+        Lists objects in a bucket with optional prefix filtering.
+
+        Pagination is cursor-based. Check `is_truncated` — if true, pass `next_cursor` as
+        the `cursor` query param in the next request to get the next page.
+        Default limit is 100, maximum is 1000.
+      security:
+        - x402: []
+      x-price: "$0.001"
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Bucket ID.
+          schema:
+            type: string
+          example: "b1a2c3d4-e5f6-7890-abcd-ef1234567890"
+        - name: prefix
+          in: query
+          description: Filter objects by key prefix (e.g. "notes/" to list only keys starting with "notes/").
+          schema:
+            type: string
+          example: "notes/"
+        - name: limit
+          in: query
+          description: Maximum number of objects to return (1–1000, default 100).
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 1000
+            default: 100
+          example: 100
+        - name: cursor
+          in: query
+          description: Pagination cursor from the previous response's `next_cursor`.
+          schema:
+            type: string
+          example: "eyJrZXkiOiJub3Rlcy8yMDI2L2Zlbi50eHQifQ=="
+      responses:
+        "200":
+          description: List of objects.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [objects, is_truncated, next_cursor, meta]
+                properties:
+                  objects:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/ObjectResponse"
+                  is_truncated:
+                    type: boolean
+                    description: true if there are more objects beyond this page.
+                    example: false
+                  next_cursor:
+                    type: ["string", "null"]
+                    description: Cursor to pass in the next request. null if is_truncated is false.
+                    example: null
+                  meta:
+                    type: object
+                    required: [prefix, limit]
+                    properties:
+                      prefix:
+                        type: ["string", "null"]
+                        description: The prefix filter applied, or null if none.
+                        example: "notes/"
+                      limit:
+                        type: integer
+                        description: The limit applied to this response.
+                        example: 100
+              example:
+                objects:
+                  - key: "notes/2026/feb.txt"
+                    size: 1024
+                    etag: '"d41d8cd98f00b204e9800998ecf8427e"'
+                    last_modified: "2026-02-26T12:00:00.000Z"
+                is_truncated: false
+                next_cursor: null
+                meta:
+                  prefix: "notes/"
+                  limit: 100
+        "402":
+          description: x402 payment required.
+        "403":
+          description: Bucket belongs to a different wallet.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "404":
+          description: Bucket not found.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "502":
+          description: Upstream R2 storage error.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
+  /v1/buckets/{id}/objects/{key}:
+    put:
+      operationId: putObject
+      summary: Upload an object
+      description: |
+        Uploads an object to a bucket. The object key is the path within the bucket
+        (e.g. "notes/2026/feb.txt"). Keys may include slashes for pseudo-directory structure.
+
+        The `Content-Length` header is required. The `Content-Type` header is optional
+        but recommended. Binary data is supported.
+
+        Fails with 413 if the upload would exceed the bucket quota or the wallet's 1 GB total limit.
+      security:
+        - x402: []
+      x-price: "$0.001"
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Bucket ID.
+          schema:
+            type: string
+          example: "b1a2c3d4-e5f6-7890-abcd-ef1234567890"
+        - name: key
+          in: path
+          required: true
+          description: Object key (path). May include slashes (e.g. "notes/2026/feb.txt").
+          schema:
+            type: string
+          example: "notes/2026/feb.txt"
+        - name: Content-Length
+          in: header
+          required: true
+          description: Size of the object body in bytes. Required — requests without it are rejected with 411.
+          schema:
+            type: integer
+          example: 1024
+        - name: Content-Type
+          in: header
+          required: false
+          description: MIME type of the object. Stored and returned on download.
+          schema:
+            type: string
+          example: "text/plain"
+      requestBody:
+        required: true
+        content:
+          application/octet-stream:
+            schema:
+              type: string
+              format: binary
+              description: Raw object bytes.
+      responses:
+        "200":
+          description: Object uploaded.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [key, size, etag]
+                properties:
+                  key:
+                    type: string
+                    description: Object key as stored.
+                    example: "notes/2026/feb.txt"
+                  size:
+                    type: integer
+                    description: Object size in bytes.
+                    example: 1024
+                  etag:
+                    type: string
+                    description: ETag (MD5 hash) of the uploaded object.
+                    example: '"d41d8cd98f00b204e9800998ecf8427e"'
+              example:
+                key: "notes/2026/feb.txt"
+                size: 1024
+                etag: '"d41d8cd98f00b204e9800998ecf8427e"'
+        "400":
+          description: Missing or invalid request body.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "402":
+          description: x402 payment required.
+        "403":
+          description: Bucket belongs to a different wallet.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "404":
+          description: Bucket not found.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "411":
+          description: Content-Length header is required but missing.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+              example:
+                error:
+                  code: "invalid_request"
+                  message: "Content-Length header is required"
+        "413":
+          description: Upload would exceed bucket quota or wallet total storage limit.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+              examples:
+                quota_exceeded:
+                  value:
+                    error:
+                      code: "quota_exceeded"
+                      message: "Upload would exceed bucket quota"
+                storage_limit_exceeded:
+                  value:
+                    error:
+                      code: "storage_limit_exceeded"
+                      message: "Upload would exceed wallet total storage limit"
+        "502":
+          description: Upstream R2 storage error.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
+    get:
+      operationId: getObject
+      summary: Download an object
+      description: |
+        Downloads an object from a bucket. The response body is streamed directly.
+        Response headers include `Content-Type`, `Content-Length`, and `ETag` from the stored object.
+      security:
+        - x402: []
+      x-price: "$0.001"
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Bucket ID.
+          schema:
+            type: string
+          example: "b1a2c3d4-e5f6-7890-abcd-ef1234567890"
+        - name: key
+          in: path
+          required: true
+          description: Object key (path). May include slashes.
+          schema:
+            type: string
+          example: "notes/2026/feb.txt"
+      responses:
+        "200":
+          description: Object content (streaming).
+          headers:
+            Content-Type:
+              description: MIME type of the object as stored.
+              schema:
+                type: string
+              example: "text/plain"
+            Content-Length:
+              description: Size of the object in bytes.
+              schema:
+                type: integer
+              example: 1024
+            ETag:
+              description: ETag (MD5 hash) of the object.
+              schema:
+                type: string
+              example: '"d41d8cd98f00b204e9800998ecf8427e"'
+          content:
+            application/octet-stream:
+              schema:
+                type: string
+                format: binary
+        "402":
+          description: x402 payment required.
+        "403":
+          description: Bucket belongs to a different wallet.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "404":
+          description: Bucket or object not found.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "502":
+          description: Upstream R2 storage error.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
+    delete:
+      operationId: deleteObject
+      summary: Delete an object
+      description: Deletes an object from a bucket. Caller must own the bucket.
+      security:
+        - x402: []
+      x-price: "$0.001"
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Bucket ID.
+          schema:
+            type: string
+          example: "b1a2c3d4-e5f6-7890-abcd-ef1234567890"
+        - name: key
+          in: path
+          required: true
+          description: Object key (path). May include slashes.
+          schema:
+            type: string
+          example: "notes/2026/feb.txt"
+      responses:
+        "200":
+          description: Object deleted.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [status]
+                properties:
+                  status:
+                    type: string
+                    enum: [deleted]
+                    example: "deleted"
+              example:
+                status: "deleted"
+        "402":
+          description: x402 payment required.
+        "403":
+          description: Bucket belongs to a different wallet.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "404":
+          description: Bucket or object not found.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "502":
+          description: Upstream R2 storage error.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
+  /v1/buckets/{id}/quota:
+    get:
+      operationId: getQuota
+      summary: Get bucket quota and usage
+      description: Returns the current quota limit and storage usage for a bucket.
+      security:
+        - x402: []
+      x-price: "$0.001"
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Bucket ID.
+          schema:
+            type: string
+          example: "b1a2c3d4-e5f6-7890-abcd-ef1234567890"
+      responses:
+        "200":
+          description: Quota and usage details.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/QuotaResponse"
+              example:
+                bucket_id: "b1a2c3d4-e5f6-7890-abcd-ef1234567890"
+                quota_bytes: 104857600
+                usage_bytes: 2048
+                usage_pct: 0.002
+        "402":
+          description: x402 payment required.
+        "403":
+          description: Bucket belongs to a different wallet.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "404":
+          description: Bucket not found.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
+    put:
+      operationId: setQuota
+      summary: Set bucket quota
+      description: |
+        Sets the storage quota for a bucket. Pass `null` to reset to the default (100 MB).
+        Caller must own the bucket.
+      security:
+        - x402: []
+      x-price: "$0.01"
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Bucket ID.
+          schema:
+            type: string
+          example: "b1a2c3d4-e5f6-7890-abcd-ef1234567890"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [quota_bytes]
+              properties:
+                quota_bytes:
+                  type: ["integer", "null"]
+                  description: New quota in bytes, or null to reset to default (100 MB).
+                  example: 52428800
+            examples:
+              set_quota:
+                summary: Set to 50 MB
+                value:
+                  quota_bytes: 52428800
+              reset_quota:
+                summary: Reset to default
+                value:
+                  quota_bytes: null
+      responses:
+        "200":
+          description: Quota updated.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/QuotaResponse"
+              example:
+                bucket_id: "b1a2c3d4-e5f6-7890-abcd-ef1234567890"
+                quota_bytes: 52428800
+                usage_bytes: 2048
+                usage_pct: 0.004
+        "400":
+          description: Invalid quota value.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "402":
+          description: x402 payment required.
+        "403":
+          description: Bucket belongs to a different wallet.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "404":
+          description: Bucket not found.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "502":
+          description: Upstream R2 storage error.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
+  /v1/buckets/{id}/quota/reconcile:
+    post:
+      operationId: reconcileQuota
+      summary: Reconcile bucket usage
+      description: |
+        Recomputes the bucket's usage_bytes by scanning actual R2 storage.
+        Use this if usage_bytes appears incorrect (e.g. after a bulk delete or
+        if the displayed usage drifts from reality).
+      security:
+        - x402: []
+      x-price: "$0.05"
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Bucket ID.
+          schema:
+            type: string
+          example: "b1a2c3d4-e5f6-7890-abcd-ef1234567890"
+      responses:
+        "200":
+          description: Reconciliation complete.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [bucket_id, previous_bytes, actual_bytes, delta_bytes]
+                properties:
+                  bucket_id:
+                    type: string
+                    description: Bucket identifier.
+                    example: "b1a2c3d4-e5f6-7890-abcd-ef1234567890"
+                  previous_bytes:
+                    type: integer
+                    description: Usage recorded before reconciliation.
+                    example: 3072
+                  actual_bytes:
+                    type: integer
+                    description: Actual usage recomputed from R2.
+                    example: 2048
+                  delta_bytes:
+                    type: integer
+                    description: Difference (actual_bytes - previous_bytes). Negative means recorded usage was overstated.
+                    example: -1024
+              example:
+                bucket_id: "b1a2c3d4-e5f6-7890-abcd-ef1234567890"
+                previous_bytes: 3072
+                actual_bytes: 2048
+                delta_bytes: -1024
+        "402":
+          description: x402 payment required.
+        "403":
+          description: Bucket belongs to a different wallet.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "404":
+          description: Bucket not found.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "502":
+          description: Upstream R2 storage error.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
