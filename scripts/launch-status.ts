@@ -17,9 +17,9 @@
  */
 
 import { execSync } from "node:child_process";
-import { readFileSync } from "node:fs";
 import { resolve4 } from "node:dns/promises";
 import { loadPrimitives, deployed } from "./lib/primitives.js";
+import { loadTasks, flatTasks, filterByRelease } from "./lib/tasks.js";
 
 // ─── Config ──────────────────────────────────────────────────────────────
 
@@ -162,26 +162,15 @@ async function checkDns() {
 function checkBlockers() {
   header("🚧", `Blockers (${TARGET_RELEASE})`);
 
-  const content = readFileSync("TASKS.md", "utf-8");
+  const data = loadTasks();
+  const releaseTasks = filterByRelease(flatTasks(data), TARGET_RELEASE);
   let blockerCount = 0;
 
-  // Match any task row with the target release in the Release column
-  // Table format: | ID | Task | Owner | Depends | Status | Release |
-  const rowPattern = /^\|\s*([^\|]+?)\s*\|(.+?)\|[^|]*\|[^|]*\|\s*(pending|in-progress|done|backlog)\s*\|\s*([^\|]*?)\s*\|/gm;
-
-  let match: RegExpExecArray | null;
-  while ((match = rowPattern.exec(content)) !== null) {
-    const id = match[1].trim();
-    const task = match[2].trim();
-    const status = match[3].trim();
-    const release = match[4].trim();
-
-    if (release !== TARGET_RELEASE) continue;
-
-    if (status === "done") {
-      pass(`${id}: resolved`);
+  for (const task of releaseTasks) {
+    if (task.status === "done") {
+      pass(`${task.id}: resolved`);
     } else {
-      pending(`${id}: ${task}`.slice(0, 160));
+      pending(`${task.id}: ${task.description}`.slice(0, 160));
       blockerCount++;
     }
   }

@@ -40,7 +40,9 @@ prim/
 │   └── <primitive>/index.html
 ├── specs/                    # Product specs
 ├── tasks/                    # Plan docs (active/ and completed/)
-├── TASKS.md                  # Phased roadmap
+│   ├── tasks.json            # SOT for task data (edit this, not TASKS.md)
+│   └── tasks.schema.json     # JSON Schema draft 2020-12
+├── TASKS.md                  # Human-readable view (generated from tasks.json)
 ├── package.json              # Workspace root
 ├── pnpm-workspace.yaml
 ├── tsconfig.base.json
@@ -132,14 +134,22 @@ Full conventions: `tasks/README.md`. Key rules for this project:
 | I | Internal tooling | SITE | Marketing site |
 | COM | Community | X4 | x402 middleware |
 
+### Task SOT
+
+`tasks/tasks.json` is the machine-editable source of truth. `TASKS.md` is a human-readable view generated from it.
+
+- Edit tasks: modify `tasks/tasks.json`
+- Regenerate TASKS.md: `bun scripts/gen-tasks-md.ts > TASKS.md`
+
 ### Completion workflow
 
-1. Update status to `done` in TASKS.md
+1. Update `status` to `"done"` in `tasks/tasks.json`
 2. Append row to `tasks/completed/log.md`
-3. Remove row from TASKS.md
-4. If plan doc exists: `git mv tasks/active/<plan>.md tasks/completed/`
+3. Remove task entry from `tasks/tasks.json`
+4. Regenerate TASKS.md: `bun scripts/gen-tasks-md.ts > TASKS.md`
+5. If plan doc exists: `git mv tasks/active/<plan>.md tasks/completed/`
 
-### What does NOT belong in TASKS.md
+### What does NOT belong in tasks.json / TASKS.md
 
 - Done tasks (go to `tasks/completed/log.md`)
 - Research notes (go to `tasks/research/`)

@@ -73,14 +73,62 @@ All sections use:
 | COM | Community |
 | X4 | x402 middleware |
 
+## Source of Truth: tasks.json
+
+`tasks/tasks.json` is the machine-editable SOT for all task data. `TASKS.md` is a human-readable view regenerated from it.
+
+- **Schema**: `tasks/tasks.schema.json` (JSON Schema draft 2020-12)
+- **Edit tasks**: modify `tasks/tasks.json` directly
+- **Regenerate TASKS.md**: `bun scripts/gen-tasks-md.ts > TASKS.md`
+- **Convert TASKS.md → tasks.json** (one-shot): `bun scripts/convert-tasks.ts`
+
+### JSON structure
+
+```
+{
+  "sections": [
+    {
+      "id": "HRD", "title": "Hardening", "description": "...",
+      "waves": [
+        {
+          "id": "HRD-W1", "title": "Open-Source Readiness", "parallelism": "PARA",
+          "phases": [
+            {
+              "id": "HRD-W1-PA", "title": "Service Layer", "parallelism": "SRL",
+              "tasks": [
+                {
+                  "id": "HRD-3",
+                  "description": "Expand wallet smoke test...",
+                  "owner": ["Claude"],
+                  "depends": [],
+                  "status": "pending",
+                  "release": "v1.0.0"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
+```
+
+Field notes:
+- `owner`: array. `"Garric + Claude"` → `["Garric", "Claude"]`
+- `depends`: array of task IDs. `--` in markdown → `[]`
+- `release`: semver string or `null`. `--` in markdown → `null`
+- `plan`: optional. Path to plan doc (extracted from markdown description)
+
 ## Completion Workflow
 
-1. Update status to `done` in TASKS.md
+1. Update `status` to `"done"` in `tasks/tasks.json`
 2. Append row to `tasks/completed/log.md`
-3. Remove row from TASKS.md
-4. If plan doc exists: `git mv tasks/active/<plan>.md tasks/completed/`
+3. Remove task from `tasks/tasks.json`
+4. Regenerate TASKS.md: `bun scripts/gen-tasks-md.ts > TASKS.md`
+5. If plan doc exists: `git mv tasks/active/<plan>.md tasks/completed/`
 
-TASKS.md only contains pending/in-progress/backlog work. It does not grow forever.
+`tasks.json` only contains pending/in-progress/backlog work. It does not grow forever.
 
 ## Plan Doc Convention
 

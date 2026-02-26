@@ -1,0 +1,641 @@
+{
+  "sections": [
+    {
+      "id": "HRD",
+      "title": "Hardening",
+      "waves": [
+        {
+          "id": "HRD-W1",
+          "title": "Open-Source Readiness",
+          "parallelism": "PARA",
+          "phases": [
+            {
+              "id": "HRD-W1-PA",
+              "title": "Service Layer + Middleware",
+              "tasks": [
+                {
+                  "id": "HRD-3",
+                  "description": "Expand wallet smoke test to 5-check contract (match `track/test/smoke.test.ts`)",
+                  "owner": [
+                    "Claude"
+                  ],
+                  "depends": [],
+                  "status": "pending",
+                  "release": "v1.0.0"
+                },
+                {
+                  "id": "HRD-4",
+                  "description": "Add try-catch around `JSON.parse` calls in service layers (wallet, email, store).",
+                  "owner": [
+                    "Claude"
+                  ],
+                  "depends": [
+                    "HRD-3"
+                  ],
+                  "status": "pending",
+                  "release": "v1.0.0",
+                  "plan": "tasks/active/hrd-4-json-parse-safety.md"
+                },
+                {
+                  "id": "HRD-8",
+                  "description": "Standardize pagination: define shared response shape across all list endpoints.",
+                  "owner": [
+                    "Claude"
+                  ],
+                  "depends": [
+                    "HRD-4"
+                  ],
+                  "status": "pending",
+                  "release": "v1.0.0",
+                  "plan": "tasks/active/hrd-8-pagination-standard.md"
+                },
+                {
+                  "id": "HRD-10",
+                  "description": "Add per-wallet rate limiting to x402-middleware (configurable, default 60/min).",
+                  "owner": [
+                    "Claude"
+                  ],
+                  "depends": [
+                    "HRD-8"
+                  ],
+                  "status": "pending",
+                  "release": "v1.0.0",
+                  "plan": "tasks/active/hrd-10-rate-limiting.md"
+                }
+              ],
+              "parallelism": "SRL"
+            },
+            {
+              "id": "HRD-W1-PB",
+              "title": "Wallet DB Fixes",
+              "tasks": [
+                {
+                  "id": "HRD-2",
+                  "description": "Fix `allowlist-db.ts` DB handle leak: use singleton pattern from `wallet/db.ts`",
+                  "owner": [
+                    "Claude"
+                  ],
+                  "depends": [],
+                  "status": "pending",
+                  "release": "v1.0.0"
+                },
+                {
+                  "id": "HRD-5",
+                  "description": "Fix `setUTCHours(24)` in `wallet/src/db.ts` — use explicit date arithmetic",
+                  "owner": [
+                    "Claude"
+                  ],
+                  "depends": [],
+                  "status": "pending",
+                  "release": "v1.0.0"
+                }
+              ],
+              "parallelism": "PARA"
+            },
+            {
+              "id": "HRD-W1-PC",
+              "title": "Repo-Level Hygiene",
+              "tasks": [
+                {
+                  "id": "HRD-1",
+                  "description": "Remove `*.db` + `server.log` from repo; scrub `.env.email` from git history",
+                  "owner": [
+                    "Garric"
+                  ],
+                  "depends": [],
+                  "status": "pending",
+                  "release": "v1.0.0"
+                },
+                {
+                  "id": "HRD-6",
+                  "description": "Create `SECURITY.md` (referenced by CONTRIBUTING.md but missing)",
+                  "owner": [
+                    "Claude"
+                  ],
+                  "depends": [],
+                  "status": "pending",
+                  "release": "v1.0.0"
+                },
+                {
+                  "id": "HRD-7",
+                  "description": "Add `pnpm -r lint` + `pnpm -r typecheck` to `.github/workflows/ci.yml`",
+                  "owner": [
+                    "Claude"
+                  ],
+                  "depends": [],
+                  "status": "pending",
+                  "release": "v1.0.0"
+                },
+                {
+                  "id": "HRD-9",
+                  "description": "Add per-package `README.md` (purpose, install, API summary)",
+                  "owner": [
+                    "Claude"
+                  ],
+                  "depends": [],
+                  "status": "pending",
+                  "release": "v1.0.0"
+                }
+              ],
+              "parallelism": "PARA"
+            }
+          ]
+        }
+      ],
+      "description": "Code quality, security, and reliability fixes from open-source readiness review."
+    },
+    {
+      "id": "PRIMS",
+      "title": "Primitives",
+      "waves": [
+        {
+          "id": "PRIMS-W1",
+          "title": "store.sh",
+          "parallelism": "PARA",
+          "tasks": [
+            {
+              "id": "ST-7",
+              "description": "Presigned URLs (GET + PUT): time-limited signed R2 URLs for direct agent access",
+              "owner": [
+                "Claude"
+              ],
+              "depends": [],
+              "status": "pending",
+              "release": null
+            },
+            {
+              "id": "ST-8",
+              "description": "Public buckets: per-bucket public-read flag, stable object URLs",
+              "owner": [
+                "Claude"
+              ],
+              "depends": [],
+              "status": "pending",
+              "release": null
+            },
+            {
+              "id": "ST-9",
+              "description": "Multipart upload: S3 multipart API for objects >5MB",
+              "owner": [
+                "Claude"
+              ],
+              "depends": [],
+              "status": "pending",
+              "release": null
+            },
+            {
+              "id": "ST-10",
+              "description": "Object copy: within or between owned buckets",
+              "owner": [
+                "Claude"
+              ],
+              "depends": [],
+              "status": "pending",
+              "release": null
+            },
+            {
+              "id": "ST-11",
+              "description": "Lifecycle rules: per-bucket auto-expiry policies",
+              "owner": [
+                "Claude"
+              ],
+              "depends": [],
+              "status": "pending",
+              "release": null
+            },
+            {
+              "id": "ST-12",
+              "description": "Bucket event webhooks: HMAC-signed callbacks on create/delete",
+              "owner": [
+                "Claude"
+              ],
+              "depends": [],
+              "status": "pending",
+              "release": null
+            },
+            {
+              "id": "ST-13",
+              "description": "Object metadata + tagging: custom key-value metadata",
+              "owner": [
+                "Claude"
+              ],
+              "depends": [],
+              "status": "pending",
+              "release": null
+            }
+          ]
+        },
+        {
+          "id": "PRIMS-W2",
+          "title": "email.sh",
+          "parallelism": "SRL",
+          "tasks": [
+            {
+              "id": "E-4",
+              "description": "Domain warmup: send low-volume emails to engaged recipients, ramp over weeks",
+              "owner": [
+                "Claude"
+              ],
+              "depends": [],
+              "status": "pending",
+              "release": null
+            },
+            {
+              "id": "E-5",
+              "description": "Verify Gmail inbox delivery (not spam) after warmup + PTR + DMARC changes",
+              "owner": [
+                "Claude"
+              ],
+              "depends": [
+                "E-4"
+              ],
+              "status": "pending",
+              "release": null
+            },
+            {
+              "id": "E-6",
+              "description": "Verify Apple Mail / iCloud delivery after warmup",
+              "owner": [
+                "Claude"
+              ],
+              "depends": [
+                "E-4"
+              ],
+              "status": "pending",
+              "release": null
+            },
+            {
+              "id": "E-7",
+              "description": "Upgrade DMARC back to `p=quarantine` once inbox delivery is consistent",
+              "owner": [
+                "Claude"
+              ],
+              "depends": [
+                "E-5",
+                "E-6"
+              ],
+              "status": "pending",
+              "release": null
+            }
+          ]
+        },
+        {
+          "id": "PRIMS-W3",
+          "title": "spawn.sh",
+          "tasks": [
+            {
+              "id": "SP-7",
+              "description": "DockerProvider: Docker container tier as default (10–50x cheaper than VMs).",
+              "owner": [
+                "Claude"
+              ],
+              "depends": [],
+              "status": "pending",
+              "release": null,
+              "plan": "tasks/active/sp-7-docker-provider-2026-02-26.md"
+            }
+          ]
+        },
+        {
+          "id": "PRIMS-W4",
+          "title": "track.sh",
+          "tasks": [
+            {
+              "id": "TR-2",
+              "description": "Smoke test + deploy: live Shippo call, systemd unit, Caddy route, DNS, env vars",
+              "owner": [
+                "Claude",
+                "Garric"
+              ],
+              "depends": [],
+              "status": "pending",
+              "release": null
+            }
+          ]
+        },
+        {
+          "id": "PRIMS-W5",
+          "title": "$PRIM Token",
+          "parallelism": "SRL",
+          "tasks": [
+            {
+              "id": "L-27",
+              "description": "**DO FIRST.** Deploy $PRIM ERC-20 to Base mainnet. Register ticker on BaseScan. 100% supply to treasury wallet. Pool deferred",
+              "owner": [
+                "Garric"
+              ],
+              "depends": [],
+              "status": "pending",
+              "release": "v1.0.0"
+            },
+            {
+              "id": "PRIM-2",
+              "description": "$PRIM utility design: fee discounts, governance, access tiers, revenue share. Design doc only.",
+              "owner": [
+                "Garric",
+                "Claude"
+              ],
+              "depends": [
+                "L-27"
+              ],
+              "status": "pending",
+              "release": "v1.0.0",
+              "plan": "tasks/active/prim-2-token-utility-2026-02-26.md"
+            }
+          ]
+        }
+      ],
+      "description": "Feature work on specific services."
+    },
+    {
+      "id": "INFRA",
+      "title": "Infrastructure",
+      "waves": [
+        {
+          "id": "INFRA-W1",
+          "title": "Tooling",
+          "parallelism": "PARA",
+          "tasks": [
+            {
+              "id": "OPS-4",
+              "description": "Load test baseline: k6/artillery against health + store CRUD, document capacity",
+              "owner": [
+                "Claude"
+              ],
+              "depends": [],
+              "status": "pending",
+              "release": null
+            },
+            {
+              "id": "L-29",
+              "description": "GH Action: auto-dedupe issues, stale auto-close (30d), bot PR auto-merge if CI passes",
+              "owner": [
+                "Claude"
+              ],
+              "depends": [],
+              "status": "pending",
+              "release": null
+            },
+            {
+              "id": "L-15",
+              "description": "Pre-public checklist: rotate Stalwart admin password + relay-wrapper API key, verify no secrets in git history, confirm .env files gitignored",
+              "owner": [
+                "Garric"
+              ],
+              "depends": [],
+              "status": "pending",
+              "release": "v1.0.0"
+            },
+            {
+              "id": "I-2",
+              "description": "Migrate TASKS.md → tasks.json: define schema, convert data, update launch-status.ts + docs, optional TASKS.md codegen.",
+              "owner": [
+                "Claude"
+              ],
+              "depends": [],
+              "status": "pending",
+              "release": null,
+              "plan": "tasks/active/i-2-migrate-tasks-json-2026-02-26.md"
+            }
+          ]
+        },
+        {
+          "id": "INFRA-W2",
+          "title": "Business",
+          "parallelism": "SRL",
+          "tasks": [
+            {
+              "id": "L-60",
+              "description": "Pricing audit: review x402 pricing against real provider costs. Risks: spawn ($0.01 create vs $4/mo DO), token ($1 deploy vs $10-50 gas)",
+              "owner": [
+                "Claude",
+                "Garric"
+              ],
+              "depends": [
+                "L-22"
+              ],
+              "status": "pending",
+              "release": null
+            },
+            {
+              "id": "L-14",
+              "description": "Full token launch: create Uniswap pool, fund liquidity, make repo public, announce. Seed pool conservatively ($2–3K USDC)",
+              "owner": [
+                "Garric",
+                "Claude"
+              ],
+              "depends": [
+                "L-15",
+                "L-27",
+                "PRIM-2"
+              ],
+              "status": "pending",
+              "release": "v1.0.0"
+            }
+          ]
+        },
+        {
+          "id": "INFRA-W3",
+          "title": "Ops",
+          "parallelism": "PARA",
+          "tasks": [
+            {
+              "id": "L-22",
+              "description": "Mainnet switchover: VPS env files `eip155:84532` → `eip155:8453`, set prod `PRIM_PAY_TO`, fund facilitator with mainnet USDC",
+              "owner": [
+                "Garric"
+              ],
+              "depends": [
+                "L-27"
+              ],
+              "status": "pending",
+              "release": "v1.0.0"
+            },
+            {
+              "id": "L-70",
+              "description": "Deploy token.sh to VPS: systemd unit (prim-token:3007), Caddy route, DNS, env vars, smoke test",
+              "owner": [
+                "Garric"
+              ],
+              "depends": [],
+              "status": "pending",
+              "release": "v1.0.0"
+            },
+            {
+              "id": "L-71",
+              "description": "Deploy mem.sh to VPS: Qdrant instance, systemd unit (prim-mem:3008), Caddy route, DNS, env vars, smoke test",
+              "owner": [
+                "Garric"
+              ],
+              "depends": [],
+              "status": "pending",
+              "release": "v1.0.0"
+            }
+          ]
+        }
+      ],
+      "description": "CI, tooling, observability, pricing, cross-cutting platform work."
+    },
+    {
+      "id": "COMM",
+      "title": "Community & Brand",
+      "waves": [
+        {
+          "id": "COMM-W1",
+          "title": "Brand + Social",
+          "parallelism": "SRL",
+          "tasks": [
+            {
+              "id": "L-54",
+              "description": "Create Discord server: name \"Prim\", channels (#general, #bugs, #feature-requests, #announcements), permanent invite link",
+              "owner": [
+                "Garric"
+              ],
+              "depends": [],
+              "status": "pending",
+              "release": null
+            },
+            {
+              "id": "L-38",
+              "description": "Set brand assets on platforms: GitHub org avatar + repo social preview, X profile pic + banner, Discord icon",
+              "owner": [
+                "Garric"
+              ],
+              "depends": [
+                "L-54"
+              ],
+              "status": "pending",
+              "release": null
+            },
+            {
+              "id": "L-55",
+              "description": "Upload `final-logo.jpg` as GitHub org avatar, X @useprim profile pic, Discord server icon",
+              "owner": [
+                "Garric"
+              ],
+              "depends": [
+                "L-54"
+              ],
+              "status": "pending",
+              "release": null
+            },
+            {
+              "id": "L-56",
+              "description": "Upload `final-x-banner.jpg` as X @useprim header image",
+              "owner": [
+                "Garric"
+              ],
+              "depends": [],
+              "status": "pending",
+              "release": null
+            },
+            {
+              "id": "L-57",
+              "description": "Upload `final-social-preview.jpg` as GitHub repo social preview",
+              "owner": [
+                "Garric"
+              ],
+              "depends": [],
+              "status": "pending",
+              "release": null
+            }
+          ]
+        },
+        {
+          "id": "COMM-W2",
+          "title": "Content + Features",
+          "parallelism": "PARA",
+          "tasks": [
+            {
+              "id": "L-72",
+              "description": "README brand sync: `scripts/gen-readme.ts` reads `brand.ts` and rewrites tagline + one-liner sections in README.md",
+              "owner": [
+                "Claude"
+              ],
+              "depends": [],
+              "status": "pending",
+              "release": null
+            },
+            {
+              "id": "L-41",
+              "description": "Human docs: `prim.sh/docs` getting-started guide. Wallet setup, faucet, first API call, per-primitive examples",
+              "owner": [
+                "Claude"
+              ],
+              "depends": [],
+              "status": "pending",
+              "release": null
+            },
+            {
+              "id": "L-42",
+              "description": "Draft X launch content: tweet copy per teaser image, launch thread script, pin strategy",
+              "owner": [
+                "Garric",
+                "Claude"
+              ],
+              "depends": [],
+              "status": "pending",
+              "release": null
+            },
+            {
+              "id": "L-44",
+              "description": "Access form: add optional X handle + GitHub handle fields. Store in D1 `access_requests` table",
+              "owner": [
+                "Claude"
+              ],
+              "depends": [],
+              "status": "pending",
+              "release": null
+            },
+            {
+              "id": "L-45",
+              "description": "Wallet ping on access approval: tiny USDC transfer with calldata `prim.sh:access:approved`",
+              "owner": [
+                "Claude"
+              ],
+              "depends": [
+                "L-44"
+              ],
+              "status": "pending",
+              "release": null
+            },
+            {
+              "id": "L-46",
+              "description": "Per-page hero color variation: accent-colored radial gradient behind hero",
+              "owner": [
+                "Claude"
+              ],
+              "depends": [],
+              "status": "pending",
+              "release": null
+            }
+          ]
+        }
+      ],
+      "description": "Docs, Discord, brand assets, marketing."
+    },
+    {
+      "id": "BKLG",
+      "title": "Backlog",
+      "waves": [
+        {
+          "id": "BKLG-W1",
+          "title": "Backlog",
+          "tasks": [
+            {
+              "id": "L-50",
+              "description": "deploy.sh: PaaS above spawn.sh — push container or repo URL, get live endpoint. Wraps Dokku/Coolify",
+              "owner": [
+                "Claude"
+              ],
+              "depends": [],
+              "status": "backlog",
+              "release": null
+            }
+          ]
+        }
+      ],
+      "description": "Future primitives and deferred ideas. No timeline."
+    }
+  ]
+}

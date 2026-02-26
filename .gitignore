@@ -26,6 +26,9 @@ scripts/.env.*
 *.pem
 *.key
 
+# Generated
+TASKS.md
+
 # Logs
 *.log
 server.log
