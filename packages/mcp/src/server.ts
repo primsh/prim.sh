@@ -13,6 +13,7 @@ import { emailTools, handleEmailTool } from "./tools/email.js";
 import { memTools, handleMemTool } from "./tools/mem.js";
 import { domainTools, handleDomainTool } from "./tools/domain.js";
 import { tokenTools, handleTokenTool } from "./tools/token.js";
+import { reportTools, handleReportTool } from "./tools/report.js";
 import { createMcpFetch, getBaseUrl } from "./x402.js";
 
 const PRIMITIVE_GROUPS = ["wallet", "store", "spawn", "faucet", "search", "email", "mem", "domain", "token"] as const;
@@ -71,6 +72,7 @@ export async function startMcpServer(options: ServerOptions = {}): Promise<void>
     ...filterTools(memTools, "mem", enabledPrimitives),
     ...filterTools(domainTools, "domain", enabledPrimitives),
     ...filterTools(tokenTools, "token", enabledPrimitives),
+    ...reportTools,
   ];
 
   const server = new Server(
@@ -112,6 +114,9 @@ export async function startMcpServer(options: ServerOptions = {}): Promise<void>
     }
     if (name.startsWith("token_") && enabledPrimitives.includes("token")) {
       return handleTokenTool(name, toolArgs, primFetch, getBaseUrl("token"));
+    }
+    if (name === "prim_report") {
+      return handleReportTool(name, toolArgs);
     }
 
     return {
