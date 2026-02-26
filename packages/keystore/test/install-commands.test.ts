@@ -93,7 +93,7 @@ describe("generateMcpConfig", () => {
   });
 
   it("generates config for all primitives", () => {
-    expect(generateMcpConfig(["wallet", "store", "spawn", "faucet", "search"])).toEqual({
+    expect(generateMcpConfig(["wallet", "store", "spawn", "faucet", "search", "email", "mem", "domain", "token"])).toEqual({
       mcpServers: {
         prim: { command: "prim", args: ["mcp"] },
       },
@@ -189,7 +189,7 @@ describe("removeFromConfigFile", () => {
       },
     }));
 
-    removeFromConfigFile("/path/mcp.json", ["wallet", "store", "spawn", "faucet", "search"]);
+    removeFromConfigFile("/path/mcp.json", ["wallet", "store", "spawn", "faucet", "search", "email", "mem", "domain", "token"]);
 
     const written = JSON.parse(mockWriteFileSync.mock.calls[0][1].replace(/\n$/, ""));
     expect(written.mcpServers["other-tool"]).toEqual({ command: "x" });
@@ -250,7 +250,7 @@ describe("runInstallCommand", () => {
   it("rejects unknown primitive", async () => {
     await expect(
       runInstallCommand("bogus", ["install", "bogus", "--agent", "generic"]),
-    ).rejects.toThrow("Unknown primitive: bogus. Valid: wallet, store, spawn, faucet, search, all");
+    ).rejects.toThrow("Unknown primitive: bogus. Valid: wallet, store, spawn, faucet, search, email, mem, domain, token, all");
   });
 
   it("prints wallet warning when no default address", async () => {

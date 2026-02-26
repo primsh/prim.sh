@@ -1,6 +1,7 @@
 [Unit]
 Description=prim.sh email service
-After=network.target
+After=network.target stalwart-mail.service
+Wants=stalwart-mail.service
 
 [Service]
 Type=simple

@@ -46,7 +46,7 @@ export async function runEmailCommand(sub: string, argv: string[]): Promise<void
       walletFlag !== undefined || passphrase !== undefined
         ? { address: walletFlag, passphrase }
         : true,
-    maxPayment: maxPaymentFlag ?? "1.00",
+    maxPayment: maxPaymentFlag ?? process.env.PRIM_MAX_PAYMENT ?? "1.00",
     network: config.network,
   });
 

@@ -252,6 +252,10 @@ ufw default allow outgoing
 ufw allow 22/tcp    # SSH
 ufw allow 80/tcp    # HTTP  (Caddy + ACME)
 ufw allow 443/tcp   # HTTPS (Caddy)
+ufw allow 25/tcp    # SMTP  (Stalwart inbound mail)
+ufw allow 465/tcp   # SMTPS (Stalwart submission SSL)
+ufw allow 587/tcp   # SMTP+STARTTLS (Stalwart submission)
+ufw allow 993/tcp   # IMAPS (Stalwart mail retrieval)
 ufw --force enable
 
 # ── 13. Enable and start services ────────────────────────────────────────────
@@ -267,6 +271,6 @@ log ""
 log "NEXT STEPS:"
 log "  1. Fill in secrets in $ENV_DIR/*.env (each file lists required vars)"
 log "  2. Start services:"
-log "       systemctl start prim-wallet prim-store prim-faucet prim-spawn caddy"
+log "       systemctl start prim-wallet prim-store prim-faucet prim-spawn prim-search prim-email caddy"
 log "  3. Check logs:"
 log "       journalctl -u prim-wallet -f"

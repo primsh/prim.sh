@@ -5,11 +5,11 @@ import { getFlag } from "./flags.ts";
 import { getDefaultAddress } from "./config.ts";
 import { SKILL_CONTENT } from "./skill-content.ts";
 
-const PRIMITIVES = ["wallet", "store", "spawn", "faucet", "search"] as const;
+const PRIMITIVES = ["wallet", "store", "spawn", "faucet", "search", "email", "mem", "domain", "token"] as const;
 type Primitive = (typeof PRIMITIVES)[number];
 
 /** Which primitives require wallet to be installed alongside them. */
-const REQUIRES_WALLET: ReadonlySet<string> = new Set(["store", "spawn", "search"]);
+const REQUIRES_WALLET: ReadonlySet<string> = new Set(["store", "spawn", "search", "email", "mem", "domain", "token"]);
 
 // ---------------------------------------------------------------------------
 // Agent detection
@@ -285,7 +285,7 @@ export async function runUninstallCommand(subcommand: string | undefined, argv: 
 // Skill command (bonus: `prim skill <name>`)
 // ---------------------------------------------------------------------------
 
-export async function runSkillCommand(subcommand: string | undefined, _argv: string[]): Promise<void> {
+export async function runSkillCommand(subcommand: string | undefined, argv: string[]): Promise<void> {
   if (!subcommand) {
     console.log(`Usage: prim skill <name>\nAvailable: ${PRIMITIVES.join(", ")}`);
     return;

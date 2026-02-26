@@ -271,6 +271,61 @@ async function main() {
     console.log(`(${data.results[0].content.length} chars) `);
   });
 
+  // ─── Email via x402 ─────────────────────────────────────────────────
+
+  console.log("\n─── Email (x402) ───────────────────────────────────────────\n");
+
+  let mailboxId: string | null = null;
+
+  await step("Create mailbox via x402", async () => {
+    const res = await primFetch(`${EMAIL_URL}/v1/mailboxes`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({}),
+    });
+    if (!res.ok) throw new Error(`${res.status}: ${await res.text()}`);
+    const data = (await res.json()) as { id: string; address: string };
+    mailboxId = data.id;
+    console.log(`(mailbox: ${data.address}) `);
+  });
+
+  if (mailboxId) {
+    await step("List mailboxes via x402", async () => {
+      const res = await primFetch(`${EMAIL_URL}/v1/mailboxes`);
+      if (!res.ok) throw new Error(`${res.status}: ${await res.text()}`);
+      const data = (await res.json()) as { mailboxes: { id: string }[]; total: number };
+      if (!data.mailboxes?.length) throw new Error("No mailboxes returned");
+      console.log(`(${data.total} total) `);
+    });
+
+    await step("Get mailbox via x402", async () => {
+      const res = await primFetch(`${EMAIL_URL}/v1/mailboxes/${mailboxId}`);
+      if (!res.ok) throw new Error(`${res.status}: ${await res.text()}`);
+    });
+
+    await step("List messages via x402", async () => {
+      const res = await primFetch(`${EMAIL_URL}/v1/mailboxes/${mailboxId}/messages`);
+      if (!res.ok) throw new Error(`${res.status}: ${await res.text()}`);
+      const data = (await res.json()) as { messages: unknown[]; total: number };
+      console.log(`(${data.total} messages) `);
+    });
+
+    await step("Delete mailbox via x402", async () => {
+      const res = await primFetch(`${EMAIL_URL}/v1/mailboxes/${mailboxId}`, { method: "DELETE" });
+      if (!res.ok) throw new Error(`${res.status}: ${await res.text()}`);
+      mailboxId = null;
+    });
+  }
+
+  // Cleanup on failure
+  if (mailboxId) {
+    console.log("\n  Cleaning up email resources...");
+    try {
+      await primFetch(`${EMAIL_URL}/v1/mailboxes/${mailboxId}`, { method: "DELETE" });
+      console.log("  ✓ Cleaned up mailbox");
+    } catch { console.log("  ✗ Mailbox cleanup failed"); }
+  }
+
   // ─── Spawn (optional) ──────────────────────────────────────────────
 
   if (!HAS_DO_TOKEN) {

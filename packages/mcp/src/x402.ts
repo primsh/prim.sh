@@ -20,7 +20,7 @@ export async function createMcpFetch(walletAddress?: string): Promise<typeof fet
 
   return createPrimFetch({
     keystore: resolvedAddress ? { address: resolvedAddress } : true,
-    maxPayment: "1.00",
+    maxPayment: process.env.PRIM_MAX_PAYMENT ?? "1.00",
     network: config.network,
   });
 }

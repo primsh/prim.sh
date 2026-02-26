@@ -52,6 +52,39 @@ async function main() {
     return;
   }
 
+  if (group === "mem") {
+    try {
+      const { runMemCommand } = await import("./mem-commands.ts");
+      await runMemCommand(subcommand, argv);
+    } catch (err) {
+      console.error(`Error: ${err instanceof Error ? err.message : String(err)}`);
+      process.exit(1);
+    }
+    return;
+  }
+
+  if (group === "domain") {
+    try {
+      const { runDomainCommand } = await import("./domain-commands.ts");
+      await runDomainCommand(subcommand, argv);
+    } catch (err) {
+      console.error(`Error: ${err instanceof Error ? err.message : String(err)}`);
+      process.exit(1);
+    }
+    return;
+  }
+
+  if (group === "token") {
+    try {
+      const { runTokenCommand } = await import("./token-commands.ts");
+      await runTokenCommand(subcommand, argv);
+    } catch (err) {
+      console.error(`Error: ${err instanceof Error ? err.message : String(err)}`);
+      process.exit(1);
+    }
+    return;
+  }
+
   if (group === "faucet") {
     try {
       const { runFaucetCommand } = await import("./faucet-commands.ts");
@@ -82,32 +115,20 @@ async function main() {
       // biome-ignore lint/suspicious/noExplicitAny: cross-package dynamic import
       const mcpModule = await import(mcpPath) as any;
       const { startMcpServer, isPrimitive } = mcpModule;
-      // mcp has no subcommand — flags start at argv[1], not argv[2]. Use hasFlag/getFlag from mcp index.ts pattern.
-      const mcpArgv = argv.slice(1); // ["--primitives", "faucet", ...]
-      function mcpGetFlag(name: string): string | undefined {
-        for (let i = 0; i < mcpArgv.length; i++) {
-          if (mcpArgv[i].startsWith(`--${name}=`)) return mcpArgv[i].slice(`--${name}=`.length);
-          if (mcpArgv[i] === `--${name}`) {
-            if (i + 1 < mcpArgv.length && !mcpArgv[i + 1].startsWith("--")) return mcpArgv[i + 1];
-            return "";
-          }
-        }
-        return undefined;
-      }
-      const primitivesFlag = mcpGetFlag("primitives");
-      const walletFlag = mcpGetFlag("wallet");
-      const VALID_PRIMITIVES = ["wallet", "store", "spawn", "faucet", "search"];
+      // mcp has no subcommand — flags start at argv[1], not argv[2].
+      // Pad argv so getFlag (which scans from index 2) sees the right positions.
+      const mcpArgv = ["mcp", "_", ...argv.slice(1)];
+      const primitivesFlag = getFlag("primitives", mcpArgv);
+      const walletFlag = getFlag("wallet", mcpArgv);
       let primitives: string[] | undefined;
       if (primitivesFlag) {
         const parsed = primitivesFlag
           .split(",")
           .map((s: string) => s.trim())
           .filter((s: string) => s.length > 0);
-        const invalid = parsed.filter((s: string) => !VALID_PRIMITIVES.includes(s));
+        const invalid = parsed.filter((s: string) => !isPrimitive(s));
         if (invalid.length > 0) {
-          console.error(
-            `Error: Unknown primitives: ${invalid.join(", ")}. Valid: wallet, store, spawn, faucet, search`,
-          );
+          console.error(`Error: Unknown primitives: ${invalid.join(", ")}`);
           process.exit(1);
         }
         primitives = parsed;
@@ -172,6 +193,9 @@ async function main() {
     console.log("  prim store     <create-bucket|ls|put|get|rm|rm-bucket|quota>");
     console.log("  prim spawn     <create|ls|get|rm|reboot|stop|start|ssh-key>");
     console.log("  prim email     <create|ls|get|rm|renew|inbox|read|send|webhook|domain>");
+    console.log("  prim mem       <create|ls|get|rm|upsert|query|cache>");
+    console.log("  prim domain    <search|quote|register|recover|status|ns|zone|record>");
+    console.log("  prim token     <deploy|ls|get|mint|supply|pool>");
     console.log("  prim faucet    <usdc|eth|status>");
     console.log("  prim search    <web|news|extract>");
     console.log("  prim mcp       [--primitives wallet,store,...] [--wallet 0x...]");
