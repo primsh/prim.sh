@@ -97,6 +97,7 @@
 | 23 | M-1 | Build mem.sh: vector memory (Qdrant collections + upsert + query) + KV cache + x402 | packages/mem | — | done |
 | 9 | M-2 | mem.sh live smoke test: create collection → upsert docs → query → cache set/get/delete on Base Sepolia via x402 payment | packages/mem | M-1 | done |
 | 14 | M-3 | `prim mem` CLI subcommand: create-collection, list-collections, upsert, query, cache-set, cache-get, cache-del using keystore + x402-client | packages/keystore | M-1, KS-1 | pending |
+| 14 | R-15 | `prim email` CLI: mailbox CRUD, message inbox/read/send, webhook and domain management using keystore + x402-client | packages/keystore | R-6, KS-1 | done |
 
 ## Plan Docs
 
@@ -207,6 +208,7 @@ Plan doc: `tasks/active/v1-launch-plan-2026-02-25.md`
 | L-32 | Faucet treasury fallback: when Circle API rate-limits (429), fall back to direct USDC transfer from pre-funded treasury wallet. Deployed + treasury funded with Sepolia ETH for gas. | Claude | FC-1 | done |
 | L-33 | Fix `prim wallet create` OpenSSL scrypt memory limit crash (Bun + node crypto compat issue) | Claude | KS-1 | done |
 | L-34 | Fix CLI `--flag value` parsing: `getFlag` only accepts `--flag=value` syntax, not `--flag value` with space. Usage hints should match actual behavior. | Claude | KS-1 | done |
+| L-61 | Dynamic allowlist: all services query wallet.sh's allowlist via internal API instead of static `PRIM_ALLOWLIST` env var. Currently access approval only updates wallet.sh's SQLite — every other service (store, spawn, search, faucet) has its own static env var list that requires manual edit + restart. Use `checkAllowlist` callback in x402-middleware to call `GET /internal/allowlist/check?address=X` on wallet.sh | Claude | L-31 | pending |
 | L-36 | Launch readiness smoke test: full Asher run with fresh wallet through CLI — `prim wallet create` → `prim faucet usdc` → `prim store create-bucket` → `prim store put` → `prim store get`. All steps must succeed without hand-written code. | Claude + Garric | L-33, L-34 | done (script: scripts/smoke-cli.ts — run from VPS) |
 
 ### Wave 4: Binary + Mainnet (critical path to launch)
@@ -216,7 +218,7 @@ Plan doc: `tasks/active/v1-launch-plan-2026-02-25.md`
 | L-11 | Compile `prim` binary for 4 platforms (`bun build --compile`) + upload to GitHub Release | Claude | L-4 | done |
 | L-12 | Write install script (`curl prim.sh \| sh`) + per-primitive wrappers | Claude | L-11 | done |
 | L-48 | Deploy search.sh to VPS: systemd unit (prim-search:3005), Caddy route (search.prim.sh), DNS A record, `TAVILY_API_KEY` env var, smoke test live endpoint | Claude + Garric | SE-1, L-10 | done |
-| L-49 | Update llms.txt: move search.sh from "Built (not yet deployed)" to "Live primitives" section after L-48 deploy is verified | Claude | L-48 | pending |
+| L-49 | Update llms.txt: move search.sh from "Built (not yet deployed)" to "Live primitives" section after L-48 deploy is verified | Claude | L-48 | done |
 | L-22 | Mainnet switchover: update VPS env files from `eip155:84532` → `eip155:8453`, set prod `PRIM_PAY_TO` treasury, fund facilitator with mainnet USDC | Garric | L-17 | pending |
 | L-15 | Pre-public checklist: rotate Stalwart admin password + `relay-wrapper` API key, verify no secrets in git history (`git log -p \| grep`), confirm .env files gitignored | Garric | L-10 | pending |
 
@@ -238,13 +240,33 @@ Plan doc: `tasks/active/v1-launch-plan-2026-02-25.md`
 | L-55 | Upload `final-logo.jpg` as GitHub org avatar (primsh settings), X @onprim profile pic, Discord server icon | Garric | L-37, L-54 | pending |
 | L-56 | Upload `final-x-banner.jpg` as X @onprim header image | Garric | L-37 | pending |
 | L-57 | Upload `final-social-preview.jpg` as GitHub repo social preview (primsh/prim.sh → Settings → Social preview) | Garric | L-37 | pending |
-| L-58 | Set up `legal@prim.sh` and `privacy@prim.sh` email aliases (or forward to personal email). Referenced in `site/terms/index.html` and `site/privacy/index.html` | Garric | L-40 | pending |
-| L-59 | Update Discord invite link: replace placeholder `discord.gg/prim` in `README.md` and `.github/ISSUE_TEMPLATE/config.yml` with real invite URL | Claude | L-54 | pending |
+| L-58 | Set up contact email for legal pages. `hello@prim.sh` mailbox on Stalwart. DNS: MX, SPF, DKIM (RSA+Ed25519), DMARC for root `prim.sh` | Claude | L-40 | done |
+| L-59 | Update Discord invite link: replace placeholder `discord.gg/prim` in `README.md` and `.github/ISSUE_TEMPLATE/config.yml` with real invite URL | Claude | L-54 | done |
 | L-39 | Write public README.md: hero image, name + tagline, one-liner, "Getting started" (wallet → faucet → first API call), primitive table with status, link to `prim.sh/llms.txt`. Should read like the site but for devs scrolling GitHub | Claude | L-37 | done |
 | L-40 | Legal minimum: Terms of Service + Privacy Policy pages. Even minimal/template versions — required before public launch. Host at `prim.sh/terms` and `prim.sh/privacy` | Garric + Claude | — | done |
 | L-41 | Human docs: `prim.sh/docs` getting-started guide for humans. Complements `llms.txt` (for agents). Wallet setup, faucet, first API call, per-primitive examples | Claude | L-39 | pending |
 | L-42 | Draft X launch content: tweet copy for each teaser image (closer, prims grid, logo), launch thread script (what Prim is → why → demo → CTA), pin strategy | Garric + Claude | L-37 | pending |
 | L-43 | Update `site/agentstack/` → `site/prim/` or set as canonical landing page. Current homepage still references "agentstack" in directory name. Clean up stale placeholder links in primitive landing pages | Claude | — | done (26 pages updated; directory rename deferred — symlink works for CF Pages) |
+
+### Backlog (unscoped)
+
+| ID | Task | Owner | Depends on | Status |
+|---|---|---|---|---|
+| L-50 | deploy.sh: PaaS prim above spawn.sh — push a container or repo URL, get a live endpoint. No server config. Wraps Dokku, Coolify, or similar self-hosted PaaS. Agent-native deploy pipeline. | Claude | — | backlog |
+| L-60 | Pricing audit: review x402 pricing across all primitives against real provider costs. Key risks: spawn.sh ($0.01 create vs $4/mo DO cost), token.sh ($1 deploy vs $10-50 mainnet gas). Consider recurring billing model for spawn, gas passthrough for token, margin analysis for store/email/search | Claude + Garric | L-22 | pending |
+
+### Wave 5.5: Agent Interface Layer (blocks public launch)
+
+All live primitives (wallet, store, spawn, faucet, search) need proper agent interfaces. Currently agents must read a 90-line llms.txt brochure and write custom HTTP scripts (see: Asher test failure). Industry standard: OpenAPI spec → auto-generate MCP server + full docs.
+
+| ID | Task | Owner | Depends on | Status |
+|---|---|---|---|---|
+| L-62 | Write OpenAPI specs for all 5 live primitives (wallet, store, spawn, faucet, search). Full endpoint docs: request/response shapes, error codes, x402 payment flow, curl examples. Source of truth for all generated interfaces | Claude | — | pending |
+| L-63 | Rewrite llms.txt as full plain-text API reference (xAI-style, not brochure). Every endpoint, every field, every error code. Per-primitive llms.txt files too. Should be enough for an agent to use the API without any other docs | Claude | L-62 | pending |
+| L-64 | Generate MCP servers from OpenAPI specs: one MCP server per primitive (or unified). x402 payment signing baked in. Agent calls `store_create_bucket` as a tool, MCP server handles auth. Evaluate Stainless / openapi-mcp-codegen / FastMCP | Claude | L-62 | pending |
+| L-65 | Write Skills (markdown + YAML) per primitive: workflow knowledge, when/why to use each prim, error handling patterns, multi-prim workflows (e.g. "register wallet → fund → create bucket") | Claude | L-62 | pending |
+| L-66 | Package as Plugins: bundle MCP server + Skill per primitive into installable plugin. `prim install store` drops MCP config + skill into agent's environment | Claude | L-64, L-65 | pending |
+| L-67 | Extend CLI to all live prims: `prim search`, `prim spawn`, `prim email` subcommands (generated or hand-written from OpenAPI specs) | Claude | L-62 | pending |
 
 ### Wave 6: Token + Public
 

@@ -1,20 +1,7 @@
 import { readFileSync } from "node:fs";
-import { createInterface } from "node:readline/promises";
-import { stdin as rlInput, stdout as rlOutput } from "node:process";
 import { createPrimFetch } from "@primsh/x402-client";
 import { getConfig } from "./config.ts";
-import { getFlag, hasFlag } from "./flags.ts";
-
-/** Same semantics as wallet's resolvePassphrase: prompts if bare --passphrase with no value. */
-async function resolvePassphrase(argv: string[]): Promise<string | undefined> {
-  if (!hasFlag("passphrase", argv)) return undefined;
-  const value = getFlag("passphrase", argv);
-  if (value) return value; // --passphrase=VALUE
-  const rl = createInterface({ input: rlInput, output: rlOutput });
-  const result = await rl.question("Passphrase: ");
-  rl.close();
-  return result;
-}
+import { getFlag, hasFlag, resolvePassphrase } from "./flags.ts";
 
 export function resolveSpawnUrl(argv: string[]): string {
   const flag = getFlag("url", argv);

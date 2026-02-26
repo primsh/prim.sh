@@ -1,31 +1,14 @@
 #!/usr/bin/env bun
-import { createInterface } from "node:readline/promises";
-import { stdin as input, stdout as output } from "node:process";
 import { existsSync, readFileSync } from "node:fs";
 import { createKey, importKey, listKeys, exportKey, removeKey, loadKey, loadAccount } from "./keystore.ts";
 import { getDefaultAddress, setDefaultAddress } from "./config.ts";
 import { getUsdcBalance } from "./balance.ts";
 import { decryptFromV3 } from "./crypto.ts";
 import type { KeystoreFile } from "./types.ts";
-import { getFlag, hasFlag } from "./flags.ts";
+import { getFlag, hasFlag, resolvePassphrase } from "./flags.ts";
 import pkg from "../package.json";
 
 const argv = process.argv.slice(2);
-
-async function promptPassphrase(prompt = "Passphrase: "): Promise<string> {
-  const rl = createInterface({ input, output });
-  const result = await rl.question(prompt);
-  rl.close();
-  return result;
-}
-
-/** Returns the passphrase if --passphrase flag is present, undefined otherwise. */
-async function resolvePassphrase(): Promise<string | undefined> {
-  if (!hasFlag("passphrase", argv)) return undefined;
-  const value = getFlag("passphrase", argv);
-  if (value) return value; // --passphrase=VALUE
-  return promptPassphrase(); // --passphrase (interactive)
-}
 
 async function main() {
   if (argv[0] === "--version" || argv[0] === "-v") {
@@ -108,7 +91,7 @@ async function main() {
     switch (subcommand) {
       case "create": {
         const label = getFlag("label", argv);
-        const passphrase = await resolvePassphrase();
+        const passphrase = await resolvePassphrase(argv);
         const { address } = await createKey({ label, passphrase });
         console.log(`Created wallet: ${address}`);
         const defaultAddr = await getDefaultAddress();
@@ -161,7 +144,7 @@ async function main() {
           process.exit(1);
         }
         const label = getFlag("label", argv);
-        const passphrase = await resolvePassphrase();
+        const passphrase = await resolvePassphrase(argv);
 
         let privateKey: `0x${string}`;
         if (keyArg.endsWith(".json") && existsSync(keyArg)) {
@@ -187,7 +170,7 @@ async function main() {
           console.error("Usage: prim wallet export <address> [--passphrase]");
           process.exit(1);
         }
-        const passphrase = await resolvePassphrase();
+        const passphrase = await resolvePassphrase(argv);
         console.warn("⚠ WARNING: Private key will be displayed in plaintext.");
         const key = await exportKey(address, { passphrase });
         console.log(key);
@@ -220,7 +203,7 @@ async function main() {
       case "register": {
         // EIP-191 registration with wallet.prim.sh
         const walletUrl = getFlag("url", argv) ?? process.env.PRIM_WALLET_URL ?? "https://wallet.prim.sh";
-        const passphrase = await resolvePassphrase();
+        const passphrase = await resolvePassphrase(argv);
         const account = await loadAccount(undefined, { passphrase });
         const address = account.address;
         const timestamp = new Date().toISOString();

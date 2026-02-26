@@ -26,3 +26,16 @@ export function hasFlag(name: string, argv: string[]): boolean {
   }
   return false;
 }
+
+/** Returns the passphrase if --passphrase flag is present, undefined otherwise. Prompts interactively if bare --passphrase with no value. */
+export async function resolvePassphrase(argv: string[]): Promise<string | undefined> {
+  if (!hasFlag("passphrase", argv)) return undefined;
+  const value = getFlag("passphrase", argv);
+  if (value) return value; // --passphrase=VALUE
+  const { createInterface } = await import("node:readline/promises");
+  const { stdin: rlInput, stdout: rlOutput } = await import("node:process");
+  const rl = createInterface({ input: rlInput, output: rlOutput });
+  const result = await rl.question("Passphrase: ");
+  rl.close();
+  return result;
+}
