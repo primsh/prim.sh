@@ -24,12 +24,12 @@ Tasks that block repo going public + mainnet switchover.
 | M-3 | `prim mem` CLI subcommand: create-collection, list-collections, upsert, query, cache-set, cache-get, cache-del | packages/keystore | M-1, KS-1 | done |
 | P-6 | `prim` binary publishing + install scripts: `bun build --compile`, host binaries in Cloudflare R2 public bucket (`prim-releases`) served via `dl.prim.sh`, install script at `prim.sh/install`. Keeps repo private during beta. | packages/keystore, site/, Cloudflare | ST-6 | done |
 | SEC-1 | Infra hardening: fail2ban, SSH key-only, unattended-upgrades on VPS | deploy/ | — | pending |
-| SEC-2 | Caddy security headers: HSTS, X-Frame-Options, X-Content-Type-Options, CSP | deploy/prim/Caddyfile | — | pending |
+| SEC-2 | Caddy security headers: HSTS, X-Frame-Options, X-Content-Type-Options, CSP | deploy/prim/Caddyfile | — | done |
 | SEC-3 | Edge rate limiting: Caddy rate_limit or CF WAF for health/registration endpoints | deploy/, Cloudflare | — | pending |
-| SEC-4 | Dependency audit: `pnpm audit` in CI, pin critical deps | .github/workflows/ci.yml | — | pending |
-| SEC-5 | Input validation + request size limits (Hono body-limit middleware, 1MB default) | packages/* | — | pending |
+| SEC-4 | Dependency audit: `pnpm audit` in CI, pin critical deps | .github/workflows/ci.yml | — | done |
+| SEC-5 | Input validation + request size limits (Hono body-limit middleware, 1MB default) | packages/* | — | done |
 | SEC-6 | SQLite backup: daily cron → R2, 30-day retention, restore procedure | deploy/prim/ | — | pending |
-| SEC-7 | Secrets audit: no .env in git history, VPS file perms 600, rotation schedule | cross-cutting | — | pending |
+| SEC-7 | Secrets audit: no .env in git history, VPS file perms 600, rotation schedule | cross-cutting | — | done |
 | OPS-1 | Uptime monitoring: external health checks + alerting (BetterStack/UptimeRobot) | deploy/ | — | pending |
 | OPS-2 | Structured logging: JSON logger with request_id, replace console.log | packages/* | — | pending |
 | OPS-3 | Incident runbook: restart procedures, log locations, common failures, escalation | docs/ops/ | — | pending |
