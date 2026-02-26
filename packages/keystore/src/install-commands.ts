@@ -3,6 +3,7 @@ import { homedir } from "node:os";
 import { join, dirname } from "node:path";
 import { getFlag } from "./flags.ts";
 import { getDefaultAddress } from "./config.ts";
+import { SKILL_CONTENT } from "./skill-content.ts";
 
 const PRIMITIVES = ["wallet", "store", "spawn", "faucet", "search"] as const;
 type Primitive = (typeof PRIMITIVES)[number];
@@ -155,7 +156,7 @@ export function removeFromConfigFile(configPath: string, primitives: string[]): 
 // ---------------------------------------------------------------------------
 
 function getSkillContent(primitive: string): string | null {
-  // Try skills/ relative to the monorepo root (3 levels up from src/)
+  // In dev mode, try reading from the skills/ directory on disk
   const candidates = [
     join(dirname(new URL(import.meta.url).pathname), "..", "..", "..", "skills", `${primitive}.md`),
     join(dirname(new URL(import.meta.url).pathname), "..", "skills", `${primitive}.md`),
@@ -163,7 +164,8 @@ function getSkillContent(primitive: string): string | null {
   for (const p of candidates) {
     if (existsSync(p)) return readFileSync(p, "utf-8");
   }
-  return null;
+  // Fall back to embedded content (works in compiled binary)
+  return SKILL_CONTENT[primitive] ?? null;
 }
 
 // ---------------------------------------------------------------------------
@@ -183,8 +185,8 @@ function parsePrimitives(name: string | undefined): string[] {
 // Install command
 // ---------------------------------------------------------------------------
 
-export async function runInstallCommand(_subcommand: string | undefined, argv: string[]): Promise<void> {
-  const primitives = parsePrimitives(_subcommand);
+export async function runInstallCommand(subcommand: string | undefined, argv: string[]): Promise<void> {
+  const primitives = parsePrimitives(subcommand);
   const isAll = primitives.length === PRIMITIVES.length;
   const agent = detectAgent(argv);
 
@@ -257,8 +259,8 @@ export async function runInstallCommand(_subcommand: string | undefined, argv: s
 // Uninstall command
 // ---------------------------------------------------------------------------
 
-export async function runUninstallCommand(_subcommand: string | undefined, argv: string[]): Promise<void> {
-  const primitives = parsePrimitives(_subcommand);
+export async function runUninstallCommand(subcommand: string | undefined, argv: string[]): Promise<void> {
+  const primitives = parsePrimitives(subcommand);
   const isAll = primitives.length === PRIMITIVES.length;
   const agent = detectAgent(argv);
 
@@ -283,19 +285,19 @@ export async function runUninstallCommand(_subcommand: string | undefined, argv:
 // Skill command (bonus: `prim skill <name>`)
 // ---------------------------------------------------------------------------
 
-export async function runSkillCommand(_subcommand: string | undefined, _argv: string[]): Promise<void> {
-  if (!_subcommand) {
+export async function runSkillCommand(subcommand: string | undefined, _argv: string[]): Promise<void> {
+  if (!subcommand) {
     console.log(`Usage: prim skill <name>\nAvailable: ${PRIMITIVES.join(", ")}`);
     return;
   }
 
-  if (!(PRIMITIVES as readonly string[]).includes(_subcommand)) {
-    throw new Error(`Unknown primitive: ${_subcommand}. Valid: ${PRIMITIVES.join(", ")}`);
+  if (!(PRIMITIVES as readonly string[]).includes(subcommand)) {
+    throw new Error(`Unknown primitive: ${subcommand}. Valid: ${PRIMITIVES.join(", ")}`);
   }
 
-  const content = getSkillContent(_subcommand);
+  const content = getSkillContent(subcommand);
   if (!content) {
-    throw new Error(`Skill file not found for ${_subcommand}. Skills may not be bundled in this build.`);
+    throw new Error(`Skill file not found for ${subcommand}. Skills may not be bundled in this build.`);
   }
   process.stdout.write(content);
 }
