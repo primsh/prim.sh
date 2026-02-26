@@ -347,7 +347,7 @@ ${inlineCSS(cfg.accent, cfg.accent_dim, cfg.accent_glow)}
   <div class="links"><a href="/">prim.sh</a></div>
   <div style="margin-top:0.75rem;font-size:0.8rem;color:#444">This page is for humans. The API is for agents.</div>
 </footer>
-<img src="/assets/banner.jpg" alt="" style="width:100%;display:block;margin:0;padding:0">
+<img src="/assets/banner.jpg" alt="" style="width:100%;display:block;margin:0;padding:0;-webkit-mask-image:linear-gradient(to bottom,rgba(0,0,0,0) 0%,rgba(0,0,0,1) 15%,rgba(0,0,0,1) 85%,rgba(0,0,0,0) 100%);mask-image:linear-gradient(to bottom,rgba(0,0,0,0) 0%,rgba(0,0,0,1) 15%,rgba(0,0,0,1) 85%,rgba(0,0,0,0) 100%)">
 </body>
 </html>`;
 }
@@ -362,7 +362,7 @@ body{background:var(--bg);color:var(--text);font-family:'SF Mono',SFMono-Regular
 a{color:var(--accent);text-decoration:none}a:hover{text-decoration:underline}
 .hero{min-height:100vh;display:flex;flex-direction:column;padding:0 2rem 2rem;justify-content:flex-start;align-items:center;text-align:center;position:relative}
 .hero::before{content:'';position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:600px;height:600px;background:radial-gradient(circle,var(--accent-glow) 0%,transparent 70%);pointer-events:none}
-.logomark{width:calc(100% + 4rem);margin-left:-2rem;height:auto;display:block;margin-bottom:0.5rem}
+.logomark{width:calc(100% + 4rem);margin-left:-2rem;height:auto;display:block;margin-bottom:0.5rem;-webkit-mask-image:linear-gradient(to bottom,rgba(0,0,0,0) 0%,rgba(0,0,0,1) 15%,rgba(0,0,0,1) 85%,rgba(0,0,0,0) 100%);mask-image:linear-gradient(to bottom,rgba(0,0,0,0) 0%,rgba(0,0,0,1) 15%,rgba(0,0,0,1) 85%,rgba(0,0,0,0) 100%)}
 .hero-hd{position:absolute;top:1.75rem;left:0;right:0;display:flex;justify-content:center;pointer-events:none;z-index:1}.hero-hd a{pointer-events:all;color:#444;text-decoration:none;font-size:0.8rem;letter-spacing:0.04em;border:1px solid #222;border-radius:20px;padding:0.3rem 1rem;transition:color 0.15s,border-color 0.15s}.hero-hd a:hover{color:var(--accent);border-color:var(--accent)}.hero-hd a span{color:var(--accent)}
 .logo{font-size:3.5rem;font-weight:700;letter-spacing:-0.03em;margin-bottom:0.5rem;margin-top:2.5rem}.logo span{color:var(--accent)}
 .tagline{font-size:1.3rem;color:var(--muted);margin-bottom:0.5rem}
@@ -462,7 +462,7 @@ ${heroBlock}
     ${badgesHtml}
   </div>
   <div class="scroll-hint">↓ scroll</div>
-</div>
+  <img src="/assets/prims.jpg" alt="prim.sh primitives" style="width:calc(100% + 4rem);margin-left:-2rem;display:block;margin-top:2rem;-webkit-mask-image:linear-gradient(to bottom,rgba(0,0,0,0) 0%,rgba(0,0,0,1) 15%,rgba(0,0,0,1) 85%,rgba(0,0,0,0) 100%);mask-image:linear-gradient(to bottom,rgba(0,0,0,0) 0%,rgba(0,0,0,1) 15%,rgba(0,0,0,1) 85%,rgba(0,0,0,0) 100%)">
 
 ${sectionsHtml}
 
@@ -473,7 +473,7 @@ ${ctaHtml}
   <div class="links"><a href="https://prim.sh/${cfg.id}">Docs</a><a href="https://${esc(cfg.endpoint)}">API</a><a href="/">prim.sh</a></div>
   <div style="margin-top:0.75rem;font-size:0.8rem;color:#444">This page is for humans. The API is for agents.</div>
 </footer>
-<img src="/assets/banner.jpg" alt="" style="width:100%;display:block;margin:0;padding:0">
+<img src="/assets/banner.jpg" alt="" style="width:100%;display:block;margin:0;padding:0;-webkit-mask-image:linear-gradient(to bottom,rgba(0,0,0,0) 0%,rgba(0,0,0,1) 15%,rgba(0,0,0,1) 85%,rgba(0,0,0,0) 100%);mask-image:linear-gradient(to bottom,rgba(0,0,0,0) 0%,rgba(0,0,0,1) 15%,rgba(0,0,0,1) 85%,rgba(0,0,0,0) 100%)">
 </body>
 </html>`;
 }
