@@ -26,7 +26,7 @@ Tasks that block repo going public + mainnet switchover.
 | P-6 | `prim` binary publishing + install scripts: `bun build --compile`, host binaries in Cloudflare R2 public bucket (`prim-releases`) served via `dl.prim.sh`, install script at `prim.sh/install`. Keeps repo private during beta. | packages/keystore, site/, Cloudflare | ST-6 | done |
 | SEC-1 | Infra hardening: fail2ban, SSH key-only, unattended-upgrades on VPS | deploy/ | — | done |
 | SEC-2 | Caddy security headers: HSTS, X-Frame-Options, X-Content-Type-Options, CSP | deploy/prim/Caddyfile | — | done |
-| SEC-3 | Edge rate limiting: Caddy rate_limit or CF WAF for health/registration endpoints | deploy/, Cloudflare | — | pending |
+| SEC-3 | Edge rate limiting: Caddy timeouts, header size limits, request body limits | deploy/, Cloudflare | — | done |
 | SEC-4 | Dependency audit: `pnpm audit` in CI, pin critical deps | .github/workflows/ci.yml | — | done |
 | SEC-5 | Input validation + request size limits (Hono body-limit middleware, 1MB default) | packages/* | — | done |
 | SEC-6 | SQLite backup: daily cron → R2, 30-day retention, restore procedure | deploy/prim/ | — | pending |
