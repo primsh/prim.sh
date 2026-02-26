@@ -2,12 +2,11 @@
 /**
  * Launch Readiness Dashboard
  *
- * Checks 5 dimensions of launch readiness:
- *   1. Tests     — `pnpm -r test` per-package results
- *   2. Tasks     — TASKS.md lane counts (done/pending)
- *   3. Endpoints — live health checks for deployed services
- *   4. DNS       — *.prim.sh A record resolution
- *   5. Blockers  — critical-path pending tasks
+ * Shows only hard pre-launch requirements:
+ *   1. Tests     — all tests must pass
+ *   2. Endpoints — all live services must respond
+ *   3. DNS       — all live services must resolve to VPS
+ *   4. Blockers  — critical-path tasks that gate launch
  *
  * Usage:
  *   bun scripts/launch-status.ts
@@ -19,6 +18,7 @@
 import { execSync } from "node:child_process";
 import { readFileSync } from "node:fs";
 import { resolve4 } from "node:dns/promises";
+// Tasks (parseTasks) intentionally removed — blockers list captures what gates launch
 
 // ─── Config ──────────────────────────────────────────────────────────────
 
@@ -42,13 +42,6 @@ const DNS_LIVE = [
   "spawn.prim.sh",
   "search.prim.sh",
   "email.prim.sh",
-] as const;
-
-// Warn only — not yet deployed
-const DNS_PLANNED = [
-  "token.prim.sh",
-  "mem.prim.sh",
-  "domain.prim.sh",
 ] as const;
 
 // Critical-path task IDs that block public launch
@@ -146,63 +139,7 @@ function checkTests() {
   }
 }
 
-// ─── 2. Tasks ────────────────────────────────────────────────────────────
-
-interface LaneCounts {
-  done: number;
-  pending: number;
-  total: number;
-}
-
-function parseTasks(): { lane1: LaneCounts; lane2: LaneCounts } {
-  header("📋", "Tasks");
-
-  const content = readFileSync("TASKS.md", "utf-8");
-  const lines = content.split("\n");
-
-  let currentLane: "lane1" | "lane2" | null = null;
-  const counts = {
-    lane1: { done: 0, pending: 0, total: 0 },
-    lane2: { done: 0, pending: 0, total: 0 },
-  };
-
-  for (const line of lines) {
-    if (line.startsWith("## Lane 1")) currentLane = "lane1";
-    else if (line.startsWith("## Lane 2")) currentLane = "lane2";
-    else if (line.startsWith("## ") && currentLane) currentLane = null;
-
-    if (!currentLane) continue;
-
-    const rowMatch = line.match(/^\|(?![-\s]*\|)\s*.+\|\s*(done|pending|backlog|deferred)\b/i);
-    if (rowMatch) {
-      const status = rowMatch[1].toLowerCase();
-      const c = counts[currentLane];
-      c.total++;
-      if (status === "done") c.done++;
-      else c.pending++;
-    }
-  }
-
-  const { lane1, lane2 } = counts;
-
-  if (lane1.total > 0) {
-    const detail = `${lane1.done} done / ${lane1.pending} pending of ${lane1.total}`;
-    if (lane1.pending > 0) pending(`Lane 1 (Launch): ${detail}`);
-    else pass(`Lane 1 (Launch): ${detail}`);
-  } else {
-    warn("Lane 1 (Launch): no tasks found", "check TASKS.md format");
-  }
-
-  if (lane2.total > 0) {
-    warn(`Lane 2 (Post-Launch): ${lane2.done} done / ${lane2.pending} pending of ${lane2.total}`);
-  } else {
-    warn("Lane 2 (Post-Launch): no tasks found", "check TASKS.md format");
-  }
-
-  return counts;
-}
-
-// ─── 3. Live Endpoints ───────────────────────────────────────────────────
+// ─── 2. Live Endpoints ───────────────────────────────────────────────────
 
 async function checkEndpoints() {
   header("🌐", "Live Endpoints");
@@ -229,7 +166,7 @@ async function checkEndpoints() {
   }
 }
 
-// ─── 4. DNS ──────────────────────────────────────────────────────────────
+// ─── 3. DNS ──────────────────────────────────────────────────────────────
 
 async function checkDns() {
   header("📡", "DNS");
@@ -248,21 +185,9 @@ async function checkDns() {
     }
   }
 
-  for (const host of DNS_PLANNED) {
-    try {
-      const addrs = await resolve4(host);
-      if (addrs.includes(VPS_IP)) {
-        pass(host, `${VPS_IP} (not yet deployed)`);
-      } else {
-        warn(host, `resolves to ${addrs.join(", ")} (expected ${VPS_IP})`);
-      }
-    } catch {
-      warn(host, "not yet deployed");
-    }
-  }
 }
 
-// ─── 5. Blockers ─────────────────────────────────────────────────────────
+// ─── 4. Blockers ─────────────────────────────────────────────────────────
 
 function checkBlockers() {
   header("🚧", "Blockers (critical path)");
@@ -304,7 +229,6 @@ async function main() {
   console.log("\n🚀 Prim Launch Readiness Dashboard\n");
 
   checkTests();
-  parseTasks();
   await checkEndpoints();
   await checkDns();
   checkBlockers();
