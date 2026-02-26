@@ -39,6 +39,9 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
+      - name: Dependency audit
+        run: pnpm audit --audit-level=high
+
       - name: Build x402-middleware
         run: pnpm --filter @primsh/x402-middleware build
 
