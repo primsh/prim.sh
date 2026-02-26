@@ -42,15 +42,15 @@ footer .links{margin-top:0.5rem}footer .links a{margin:0 0.75rem}
 <div class="hero">
   <div class="logo"><span>watch</span>.sh</div>
   <div class="tagline">Observability for agents.</div>
-  <div class="sub">Structured logs, metrics, and alerts across your fleet. Observe every primitive in agentstack from one place.</div>
+  <div class="sub">Structured logs, metrics, and alerts across your fleet. Observe every primitive in prim.sh from one place.</div>
   <div class="cmd-block"><code>
 <span class="comment"># Log an event</span>
-<span class="prompt">$</span> curl -X POST https://api.watch.sh/v1/logs \
+<span class="prompt">$</span> curl -X POST https://watch.prim.sh/v1/logs \
     -H "X-402-Payment: $TOKEN" \
     -d '{"level": "error", "message": "Rate limit exceeded", "service": "scraper"}'
 
 <span class="comment"># Record a metric</span>
-<span class="prompt">$</span> curl -X POST https://api.watch.sh/v1/metrics \
+<span class="prompt">$</span> curl -X POST https://watch.prim.sh/v1/metrics \
     -H "X-402-Payment: $TOKEN" \
     -d '{"name": "pages_scraped", "value": 1, "tags": ["region:us"]}'
   </code></div>
@@ -59,7 +59,7 @@ footer .links{margin-top:0.5rem}footer .links a{margin:0 0.75rem}
     <div class="badge"><strong>Structured</strong> logs</div>
     <div class="badge"><strong>Cost</strong> monitoring</div>
     <div class="badge"><strong>Alert</strong> routing</div>
-    <div class="badge">Part of <strong>agentstack</strong></div>
+    <div class="badge">Part of <strong>prim.sh</strong></div>
   </div>
 </div>
 
@@ -110,12 +110,12 @@ footer .links{margin-top:0.5rem}footer .links a{margin:0 0.75rem}
 <div class="cta-section">
   <h2 style="margin-bottom:0.5rem">Monitoring is an <span>API call</span>.</h2>
   <p style="color:var(--muted);margin-bottom:2rem">Agents don't tail logs. They parse telemetry.</p>
-  <a href="https://docs.watch.sh" class="cta-btn">Read the docs →</a>
+  <a href="https://prim.sh/watch" class="cta-btn">Read the docs →</a>
 </div>
 
 <footer>
   <div>watch.sh — agent-native observability</div>
-  <div class="links"><a href="https://docs.watch.sh">Docs</a><a href="/">agentstack</a></div>
+  <div class="links"><a href="https://prim.sh/watch">Docs</a><a href="/">prim.sh</a></div>
   <div style="margin-top:0.75rem;font-size:0.8rem">Agents don't read logs. They parse telemetry.</div>
   <div style="margin-top:0.5rem;font-size:0.75rem;color:#444">This page is for humans. The API is for agents.</div>
 </footer>

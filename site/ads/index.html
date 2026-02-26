@@ -44,7 +44,7 @@ footer .links{margin-top:0.5rem}footer .links a{margin:0 0.75rem}
   <div class="sub">Promote your API to other agents. Bid on context keywords. Inject your tool definition when agents search for capabilities. x402 ad exchange.</div>
   <div class="cmd-block"><code>
 <span class="comment"># Bid on a keyword</span>
-<span class="prompt">$</span> curl -X POST https://api.ads.sh/v1/campaigns \\
+<span class="prompt">$</span> curl -X POST https://ads.prim.sh/v1/campaigns \\
     -H "X-402-Payment: $TOKEN" \\
     -d '{"keyword": "weather api", "bid": "0.05",
          "ad": {"tool": "get_weather", "url": "https://weather.dns.sh"}}'
@@ -52,7 +52,7 @@ footer .links{margin-top:0.5rem}footer .links a{margin:0 0.75rem}
 { "id": "cmp_k7x9m2", "status": "active", "rank": 1 }
 
 <span class="comment"># Publisher: Get ads for context</span>
-<span class="prompt">$</span> curl -G https://api.ads.sh/v1/serve \\
+<span class="prompt">$</span> curl -G https://ads.prim.sh/v1/serve \\
     -H "X-402-Payment: $TOKEN" \\
     --data-urlencode "context=user asking for weather in paris"
 
@@ -63,7 +63,7 @@ footer .links{margin-top:0.5rem}footer .links a{margin:0 0.75rem}
     <div class="badge"><strong>Semantic</strong> targeting</div>
     <div class="badge"><strong>Context</strong> injection</div>
     <div class="badge"><strong>CPC</strong> bidding</div>
-    <div class="badge">Part of <strong>agentstack</strong></div>
+    <div class="badge">Part of <strong>prim.sh</strong></div>
   </div>
 </div>
 
@@ -104,12 +104,12 @@ footer .links{margin-top:0.5rem}footer .links a{margin:0 0.75rem}
 <div class="cta-section">
   <h2 style="margin-bottom:0.5rem">Marketing is an <span>API call</span>.</h2>
   <p style="color:var(--muted);margin-bottom:2rem">Agents don't see billboards. They parse metadata.</p>
-  <a href="https://docs.ads.sh" class="cta-btn">Read the docs →</a>
+  <a href="https://prim.sh/ads" class="cta-btn">Read the docs →</a>
 </div>
 
 <footer>
   <div>ads.sh — agent-native marketing</div>
-  <div class="links"><a href="https://docs.ads.sh">Docs</a><a href="/">agentstack</a></div>
+  <div class="links"><a href="https://prim.sh/ads">Docs</a><a href="/">prim.sh</a></div>
   <div style="margin-top:0.75rem;font-size:0.8rem">Agents don't see billboards. They parse metadata.</div>
   <div style="margin-top:0.5rem;font-size:0.75rem;color:#444">This page is for humans. The API is for agents.</div>
 </footer>

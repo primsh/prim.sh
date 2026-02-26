@@ -2,8 +2,9 @@
 
 > Secrets for agents. Store API keys and sensitive config behind x402 auth.
 
-Base URL: https://api.vault.sh  
+Base URL: https://vault.prim.sh  
 Auth: x402 (USDC on Base, chain `eip155:8453`)
+Status: Coming soon. This primitive is not yet available.
 
 ## Endpoints
 
@@ -19,18 +20,18 @@ Auth: x402 (USDC on Base, chain `eip155:8453`)
 - Reads/writes: per 1k operations.  
 - Rotation: small per-rotation fee.
 
-See human docs at `https://docs.vault.sh` for concrete pricing.
+See human docs at `https://prim.sh/vault` for concrete pricing.
 
 ## Examples
 
 ```bash
 # Store a secret
-curl -X POST https://api.vault.sh/v1/secrets \
+curl -X POST https://vault.prim.sh/v1/secrets \
   -H "X-402-Payment: $TOKEN" \
   -d '{"name": "smtp_password", "value": "..." }'
 
 # Read a secret
-curl https://api.vault.sh/v1/secrets/smtp_password \
+curl https://vault.prim.sh/v1/secrets/smtp_password \
   -H "X-402-Payment: $TOKEN"
 ```
 

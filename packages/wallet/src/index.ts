@@ -1,5 +1,7 @@
 import { Hono } from "hono";
 import { createAgentStackMiddleware, getNetworkConfig } from "@primsh/x402-middleware";
+import { addToAllowlist, removeFromAllowlist, isAllowed, createAllowlistChecker } from "@primsh/x402-middleware/allowlist-db";
+import { join } from "node:path";
 import type {
   WalletRegisterRequest,
   WalletListResponse,
@@ -34,6 +36,9 @@ import { pause, resume, getState } from "./circuit-breaker.ts";
 const networkConfig = getNetworkConfig();
 const PAY_TO_ADDRESS = process.env.PRIM_PAY_TO ?? "0x0000000000000000000000000000000000000000";
 const NETWORK = networkConfig.network;
+const INTERNAL_KEY = process.env.PRIM_INTERNAL_KEY;
+const ALLOWLIST_DB_PATH = process.env.PRIM_ALLOWLIST_DB ?? join(process.env.PRIM_DATA_DIR ?? "/var/lib/prim", "allowlist.db");
+const allowlistChecker = createAllowlistChecker(ALLOWLIST_DB_PATH);
 
 const WALLET_ROUTES = {
   "GET /v1/wallets": "$0.001",
@@ -66,12 +71,16 @@ app.use(
     {
       payTo: PAY_TO_ADDRESS,
       network: NETWORK,
+      checkAllowlist: allowlistChecker,
       freeRoutes: [
         "GET /",
         "POST /v1/wallets",
         "POST /v1/admin/circuit-breaker/pause",
         "POST /v1/admin/circuit-breaker/resume",
         "GET /v1/admin/circuit-breaker",
+        "POST /internal/allowlist/add",
+        "DELETE /internal/allowlist/:address",
+        "GET /internal/allowlist/check",
       ],
     },
     { ...WALLET_ROUTES },
@@ -383,6 +392,63 @@ app.post("/v1/admin/circuit-breaker/resume", async (c) => {
 app.get("/v1/admin/circuit-breaker", (c) => {
   const state = getState();
   return c.json(state, 200);
+});
+
+// ─── Internal: allowlist management ────────────────────────────────────────
+
+function internalAuth(c: Parameters<import("hono").MiddlewareHandler>[0]): Response | null {
+  if (!INTERNAL_KEY) {
+    return c.json({ error: { code: "not_configured", message: "Internal API not configured" } }, 501);
+  }
+  const key = c.req.header("x-internal-key");
+  if (key !== INTERNAL_KEY) {
+    return c.json({ error: { code: "unauthorized", message: "Invalid internal key" } }, 401);
+  }
+  return null;
+}
+
+// POST /internal/allowlist/add — Add wallet to allowlist
+app.post("/internal/allowlist/add", async (c) => {
+  const denied = internalAuth(c);
+  if (denied) return denied;
+
+  let body: { address?: string; added_by?: string; note?: string };
+  try {
+    body = await c.req.json();
+  } catch {
+    return c.json({ error: { code: "invalid_request", message: "Invalid JSON body" } }, 400);
+  }
+
+  if (!body.address) {
+    return c.json({ error: { code: "invalid_request", message: "Missing required field: address" } }, 400);
+  }
+
+  addToAllowlist(ALLOWLIST_DB_PATH, body.address, body.added_by ?? "internal", body.note);
+  return c.json({ ok: true, address: body.address.toLowerCase() }, 200);
+});
+
+// DELETE /internal/allowlist/:address — Remove wallet from allowlist
+app.delete("/internal/allowlist/:address", (c) => {
+  const denied = internalAuth(c);
+  if (denied) return denied;
+
+  const address = c.req.param("address");
+  removeFromAllowlist(ALLOWLIST_DB_PATH, address);
+  return c.json({ ok: true, address: address.toLowerCase() }, 200);
+});
+
+// GET /internal/allowlist/check — Check if wallet is allowed
+app.get("/internal/allowlist/check", (c) => {
+  const denied = internalAuth(c);
+  if (denied) return denied;
+
+  const address = c.req.query("address");
+  if (!address) {
+    return c.json({ error: { code: "invalid_request", message: "Missing query param: address" } }, 400);
+  }
+
+  const allowed = isAllowed(ALLOWLIST_DB_PATH, address);
+  return c.json({ allowed, address: address.toLowerCase() }, 200);
 });
 
 export default app;

@@ -324,4 +324,113 @@ describe("createPrimFetch", () => {
 
     vi.unstubAllGlobals();
   });
+
+  describe("settlement failure retry", () => {
+    function makeSettlement402(): Response {
+      return new Response(JSON.stringify({ error: "Settlement failed", details: "nonce collision" }), {
+        status: 402,
+        headers: {
+          "X-Payment-Required": makePaymentRequiredHeader(),
+          "Content-Type": "application/json",
+        },
+      });
+    }
+
+    it("settlement fails then succeeds: returns 200, fetch called 3 times, 2s delay", async () => {
+      vi.useFakeTimers();
+
+      const mockFetch = vi
+        .fn()
+        .mockResolvedValueOnce(make402Response())
+        .mockResolvedValueOnce(makeSettlement402())
+        .mockResolvedValueOnce(make200Response());
+      vi.stubGlobal("fetch", mockFetch);
+
+      const primFetch = createPrimFetch({ privateKey: TEST_PRIVATE_KEY });
+      const fetchPromise = primFetch("https://example.com/resource");
+
+      // Advance past the 2s backoff
+      await vi.advanceTimersByTimeAsync(2000);
+
+      const res = await fetchPromise;
+
+      expect(res.status).toBe(200);
+      expect(mockFetch).toHaveBeenCalledTimes(3);
+      // Re-sign: createPaymentPayload called for initial sign + settlement retry
+      expect(mockCreatePaymentPayload).toHaveBeenCalledTimes(2);
+
+      vi.useRealTimers();
+      vi.unstubAllGlobals();
+    });
+
+    it("settlement fails twice: returns 402 without a second retry", async () => {
+      vi.useFakeTimers();
+
+      const mockFetch = vi
+        .fn()
+        .mockResolvedValueOnce(make402Response())
+        .mockResolvedValueOnce(makeSettlement402())
+        .mockResolvedValueOnce(makeSettlement402());
+      vi.stubGlobal("fetch", mockFetch);
+
+      const primFetch = createPrimFetch({ privateKey: TEST_PRIVATE_KEY });
+      const fetchPromise = primFetch("https://example.com/resource");
+
+      await vi.advanceTimersByTimeAsync(2000);
+
+      const res = await fetchPromise;
+
+      expect(res.status).toBe(402);
+      expect(mockFetch).toHaveBeenCalledTimes(3);
+
+      vi.useRealTimers();
+      vi.unstubAllGlobals();
+    });
+
+    it("non-settlement 402: not retried, fetch called exactly 2 times", async () => {
+      const insufficientFunds402 = new Response(
+        JSON.stringify({ error: "Insufficient funds" }),
+        {
+          status: 402,
+          headers: {
+            "X-Payment-Required": makePaymentRequiredHeader(),
+            "Content-Type": "application/json",
+          },
+        },
+      );
+
+      const mockFetch = vi
+        .fn()
+        .mockResolvedValueOnce(make402Response())
+        .mockResolvedValueOnce(insufficientFunds402);
+      vi.stubGlobal("fetch", mockFetch);
+
+      const primFetch = createPrimFetch({ privateKey: TEST_PRIVATE_KEY });
+      const res = await primFetch("https://example.com/resource");
+
+      expect(res.status).toBe(402);
+      expect(mockFetch).toHaveBeenCalledTimes(2);
+
+      vi.unstubAllGlobals();
+    });
+
+    it("retrySettlement: false — settlement 402 not retried, fetch called exactly 2 times", async () => {
+      const mockFetch = vi
+        .fn()
+        .mockResolvedValueOnce(make402Response())
+        .mockResolvedValueOnce(makeSettlement402());
+      vi.stubGlobal("fetch", mockFetch);
+
+      const primFetch = createPrimFetch({
+        privateKey: TEST_PRIVATE_KEY,
+        retrySettlement: false,
+      });
+      const res = await primFetch("https://example.com/resource");
+
+      expect(res.status).toBe(402);
+      expect(mockFetch).toHaveBeenCalledTimes(2);
+
+      vi.unstubAllGlobals();
+    });
+  });
 });

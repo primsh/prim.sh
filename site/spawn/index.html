@@ -89,7 +89,7 @@ footer .links a{margin:0 0.75rem}
   
   <div class="cmd-block"><code>
 <span class="comment"># Deploy a VPS in one HTTP request</span>
-<span class="prompt">$</span> curl -X POST https://api.spawn.sh/v1/instances \
+<span class="prompt">$</span> curl -X POST https://spawn.prim.sh/v1/instances \
     -H "X-402-Payment: $PAYMENT_TOKEN" \
     -d '{"image": "ubuntu-24.04", "plan": "s-1vcpu-1gb"}'
 
@@ -294,16 +294,16 @@ footer .links a{margin:0 0.75rem}
 <div class="cta-section">
   <h2 style="margin-bottom:0.5rem">Compute should be an <span>HTTP request</span>.</h2>
   <p style="color:var(--muted);margin-bottom:2rem;max-width:500px;margin-left:auto;margin-right:auto">No sign-up page because there's nothing to sign up for. Just point your agent at the API and pay.</p>
-  <a href="https://docs.spawn.sh" class="cta-btn">Read the docs →</a>
-  <p style="color:var(--muted);font-size:0.85rem;margin-top:1.5rem">or just: <code style="color:var(--green)">curl https://api.spawn.sh/v1/plans</code></p>
+  <a href="https://prim.sh/spawn" class="cta-btn">Read the docs →</a>
+  <p style="color:var(--muted);font-size:0.85rem;margin-top:1.5rem">or just: <code style="color:var(--green)">curl https://spawn.prim.sh/v1/plans</code></p>
 </div>
 
 <footer>
   <div>spawn.sh — agent-native infrastructure</div>
   <div class="links">
-    <a href="https://docs.spawn.sh">Docs</a>
+    <a href="https://prim.sh/spawn">Docs</a>
     <a href="https://github.com/spawn-sh">GitHub</a>
-    <a href="https://api.spawn.sh">API</a>
+    <a href="https://spawn.prim.sh">API</a>
   </div>
   <div style="margin-top:0.75rem;font-size:0.8rem">Agents don't have passports. They have payment receipts.</div>
   <div style="margin-top:0.5rem;font-size:0.75rem;color:#444">This page is for humans. The API is for agents.</div>

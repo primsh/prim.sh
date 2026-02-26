@@ -34,6 +34,9 @@ ROUTES = {
     "/hands": os.path.join(BASE, "hands", "index.html"),
     "/id": os.path.join(BASE, "id", "index.html"),
     "/corp": os.path.join(BASE, "corp", "index.html"),
+    "/access": os.path.join(BASE, "access", "index.html"),
+    "/terms": os.path.join(BASE, "terms", "index.html"),
+    "/privacy": os.path.join(BASE, "privacy", "index.html"),
 }
 
 
@@ -54,6 +57,10 @@ class H(http.server.BaseHTTPRequestHandler):
                 f = os.path.join(BASE, primitive, "llms.txt")
                 return f if os.path.exists(f) else None
 
+        if path.startswith("/assets/"):
+            f = os.path.join(BASE, path.lstrip("/"))
+            return f if os.path.exists(f) else None
+
         return None
 
     def _content_type(self, file_path: str) -> str:
@@ -61,6 +68,10 @@ class H(http.server.BaseHTTPRequestHandler):
             return "text/html; charset=utf-8"
         if file_path.endswith(".txt"):
             return "text/plain; charset=utf-8"
+        if file_path.endswith(".png"):
+            return "image/png"
+        if file_path.endswith(".jpg") or file_path.endswith(".jpeg"):
+            return "image/jpeg"
         return "application/octet-stream"
 
     def do_GET(self) -> None:

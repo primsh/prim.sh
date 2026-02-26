@@ -44,27 +44,27 @@ footer .links{margin-top:0.5rem}footer .links a{margin:0 0.75rem}
   <div class="sub">Create, fund, and spend from on-chain wallets. Base USDC first, multi-chain later. x402-native identity for every agent.</div>
   <div class="cmd-block"><code>
 <span class="comment"># Create a wallet</span>
-<span class="prompt">$</span> curl -X POST https://api.wallet.sh/v1/wallets \
+<span class="prompt">$</span> curl -X POST https://wallet.prim.sh/v1/wallets \
     -H "X-402-Payment: $TOKEN"
 
 { "address": "0xabc...", "network": "eip155:8453", "balances": { "USDC": "0.00" } }
 
 <span class="comment"># Send USDC on Base</span>
-<span class="prompt">$</span> curl -X POST https://api.wallet.sh/v1/wallets/0xabc.../send \
+<span class="prompt">$</span> curl -X POST https://wallet.prim.sh/v1/wallets/0xabc.../send \
     -H "X-402-Payment: $TOKEN" \
     -d '{"to": "0xdef...", "amount": "1.23", "asset": "USDC"}'
 
 <span class="comment"># Pay another primitive via x402</span>
-<span class="prompt">$</span> curl -X POST https://api.wallet.sh/v1/x402/pay \
+<span class="prompt">$</span> curl -X POST https://wallet.prim.sh/v1/x402/pay \
     -H "X-402-Payment: $TOKEN" \
-    -d '{"url": "https://api.spawn.sh/v1/instances", "max": "0.05"}'
+    -d '{"url": "https://spawn.prim.sh/v1/instances", "max": "0.05"}'
   </code></div>
   <div class="badges">
     <div class="badge"><strong>Base</strong> USDC</div>
     <div class="badge"><strong>x402</strong> native</div>
     <div class="badge"><strong>Multi</strong>-wallet</div>
     <div class="badge"><strong>Owner</strong> funding</div>
-    <div class="badge">Part of <strong>agentstack</strong></div>
+    <div class="badge">Part of <strong>prim.sh</strong></div>
   </div>
 </div>
 
@@ -103,12 +103,12 @@ footer .links{margin-top:0.5rem}footer .links a{margin:0 0.75rem}
 <div class="cta-section">
   <h2 style="margin-bottom:0.5rem">Wallets are an <span>API call</span>.</h2>
   <p style="color:var(--muted);margin-bottom:2rem">Agents don't KYC. They generate keys.</p>
-  <a href="https://docs.wallet.sh" class="cta-btn">Read the docs →</a>
+  <a href="https://prim.sh/wallet" class="cta-btn">Read the docs →</a>
 </div>
 
 <footer>
   <div>wallet.sh — agent-native wallets</div>
-  <div class="links"><a href="https://docs.wallet.sh">Docs</a><a href="/">agentstack</a></div>
+  <div class="links"><a href="https://prim.sh/wallet">Docs</a><a href="/">prim.sh</a></div>
   <div style="margin-top:0.75rem;font-size:0.8rem">Agents don't KYC. They generate keys.</div>
   <div style="margin-top:0.5rem;font-size:0.75rem;color:#444">This page is for humans. The API is for agents.</div>
 </footer>

@@ -44,7 +44,7 @@ footer .links{margin-top:0.5rem}footer .links a{margin:0 0.75rem}
   <div class="sub">Hold funds, receive payments, pay other agents, charge users. The financial primitive that makes agent commerce possible. x402 native.</div>
   <div class="cmd-block"><code>
 <span class="comment"># Create a wallet</span>
-<span class="prompt">$</span> curl -X POST https://api.pay.sh/v1/wallets \
+<span class="prompt">$</span> curl -X POST https://pay.prim.sh/v1/wallets \
     -H "X-402-Payment: $TOKEN"
 
 { "id": "wal_m8x3k7", "balance": "0.00",
@@ -54,13 +54,13 @@ footer .links{margin-top:0.5rem}footer .links a{margin:0 0.75rem}
 <span class="comment"># ... send to deposit address ...</span>
 
 <span class="comment"># Pay another agent's service</span>
-<span class="prompt">$</span> curl -X POST https://api.pay.sh/v1/wallets/wal_m8x3k7/pay \
+<span class="prompt">$</span> curl -X POST https://pay.prim.sh/v1/wallets/wal_m8x3k7/pay \
     -H "X-402-Payment: $TOKEN" \
-    -d '{"to": "https://api.spawn.sh/v1/instances",
+    -d '{"to": "https://spawn.prim.sh/v1/instances",
          "amount": "0.012"}'
 
 <span class="comment"># Create a charge (agent sells a service)</span>
-<span class="prompt">$</span> curl -X POST https://api.pay.sh/v1/charges \
+<span class="prompt">$</span> curl -X POST https://pay.prim.sh/v1/charges \
     -H "X-402-Payment: $TOKEN" \
     -d '{"amount": "0.05", "description": "API call",
          "wallet": "wal_m8x3k7"}'
@@ -73,7 +73,7 @@ footer .links{margin-top:0.5rem}footer .links a{margin:0 0.75rem}
     <div class="badge"><strong>Lightning</strong> + <strong>Base L2</strong></div>
     <div class="badge"><strong>Hold</strong> + <strong>send</strong> + <strong>receive</strong></div>
     <div class="badge"><strong>Agent-to-agent</strong> payments</div>
-    <div class="badge">Part of <strong>agentstack</strong></div>
+    <div class="badge">Part of <strong>prim.sh</strong></div>
   </div>
 </div>
 
@@ -135,12 +135,12 @@ footer .links{margin-top:0.5rem}footer .links a{margin:0 0.75rem}
 <div class="cta-section">
   <h2 style="margin-bottom:0.5rem">Money is an <span>API call</span>.</h2>
   <p style="color:var(--muted);margin-bottom:2rem">Agents don't have bank accounts. They have wallets.</p>
-  <a href="https://docs.pay.sh" class="cta-btn">Read the docs →</a>
+  <a href="https://prim.sh/pay" class="cta-btn">Read the docs →</a>
 </div>
 
 <footer>
   <div>pay.sh — agent-native payments</div>
-  <div class="links"><a href="https://docs.pay.sh">Docs</a><a href="/">agentstack</a></div>
+  <div class="links"><a href="https://prim.sh/pay">Docs</a><a href="/">prim.sh</a></div>
   <div style="margin-top:0.75rem;font-size:0.8rem">Agents don't have bank accounts. They have API calls.</div>
   <div style="margin-top:0.5rem;font-size:0.75rem;color:#444">This page is for humans. The API is for agents.</div>
 </footer>

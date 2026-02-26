@@ -44,7 +44,7 @@ footer .links{margin-top:0.5rem}footer .links a{margin:0 0.75rem}
   <div class="sub">Upload files, share artifacts between runs, persist state across ephemeral VMs. S3-compatible. x402 auth.</div>
   <div class="cmd-block"><code>
 <span class="comment"># Upload a file</span>
-<span class="prompt">$</span> curl -X PUT https://api.store.sh/v1/objects/results.json \
+<span class="prompt">$</span> curl -X PUT https://store.prim.sh/v1/objects/results.json \
     -H "X-402-Payment: $TOKEN" \
     -H "Content-Type: application/json" \
     -d @results.json
@@ -52,12 +52,12 @@ footer .links{margin-top:0.5rem}footer .links a{margin:0 0.75rem}
 { "id": "obj_k9m2x7", "url": "https://cdn.store.sh/obj_k9m2x7", "size": 4096 }
 
 <span class="comment"># Create a bucket for a project</span>
-<span class="prompt">$</span> curl -X POST https://api.store.sh/v1/buckets \
+<span class="prompt">$</span> curl -X POST https://store.prim.sh/v1/buckets \
     -H "X-402-Payment: $TOKEN" \
     -d '{"name": "training-run-042", "ttl": 604800}'
 
 <span class="comment"># Share via signed URL (no auth needed to download)</span>
-<span class="prompt">$</span> curl -X POST https://api.store.sh/v1/objects/obj_k9m2x7/share \
+<span class="prompt">$</span> curl -X POST https://store.prim.sh/v1/objects/obj_k9m2x7/share \
     -H "X-402-Payment: $TOKEN" \
     -d '{"expires": 3600}'
 
@@ -68,7 +68,7 @@ footer .links{margin-top:0.5rem}footer .links a{margin:0 0.75rem}
     <div class="badge"><strong>S3</strong> compatible</div>
     <div class="badge"><strong>CDN</strong> edge delivery</div>
     <div class="badge"><strong>Signed</strong> URLs</div>
-    <div class="badge">Part of <strong>agentstack</strong></div>
+    <div class="badge">Part of <strong>prim.sh</strong></div>
   </div>
 </div>
 
@@ -113,12 +113,12 @@ footer .links{margin-top:0.5rem}footer .links a{margin:0 0.75rem}
 <div class="cta-section">
   <h2 style="margin-bottom:0.5rem">Storage is an <span>API call</span>.</h2>
   <p style="color:var(--muted);margin-bottom:2rem">Agents don't have hard drives. They have store.sh.</p>
-  <a href="https://docs.store.sh" class="cta-btn">Read the docs →</a>
+  <a href="https://prim.sh/store" class="cta-btn">Read the docs →</a>
 </div>
 
 <footer>
   <div>store.sh — agent-native storage</div>
-  <div class="links"><a href="https://docs.store.sh">Docs</a><a href="/">agentstack</a></div>
+  <div class="links"><a href="https://prim.sh/store">Docs</a><a href="/">prim.sh</a></div>
   <div style="margin-top:0.75rem;font-size:0.8rem">Agents don't have hard drives. They have HTTP endpoints.</div>
   <div style="margin-top:0.5rem;font-size:0.75rem;color:#444">This page is for humans. The API is for agents.</div>
 </footer>

@@ -4,6 +4,7 @@ import {
   createAgentStackMiddleware,
   type AgentStackRouteConfig,
 } from "../src/middleware.ts";
+import type { AgentStackMiddlewareOptions } from "../src/types.ts";
 import {
   decodePaymentRequiredHeader,
   encodePaymentSignatureHeader,
@@ -236,7 +237,7 @@ describe("Wallet allowlist", () => {
     expect(res.status).toBe(403);
     const body = await res.json();
     expect(body.error).toBe("wallet_not_allowed");
-    expect(body.message).toBe("This service is in private beta");
+    expect(body.message).toContain("private beta");
   });
 
   it("allows all wallets when no allowlist is set", async () => {
@@ -284,6 +285,45 @@ describe("Wallet allowlist", () => {
     expect(res.status).toBe(402);
   });
 
+  it("includes access_url in 403 response when accessUrl is set", async () => {
+    const app = new Hono();
+    app.use(
+      "*",
+      createAgentStackMiddleware(
+        {
+          payTo: TEST_PAY_TO,
+          network: TEST_NETWORK,
+          facilitatorUrl: "https://x402.example",
+          freeRoutes: ["GET /free"],
+          allowlist: [ALLOWED_ADDRESS],
+          accessUrl: "https://prim.sh/access",
+        },
+        routes,
+      ),
+    );
+    app.get("/free", (c) => c.json({ ok: true }));
+    const res = await app.request("/free", {
+      method: "GET",
+      headers: { "PAYMENT-SIGNATURE": makePaymentHeader("0xBlockedAddress") },
+    });
+    expect(res.status).toBe(403);
+    const body = await res.json();
+    expect(body.access_url).toBe("https://prim.sh/access");
+    expect(body.message).toContain("https://prim.sh/access");
+  });
+
+  it("omits access_url when accessUrl is not set", async () => {
+    const app = createAllowlistApp([ALLOWED_ADDRESS]);
+    const res = await app.request("/free", {
+      method: "GET",
+      headers: { "PAYMENT-SIGNATURE": makePaymentHeader("0xBlockedAddress") },
+    });
+    expect(res.status).toBe(403);
+    const body = await res.json();
+    expect(body.access_url).toBeUndefined();
+    expect(body.message).toBe("This service is in private beta");
+  });
+
   it("skips allowlist check when PRIM_ALLOWLIST is empty string", async () => {
     process.env.PRIM_ALLOWLIST = "";
     const app = createAllowlistApp();
@@ -292,6 +332,124 @@ describe("Wallet allowlist", () => {
       headers: { "PAYMENT-SIGNATURE": makePaymentHeader("0xAnyAddress") },
     });
     expect(res.status).toBe(200);
+  });
+});
+
+describe("Dynamic allowlist (checkAllowlist callback)", () => {
+  const ALLOWED_ADDRESS = "0xAllowedAddress";
+
+  function makePaymentHeader(from: string) {
+    const paymentPayload = {
+      x402Version: 2,
+      scheme: "exact",
+      network: TEST_NETWORK,
+      payload: {
+        authorization: {
+          from,
+          to: TEST_PAY_TO,
+          value: "1000",
+          validAfter: "0",
+          validBefore: "9999999999",
+          nonce: "0xnonce",
+        },
+        signature: "0xsignature",
+      },
+    };
+    return encodePaymentSignatureHeader(paymentPayload as unknown as never);
+  }
+
+  function createDynamicApp(opts: Partial<AgentStackMiddlewareOptions> = {}) {
+    const app = new Hono();
+    app.use(
+      "*",
+      createAgentStackMiddleware(
+        {
+          payTo: TEST_PAY_TO,
+          network: TEST_NETWORK,
+          facilitatorUrl: "https://x402.example",
+          freeRoutes: ["GET /free"],
+          ...opts,
+        },
+        routes,
+      ),
+    );
+    app.get("/free", (c) => c.json({ route: "free", walletAddress: c.get("walletAddress") }));
+    app.get("/paid", (c) => c.json({ route: "paid", walletAddress: c.get("walletAddress") }));
+    return app;
+  }
+
+  afterEach(() => {
+    delete process.env.PRIM_ALLOWLIST;
+  });
+
+  it("allows wallet when checkAllowlist returns true", async () => {
+    const checker = vi.fn(async () => true);
+    const app = createDynamicApp({ checkAllowlist: checker });
+    const res = await app.request("/free", {
+      method: "GET",
+      headers: { "PAYMENT-SIGNATURE": makePaymentHeader("0xDynamicWallet") },
+    });
+    expect(res.status).toBe(200);
+    expect(checker).toHaveBeenCalledWith("0xdynamicwallet");
+  });
+
+  it("blocks wallet when checkAllowlist returns false", async () => {
+    const checker = vi.fn(async () => false);
+    const app = createDynamicApp({ checkAllowlist: checker });
+    const res = await app.request("/free", {
+      method: "GET",
+      headers: { "PAYMENT-SIGNATURE": makePaymentHeader("0xBlockedWallet") },
+    });
+    expect(res.status).toBe(403);
+    const body = await res.json();
+    expect(body.error).toBe("wallet_not_allowed");
+  });
+
+  it("does NOT call checkAllowlist if static allowlist already allows", async () => {
+    const checker = vi.fn(async () => false);
+    const app = createDynamicApp({
+      allowlist: [ALLOWED_ADDRESS],
+      checkAllowlist: checker,
+    });
+    const res = await app.request("/free", {
+      method: "GET",
+      headers: { "PAYMENT-SIGNATURE": makePaymentHeader(ALLOWED_ADDRESS) },
+    });
+    expect(res.status).toBe(200);
+    expect(checker).not.toHaveBeenCalled();
+  });
+
+  it("falls through to checkAllowlist when static allowlist misses", async () => {
+    const checker = vi.fn(async () => true);
+    const app = createDynamicApp({
+      allowlist: [ALLOWED_ADDRESS],
+      checkAllowlist: checker,
+    });
+    const res = await app.request("/free", {
+      method: "GET",
+      headers: { "PAYMENT-SIGNATURE": makePaymentHeader("0xOtherAddress") },
+    });
+    expect(res.status).toBe(200);
+    expect(checker).toHaveBeenCalledWith("0xotheraddress");
+  });
+
+  it("backwards compatible: no checkAllowlist = current behavior (allow all)", async () => {
+    const app = createDynamicApp(); // No allowlist, no checkAllowlist
+    const res = await app.request("/free", {
+      method: "GET",
+      headers: { "PAYMENT-SIGNATURE": makePaymentHeader("0xAnyWallet") },
+    });
+    expect(res.status).toBe(200);
+  });
+
+  it("checkAllowlist works on paid routes (payment path)", async () => {
+    const checker = vi.fn(async () => false);
+    const app = createDynamicApp({ checkAllowlist: checker });
+    const res = await app.request("/paid", {
+      method: "GET",
+      headers: { "PAYMENT-SIGNATURE": makePaymentHeader("0xBlockedWallet") },
+    });
+    expect(res.status).toBe(403);
   });
 });
 

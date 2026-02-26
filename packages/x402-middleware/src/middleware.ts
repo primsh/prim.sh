@@ -68,6 +68,7 @@ export function createAgentStackMiddleware(
   const facilitatorUrl = options.facilitatorUrl ?? DEFAULT_FACILITATOR_URL;
   const freeRoutes = new Set(options.freeRoutes ?? []);
   const allowlist = buildAllowlist(options);
+  const accessUrl = options.accessUrl ?? process.env.PRIM_ACCESS_URL;
 
   const effectiveRoutes: Record<string, RouteConfig> = {};
 
@@ -110,18 +111,28 @@ export function createAgentStackMiddleware(
     }
   }
 
-  function denyWallet(c: Parameters<MiddlewareHandler>[0]): boolean {
-    if (!allowlist) return false;
+  async function denyWallet(c: Parameters<MiddlewareHandler>[0]): Promise<boolean> {
+    if (!allowlist && !options.checkAllowlist) return false;
     const wallet = c.get(WALLET_ADDRESS_KEY) as string | undefined;
     if (!wallet) return false; // No payment header yet — let x402 return 402
-    return !allowlist.has(wallet.toLowerCase());
+    const lower = wallet.toLowerCase();
+    if (allowlist?.has(lower)) return false; // Static allowlist fast path
+    if (options.checkAllowlist) return !(await options.checkAllowlist(lower));
+    // Static allowlist exists but wallet not found
+    return true;
   }
 
   if (Object.keys(effectiveRoutes).length === 0) {
     return async (c: Parameters<MiddlewareHandler>[0], next: Parameters<MiddlewareHandler>[1]) => {
       extractWalletAddress(c);
-      if (denyWallet(c)) {
-        return c.json({ error: "wallet_not_allowed", message: "This service is in private beta" }, 403);
+      if (await denyWallet(c)) {
+        return c.json({
+          error: "wallet_not_allowed",
+          message: accessUrl
+            ? `This service is in private beta. Request access via ${accessUrl}`
+            : "This service is in private beta",
+          ...(accessUrl && { access_url: accessUrl }),
+        }, 403);
       }
       await next();
     };
@@ -141,8 +152,14 @@ export function createAgentStackMiddleware(
 
   return async (c, next) => {
     extractWalletAddress(c);
-    if (denyWallet(c)) {
-      return c.json({ error: "wallet_not_allowed", message: "This service is in private beta" }, 403);
+    if (await denyWallet(c)) {
+      return c.json({
+          error: "wallet_not_allowed",
+          message: accessUrl
+            ? `This service is in private beta. Request access via ${accessUrl}`
+            : "This service is in private beta",
+          ...(accessUrl && { access_url: accessUrl }),
+        }, 403);
     }
     return payment(c, next);
   };

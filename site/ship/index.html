@@ -44,14 +44,14 @@ footer .links{margin-top:0.5rem}footer .links a{margin:0 0.75rem}
   <div class="sub">Generate labels (UPS/FedEx/USPS). Schedule pickups. Track packages via webhook. Physical mail receiving addresses. x402 auth.</div>
   <div class="cmd-block"><code>
 <span class="comment"># Get a rate quote</span>
-<span class="prompt">$</span> curl -X POST https://api.ship.sh/v1/rates \\
+<span class="prompt">$</span> curl -X POST https://ship.prim.sh/v1/rates \\
     -H "X-402-Payment: $TOKEN" \\
     -d '{"from": "90210", "to": "94103", "weight_oz": 16}'
 
 { "rates": [ { "id": "rate_x9k2", "carrier": "USPS", "service": "Priority", "price": "8.50" } ] }
 
 <span class="comment"># Buy label</span>
-<span class="prompt">$</span> curl -X POST https://api.ship.sh/v1/labels \\
+<span class="prompt">$</span> curl -X POST https://ship.prim.sh/v1/labels \\
     -H "X-402-Payment: $TOKEN" \\
     -d '{"rate_id": "rate_x9k2", "sender": {...}, "recipient": {...}}'
 
@@ -63,7 +63,7 @@ footer .links{margin-top:0.5rem}footer .links a{margin:0 0.75rem}
     <div class="badge"><strong>Multi-carrier</strong></div>
     <div class="badge"><strong>Receiving</strong> addresses</div>
     <div class="badge"><strong>Webhook</strong> tracking</div>
-    <div class="badge">Part of <strong>agentstack</strong></div>
+    <div class="badge">Part of <strong>prim.sh</strong></div>
   </div>
 </div>
 
@@ -105,12 +105,12 @@ footer .links{margin-top:0.5rem}footer .links a{margin:0 0.75rem}
 <div class="cta-section">
   <h2 style="margin-bottom:0.5rem">Logistics is an <span>API call</span>.</h2>
   <p style="color:var(--muted);margin-bottom:2rem">Agents don't have mailboxes. They have receiving centers.</p>
-  <a href="https://docs.ship.sh" class="cta-btn">Read the docs →</a>
+  <a href="https://prim.sh/ship" class="cta-btn">Read the docs →</a>
 </div>
 
 <footer>
   <div>ship.sh — agent-native logistics</div>
-  <div class="links"><a href="https://docs.ship.sh">Docs</a><a href="/">agentstack</a></div>
+  <div class="links"><a href="https://prim.sh/ship">Docs</a><a href="/">prim.sh</a></div>
   <div style="margin-top:0.75rem;font-size:0.8rem">Agents don't have mailboxes. They have receiving centers.</div>
   <div style="margin-top:0.5rem;font-size:0.75rem;color:#444">This page is for humans. The API is for agents.</div>
 </footer>

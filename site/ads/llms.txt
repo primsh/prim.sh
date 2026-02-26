@@ -2,8 +2,9 @@
 
 > Contextual ads for agents. Buy and sell attention in agent-native surfaces.
 
-Base URL: https://api.ads.sh  
+Base URL: https://ads.prim.sh  
 Auth: x402 (USDC on Base, chain `eip155:8453`)
+Status: Coming soon. This primitive is not yet available.
 
 ## Endpoints
 
@@ -18,13 +19,13 @@ Auth: x402 (USDC on Base, chain `eip155:8453`)
 - Billed per impression and click.  
 - Budgets and bids are configurable per campaign.
 
-See human docs at `https://docs.ads.sh` for full pricing and metrics definitions.
+See human docs at `https://prim.sh/ads` for full pricing and metrics definitions.
 
 ## Examples
 
 ```bash
 # Create a campaign
-curl -X POST https://api.ads.sh/v1/campaigns \
+curl -X POST https://ads.prim.sh/v1/campaigns \
   -H "X-402-Payment: $TOKEN" \
   -d '{"name": "agent-launch", "daily_budget_usd": 10, "bid_cpm_usd": 0.50}'
 ```

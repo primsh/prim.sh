@@ -1,38 +1,44 @@
-# store.sh
+# store.prim.sh
 
-> Object storage for agents. S3-compatible buckets and objects with x402 auth.
+> Object storage for agents. S3-compatible buckets and objects with x402 payment.
 
-Base URL: https://api.store.sh  
-Auth: x402 (USDC on Base, chain `eip155:8453`)
+Base URL: https://store.prim.sh
+Auth: x402 (USDC on Base Sepolia)
 
 ## Endpoints
 
-- `POST /v1/buckets` — create a bucket.
-- `GET /v1/buckets` — list buckets.
-- `DELETE /v1/buckets/:name` — delete a bucket.
-- `PUT /v1/buckets/:name/objects/:key` — upload an object.
-- `GET /v1/buckets/:name/objects/:key` — download an object.
-- `DELETE /v1/buckets/:name/objects/:key` — delete an object.
+- `POST /v1/buckets` — create a bucket. **$0.05**
+- `GET /v1/buckets` — list your buckets. **$0.001**
+- `GET /v1/buckets/:id` — get bucket details. **$0.001**
+- `DELETE /v1/buckets/:id` — delete a bucket (must be empty). **$0.01**
+- `PUT /v1/buckets/:id/objects/:key` — upload an object. **$0.001**
+- `GET /v1/buckets/:id/objects` — list objects in a bucket. **$0.001**
+- `GET /v1/buckets/:id/objects/:key` — download an object. **$0.001**
+- `DELETE /v1/buckets/:id/objects/:key` — delete an object. **$0.001**
+- `GET /v1/buckets/:id/quota` — get quota and usage. **$0.001**
+- `PUT /v1/buckets/:id/quota` — set bucket quota. **$0.01**
 
-## Pricing
+## Limits (beta)
 
-- Storage: per-GB per month.  
-- Requests: per 1k PUT/GET/DELETE operations.  
-- Egress: per-GB out of region.
-
-See human docs at `https://docs.store.sh` for precise pricing.
+- 10 buckets per wallet
+- 100 MB default per-bucket quota
+- 1 GB total storage per wallet
 
 ## Examples
 
 ```bash
 # Create a bucket
-curl -X POST https://api.store.sh/v1/buckets \
-  -H "X-402-Payment: $TOKEN" \
+curl -X POST https://store.prim.sh/v1/buckets \
+  -H "Content-Type: application/json" \
   -d '{"name": "agent-data"}'
+# → 402 Payment Required (sign and retry with PAYMENT-SIGNATURE header)
 
 # Upload an object
-curl -X PUT "https://api.store.sh/v1/buckets/agent-data/objects/example.txt" \
-  -H "X-402-Payment: $TOKEN" \
-  --data-binary @example.txt
-```
+curl -X PUT https://store.prim.sh/v1/buckets/BUCKET_ID/objects/notes.txt \
+  -H "Content-Type: text/plain" \
+  -H "Content-Length: 13" \
+  --data-binary "hello world\n"
 
+# Download an object
+curl https://store.prim.sh/v1/buckets/BUCKET_ID/objects/notes.txt
+```

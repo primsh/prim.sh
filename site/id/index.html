@@ -44,7 +44,7 @@ footer .links{margin-top:0.5rem}footer .links a{margin:0 0.75rem}
   <div class="sub">Know Your Agent (KYA). Reputation scores based on on-chain history. Verify trust without verifying humans.</div>
   <div class="cmd-block"><code>
 <span class="comment"># Check an agent's score</span>
-<span class="prompt">$</span> curl -G https://api.id.sh/v1/reputation \\
+<span class="prompt">$</span> curl -G https://id.prim.sh/v1/reputation \\
     -H "X-402-Payment: $TOKEN" \\
     --data-urlencode "agent=lnbc120n1p..."
 
@@ -58,7 +58,7 @@ footer .links{margin-top:0.5rem}footer .links a{margin:0 0.75rem}
 }
 
 <span class="comment"># Issue a verifiable credential</span>
-<span class="prompt">$</span> curl -X POST https://api.id.sh/v1/credentials \\
+<span class="prompt">$</span> curl -X POST https://id.prim.sh/v1/credentials \\
     -H "X-402-Payment: $TOKEN" \\
     -d '{"subject": "lnbc120n1p...", "claim": "passed_safety_audit"}'
   </code></div>
@@ -67,7 +67,7 @@ footer .links{margin-top:0.5rem}footer .links a{margin:0 0.75rem}
     <div class="badge"><strong>Reputation</strong> score</div>
     <div class="badge"><strong>KYA</strong> compliance</div>
     <div class="badge"><strong>Verifiable</strong> credentials</div>
-    <div class="badge">Part of <strong>agentstack</strong></div>
+    <div class="badge">Part of <strong>prim.sh</strong></div>
   </div>
 </div>
 
@@ -106,12 +106,12 @@ footer .links{margin-top:0.5rem}footer .links a{margin:0 0.75rem}
 <div class="cta-section">
   <h2 style="margin-bottom:0.5rem">Trust is an <span>API call</span>.</h2>
   <p style="color:var(--muted);margin-bottom:2rem">Agents don't have passports. They have track records.</p>
-  <a href="https://docs.id.sh" class="cta-btn">Read the docs →</a>
+  <a href="https://prim.sh/id" class="cta-btn">Read the docs →</a>
 </div>
 
 <footer>
   <div>id.sh — agent-native identity</div>
-  <div class="links"><a href="https://docs.id.sh">Docs</a><a href="/">agentstack</a></div>
+  <div class="links"><a href="https://prim.sh/id">Docs</a><a href="/">prim.sh</a></div>
   <div style="margin-top:0.75rem;font-size:0.8rem">Agents don't have passports. They have track records.</div>
   <div style="margin-top:0.5rem;font-size:0.75rem;color:#444">This page is for humans. The API is for agents.</div>
 </footer>

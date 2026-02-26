@@ -40,7 +40,13 @@ Chain: Base Sepolia (`eip155:84532`) during beta. Token: USDC.
 
 ## Getting started
 
-If the `prim` CLI is available on your system, use it:
+Install the CLI:
+
+```bash
+curl -fsSL prim.sh/install.sh | sh
+```
+
+Then use it:
 
 ```bash
 prim wallet create        # Generate and register a wallet
@@ -66,6 +72,7 @@ These are deployed and responding to requests now.
 - [store.prim.sh](https://prim.sh/store/llms.txt) — object storage (S3-compatible buckets and objects)
 - [spawn.prim.sh](https://prim.sh/spawn/llms.txt) — VPS provisioning (DigitalOcean)
 - [faucet.prim.sh](https://prim.sh/faucet/llms.txt) — testnet USDC and ETH faucet (free)
+- [search.prim.sh](https://prim.sh/search/llms.txt) — web search, news, URL extraction
 
 ## Built (not yet deployed)
 
@@ -73,7 +80,6 @@ These primitives are implemented but not yet live on the network.
 
 - [email.prim.sh](https://prim.sh/email/llms.txt) — email mailboxes, send/receive, webhooks
 - [mem.prim.sh](https://prim.sh/mem/llms.txt) — vector memory and KV cache
-- [search.prim.sh](https://prim.sh/search/llms.txt) — web search, news, URL extraction
 - [domain.prim.sh](https://prim.sh/domain/llms.txt) — domains and DNS records
 - [token.prim.sh](https://prim.sh/token/llms.txt) — ERC-20 token deployment and Uniswap pools
 

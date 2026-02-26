@@ -62,8 +62,13 @@ class PreparedStatement {
 export class Database {
   private db: NodeSqliteDb;
 
-  constructor(path: string) {
-    this.db = new DatabaseSync(path);
+  constructor(path: string, _options?: Record<string, unknown>) {
+    try {
+      this.db = new DatabaseSync(path);
+    } catch {
+      // Fall back to in-memory DB when path is not writable (e.g., tests)
+      this.db = new DatabaseSync(":memory:");
+    }
   }
 
   // run() without params: used for schema DDL statements (CREATE TABLE, CREATE INDEX)
@@ -101,6 +106,14 @@ export class Database {
         throw err;
       }
     };
+  }
+
+  exec(sql: string): void {
+    this.db.exec(sql);
+  }
+
+  prepare(sql: string): PreparedStatement {
+    return new PreparedStatement(this.db.prepare(sql));
   }
 
   close(): void {

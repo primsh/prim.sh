@@ -8,7 +8,7 @@
 
 Nine primitives built (500+ tests), end-to-end x402 payment proven on Base Sepolia. Nothing is deployed, installable, or discoverable. This plan takes "works on localhost" to "live on the internet."
 
-**Launch scope:** Core 4 — wallet.sh, store.sh, spawn.sh, faucet.sh. Store is the hero demo primitive (~$0.01/op, fast, reversible). Email and token deferred to v1.1.
+**Launch scope:** Core 5 — wallet.sh, store.sh, spawn.sh, faucet.sh, search.sh. Store is the hero demo primitive (~$0.01/op, fast, reversible). Search added as 5th (stateless, low-risk). Email, token, mem, domain deferred to wave 2.
 
 **Brand:**
 - Product: **Prim** ("Primitive Shell" is the backronym)
@@ -86,8 +86,8 @@ DigitalOcean Droplet `s-1vcpu-2gb` ($12/mo), Ubuntu 24.04, `sfo3` or `nyc1`.
 `deploy/prim/setup.sh`:
 1. Install Bun + pnpm
 2. Clone repo, `pnpm install`
-3. systemd services: wallet (3001), store (3002), faucet (3003), spawn (3004)
-4. Caddy reverse proxy with auto-TLS: `wallet.prim.sh`, `store.prim.sh`, `faucet.prim.sh`, `spawn.prim.sh`
+3. systemd services: wallet (3001), store (3002), faucet (3003), spawn (3004), search (3005)
+4. Caddy reverse proxy with auto-TLS: `wallet.prim.sh`, `store.prim.sh`, `faucet.prim.sh`, `spawn.prim.sh`, `search.prim.sh`
 5. UFW: 22, 80, 443 only
 
 `deploy/prim/Caddyfile`:
@@ -96,6 +96,7 @@ wallet.prim.sh { reverse_proxy localhost:3001 }
 store.prim.sh  { reverse_proxy localhost:3002 }
 faucet.prim.sh { reverse_proxy localhost:3003 }
 spawn.prim.sh  { reverse_proxy localhost:3004 }
+search.prim.sh { reverse_proxy localhost:3005 }
 ```
 
 ### L-9: Wire DNS + env vars (Garric manual)
@@ -107,6 +108,7 @@ Env vars on VPS (`/etc/prim/<service>.env`):
 - store: `CLOUDFLARE_API_TOKEN`, `CLOUDFLARE_ACCOUNT_ID`, `R2_ACCESS_KEY_ID`, `R2_SECRET_ACCESS_KEY`
 - spawn: `DO_API_TOKEN`
 - faucet: `CIRCLE_API_KEY`, `FAUCET_TREASURY_KEY`
+- search: `TAVILY_API_KEY`
 
 ## Wave 2: Go Live
 
@@ -159,8 +161,10 @@ After all waves:
 5. `prim store create-bucket --name test` succeeds (x402 payment settles)
 6. `prim store put <bucket> hello.txt --file=./hello.txt` uploads
 7. `prim store get <bucket> hello.txt` downloads
-8. All 4 services respond at `https://<primitive>.prim.sh/health`
+8. All 5 services respond at `https://<primitive>.prim.sh/` (health check)
 9. `https://prim.sh/llms.txt` accessible
+10. `https://search.prim.sh/` returns health check
+11. x402 search request succeeds: `POST https://search.prim.sh/v1/search`
 
 ## Manual tasks (Garric) — each is a potential primitive
 
@@ -185,20 +189,61 @@ Package rename (L-2) is the only disruption. All devs rebase once. After that:
 - Adding a primitive to production = systemd + Caddy route + DNS record
 - Notify all devs of: repo location, `@primsh/*` namespace, rebase instructions
 
+## Launch primitive set (updated 2026-02-25)
+
+### Ship at launch (5 primitives)
+
+| Primitive | Tests | Live smoke | Status | Risk |
+|-----------|-------|------------|--------|------|
+| **wallet** | 82 | smoke-live, smoke-cli | Deployed, proven | Low |
+| **store** | 84 | smoke-live, integration, smoke-cli | Deployed, proven | Low |
+| **faucet** | 26 | smoke-live, smoke-cli | Deployed, proven | Low |
+| **spawn** | 60 | SP-8, SP-9, smoke-live | Deployed, proven | Medium (real $ — DO droplets) |
+| **search** | 30 | SE-2 (real Tavily API) | Built, not deployed | Low (stateless proxy, no DB) |
+
+Search is the only addition needed — stateless, no infra beyond Tavily API key. Needs: systemd unit, Caddy route, DNS A record, env var (`TAVILY_API_KEY`).
+
+### Hold for wave 2
+
+| Primitive | Tests | Blocker |
+|-----------|-------|---------|
+| **mem** | ~96 | Needs Qdrant deployed to VPS (or managed instance). No deploy config yet. |
+| **email** | 162 | Stalwart deployed but domain warmup incomplete (E-4 pending). Gmail deliverability uncertain. |
+| **domain** | 36 | Custom x402 payment for registration (bypasses middleware). Registrar integration (NameSilo) untested in prod. Higher audit surface. |
+| **token** | 95 | Expensive ops ($1/deploy, $0.50/pool). Niche use case for launch. |
+
+### API uniformity audit (2026-02-25)
+
+**Consistent across all 9:**
+- Health check at `GET /` (free, returns `{service, status}`)
+- Error envelope: `{ error: { code, message } }`
+- x402 pricing in route config
+- Internal/admin routes separated
+
+**Known inconsistencies (defer to post-launch):**
+- Pagination: wallet uses `limit+after`, store uses `limit+page`, email uses `per_page+page`
+- domain.sh implements x402 inline for `/v1/domains/register` (quote-based variable pricing)
+- Rate limit format: faucet returns `retryAfterMs` in body; search returns `Retry-After` header
+
+None of these are launch-blocking. Agents parse whatever is returned.
+
 ## What's NOT in v1
 
-- email.sh (v1.1 — Stalwart ops)
-- token.sh (v1.1 — TK-6 mint fix)
+- email.sh (wave 2 — domain warmup needed)
+- token.sh (wave 2 — expensive, niche)
+- mem.sh (wave 2 — needs Qdrant)
+- domain.sh (wave 2 — custom payment audit)
 - MCP server (v1.1)
-- Mainnet (v1.2 — needs pay.sh fiat onramp)
-- mem.sh, search.sh (in dev, not launch-blocking)
+- Mainnet (L-22 — needs security checklist first)
 - Monitoring/alerting (post-launch)
+- API pagination standardization (post-launch)
 
 ## Before closing
 
-- [ ] All 4 services respond at `https://<primitive>.prim.sh/health`
+- [ ] All 5 services respond at `https://<primitive>.prim.sh/` (wallet, store, faucet, spawn, search)
 - [ ] `curl prim.sh | sh` installs working binary
 - [ ] `prim store create-bucket` succeeds with x402 payment
-- [ ] `prim.sh/llms.txt` resolves
+- [ ] x402 search works: `POST https://search.prim.sh/v1/search`
+- [ ] `prim.sh/llms.txt` resolves and lists all 5 live primitives
 - [ ] GitHub repo is public
 - [ ] All secrets rotated post-push

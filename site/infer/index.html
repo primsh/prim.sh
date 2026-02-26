@@ -45,7 +45,7 @@ footer .links{margin-top:0.5rem}footer .links a{margin:0 0.75rem}
   <div class="sub">On-demand LLM inference. GPT-4, Claude, Llama, and more behind a single x402-gated API.</div>
   <div class="cmd-block"><code>
 <span class="comment"># Run chat completion</span>
-<span class="prompt">$</span> curl -X POST https://api.infer.sh/v1/chat/completions \
+<span class="prompt">$</span> curl -X POST https://infer.prim.sh/v1/chat/completions \
     -H "X-402-Payment: $TOKEN" \
     -d '{"model": "llama-3-70b", "messages": [{"role": "user", "content": "Hello"}]}'
 
@@ -56,7 +56,7 @@ footer .links{margin-top:0.5rem}footer .links a{margin:0 0.75rem}
 }
 
 <span class="comment"># Embeddings</span>
-<span class="prompt">$</span> curl -X POST https://api.infer.sh/v1/embeddings \
+<span class="prompt">$</span> curl -X POST https://infer.prim.sh/v1/embeddings \
     -H "X-402-Payment: $TOKEN" \
     -d '{"model": "text-embedding-3-small", "input": "hello world"}'
   </code></div>
@@ -65,7 +65,7 @@ footer .links{margin-top:0.5rem}footer .links a{margin:0 0.75rem}
     <div class="badge"><strong>OpenAI</strong> compatible</div>
     <div class="badge"><strong>Multi</strong>-provider</div>
     <div class="badge"><strong>Token</strong> metering</div>
-    <div class="badge">Part of <strong>agentstack</strong></div>
+    <div class="badge">Part of <strong>prim.sh</strong></div>
   </div>
 </div>
 
@@ -117,12 +117,12 @@ footer .links{margin-top:0.5rem}footer .links a{margin:0 0.75rem}
 <div class="cta-section">
   <h2 style="margin-bottom:0.5rem">Intelligence is an <span>API call</span>.</h2>
   <p style="color:var(--muted);margin-bottom:2rem">Agents don't have brains. They have endpoints.</p>
-  <a href="https://docs.infer.sh" class="cta-btn">Read the docs →</a>
+  <a href="https://prim.sh/infer" class="cta-btn">Read the docs →</a>
 </div>
 
 <footer>
   <div>infer.sh — agent-native models</div>
-  <div class="links"><a href="https://docs.infer.sh">Docs</a><a href="/">agentstack</a></div>
+  <div class="links"><a href="https://prim.sh/infer">Docs</a><a href="/">prim.sh</a></div>
   <div style="margin-top:0.75rem;font-size:0.8rem">Agents don't have brains. They have endpoints.</div>
   <div style="margin-top:0.5rem;font-size:0.75rem;color:#444">This page is for humans. The API is for agents.</div>
 </footer>

@@ -15,11 +15,10 @@ process.env.FAUCET_DRIP_ETH = "0.01";
 // Use in-memory SQLite for tests (isolated, no disk files)
 process.env.FAUCET_DB_PATH = ":memory:";
 
-// ─── Hoist mock fns so vi.mock factories can reference them ───────────────
+// ─── Mock fns (declared before vi.mock so factories can reference them) ───
 
-const { mockSendTransaction } = vi.hoisted(() => ({
-  mockSendTransaction: vi.fn<[], Promise<`0x${string}`>>(),
-}));
+const mockSendTransaction = vi.fn<[], Promise<`0x${string}`>>();
+const mockWriteContract = vi.fn<[], Promise<`0x${string}`>>();
 
 // ─── Mock viem wallet client ───────────────────────────────────────────────
 
@@ -29,6 +28,7 @@ vi.mock("viem", async (importOriginal) => {
     ...actual,
     createWalletClient: vi.fn(() => ({
       sendTransaction: mockSendTransaction,
+      writeContract: mockWriteContract,
     })),
   };
 });
@@ -76,6 +76,7 @@ function setupCircleError(status: number, body: string): void {
 beforeEach(() => {
   mockFetch.mockReset();
   mockSendTransaction.mockReset();
+  mockWriteContract.mockReset();
   process.env.PRIM_NETWORK = "eip155:84532";
   process.env.CIRCLE_API_KEY = "test-api-key";
   process.env.FAUCET_TREASURY_KEY =
@@ -130,7 +131,7 @@ describe("testnet guard", () => {
 // ─── USDC drip ────────────────────────────────────────────────────────────
 
 describe("POST /v1/faucet/usdc", () => {
-  it("valid address — returns 200 with txHash/amount/currency/chain", async () => {
+  it("valid address — returns 200 with txHash/amount/currency/chain (Circle)", async () => {
     setupCircleSuccess();
     // Use a unique address to avoid rate limit from other tests
     const addr = "0x70997970C51812dc3A010C7d01b50e0d17dc79C8";
@@ -141,6 +142,7 @@ describe("POST /v1/faucet/usdc", () => {
     expect(body.amount).toBe("10.00");
     expect(body.currency).toBe("USDC");
     expect(body.chain).toBe("eip155:84532");
+    expect(body.source).toBe("circle");
   });
 
   it("invalid address — returns 400", async () => {
@@ -177,13 +179,74 @@ describe("POST /v1/faucet/usdc", () => {
     expect(body.error.retryAfter).toBeGreaterThan(0);
   });
 
-  it("Circle API error — returns 502", async () => {
+  it("Circle API error + treasury failure — returns 502", async () => {
     setupCircleError(500, "Internal server error");
+    mockWriteContract.mockRejectedValue(new Error("RPC timeout"));
     const addr = "0x90F79bf6EB2c4f870365E785982E1f101E93b906";
+    const res = await postJson("/v1/faucet/usdc", { address: addr });
+    expect(res.status).toBe(502);
+    const body = (await res.json()) as { error: { code: string; message: string } };
+    expect(body.error.code).toBe("faucet_error");
+    expect(body.error.message).toContain("treasury also failed");
+  });
+
+  it("Circle 429 rate-limited — falls back to treasury and returns 200", async () => {
+    setupCircleError(429, "Too Many Requests");
+    mockWriteContract.mockResolvedValue("0xTreasuryUsdcTx");
+    const addr = "0x71bE63f3384f5fb98995898A86B02Fb2426c5788";
+    const res = await postJson("/v1/faucet/usdc", { address: addr });
+    expect(res.status).toBe(200);
+    const body = (await res.json()) as Record<string, unknown>;
+    expect(body.txHash).toBe("0xTreasuryUsdcTx");
+    expect(body.amount).toBe("10.00");
+    expect(body.currency).toBe("USDC");
+    expect(body.chain).toBe("eip155:84532");
+    expect(body.source).toBe("treasury");
+  });
+
+  it("Circle error — falls back to treasury and returns 200", async () => {
+    setupCircleError(503, "Service Unavailable");
+    mockWriteContract.mockResolvedValue("0xTreasuryUsdcTx2");
+    const addr = "0xFABB0ac9d68B0B445fB7357272Ff202C5651694a";
+    const res = await postJson("/v1/faucet/usdc", { address: addr });
+    expect(res.status).toBe(200);
+    const body = (await res.json()) as Record<string, unknown>;
+    expect(body.source).toBe("treasury");
+    expect(body.txHash).toBe("0xTreasuryUsdcTx2");
+  });
+
+  it("no CIRCLE_API_KEY + no FAUCET_TREASURY_KEY — returns 502", async () => {
+    const origCircle = process.env.CIRCLE_API_KEY;
+    const origTreasury = process.env.FAUCET_TREASURY_KEY;
+    // biome-ignore lint/performance/noDelete: process.env must use delete to truly unset
+    delete process.env.CIRCLE_API_KEY;
+    // biome-ignore lint/performance/noDelete: process.env must use delete to truly unset
+    delete process.env.FAUCET_TREASURY_KEY;
+
+    const addr = "0x1CBd3b2770909D4e10f157cABC84C7264073C9Ec";
     const res = await postJson("/v1/faucet/usdc", { address: addr });
     expect(res.status).toBe(502);
     const body = (await res.json()) as { error: { code: string } };
     expect(body.error.code).toBe("faucet_error");
+
+    process.env.CIRCLE_API_KEY = origCircle;
+    process.env.FAUCET_TREASURY_KEY = origTreasury;
+  });
+
+  it("no CIRCLE_API_KEY — falls back to treasury and returns 200", async () => {
+    const origCircle = process.env.CIRCLE_API_KEY;
+    // biome-ignore lint/performance/noDelete: process.env must use delete to truly unset
+    delete process.env.CIRCLE_API_KEY;
+    mockWriteContract.mockResolvedValue("0xTreasuryFallbackNoCircleKey");
+
+    const addr = "0xdF3e18d64BC6A983f673Ab319CCaE4f1a57C7097";
+    const res = await postJson("/v1/faucet/usdc", { address: addr });
+    expect(res.status).toBe(200);
+    const body = (await res.json()) as Record<string, unknown>;
+    expect(body.source).toBe("treasury");
+    expect(body.txHash).toBe("0xTreasuryFallbackNoCircleKey");
+
+    process.env.CIRCLE_API_KEY = origCircle;
   });
 });
 

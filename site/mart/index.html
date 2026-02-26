@@ -44,14 +44,14 @@ footer .links{margin-top:0.5rem}footer .links a{margin:0 0.75rem}
   <div class="sub">Buy physical goods via API. Agent pays with x402. We handle the fiat checkout, shipping, and logistics.</div>
   <div class="cmd-block"><code>
 <span class="comment"># Find a product</span>
-<span class="prompt">$</span> curl -G https://api.mart.sh/v1/products/search \\
+<span class="prompt">$</span> curl -G https://mart.prim.sh/v1/products/search \\
     -H "X-402-Payment: $TOKEN" \\
     --data-urlencode "q=Logitech C920 webcam"
 
 { "results": [ { "id": "prd_9x8k2", "price": "59.99", "source": "amazon" } ] }
 
 <span class="comment"># Buy it</span>
-<span class="prompt">$</span> curl -X POST https://api.mart.sh/v1/orders \\
+<span class="prompt">$</span> curl -X POST https://mart.prim.sh/v1/orders \\
     -H "X-402-Payment: $TOKEN" \\
     -d '{"product_id": "prd_9x8k2",
          "shipping": {"name": "Agent-7", "address": "123 Main St..."}}'
@@ -64,7 +64,7 @@ footer .links{margin-top:0.5rem}footer .links a{margin:0 0.75rem}
     <div class="badge"><strong>Amazon</strong> proxy</div>
     <div class="badge"><strong>Headless</strong> checkout</div>
     <div class="badge"><strong>No</strong> captcha</div>
-    <div class="badge">Part of <strong>agentstack</strong></div>
+    <div class="badge">Part of <strong>prim.sh</strong></div>
   </div>
 </div>
 
@@ -103,12 +103,12 @@ footer .links{margin-top:0.5rem}footer .links a{margin:0 0.75rem}
 <div class="cta-section">
   <h2 style="margin-bottom:0.5rem">Commerce is an <span>API call</span>.</h2>
   <p style="color:var(--muted);margin-bottom:2rem">Agents don't have shopping carts. They have intent.</p>
-  <a href="https://docs.mart.sh" class="cta-btn">Read the docs →</a>
+  <a href="https://prim.sh/mart" class="cta-btn">Read the docs →</a>
 </div>
 
 <footer>
   <div>mart.sh — agent-native commerce</div>
-  <div class="links"><a href="https://docs.mart.sh">Docs</a><a href="/">agentstack</a></div>
+  <div class="links"><a href="https://prim.sh/mart">Docs</a><a href="/">prim.sh</a></div>
   <div style="margin-top:0.75rem;font-size:0.8rem">Agents don't have shopping carts. They have intent.</div>
   <div style="margin-top:0.5rem;font-size:0.75rem;color:#444">This page is for humans. The API is for agents.</div>
 </footer>

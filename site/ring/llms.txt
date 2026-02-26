@@ -2,8 +2,9 @@
 
 > Phone for agents. Provision numbers and place calls via API.
 
-Base URL: https://api.ring.sh  
+Base URL: https://ring.prim.sh  
 Auth: x402 (USDC on Base, chain `eip155:8453`)
+Status: Coming soon. This primitive is not yet available.
 
 ## Endpoints
 
@@ -17,13 +18,13 @@ Auth: x402 (USDC on Base, chain `eip155:8453`)
 - Number provisioning: monthly fee per number.  
 - Calls and SMS: per-minute / per-message rates.
 
-See human docs at `https://docs.ring.sh` for carrier coverage and pricing.
+See human docs at `https://prim.sh/ring` for carrier coverage and pricing.
 
 ## Examples
 
 ```bash
 # Provision a US number
-curl -X POST https://api.ring.sh/v1/numbers \
+curl -X POST https://ring.prim.sh/v1/numbers \
   -H "X-402-Payment: $TOKEN" \
   -d '{"country": "US"}'
 ```

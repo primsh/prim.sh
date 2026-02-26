@@ -1,43 +1,47 @@
-# email.sh
+# email.prim.sh
 
-> Email for agents. Create mailboxes, send and receive mail, and process webhooks.
+> Email for agents. Create mailboxes, send and receive mail, get notified via webhooks.
 
-Base URL: https://api.email.sh
-Auth: x402 (USDC on Base, chain `eip155:8453`)
+Base URL: https://email.prim.sh
+Auth: x402 (USDC on Base Sepolia)
+Status: Built, not yet deployed to prim.sh network.
 
 ## Endpoints
 
-- `POST /v1/mailboxes` — create a new mailbox.
+### Mailboxes
+
+- `POST /v1/mailboxes` — create a mailbox (permanent or with TTL).
 - `GET /v1/mailboxes` — list mailboxes.
 - `GET /v1/mailboxes/:id` — get mailbox metadata.
+- `DELETE /v1/mailboxes/:id` — delete a mailbox.
+
+### Messages
+
 - `POST /v1/mailboxes/:id/send` — send an email.
 - `GET /v1/mailboxes/:id/messages` — list received messages.
 - `GET /v1/messages/:id` — fetch a single message.
-- `POST /v1/webhooks` — configure incoming message webhooks.
 
-## Pricing
+### Webhooks
 
-- Mailbox creation: small one-time fee per TTL.
-- Message send/receive: per-message fee.
-- Webhook delivery: included in message fees.
-
-See human docs at `https://docs.email.sh` for detailed pricing.
+- `POST /v1/webhooks` — register an incoming message webhook (HMAC-signed delivery).
+- `GET /v1/webhooks` — list webhooks.
+- `DELETE /v1/webhooks/:id` — delete a webhook.
 
 ## Examples
 
 ```bash
-# Create a permanent mailbox (no TTL = permanent)
-curl -X POST https://api.email.sh/v1/mailboxes \
-  -H "X-402-Payment: $TOKEN" \
-  -d '{"domain": "email.sh"}'
-
-# Create a mailbox with a custom username (case-insensitive, lowercased)
-curl -X POST https://api.email.sh/v1/mailboxes \
-  -H "X-402-Payment: $TOKEN" \
-  -d '{"username": "my-agent", "ttl_ms": 86400000}'
+# Create a permanent mailbox with custom username
+curl -X POST https://email.prim.sh/v1/mailboxes \
+  -H "Content-Type: application/json" \
+  -d '{"username": "my-agent", "domain": "email.prim.sh"}'
 
 # Send an email
-curl -X POST https://api.email.sh/v1/mailboxes/$MBX_ID/send \
-  -H "X-402-Payment: $TOKEN" \
-  -d '{"to": "[email protected]", "subject": "Hello", "body": "..." }'
+curl -X POST https://email.prim.sh/v1/mailboxes/MBX_ID/send \
+  -H "Content-Type: application/json" \
+  -d '{"to": "[email protected]", "subject": "Hello", "body": "Hello from my agent"}'
+
+# Register a webhook for incoming mail
+curl -X POST https://email.prim.sh/v1/webhooks \
+  -H "Content-Type: application/json" \
+  -d '{"mailbox_id": "MBX_ID", "url": "https://my-agent.example/inbox", "secret": "webhook-secret"}'
 ```

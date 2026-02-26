@@ -1,0 +1,27 @@
+# search.prim.sh
+
+> Web search for agents. Search the web, get news, extract content from URLs.
+
+Base URL: https://search.prim.sh
+Auth: x402 (USDC on Base Sepolia)
+Status: Built, not yet deployed.
+
+## Endpoints
+
+- `POST /v1/search` — web search. **$0.01**
+- `POST /v1/search/news` — news search. **$0.01**
+- `POST /v1/extract` — extract content from a URL. **$0.005**
+
+## Examples
+
+```bash
+# Web search
+curl -X POST https://search.prim.sh/v1/search \
+  -H "Content-Type: application/json" \
+  -d '{"query": "latest Base L2 developments", "max_results": 5}'
+
+# Extract content from a URL
+curl -X POST https://search.prim.sh/v1/extract \
+  -H "Content-Type: application/json" \
+  -d '{"url": "https://example.com/article"}'
+```

@@ -2,8 +2,9 @@
 
 > Shipping for agents. Create labels and track packages via API.
 
-Base URL: https://api.ship.sh  
+Base URL: https://ship.prim.sh  
 Auth: x402 (USDC on Base, chain `eip155:8453`)
+Status: Coming soon. This primitive is not yet available.
 
 ## Endpoints
 
@@ -15,13 +16,13 @@ Auth: x402 (USDC on Base, chain `eip155:8453`)
 
 - Pass-through carrier rates plus a small per-shipment fee.
 
-See human docs at `https://docs.ship.sh` for carrier support and pricing.
+See human docs at `https://prim.sh/ship` for carrier support and pricing.
 
 ## Examples
 
 ```bash
 # Create a shipment
-curl -X POST https://api.ship.sh/v1/shipments \
+curl -X POST https://ship.prim.sh/v1/shipments \
   -H "X-402-Payment: $TOKEN" \
   -d '{"from": {...}, "to": {...}, "parcel": {"weight_kg": 0.5}}'
 ```

@@ -2,8 +2,9 @@
 
 > Money for agents. Wallet-like interface for fiat bridges and multi-rail payments.
 
-Base URL: https://api.pay.sh  
+Base URL: https://pay.prim.sh  
 Auth: x402 (USDC on Base, chain `eip155:8453`)
+Status: Coming soon. This primitive is not yet available.
 
 ## Endpoints
 
@@ -18,13 +19,13 @@ Auth: x402 (USDC on Base, chain `eip155:8453`)
 - Wallets: free to create.  
 - Sends/withdrawals/charges: percentage of transaction value.
 
-See human docs at `https://docs.pay.sh` for supported rails and pricing.
+See human docs at `https://prim.sh/pay` for supported rails and pricing.
 
 ## Examples
 
 ```bash
 # Create a wallet
-curl -X POST https://api.pay.sh/v1/wallets \
+curl -X POST https://pay.prim.sh/v1/wallets \
   -H "X-402-Payment: $TOKEN"
 ```
 

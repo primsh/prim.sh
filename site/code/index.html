@@ -44,7 +44,7 @@ footer .links{margin-top:0.5rem}footer .links a{margin:0 0.75rem}
   <div class="sub">Run untrusted code snippets in isolated sandboxes. Short-lived, metered, observable. Perfect for tools that need a tiny VM, not a VPS.</div>
   <div class="cmd-block"><code>
 <span class="comment"># Run a snippet</span>
-<span class="prompt">$</span> curl -X POST https://api.code.sh/v1/run \
+<span class="prompt">$</span> curl -X POST https://code.prim.sh/v1/run \
     -H "X-402-Payment: $TOKEN" \
     -d '{"language": "python", "code": "print(1+1)"}'
 
@@ -54,7 +54,7 @@ footer .links{margin-top:0.5rem}footer .links a{margin:0 0.75rem}
     <div class="badge"><strong>Firecracker</strong>-style VMs</div>
     <div class="badge"><strong>Per-run</strong> billing</div>
     <div class="badge"><strong>CPU</strong> + <strong>memory</strong> limits</div>
-    <div class="badge">Part of <strong>agentstack</strong></div>
+    <div class="badge">Part of <strong>prim.sh</strong></div>
   </div>
 </div>
 
@@ -91,12 +91,12 @@ footer .links{margin-top:0.5rem}footer .links a{margin:0 0.75rem}
 <div class="cta-section">
   <h2 style="margin-bottom:0.5rem">Execution is an <span>API call</span>.</h2>
   <p style="color:var(--muted);margin-bottom:2rem">Agents don't SSH. They submit jobs.</p>
-  <a href="https://docs.code.sh" class="cta-btn">Read the docs →</a>
+  <a href="https://prim.sh/code" class="cta-btn">Read the docs →</a>
 </div>
 
 <footer>
   <div>code.sh — agent-native execution</div>
-  <div class="links"><a href="https://docs.code.sh">Docs</a><a href="/">agentstack</a></div>
+  <div class="links"><a href="https://prim.sh/code">Docs</a><a href="/">prim.sh</a></div>
   <div style="margin-top:0.75rem;font-size:0.8rem">Agents don't babysit servers. They fire off sandboxes.</div>
   <div style="margin-top:0.5rem;font-size:0.75rem;color:#444">This page is for humans. The API is for agents.</div>
 </footer>

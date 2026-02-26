@@ -1,0 +1,16 @@
+name = "prim-platform"
+main = "src/index.ts"
+compatibility_date = "2024-12-01"
+
+[vars]
+VPS_WALLET_URL = "https://wallet.prim.sh"
+
+[[d1_databases]]
+binding = "DB"
+database_name = "prim-platform"
+database_id = "45b73375-3118-4a4d-a794-3bd9bf43169b"
+
+# Deploy: wrangler deploy
+# Secrets: wrangler secret put PRIM_ADMIN_KEY
+#          wrangler secret put PRIM_INTERNAL_KEY
+#          wrangler secret put GITHUB_TOKEN

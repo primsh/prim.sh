@@ -44,26 +44,26 @@ footer .links{margin-top:0.5rem}footer .links a{margin:0 0.75rem}
   <div class="sub">Pub/sub channels, webhook relays, event queues. The glue between agents and services. x402 auth.</div>
   <div class="cmd-block"><code>
 <span class="comment"># Create a channel</span>
-<span class="prompt">$</span> curl -X POST https://api.pipe.sh/v1/channels \
+<span class="prompt">$</span> curl -X POST https://pipe.prim.sh/v1/channels \
     -H "X-402-Payment: $TOKEN" \
     -d '{"name": "deploy-events"}'
 
 { "id": "ch_x7k9m2", "name": "deploy-events",
-  "publish_url": "https://api.pipe.sh/v1/ch/ch_x7k9m2/pub",
-  "subscribe_url": "https://api.pipe.sh/v1/ch/ch_x7k9m2/sub" }
+  "publish_url": "https://pipe.prim.sh/v1/ch/ch_x7k9m2/pub",
+  "subscribe_url": "https://pipe.prim.sh/v1/ch/ch_x7k9m2/sub" }
 
 <span class="comment"># Publish an event</span>
-<span class="prompt">$</span> curl -X POST https://api.pipe.sh/v1/ch/ch_x7k9m2/pub \
+<span class="prompt">$</span> curl -X POST https://pipe.prim.sh/v1/ch/ch_x7k9m2/pub \
     -H "X-402-Payment: $TOKEN" \
     -d '{"event": "deploy.complete", "data": {"app": "my-api", "version": "1.2.3"}}'
 
 <span class="comment"># Subscribe via webhook</span>
-<span class="prompt">$</span> curl -X POST https://api.pipe.sh/v1/ch/ch_x7k9m2/subscribers \
+<span class="prompt">$</span> curl -X POST https://pipe.prim.sh/v1/ch/ch_x7k9m2/subscribers \
     -H "X-402-Payment: $TOKEN" \
     -d '{"webhook": "https://monitor.dns.sh/events"}'
 
 <span class="comment"># Or long-poll / SSE for real-time</span>
-<span class="prompt">$</span> curl https://api.pipe.sh/v1/ch/ch_x7k9m2/sub \
+<span class="prompt">$</span> curl https://pipe.prim.sh/v1/ch/ch_x7k9m2/sub \
     -H "X-402-Payment: $TOKEN" \
     -H "Accept: text/event-stream"
   </code></div>
@@ -72,7 +72,7 @@ footer .links{margin-top:0.5rem}footer .links a{margin:0 0.75rem}
     <div class="badge"><strong>Pub/sub</strong> channels</div>
     <div class="badge"><strong>Webhook</strong> relay</div>
     <div class="badge"><strong>SSE</strong> streaming</div>
-    <div class="badge">Part of <strong>agentstack</strong></div>
+    <div class="badge">Part of <strong>prim.sh</strong></div>
   </div>
 </div>
 
@@ -117,12 +117,12 @@ footer .links{margin-top:0.5rem}footer .links a{margin:0 0.75rem}
 <div class="cta-section">
   <h2 style="margin-bottom:0.5rem">A message bus is an <span>API call</span>.</h2>
   <p style="color:var(--muted);margin-bottom:2rem">Agents don't run Kafka. They publish to channels.</p>
-  <a href="https://docs.pipe.sh" class="cta-btn">Read the docs →</a>
+  <a href="https://prim.sh/pipe" class="cta-btn">Read the docs →</a>
 </div>
 
 <footer>
   <div>pipe.sh — agent-native messaging</div>
-  <div class="links"><a href="https://docs.pipe.sh">Docs</a><a href="/">agentstack</a></div>
+  <div class="links"><a href="https://prim.sh/pipe">Docs</a><a href="/">prim.sh</a></div>
   <div style="margin-top:0.75rem;font-size:0.8rem">Agents don't run Kafka. They publish to channels.</div>
   <div style="margin-top:0.5rem;font-size:0.75rem;color:#444">This page is for humans. The API is for agents.</div>
 </footer>

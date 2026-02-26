@@ -50,10 +50,15 @@ jobs:
             --target=${{ matrix.target }} \
             --outfile ${{ matrix.output }}
 
+      - name: Generate checksum
+        run: shasum -a 256 ${{ matrix.output }} > ${{ matrix.output }}.sha256
+
       - uses: actions/upload-artifact@v4
         with:
           name: ${{ matrix.output }}
-          path: ${{ matrix.output }}
+          path: |
+            ${{ matrix.output }}
+            ${{ matrix.output }}.sha256
 
   release:
     name: Create Release
@@ -78,6 +83,10 @@ jobs:
             --title "${{ github.ref_name }}" \
             --generate-notes \
             binaries/prim-darwin-arm64 \
+            binaries/prim-darwin-arm64.sha256 \
             binaries/prim-darwin-x64 \
+            binaries/prim-darwin-x64.sha256 \
             binaries/prim-linux-x64 \
-            binaries/prim-linux-arm64
+            binaries/prim-linux-x64.sha256 \
+            binaries/prim-linux-arm64 \
+            binaries/prim-linux-arm64.sha256

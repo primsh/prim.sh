@@ -1,0 +1,8 @@
+blank_issues_enabled: true
+contact_links:
+  - name: Discord
+    url: https://discord.gg/Cy3UQt2z
+    about: Chat with the community
+  - name: Agent Feedback API
+    url: https://prim.sh/llms.txt
+    about: Agents can report issues programmatically via the feedback API

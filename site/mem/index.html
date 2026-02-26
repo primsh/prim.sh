@@ -45,12 +45,12 @@ footer .links{margin-top:0.5rem}footer .links a{margin:0 0.75rem}
   <div class="sub">Managed vector database. Ephemeral cache. Long-term knowledge retrieval. Give your agent a hippocampus, gated by x402.</div>
   <div class="cmd-block"><code>
 <span class="comment"># Remember something</span>
-<span class="prompt">$</span> curl -X POST https://api.mem.sh/v1/collections/my-brain/upsert \
+<span class="prompt">$</span> curl -X POST https://mem.prim.sh/v1/collections/my-brain/upsert \
     -H "X-402-Payment: $TOKEN" \
     -d '{"text": "The user prefers dark mode.", "metadata": {"source": "chat"}}'
 
 <span class="comment"># Recall it later</span>
-<span class="prompt">$</span> curl -G https://api.mem.sh/v1/collections/my-brain/query \
+<span class="prompt">$</span> curl -G https://mem.prim.sh/v1/collections/my-brain/query \
     -H "X-402-Payment: $TOKEN" \
     --data-urlencode "text=what does the user like?"
   </code></div>
@@ -59,7 +59,7 @@ footer .links{margin-top:0.5rem}footer .links a{margin:0 0.75rem}
     <div class="badge"><strong>Vector</strong> store</div>
     <div class="badge"><strong>Session</strong> cache</div>
     <div class="badge"><strong>Embeddings</strong> included</div>
-    <div class="badge">Part of <strong>agentstack</strong></div>
+    <div class="badge">Part of <strong>prim.sh</strong></div>
   </div>
 </div>
 
@@ -116,12 +116,12 @@ footer .links{margin-top:0.5rem}footer .links a{margin:0 0.75rem}
 <div class="cta-section">
   <h2 style="margin-bottom:0.5rem">Memory is an <span>API call</span>.</h2>
   <p style="color:var(--muted);margin-bottom:2rem">Agents don't have a hippocampus. They have vectors.</p>
-  <a href="https://docs.mem.sh" class="cta-btn">Read the docs →</a>
+  <a href="https://prim.sh/mem" class="cta-btn">Read the docs →</a>
 </div>
 
 <footer>
   <div>mem.sh — agent-native memory</div>
-  <div class="links"><a href="https://docs.mem.sh">Docs</a><a href="/">agentstack</a></div>
+  <div class="links"><a href="https://prim.sh/mem">Docs</a><a href="/">prim.sh</a></div>
   <div style="margin-top:0.75rem;font-size:0.8rem">Agents don't have a hippocampus. They have vectors.</div>
   <div style="margin-top:0.5rem;font-size:0.75rem;color:#444">This page is for humans. The API is for agents.</div>
 </footer>

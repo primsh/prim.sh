@@ -91,7 +91,7 @@ footer .links a{margin:0 0.75rem}
 
   <div class="cmd-block"><code>
 <span class="comment"># Get a mailbox in one request</span>
-<span class="prompt">$</span> curl -X POST https://api.email.sh/v1/mailboxes \
+<span class="prompt">$</span> curl -X POST https://email.prim.sh/v1/mailboxes \
     -H "X-402-Payment: $PAYMENT_TOKEN" \
     -d '{"domain": "email.sh"}'
 
@@ -105,7 +105,7 @@ footer .links a{margin:0 0.75rem}
 }
 
 <span class="comment"># Send email</span>
-<span class="prompt">$</span> curl -X POST https://api.email.sh/v1/send \
+<span class="prompt">$</span> curl -X POST https://email.prim.sh/v1/send \
     -H "X-402-Payment: $PAYMENT_TOKEN" \
     -d '{"from": "a7x9m2@email.sh", "to": "human@gmail.com",
          "subject": "Task complete", "body": "Your report is ready."}'
@@ -117,7 +117,7 @@ footer .links a{margin:0 0.75rem}
     <div class="badge"><strong>Webhooks</strong> for inbound</div>
     <div class="badge"><strong>0</strong> signup required</div>
     <div class="badge"><strong>MCP</strong> + <strong>REST</strong></div>
-    <div class="badge">Part of <strong>agentstack</strong></div>
+    <div class="badge">Part of <strong>prim.sh</strong></div>
   </div>
 
   <div class="scroll-hint">↓ scroll</div>
@@ -253,7 +253,7 @@ footer .links a{margin:0 0.75rem}
 <!-- Bundle -->
 <section>
   <div class="bundle-banner">
-    <p style="color:var(--muted);margin-bottom:0.5rem">Part of the <strong style="color:var(--text)">agentstack</strong></p>
+    <p style="color:var(--muted);margin-bottom:0.5rem">Part of the <strong style="color:var(--text)">prim.sh</strong></p>
     <p style="color:var(--muted);font-size:0.9rem">Same x402 payment token works across <a href="/spawn">spawn.sh</a> (compute), <strong>email.sh</strong> (email), and <a href="/ring">ring.sh</a> (phone). One identity, three primitives.</p>
   </div>
 </section>
@@ -262,17 +262,17 @@ footer .links a{margin:0 0.75rem}
 <div class="cta-section">
   <h2 style="margin-bottom:0.5rem">Email is an <span>API call</span>.</h2>
   <p style="color:var(--muted);margin-bottom:2rem;max-width:500px;margin-left:auto;margin-right:auto">Agents don't check inboxes. They poll endpoints and parse JSON.</p>
-  <a href="https://docs.email.sh" class="cta-btn">Read the docs →</a>
-  <p style="color:var(--muted);font-size:0.85rem;margin-top:1.5rem">or just: <code style="color:var(--accent)">curl https://api.email.sh/v1/mailboxes</code></p>
+  <a href="https://prim.sh/email" class="cta-btn">Read the docs →</a>
+  <p style="color:var(--muted);font-size:0.85rem;margin-top:1.5rem">or just: <code style="color:var(--accent)">curl https://email.prim.sh/v1/mailboxes</code></p>
 </div>
 
 <footer>
   <div>email.sh — agent-native email</div>
   <div class="links">
-    <a href="https://docs.email.sh">Docs</a>
+    <a href="https://prim.sh/email">Docs</a>
     <a href="https://github.com/email-sh">GitHub</a>
-    <a href="https://api.email.sh">API</a>
-    <a href="/">agentstack</a>
+    <a href="https://email.prim.sh">API</a>
+    <a href="/">prim.sh</a>
   </div>
   <div style="margin-top:0.75rem;font-size:0.8rem">Agents don't have inboxes. They have webhooks.</div>
   <div style="margin-top:0.5rem;font-size:0.75rem;color:#444">This page is for humans. The API is for agents.</div>

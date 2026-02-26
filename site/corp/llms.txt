@@ -2,8 +2,9 @@
 
 > Legal entities for agents. Form and manage companies programmatically.
 
-Base URL: https://api.corp.sh  
+Base URL: https://corp.prim.sh  
 Auth: x402 (USDC on Base, chain `eip155:8453`)
+Status: Coming soon. This primitive is not yet available.
 
 ## Endpoints
 
@@ -17,13 +18,13 @@ Auth: x402 (USDC on Base, chain `eip155:8453`)
 - Formation: one-time fee per entity (jurisdiction-specific).  
 - Ongoing filings: per-filing fee.
 
-See human docs at `https://docs.corp.sh` for jurisdiction coverage and pricing.
+See human docs at `https://prim.sh/corp` for jurisdiction coverage and pricing.
 
 ## Examples
 
 ```bash
 # Create a Delaware LLC
-curl -X POST https://api.corp.sh/v1/entities \
+curl -X POST https://corp.prim.sh/v1/entities \
   -H "X-402-Payment: $TOKEN" \
   -d '{"jurisdiction": "US-DE", "type": "llc", "name": "Agent Services LLC"}'
 ```

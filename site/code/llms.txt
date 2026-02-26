@@ -2,8 +2,9 @@
 
 > Sandboxed code execution for agents. Run short-lived jobs instead of managing servers.
 
-Base URL: https://api.code.sh  
+Base URL: https://code.prim.sh  
 Auth: x402 (USDC on Base, chain `eip155:8453`)
+Status: Coming soon. This primitive is not yet available.
 
 ## Endpoints
 
@@ -17,13 +18,13 @@ Auth: x402 (USDC on Base, chain `eip155:8453`)
 - Billed per second of execution time and memory.  
 - Minimum charge per job; additional fees for high-CPU profiles.
 
-See human docs at `https://docs.code.sh` for runtime support and pricing.
+See human docs at `https://prim.sh/code` for runtime support and pricing.
 
 ## Examples
 
 ```bash
 # Run a Python job
-curl -X POST https://api.code.sh/v1/jobs \
+curl -X POST https://code.prim.sh/v1/jobs \
   -H "X-402-Payment: $TOKEN" \
   -d '{"language": "python", "source": "print(1+1)"}'
 ```

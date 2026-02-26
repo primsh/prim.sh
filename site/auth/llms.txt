@@ -2,8 +2,9 @@
 
 > Managed OAuth for agents. Broker access to third-party APIs without sharing passwords.
 
-Base URL: https://api.auth.sh  
+Base URL: https://auth.prim.sh  
 Auth: x402 (USDC on Base, chain `eip155:8453`)
+Status: Coming soon. This primitive is not yet available.
 
 ## Endpoints
 
@@ -19,13 +20,13 @@ Auth: x402 (USDC on Base, chain `eip155:8453`)
 - Token refresh: per-call fee.  
 - Read-only token lookups: usually free.
 
-See human docs at `https://docs.auth.sh` for provider matrix and pricing.
+See human docs at `https://prim.sh/auth` for provider matrix and pricing.
 
 ## Examples
 
 ```bash
 # Create a GitHub OAuth connection
-curl -X POST https://api.auth.sh/v1/connections \
+curl -X POST https://auth.prim.sh/v1/connections \
   -H "X-402-Payment: $TOKEN" \
   -d '{"provider": "github", "scopes": ["repo", "user:email"]}'
 ```

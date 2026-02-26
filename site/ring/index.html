@@ -91,7 +91,7 @@ footer .links a{margin:0 0.75rem}
 
   <div class="cmd-block"><code>
 <span class="comment"># Get a phone number in one request</span>
-<span class="prompt">$</span> curl -X POST https://api.ring.sh/v1/numbers \
+<span class="prompt">$</span> curl -X POST https://ring.prim.sh/v1/numbers \
     -H "X-402-Payment: $PAYMENT_TOKEN" \
     -d '{"country": "US", "capabilities": ["sms", "voice"]}'
 
@@ -106,7 +106,7 @@ footer .links a{margin:0 0.75rem}
 }
 
 <span class="comment"># Send SMS</span>
-<span class="prompt">$</span> curl -X POST https://api.ring.sh/v1/sms \
+<span class="prompt">$</span> curl -X POST https://ring.prim.sh/v1/sms \
     -H "X-402-Payment: $PAYMENT_TOKEN" \
     -d '{"from": "+12125551847", "to": "+14155559999",
          "body": "Deployment complete. All systems green."}'
@@ -118,7 +118,7 @@ footer .links a{margin:0 0.75rem}
     <div class="badge"><strong>Voice</strong> calls</div>
     <div class="badge"><strong>0</strong> signup required</div>
     <div class="badge"><strong>MCP</strong> + <strong>REST</strong></div>
-    <div class="badge">Part of <strong>agentstack</strong></div>
+    <div class="badge">Part of <strong>prim.sh</strong></div>
   </div>
 
   <div class="scroll-hint">↓ scroll</div>
@@ -261,7 +261,7 @@ footer .links a{margin:0 0.75rem}
 <!-- Bundle -->
 <section>
   <div class="bundle-banner">
-    <p style="color:var(--muted);margin-bottom:0.5rem">Part of the <strong style="color:var(--text)">agentstack</strong></p>
+    <p style="color:var(--muted);margin-bottom:0.5rem">Part of the <strong style="color:var(--text)">prim.sh</strong></p>
     <p style="color:var(--muted);font-size:0.9rem">Same x402 payment token works across <a href="/spawn">spawn.sh</a> (compute), <a href="/relay">relay.sh</a> (email), and <strong>ring.sh</strong> (phone). One identity, three primitives.</p>
   </div>
 </section>
@@ -270,17 +270,17 @@ footer .links a{margin:0 0.75rem}
 <div class="cta-section">
   <h2 style="margin-bottom:0.5rem">A phone number is an <span>API call</span>.</h2>
   <p style="color:var(--muted);margin-bottom:2rem;max-width:500px;margin-left:auto;margin-right:auto">Agents don't have phones. They have HTTP clients.</p>
-  <a href="https://docs.ring.sh" class="cta-btn">Read the docs →</a>
-  <p style="color:var(--muted);font-size:0.85rem;margin-top:1.5rem">or just: <code style="color:var(--accent)">curl https://api.ring.sh/v1/available?country=US</code></p>
+  <a href="https://prim.sh/ring" class="cta-btn">Read the docs →</a>
+  <p style="color:var(--muted);font-size:0.85rem;margin-top:1.5rem">or just: <code style="color:var(--accent)">curl https://ring.prim.sh/v1/available?country=US</code></p>
 </div>
 
 <footer>
   <div>ring.sh — agent-native phone</div>
   <div class="links">
-    <a href="https://docs.ring.sh">Docs</a>
+    <a href="https://prim.sh/ring">Docs</a>
     <a href="https://github.com/ring-sh">GitHub</a>
-    <a href="https://api.ring.sh">API</a>
-    <a href="/">agentstack</a>
+    <a href="https://ring.prim.sh">API</a>
+    <a href="/">prim.sh</a>
   </div>
   <div style="margin-top:0.75rem;font-size:0.8rem">Agents don't have phones. They have HTTP clients.</div>
   <div style="margin-top:0.5rem;font-size:0.75rem;color:#444">This page is for humans. The API is for agents.</div>

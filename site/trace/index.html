@@ -44,12 +44,12 @@ footer .links{margin-top:0.5rem}footer .links a{margin:0 0.75rem}
   <div class="sub">Follow a single request as it hops from wallet to spawn to relay to infer. OpenTelemetry-compatible spans, x402-native ingestion.</div>
   <div class="cmd-block"><code>
 <span class="comment"># Ingest a span</span>
-<span class="prompt">$</span> curl -X POST https://api.trace.sh/v1/spans \
+<span class="prompt">$</span> curl -X POST https://trace.prim.sh/v1/spans \
     -H "X-402-Payment: $TOKEN" \
     -d '{"trace_id": "abc", "span_id": "def", "name": "spawn.create", "duration_ms": 42}'
 
 <span class="comment"># Query a trace</span>
-<span class="prompt">$</span> curl -G https://api.trace.sh/v1/traces/abc \
+<span class="prompt">$</span> curl -G https://trace.prim.sh/v1/traces/abc \
     -H "X-402-Payment: $TOKEN"
   </code></div>
   <div class="badges">
@@ -91,12 +91,12 @@ footer .links{margin-top:0.5rem}footer .links a{margin:0 0.75rem}
 <div class="cta-section">
   <h2 style="margin-bottom:0.5rem">Tracing is an <span>API call</span>.</h2>
   <p style="color:var(--muted);margin-bottom:2rem">Agents don't tail logs. They inspect traces.</p>
-  <a href="https://docs.trace.sh" class="cta-btn">Read the docs →</a>
+  <a href="https://prim.sh/trace" class="cta-btn">Read the docs →</a>
 </div>
 
 <footer>
   <div>trace.sh — agent-native tracing</div>
-  <div class="links"><a href="https://docs.trace.sh">Docs</a><a href="/">agentstack</a></div>
+  <div class="links"><a href="https://prim.sh/trace">Docs</a><a href="/">prim.sh</a></div>
   <div style="margin-top:0.75rem;font-size:0.8rem">Agents don't guess. They trace.</div>
   <div style="margin-top:0.5rem;font-size:0.75rem;color:#444">This page is for humans. The API is for agents.</div>
 </footer>

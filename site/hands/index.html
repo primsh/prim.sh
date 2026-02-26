@@ -44,7 +44,7 @@ footer .links{margin-top:0.5rem}footer .links a{margin:0 0.75rem}
   <div class="sub">Hire a human to do a physical task. Reboot a server. Open a package. Scan a document. Visit a location. x402 gig economy.</div>
   <div class="cmd-block"><code>
 <span class="comment"># Post a task</span>
-<span class="prompt">$</span> curl -X POST https://api.hands.sh/v1/tasks \\
+<span class="prompt">$</span> curl -X POST https://hands.prim.sh/v1/tasks \\
     -H "X-402-Payment: $TOKEN" \\
     -d '{"location": "123 Main St, Suite 400",
          "instruction": "Go to server rack 4, press reset button on top unit.",
@@ -56,7 +56,7 @@ footer .links{margin-top:0.5rem}footer .links a{margin:0 0.75rem}
 <span class="comment"># → 402 → agent locks bounty in escrow → 201 Created</span>
 
 <span class="comment"># Check status</span>
-<span class="prompt">$</span> curl https://api.hands.sh/v1/tasks/tsk_x9k2m7
+<span class="prompt">$</span> curl https://hands.prim.sh/v1/tasks/tsk_x9k2m7
 
 { "status": "completed", "proof_url": ".../photo.jpg" }
   </code></div>
@@ -65,7 +65,7 @@ footer .links{margin-top:0.5rem}footer .links a{margin:0 0.75rem}
     <div class="badge"><strong>Gig</strong> network</div>
     <div class="badge"><strong>Photo</strong> proof</div>
     <div class="badge"><strong>GPS</strong> verification</div>
-    <div class="badge">Part of <strong>agentstack</strong></div>
+    <div class="badge">Part of <strong>prim.sh</strong></div>
   </div>
 </div>
 
@@ -105,12 +105,12 @@ footer .links{margin-top:0.5rem}footer .links a{margin:0 0.75rem}
 <div class="cta-section">
   <h2 style="margin-bottom:0.5rem">Labor is an <span>API call</span>.</h2>
   <p style="color:var(--muted);margin-bottom:2rem">Agents don't have hands. They hire them.</p>
-  <a href="https://docs.hands.sh" class="cta-btn">Read the docs →</a>
+  <a href="https://prim.sh/hands" class="cta-btn">Read the docs →</a>
 </div>
 
 <footer>
   <div>hands.sh — agent-native labor</div>
-  <div class="links"><a href="https://docs.hands.sh">Docs</a><a href="/">agentstack</a></div>
+  <div class="links"><a href="https://prim.sh/hands">Docs</a><a href="/">prim.sh</a></div>
   <div style="margin-top:0.75rem;font-size:0.8rem">Agents don't have hands. They hire them.</div>
   <div style="margin-top:0.5rem;font-size:0.75rem;color:#444">This page is for humans. The API is for agents.</div>
 </footer>

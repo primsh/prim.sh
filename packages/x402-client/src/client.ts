@@ -95,7 +95,8 @@ function buildHttpClient(account: LocalAccount, network?: string): x402HTTPClien
  * 4. Check price against maxPayment cap
  * 5. Sign EIP-3009 payment via x402 client
  * 6. Retry with Payment-Signature header
- * 7. Return retry response (no second retry)
+ * 7. If settlement failed, wait 2s and re-sign once (configurable via retrySettlement)
+ * 8. Return final response
  */
 export function createPrimFetch(config: CreatePrimFetchConfig): typeof fetch {
   const maxPayment = config.maxPayment ?? "1.00";
@@ -181,6 +182,48 @@ export function createPrimFetch(config: CreatePrimFetchConfig): typeof fetch {
       headers: existingHeaders,
     });
 
-    return retryResponse;
+    // Step 6: Detect settlement failure and retry once
+    if (retryResponse.status !== 402) {
+      return retryResponse;
+    }
+
+    // Must clone before reading body — body can only be consumed once
+    const retryClone = retryResponse.clone();
+    let retryBody: { error?: string } = {};
+    try {
+      retryBody = await retryClone.json();
+    } catch {
+      return retryResponse;
+    }
+
+    if (retryBody.error !== "Settlement failed") {
+      return retryResponse;
+    }
+
+    if (config.retrySettlement === false) {
+      return retryResponse;
+    }
+
+    // Wait 2s — enough for the facilitator to complete the prior batch
+    await new Promise((resolve) => setTimeout(resolve, 2000));
+
+    // Re-sign with fresh EIP-3009 authorization
+    const paymentPayload2 = await httpClient.createPaymentPayload(paymentRequired);
+    const paymentHeaders2 = httpClient.encodePaymentSignatureHeader(paymentPayload2);
+
+    const settlementRetryHeaders = init?.headers
+      ? new Headers(init.headers as HeadersInit)
+      : new Headers();
+
+    for (const [key, value] of Object.entries(paymentHeaders2)) {
+      settlementRetryHeaders.set(key, value);
+    }
+
+    const finalResponse = await fetch(input, {
+      ...init,
+      headers: settlementRetryHeaders,
+    });
+
+    return finalResponse;
   };
 }

@@ -2,8 +2,9 @@
 
 > Models for agents. Proxy to GPT-4, Claude, Llama, and more behind a single API.
 
-Base URL: https://api.infer.sh  
+Base URL: https://infer.prim.sh  
 Auth: x402 (USDC on Base, chain `eip155:8453`)
+Status: Coming soon. This primitive is not yet available.
 
 ## Endpoints
 
@@ -17,13 +18,13 @@ Auth: x402 (USDC on Base, chain `eip155:8453`)
 - Billed per 1M tokens, per model, with separate input/output rates.  
 - Embeddings: per 1K tokens embedded.
 
-See human docs at `https://docs.infer.sh` for current model catalog and prices.
+See human docs at `https://prim.sh/infer` for current model catalog and prices.
 
 ## Examples
 
 ```bash
 # Chat completion
-curl -X POST https://api.infer.sh/v1/chat/completions \
+curl -X POST https://infer.prim.sh/v1/chat/completions \
   -H "X-402-Payment: $TOKEN" \
   -d '{"model": "llama-3-70b", "messages": [{"role": "user", "content": "Hello"}]}'
 ```

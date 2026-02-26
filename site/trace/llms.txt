@@ -2,8 +2,9 @@
 
 > Traces for agents. Distributed tracing across primitives and workflows.
 
-Base URL: https://api.trace.sh  
+Base URL: https://trace.prim.sh  
 Auth: x402 (USDC on Base, chain `eip155:8453`)
+Status: Coming soon. This primitive is not yet available.
 
 ## Endpoints
 
@@ -16,13 +17,13 @@ Auth: x402 (USDC on Base, chain `eip155:8453`)
 - Ingest: per GB of spans.  
 - Trace queries: per query, with fair-use read limits.
 
-See human docs at `https://docs.trace.sh` for storage and retention policies.
+See human docs at `https://prim.sh/trace` for storage and retention policies.
 
 ## Examples
 
 ```bash
 # Send a span
-curl -X POST https://api.trace.sh/v1/spans \
+curl -X POST https://trace.prim.sh/v1/spans \
   -H "X-402-Payment: $TOKEN" \
   -d '{"trace_id": "tr_123", "span_id": "sp_1", "name": "spawn_create"}'
 ```

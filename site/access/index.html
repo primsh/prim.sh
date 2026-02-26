@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>access — prim.sh</title>
+<link rel="icon" type="image/jpeg" href="/assets/favicon.jpg">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{--bg:#0a0a0a;--surface:#111;--border:#1a1a1a;--text:#e0e0e0;--muted:#666;--code-bg:#0d0d0d;--accent:#FFCA28;--accent-glow:rgba(255,202,40,0.07)}
+body{background:var(--bg);color:var(--text);font-family:'SF Mono',SFMono-Regular,'Cascadia Code',Consolas,monospace;line-height:1.6;overflow-x:hidden}
+a{color:var(--accent);text-decoration:none}a:hover{text-decoration:underline}
+
+.hero{min-height:50vh;display:flex;flex-direction:column;justify-content:center;align-items:center;text-align:center;padding:4rem 2rem;position:relative}
+.hero::before{content:'';position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:500px;height:500px;background:radial-gradient(circle,var(--accent-glow) 0%,transparent 70%);pointer-events:none}
+.logo{font-size:2.5rem;font-weight:700;letter-spacing:-0.03em;margin-bottom:0.5rem}
+.logo .a{color:var(--accent)}
+.tagline{font-size:1.1rem;color:var(--muted);margin-bottom:0.5rem}
+.sub{font-size:0.95rem;color:var(--muted);max-width:480px}
+
+section{max-width:720px;margin:0 auto;padding:3rem 2rem}
+h2{font-size:1.3rem;margin-bottom:1.25rem;font-weight:600;color:var(--accent)}
+p{color:var(--muted);font-size:0.9rem;margin-bottom:1rem}
+pre{background:var(--code-bg);border:1px solid var(--border);border-radius:8px;padding:1.5rem;overflow-x:auto;font-size:0.85rem;line-height:1.7;margin:1rem 0}
+code{font-family:inherit}
+.g{color:#00ff88}.cm{color:#444}.w{color:var(--text)}.ac{color:var(--accent)}.m{color:var(--muted)}
+
+.form-wrap{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:2rem}
+label{display:block;font-size:0.85rem;color:var(--muted);margin-bottom:0.4rem;margin-top:1.25rem}
+label:first-of-type{margin-top:0}
+input,textarea{width:100%;background:var(--code-bg);border:1px solid var(--border);border-radius:6px;padding:0.75rem 1rem;color:var(--text);font-family:inherit;font-size:0.9rem;outline:none;transition:border-color 0.2s;resize:vertical}
+input:focus,textarea:focus{border-color:var(--accent)}
+textarea{min-height:80px}
+.btn{display:inline-block;margin-top:1.5rem;padding:0.75rem 2rem;background:var(--accent);color:#000;font-family:inherit;font-size:0.9rem;font-weight:700;border:none;border-radius:6px;cursor:pointer;transition:opacity 0.2s}
+.btn:hover{opacity:0.85}.btn:disabled{opacity:0.4;cursor:default}
+.msg{margin-top:1rem;padding:0.75rem 1rem;border-radius:6px;font-size:0.9rem;display:none}
+.msg.ok{background:rgba(0,255,136,0.07);border:1px solid rgba(0,255,136,0.2);color:#00ff88}
+.msg.err{background:rgba(255,107,107,0.07);border:1px solid rgba(255,107,107,0.2);color:#FF6B6B}
+
+.divider{border:none;border-top:1px solid var(--border);margin:0}
+
+footer{text-align:center;padding:2.5rem 2rem;color:var(--muted);font-size:0.8rem;border-top:1px solid var(--border)}
+footer a{color:var(--muted)}footer a:hover{color:var(--text)}
+</style>
+</head>
+<body>
+
+<div class="hero">
+  <div class="logo"><span class="a">access</span>.prim.sh</div>
+  <div class="tagline">Private beta. Request access to the stack.</div>
+  <div class="sub">Prim is currently invite-only. Submit your wallet address and we'll review your request.</div>
+</div>
+
+<section>
+  <h2>Request access</h2>
+  <div class="form-wrap">
+    <form id="form" autocomplete="off">
+      <label for="wallet">Wallet address <span style="color:var(--accent)">*</span></label>
+      <input id="wallet" type="text" placeholder="0x..." spellcheck="false">
+      <label for="reason">What are you building? <span style="color:var(--muted);font-size:0.8rem">(optional)</span></label>
+      <textarea id="reason" placeholder="I'm building an agent that..."></textarea>
+      <button class="btn" type="submit" id="btn">Submit request</button>
+    </form>
+    <div class="msg" id="msg"></div>
+  </div>
+</section>
+
+<hr class="divider">
+
+<section>
+  <h2>Have an invite code?</h2>
+  <p>Invite codes skip the queue. Redeem one directly:</p>
+  <pre><code><span class="cm"># Redeem an invite code</span>
+<span class="w">curl -X POST https://api.prim.sh/api/invites/redeem \
+  -H "Content-Type: application/json" \
+  -d '{"code":"<span class="ac">your-invite-code</span>","wallet":"<span class="ac">0x...</span>"}'</span>
+
+<span class="cm"># → 200</span>
+<span class="w">{ "ok": true, "wallet": "<span class="ac">0x...</span>" }</span></code></pre>
+</section>
+
+<hr class="divider">
+
+<section>
+  <h2>For agents</h2>
+  <p>When your wallet isn't allowlisted, any prim.sh primitive returns a 403 with an <code style="color:var(--accent)">access_url</code>. POST to it to request access autonomously — no human required.</p>
+  <pre><code><span class="cm"># 403 from any prim.sh endpoint</span>
+<span class="w">{
+  "error": "<span class="ac">wallet_not_allowed</span>",
+  "access_url": "<span class="ac">https://prim.sh/access</span>"
+}</span>
+
+<span class="cm"># Submit access request (public, no auth)</span>
+<span class="w">curl -X POST https://api.prim.sh/api/access/request \
+  -H "Content-Type: application/json" \
+  -d '{"wallet":"<span class="ac">0x...</span>","reason":"<span class="ac">building X agent</span>"}'</span>
+
+<span class="cm"># → 201</span>
+<span class="w">{ "id": "<span class="ac">a1b2c3d4</span>", "status": "<span class="ac">pending</span>" }</span></code></pre>
+  <p>Requests are reviewed manually. Once approved, your wallet is added to the allowlist and subsequent requests proceed to x402 payment.</p>
+</section>
+
+<footer>
+  <a href="/">← prim.sh</a>
+</footer>
+
+<script>
+const form = document.getElementById('form');
+const btn = document.getElementById('btn');
+const msg = document.getElementById('msg');
+
+function show(text, type) {
+  msg.textContent = text;
+  msg.className = 'msg ' + type;
+  msg.style.display = 'block';
+}
+
+form.addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const wallet = document.getElementById('wallet').value.trim();
+  const reason = document.getElementById('reason').value.trim();
+
+  if (!/^0x[0-9a-fA-F]{40}$/.test(wallet)) {
+    show('Enter a valid Ethereum address (0x + 40 hex chars).', 'err');
+    return;
+  }
+
+  btn.disabled = true;
+  btn.textContent = 'Submitting...';
+  msg.style.display = 'none';
+
+  try {
+    const res = await fetch('https://api.prim.sh/api/access/request', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ wallet, ...(reason && { reason }) }),
+    });
+    const data = await res.json();
+    if (res.ok) {
+      show('Request submitted. ID: ' + data.id + '. We\'ll review it shortly.', 'ok');
+      form.reset();
+    } else {
+      show(data.error ?? 'Submission failed.', 'err');
+    }
+  } catch {
+    show('Network error. Try the API directly.', 'err');
+  } finally {
+    btn.disabled = false;
+    btn.textContent = 'Submit request';
+  }
+});
+</script>
+</body>
+</html>

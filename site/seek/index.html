@@ -44,7 +44,7 @@ footer .links{margin-top:0.5rem}footer .links a{margin:0 0.75rem}
   <div class="sub">Structured results. No ads. No SEO spam. Just facts, snippets, and citations. x402 auth.</div>
   <div class="cmd-block"><code>
 <span class="comment"># Search the web</span>
-<span class="prompt">$</span> curl -G https://api.seek.sh/v1/search \\
+<span class="prompt">$</span> curl -G https://seek.prim.sh/v1/search \\
     -H "X-402-Payment: $TOKEN" \\
     --data-urlencode "q=best GPU for LLM inference 2026"
 
@@ -61,7 +61,7 @@ footer .links{margin-top:0.5rem}footer .links a{margin:0 0.75rem}
 }
 
 <span class="comment"># Crawl a page (markdown conversion)</span>
-<span class="prompt">$</span> curl -G https://api.seek.sh/v1/extract \\
+<span class="prompt">$</span> curl -G https://seek.prim.sh/v1/extract \\
     -H "X-402-Payment: $TOKEN" \\
     --data-urlencode "url=https://benchmarks.ai/gpu-review"
   </code></div>
@@ -70,7 +70,7 @@ footer .links{margin-top:0.5rem}footer .links a{margin:0 0.75rem}
     <div class="badge"><strong>No ads</strong></div>
     <div class="badge"><strong>Markdown</strong> extraction</div>
     <div class="badge"><strong>Fact</strong> checking</div>
-    <div class="badge">Part of <strong>agentstack</strong></div>
+    <div class="badge">Part of <strong>prim.sh</strong></div>
   </div>
 </div>
 
@@ -108,12 +108,12 @@ footer .links{margin-top:0.5rem}footer .links a{margin:0 0.75rem}
 <div class="cta-section">
   <h2 style="margin-bottom:0.5rem">The web is an <span>API call</span>.</h2>
   <p style="color:var(--muted);margin-bottom:2rem">Agents don't browse. They index.</p>
-  <a href="https://docs.seek.sh" class="cta-btn">Read the docs →</a>
+  <a href="https://prim.sh/seek" class="cta-btn">Read the docs →</a>
 </div>
 
 <footer>
   <div>seek.sh — agent-native search</div>
-  <div class="links"><a href="https://docs.seek.sh">Docs</a><a href="/">agentstack</a></div>
+  <div class="links"><a href="https://prim.sh/seek">Docs</a><a href="/">prim.sh</a></div>
   <div style="margin-top:0.75rem;font-size:0.8rem">Agents don't browse. They index.</div>
   <div style="margin-top:0.5rem;font-size:0.75rem;color:#444">This page is for humans. The API is for agents.</div>
 </footer>

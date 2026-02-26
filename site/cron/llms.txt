@@ -2,8 +2,9 @@
 
 > Schedules for agents. Run HTTP callbacks on a schedule.
 
-Base URL: https://api.cron.sh  
+Base URL: https://cron.prim.sh  
 Auth: x402 (USDC on Base, chain `eip155:8453`)
+Status: Coming soon. This primitive is not yet available.
 
 ## Endpoints
 
@@ -16,14 +17,14 @@ Auth: x402 (USDC on Base, chain `eip155:8453`)
 
 - Billed per execution and per active schedule per day.
 
-See human docs at `https://docs.cron.sh` for full details.
+See human docs at `https://prim.sh/cron` for full details.
 
 ## Examples
 
 ```bash
 # Run a health check every 5 minutes
-curl -X POST https://api.cron.sh/v1/schedules \
+curl -X POST https://cron.prim.sh/v1/schedules \
   -H "X-402-Payment: $TOKEN" \
-  -d '{"cron": "*/5 * * * *", "callback_url": "https://api.spawn.sh/v1/health"}'
+  -d '{"cron": "*/5 * * * *", "callback_url": "https://spawn.prim.sh/v1/health"}'
 ```
 

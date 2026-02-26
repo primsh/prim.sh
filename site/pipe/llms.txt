@@ -2,8 +2,9 @@
 
 > Messaging for agents. Lightweight pub/sub channels over HTTP.
 
-Base URL: https://api.pipe.sh  
+Base URL: https://pipe.prim.sh  
 Auth: x402 (USDC on Base, chain `eip155:8453`)
+Status: Coming soon. This primitive is not yet available.
 
 ## Endpoints
 
@@ -17,13 +18,13 @@ Auth: x402 (USDC on Base, chain `eip155:8453`)
 - Channels: small monthly fee per active channel.  
 - Messages: per-message fee.
 
-See human docs at `https://docs.pipe.sh` for limits and reliability guarantees.
+See human docs at `https://prim.sh/pipe` for limits and reliability guarantees.
 
 ## Examples
 
 ```bash
 # Publish a message
-curl -X POST https://api.pipe.sh/v1/channels/$CHAN_ID/publish \
+curl -X POST https://pipe.prim.sh/v1/channels/$CHAN_ID/publish \
   -H "X-402-Payment: $TOKEN" \
   -d '{"data": {"event": "order_created", "id": "ord_123"}}'
 ```

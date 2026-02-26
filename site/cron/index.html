@@ -44,7 +44,7 @@ footer .links{margin-top:0.5rem}footer .links a{margin:0 0.75rem}
   <div class="sub">Run code on a schedule without keeping a server alive. Cron expressions, one-shots, intervals. Pay per invocation.</div>
   <div class="cmd-block"><code>
 <span class="comment"># Schedule a job</span>
-<span class="prompt">$</span> curl -X POST https://api.cron.sh/v1/jobs \
+<span class="prompt">$</span> curl -X POST https://cron.prim.sh/v1/jobs \
     -H "X-402-Payment: $TOKEN" \
     -d '{"schedule": "*/5 * * * *",
          "endpoint": "https://my-app.dns.sh/healthcheck",
@@ -54,7 +54,7 @@ footer .links{margin-top:0.5rem}footer .links a{margin:0 0.75rem}
   "next_run": "2026-02-23T06:35:00Z", "status": "active" }
 
 <span class="comment"># Or run a command on a spawn.sh instance</span>
-<span class="prompt">$</span> curl -X POST https://api.cron.sh/v1/jobs \
+<span class="prompt">$</span> curl -X POST https://cron.prim.sh/v1/jobs \
     -H "X-402-Payment: $TOKEN" \
     -d '{"schedule": "0 9 * * MON-FRI",
          "action": "spawn_exec",
@@ -62,10 +62,10 @@ footer .links{margin-top:0.5rem}footer .links a{margin:0 0.75rem}
          "command": "python3 daily_report.py"}'
 
 <span class="comment"># One-shot: run once at a specific time</span>
-<span class="prompt">$</span> curl -X POST https://api.cron.sh/v1/jobs \
+<span class="prompt">$</span> curl -X POST https://cron.prim.sh/v1/jobs \
     -H "X-402-Payment: $TOKEN" \
     -d '{"at": "2026-02-23T15:00:00Z",
-         "endpoint": "https://api.relay.sh/v1/send",
+         "endpoint": "https://relay.prim.sh/v1/send",
          "method": "POST",
          "body": {"to": "human@gmail.com", "subject": "Reminder"}}'
   </code></div>
@@ -74,7 +74,7 @@ footer .links{margin-top:0.5rem}footer .links a{margin:0 0.75rem}
     <div class="badge"><strong>Cron</strong> expressions</div>
     <div class="badge"><strong>One-shot</strong> timers</div>
     <div class="badge"><strong>Webhook</strong> + <strong>spawn exec</strong></div>
-    <div class="badge">Part of <strong>agentstack</strong></div>
+    <div class="badge">Part of <strong>prim.sh</strong></div>
   </div>
 </div>
 
@@ -118,12 +118,12 @@ footer .links{margin-top:0.5rem}footer .links a{margin:0 0.75rem}
 <div class="cta-section">
   <h2 style="margin-bottom:0.5rem">A schedule is an <span>API call</span>.</h2>
   <p style="color:var(--muted);margin-bottom:2rem">Agents don't have crontabs. They have endpoints.</p>
-  <a href="https://docs.cron.sh" class="cta-btn">Read the docs →</a>
+  <a href="https://prim.sh/cron" class="cta-btn">Read the docs →</a>
 </div>
 
 <footer>
   <div>cron.sh — agent-native scheduling</div>
-  <div class="links"><a href="https://docs.cron.sh">Docs</a><a href="/">agentstack</a></div>
+  <div class="links"><a href="https://prim.sh/cron">Docs</a><a href="/">prim.sh</a></div>
   <div style="margin-top:0.75rem;font-size:0.8rem">Agents don't have crontabs. They have HTTP endpoints.</div>
   <div style="margin-top:0.5rem;font-size:0.75rem;color:#444">This page is for humans. The API is for agents.</div>
 </footer>

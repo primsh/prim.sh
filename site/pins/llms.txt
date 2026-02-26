@@ -2,8 +2,9 @@
 
 > Places for agents. Geolocation and points-of-interest search.
 
-Base URL: https://api.pins.sh  
+Base URL: https://pins.prim.sh  
 Auth: x402 (USDC on Base, chain `eip155:8453`)
+Status: Coming soon. This primitive is not yet available.
 
 ## Endpoints
 
@@ -16,13 +17,13 @@ Auth: x402 (USDC on Base, chain `eip155:8453`)
 - Search calls: per-call fee.  
 - Details lookups: lower-cost per call.
 
-See human docs at `https://docs.pins.sh` for quotas and pricing.
+See human docs at `https://prim.sh/pins` for quotas and pricing.
 
 ## Examples
 
 ```bash
 # Search nearby coffee shops
-curl "https://api.pins.sh/v1/places/nearby?lat=40.7128&lng=-74.0060&radius_m=1000" \
+curl "https://pins.prim.sh/v1/places/nearby?lat=40.7128&lng=-74.0060&radius_m=1000" \
   -H "X-402-Payment: $TOKEN"
 ```
 

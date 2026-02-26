@@ -2,8 +2,9 @@
 
 > Headless browser for agents. Run scripted browsing sessions via API.
 
-Base URL: https://api.browse.sh  
+Base URL: https://browse.prim.sh  
 Auth: x402 (USDC on Base, chain `eip155:8453`)
+Status: Coming soon. This primitive is not yet available.
 
 ## Endpoints
 
@@ -20,13 +21,13 @@ Auth: x402 (USDC on Base, chain `eip155:8453`)
 - Actions (navigate/click/type): per-action fee.  
 - Screenshots: per image generated.
 
-See human docs at `https://docs.browse.sh` for quotas and limits.
+See human docs at `https://prim.sh/browse` for quotas and limits.
 
 ## Examples
 
 ```bash
 # Start a session
-curl -X POST https://api.browse.sh/v1/sessions \
+curl -X POST https://browse.prim.sh/v1/sessions \
   -H "X-402-Payment: $TOKEN" \
   -d '{"viewport": {"width": 1280, "height": 720}}'
 ```

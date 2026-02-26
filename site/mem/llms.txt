@@ -1,32 +1,48 @@
-# mem.sh
+# mem.prim.sh
 
-> Memory for agents. Vector search and key-value cache for long- and short-term state.
+> Memory for agents. Vector search for long-term knowledge, KV cache for short-term state.
 
-Base URL: https://api.mem.sh  
-Auth: x402 (USDC on Base, chain `eip155:8453`)
+Base URL: https://mem.prim.sh
+Auth: x402 (USDC on Base Sepolia)
+Status: Built, not yet deployed to prim.sh network.
 
 ## Endpoints
 
-- `POST /v1/collections` — create a vector collection.
-- `POST /v1/collections/:id/upsert` — embed and store text.
-- `GET /v1/collections/:id/query` — semantic search over a collection.
-- `POST /v1/cache/set` — set a cache key.
-- `GET /v1/cache/get` — read a cache key.
+### Vector collections
 
-## Pricing
+- `POST /v1/collections` — create a vector collection. **$0.01**
+- `GET /v1/collections` — list collections. **$0.001**
+- `GET /v1/collections/:id` — get collection with document count. **$0.001**
+- `DELETE /v1/collections/:id` — delete a collection. **$0.01**
+- `POST /v1/collections/:id/upsert` — embed and store documents. **$0.001**
+- `POST /v1/collections/:id/query` — semantic search. **$0.001**
 
-- Storage: per GB per month.  
-- Embeds and queries: per call.  
-- Cache: discounted storage for ephemeral data.
+### KV cache
 
-See human docs at `https://docs.mem.sh` for pricing and limits.
+- `PUT /v1/cache/:namespace/:key` — set a cache entry. **$0.0001**
+- `GET /v1/cache/:namespace/:key` — get a cache entry. **$0.0001**
+- `DELETE /v1/cache/:namespace/:key` — delete a cache entry. **$0.0001**
 
 ## Examples
 
 ```bash
-# Upsert a memory
-curl -X POST https://api.mem.sh/v1/collections/my-brain/upsert \
-  -H "X-402-Payment: $TOKEN" \
-  -d '{"text": "The user prefers dark mode.", "metadata": {"source": "chat"}}'
-```
+# Create a collection
+curl -X POST https://mem.prim.sh/v1/collections \
+  -H "Content-Type: application/json" \
+  -d '{"name": "my-brain"}'
 
+# Store a memory
+curl -X POST https://mem.prim.sh/v1/collections/COLLECTION_ID/upsert \
+  -H "Content-Type: application/json" \
+  -d '{"documents": [{"id": "doc1", "text": "The user prefers dark mode", "metadata": {"source": "chat"}}]}'
+
+# Search memories
+curl -X POST https://mem.prim.sh/v1/collections/COLLECTION_ID/query \
+  -H "Content-Type: application/json" \
+  -d '{"query": "user preferences", "limit": 5}'
+
+# Cache a value
+curl -X PUT https://mem.prim.sh/v1/cache/session/current-task \
+  -H "Content-Type: application/json" \
+  -d '{"value": "researching Base L2"}'
+```

@@ -2,8 +2,9 @@
 
 > Commerce for agents. Buy physical goods and trigger fulfillment via API.
 
-Base URL: https://api.mart.sh  
+Base URL: https://mart.prim.sh  
 Auth: x402 (USDC on Base, chain `eip155:8453`)
+Status: Coming soon. This primitive is not yet available.
 
 ## Endpoints
 
@@ -17,13 +18,13 @@ Auth: x402 (USDC on Base, chain `eip155:8453`)
 - Takes a percentage fee on successful orders.  
 - Network fees may apply via shipping/payment partners.
 
-See human docs at `https://docs.mart.sh` for marketplace and compliance details.
+See human docs at `https://prim.sh/mart` for marketplace and compliance details.
 
 ## Examples
 
 ```bash
 # Add item and checkout
-curl -X POST https://api.mart.sh/v1/carts \
+curl -X POST https://mart.prim.sh/v1/carts \
   -H "X-402-Payment: $TOKEN" \
   -d '{"currency": "USD"}'
 ```

@@ -44,14 +44,14 @@ footer .links{margin-top:0.5rem}footer .links a{margin:0 0.75rem}
   <div class="sub">Open pages, click buttons, fill forms, capture DOM and screenshots — without ever opening a tab. x402-native browsing sessions.</div>
   <div class="cmd-block"><code>
 <span class="comment"># Start a session</span>
-<span class="prompt">$</span> curl -X POST https://api.browse.sh/v1/sessions \
+<span class="prompt">$</span> curl -X POST https://browse.prim.sh/v1/sessions \
     -H "X-402-Payment: $TOKEN" \
     -d '{"url": "https://example.com"}'
 
 { "id": "sess_k7x9m2", "status": "ready" }
 
 <span class="comment"># Run a script</span>
-<span class="prompt">$</span> curl -X POST https://api.browse.sh/v1/sessions/sess_k7x9m2/eval \
+<span class="prompt">$</span> curl -X POST https://browse.prim.sh/v1/sessions/sess_k7x9m2/eval \
     -H "X-402-Payment: $TOKEN" \
     -d '{"script": "document.title"}'
   </code></div>
@@ -59,7 +59,7 @@ footer .links{margin-top:0.5rem}footer .links a{margin:0 0.75rem}
     <div class="badge"><strong>Playwright</strong> backend</div>
     <div class="badge"><strong>Headless</strong> sessions</div>
     <div class="badge"><strong>DOM</strong> + <strong>screenshots</strong></div>
-    <div class="badge">Part of <strong>agentstack</strong></div>
+    <div class="badge">Part of <strong>prim.sh</strong></div>
   </div>
 </div>
 
@@ -97,12 +97,12 @@ footer .links{margin-top:0.5rem}footer .links a{margin:0 0.75rem}
 <div class="cta-section">
   <h2 style="margin-bottom:0.5rem">Browsing is an <span>API call</span>.</h2>
   <p style="color:var(--muted);margin-bottom:2rem">Agents don't click. They script.</p>
-  <a href="https://docs.browse.sh" class="cta-btn">Read the docs →</a>
+  <a href="https://prim.sh/browse" class="cta-btn">Read the docs →</a>
 </div>
 
 <footer>
   <div>browse.sh — agent-native browsing</div>
-  <div class="links"><a href="https://docs.browse.sh">Docs</a><a href="/">agentstack</a></div>
+  <div class="links"><a href="https://prim.sh/browse">Docs</a><a href="/">prim.sh</a></div>
   <div style="margin-top:0.75rem;font-size:0.8rem">Agents don't click. They script.</div>
   <div style="margin-top:0.5rem;font-size:0.75rem;color:#444">This page is for humans. The API is for agents.</div>
 </footer>

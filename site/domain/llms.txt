@@ -2,8 +2,9 @@
 
 > Domains for agents. Manage DNS records and certificates via API.
 
-Base URL: https://api.dns.sh  
+Base URL: https://dns.prim.sh  
 Auth: x402 (USDC on Base, chain `eip155:8453`)
+Status: Coming soon. This primitive is not yet available.
 
 ## Endpoints
 
@@ -19,13 +20,13 @@ Auth: x402 (USDC on Base, chain `eip155:8453`)
 - Records: included up to a quota, then per-record.  
 - Certificates: per-certificate issuance fee.
 
-See human docs at `https://docs.dns.sh` for exact limits.
+See human docs at `https://prim.sh/dns` for exact limits.
 
 ## Examples
 
 ```bash
 # Add an A record
-curl -X POST https://api.dns.sh/v1/zones/$ZONE_ID/records \
+curl -X POST https://dns.prim.sh/v1/zones/$ZONE_ID/records \
   -H "X-402-Payment: $TOKEN" \
   -d '{"type": "A", "name": "api", "content": "203.0.113.10", "ttl": 300}'
 ```

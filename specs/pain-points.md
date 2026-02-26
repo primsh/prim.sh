@@ -83,5 +83,18 @@ Every entry here is friction an agent hits when trying to operate autonomously. 
 ### Monitor email deliverability / register with Google Postmaster Tools
 - **Context:** Agent sends email via email.sh, needs to know if it's landing in spam or being blocked
 - **Friction:** Google Postmaster Tools requires a human to log into a web GUI, add the domain, copy a DNS verification token, and check dashboards manually. No API. Apple has no equivalent at all.
-- **Primitive:** email.sh feature (deliverability monitoring endpoint) or watch.sh
+- **Primitive:** email.sh feature (deliverability monitoring endpoint) or watch.sh. Postmaster Tools has a read-only API for already-verified domains — could surface reputation/spam data via email.sh. But initial domain verification is GUI-only.
 - **Date:** 2026-02-25
+
+### GUI-only services: agents can't click buttons
+- **Context:** Many critical operations are only available through web GUIs — Google Postmaster Tools, npm org creation, GitHub org creation, Cloudflare Pages initial setup, etc.
+- **Friction:** No API exists. Agent must ask a human to perform the action manually. Blocks autonomous operation.
+- **Primitive:** browse.sh (hosted Playwright/Browserbase, x402 per action) + vault.sh (credential storage) + auth.sh (OAuth broker). The three compose: auth.sh gets tokens → vault.sh stores them → browse.sh drives the GUI. This is the stack that unlocks GUI automation.
+- **Deeper problem:** Even with browse.sh, most platforms require human identity verification to create accounts (Google, AWS, GitHub, Stripe). Agents can act *on behalf of* a human's account (delegated OAuth), but can't create their own. This is a platform policy constraint, not a technical one.
+- **Date:** 2026-02-25
+
+### Create a GitHub Personal Access Token
+- **Context:** Deploying a service that needs to call the GitHub API (e.g., creating issues for agent feedback). Agent needed a PAT with `repo` scope.
+- **Friction:** GitHub PATs can only be created via web GUI (Settings → Developer Settings → Personal Access Tokens). No API, no CLI. Agent had to stop and ask the human to generate the token manually.
+- **Primitive:** auth.sh (OAuth/token broker) or vault.sh (credential provisioning). An agent-accessible token minting flow that can request scoped API access to platforms the human has already authorized.
+- **Date:** 2026-02-26

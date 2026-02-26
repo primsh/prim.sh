@@ -14,6 +14,10 @@
     ".": {
       "import": "./dist/index.js",
       "types": "./dist/index.d.ts"
+    },
+    "./allowlist-db": {
+      "import": "./src/allowlist-db.ts",
+      "types": "./src/allowlist-db.ts"
     }
   },
   "scripts": {

@@ -2,8 +2,9 @@
 
 > Observability for agents. Logs, metrics, and alerts across your primitives.
 
-Base URL: https://api.watch.sh  
+Base URL: https://watch.prim.sh  
 Auth: x402 (USDC on Base, chain `eip155:8453`)
+Status: Coming soon. This primitive is not yet available.
 
 ## Endpoints
 
@@ -19,13 +20,13 @@ Auth: x402 (USDC on Base, chain `eip155:8453`)
 - Metric ingest: per million points.  
 - Alerts: per active rule per day.
 
-See human docs at `https://docs.watch.sh` for full pricing and retention.
+See human docs at `https://prim.sh/watch` for full pricing and retention.
 
 ## Examples
 
 ```bash
 # Ingest a log
-curl -X POST https://api.watch.sh/v1/logs \
+curl -X POST https://watch.prim.sh/v1/logs \
   -H "X-402-Payment: $TOKEN" \
   -d '{"level": "error", "message": "Rate limit exceeded", "service": "scraper"}'
 ```

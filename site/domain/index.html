@@ -44,7 +44,7 @@ footer .links{margin-top:0.5rem}footer .links a{margin:0 0.75rem}
   <div class="sub">Instant subdomains with auto-TLS. Or bring your own domain. DNS records via API. No registrar account needed.</div>
   <div class="cmd-block"><code>
 <span class="comment"># Get a subdomain with TLS instantly</span>
-<span class="prompt">$</span> curl -X POST https://api.dns.sh/v1/subdomains \
+<span class="prompt">$</span> curl -X POST https://dns.prim.sh/v1/subdomains \
     -H "X-402-Payment: $TOKEN" \
     -d '{"name": "my-app", "target": "198.51.100.1"}'
 
@@ -52,7 +52,7 @@ footer .links{margin-top:0.5rem}footer .links a{margin:0 0.75rem}
   "tls": true, "cert_status": "provisioning" }
 
 <span class="comment"># Or manage DNS records for your own domain</span>
-<span class="prompt">$</span> curl -X POST https://api.dns.sh/v1/zones/mysite.com/records \
+<span class="prompt">$</span> curl -X POST https://dns.prim.sh/v1/zones/mysite.com/records \
     -H "X-402-Payment: $TOKEN" \
     -d '{"type": "A", "name": "@", "value": "198.51.100.1"}'
   </code></div>
@@ -61,7 +61,7 @@ footer .links{margin-top:0.5rem}footer .links a{margin:0 0.75rem}
     <div class="badge"><strong>Auto</strong> TLS</div>
     <div class="badge"><strong>Instant</strong> subdomains</div>
     <div class="badge"><strong>BYOD</strong> custom domains</div>
-    <div class="badge">Part of <strong>agentstack</strong></div>
+    <div class="badge">Part of <strong>prim.sh</strong></div>
   </div>
 </div>
 
@@ -112,12 +112,12 @@ footer .links{margin-top:0.5rem}footer .links a{margin:0 0.75rem}
 <div class="cta-section">
   <h2 style="margin-bottom:0.5rem">A domain is an <span>API call</span>.</h2>
   <p style="color:var(--muted);margin-bottom:2rem">Agents don't register domains. They provision endpoints.</p>
-  <a href="https://docs.dns.sh" class="cta-btn">Read the docs →</a>
+  <a href="https://prim.sh/dns" class="cta-btn">Read the docs →</a>
 </div>
 
 <footer>
   <div>dns.sh — agent-native domains</div>
-  <div class="links"><a href="https://docs.dns.sh">Docs</a><a href="/">agentstack</a></div>
+  <div class="links"><a href="https://prim.sh/dns">Docs</a><a href="/">prim.sh</a></div>
   <div style="margin-top:0.75rem;font-size:0.8rem">Agents don't register domains. They provision endpoints.</div>
   <div style="margin-top:0.5rem;font-size:0.75rem;color:#444">This page is for humans. The API is for agents.</div>
 </footer>

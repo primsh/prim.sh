@@ -1,0 +1,31 @@
+# faucet.prim.sh
+
+> Testnet faucet. Get free USDC and ETH on Base Sepolia to test prim primitives.
+
+Base URL: https://faucet.prim.sh
+Auth: None required (rate-limited by wallet address)
+
+## Endpoints
+
+- `GET /` — health check (shows network info).
+- `POST /v1/faucet/usdc` — dispense 1 test USDC. Rate limit: once per 2 hours.
+- `POST /v1/faucet/eth` — dispense 1 test ETH. Rate limit: once per 1 hour.
+- `GET /v1/faucet/status` — check rate limit status for an address.
+
+## Examples
+
+```bash
+# Get test USDC
+curl -X POST https://faucet.prim.sh/v1/faucet/usdc \
+  -H "Content-Type: application/json" \
+  -d '{"address": "0xYOUR_ADDRESS"}'
+
+# Check when you can drip again
+curl "https://faucet.prim.sh/v1/faucet/status?address=0xYOUR_ADDRESS"
+```
+
+## Notes
+
+- Testnet only. Will not operate on mainnet.
+- USDC is dispensed via Circle testnet API.
+- ETH is dispensed from a treasury wallet.

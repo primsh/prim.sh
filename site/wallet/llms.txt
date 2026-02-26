@@ -1,41 +1,38 @@
-# wallet.sh
+# wallet.prim.sh
 
-> Agent-native wallets. Hold USDC on Base, fund agents, and pay x402 endpoints.
+> Non-custodial wallet registration. Register your wallet address, then use it across all prim primitives.
 
-Base URL: https://api.wallet.sh  
-Auth: x402 (USDC on Base, chain `eip155:8453`)
+Base URL: https://wallet.prim.sh
+Auth: Wallet registration is free. Other endpoints require x402 (USDC on Base Sepolia).
 
 ## Endpoints
 
-- `POST /v1/wallets` — create a new wallet.
-- `GET /v1/wallets` — list wallets.
-- `GET /v1/wallets/:id` — get balances and deposit addresses.
-- `GET /v1/wallets/:id/txns` — list transactions for a wallet.
-- `POST /v1/wallets/:id/pay` — pay an x402-enabled endpoint.
-- `POST /v1/wallets/:id/send` — send funds to another wallet or address.
-- `POST /v1/wallets/:id/withdraw` — withdraw to Lightning or Base L2.
-- `POST /v1/charges` — create a payment request.
-- `GET /v1/charges/:id` — check payment status.
+### Free (no payment required)
 
-## Pricing
+- `GET /` — health check.
+- `POST /v1/wallets` — register a wallet via EIP-191 signature.
 
-- Wallet creation: free.  
-- x402 outbound payments: percentage fee per transaction.  
-- Charges: percentage fee on successful collection.  
-- On-chain withdrawals: network fees pass-through.
+### Paid (x402)
 
-See human docs at `https://docs.wallet.sh` for the latest pricing.
+- `GET /v1/wallets` — list registered wallets. **$0.001**
+- `GET /v1/wallets/:address` — get wallet details. **$0.001**
+- `DELETE /v1/wallets/:address` — deactivate wallet. **$0.01**
+- `GET /v1/wallets/:address/fund-requests` — list fund requests. **$0.001**
+- `POST /v1/wallets/:address/fund-request` — create fund request. **$0.001**
+- `POST /v1/fund-requests/:id/approve` — approve fund request. **$0.01**
+- `POST /v1/fund-requests/:id/deny` — deny fund request. **$0.001**
+- `GET /v1/wallets/:address/policy` — get spending policy. **$0.001**
+- `PUT /v1/wallets/:address/policy` — update spending policy. **$0.005**
 
-## Examples
+## Registration
+
+Wallet registration uses EIP-191 signed messages. No keys are stored server-side.
 
 ```bash
-# Create a wallet
-curl -X POST https://api.wallet.sh/v1/wallets \
-  -H "X-402-Payment: $TOKEN"
-
-# Pay an x402 endpoint
-curl -X POST https://api.wallet.sh/v1/wallets/$WALLET_ID/pay \
-  -H "X-402-Payment: $TOKEN" \
-  -d '{"endpoint": "https://api.spawn.sh/v1/instances", "amount_usd": "0.10"}'
+# Register a wallet
+curl -X POST https://wallet.prim.sh/v1/wallets \
+  -H "Content-Type: application/json" \
+  -d '{"address": "0xYOUR_ADDRESS", "signature": "0xSIGNED_MESSAGE", "timestamp": "2026-02-25T00:00:00Z"}'
 ```
 
+The message to sign: `Register <address> with prim.sh at <timestamp>`

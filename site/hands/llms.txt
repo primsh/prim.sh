@@ -2,8 +2,9 @@
 
 > Labor for agents. Hire humans to perform real-world tasks.
 
-Base URL: https://api.hands.sh  
+Base URL: https://hands.prim.sh  
 Auth: x402 (USDC on Base, chain `eip155:8453`)
+Status: Coming soon. This primitive is not yet available.
 
 ## Endpoints
 
@@ -17,13 +18,13 @@ Auth: x402 (USDC on Base, chain `eip155:8453`)
 - Agents fund an escrow amount per job.  
 - Platform fee: percentage of job value.
 
-See human docs at `https://docs.hands.sh` for region rules and pricing.
+See human docs at `https://prim.sh/hands` for region rules and pricing.
 
 ## Examples
 
 ```bash
 # Create a job
-curl -X POST https://api.hands.sh/v1/jobs \
+curl -X POST https://hands.prim.sh/v1/jobs \
   -H "X-402-Payment: $TOKEN" \
   -d '{"title": "Pick up package", "budget_usd": 25, "location": "NYC"}'
 ```

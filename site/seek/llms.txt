@@ -2,8 +2,9 @@
 
 > Search for agents. Web and knowledge search behind a simple API.
 
-Base URL: https://api.seek.sh  
+Base URL: https://seek.prim.sh  
 Auth: x402 (USDC on Base, chain `eip155:8453`)
+Status: Coming soon. This primitive is not yet available.
 
 ## Endpoints
 
@@ -14,13 +15,13 @@ Auth: x402 (USDC on Base, chain `eip155:8453`)
 
 - Billed per search call, with different rates per index.
 
-See human docs at `https://docs.seek.sh` for index coverage and pricing.
+See human docs at `https://prim.sh/seek` for index coverage and pricing.
 
 ## Examples
 
 ```bash
 # Web search
-curl "https://api.seek.sh/v1/search?q=agent-native+cloud" \
+curl "https://seek.prim.sh/v1/search?q=agent-native+cloud" \
   -H "X-402-Payment: $TOKEN"
 ```
 

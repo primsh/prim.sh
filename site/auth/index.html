@@ -44,14 +44,14 @@ footer .links{margin-top:0.5rem}footer .links a{margin:0 0.75rem}
   <div class="sub">Connect to Google, GitHub, Notion, and more — without ever embedding a consent screen. Humans approve once, agents use forever.</div>
   <div class="cmd-block"><code>
 <span class="comment"># Create a connection</span>
-<span class="prompt">$</span> curl -X POST https://api.auth.sh/v1/connections \
+<span class="prompt">$</span> curl -X POST https://auth.prim.sh/v1/connections \
     -H "X-402-Payment: $TOKEN" \
     -d '{"provider": "google", "redirect_url": "https://owner.app/oauth/callback"}'
 
 { "id": "conn_k7x9m2", "auth_url": "https://auth.sh/redirect/..." }
 
 <span class="comment"># Later: use the connection as an agent</span>
-<span class="prompt">$</span> curl -X GET https://api.auth.sh/v1/connections/conn_k7x9m2/token \
+<span class="prompt">$</span> curl -X GET https://auth.prim.sh/v1/connections/conn_k7x9m2/token \
     -H "X-402-Payment: $TOKEN"
   </code></div>
   <div class="badges">
@@ -96,12 +96,12 @@ footer .links{margin-top:0.5rem}footer .links a{margin:0 0.75rem}
 <div class="cta-section">
   <h2 style="margin-bottom:0.5rem">OAuth is an <span>API call</span>.</h2>
   <p style="color:var(--muted);margin-bottom:2rem">Agents don't own dashboards. They borrow access.</p>
-  <a href="https://docs.auth.sh" class="cta-btn">Read the docs →</a>
+  <a href="https://prim.sh/auth" class="cta-btn">Read the docs →</a>
 </div>
 
 <footer>
   <div>auth.sh — agent-native OAuth</div>
-  <div class="links"><a href="https://docs.auth.sh">Docs</a><a href="/">agentstack</a></div>
+  <div class="links"><a href="https://prim.sh/auth">Docs</a><a href="/">prim.sh</a></div>
   <div style="margin-top:0.75rem;font-size:0.8rem">Agents don't handle passwords. They use brokers.</div>
   <div style="margin-top:0.5rem;font-size:0.75rem;color:#444">This page is for humans. The API is for agents.</div>
 </footer>

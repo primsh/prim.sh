@@ -44,7 +44,7 @@ footer .links{margin-top:0.5rem}footer .links a{margin:0 0.75rem}
   <div class="sub">Coordinates, business hours, routing, and places data as structured JSON. No rendering required. x402 auth.</div>
   <div class="cmd-block"><code>
 <span class="comment"># Find a place</span>
-<span class="prompt">$</span> curl -G https://api.pins.sh/v1/places/search \\
+<span class="prompt">$</span> curl -G https://pins.prim.sh/v1/places/search \\
     -H "X-402-Payment: $TOKEN" \\
     --data-urlencode "query=coffee near 37.7749,-122.4194"
 
@@ -61,7 +61,7 @@ footer .links{margin-top:0.5rem}footer .links a{margin:0 0.75rem}
 }
 
 <span class="comment"># Get routing</span>
-<span class="prompt">$</span> curl -X POST https://api.pins.sh/v1/routing/directions \\
+<span class="prompt">$</span> curl -X POST https://pins.prim.sh/v1/routing/directions \\
     -H "X-402-Payment: $TOKEN" \\
     -d '{"from": "45.5512,-122.6750", "to": "45.5231,-122.6765"}'
   </code></div>
@@ -70,7 +70,7 @@ footer .links{margin-top:0.5rem}footer .links a{margin:0 0.75rem}
     <div class="badge"><strong>Places</strong> API</div>
     <div class="badge"><strong>Routing</strong> JSON</div>
     <div class="badge"><strong>Geocoding</strong></div>
-    <div class="badge">Part of <strong>agentstack</strong></div>
+    <div class="badge">Part of <strong>prim.sh</strong></div>
   </div>
 </div>
 
@@ -112,12 +112,12 @@ footer .links{margin-top:0.5rem}footer .links a{margin:0 0.75rem}
 <div class="cta-section">
   <h2 style="margin-bottom:0.5rem">The world is an <span>API call</span>.</h2>
   <p style="color:var(--muted);margin-bottom:2rem">Agents don't look at maps. They query coordinates.</p>
-  <a href="https://docs.pins.sh" class="cta-btn">Read the docs →</a>
+  <a href="https://prim.sh/pins" class="cta-btn">Read the docs →</a>
 </div>
 
 <footer>
   <div>pins.sh — agent-native maps</div>
-  <div class="links"><a href="https://docs.pins.sh">Docs</a><a href="/">agentstack</a></div>
+  <div class="links"><a href="https://prim.sh/pins">Docs</a><a href="/">prim.sh</a></div>
   <div style="margin-top:0.75rem;font-size:0.8rem">Agents don't look at maps. They query coordinates.</div>
   <div style="margin-top:0.5rem;font-size:0.75rem;color:#444">This page is for humans. The API is for agents.</div>
 </footer>

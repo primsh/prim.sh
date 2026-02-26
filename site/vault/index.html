@@ -44,7 +44,7 @@ footer .links{margin-top:0.5rem}footer .links a{margin:0 0.75rem}
   <div class="sub">Store API keys, tokens, SSH keys, credentials. Scoped access. Ephemeral or persistent. x402 auth.</div>
   <div class="cmd-block"><code>
 <span class="comment"># Store a secret</span>
-<span class="prompt">$</span> curl -X POST https://api.vault.sh/v1/secrets \
+<span class="prompt">$</span> curl -X POST https://vault.prim.sh/v1/secrets \
     -H "X-402-Payment: $TOKEN" \
     -d '{"key": "openai_key", "value": "sk-...", "ttl": 3600}'
 
@@ -52,13 +52,13 @@ footer .links{margin-top:0.5rem}footer .links a{margin:0 0.75rem}
 { "id": "sec_m3x8k1", "key": "openai_key", "ttl": 3600 }
 
 <span class="comment"># Read it back</span>
-<span class="prompt">$</span> curl https://api.vault.sh/v1/secrets/sec_m3x8k1 \
+<span class="prompt">$</span> curl https://vault.prim.sh/v1/secrets/sec_m3x8k1 \
     -H "X-402-Payment: $TOKEN"
 
 { "key": "openai_key", "value": "sk-...", "expires_at": "..." }
 
 <span class="comment"># Create a scoped token (read-only, 1 hour, one secret)</span>
-<span class="prompt">$</span> curl -X POST https://api.vault.sh/v1/tokens \
+<span class="prompt">$</span> curl -X POST https://vault.prim.sh/v1/tokens \
     -H "X-402-Payment: $TOKEN" \
     -d '{"scope": ["sec_m3x8k1"], "perms": "read", "ttl": 3600}'
   </code></div>
@@ -67,7 +67,7 @@ footer .links{margin-top:0.5rem}footer .links a{margin:0 0.75rem}
     <div class="badge"><strong>Scoped</strong> access tokens</div>
     <div class="badge"><strong>Ephemeral</strong> or persistent</div>
     <div class="badge"><strong>E2E</strong> encrypted</div>
-    <div class="badge">Part of <strong>agentstack</strong></div>
+    <div class="badge">Part of <strong>prim.sh</strong></div>
   </div>
 </div>
 
@@ -110,12 +110,12 @@ footer .links{margin-top:0.5rem}footer .links a{margin:0 0.75rem}
 <div class="cta-section">
   <h2 style="margin-bottom:0.5rem">Secrets are an <span>API call</span>.</h2>
   <p style="color:var(--muted);margin-bottom:2rem">Agents don't have password managers. They have vault.sh.</p>
-  <a href="https://docs.vault.sh" class="cta-btn">Read the docs →</a>
+  <a href="https://prim.sh/vault" class="cta-btn">Read the docs →</a>
 </div>
 
 <footer>
   <div>vault.sh — agent-native secrets</div>
-  <div class="links"><a href="https://docs.vault.sh">Docs</a><a href="/">agentstack</a></div>
+  <div class="links"><a href="https://prim.sh/vault">Docs</a><a href="/">prim.sh</a></div>
   <div style="margin-top:0.75rem;font-size:0.8rem">Agents don't have password managers. They have API calls.</div>
   <div style="margin-top:0.5rem;font-size:0.75rem;color:#444">This page is for humans. The API is for agents.</div>
 </footer>

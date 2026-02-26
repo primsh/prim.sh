@@ -1,36 +1,48 @@
-# spawn.sh
+# spawn.prim.sh
 
-> VPS for agents. Provision, resize, and destroy virtual machines via API.
+> VPS for agents. Provision, manage, and destroy virtual machines via API.
 
-Base URL: https://api.spawn.sh  
-Auth: x402 (USDC on Base, chain `eip155:8453`)
+Base URL: https://spawn.prim.sh
+Auth: x402 (USDC on Base Sepolia)
 
 ## Endpoints
 
-- `POST /v1/instances` — create a new VPS instance.
-- `GET /v1/instances` — list instances.
-- `GET /v1/instances/:id` — get instance status and connection info.
-- `POST /v1/instances/:id/resize` — change plan/size.
-- `POST /v1/instances/:id/destroy` — destroy an instance.
+### Servers
 
-## Pricing
+- `POST /v1/servers` — create a server. **$0.01**
+- `GET /v1/servers` — list servers. **$0.001**
+- `GET /v1/servers/:id` — get server details (status, IP). **$0.001**
+- `DELETE /v1/servers/:id` — delete a server. **$0.005**
+- `POST /v1/servers/:id/start` — start a stopped server. **$0.002**
+- `POST /v1/servers/:id/stop` — stop a running server. **$0.002**
+- `POST /v1/servers/:id/reboot` — reboot a server. **$0.002**
+- `POST /v1/servers/:id/resize` — resize a server. **$0.01**
+- `POST /v1/servers/:id/rebuild` — rebuild from image. **$0.005**
 
-- Instances billed per-minute by plan (vCPU/RAM/disk).  
-- API requests that mutate state (create/resize/destroy) include an x402 fee.  
-- Read-only endpoints are typically free.
+### SSH Keys
 
-See human docs at `https://docs.spawn.sh` for exact plan and pricing tables.
+- `POST /v1/ssh-keys` — register an SSH key. **$0.001**
+- `GET /v1/ssh-keys` — list SSH keys. **$0.001**
+- `DELETE /v1/ssh-keys/:id` — delete an SSH key. **$0.001**
+
+## Limits (beta)
+
+- 3 concurrent servers per wallet
+- `small` type only (1 vCPU, 1 GB RAM)
 
 ## Examples
 
 ```bash
-# Provision a VPS
-curl -X POST https://api.spawn.sh/v1/instances \
-  -H "X-402-Payment: $TOKEN" \
-  -d '{"image": "ubuntu-24.04", "plan": "s-1vcpu-1gb"}'
+# Register an SSH key
+curl -X POST https://spawn.prim.sh/v1/ssh-keys \
+  -H "Content-Type: application/json" \
+  -d '{"name": "my-key", "public_key": "ssh-ed25519 AAAA..."}'
 
-# Check instance status
-curl https://api.spawn.sh/v1/instances/inst_k7x9m2 \
-  -H "X-402-Payment: $TOKEN"
+# Create a server
+curl -X POST https://spawn.prim.sh/v1/servers \
+  -H "Content-Type: application/json" \
+  -d '{"name": "my-server", "type": "small", "image": "ubuntu-24.04", "location": "nyc3", "ssh_keys": ["KEY_ID"]}'
+
+# Check server status (poll until status=active to get IP)
+curl https://spawn.prim.sh/v1/servers/SERVER_ID
 ```
-

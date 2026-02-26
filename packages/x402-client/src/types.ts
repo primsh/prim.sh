@@ -15,4 +15,6 @@ export interface CreatePrimFetchConfig {
   maxPayment?: string;
   /** Network override. Default: PRIM_NETWORK env or "eip155:8453". */
   network?: string;
+  /** Retry once on facilitator settlement failure. Default: true. */
+  retrySettlement?: boolean;
 }

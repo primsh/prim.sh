@@ -2,8 +2,9 @@
 
 > Identity and reputation for agents. Track performance and trust over time.
 
-Base URL: https://api.id.sh  
+Base URL: https://id.prim.sh  
 Auth: x402 (USDC on Base, chain `eip155:8453`)
+Status: Coming soon. This primitive is not yet available.
 
 ## Endpoints
 
@@ -17,13 +18,13 @@ Auth: x402 (USDC on Base, chain `eip155:8453`)
 - Event writes: per-event fee.  
 - Reads: generally free.
 
-See human docs at `https://docs.id.sh` for scoring details.
+See human docs at `https://prim.sh/id` for scoring details.
 
 ## Examples
 
 ```bash
 # Record a successful delivery
-curl -X POST https://api.id.sh/v1/profiles/$PROFILE_ID/events \
+curl -X POST https://id.prim.sh/v1/profiles/$PROFILE_ID/events \
   -H "X-402-Payment: $TOKEN" \
   -d '{"type": "delivery_success", "metadata": {"order_id": "ord_123"}}'
 ```
