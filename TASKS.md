@@ -98,6 +98,7 @@
 | 9 | M-2 | mem.sh live smoke test: create collection → upsert docs → query → cache set/get/delete on Base Sepolia via x402 payment | packages/mem | M-1 | done |
 | 14 | M-3 | `prim mem` CLI subcommand: create-collection, list-collections, upsert, query, cache-set, cache-get, cache-del using keystore + x402-client | packages/keystore | M-1, KS-1 | pending |
 | 14 | R-15 | `prim email` CLI: mailbox CRUD, message inbox/read/send, webhook and domain management using keystore + x402-client | packages/keystore | R-6, KS-1 | done |
+| 16 | I-1 | Primitives status SOT: `primitives.yaml` + codegen script that regenerates llms.txt + README table. Status states: coming_soon → building → built → testing → production. CI check fails if generated output doesn't match committed files. | root, scripts/, site/, README.md | — | pending |
 
 ## Plan Docs
 
@@ -158,8 +159,10 @@
 - X4-2: `tasks/active/x4-2-x402-client-retry-2026-02-25.md`
 - L-35: `tasks/active/l-35-access-request-e2e-test-2026-02-25.md`
 - Wave 5.5 (L-62→L-67): `tasks/active/wave-5.5-agent-interface-layer-2026-02-26.md`
+- I-1: `tasks/active/i-1-primitives-sot-codegen-2026-02-26.md`
 - L-48/L-49: covered by v1 launch plan update (search deploy)
 - V1 Launch: `tasks/active/v1-launch-plan-2026-02-25.md`
+- L-66: `tasks/active/l-66-package-as-plugins-2026-02-26.md`
 
 ## V1 Launch (scope: L)
 
