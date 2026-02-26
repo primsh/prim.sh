@@ -12,7 +12,12 @@
     "format": "biome format .",
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "test": "vitest --run",
-    "check": "pnpm lint && pnpm typecheck && pnpm test"
+    "check": "pnpm lint && pnpm typecheck && pnpm test",
+    "build:binary:linux-x64": "bun build --compile --target=bun-linux-x64 src/cli.ts --outfile ../../dist/prim-linux-x64",
+    "build:binary:linux-arm64": "bun build --compile --target=bun-linux-arm64 src/cli.ts --outfile ../../dist/prim-linux-arm64",
+    "build:binary:darwin-x64": "bun build --compile --target=bun-darwin-x64 src/cli.ts --outfile ../../dist/prim-darwin-x64",
+    "build:binary:darwin-arm64": "bun build --compile --target=bun-darwin-arm64 src/cli.ts --outfile ../../dist/prim-darwin-arm64",
+    "build:binaries": "pnpm build:binary:linux-x64 && pnpm build:binary:linux-arm64 && pnpm build:binary:darwin-x64 && pnpm build:binary:darwin-arm64"
   },
   "dependencies": {
     "@primsh/x402-middleware": "workspace:*",
