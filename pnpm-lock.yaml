@@ -7,6 +7,10 @@ settings:
 importers:
 
   .:
+    dependencies:
+      aws4fetch:
+        specifier: ^1.0.20
+        version: 1.0.20
     devDependencies:
       '@biomejs/biome':
         specifier: ^1.9.0
