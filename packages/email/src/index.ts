@@ -242,13 +242,15 @@ app.use("*", bodyLimit({
   onError: (c) => c.json({ error: "Request too large" }, 413),
 }));
 
+app.use("*", metricsMiddleware());
+
 app.use(
   "*",
   createAgentStackMiddleware(
     {
       payTo: PAY_TO_ADDRESS,
       network: NETWORK,
-      freeRoutes: ["GET /", "GET /pricing", "GET /llms.txt", "POST /internal/hooks/ingest"],
+      freeRoutes: ["GET /", "GET /pricing", "GET /llms.txt", "POST /internal/hooks/ingest", "GET /v1/metrics"],
       checkAllowlist,
     },
     { ...EMAIL_ROUTES },
@@ -292,6 +294,9 @@ app.get("/llms.txt", (c) => {
   c.header("Content-Type", "text/plain; charset=utf-8");
   return c.body(LLMS_TXT);
 });
+
+// GET /v1/metrics — operational metrics (free)
+app.get("/v1/metrics", metricsHandler("email.prim.sh"));
 
 // POST /v1/mailboxes — Create mailbox
 app.post("/v1/mailboxes", async (c) => {

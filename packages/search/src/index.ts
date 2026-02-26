@@ -56,6 +56,9 @@ app.get("/", (c) => {
   return c.json({ service: "search.sh", status: "ok" });
 });
 
+// GET /v1/metrics — operational metrics (free)
+app.get("/v1/metrics", metricsHandler("search.prim.sh"));
+
 // GET /pricing — machine-readable pricing (free)
 app.get("/pricing", (c) => {
   return c.json({
