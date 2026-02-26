@@ -153,6 +153,7 @@
 - E-8: `tasks/active/e-8-email-domain-migration-2026-02-25.md`
 - L-31: `tasks/active/l-31-deploy-access-invite-flow-2026-02-26.md`
 - L-33: `tasks/active/l-33-fix-scrypt-openssl-crash-2026-02-26.md`
+- L-36: `tasks/active/l-36-launch-readiness-smoke-test-2026-02-26.md`
 - V1 Launch: `tasks/active/v1-launch-plan-2026-02-25.md`
 
 ## V1 Launch (scope: L)
