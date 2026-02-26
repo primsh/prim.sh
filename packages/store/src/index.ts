@@ -1,4 +1,5 @@
 import { Hono } from "hono";
+import { bodyLimit } from "hono/body-limit";
 import { createAgentStackMiddleware, createWalletAllowlistChecker, getNetworkConfig } from "@primsh/x402-middleware";
 import type {
   ApiError,
@@ -83,6 +84,17 @@ function extractObjectKey(c: { req: { path: string } }): string {
 
 type AppVariables = { walletAddress: string | undefined };
 const app = new Hono<{ Variables: AppVariables }>();
+
+// Body size limit — skip for object PUT (streaming uploads to R2 can exceed 1MB)
+app.use("*", async (c, next) => {
+  if (c.req.method === "PUT" && c.req.path.includes("/objects/")) {
+    return next();
+  }
+  return bodyLimit({
+    maxSize: 1024 * 1024,
+    onError: (c) => c.json({ error: "Request too large" }, 413),
+  })(c, next);
+});
 
 app.use(
   "*",

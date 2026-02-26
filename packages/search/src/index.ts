@@ -1,4 +1,5 @@
 import { Hono } from "hono";
+import { bodyLimit } from "hono/body-limit";
 import { createAgentStackMiddleware, createWalletAllowlistChecker, getNetworkConfig } from "@primsh/x402-middleware";
 import type { SearchRequest, ExtractRequest, ApiError } from "./api.ts";
 import { searchWeb, searchNews, extractUrls } from "./service.ts";
@@ -29,6 +30,11 @@ function rateLimited(message: string): ApiError {
 
 type AppVariables = { walletAddress: string | undefined };
 const app = new Hono<{ Variables: AppVariables }>();
+
+app.use("*", bodyLimit({
+  maxSize: 1024 * 1024,
+  onError: (c) => c.json({ error: "Request too large" }, 413),
+}));
 
 app.use(
   "*",

@@ -1,4 +1,5 @@
 import { Hono } from "hono";
+import { bodyLimit } from "hono/body-limit";
 import { createAgentStackMiddleware, createWalletAllowlistChecker, getNetworkConfig } from "@primsh/x402-middleware";
 
 const LLMS_TXT = `# mem.prim.sh — API Reference
@@ -193,6 +194,11 @@ function backendError(code: string, message: string): ApiError {
 
 type AppVariables = { walletAddress: string | undefined };
 const app = new Hono<{ Variables: AppVariables }>();
+
+app.use("*", bodyLimit({
+  maxSize: 1024 * 1024,
+  onError: (c) => c.json({ error: "Request too large" }, 413),
+}));
 
 app.use(
   "*",

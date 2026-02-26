@@ -1,4 +1,5 @@
 import { Hono } from "hono";
+import { bodyLimit } from "hono/body-limit";
 import { createAgentStackMiddleware, getNetworkConfig } from "@primsh/x402-middleware";
 import { addToAllowlist, removeFromAllowlist, isAllowed, createAllowlistChecker } from "@primsh/x402-middleware/allowlist-db";
 import { join } from "node:path";
@@ -64,6 +65,11 @@ function notFound(message: string): ApiError {
 
 type AppVariables = { walletAddress: string | undefined };
 const app = new Hono<{ Variables: AppVariables }>();
+
+app.use("*", bodyLimit({
+  maxSize: 1024 * 1024,
+  onError: (c) => c.json({ error: "Request too large" }, 413),
+}));
 
 app.use(
   "*",
