@@ -847,7 +847,7 @@
             },
             {
               "id": "INF-6",
-              "description": "Deploy infer.sh to VPS: systemd unit, /etc/prim/infer.env, Caddy route (port 3012), prim.yaml status → deployed, pnpm gen:prims.",
+              "description": "Deploy infer.sh to VPS: systemd unit, /etc/prim/infer.env, Caddy route (port 3012), prim.yaml status → live, pnpm gen:prims.",
               "owner": ["Garric"],
               "depends": ["INF-5"],
               "status": "done",
@@ -1134,7 +1134,7 @@
                 },
                 {
                   "id": "I-7",
-                  "description": "Conformance runner: `pnpm test:conformance` verifies every deployed prim passes 5-check contract + generated files up-to-date. Add to CI.",
+                  "description": "Conformance runner: `pnpm test:conformance` verifies every live prim passes 5-check contract + generated files up-to-date. Add to CI.",
                   "owner": [
                     "Claude"
                   ],
@@ -1434,7 +1434,7 @@
             },
             {
               "id": "I-33",
-              "description": "gen:gate — codegen smoke-test-plan.json entries from prim.yaml routes_map. For each deployed prim: emit health check + one test per route (method, endpoint, expected status/shape). Manual overrides (captures, special-case notes, group prompts) stay hand-written.",
+              "description": "gen:gate — codegen smoke-test-plan.json entries from prim.yaml routes_map. For each live prim: emit health check + one test per route (method, endpoint, expected status/shape). Manual overrides (captures, special-case notes, group prompts) stay hand-written.",
               "owner": ["Claude"],
               "depends": ["I-30"],
               "status": "pending",
@@ -1449,7 +1449,7 @@
           "tasks": [
             {
               "id": "OPS-7",
-              "description": "gen:deploy generator: read prim.yaml → generate systemd unit, Caddy block, env template for each deployed prim. All three are boilerplate that only varies by package name, port, subdomain, and env list.",
+              "description": "gen:deploy generator: read prim.yaml → generate systemd unit, Caddy block, env template for each live prim. All three are boilerplate that only varies by package name, port, subdomain, and env list.",
               "owner": ["Claude"],
               "depends": [],
               "status": "pending",
@@ -1473,7 +1473,7 @@
             },
             {
               "id": "OPS-10",
-              "description": "CI auto-deploy: on push to main, diff prim.yaml status changes (building→deployed), run deploy-prim.sh for each newly deployed prim. Extends OPS-5 GHA pipeline.",
+              "description": "CI auto-deploy: on push to main, diff prim.yaml status changes (building→live), run deploy-prim.sh for each newly live prim. Extends OPS-5 GHA pipeline.",
               "owner": ["Claude"],
               "depends": ["OPS-5", "OPS-9"],
               "status": "pending",
@@ -1501,7 +1501,7 @@
                 },
                 {
                   "id": "I-34",
-                  "description": "Dynamic deploy.sh SERVICES — read prim.yaml status:deployed instead of hardcoded array. 4 prims (token, mem, domain, track) missing from auto-restart.",
+                  "description": "Dynamic deploy.sh SERVICES — read prim.yaml status:live instead of hardcoded array. 4 prims (token, mem, domain, track) missing from auto-restart.",
                   "owner": ["Claude"],
                   "depends": [],
                   "status": "pending",
@@ -1547,7 +1547,7 @@
               "tasks": [
                 {
                   "id": "I-35",
-                  "description": "Post-deploy health gate in CI — after deploy-vps job, poll all deployed service health endpoints. Fail the pipeline if any service is down. Catches bad deploys before they stick.",
+                  "description": "Post-deploy health gate in CI — after deploy-vps job, poll all live service health endpoints. Fail the pipeline if any service is down. Catches bad deploys before they stick.",
                   "owner": ["Claude"],
                   "depends": ["OPS-5"],
                   "status": "pending",
@@ -1647,10 +1647,10 @@
               "id": "L-75",
               "description": "Document GitHub repo URL convention (`primsh/prim` vs `primsh/prim.sh`) in BRAND.md handles section",
               "owner": [
-                "Garric"
+                "Claude"
               ],
               "depends": [],
-              "status": "pending",
+              "status": "done",
               "release": null
             }
           ]

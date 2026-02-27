@@ -7,44 +7,126 @@
     {
       "id": "discovery",
       "name": "Discovery & Health",
-      "prompt": "Read https://prim.sh/llms.txt to learn about the prim.sh platform. Then check the health of each deployed service by making a GET request to the root URL of each one listed. Report which services are up and their response bodies.",
-      "tests": ["H-1", "H-2", "H-3", "H-4", "H-5", "H-6"]
+      "prompt": "Read https://prim.sh/llms.txt to learn about the prim.sh platform. Then check the health of each live service by making a GET request to the root URL of each one listed. Report which services are up and their response bodies.",
+      "tests": [
+        "H-1",
+        "H-2",
+        "H-3",
+        "H-4",
+        "H-5",
+        "H-6"
+      ]
     },
     {
       "id": "onboarding",
       "name": "Wallet Registration & Funding",
       "prompt": "Follow the Getting Started steps in https://prim.sh/llms.txt. Generate a new wallet, register it with wallet.prim.sh using an EIP-191 signature, then request test USDC and test ETH from faucet.prim.sh. After funding, check your rate limit status and retrieve your wallet details and spending policy. Report your wallet address, balances received, and policy limits.",
-      "tests": ["W-1", "W-2", "W-3", "W-4", "F-1", "F-2", "F-3"]
+      "tests": [
+        "W-1",
+        "W-2",
+        "W-3",
+        "W-4",
+        "F-1",
+        "F-2",
+        "F-3"
+      ]
     },
     {
       "id": "store",
       "name": "Object Storage (store.sh)",
       "prompt": "Using your funded wallet, test the full storage lifecycle on store.prim.sh: (1) Create a new bucket, (2) list your buckets to confirm it exists, (3) upload a small text file to it, (4) download the file and verify the content matches, (5) list objects in the bucket, (6) check the bucket's quota/usage, (7) delete the file, (8) delete the bucket. Report each step's result including any IDs, sizes, and response codes.",
-      "tests": ["ST-1", "ST-2", "ST-3", "ST-4", "ST-5", "ST-6", "ST-7", "ST-8"]
+      "tests": [
+        "ST-1",
+        "ST-2",
+        "ST-3",
+        "ST-4",
+        "ST-5",
+        "ST-6",
+        "ST-7",
+        "ST-8",
+        "ST-9",
+        "ST-10",
+        "ST-11"
+      ]
     },
     {
       "id": "search",
       "name": "Web Search (search.sh)",
       "prompt": "Using your funded wallet, test all three search capabilities on search.prim.sh: (1) Run a web search for 'TypeScript programming language' with max_results=3, (2) run a news search for 'artificial intelligence' with max_results=3, (3) extract the content of https://www.typescriptlang.org in markdown format. Report the number of results, titles, and content length for each.",
-      "tests": ["SE-1", "SE-2", "SE-3"]
+      "tests": [
+        "SE-1",
+        "SE-2",
+        "SE-3"
+      ]
     },
     {
       "id": "email",
       "name": "Email (email.sh)",
       "prompt": "Using your funded wallet, test the full email lifecycle on email.prim.sh: (1) Create a new mailbox (auto-generated username is fine), (2) list your mailboxes to confirm it exists, (3) get the mailbox details, (4) send an email to yourself at the mailbox address with subject 'Smoke test' and body 'Hello from manual test run', (5) wait a few seconds then list messages to confirm delivery, (6) get the message detail and verify the subject, (7) delete the mailbox. Report each step's result including the mailbox address and message details.",
-      "tests": ["E-1", "E-2", "E-3", "E-4", "E-5", "E-6", "E-7"]
+      "tests": [
+        "E-1",
+        "E-2",
+        "E-3",
+        "E-4",
+        "E-5",
+        "E-6",
+        "E-7",
+        "E-8",
+        "E-9",
+        "E-10",
+        "E-11",
+        "E-12",
+        "E-13",
+        "E-14",
+        "E-15",
+        "E-16"
+      ]
     },
     {
       "id": "spawn",
       "name": "Server Provisioning (spawn.sh)",
       "prompt": "Using your funded wallet, test the full server lifecycle on spawn.prim.sh: (1) Generate a throwaway SSH key pair, (2) register the public key with spawn.prim.sh, (3) list SSH keys to confirm, (4) create a server named 'test-server' with type 'small', image 'ubuntu-24.04', location 'nyc3', attaching your SSH key, (5) poll the server status every 5 seconds until it becomes 'active' (up to 2 minutes), (6) list servers to confirm, (7) DELETE the server immediately — do not leave it running, (8) delete the SSH key. Report the server ID, IP address, and time to become active. IMPORTANT: Always clean up — delete the server and SSH key even if earlier steps fail.",
-      "tests": ["SP-1", "SP-2", "SP-3", "SP-4", "SP-5", "SP-6", "SP-7"]
+      "tests": [
+        "SP-1",
+        "SP-2",
+        "SP-3",
+        "SP-4",
+        "SP-5",
+        "SP-6",
+        "SP-7",
+        "SP-8",
+        "SP-9",
+        "SP-10",
+        "SP-11",
+        "SP-12"
+      ]
     },
     {
       "id": "infer",
       "name": "LLM Inference (infer.sh)",
       "prompt": "Using your funded wallet, test the infer.sh LLM inference service on infer.prim.sh: (1) Check the health endpoint, (2) attempt a chat completion to confirm x402 gating, then pay and verify a valid ChatResponse, (3) attempt an embeddings call to confirm x402 gating, then pay and verify a valid EmbedResponse, (4) attempt to list models to confirm x402 gating, then pay and verify a valid models list. Report each step's result including response shapes and status codes.",
-      "tests": ["INF-H1", "INF-T1", "INF-T2", "INF-T3"]
+      "tests": [
+        "INF-H1",
+        "INF-T1",
+        "INF-T2",
+        "INF-T3"
+      ]
+    },
+    {
+      "id": "wallet",
+      "name": "wallet (wallet.sh)",
+      "prompt": "Test all wallet.sh endpoints on wallet.prim.sh.",
+      "tests": [
+        "W-5",
+        "W-6",
+        "W-7",
+        "W-8",
+        "W-9",
+        "W-10",
+        "W-11",
+        "W-12",
+        "W-13"
+      ]
     }
   ],
   "tests": [
@@ -55,12 +137,21 @@
       "method": "GET",
       "endpoint": "https://wallet.prim.sh/",
       "input": null,
-      "expected": { "status": 200, "body": { "service": "wallet.sh", "status": "ok" } },
+      "expected": {
+        "status": 200,
+        "body": {
+          "service": "wallet.sh",
+          "status": "ok"
+        }
+      },
       "depends_on": [],
       "captures": {},
       "notes": null,
       "actual_status": 200,
-      "actual_body": { "service": "wallet.sh", "status": "ok" },
+      "actual_body": {
+        "service": "wallet.sh",
+        "status": "ok"
+      },
       "result": "pass"
     },
     {
@@ -70,12 +161,21 @@
       "method": "GET",
       "endpoint": "https://store.prim.sh/",
       "input": null,
-      "expected": { "status": 200, "body": { "service": "store.sh", "status": "ok" } },
+      "expected": {
+        "status": 200,
+        "body": {
+          "service": "store.sh",
+          "status": "ok"
+        }
+      },
       "depends_on": [],
       "captures": {},
       "notes": null,
       "actual_status": 200,
-      "actual_body": { "service": "store.sh", "status": "ok" },
+      "actual_body": {
+        "service": "store.sh",
+        "status": "ok"
+      },
       "result": "pass"
     },
     {
@@ -85,12 +185,24 @@
       "method": "GET",
       "endpoint": "https://faucet.prim.sh/",
       "input": null,
-      "expected": { "status": 200, "body": { "service": "faucet.sh", "status": "ok", "testnet": true } },
+      "expected": {
+        "status": 200,
+        "body": {
+          "service": "faucet.sh",
+          "status": "ok",
+          "testnet": true
+        }
+      },
       "depends_on": [],
       "captures": {},
       "notes": null,
       "actual_status": 200,
-      "actual_body": { "service": "faucet.sh", "status": "ok", "network": "eip155:84532", "testnet": true },
+      "actual_body": {
+        "service": "faucet.sh",
+        "status": "ok",
+        "network": "eip155:84532",
+        "testnet": true
+      },
       "result": "pass"
     },
     {
@@ -100,12 +212,21 @@
       "method": "GET",
       "endpoint": "https://spawn.prim.sh/",
       "input": null,
-      "expected": { "status": 200, "body": { "service": "spawn.sh", "status": "ok" } },
+      "expected": {
+        "status": 200,
+        "body": {
+          "service": "spawn.sh",
+          "status": "ok"
+        }
+      },
       "depends_on": [],
       "captures": {},
       "notes": null,
       "actual_status": 200,
-      "actual_body": { "service": "spawn.sh", "status": "ok" },
+      "actual_body": {
+        "service": "spawn.sh",
+        "status": "ok"
+      },
       "result": "pass"
     },
     {
@@ -115,12 +236,21 @@
       "method": "GET",
       "endpoint": "https://search.prim.sh/",
       "input": null,
-      "expected": { "status": 200, "body": { "service": "search.sh", "status": "ok" } },
+      "expected": {
+        "status": 200,
+        "body": {
+          "service": "search.sh",
+          "status": "ok"
+        }
+      },
       "depends_on": [],
       "captures": {},
       "notes": null,
       "actual_status": 200,
-      "actual_body": { "service": "search.sh", "status": "ok" },
+      "actual_body": {
+        "service": "search.sh",
+        "status": "ok"
+      },
       "result": "pass"
     },
     {
@@ -130,24 +260,43 @@
       "method": "GET",
       "endpoint": "https://email.prim.sh/",
       "input": null,
-      "expected": { "status": 200, "body": { "service": "email.sh", "status": "ok" } },
+      "expected": {
+        "status": 200,
+        "body": {
+          "service": "email.sh",
+          "status": "ok"
+        }
+      },
       "depends_on": [],
       "captures": {},
       "notes": null,
       "actual_status": 200,
-      "actual_body": { "service": "email.sh", "status": "ok" },
+      "actual_body": {
+        "service": "email.sh",
+        "status": "ok"
+      },
       "result": "pass"
     },
-
     {
       "id": "W-1",
       "service": "wallet.sh",
       "test": "Register wallet (EIP-191)",
       "method": "POST",
       "endpoint": "https://wallet.prim.sh/v1/wallets",
-      "input": { "address": "{{agent_address}}", "signature": "{{eip191_sig}}", "timestamp": "{{iso_timestamp}}" },
-      "expected": { "status": 200, "body": { "address": "{{agent_address}}" } },
-      "depends_on": ["H-1"],
+      "input": {
+        "address": "{{agent_address}}",
+        "signature": "{{eip191_sig}}",
+        "timestamp": "{{iso_timestamp}}"
+      },
+      "expected": {
+        "status": 200,
+        "body": {
+          "address": "{{agent_address}}"
+        }
+      },
+      "depends_on": [
+        "H-1"
+      ],
       "captures": {},
       "notes": "EIP-191 signature of 'Register {address} with prim.sh at {timestamp}'. 409 = already registered, counts as pass.",
       "actual_status": 409,
@@ -162,8 +311,16 @@
       "method": "GET",
       "endpoint": "https://wallet.prim.sh/v1/wallets/{{agent_address}}",
       "input": null,
-      "expected": { "status": 200, "body": { "address": "{{agent_address}}", "status": "active" } },
-      "depends_on": ["W-1"],
+      "expected": {
+        "status": 200,
+        "body": {
+          "address": "{{agent_address}}",
+          "status": "active"
+        }
+      },
+      "depends_on": [
+        "W-1"
+      ],
       "captures": {},
       "notes": "x402 paid ($0.001).",
       "actual_status": 402,
@@ -178,8 +335,16 @@
       "method": "GET",
       "endpoint": "https://wallet.prim.sh/v1/wallets/{{agent_address}}/policy",
       "input": null,
-      "expected": { "status": 200, "body": { "max_per_tx": "string", "daily_limit": "string" } },
-      "depends_on": ["W-1"],
+      "expected": {
+        "status": 200,
+        "body": {
+          "max_per_tx": "string",
+          "daily_limit": "string"
+        }
+      },
+      "depends_on": [
+        "W-1"
+      ],
       "captures": {},
       "notes": "x402 paid.",
       "actual_status": 402,
@@ -194,28 +359,51 @@
       "method": "GET",
       "endpoint": "https://wallet.prim.sh/v1/metrics",
       "input": null,
-      "expected": { "status": 200, "body": { "service": "wallet.prim.sh" } },
-      "depends_on": ["H-1"],
+      "expected": {
+        "status": 200,
+        "body": {
+          "service": "wallet.prim.sh"
+        }
+      },
+      "depends_on": [
+        "H-1"
+      ],
       "captures": {},
       "notes": "Free route.",
       "actual_status": 200,
-      "actual_body": { "service": "wallet.prim.sh" },
+      "actual_body": {
+        "service": "wallet.prim.sh"
+      },
       "result": "pass"
     },
-
     {
       "id": "F-1",
       "service": "faucet.sh",
       "test": "Drip test USDC",
       "method": "POST",
       "endpoint": "https://faucet.prim.sh/v1/faucet/usdc",
-      "input": { "address": "{{agent_address}}" },
-      "expected": { "status": 200, "body": { "tx_hash": "string" } },
-      "depends_on": ["W-1"],
+      "input": {
+        "address": "{{agent_address}}"
+      },
+      "expected": {
+        "status": 200,
+        "body": {
+          "tx_hash": "string"
+        }
+      },
+      "depends_on": [
+        "W-1"
+      ],
       "captures": {},
       "notes": "Free, rate-limited (2h). 429 = rate limited, counts as pass. Wallet must be in allowlist.",
       "actual_status": 200,
-      "actual_body": { "tx_hash": "0x5f0584aa963a4d2650075fe323dd009a4ec6485b8ea2a671d5dd0e8601174578", "amount": "10.00", "currency": "USDC", "chain": "eip155:84532", "source": "treasury" },
+      "actual_body": {
+        "tx_hash": "0x5f0584aa963a4d2650075fe323dd009a4ec6485b8ea2a671d5dd0e8601174578",
+        "amount": "10.00",
+        "currency": "USDC",
+        "chain": "eip155:84532",
+        "source": "treasury"
+      },
       "result": "pass"
     },
     {
@@ -224,13 +412,27 @@
       "test": "Drip test ETH",
       "method": "POST",
       "endpoint": "https://faucet.prim.sh/v1/faucet/eth",
-      "input": { "address": "{{agent_address}}" },
-      "expected": { "status": 200, "body": { "tx_hash": "string" } },
-      "depends_on": ["W-1"],
+      "input": {
+        "address": "{{agent_address}}"
+      },
+      "expected": {
+        "status": 200,
+        "body": {
+          "tx_hash": "string"
+        }
+      },
+      "depends_on": [
+        "W-1"
+      ],
       "captures": {},
       "notes": "Free, rate-limited (1h). 429 = rate limited, counts as pass.",
       "actual_status": 502,
-      "actual_body": { "error": { "code": "faucet_error", "message": "treasury 0x09D896... insufficient ETH for transfer" } },
+      "actual_body": {
+        "error": {
+          "code": "faucet_error",
+          "message": "treasury 0x09D896... insufficient ETH for transfer"
+        }
+      },
       "result": "fail",
       "run_note": "Treasury wallet has no ETH on Base Sepolia"
     },
@@ -241,25 +443,61 @@
       "method": "GET",
       "endpoint": "https://faucet.prim.sh/v1/faucet/status?address={{agent_address}}",
       "input": null,
-      "expected": { "status": 200, "body": { "address": "string", "usdc": { "available": "boolean" }, "eth": { "available": "boolean" } } },
-      "depends_on": ["H-3"],
+      "expected": {
+        "status": 200,
+        "body": {
+          "address": "string",
+          "usdc": {
+            "available": "boolean"
+          },
+          "eth": {
+            "available": "boolean"
+          }
+        }
+      },
+      "depends_on": [
+        "H-3"
+      ],
       "captures": {},
       "notes": "Free.",
       "actual_status": 200,
-      "actual_body": { "address": "0x409aBc06aEB8179aF9D01Cd7b8fc3b541ddb57c5", "usdc": { "available": false, "retry_after_ms": 7173215 }, "eth": { "available": true, "retry_after_ms": 0 } },
+      "actual_body": {
+        "address": "0x409aBc06aEB8179aF9D01Cd7b8fc3b541ddb57c5",
+        "usdc": {
+          "available": false,
+          "retry_after_ms": 7173215
+        },
+        "eth": {
+          "available": true,
+          "retry_after_ms": 0
+        }
+      },
       "result": "pass"
     },
-
     {
       "id": "ST-1",
       "service": "store.sh",
       "test": "Create bucket",
       "method": "POST",
       "endpoint": "https://store.prim.sh/v1/buckets",
-      "input": { "name": "{{test_prefix}}-bucket" },
-      "expected": { "status": 200, "body": { "bucket": { "id": "string", "name": "string" } } },
-      "depends_on": ["F-1"],
-      "captures": { "bucket_id": "$.bucket.id" },
+      "input": {
+        "name": "{{test_prefix}}-bucket"
+      },
+      "expected": {
+        "status": 200,
+        "body": {
+          "bucket": {
+            "id": "string",
+            "name": "string"
+          }
+        }
+      },
+      "depends_on": [
+        "F-1"
+      ],
+      "captures": {
+        "bucket_id": "$.bucket.id"
+      },
       "notes": "x402 paid ($0.05).",
       "actual_status": 200,
       "actual_body": "bucket b_0c2db2e6, 100MB quota, location ENAM",
@@ -272,8 +510,15 @@
       "method": "GET",
       "endpoint": "https://store.prim.sh/v1/buckets",
       "input": null,
-      "expected": { "status": 200, "body": { "buckets": "array" } },
-      "depends_on": ["ST-1"],
+      "expected": {
+        "status": 200,
+        "body": {
+          "buckets": "array"
+        }
+      },
+      "depends_on": [
+        "ST-1"
+      ],
       "captures": {},
       "notes": "x402 paid ($0.001). Should include the bucket just created.",
       "actual_status": 200,
@@ -287,8 +532,12 @@
       "method": "PUT",
       "endpoint": "https://store.prim.sh/v1/buckets/{{bucket_id}}/objects/hello.txt",
       "input": "hello from {{runner}}",
-      "expected": { "status": 200 },
-      "depends_on": ["ST-1"],
+      "expected": {
+        "status": 200
+      },
+      "depends_on": [
+        "ST-1"
+      ],
       "captures": {},
       "notes": "x402 paid ($0.001). Content-Type: text/plain. Raw string body.",
       "actual_status": 200,
@@ -302,8 +551,13 @@
       "method": "GET",
       "endpoint": "https://store.prim.sh/v1/buckets/{{bucket_id}}/objects/hello.txt",
       "input": null,
-      "expected": { "status": 200, "body_equals": "hello from {{runner}}" },
-      "depends_on": ["ST-3"],
+      "expected": {
+        "status": 200,
+        "body_equals": "hello from {{runner}}"
+      },
+      "depends_on": [
+        "ST-3"
+      ],
       "captures": {},
       "notes": "x402 paid ($0.001). Exact body match.",
       "actual_status": 200,
@@ -317,8 +571,15 @@
       "method": "GET",
       "endpoint": "https://store.prim.sh/v1/buckets/{{bucket_id}}/objects",
       "input": null,
-      "expected": { "status": 200, "body": { "objects": "array" } },
-      "depends_on": ["ST-3"],
+      "expected": {
+        "status": 200,
+        "body": {
+          "objects": "array"
+        }
+      },
+      "depends_on": [
+        "ST-3"
+      ],
       "captures": {},
       "notes": "x402 paid ($0.001). Should include hello.txt.",
       "actual_status": 200,
@@ -333,12 +594,23 @@
       "method": "GET",
       "endpoint": "https://store.prim.sh/v1/buckets/{{bucket_id}}/quota",
       "input": null,
-      "expected": { "status": 200, "body": { "usage_bytes": "number" } },
-      "depends_on": ["ST-3"],
+      "expected": {
+        "status": 200,
+        "body": {
+          "usage_bytes": "number"
+        }
+      },
+      "depends_on": [
+        "ST-3"
+      ],
       "captures": {},
       "notes": "x402 paid ($0.001).",
       "actual_status": 200,
-      "actual_body": { "quota_bytes": 104857600, "usage_bytes": 63, "usage_pct": 0 },
+      "actual_body": {
+        "quota_bytes": 104857600,
+        "usage_bytes": 63,
+        "usage_pct": 0
+      },
       "result": "pass"
     },
     {
@@ -348,12 +620,18 @@
       "method": "DELETE",
       "endpoint": "https://store.prim.sh/v1/buckets/{{bucket_id}}/objects/hello.txt",
       "input": null,
-      "expected": { "status": 200 },
-      "depends_on": ["ST-4"],
+      "expected": {
+        "status": 200
+      },
+      "depends_on": [
+        "ST-4"
+      ],
       "captures": {},
       "notes": "x402 paid ($0.001).",
       "actual_status": 200,
-      "actual_body": { "status": "deleted" },
+      "actual_body": {
+        "status": "deleted"
+      },
       "result": "pass"
     },
     {
@@ -363,24 +641,39 @@
       "method": "DELETE",
       "endpoint": "https://store.prim.sh/v1/buckets/{{bucket_id}}",
       "input": null,
-      "expected": { "status": 200 },
-      "depends_on": ["ST-7"],
+      "expected": {
+        "status": 200
+      },
+      "depends_on": [
+        "ST-7"
+      ],
       "captures": {},
       "notes": "x402 paid ($0.01). Bucket must be empty.",
       "actual_status": 200,
-      "actual_body": { "status": "deleted" },
+      "actual_body": {
+        "status": "deleted"
+      },
       "result": "pass"
     },
-
     {
       "id": "SE-1",
       "service": "search.sh",
       "test": "Web search",
       "method": "POST",
       "endpoint": "https://search.prim.sh/v1/search",
-      "input": { "query": "TypeScript programming language", "max_results": 3 },
-      "expected": { "status": 200, "body": { "results": "array (non-empty)" } },
-      "depends_on": ["F-1"],
+      "input": {
+        "query": "TypeScript programming language",
+        "max_results": 3
+      },
+      "expected": {
+        "status": 200,
+        "body": {
+          "results": "array (non-empty)"
+        }
+      },
+      "depends_on": [
+        "F-1"
+      ],
       "captures": {},
       "notes": "x402 paid ($0.01).",
       "actual_status": 200,
@@ -393,9 +686,19 @@
       "test": "News search",
       "method": "POST",
       "endpoint": "https://search.prim.sh/v1/search/news",
-      "input": { "query": "artificial intelligence", "max_results": 3 },
-      "expected": { "status": 200, "body": { "results": "array (non-empty)" } },
-      "depends_on": ["F-1"],
+      "input": {
+        "query": "artificial intelligence",
+        "max_results": 3
+      },
+      "expected": {
+        "status": 200,
+        "body": {
+          "results": "array (non-empty)"
+        }
+      },
+      "depends_on": [
+        "F-1"
+      ],
       "captures": {},
       "notes": "x402 paid ($0.01).",
       "actual_status": 200,
@@ -408,16 +711,30 @@
       "test": "URL content extraction",
       "method": "POST",
       "endpoint": "https://search.prim.sh/v1/extract",
-      "input": { "urls": "https://www.typescriptlang.org", "format": "markdown" },
-      "expected": { "status": 200, "body": { "results": [{ "url": "string", "content": "non-empty string" }] } },
-      "depends_on": ["F-1"],
+      "input": {
+        "urls": "https://www.typescriptlang.org",
+        "format": "markdown"
+      },
+      "expected": {
+        "status": 200,
+        "body": {
+          "results": [
+            {
+              "url": "string",
+              "content": "non-empty string"
+            }
+          ]
+        }
+      },
+      "depends_on": [
+        "F-1"
+      ],
       "captures": {},
       "notes": "x402 paid ($0.005).",
       "actual_status": 200,
       "actual_body": "5568 chars markdown content",
       "result": "pass"
     },
-
     {
       "id": "E-1",
       "service": "email.sh",
@@ -425,9 +742,20 @@
       "method": "POST",
       "endpoint": "https://email.prim.sh/v1/mailboxes",
       "input": {},
-      "expected": { "status": 200, "body": { "id": "string", "address": "string" } },
-      "depends_on": ["F-1"],
-      "captures": { "mailbox_id": "$.id", "mailbox_address": "$.address" },
+      "expected": {
+        "status": 200,
+        "body": {
+          "id": "string",
+          "address": "string"
+        }
+      },
+      "depends_on": [
+        "F-1"
+      ],
+      "captures": {
+        "mailbox_id": "$.id",
+        "mailbox_address": "$.address"
+      },
       "notes": "x402 paid ($0.05). Empty body = auto-generated username.",
       "actual_status": 500,
       "actual_body": "Internal Server Error (text/plain, no JSON)",
@@ -441,12 +769,25 @@
       "method": "GET",
       "endpoint": "https://email.prim.sh/v1/mailboxes",
       "input": null,
-      "expected": { "status": 200, "body": { "mailboxes": "array", "total": "number >= 1" } },
-      "depends_on": ["E-1"],
+      "expected": {
+        "status": 200,
+        "body": {
+          "mailboxes": "array",
+          "total": "number >= 1"
+        }
+      },
+      "depends_on": [
+        "E-1"
+      ],
       "captures": {},
       "notes": "x402 paid ($0.001).",
       "actual_status": 200,
-      "actual_body": { "data": [], "pagination": { "total": 0 } },
+      "actual_body": {
+        "data": [],
+        "pagination": {
+          "total": 0
+        }
+      },
       "result": "pass",
       "run_note": "Response uses 'data' not 'mailboxes' — shape mismatch with docs"
     },
@@ -457,8 +798,16 @@
       "method": "GET",
       "endpoint": "https://email.prim.sh/v1/mailboxes/{{mailbox_id}}",
       "input": null,
-      "expected": { "status": 200, "body": { "id": "{{mailbox_id}}", "address": "string" } },
-      "depends_on": ["E-1"],
+      "expected": {
+        "status": 200,
+        "body": {
+          "id": "{{mailbox_id}}",
+          "address": "string"
+        }
+      },
+      "depends_on": [
+        "E-1"
+      ],
       "captures": {},
       "notes": "x402 paid ($0.001).",
       "actual_status": null,
@@ -472,9 +821,17 @@
       "test": "Send email (self-to-self)",
       "method": "POST",
       "endpoint": "https://email.prim.sh/v1/mailboxes/{{mailbox_id}}/send",
-      "input": { "to": "{{mailbox_address}}", "subject": "Smoke test", "body": "Hello from manual test run." },
-      "expected": { "status": 200 },
-      "depends_on": ["E-1"],
+      "input": {
+        "to": "{{mailbox_address}}",
+        "subject": "Smoke test",
+        "body": "Hello from manual test run."
+      },
+      "expected": {
+        "status": 200
+      },
+      "depends_on": [
+        "E-1"
+      ],
       "captures": {},
       "notes": "x402 paid ($0.01).",
       "actual_status": null,
@@ -489,9 +846,19 @@
       "method": "GET",
       "endpoint": "https://email.prim.sh/v1/mailboxes/{{mailbox_id}}/messages",
       "input": null,
-      "expected": { "status": 200, "body": { "messages": "array", "total": "number >= 1" } },
-      "depends_on": ["E-4"],
-      "captures": { "message_id": "$.messages[0].id" },
+      "expected": {
+        "status": 200,
+        "body": {
+          "messages": "array",
+          "total": "number >= 1"
+        }
+      },
+      "depends_on": [
+        "E-4"
+      ],
+      "captures": {
+        "message_id": "$.messages[0].id"
+      },
       "notes": "x402 paid ($0.001). Wait 2-3s after send.",
       "actual_status": null,
       "actual_body": null,
@@ -505,8 +872,15 @@
       "method": "GET",
       "endpoint": "https://email.prim.sh/v1/mailboxes/{{mailbox_id}}/messages/{{message_id}}",
       "input": null,
-      "expected": { "status": 200, "body": { "subject": "Smoke test" } },
-      "depends_on": ["E-5"],
+      "expected": {
+        "status": 200,
+        "body": {
+          "subject": "Smoke test"
+        }
+      },
+      "depends_on": [
+        "E-5"
+      ],
       "captures": {},
       "notes": "x402 paid ($0.001).",
       "actual_status": null,
@@ -521,8 +895,12 @@
       "method": "DELETE",
       "endpoint": "https://email.prim.sh/v1/mailboxes/{{mailbox_id}}",
       "input": null,
-      "expected": { "status": 200 },
-      "depends_on": ["E-6"],
+      "expected": {
+        "status": 200
+      },
+      "depends_on": [
+        "E-6"
+      ],
       "captures": {},
       "notes": "x402 paid ($0.01).",
       "actual_status": null,
@@ -530,20 +908,33 @@
       "result": "blocked",
       "run_note": "E-1 failed"
     },
-
     {
       "id": "SP-1",
       "service": "spawn.sh",
       "test": "Register SSH key",
       "method": "POST",
       "endpoint": "https://spawn.prim.sh/v1/ssh-keys",
-      "input": { "name": "{{test_prefix}}-key", "public_key": "{{ssh_pubkey}}" },
-      "expected": { "status": 200, "body": { "id": "string" } },
-      "depends_on": ["F-1"],
-      "captures": { "ssh_key_id": "$.id" },
+      "input": {
+        "name": "{{test_prefix}}-key",
+        "public_key": "{{ssh_pubkey}}"
+      },
+      "expected": {
+        "status": 200,
+        "body": {
+          "id": "string"
+        }
+      },
+      "depends_on": [
+        "F-1"
+      ],
+      "captures": {
+        "ssh_key_id": "$.id"
+      },
       "notes": "x402 paid ($0.001). Generate throwaway ed25519 key first.",
       "actual_status": 200,
-      "actual_body": { "id": "sk_502ba7b5" },
+      "actual_body": {
+        "id": "sk_502ba7b5"
+      },
       "result": "pass"
     },
     {
@@ -553,8 +944,15 @@
       "method": "GET",
       "endpoint": "https://spawn.prim.sh/v1/ssh-keys",
       "input": null,
-      "expected": { "status": 200, "body": { "ssh_keys": "array" } },
-      "depends_on": ["SP-1"],
+      "expected": {
+        "status": 200,
+        "body": {
+          "ssh_keys": "array"
+        }
+      },
+      "depends_on": [
+        "SP-1"
+      ],
       "captures": {},
       "notes": "x402 paid ($0.001).",
       "actual_status": 200,
@@ -567,13 +965,36 @@
       "test": "Create server",
       "method": "POST",
       "endpoint": "https://spawn.prim.sh/v1/servers",
-      "input": { "name": "{{test_prefix}}-server", "type": "small", "image": "ubuntu-24.04", "location": "nyc3", "ssh_keys": ["{{ssh_key_id}}"] },
-      "expected": { "status": 200, "body": { "server": { "id": "string" } } },
-      "depends_on": ["SP-1"],
-      "captures": { "server_id": "$.server.id" },
+      "input": {
+        "name": "{{test_prefix}}-server",
+        "type": "small",
+        "image": "ubuntu-24.04",
+        "location": "nyc3",
+        "ssh_keys": [
+          "{{ssh_key_id}}"
+        ]
+      },
+      "expected": {
+        "status": 200,
+        "body": {
+          "server": {
+            "id": "string"
+          }
+        }
+      },
+      "depends_on": [
+        "SP-1"
+      ],
+      "captures": {
+        "server_id": "$.server.id"
+      },
       "notes": "x402 paid ($0.01). Creates a real droplet. MUST delete after.",
       "actual_status": 200,
-      "actual_body": { "server": { "id": "srv_321ccae0" } },
+      "actual_body": {
+        "server": {
+          "id": "srv_321ccae0"
+        }
+      },
       "result": "pass"
     },
     {
@@ -583,8 +1004,15 @@
       "method": "GET",
       "endpoint": "https://spawn.prim.sh/v1/servers/{{server_id}}",
       "input": null,
-      "expected": { "status": 200, "body": { "status": "active" } },
-      "depends_on": ["SP-3"],
+      "expected": {
+        "status": 200,
+        "body": {
+          "status": "active"
+        }
+      },
+      "depends_on": [
+        "SP-3"
+      ],
       "captures": {},
       "notes": "x402 paid ($0.001). Poll every 5s, max 120s.",
       "actual_status": 200,
@@ -599,8 +1027,15 @@
       "method": "GET",
       "endpoint": "https://spawn.prim.sh/v1/servers",
       "input": null,
-      "expected": { "status": 200, "body": { "servers": "array" } },
-      "depends_on": ["SP-3"],
+      "expected": {
+        "status": 200,
+        "body": {
+          "servers": "array"
+        }
+      },
+      "depends_on": [
+        "SP-3"
+      ],
       "captures": {},
       "notes": "x402 paid ($0.001).",
       "actual_status": 200,
@@ -614,12 +1049,19 @@
       "method": "DELETE",
       "endpoint": "https://spawn.prim.sh/v1/servers/{{server_id}}",
       "input": null,
-      "expected": { "status": 200 },
-      "depends_on": ["SP-4"],
+      "expected": {
+        "status": 200
+      },
+      "depends_on": [
+        "SP-4"
+      ],
       "captures": {},
       "notes": "x402 paid ($0.005). MUST run to avoid charges.",
       "actual_status": 200,
-      "actual_body": { "status": "deleted", "deposit_refunded": "0.00" },
+      "actual_body": {
+        "status": "deleted",
+        "deposit_refunded": "0.00"
+      },
       "result": "pass"
     },
     {
@@ -629,15 +1071,20 @@
       "method": "DELETE",
       "endpoint": "https://spawn.prim.sh/v1/ssh-keys/{{ssh_key_id}}",
       "input": null,
-      "expected": { "status": 200 },
-      "depends_on": ["SP-6"],
+      "expected": {
+        "status": 200
+      },
+      "depends_on": [
+        "SP-6"
+      ],
       "captures": {},
       "notes": "x402 paid ($0.001).",
       "actual_status": 200,
-      "actual_body": { "status": "deleted" },
+      "actual_body": {
+        "status": "deleted"
+      },
       "result": "pass"
     },
-
     {
       "id": "INF-H1",
       "service": "infer.sh",
@@ -645,7 +1092,13 @@
       "method": "GET",
       "endpoint": "https://infer.prim.sh/",
       "input": null,
-      "expected": { "status": 200, "body": { "service": "infer.sh", "status": "ok" } },
+      "expected": {
+        "status": 200,
+        "body": {
+          "service": "infer.sh",
+          "status": "ok"
+        }
+      },
       "depends_on": [],
       "captures": {},
       "notes": null,
@@ -659,9 +1112,27 @@
       "test": "Chat completion",
       "method": "POST",
       "endpoint": "https://infer.prim.sh/v1/chat",
-      "input": { "model": "anthropic/claude-sonnet-4", "messages": [{ "role": "user", "content": "Say hello in exactly three words." }] },
-      "expected": { "status": 200, "body": { "id": "string", "object": "chat.completion", "choices": "array (non-empty)" } },
-      "depends_on": ["INF-H1", "F-1"],
+      "input": {
+        "model": "anthropic/claude-sonnet-4",
+        "messages": [
+          {
+            "role": "user",
+            "content": "Say hello in exactly three words."
+          }
+        ]
+      },
+      "expected": {
+        "status": 200,
+        "body": {
+          "id": "string",
+          "object": "chat.completion",
+          "choices": "array (non-empty)"
+        }
+      },
+      "depends_on": [
+        "INF-H1",
+        "F-1"
+      ],
       "captures": {},
       "notes": "x402 paid ($0.01). Verify response has id, object='chat.completion', choices array with at least one choice containing message.content.",
       "actual_status": null,
@@ -674,9 +1145,21 @@
       "test": "Generate embeddings",
       "method": "POST",
       "endpoint": "https://infer.prim.sh/v1/embed",
-      "input": { "model": "openai/text-embedding-3-small", "input": "Hello world" },
-      "expected": { "status": 200, "body": { "object": "list", "data": "array (non-empty)" } },
-      "depends_on": ["INF-H1", "F-1"],
+      "input": {
+        "model": "openai/text-embedding-3-small",
+        "input": "Hello world"
+      },
+      "expected": {
+        "status": 200,
+        "body": {
+          "object": "list",
+          "data": "array (non-empty)"
+        }
+      },
+      "depends_on": [
+        "INF-H1",
+        "F-1"
+      ],
       "captures": {},
       "notes": "x402 paid ($0.001). OpenRouter may not support embeddings — 502 with provider_error counts as soft_fail, not fail.",
       "actual_status": null,
@@ -690,13 +1173,767 @@
       "method": "GET",
       "endpoint": "https://infer.prim.sh/v1/models",
       "input": null,
-      "expected": { "status": 200, "body": { "data": "array (non-empty)" } },
-      "depends_on": ["INF-H1", "F-1"],
+      "expected": {
+        "status": 200,
+        "body": {
+          "data": "array (non-empty)"
+        }
+      },
+      "depends_on": [
+        "INF-H1",
+        "F-1"
+      ],
       "captures": {},
       "notes": "x402 paid ($0.01). Verify data array contains model objects with id and pricing fields.",
       "actual_status": null,
       "actual_body": null,
       "result": null
+    },
+    {
+      "id": "W-5",
+      "service": "wallet.sh",
+      "test": "List registered wallets owned by the calling wallet",
+      "method": "GET",
+      "endpoint": "https://wallet.prim.sh/v1/wallets",
+      "input": null,
+      "expected": {
+        "status": 200
+      },
+      "depends_on": [
+        "H-1",
+        "F-1"
+      ],
+      "captures": {},
+      "notes": "x402 paid. List registered wallets owned by the calling wallet",
+      "actual_status": null,
+      "actual_body": null,
+      "result": null,
+      "generated": true
+    },
+    {
+      "id": "W-6",
+      "service": "wallet.sh",
+      "test": "Permanently deactivate a wallet. Irreversible. Pending fund requests cancelled.",
+      "method": "DELETE",
+      "endpoint": "https://wallet.prim.sh/v1/wallets/{{agent_address}}",
+      "input": null,
+      "expected": {
+        "status": 200,
+        "body": {
+          "address": "string",
+          "deactivated": "boolean",
+          "deactivated_at": "string"
+        }
+      },
+      "depends_on": [
+        "H-1",
+        "F-1",
+        "W-1"
+      ],
+      "captures": {},
+      "notes": "x402 paid. Permanently deactivate a wallet. Irreversible. Pending fund requests cancelled.",
+      "actual_status": null,
+      "actual_body": null,
+      "result": null,
+      "generated": true
+    },
+    {
+      "id": "W-7",
+      "service": "wallet.sh",
+      "test": "Request USDC funding for a wallet. A human operator can approve or deny.",
+      "method": "POST",
+      "endpoint": "https://wallet.prim.sh/v1/wallets/{{agent_address}}/fund-request",
+      "input": {
+        "amount": "1.00",
+        "reason": "Gate runner test funding"
+      },
+      "expected": {
+        "status": 200,
+        "body": {
+          "id": "string",
+          "wallet_address": "string",
+          "amount": "string",
+          "reason": "string",
+          "status": "string",
+          "created_at": "string"
+        }
+      },
+      "depends_on": [
+        "H-1",
+        "F-1",
+        "W-1"
+      ],
+      "captures": {},
+      "notes": "x402 paid. Request USDC funding for a wallet. A human operator can approve or deny.",
+      "actual_status": null,
+      "actual_body": null,
+      "result": null,
+      "generated": true
+    },
+    {
+      "id": "W-8",
+      "service": "wallet.sh",
+      "test": "List all fund requests for a wallet",
+      "method": "GET",
+      "endpoint": "https://wallet.prim.sh/v1/wallets/{{agent_address}}/fund-requests",
+      "input": null,
+      "expected": {
+        "status": 200
+      },
+      "depends_on": [
+        "H-1",
+        "F-1",
+        "W-1"
+      ],
+      "captures": {},
+      "notes": "x402 paid. List all fund requests for a wallet",
+      "actual_status": null,
+      "actual_body": null,
+      "result": null,
+      "generated": true
+    },
+    {
+      "id": "W-9",
+      "service": "wallet.sh",
+      "test": "Approve a pending fund request. Returns the address to send USDC to.",
+      "method": "POST",
+      "endpoint": "https://wallet.prim.sh/v1/fund-requests/{{fund_request_id}}/approve",
+      "input": null,
+      "expected": {
+        "status": 200,
+        "body": {
+          "id": "string",
+          "status": "string",
+          "funding_address": "string",
+          "amount": "string",
+          "chain": "string",
+          "approved_at": "string"
+        }
+      },
+      "depends_on": [
+        "H-1",
+        "F-1"
+      ],
+      "captures": {},
+      "notes": "x402 paid. Approve a pending fund request. Returns the address to send USDC to.",
+      "actual_status": null,
+      "actual_body": null,
+      "result": null,
+      "generated": true
+    },
+    {
+      "id": "W-10",
+      "service": "wallet.sh",
+      "test": "Deny a pending fund request",
+      "method": "POST",
+      "endpoint": "https://wallet.prim.sh/v1/fund-requests/{{fund_request_id}}/deny",
+      "input": {},
+      "expected": {
+        "status": 200,
+        "body": {
+          "id": "string",
+          "status": "string",
+          "reason": "string",
+          "denied_at": "string"
+        }
+      },
+      "depends_on": [
+        "H-1",
+        "F-1"
+      ],
+      "captures": {},
+      "notes": "x402 paid. Deny a pending fund request",
+      "actual_status": null,
+      "actual_body": null,
+      "result": null,
+      "generated": true
+    },
+    {
+      "id": "W-11",
+      "service": "wallet.sh",
+      "test": "Update spending policy for a wallet. All fields optional. Pass null to remove a limit.",
+      "method": "PUT",
+      "endpoint": "https://wallet.prim.sh/v1/wallets/{{agent_address}}/policy",
+      "input": {},
+      "expected": {
+        "status": 200,
+        "body": {
+          "wallet_address": "string",
+          "max_per_tx": "string",
+          "max_per_day": "string",
+          "allowed_primitives": "array (non-empty)",
+          "daily_spent": "string",
+          "daily_reset_at": "string"
+        }
+      },
+      "depends_on": [
+        "H-1",
+        "F-1",
+        "W-1"
+      ],
+      "captures": {},
+      "notes": "x402 paid. Update spending policy for a wallet. All fields optional. Pass null to remove a limit.",
+      "actual_status": null,
+      "actual_body": null,
+      "result": null,
+      "generated": true
+    },
+    {
+      "id": "W-12",
+      "service": "wallet.sh",
+      "test": "Pause operations for a wallet. Temporarily halts spending without deactivating.",
+      "method": "POST",
+      "endpoint": "https://wallet.prim.sh/v1/wallets/{{agent_address}}/pause",
+      "input": {},
+      "expected": {
+        "status": 200,
+        "body": {
+          "wallet_address": "string",
+          "paused": "boolean",
+          "scope": "string",
+          "paused_at": "string"
+        }
+      },
+      "depends_on": [
+        "H-1",
+        "F-1",
+        "W-1"
+      ],
+      "captures": {},
+      "notes": "x402 paid. Pause operations for a wallet. Temporarily halts spending without deactivating.",
+      "actual_status": null,
+      "actual_body": null,
+      "result": null,
+      "generated": true
+    },
+    {
+      "id": "W-13",
+      "service": "wallet.sh",
+      "test": "Resume operations for a paused wallet",
+      "method": "POST",
+      "endpoint": "https://wallet.prim.sh/v1/wallets/{{agent_address}}/resume",
+      "input": {},
+      "expected": {
+        "status": 200,
+        "body": {
+          "wallet_address": "string",
+          "paused": "boolean",
+          "scope": "string",
+          "resumed_at": "string"
+        }
+      },
+      "depends_on": [
+        "H-1",
+        "F-1",
+        "W-1"
+      ],
+      "captures": {},
+      "notes": "x402 paid. Resume operations for a paused wallet",
+      "actual_status": null,
+      "actual_body": null,
+      "result": null,
+      "generated": true
+    },
+    {
+      "id": "SP-8",
+      "service": "spawn.sh",
+      "test": "Start a stopped server",
+      "method": "POST",
+      "endpoint": "https://spawn.prim.sh/v1/servers/{{server_id}}/start",
+      "input": null,
+      "expected": {
+        "status": 200,
+        "body": {
+          "action": {
+            "id": "string",
+            "command": "string",
+            "status": "string",
+            "started_at": "string",
+            "finished_at": "string"
+          }
+        }
+      },
+      "depends_on": [
+        "H-4",
+        "F-1",
+        "SP-3"
+      ],
+      "captures": {},
+      "notes": "x402 paid. Start a stopped server",
+      "actual_status": null,
+      "actual_body": null,
+      "result": null,
+      "generated": true
+    },
+    {
+      "id": "SP-9",
+      "service": "spawn.sh",
+      "test": "Stop a running server (graceful shutdown)",
+      "method": "POST",
+      "endpoint": "https://spawn.prim.sh/v1/servers/{{server_id}}/stop",
+      "input": null,
+      "expected": {
+        "status": 200,
+        "body": {
+          "action": {
+            "id": "string",
+            "command": "string",
+            "status": "string",
+            "started_at": "string",
+            "finished_at": "string"
+          }
+        }
+      },
+      "depends_on": [
+        "H-4",
+        "F-1",
+        "SP-3"
+      ],
+      "captures": {},
+      "notes": "x402 paid. Stop a running server (graceful shutdown)",
+      "actual_status": null,
+      "actual_body": null,
+      "result": null,
+      "generated": true
+    },
+    {
+      "id": "SP-10",
+      "service": "spawn.sh",
+      "test": "Reboot a running server",
+      "method": "POST",
+      "endpoint": "https://spawn.prim.sh/v1/servers/{{server_id}}/reboot",
+      "input": null,
+      "expected": {
+        "status": 200,
+        "body": {
+          "action": {
+            "id": "string",
+            "command": "string",
+            "status": "string",
+            "started_at": "string",
+            "finished_at": "string"
+          }
+        }
+      },
+      "depends_on": [
+        "H-4",
+        "F-1",
+        "SP-3"
+      ],
+      "captures": {},
+      "notes": "x402 paid. Reboot a running server",
+      "actual_status": null,
+      "actual_body": null,
+      "result": null,
+      "generated": true
+    },
+    {
+      "id": "SP-11",
+      "service": "spawn.sh",
+      "test": "Change server type (CPU/RAM). Server must be stopped first. Deposit adjusted.",
+      "method": "POST",
+      "endpoint": "https://spawn.prim.sh/v1/servers/{{server_id}}/resize",
+      "input": {
+        "type": "small"
+      },
+      "expected": {
+        "status": 200,
+        "body": {
+          "action": {
+            "id": "string",
+            "command": "string",
+            "status": "string",
+            "started_at": "string",
+            "finished_at": "string"
+          },
+          "new_type": "string",
+          "deposit_delta": "string"
+        }
+      },
+      "depends_on": [
+        "H-4",
+        "F-1",
+        "SP-3"
+      ],
+      "captures": {},
+      "notes": "x402 paid. Change server type (CPU/RAM). Server must be stopped first. Deposit adjusted.",
+      "actual_status": null,
+      "actual_body": null,
+      "result": null,
+      "generated": true
+    },
+    {
+      "id": "SP-12",
+      "service": "spawn.sh",
+      "test": "Reinstall from a fresh OS image. All data on server is destroyed.",
+      "method": "POST",
+      "endpoint": "https://spawn.prim.sh/v1/servers/{{server_id}}/rebuild",
+      "input": {
+        "image": "ubuntu-24.04"
+      },
+      "expected": {
+        "status": 200,
+        "body": {
+          "action": {
+            "id": "string",
+            "command": "string",
+            "status": "string",
+            "started_at": "string",
+            "finished_at": "string"
+          },
+          "root_password": "string"
+        }
+      },
+      "depends_on": [
+        "H-4",
+        "F-1",
+        "SP-3"
+      ],
+      "captures": {},
+      "notes": "x402 paid. Reinstall from a fresh OS image. All data on server is destroyed.",
+      "actual_status": null,
+      "actual_body": null,
+      "result": null,
+      "generated": true
+    },
+    {
+      "id": "ST-9",
+      "service": "store.sh",
+      "test": "Get details for a single bucket. Caller must own the bucket.",
+      "method": "GET",
+      "endpoint": "https://store.prim.sh/v1/buckets/{{bucket_id}}",
+      "input": null,
+      "expected": {
+        "status": 200,
+        "body": {
+          "id": "string",
+          "name": "string",
+          "location": "string",
+          "owner_wallet": "string",
+          "quota_bytes": "number",
+          "usage_bytes": "number",
+          "created_at": "string"
+        }
+      },
+      "depends_on": [
+        "H-2",
+        "F-1",
+        "ST-1"
+      ],
+      "captures": {},
+      "notes": "x402 paid. Get details for a single bucket. Caller must own the bucket.",
+      "actual_status": null,
+      "actual_body": null,
+      "result": null,
+      "generated": true
+    },
+    {
+      "id": "ST-10",
+      "service": "store.sh",
+      "test": "Set the storage quota for a bucket. Pass null to reset to default (100 MB).",
+      "method": "PUT",
+      "endpoint": "https://store.prim.sh/v1/buckets/{{bucket_id}}/quota",
+      "input": {
+        "quota_bytes": "test"
+      },
+      "expected": {
+        "status": 200,
+        "body": {
+          "bucket_id": "string",
+          "quota_bytes": "number",
+          "usage_bytes": "number",
+          "usage_pct": "number"
+        }
+      },
+      "depends_on": [
+        "H-2",
+        "F-1",
+        "ST-1"
+      ],
+      "captures": {},
+      "notes": "x402 paid. Set the storage quota for a bucket. Pass null to reset to default (100 MB).",
+      "actual_status": null,
+      "actual_body": null,
+      "result": null,
+      "generated": true
+    },
+    {
+      "id": "ST-11",
+      "service": "store.sh",
+      "test": "Recompute bucket usage by scanning actual R2 storage. Use when usage_bytes appears incorrect.",
+      "method": "POST",
+      "endpoint": "https://store.prim.sh/v1/buckets/{{bucket_id}}/quota/reconcile",
+      "input": null,
+      "expected": {
+        "status": 200,
+        "body": {
+          "bucket_id": "string",
+          "previous_bytes": "number",
+          "actual_bytes": "number",
+          "delta_bytes": "number"
+        }
+      },
+      "depends_on": [
+        "H-2",
+        "F-1",
+        "ST-1"
+      ],
+      "captures": {},
+      "notes": "x402 paid. Recompute bucket usage by scanning actual R2 storage. Use when usage_bytes appears incorrect.",
+      "actual_status": null,
+      "actual_body": null,
+      "result": null,
+      "generated": true
+    },
+    {
+      "id": "E-8",
+      "service": "email.sh",
+      "test": "Extend mailbox TTL by ttl_ms milliseconds",
+      "method": "POST",
+      "endpoint": "https://email.prim.sh/v1/mailboxes/{{mailbox_id}}/renew",
+      "input": {},
+      "expected": {
+        "status": 200,
+        "body": {
+          "id": "string",
+          "address": "string",
+          "username": "string",
+          "domain": "string",
+          "status": "string",
+          "created_at": "string",
+          "expires_at": "string"
+        }
+      },
+      "depends_on": [
+        "H-6",
+        "F-1",
+        "E-1"
+      ],
+      "captures": {},
+      "notes": "x402 paid. Extend mailbox TTL by ttl_ms milliseconds",
+      "actual_status": null,
+      "actual_body": null,
+      "result": null,
+      "generated": true
+    },
+    {
+      "id": "E-9",
+      "service": "email.sh",
+      "test": "Register a webhook URL for message.received events. Optional secret for HMAC signing.",
+      "method": "POST",
+      "endpoint": "https://email.prim.sh/v1/mailboxes/{{mailbox_id}}/webhooks",
+      "input": {
+        "url": "https://example.com"
+      },
+      "expected": {
+        "status": 201,
+        "body": {
+          "id": "string",
+          "url": "string",
+          "events": "array (non-empty)",
+          "status": "string",
+          "created_at": "string"
+        }
+      },
+      "depends_on": [
+        "H-6",
+        "F-1",
+        "E-1"
+      ],
+      "captures": {},
+      "notes": "x402 paid. Register a webhook URL for message.received events. Optional secret for HMAC signing.",
+      "actual_status": null,
+      "actual_body": null,
+      "result": null,
+      "generated": true
+    },
+    {
+      "id": "E-10",
+      "service": "email.sh",
+      "test": "List webhooks for a mailbox",
+      "method": "GET",
+      "endpoint": "https://email.prim.sh/v1/mailboxes/{{mailbox_id}}/webhooks",
+      "input": null,
+      "expected": {
+        "status": 200
+      },
+      "depends_on": [
+        "H-6",
+        "F-1",
+        "E-1"
+      ],
+      "captures": {},
+      "notes": "x402 paid. List webhooks for a mailbox",
+      "actual_status": null,
+      "actual_body": null,
+      "result": null,
+      "generated": true
+    },
+    {
+      "id": "E-11",
+      "service": "email.sh",
+      "test": "Delete a webhook",
+      "method": "DELETE",
+      "endpoint": "https://email.prim.sh/v1/mailboxes/{{mailbox_id}}/webhooks/{{webhook_id}}",
+      "input": null,
+      "expected": {
+        "status": 200,
+        "body": {
+          "id": "string",
+          "deleted": "string"
+        }
+      },
+      "depends_on": [
+        "H-6",
+        "F-1",
+        "E-1"
+      ],
+      "captures": {},
+      "notes": "x402 paid. Delete a webhook",
+      "actual_status": null,
+      "actual_body": null,
+      "result": null,
+      "generated": true
+    },
+    {
+      "id": "E-12",
+      "service": "email.sh",
+      "test": "Register a custom domain. Returns required_records for DNS.",
+      "method": "POST",
+      "endpoint": "https://email.prim.sh/v1/domains",
+      "input": {
+        "domain": "{{test_prefix}}.example.com"
+      },
+      "expected": {
+        "status": 201,
+        "body": {
+          "id": "string",
+          "domain": "string",
+          "status": "string",
+          "owner_wallet": "string",
+          "created_at": "string",
+          "verified_at": "string",
+          "required_records": "array (non-empty)"
+        }
+      },
+      "depends_on": [
+        "H-6",
+        "F-1"
+      ],
+      "captures": {
+        "domain_id": "$.id"
+      },
+      "notes": "x402 paid. Register a custom domain. Returns required_records for DNS.",
+      "actual_status": null,
+      "actual_body": null,
+      "result": null,
+      "generated": true
+    },
+    {
+      "id": "E-13",
+      "service": "email.sh",
+      "test": "List registered custom domains (paginated)",
+      "method": "GET",
+      "endpoint": "https://email.prim.sh/v1/domains",
+      "input": null,
+      "expected": {
+        "status": 200
+      },
+      "depends_on": [
+        "H-6",
+        "F-1"
+      ],
+      "captures": {},
+      "notes": "x402 paid. List registered custom domains (paginated)",
+      "actual_status": null,
+      "actual_body": null,
+      "result": null,
+      "generated": true
+    },
+    {
+      "id": "E-14",
+      "service": "email.sh",
+      "test": "Get domain details and verification status",
+      "method": "GET",
+      "endpoint": "https://email.prim.sh/v1/domains/{{domain_id}}",
+      "input": null,
+      "expected": {
+        "status": 200,
+        "body": {
+          "id": "string",
+          "domain": "string",
+          "status": "string",
+          "owner_wallet": "string",
+          "created_at": "string",
+          "verified_at": "string",
+          "required_records": "array (non-empty)"
+        }
+      },
+      "depends_on": [
+        "H-6",
+        "F-1",
+        "E-12"
+      ],
+      "captures": {},
+      "notes": "x402 paid. Get domain details and verification status",
+      "actual_status": null,
+      "actual_body": null,
+      "result": null,
+      "generated": true
+    },
+    {
+      "id": "E-15",
+      "service": "email.sh",
+      "test": "Verify DNS records. On success: status → verified, dkim_records returned.",
+      "method": "POST",
+      "endpoint": "https://email.prim.sh/v1/domains/{{domain_id}}/verify",
+      "input": null,
+      "expected": {
+        "status": 200,
+        "body": {
+          "id": "string",
+          "domain": "string",
+          "status": "string",
+          "verified_at": "string"
+        }
+      },
+      "depends_on": [
+        "H-6",
+        "F-1",
+        "E-12"
+      ],
+      "captures": {},
+      "notes": "x402 paid. Verify DNS records. On success: status → verified, dkim_records returned.",
+      "actual_status": null,
+      "actual_body": null,
+      "result": null,
+      "generated": true
+    },
+    {
+      "id": "E-16",
+      "service": "email.sh",
+      "test": "Remove a custom domain registration",
+      "method": "DELETE",
+      "endpoint": "https://email.prim.sh/v1/domains/{{domain_id}}",
+      "input": null,
+      "expected": {
+        "status": 200,
+        "body": {
+          "id": "string",
+          "deleted": "string"
+        }
+      },
+      "depends_on": [
+        "H-6",
+        "F-1",
+        "E-12"
+      ],
+      "captures": {},
+      "notes": "x402 paid. Remove a custom domain registration",
+      "actual_status": null,
+      "actual_body": null,
+      "result": null,
+      "generated": true
     }
   ]
 }

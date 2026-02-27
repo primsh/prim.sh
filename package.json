@@ -33,6 +33,7 @@
     "gen:openai": "bun scripts/gen-openai.ts",
     "gen:tests": "bun scripts/gen-tests.ts",
     "gen:docs": "bun scripts/gen-docs.ts",
+    "gen:gate": "bun scripts/gen-gate.ts",
     "gen:check": "bun scripts/gen-openapi.ts --check && bun scripts/gen-prims.ts --check && bun scripts/gen-mcp.ts --check && bun scripts/gen-cli.ts --check && bun scripts/gen-openai.ts --check && bun scripts/gen-tests.ts --check && bun scripts/gen-docs.ts --check",
     "push:github-profile": "bun scripts/gen-prims.ts && bun scripts/push-github-profile.ts",
     "gate": "bun scripts/gate-check.ts",
