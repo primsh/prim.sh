@@ -1,0 +1,40 @@
+{
+  "name": "@primsh/imagine",
+  "version": "0.0.0",
+  "private": false,
+  "type": "module",
+  "main": "src/index.ts",
+  "description": "Media generation for agents. Images, video, audio. Any model, one API. No API keys.",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/primsh/prim",
+    "directory": "packages/imagine"
+  },
+  "license": "Apache-2.0",
+  "author": "Prim (https://prim.sh)",
+  "keywords": [
+    "prim",
+    "x402",
+    "imagine",
+    "google-gemini-imagen-api"
+  ],
+  "scripts": {
+    "dev": "bun run src/index.ts",
+    "start": "bun run src/index.ts",
+    "lint": "biome lint .",
+    "format": "biome format .",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "test": "vitest --run --exclude test/smoke-live.test.ts",
+    "test:smoke": "vitest --run --passWithNoTests test/smoke-live.test.ts",
+    "check": "pnpm lint && pnpm typecheck && pnpm test"
+  },
+  "dependencies": {
+    "@primsh/x402-middleware": "workspace:*",
+    "hono": "^4.4.7"
+  },
+  "devDependencies": {
+    "@x402/core": "^2.4.0",
+    "typescript": "^5.6.3",
+    "vitest": "^1.6.1"
+  }
+}

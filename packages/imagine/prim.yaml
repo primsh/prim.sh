@@ -1,0 +1,96 @@
+id: imagine
+name: imagine.sh
+endpoint: imagine.prim.sh
+status: building
+type: intelligence
+category: intelligence
+description: "Media generation for agents. Images, video, audio. Any model, one API. No API keys."
+port: 3013
+accent: "#B39DDB"
+accent_dim: "#8f7eaf"
+accent_glow: "rgba(179,157,219,0.08)"
+wraps: Google Gemini Imagen API
+env:
+  - PRIM_PAY_TO
+  - PRIM_NETWORK
+  - GEMINI_API_KEY
+  - WALLET_INTERNAL_URL
+
+pricing:
+  - op: "Generate image"
+    price: "$0.02"
+    note: "Per image"
+  - op: "Describe image"
+    price: "$0.005"
+    note: "Per image"
+  - op: "Upscale image"
+    price: "$0.01"
+    note: "Per image"
+  - op: "List models"
+    price: "free"
+
+providers:
+  - name: google-gemini
+    env: [GEMINI_API_KEY]
+    status: active
+    default: true
+    url: https://ai.google.dev/
+  - name: replicate
+    env: [REPLICATE_API_KEY]
+    status: planned
+    default: false
+    url: https://replicate.com/
+
+interfaces:
+  mcp: true
+  cli: true
+  openai: false
+  rest: true
+
+factory:
+  max_body_size: "25MB"
+  metrics: true
+  free_service: false
+
+routes_map:
+  - route: "POST /v1/generate"
+    request: GenerateRequest
+    response: GenerateResponse
+    status: 200
+    description: "Generate an image from a text prompt. Returns base64 or URL."
+    operation_id: generate
+    errors:
+      - { status: 400, code: invalid_request, description: "Missing or invalid prompt" }
+      - { status: 402, code: payment_required, description: "x402 payment needed" }
+      - { status: 429, code: rate_limited, description: "Too many requests" }
+      - { status: 502, code: provider_error, description: "Upstream provider error" }
+  - route: "POST /v1/describe"
+    request: DescribeRequest
+    response: DescribeResponse
+    status: 200
+    description: "Describe an image. Accepts base64 or URL. Returns text description."
+    operation_id: describe
+    errors:
+      - { status: 400, code: invalid_request, description: "Missing or invalid image input" }
+      - { status: 402, code: payment_required, description: "x402 payment needed" }
+      - { status: 429, code: rate_limited, description: "Too many requests" }
+      - { status: 502, code: provider_error, description: "Upstream provider error" }
+  - route: "POST /v1/upscale"
+    request: UpscaleRequest
+    response: UpscaleResponse
+    status: 200
+    description: "Upscale an image to higher resolution. Accepts base64 or URL."
+    operation_id: upscale
+    errors:
+      - { status: 400, code: invalid_request, description: "Missing or invalid image input" }
+      - { status: 402, code: payment_required, description: "x402 payment needed" }
+      - { status: 429, code: rate_limited, description: "Too many requests" }
+      - { status: 502, code: provider_error, description: "Upstream provider error" }
+  - route: "GET /v1/models"
+    request: null
+    response: ModelsResponse
+    status: 200
+    description: "List available image models with capabilities and pricing."
+    operation_id: list_models
+    errors:
+      - { status: 502, code: provider_error, description: "Unable to fetch model list" }

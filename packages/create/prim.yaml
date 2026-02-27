@@ -1,0 +1,55 @@
+id: create
+name: create.sh
+endpoint: create.prim.sh
+tagline: "Agents building agents"
+description: "Scaffold new prim.sh primitives. Write a prim.yaml spec, get a complete package with passing tests."
+type: meta
+category: meta
+port: 3011
+accent: "#E0E0E0"
+accent_dim: "#b3b3b3"
+accent_glow: "rgba(224,224,224,0.08)"
+status: building
+phantom: false
+env:
+  - PRIM_NETWORK
+  - WALLET_INTERNAL_URL
+routes_map:
+  - route: "POST /v1/scaffold"
+    description: "Generate a complete prim package from a prim.yaml spec. Returns file manifest with contents."
+    operation_id: scaffold
+    request_type: ScaffoldRequest
+    response_type: ScaffoldResponse
+    status: 200
+    errors:
+      - { status: 400, code: invalid_request, description: "Invalid or missing prim.yaml spec" }
+  - route: "POST /v1/validate"
+    description: "Validate a prim.yaml spec against the schema without generating files."
+    operation_id: validate
+    request_type: ValidateRequest
+    response_type: ValidateResponse
+    status: 200
+    errors:
+      - { status: 400, code: invalid_request, description: "Invalid YAML" }
+  - route: "GET /v1/schema"
+    description: "Return the prim.yaml JSON schema for agents to reference when writing specs."
+    operation_id: get_schema
+    request_type: null
+    response_type: SchemaResponse
+    status: 200
+  - route: "GET /v1/ports"
+    description: "Return allocated ports and next available port number."
+    operation_id: get_ports
+    request_type: null
+    response_type: PortsResponse
+    status: 200
+providers: []
+interfaces:
+  mcp: true
+  cli: true
+  openai: true
+factory:
+  free_service: true
+  skip_x402: false
+  skip_body_limit: false
+  skip_health_check: false
