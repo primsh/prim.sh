@@ -91,6 +91,14 @@ export interface PrimConfig {
   hero_example?: string;
   cta?: { headline: string; sub: string };
   sections?: Section[];
+
+  // Enrichment fields
+  interfaces?: { mcp?: boolean; cli?: boolean; openai?: boolean; rest?: boolean };
+  quick_start?: string[];
+  tips?: string[];
+  limits?: string[];
+  ownership?: string;
+  providers?: { name: string; status?: string; url?: string }[];
 }
 
 // ── helpers ──────────────────────────────────────────────────────────────────
@@ -105,6 +113,80 @@ const esc = (s: string) =>
 /** Convert **bold** markers → <strong>bold</strong> */
 function bold(s: string): string {
   return s.replace(/\*\*([^*]+)\*\*/g, "<strong>$1</strong>");
+}
+
+/** Render interface badges row (REST · CLI · MCP · OpenAI) */
+function renderInterfaces(ifaces: NonNullable<PrimConfig["interfaces"]>): string {
+  const items: string[] = [];
+  if (ifaces.rest) items.push("REST");
+  if (ifaces.cli) items.push("CLI");
+  if (ifaces.mcp) items.push("MCP");
+  if (ifaces.openai) items.push("OpenAI");
+  if (items.length === 0) return "";
+  return `<div class="ifaces">${items.map((i) => `<span class="iface">${i}</span>`).join("")}</div>`;
+}
+
+/** Render quick_start, tips, limits, ownership blocks */
+function renderEnrichment(cfg: PrimConfig): string {
+  const parts: string[] = [];
+
+  if (cfg.quick_start && cfg.quick_start.length > 0) {
+    const steps = cfg.quick_start
+      .map((s, i) => `    <li><span class="num">${i + 1}</span>${esc(s)}</li>`)
+      .join("\n");
+    parts.push(`<section>
+  <h2>Quick <span>start</span></h2>
+  <ol class="qs-list">
+${steps}
+  </ol>
+</section>`);
+  }
+
+  if (cfg.tips && cfg.tips.length > 0) {
+    const items = cfg.tips.map((t) => `    <li>${esc(t)}</li>`).join("\n");
+    parts.push(`<section>
+  <h2><span>Tips</span></h2>
+  <ul class="enrich-list">
+${items}
+  </ul>
+</section>`);
+  }
+
+  if (cfg.limits && cfg.limits.length > 0) {
+    const items = cfg.limits.map((l) => `    <li>${esc(l)}</li>`).join("\n");
+    parts.push(`<section>
+  <h2>Limits &amp; <span>quotas</span></h2>
+  <ul class="enrich-list">
+${items}
+  </ul>
+</section>`);
+  }
+
+  if (cfg.ownership) {
+    parts.push(`<section>
+  <div class="ownership-box">
+    <strong>Ownership</strong>
+    <p>${esc(cfg.ownership)}</p>
+  </div>
+</section>`);
+  }
+
+  if (cfg.providers && cfg.providers.length > 0) {
+    const links = cfg.providers
+      .map((p) =>
+        p.url
+          ? `<a href="${esc(p.url)}" class="provider-link">${esc(p.name)}</a>`
+          : `<span class="provider-link">${esc(p.name)}</span>`
+      )
+      .join("");
+    parts.push(`<section>
+  <div class="providers-row">
+    <span class="providers-label">Powered by</span>${links}
+  </div>
+</section>`);
+  }
+
+  return parts.join("\n\n");
 }
 
 /** Status badge label + class */
@@ -514,6 +596,9 @@ export function render(cfg: PrimConfig): string {
     `<span class="badge ${cls}">${label}</span>`,
   ].join("\n    ");
 
+  // Interface badges (REST · CLI · MCP · OpenAI)
+  const ifacesHtml = cfg.interfaces ? renderInterfaces(cfg.interfaces) : "";
+
   // Hero install command
   const installUrl = `https://${cfg.endpoint}/install.sh`;
   const heroBlock =
@@ -531,6 +616,9 @@ export function render(cfg: PrimConfig): string {
   if (!hasPricingSection && cfg.pricing && cfg.pricing.length > 0) {
     sectionsHtml += "\n\n" + renderPricingFromTopLevel(cfg.pricing);
   }
+
+  // Enrichment (quick_start, tips, limits, ownership, providers)
+  const enrichHtml = renderEnrichment(cfg);
 
   // CTA
   const ctaHeadline = cfg.cta?.headline ?? "";
@@ -563,10 +651,13 @@ ${heroBlock}
   <div class="badges">
     ${badgesHtml}
   </div>
+${ifacesHtml}
 </div>
 <img id="content" src="/assets/prims.jpg" alt="${BRAND.name} primitives" class="img-fade" style="width:100%;display:block">
 
 ${sectionsHtml}
+
+${enrichHtml}
 
 ${ctaHtml}
 
