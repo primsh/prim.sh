@@ -311,6 +311,28 @@
               ]
             }
           ]
+        },
+        {
+          "id": "HRD-W3",
+          "title": "Pre-Public Audit Fixes",
+          "parallelism": "PARA",
+          "phases": [
+            {
+              "id": "HRD-W3-PB",
+              "title": "Test Coverage Gaps",
+              "parallelism": "PARA",
+              "tasks": [
+                {
+                  "id": "HRD-27",
+                  "description": "Backfill search/test/smoke.test.ts to 5-check contract (currently 12 lines)",
+                  "owner": ["Claude"],
+                  "depends": [],
+                  "status": "done",
+                  "release": null
+                }
+              ]
+            }
+          ]
         }
       ],
       "description": "Code quality, security, and reliability fixes from open-source readiness review."
