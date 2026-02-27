@@ -1,6 +1,6 @@
 # SEC-1: Audit git history for leaked secrets
 
-**Status**: pending
+**Status**: done — 2026-02-27
 **Scope**: git history (all branches), `.gitleaks.toml`
 
 ## Problem
@@ -114,3 +114,19 @@ This scans only the new commits in each push, keeping CI fast.
 - [ ] CI step added to scan new commits on each push
 - [ ] `gitleaks-report.json` is in `.gitignore`
 - [ ] If history was rewritten: all collaborators notified to re-clone
+
+---
+
+## Scan result — 2026-02-27
+
+**Tool**: gitleaks 8.30.0
+**Scope**: all branches, 431 commits, ~6.94 MB
+**Findings**: 0
+
+One flag in `--no-git` (working tree) mode:
+- `deploy/email/.env` — `STALWART_API_KEY=msk_relay_aN8xKd2mPqVr5Tw9`
+- **Not a finding**: file is gitignored (line 19 of `.gitignore`), never committed. Confirmed via `git log --all -S "msk_relay_..."` — no hits.
+
+OpenZeppelin test fixture strings (ERC-721/1155 error names) also flagged in `--no-git` mode — false positives, vendored library code.
+
+**Verdict**: Clean. No rotation required. SEC-1c is N/A.
