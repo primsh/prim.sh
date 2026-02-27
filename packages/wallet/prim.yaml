@@ -3,7 +3,7 @@ name: wallet.sh
 endpoint: wallet.prim.sh
 status: live
 type: crypto
-category: crypto
+category: identity
 card_class: p20
 description: "Agent wallets. Generate keys, hold USDC on Base, and pay any x402 invoice."
 port: 3001
@@ -24,9 +24,9 @@ pricing:
     price: "$0.005"
     note: ""
 
-accent: "#00ff88"
-accent_dim: "#00cc6d"
-accent_glow: "rgba(0,255,136,0.08)"
+accent: "#FFC107"
+accent_dim: "#e0a800"
+accent_glow: "rgba(255,193,7,0.08)"
 
 tagline: "Wallets for agents."
 sub: "Create, fund, and spend from on-chain wallets. Base USDC first, multi-chain later. x402-native identity for every agent."
