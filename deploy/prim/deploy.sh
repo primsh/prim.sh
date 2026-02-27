@@ -9,7 +9,7 @@ set -euo pipefail
 REPO_DIR="/opt/prim"
 PRIM_USER="prim"
 # BEGIN:PRIM:SERVICES
-SERVICES=(wallet faucet spawn store email search)
+SERVICES=(wallet faucet spawn store email search infer)
 # END:PRIM:SERVICES
 
 log() { echo "[deploy] $*"; }

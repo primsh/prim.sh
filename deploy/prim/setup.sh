@@ -10,7 +10,7 @@ REPO_DIR="/opt/prim"
 PRIM_USER="prim"
 ENV_DIR="/etc/prim"
 # BEGIN:PRIM:SERVICES
-SERVICES=(wallet faucet spawn store email search)
+SERVICES=(wallet faucet spawn store email search infer)
 # END:PRIM:SERVICES
 
 log() { echo "[setup] $*"; }

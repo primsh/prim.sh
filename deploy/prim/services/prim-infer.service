@@ -1,0 +1,15 @@
+[Unit]
+Description=prim.sh infer.sh service
+After=network.target
+
+[Service]
+Type=simple
+User=prim
+WorkingDirectory=/opt/prim
+EnvironmentFile=/etc/prim/infer.env
+ExecStart=/home/prim/.bun/bin/bun run packages/infer/src/index.ts
+Restart=on-failure
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target

@@ -32,7 +32,7 @@ const WALLET_INTERNAL_URL = process.env.WALLET_INTERNAL_URL ?? "http://127.0.0.1
 const checkAllowlist = createWalletAllowlistChecker(WALLET_INTERNAL_URL);
 
 const INFER_ROUTES = {
-  "POST /v1/chat": "$pass-through + 10%",
+  "POST /v1/chat": "$0.01",
   "POST /v1/embed": "$0.001",
   "GET /v1/models": "$0.01"
 } as const;

@@ -13,6 +13,7 @@ ENDPOINTS=(
   "https://store.prim.sh"
   "https://email.prim.sh"
   "https://search.prim.sh"
+  "https://infer.prim.sh"
 )
 # END:PRIM:ENDPOINTS
 
