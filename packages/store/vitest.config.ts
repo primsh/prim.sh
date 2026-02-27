@@ -2,6 +2,10 @@ import { defineConfig } from "vitest/config";
 import path from "node:path";
 
 export default defineConfig({
+  define: {
+    // Polyfill Bun-only import.meta.dir for vitest (Node)
+    "import.meta.dir": JSON.stringify(path.resolve(__dirname, "src")),
+  },
   resolve: {
     alias: {
       "bun:sqlite": path.resolve(__dirname, "src/__mocks__/bun-sqlite.ts"),

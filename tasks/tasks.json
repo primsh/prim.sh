@@ -278,6 +278,16 @@
                   ],
                   "status": "pending",
                   "release": "v1.0.0"
+                },
+                {
+                  "id": "HRD-29",
+                  "description": "Backfill store/test/smoke.test.ts to 5-check contract (currently 49 lines, only 1 real check)",
+                  "owner": [
+                    "Claude"
+                  ],
+                  "depends": [],
+                  "status": "done",
+                  "release": "v1.0.0"
                 }
               ]
             },
