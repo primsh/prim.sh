@@ -698,7 +698,7 @@
             },
             {
               "id": "SP-8",
-              "description": "Nested spawn: POST /v1/servers/{id}/containers — create/list/destroy containers on an existing spawn via SSH+Docker. Enables spawn-inside-spawn for agent replication.",
+              "description": "Nested spawn: POST /v1/servers/{id}/containers \u2014 create/list/destroy containers on an existing spawn via SSH+Docker. Enables spawn-inside-spawn for agent replication.",
               "owner": [],
               "depends": [
                 "SP-7"
@@ -825,7 +825,7 @@
         },
         {
           "id": "PRIMS-W7",
-          "title": "infer.sh — Agent Test Loop",
+          "title": "infer.sh \u2014 Agent Test Loop",
           "parallelism": "SRL",
           "tasks": [
             {
@@ -1189,6 +1189,18 @@
               "depends": [],
               "status": "pending",
               "release": null
+            },
+            {
+              "id": "L-81",
+              "description": "Cut release/v0 branch when I-38 factory starts and tracks diverge. Until then, tag v0.0.0 on main. Branch only when v0 hotfixes would conflict with factory work in-flight on main.",
+              "owner": [
+                "Garric"
+              ],
+              "depends": [
+                "L-80"
+              ],
+              "status": "backlog",
+              "release": null
             }
           ]
         },
@@ -1496,7 +1508,7 @@
         },
         {
           "id": "INFRA-W8",
-          "title": "Gate Runner — Agent Test Loop",
+          "title": "Gate Runner \u2014 Agent Test Loop",
           "parallelism": "SRL",
           "tasks": [
             {
@@ -1716,6 +1728,74 @@
               ]
             }
           ]
+        },
+        {
+          "id": "INFRA-W11",
+          "title": "V0 Launch Gates",
+          "parallelism": "SRL",
+          "tasks": [
+            {
+              "id": "L-76",
+              "description": "G3 Dogfood: complete golden path on mainnet via CLI using one-pager only (wallet create \u2192 fund \u2192 access request \u2192 store \u2192 search \u2192 feedback)",
+              "owner": [
+                "Garric"
+              ],
+              "depends": [
+                "L-22"
+              ],
+              "status": "pending",
+              "release": "v0"
+            },
+            {
+              "id": "L-77",
+              "description": "G4 Mainnet smoke test: write `scripts/smoke-mainnet.ts` \u2014 x402 settlement timing, spend limit enforcement, feedback_url error shape",
+              "owner": [
+                "Garric"
+              ],
+              "depends": [
+                "L-76"
+              ],
+              "status": "pending",
+              "release": "v0"
+            },
+            {
+              "id": "L-78",
+              "description": "G5 Build feedback.sh: `pnpm create-prim`, SQLite service logic, deploy to VPS, add feedback_url to x402-middleware errors",
+              "owner": [
+                "Garric"
+              ],
+              "depends": [
+                "L-76"
+              ],
+              "status": "pending",
+              "release": "v0"
+            },
+            {
+              "id": "L-79",
+              "description": "G6 One-pager: write beta onboarding doc (<1 page) \u2014 install CLI, wallet create, access request, golden path, feedback loop",
+              "owner": [
+                "Garric"
+              ],
+              "depends": [
+                "L-77",
+                "L-78"
+              ],
+              "status": "pending",
+              "release": "v0"
+            },
+            {
+              "id": "L-80",
+              "description": "G7 Private beta: send one-pager to 5 testers, 1-week observation, success = 3/5 complete golden path independently",
+              "owner": [
+                "Garric"
+              ],
+              "depends": [
+                "L-79"
+              ],
+              "status": "pending",
+              "release": "v0"
+            }
+          ]
         }
       ],
       "description": "CI, tooling, observability, pricing, cross-cutting platform work."
@@ -1785,7 +1865,7 @@
             },
             {
               "id": "L-73",
-              "description": "Compress favicon.png (1.2 MB → <50 KB) or regenerate optimized PNG from source artwork",
+              "description": "Compress favicon.png (1.2 MB \u2192 <50 KB) or regenerate optimized PNG from source artwork",
               "owner": [
                 "Claude"
               ],
@@ -2254,7 +2334,7 @@
             },
             {
               "id": "I-29",
-              "description": "gen:docs — generates CLAUDE.md factory section, README prim table, per-package READMEs, homepage fields in package.json, shields.io badges in root README, brand copy from brand.ts SOT. Code is canonical source.",
+              "description": "gen:docs \u2014 generates CLAUDE.md factory section, README prim table, per-package READMEs, homepage fields in package.json, shields.io badges in root README, brand copy from brand.ts SOT. Code is canonical source.",
               "owner": [
                 "Claude"
               ],
