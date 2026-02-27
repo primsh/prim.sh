@@ -1568,6 +1568,14 @@
                   "depends": [],
                   "status": "pending",
                   "release": null
+                },
+                {
+                  "id": "I-39",
+                  "description": "API key usage cost tracking — add usage-based providers (GEMINI_API_KEY, OPENROUTER_API_KEY, etc.) to specs/pricing.yaml infrastructure section and scripts/expenses.ts. Each provider needs: API or dashboard URL to fetch usage, per-unit cost, monthly cap if any. Goal: expenses.ts includes these in the fixed+variable cost breakdown so total operational cost is visible in one place.",
+                  "owner": ["Claude"],
+                  "depends": [],
+                  "status": "pending",
+                  "release": null
                 }
               ]
             },

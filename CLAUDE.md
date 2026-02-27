@@ -104,6 +104,30 @@ Reference implementation: `packages/track/test/smoke.test.ts`
 
 **Pattern**: `@primsh/x402-middleware` is mocked as a passthrough via `vi.mock` so the handler is reachable. Check 3 uses a `vi.fn()` spy on `createAgentStackMiddleware` to verify it was registered with the correct config — this is a structural test (middleware is wired), not a runtime test (middleware returns 402). The runtime 402 behavior is covered by the gate runner's `testing → live` check, which POSTs to the live endpoint and asserts 402.
 
+## Git Workflow
+
+**All new work must use a worktree-based branch → PR flow. No direct commits to `main`.**
+
+### Process
+
+1. Create a worktree on a new branch — use `/prim_git_wt_b_c_p <task-id> <slug>`
+2. Implement the task inside `.worktrees/<slug>/`
+3. Run `pnpm -r check` — must pass before committing
+4. Commit, push, open PR via `gh pr create`
+5. After merge, clean up: `git worktree remove .worktrees/<slug>`
+
+### Branch naming
+
+`<scope>/<task-id>-<slug>` — e.g., `i/i-39-api-key-costs`, `hrd/hrd-30-console-warn`, `ops/ops-13-health-alerting`
+
+Scope = lowercased task ID prefix. If no task ID: `fix/`, `feat/`, `chore/`.
+
+### Rules
+
+- Never push directly to `main`
+- Never use `--no-verify` or `--force-push` unless explicitly instructed
+- PRs require CI to pass before merge
+
 ## Task Management
 
 Full conventions: `tasks/README.md`. Key rules for this project:
