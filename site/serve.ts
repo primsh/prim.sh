@@ -18,14 +18,14 @@ const INDEX_TEMPLATE = readFileSync(INDEX_PATH, "utf-8")
   .replace("{{tagline}}", BRAND.tagline)
   .replace("{{sub}}", BRAND.sub)
   .replace("{{closer}}", BRAND.closer)
-  .replace("{{footer}}", renderFooter("prim.sh"));
+  .replace("{{footer}}", renderFooter(BRAND.name));
 
 const NOT_FOUND_HTML = `<!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>404 — prim.sh</title>
+<title>404 — ${BRAND.name}</title>
 <link rel="icon" type="image/jpeg" href="/assets/favicon.jpg">
 <link rel="stylesheet" href="/assets/prim.css">
 </head>
@@ -33,14 +33,14 @@ const NOT_FOUND_HTML = `<!DOCTYPE html>
 <div class="hero" style="justify-content:center;min-height:80vh">
   <div class="logo"><span>404</span></div>
   <div class="tagline">Not found.</div>
-  <div class="sub">That path doesn't exist. <a href="/">Back to prim.sh</a></div>
+  <div class="sub">That path doesn't exist. <a href="/">Back to ${BRAND.name}</a></div>
 </div>
 </body>
 </html>`;
 
 const ACCESS_PATH = join(ROOT, "site/access/index.html");
 const ACCESS_TEMPLATE = readFileSync(ACCESS_PATH, "utf-8")
-  .replace("{{footer:access}}", renderFooter(`<a href="/">prim.sh</a> / access`));
+  .replace("{{footer:access}}", renderFooter(`<a href="/">${BRAND.name}</a> / access`));
 
 const STATIC_ROUTES: Record<string, string> = {
   "/terms": join(ROOT, "site/terms/index.html"),

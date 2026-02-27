@@ -1,6 +1,8 @@
 // site/template.ts — SSR template for prim.sh primitive pages
 // render(config) → HTML string. CSS is inlined.
 
+import { BRAND } from "../brand.ts";
+
 export interface PricingRow {
   op: string;
   price: string;
@@ -278,7 +280,7 @@ export function renderFooter(crumb: string): string {
     <a href="/access">access</a>
     <a href="/llms.txt">llms.txt</a>
   </div>
-  <div class="copyright">&copy; 2026 prim.sh</div>
+  <div class="copyright">${BRAND.copyright}</div>
 </footer>`;
 }
 
@@ -452,16 +454,16 @@ ${inlineCSS(cfg.accent, cfg.accent_dim, cfg.accent_glow)}
 <body>
 <div class="hero">
   <img class="logomark" src="/assets/hero.jpg" alt=">|">
-  <div class="hero-hd"><a href="/" class="pill"><span class="parent">prim.sh</span><span class="sep">/</span><span class="child">${esc(cfg.name)}</span></a></div>
+  <div class="hero-hd"><a href="/" class="pill"><span class="parent">${BRAND.name}</span><span class="sep">/</span><span class="child">${esc(cfg.name)}</span></a></div>
   <div class="logo"><span>${esc(namePart)}</span>.${ext ?? "sh"}</div>
   <div class="tagline">${esc(cfg.tagline)}</div>
   <div class="sub">${esc(cfg.sub)}</div>
   <div class="badges">
-    <div class="badge">Part of <strong>prim.sh</strong></div>
+    <div class="badge">Part of <strong>${BRAND.name}</strong></div>
     <span class="badge ${cls}">${label}</span>
   </div>
 </div>
-${renderFooter(`<a href="/">prim.sh</a> / ${esc(cfg.name)}`)}
+${renderFooter(`<a href="/">${BRAND.name}</a> / ${esc(cfg.name)}`)}
 <img src="/assets/banner.jpg" alt="" class="img-fade" style="width:100%;display:block;margin:0;padding:0">
 </body>
 </html>`;
@@ -508,7 +510,7 @@ export function render(cfg: PrimConfig): string {
   // Hero badges
   const badgesHtml = [
     ...(cfg.hero_badges ?? []).map(renderBadgeStr),
-    `<div class="badge">Part of <strong>prim.sh</strong></div>`,
+    `<div class="badge">Part of <strong>${BRAND.name}</strong></div>`,
     `<span class="badge ${cls}">${label}</span>`,
   ].join("\n    ");
 
@@ -553,7 +555,7 @@ ${inlineCSS(cfg.accent, cfg.accent_dim, cfg.accent_glow)}
 <body>
 <div class="hero">
   <img class="logomark" src="/assets/hero.jpg" alt=">|">
-  <div class="hero-hd"><a href="/" class="pill"><span class="parent">prim.sh</span><span class="sep">/</span><span class="child">${esc(cfg.name)}</span></a></div>
+  <div class="hero-hd"><a href="/" class="pill"><span class="parent">${BRAND.name}</span><span class="sep">/</span><span class="child">${esc(cfg.name)}</span></a></div>
   <div class="logo"><span>${esc(namePart ?? cfg.id)}</span>.${esc(ext ?? "sh")}</div>
   <div class="tagline">${esc(cfg.tagline)}</div>
   <div class="sub">${esc(cfg.sub)}</div>
@@ -562,13 +564,13 @@ ${heroBlock}
     ${badgesHtml}
   </div>
 </div>
-<img id="content" src="/assets/prims.jpg" alt="prim.sh primitives" class="img-fade" style="width:100%;display:block">
+<img id="content" src="/assets/prims.jpg" alt="${BRAND.name} primitives" class="img-fade" style="width:100%;display:block">
 
 ${sectionsHtml}
 
 ${ctaHtml}
 
-${renderFooter(`<a href="/">prim.sh</a> / ${esc(cfg.name)}`)}
+${renderFooter(`<a href="/">${BRAND.name}</a> / ${esc(cfg.name)}`)}
 <img src="/assets/banner.jpg" alt="" class="img-fade" style="width:100%;display:block;margin:0;padding:0">
 </body>
 </html>`;

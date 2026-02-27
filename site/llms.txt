@@ -114,7 +114,6 @@ Run prim <command> --help for options.
 - store.sh — store.prim.sh — Object storage. Persist artifacts across ephemeral VMs. S3-compatible.
 - email.sh — email.prim.sh — Mailboxes on demand. Send, receive, webhook. Disposable or permanent.
 - search.sh — search.prim.sh — Search for agents. No ads, no SEO spam. Just facts and clean markdown.
-- infer.sh — infer.prim.sh — LLM inference for agents. Any model, any provider, one API. Per-token pricing. No API keys.
 
 ## Built (Not Yet Deployed)
 
@@ -122,8 +121,7 @@ Run prim <command> --help for options.
 - mem.sh — Vector store and cache for agents. Persist long-term knowledge and session state.
 - domain.sh — Register domains, manage DNS, auto-TLS. Full domain lifecycle via API.
 - track.sh — Package tracking for agents. USPS, FedEx, UPS, DHL and 1000+ carriers. Status, ETA, full event history.
-- create.sh — Scaffold new prim.sh primitives. Write a prim.yaml spec, get a complete package with passing tests.
-- imagine.sh — Media generation for agents. Images, video, audio. Any model, one API. No API keys.
+- infer.sh — LLM inference for agents. Any model, any provider, one API. Per-token pricing. No API keys.
 
 ## Planned Primitives
 

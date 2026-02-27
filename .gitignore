@@ -52,6 +52,9 @@ site-dist/
 # Original image assets (pre-optimization)
 site/assets/*_orig.*
 
+# Legal (receipts, contracts — sensitive)
+legal/
+
 # OS
 .DS_Store
 Thumbs.db

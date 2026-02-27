@@ -1,12 +1,25 @@
 # Brand Guide
 
+## Hierarchy
+
+**Primitive Shell** is the parent organization. **Prim** is the first product.
+
+| Entity | What it is | Where it appears |
+|--------|-----------|-----------------|
+| **Primitive Shell** | Parent org/company | Legal, copyright, GitHub org display name, about pages |
+| **Prim** | Product brand | Site, README, docs, CLI, everything user-facing |
+
+Primitive Shell owns the vision (agent-native infrastructure). Prim is the product that delivers it. If a second product ever ships, it lives under Primitive Shell alongside Prim.
+
+Legal entity: **Prim.sh LLC** (or Primitive Shell LLC — TBD).
+
 ## Name
 
 **Prim** — short for Primitive Shell (`prim.sh`).
 
 The brand name is **Prim**. The `.sh` is the domain TLD *and* part of the name's meaning — primitive shell. A simple wrapper around existing services that require human signup flows, made accessible to agents through a single payment protocol. When written, `prim.sh` carries both readings. When spoken, just "Prim."
 
-A **prim** (lowercase) is also the atomic product unit — a single infrastructure primitive. "Add another prim." "Which prims are you using?" The company is **Prim**. The building blocks are **prims**.
+A **prim** (lowercase) is also the atomic product unit — a single infrastructure primitive. "Add another prim." "Which prims are you using?" The product is **Prim**. The building blocks are **prims**.
 
 ## Tagline
 *What we are. Goes next to the logo.*
@@ -43,8 +56,10 @@ No exclamation marks. No "we're excited." No "getting started is easy." State wh
 
 | Platform | Handle | Notes |
 |----------|--------|-------|
-| Domain | `prim.sh` | Primary. All primitives are subdomains (`wallet.prim.sh`, `store.prim.sh`, etc.) |
-| GitHub | `primsh` | Org. Main repo: `primsh/prim.sh` |
+| Domain (product) | `prim.sh` | All primitives are subdomains (`wallet.prim.sh`, `store.prim.sh`, etc.) |
+| Domain (org) | `primitiveshell.com` | Parent org. Redirects to `prim.sh` or hosts a minimal about page. |
+| Domain (org, reserved) | `primitiveshell.org` | Reserved for potential future foundation use. |
+| GitHub org | `primsh` | Slug. Display name set to **Primitive Shell**. Main repo: `primsh/prim` |
 | npm | `@primsh` | All packages: `@primsh/wallet`, `@primsh/store`, etc. |
 | X | `@useprim` | Handle. Display name: **Prim** (not "Prim.sh" or "Primitive Shell") |
 | Discord | Prim | Server display name. Proper noun, capitalized. |
@@ -61,7 +76,8 @@ No exclamation marks. No "we're excited." No "getting started is easy." State wh
 | A single primitive | **a prim** | "spawn.sh is a prim." |
 | Multiple primitives | **prims** | "How many prims are you using?" |
 | The CLI binary | **prim** | `prim spawn create` |
-| Legal / formal | **Prim, Inc.** | Or "Prim (Primitive Shell)" as a one-time parenthetical. |
+| Legal / copyright | **© Primitive Shell** | Footer, LICENSE. The org name, not the product. |
+| Legal / formal | **Prim.sh LLC** | Or Primitive Shell LLC — TBD. |
 
 ## Visual Identity
 

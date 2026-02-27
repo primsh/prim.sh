@@ -20,7 +20,7 @@ const out = src
   .replace("{{tagline}}", BRAND.tagline)
   .replace("{{sub}}", BRAND.sub)
   .replace("{{closer}}", BRAND.closer)
-  .replace("{{footer}}", renderFooter("prim.sh"));
+  .replace("{{footer}}", renderFooter(BRAND.name));
 
 mkdirSync(resolve(ROOT, "site-dist"), { recursive: true });
 writeFileSync(resolve(ROOT, "site-dist/index.html"), out);
@@ -31,7 +31,7 @@ console.log("[build] site-dist/index.html written");
 const accessPath = resolve(ROOT, "site/access/index.html");
 if (existsSync(accessPath)) {
   const accessSrc = readFileSync(accessPath, "utf-8");
-  const accessOut = accessSrc.replace("{{footer:access}}", renderFooter(`<a href="/">prim.sh</a> / access`));
+  const accessOut = accessSrc.replace("{{footer:access}}", renderFooter(`<a href="/">${BRAND.name}</a> / access`));
   mkdirSync(resolve(ROOT, "site-dist/access"), { recursive: true });
   writeFileSync(resolve(ROOT, "site-dist/access/index.html"), accessOut);
   console.log("[build] site-dist/access/index.html written");
