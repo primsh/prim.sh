@@ -1,31 +1,150 @@
-# infer.sh
+# infer.prim.sh
 
-> Models for agents. Proxy to GPT-4, Claude, Llama, and more behind a single API.
+LLM inference for agents. Any model, any provider, one API. Per-token pricing. No API keys.
 
-Base URL: https://infer.prim.sh  
-Auth: x402 (USDC on Base, chain `eip155:8453`)
-Status: Coming soon. This primitive is not yet available.
+Base URL: https://infer.prim.sh
+Auth: x402 (USDC on Base Sepolia). GET /, GET /pricing, GET /v1/metrics are free.
+Chain: Base Sepolia (eip155:84532) during beta.
+
+Install:
+  curl -fsSL https://infer.prim.sh/install.sh | sh
+
+---
+
+## x402 Payment
+
+  1. Make request. Server returns 402 with Payment-Required header.
+  2. Sign EIP-3009 transferWithAuthorization.
+  3. Retry with Payment-Signature header (base64-encoded signed authorization).
+
+Error envelope:
+  {"error": {"code": "<code>", "message": "<msg>"}}
+
+Error codes:
+  invalid_request
+  not_found
+  rate_limited
+  provider_error
+
+---
 
 ## Endpoints
 
-- `POST /v1/chat/completions` — chat completions (OpenAI-compatible).
-- `POST /v1/completions` — text completions.
-- `POST /v1/embeddings` — vector embeddings.
-- `GET /v1/models` — list available models.
+### GET /
 
-## Pricing
+Health check.
 
-- Billed per 1M tokens, per model, with separate input/output rates.  
-- Embeddings: per 1K tokens embedded.
+Free.
 
-See human docs at `https://prim.sh/infer` for current model catalog and prices.
+Response (200):
+  service  string  "infer.sh"
+  status   string  "ok"
 
-## Examples
+---
 
-```bash
-# Chat completion
-curl -X POST https://infer.prim.sh/v1/chat/completions \
-  -H "X-402-Payment: $TOKEN" \
-  -d '{"model": "llama-3-70b", "messages": [{"role": "user", "content": "Hello"}]}'
-```
+### GET /pricing
 
+Machine-readable pricing for all endpoints.
+
+Free.
+
+Response (200):
+  service   string  "infer.prim.sh"
+  currency  string  "USDC"
+  network   string  "eip155:8453"
+  routes    array   Route pricing list
+    .method       string  HTTP method
+    .path         string  URL path
+    .price_usdc   string  Price in USDC (decimal string)
+    .description  string  Human-readable description
+
+---
+
+### GET /v1/metrics
+
+Operational metrics. Uptime, request counts, latency percentiles, error rates.
+
+Free.
+
+Response (200):
+  service     string  "infer.prim.sh"
+  uptime_s    number  Seconds since last restart
+  requests    object  Request counts and latencies by endpoint
+  payments    object  Payment counts by endpoint
+  errors      object  Error counts by status code
+
+---
+
+### POST /v1/chat
+
+Chat completion. Supports streaming, tool use, structured output.
+
+Price: $pass-through + 10%
+
+Request:
+  model              string                                                                           required
+  messages           Message[]                                                                        required
+  temperature        number                                                                           optional
+  max_tokens         number                                                                           optional
+  top_p              number                                                                           optional
+  frequency_penalty  number                                                                           optional
+  presence_penalty   number                                                                           optional
+  stop               string | string[]                                                                optional
+  stream             boolean                                                                          optional
+  tools              Tool[]                                                                           optional
+  tool_choice        "none" | "auto" | "required" | { type: "function"; function: { name: string } }  optional
+  response_format    object                                                                           optional
+
+Response (200):
+  id       string
+  object   "chat.completion"
+  created  number
+  model    string
+  choices  Choice[]
+  usage    Usage
+
+Errors:
+  400  invalid_request   Missing or invalid model/messages
+  402  payment_required  x402 payment needed
+  429  rate_limited      Too many requests
+  502  provider_error    Upstream model provider error
+
+---
+
+### POST /v1/embed
+
+Generate embeddings for text input. Returns vector array.
+
+Price: $0.001
+
+Request:
+  model  string             required
+  input  string | string[]  required
+
+Response (200):
+  object  "list"
+  data    EmbeddingData[]
+  model   string
+  usage   object
+
+Errors:
+  400  invalid_request   Missing or invalid input
+  402  payment_required  x402 payment needed
+  429  rate_limited      Too many requests
+  502  provider_error    Upstream provider error
+
+---
+
+### GET /v1/models
+
+List available models with pricing and capabilities.
+
+Price: $0.01
+
+Response (200):
+  data  ModelInfo[]
+
+Errors:
+  502  provider_error  Unable to fetch model list
+
+---
