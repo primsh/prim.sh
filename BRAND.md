@@ -123,3 +123,4 @@ Dark-mode. Monospace.
 6. **No lock-in** — use what you need, leave when you're done. No contracts, no minimums.
 7. **Composable** — use one prim or all twenty-seven. No coupling, no bundling.
 8. **Pay per call** — micropayments via x402. Every request is priced individually. No subscriptions, no metering.
+9. **Self-extending** — agents don't just consume the stack, they grow it. A missing capability is a prim waiting to be built — by an agent, not an engineer. The platform scales by unblocking LLMs to contribute back in structured, automated ways.
