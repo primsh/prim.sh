@@ -261,4 +261,25 @@ describe("Wallet deactivation", () => {
       expect(result.status).toBe(404);
     }
   });
+
+  it("re-registering a deactivated wallet reactivates it (not 500)", async () => {
+    const { address, privateKey } = registerTestWallet(CALLER);
+    deactivateWallet(address, CALLER);
+
+    // Re-register using the same canonical message format as normal registration
+    const account = privateKeyToAccount(privateKey);
+    const timestamp = new Date().toISOString();
+    const message = `Register ${getAddress(address)} with prim.sh at ${timestamp}`;
+    const signature = await account.signMessage({ message });
+    const result = await registerWallet({ address, signature, timestamp });
+
+    expect(result.ok).toBe(true);
+    if (result.ok) {
+      expect(result.data.address).toBe(address);
+    }
+
+    // Wallet should now be visible again
+    const fetched = await getWallet(address, CALLER);
+    expect(fetched.ok).toBe(true);
+  });
 });
