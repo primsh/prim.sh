@@ -18,7 +18,7 @@ Scaffold and implement keys.sh as a new prim at `packages/keys/`.
 
 **Port**: 3014 (next available after track.sh at 3013)
 
-**prim.yaml**: Define routes, pricing, env vars, interfaces. Category: `meta`. ID prefix: `DK`.
+**prim.yaml**: Define routes, pricing, env vars, interfaces. Type: `meta`. Category: `meta`. Accent: TBD (assign during scaffolding — check `CATEGORY_COLORS` in `scripts/lib/primitives.ts`). ID prefix: `DK`.
 
 **Files to create/modify:**
 
@@ -67,6 +67,7 @@ CREATE TABLE IF NOT EXISTS keys (
   auth_tag TEXT NOT NULL,           -- GCM auth tag (base64)
   rate_limit INTEGER NOT NULL,      -- max calls per month (from tier)
   calls_this_month INTEGER NOT NULL DEFAULT 0,
+  month_reset_at INTEGER NOT NULL,   -- epoch ms, last time calls_this_month was reset
   last_call_at INTEGER,             -- epoch ms
   last_health_at INTEGER,           -- epoch ms
   health_status TEXT NOT NULL DEFAULT 'unknown', -- "healthy", "degraded", "dead", "unknown"
@@ -82,7 +83,7 @@ CREATE INDEX IF NOT EXISTS idx_keys_owner ON keys(owner_wallet);
 CREATE TABLE IF NOT EXISTS credits (
   id TEXT PRIMARY KEY,              -- uuid
   wallet TEXT NOT NULL,             -- wallet address
-  amount_usdc REAL NOT NULL,        -- positive = earned, negative = spent
+  amount_micro_usdc INTEGER NOT NULL, -- micro-USDC (1 USDC = 1,000,000). positive = earned, negative = spent
   reason TEXT NOT NULL,             -- "proxy_served", "redemption", "spend"
   key_id TEXT,                      -- which contributed key earned this (nullable)
   proxy_call_id TEXT,               -- which proxy call (nullable)
@@ -119,7 +120,7 @@ After each proxy call:
 - If upstream returns 401/403, increment `health_errors`, set `health_status = 'degraded'` (3+ consecutive errors → `'dead'`)
 - If upstream succeeds, reset `health_errors`, set `health_status = 'healthy'`
 
-Monthly reset: cron-like check on each request — if `calls_this_month` was last reset >30 days ago, reset to 0.
+Monthly reset: lazy per-key reset. Each key row has a `month_reset_at INTEGER` column. On selection, if `month_reset_at` is >30 days ago, reset that key's `calls_this_month` to 0 and update `month_reset_at`. This avoids a bulk write that spikes latency on the first request after a month boundary.
 
 #### Proxy handler (`service.ts`)
 
@@ -136,7 +137,7 @@ The proxy handler is the critical path. It must:
 
 | Provider | Auth method | Header/param |
 |----------|-----------|--------------|
-| Tavily | API key in body | `{ api_key: "<key>" }` |
+| Tavily | Bearer token | `Authorization: Bearer <key>` |
 | Serper | Bearer token | `Authorization: Bearer <key>` |
 | OpenAI | Bearer token | `Authorization: Bearer <key>` |
 | Hetzner | Bearer token | `Authorization: Bearer <key>` |
