@@ -81,12 +81,50 @@ export interface FactoryConfig {
   free_service?: boolean;    // default false
 }
 
+export type PrimCategory =
+  | "crypto"
+  | "compute"
+  | "storage"
+  | "comms"
+  | "intelligence"
+  | "identity"
+  | "ops"
+  | "physical"
+  | "meta";
+
+/** Category → accent color. Single source of truth for the color system. */
+export const CATEGORY_COLORS: Record<PrimCategory, string> = {
+  crypto:       "#00ff88",  // neon green
+  compute:      "#4DD0E1",  // cyan
+  storage:      "#FFB74D",  // amber
+  comms:        "#6C8EFF",  // blue
+  intelligence: "#B39DDB",  // purple
+  identity:     "#FFC107",  // gold
+  ops:          "#FF3D00",  // orange
+  physical:     "#F48FB1",  // pink
+  meta:         "#E0E0E0",  // white/silver
+};
+
+/** Map existing `type` values to categories */
+export const TYPE_TO_CATEGORY: Record<string, PrimCategory> = {
+  crypto: "crypto", defi: "crypto", testnet: "crypto", payments: "crypto",
+  compute: "compute", execution: "compute", scheduler: "compute",
+  storage: "storage", memory: "storage", secrets: "storage",
+  email: "comms", messaging: "comms", voice: "comms", browser: "comms",
+  intelligence: "intelligence", ai: "intelligence", search: "intelligence", documentation: "intelligence",
+  auth: "identity", identity: "identity", domains: "identity",
+  observability: "ops", tracing: "ops", logistics: "ops", coordination: "ops",
+  labor: "physical", commerce: "physical", location: "physical", advertising: "physical", legal: "physical",
+  meta: "meta",
+};
+
 export interface Primitive {
   id: string;
   name: string;
   endpoint?: string;
   status: PrimStatus;
   type: string;
+  category?: PrimCategory;
   card_class: string;
   description: string;
   port?: number;
