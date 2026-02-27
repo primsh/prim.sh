@@ -83,7 +83,8 @@ describe("mem.sh app", () => {
 
   // Check 4: happy path — handler returns 201 with mocked service response
   it("POST /v1/collections returns 201 with valid response", async () => {
-    vi.mocked(createCollection).mockResolvedValueOnce({ ok: true, data: {} as CollectionResponse });
+    // biome-ignore lint/suspicious/noExplicitAny: mock shape — smoke test only checks status code
+    vi.mocked(createCollection).mockResolvedValueOnce({ ok: true, data: {} as any });
 
     const res = await app.request("/v1/collections", {
       method: "POST",

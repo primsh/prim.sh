@@ -285,6 +285,7 @@ describe("V3 format", () => {
   it("createKey succeeds with default scrypt N (no PRIM_SCRYPT_N env)", async () => {
     // Regression guard: default N=16384 must fit under OpenSSL's 32 MB limit.
     // If someone bumps the default back to 131072, this test fails.
+    // biome-ignore lint/performance/noDelete: need actual undefined, not empty string
     delete process.env.PRIM_SCRYPT_N;
     try {
       const { address } = await createKey();
@@ -295,6 +296,7 @@ describe("V3 format", () => {
   });
 
   it("encrypt/decrypt round-trip at default N=16384", () => {
+    // biome-ignore lint/performance/noDelete: need actual undefined, not empty string
     delete process.env.PRIM_SCRYPT_N;
     try {
       const params = encryptToV3(TEST_PRIVATE_KEY, "test-password");

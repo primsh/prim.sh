@@ -544,7 +544,7 @@ export async function mailSetup(
       name: `${dkim.rsa.selector}._domainkey.${domain}`,
       content: `v=DKIM1; k=rsa; p=${dkim.rsa.public_key}`,
       ttl: 3600,
-      matchFn: (r) => r.type === "TXT" && r.name === `${dkim!.rsa!.selector}._domainkey.${domain}`,
+      matchFn: (r) => r.type === "TXT" && r.name === `${dkim.rsa?.selector}._domainkey.${domain}`,
     });
   }
 
@@ -554,7 +554,7 @@ export async function mailSetup(
       name: `${dkim.ed25519.selector}._domainkey.${domain}`,
       content: `v=DKIM1; k=ed25519; p=${dkim.ed25519.public_key}`,
       ttl: 3600,
-      matchFn: (r) => r.type === "TXT" && r.name === `${dkim!.ed25519!.selector}._domainkey.${domain}`,
+      matchFn: (r) => r.type === "TXT" && r.name === `${dkim.ed25519?.selector}._domainkey.${domain}`,
     });
   }
 

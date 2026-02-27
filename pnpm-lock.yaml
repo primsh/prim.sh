@@ -21,6 +21,9 @@ importers:
       '@coinbase/cdp-sdk':
         specifier: ^1.44.1
         version: 1.44.1(bufferutil@4.1.0)(typescript@5.9.3)(utf-8-validate@5.0.10)
+      '@types/node':
+        specifier: ^25.3.0
+        version: 25.3.0
       '@vitest/coverage-v8':
         specifier: ^1.6.1
         version: 1.6.1(vitest@1.6.1(@types/node@25.3.0))
@@ -166,25 +169,6 @@ importers:
         specifier: ^1.6.1
         version: 1.6.1(@types/node@25.3.0)
 
-  packages/ring:
-    dependencies:
-      '@primsh/x402-middleware':
-        specifier: workspace:*
-        version: link:../x402-middleware
-      hono:
-        specifier: ^4.4.7
-        version: 4.12.2
-    devDependencies:
-      '@x402/core':
-        specifier: ^2.4.0
-        version: 2.4.0
-      typescript:
-        specifier: ^5.6.3
-        version: 5.9.3
-      vitest:
-        specifier: ^1.6.1
-        version: 1.6.1(@types/node@25.3.0)
-
   packages/search:
     dependencies:
       '@primsh/x402-middleware':
@@ -231,6 +215,25 @@ importers:
       aws4fetch:
         specifier: ^1.0.20
         version: 1.0.20
+      hono:
+        specifier: ^4.4.7
+        version: 4.12.2
+    devDependencies:
+      '@x402/core':
+        specifier: ^2.4.0
+        version: 2.4.0
+      typescript:
+        specifier: ^5.6.3
+        version: 5.9.3
+      vitest:
+        specifier: ^1.6.1
+        version: 1.6.1(@types/node@25.3.0)
+
+  packages/testprim:
+    dependencies:
+      '@primsh/x402-middleware':
+        specifier: workspace:*
+        version: link:../x402-middleware
       hono:
         specifier: ^4.4.7
         version: 4.12.2
@@ -357,6 +360,9 @@ importers:
       '@types/node':
         specifier: ^25.3.0
         version: 25.3.0
+      vitest:
+        specifier: ^1.6.1
+        version: 1.6.1(@types/node@25.3.0)
 
 packages:
 

@@ -5,7 +5,7 @@
 
 import { beforeEach, describe, expect, it } from "vitest";
 import { ProviderError } from "../src/provider.ts";
-import { searchWeb, searchNews, extractUrls, resetClient } from "../src/service.ts";
+import { searchWeb, searchNews, extractUrls } from "../src/service.ts";
 import type { SearchProvider, ExtractProvider, SearchProviderParams, SearchProviderResult, ExtractProviderResult } from "../src/provider.ts";
 
 // ─── Mock providers ───────────────────────────────────────────────────────────
@@ -129,7 +129,7 @@ class ErrorExtractProvider implements ExtractProvider {
 // ─── searchWeb ────────────────────────────────────────────────────────────────
 
 describe("searchWeb", () => {
-  beforeEach(() => resetClient());
+  beforeEach(() => {});
 
   it("returns results for a valid query", async () => {
     const provider = new MockSearchProvider();
@@ -237,7 +237,7 @@ describe("searchWeb", () => {
 // ─── searchNews ───────────────────────────────────────────────────────────────
 
 describe("searchNews", () => {
-  beforeEach(() => resetClient());
+  beforeEach(() => {});
 
   it("returns results for a valid query", async () => {
     const provider = new MockSearchProvider();
@@ -291,7 +291,7 @@ describe("searchNews", () => {
 // ─── extractUrls ──────────────────────────────────────────────────────────────
 
 describe("extractUrls", () => {
-  beforeEach(() => resetClient());
+  beforeEach(() => {});
 
   it("extracts content from a single URL string", async () => {
     const provider = new MockExtractProvider();

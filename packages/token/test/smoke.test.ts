@@ -48,8 +48,6 @@ vi.mock("../src/service.ts", async (importOriginal) => {
 import app from "../src/index.ts";
 import { deployToken } from "../src/service.ts";
 import { createAgentStackMiddleware } from "@primsh/x402-middleware";
-import type { TokenResponse } from "../src/api.ts";
-
 // BEGIN:GENERATED:SMOKE
 describe("token.sh app", () => {
   beforeEach(() => {
@@ -82,7 +80,8 @@ describe("token.sh app", () => {
 
   // Check 4: happy path — handler returns 201 with mocked service response
   it("POST /v1/tokens returns 201 with valid response", async () => {
-    vi.mocked(deployToken).mockResolvedValueOnce({ ok: true, data: {} as TokenResponse });
+    // biome-ignore lint/suspicious/noExplicitAny: mock shape — smoke test only checks status code
+    vi.mocked(deployToken).mockResolvedValueOnce({ ok: true, data: {} as any });
 
     const res = await app.request("/v1/tokens", {
       method: "POST",

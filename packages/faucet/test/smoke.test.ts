@@ -32,8 +32,6 @@ vi.mock("../src/service.ts", async (importOriginal) => {
 
 import app from "../src/index.ts";
 import { dripUsdc } from "../src/service.ts";
-import type { DripResponse } from "../src/api.ts";
-
 // BEGIN:GENERATED:SMOKE
 describe("faucet.sh app", () => {
   beforeEach(() => {
@@ -55,7 +53,8 @@ describe("faucet.sh app", () => {
 
   // Check 4: happy path — handler returns 200 with mocked service response
   it("POST /v1/faucet/usdc returns 200 with valid response", async () => {
-    vi.mocked(dripUsdc).mockResolvedValueOnce({} as DripResponse);
+    // biome-ignore lint/suspicious/noExplicitAny: mock shape — smoke test only checks status code
+    vi.mocked(dripUsdc).mockResolvedValueOnce({} as any);
 
     const res = await app.request("/v1/faucet/usdc", {
       method: "POST",

@@ -341,10 +341,8 @@ function generateFullFile(ctx: GenContext): string {
     lines.push(`import { createAgentStackMiddleware } from "@primsh/x402-middleware";`);
   }
 
-  // Response type import from primary route
-  if (primary?.response_type) {
-    lines.push(`import type { ${primary.response_type} } from "../src/api.ts";`);
-  }
+  // Response type import from primary route — intentionally omitted from mock
+  // (mocks use `as any` since smoke tests only check HTTP status, not response shape)
 
   lines.push(``);
 
@@ -433,10 +431,12 @@ function generateMarkedContent(
 
     if (primaryServiceFn) {
       if (serviceUsesOkWrapper) {
-        lines.push(`    vi.mocked(${primaryServiceFn}).mockResolvedValueOnce({ ok: true, data: {} as ${responseType ?? "unknown"} });`);
+        lines.push(`    // biome-ignore lint/suspicious/noExplicitAny: mock shape — smoke test only checks status code`);
+        lines.push(`    vi.mocked(${primaryServiceFn}).mockResolvedValueOnce({ ok: true, data: {} as any });`);
       } else {
         // Throw-based service (e.g. faucet) — resolve with minimal shape
-        lines.push(`    vi.mocked(${primaryServiceFn}).mockResolvedValueOnce({} as ${responseType ?? "unknown"});`);
+        lines.push(`    // biome-ignore lint/suspicious/noExplicitAny: mock shape — smoke test only checks status code`);
+        lines.push(`    vi.mocked(${primaryServiceFn}).mockResolvedValueOnce({} as any);`);
       }
       lines.push(``);
     }

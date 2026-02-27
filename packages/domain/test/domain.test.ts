@@ -274,8 +274,10 @@ describe("domain.sh", () => {
     mockFetch.mockClear();
     cfDnsRecordsMock = [];
     // Reset DNS resolver mocks
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    Object.values(dnsResolverMock).forEach((m) => (m as any).mockReset());
+    for (const m of Object.values(dnsResolverMock)) {
+      // biome-ignore lint/suspicious/noExplicitAny: mock reset on vi.fn()
+      (m as any).mockReset();
+    }
   });
 
   afterEach(() => {
@@ -1573,7 +1575,7 @@ describe("domain.sh", () => {
       );
       const reg = await registerDomain(q.data.quote_id, CALLER);
       if (!reg.ok) throw new Error("Failed to register");
-      recoveryToken = reg.data.recovery_token!;
+      recoveryToken = reg.data.recovery_token ?? "";
     });
 
     afterEach(() => {

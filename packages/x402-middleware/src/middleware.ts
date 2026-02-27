@@ -25,17 +25,29 @@ const WALLET_CHECK_TIMEOUT_MS = 2000;
  * Creates a `checkAllowlist` callback that queries wallet.sh's internal API.
  * Fail-closed: on timeout or network error, denies access and logs a warning.
  *
+ * Reads `PRIM_INTERNAL_KEY` from the environment and sends it as `x-internal-key`
+ * header. Without this key, wallet.sh returns 401 on internal endpoints.
+ *
  * @param walletInternalUrl - Base URL for wallet.sh internal API (e.g. "http://127.0.0.1:3001")
  */
 export function createWalletAllowlistChecker(walletInternalUrl: string): (address: string) => Promise<boolean> {
+  const internalKey = process.env.PRIM_INTERNAL_KEY;
+  if (!internalKey) {
+    log.warn("PRIM_INTERNAL_KEY not set — allowlist checks will fail");
+  }
+
   return async (address: string): Promise<boolean> => {
     const url = `${walletInternalUrl}/internal/allowlist/check?address=${encodeURIComponent(address)}`;
     try {
       const controller = new AbortController();
       const timer = setTimeout(() => controller.abort(), WALLET_CHECK_TIMEOUT_MS);
+      const headers: Record<string, string> = {};
+      if (internalKey) {
+        headers["x-internal-key"] = internalKey;
+      }
       let res: Response;
       try {
-        res = await fetch(url, { signal: controller.signal });
+        res = await fetch(url, { signal: controller.signal, headers });
       } finally {
         clearTimeout(timer);
       }

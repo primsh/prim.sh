@@ -3,7 +3,9 @@
   "files": {
     "ignore": [
       "node_modules",
-      "dist"
+      "dist",
+      "**/test/smoke-live.test.ts",
+      "**/*.timestamp-*"
     ]
   },
   "formatter": {

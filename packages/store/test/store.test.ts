@@ -892,6 +892,7 @@ describe("store.sh", () => {
       // Instead we rely on the module reading env at call time — it reads the constant at module load.
       // We need to set env BEFORE module import. Since the module is already loaded, we test
       // with the real default (10). Create 10, then verify 11th fails.
+      // biome-ignore lint/performance/noDelete: need actual undefined for env fallback
       delete process.env.STORE_MAX_BUCKETS_PER_WALLET;
 
       for (let i = 0; i < 10; i++) {
