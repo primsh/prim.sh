@@ -4,7 +4,8 @@ import { createAgentStackMiddleware, createLogger, getNetworkConfig, metricsMidd
 import { addToAllowlist, removeFromAllowlist, isAllowed, createAllowlistChecker } from "@primsh/x402-middleware/allowlist-db";
 import { join } from "node:path";
 import { readFileSync } from "node:fs";
-import { resolve } from "node:path";
+import { resolve, dirname } from "node:path";
+import { fileURLToPath } from "node:url";
 import type {
   WalletRegisterRequest,
   WalletListResponse,
@@ -36,8 +37,10 @@ import {
 import type { FundRequestCreateRequest, FundRequestDenyRequest, PolicyUpdateRequest, PauseRequest, ResumeRequest } from "./api.ts";
 import { pause, resume, getState } from "./circuit-breaker.ts";
 
+const _dir = import.meta.dir ?? dirname(fileURLToPath(import.meta.url));
+
 const LLMS_TXT = readFileSync(
-  resolve(import.meta.dir, "../../../site/wallet/llms.txt"), "utf-8"
+  resolve(_dir, "../../../site/wallet/llms.txt"), "utf-8"
 );
 
 const logger = createLogger("wallet.sh");

@@ -1,0 +1,26 @@
+# track.sh
+
+> Shipment tracking for agents. Real-time package status from any carrier.
+
+Base URL: https://track.prim.sh
+Auth: x402 (USDC on Base, chain `eip155:8453`)
+Status: deployed
+
+## Endpoints
+
+- `POST /v1/track` — track a shipment by tracking number and optional carrier.
+
+## Pricing
+
+- Per tracking request.
+
+See human docs at `https://prim.sh/track` for carrier coverage and rate limits.
+
+## Examples
+
+```bash
+# Track a shipment
+curl -X POST https://track.prim.sh/v1/track \
+  -H "X-402-Payment: $TOKEN" \
+  -d '{"tracking_number": "1Z999AA10123456784", "carrier": "ups"}'
+```

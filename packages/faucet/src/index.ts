@@ -1,10 +1,13 @@
 import { Hono } from "hono";
 import { isAddress, getAddress } from "viem";
 import { readFileSync } from "node:fs";
-import { resolve } from "node:path";
+import { resolve, dirname } from "node:path";
+import { fileURLToPath } from "node:url";
+
+const _dir = import.meta.dir ?? dirname(fileURLToPath(import.meta.url));
 
 const LLMS_TXT = readFileSync(
-  resolve(import.meta.dir, "../../../site/faucet/llms.txt"), "utf-8"
+  resolve(_dir, "../../../site/faucet/llms.txt"), "utf-8"
 );
 import { getNetworkConfig, createWalletAllowlistChecker, createLogger, metricsMiddleware, metricsHandler, requestIdMiddleware } from "@primsh/x402-middleware";
 import { RateLimiter } from "./rate-limit.ts";
@@ -197,11 +200,11 @@ app.get("/v1/faucet/status", (c) => {
     address: normalizedAddress,
     usdc: {
       available: usdcCheck.allowed,
-      retryAfterMs: usdcCheck.retryAfterMs,
+      retry_after_ms: usdcCheck.retryAfterMs,
     },
     eth: {
       available: ethCheck.allowed,
-      retryAfterMs: ethCheck.retryAfterMs,
+      retry_after_ms: ethCheck.retryAfterMs,
     },
   });
 });

@@ -1,10 +1,13 @@
 import { Hono } from "hono";
 import { bodyLimit } from "hono/body-limit";
 import { readFileSync } from "node:fs";
-import { resolve } from "node:path";
+import { resolve, dirname } from "node:path";
+import { fileURLToPath } from "node:url";
+
+const _dir = import.meta.dir ?? dirname(fileURLToPath(import.meta.url));
 
 const LLMS_TXT = readFileSync(
-  resolve(import.meta.dir, "../../../site/store/llms.txt"), "utf-8"
+  resolve(_dir, "../../../site/store/llms.txt"), "utf-8"
 );
 import { createAgentStackMiddleware, createLogger, createWalletAllowlistChecker, getNetworkConfig, metricsMiddleware, metricsHandler, requestIdMiddleware, forbidden, notFound, invalidRequest } from "@primsh/x402-middleware";
 import type { ApiError } from "@primsh/x402-middleware";
