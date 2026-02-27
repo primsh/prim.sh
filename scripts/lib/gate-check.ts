@@ -21,7 +21,10 @@ export interface GateResult {
   warnings: string[];
 }
 
-const VPS_IP = process.env.VPS_IP ?? "<VPS_IP>";
+const VPS_IP = process.env.VPS_IP;
+if (!VPS_IP) {
+  throw new Error("VPS_IP not set. Add it to .env or pass as env var.");
+}
 
 function grep(dir: string, pattern: string): boolean {
   try {

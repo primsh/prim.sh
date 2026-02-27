@@ -26,7 +26,11 @@ import { loadPrimitives } from "./lib/primitives.js";
 
 // ─── Config ──────────────────────────────────────────────────────────────────
 
-const VPS_IP = process.env.VPS_IP ?? "<VPS_IP>";
+const VPS_IP = process.env.VPS_IP;
+if (!VPS_IP) {
+  console.error("Error: VPS_IP not set. Add it to .env or pass as env var.");
+  process.exit(1);
+}
 
 const _prims = loadPrimitives();
 const PRIMITIVES = _prims.filter((p) => p.port).map((p) => p.id);
