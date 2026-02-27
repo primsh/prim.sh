@@ -1,8 +1,10 @@
 import { Hono } from "hono";
 import { isAddress, getAddress } from "viem";
-import { getNetworkConfig, createWalletAllowlistChecker, metricsMiddleware, metricsHandler, requestIdMiddleware } from "@primsh/x402-middleware";
+import { getNetworkConfig, createWalletAllowlistChecker, createLogger, metricsMiddleware, metricsHandler, requestIdMiddleware } from "@primsh/x402-middleware";
 import { RateLimiter } from "./rate-limit.ts";
 import { dripUsdc, dripEth } from "./service.ts";
+
+const logger = createLogger("faucet.sh");
 
 const WALLET_INTERNAL_URL = process.env.WALLET_INTERNAL_URL ?? "http://127.0.0.1:3001";
 const checkAllowlist = createWalletAllowlistChecker(WALLET_INTERNAL_URL);
@@ -73,7 +75,8 @@ app.post("/v1/faucet/usdc", async (c) => {
       );
     }
     address = getAddress(body.address);
-  } catch {
+  } catch (err) {
+    logger.warn("JSON parse failed on POST /v1/faucet/usdc", { error: String(err) });
     return c.json({ error: { code: "invalid_request", message: "Invalid JSON body" } }, 400);
   }
 
@@ -124,7 +127,8 @@ app.post("/v1/faucet/eth", async (c) => {
       );
     }
     address = getAddress(body.address);
-  } catch {
+  } catch (err) {
+    logger.warn("JSON parse failed on POST /v1/faucet/eth", { error: String(err) });
     return c.json({ error: { code: "invalid_request", message: "Invalid JSON body" } }, 400);
   }
 

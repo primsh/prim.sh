@@ -237,6 +237,7 @@ describe("HTTP /v1/track", () => {
   // Import app after setting required env vars
   beforeEach(() => {
     process.env.PRIM_NETWORK = "eip155:8453";
+    process.env.PRIM_PAY_TO = "0x0000000000000000000000000000000000000001";
     resetClient();
   });
 

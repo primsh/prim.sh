@@ -1,6 +1,7 @@
 import { Hono } from "hono";
 import { bodyLimit } from "hono/body-limit";
-import { createAgentStackMiddleware, createWalletAllowlistChecker, metricsMiddleware, metricsHandler, requestIdMiddleware, parsePaginationParams } from "@primsh/x402-middleware";
+import { createAgentStackMiddleware, createLogger, createWalletAllowlistChecker, metricsMiddleware, metricsHandler, requestIdMiddleware, forbidden, notFound, invalidRequest, serviceError } from "@primsh/x402-middleware";
+import type { ApiError } from "@primsh/x402-middleware";
 import type {
   CreateServerRequest,
   CreateServerResponse,
@@ -15,7 +16,6 @@ import type {
   CreateSshKeyRequest,
   SshKeyResponse,
   SshKeyListResponse,
-  ApiError,
 } from "./api.ts";
 import {
   createServer,
@@ -34,8 +34,13 @@ import {
 
 import { getNetworkConfig } from "@primsh/x402-middleware";
 
+const logger = createLogger("spawn.sh");
+
 const networkConfig = getNetworkConfig();
-const PAY_TO_ADDRESS = process.env.PRIM_PAY_TO ?? "0x0000000000000000000000000000000000000000";
+const PAY_TO_ADDRESS = process.env.PRIM_PAY_TO;
+if (!PAY_TO_ADDRESS) {
+  throw new Error("[spawn.sh] PRIM_PAY_TO environment variable is required");
+}
 const NETWORK = networkConfig.network;
 const WALLET_INTERNAL_URL = process.env.WALLET_INTERNAL_URL ?? "http://127.0.0.1:3001";
 const checkAllowlist = createWalletAllowlistChecker(WALLET_INTERNAL_URL);
@@ -54,22 +59,6 @@ const SPAWN_ROUTES = {
   "GET /v1/ssh-keys": "$0.001",
   "DELETE /v1/ssh-keys/[id]": "$0.001",
 } as const;
-
-function forbidden(message: string): ApiError {
-  return { error: { code: "forbidden", message } };
-}
-
-function serviceError(code: string, message: string): ApiError {
-  return { error: { code, message } };
-}
-
-function notFound(message: string): ApiError {
-  return { error: { code: "not_found", message } };
-}
-
-function invalidRequest(message: string): ApiError {
-  return { error: { code: "invalid_request", message } };
-}
 
 function providerError(message: string): ApiError {
   return { error: { code: "provider_error", message } };
@@ -141,7 +130,8 @@ app.post("/v1/servers", async (c) => {
   let body: CreateServerRequest;
   try {
     body = await c.req.json<CreateServerRequest>();
-  } catch {
+  } catch (err) {
+    logger.warn("JSON parse failed on POST /v1/servers", { error: String(err) });
     return c.json(invalidRequest("Invalid JSON body"), 400);
   }
 
@@ -162,7 +152,10 @@ app.get("/v1/servers", (c) => {
     return c.json(forbidden("No wallet address in payment"), 403);
   }
 
-  const { limit, page } = parsePaginationParams(c.req.query());
+  const limitParam = c.req.query("limit");
+  const pageParam = c.req.query("page");
+  const limit = Math.min(Number(limitParam) || 20, 100);
+  const page = Math.max(Number(pageParam) || 1, 1);
 
   const data = listServers(caller, limit, page);
   return c.json(data as ServerListResponse, 200);
@@ -253,7 +246,8 @@ app.post("/v1/servers/:id/resize", async (c) => {
   let body: ResizeRequest;
   try {
     body = await c.req.json<ResizeRequest>();
-  } catch {
+  } catch (err) {
+    logger.warn("JSON parse failed on POST /v1/servers/:id/resize", { error: String(err) });
     return c.json(invalidRequest("Invalid JSON body"), 400);
   }
 
@@ -275,7 +269,8 @@ app.post("/v1/servers/:id/rebuild", async (c) => {
   let body: RebuildRequest;
   try {
     body = await c.req.json<RebuildRequest>();
-  } catch {
+  } catch (err) {
+    logger.warn("JSON parse failed on POST /v1/servers/:id/rebuild", { error: String(err) });
     return c.json(invalidRequest("Invalid JSON body"), 400);
   }
 
@@ -297,7 +292,8 @@ app.post("/v1/ssh-keys", async (c) => {
   let body: CreateSshKeyRequest;
   try {
     body = await c.req.json<CreateSshKeyRequest>();
-  } catch {
+  } catch (err) {
+    logger.warn("JSON parse failed on POST /v1/ssh-keys", { error: String(err) });
     return c.json(invalidRequest("Invalid JSON body"), 400);
   }
 

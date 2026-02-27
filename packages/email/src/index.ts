@@ -1,8 +1,8 @@
 import { Hono } from "hono";
 import { bodyLimit } from "hono/body-limit";
-import { createAgentStackMiddleware, createWalletAllowlistChecker, getNetworkConfig, metricsMiddleware, metricsHandler, requestIdMiddleware, parsePaginationParams } from "@primsh/x402-middleware";
+import { createAgentStackMiddleware, createLogger, createWalletAllowlistChecker, getNetworkConfig, metricsMiddleware, metricsHandler, requestIdMiddleware, forbidden, notFound, invalidRequest, serviceError } from "@primsh/x402-middleware";
+import type { ApiError } from "@primsh/x402-middleware";
 import type {
-  ApiError,
   CreateMailboxRequest,
   RenewMailboxRequest,
   SendMessageRequest,
@@ -41,6 +41,8 @@ import {
   verifyDomain,
   deleteDomain,
 } from "./service.ts";
+
+const logger = createLogger("email.sh");
 
 const LLMS_TXT = `# email.prim.sh — API Reference
 
@@ -190,7 +192,10 @@ All resources are scoped to the wallet address that paid to create them. Your wa
 `;
 
 const networkConfig = getNetworkConfig();
-const PAY_TO_ADDRESS = process.env.PRIM_PAY_TO ?? "0x0000000000000000000000000000000000000000";
+const PAY_TO_ADDRESS = process.env.PRIM_PAY_TO;
+if (!PAY_TO_ADDRESS) {
+  throw new Error("[email.sh] PRIM_PAY_TO environment variable is required");
+}
 const NETWORK = networkConfig.network;
 const WALLET_INTERNAL_URL = process.env.WALLET_INTERNAL_URL ?? "http://127.0.0.1:3001";
 const checkAllowlist = createWalletAllowlistChecker(WALLET_INTERNAL_URL);
@@ -214,24 +219,8 @@ const EMAIL_ROUTES = {
   "DELETE /v1/domains/[id]": "$0.01",
 } as const;
 
-function forbidden(message: string): ApiError {
-  return { error: { code: "forbidden", message } };
-}
-
-function notFound(message: string): ApiError {
-  return { error: { code: "not_found", message } };
-}
-
-function invalidRequest(message: string): ApiError {
-  return { error: { code: "invalid_request", message } };
-}
-
 function stalwartError(message: string): ApiError {
   return { error: { code: "stalwart_error", message } };
-}
-
-function serviceError(code: string, message: string): ApiError {
-  return { error: { code, message } };
 }
 
 type AppVariables = { walletAddress: string | undefined };
@@ -308,7 +297,8 @@ app.post("/v1/mailboxes", async (c) => {
   let body: CreateMailboxRequest;
   try {
     body = await c.req.json<CreateMailboxRequest>();
-  } catch {
+  } catch (err) {
+    logger.warn("JSON parse failed on POST /v1/mailboxes", { error: String(err) });
     body = {};
   }
 
@@ -327,10 +317,11 @@ app.get("/v1/mailboxes", (c) => {
   const caller = c.get("walletAddress");
   if (!caller) return c.json(forbidden("No wallet address in payment"), 403);
 
-  const { limit, page } = parsePaginationParams(c.req.query());
+  const perPage = Math.min(Number(c.req.query("per_page")) || 25, 100);
+  const page = Math.max(Number(c.req.query("page")) || 1, 1);
   const includeExpired = c.req.query("include_expired") === "true";
 
-  const data = listMailboxes(caller, page, limit, includeExpired);
+  const data = listMailboxes(caller, page, perPage, includeExpired);
   return c.json(data as MailboxListResponse, 200);
 });
 
@@ -365,7 +356,8 @@ app.post("/v1/mailboxes/:id/renew", async (c) => {
   let body: RenewMailboxRequest;
   try {
     body = await c.req.json<RenewMailboxRequest>();
-  } catch {
+  } catch (err) {
+    logger.warn("JSON parse failed on POST /v1/mailboxes/:id/renew", { error: String(err) });
     body = {};
   }
 
@@ -384,8 +376,8 @@ app.get("/v1/mailboxes/:id/messages", async (c) => {
   const caller = c.get("walletAddress");
   if (!caller) return c.json(forbidden("No wallet address in payment"), 403);
 
-  const { limit, cursor } = parsePaginationParams(c.req.query());
-  const position = cursor ? Math.max(Number(cursor), 0) : Math.max(Number(c.req.query("position")) || 0, 0);
+  const limit = Math.min(Math.max(Number(c.req.query("limit")) || 20, 1), 100);
+  const position = Math.max(Number(c.req.query("position")) || 0, 0);
   const folder = (c.req.query("folder") ?? "inbox") as "inbox" | "drafts" | "sent" | "all";
   if (!["inbox", "drafts", "sent", "all"].includes(folder)) {
     return c.json(invalidRequest("folder must be inbox, drafts, sent, or all"), 400);
@@ -422,7 +414,8 @@ app.post("/v1/mailboxes/:id/send", async (c) => {
   let body: SendMessageRequest;
   try {
     body = await c.req.json<SendMessageRequest>();
-  } catch {
+  } catch (err) {
+    logger.warn("JSON parse failed on POST /v1/mailboxes/:id/send", { error: String(err) });
     return c.json(invalidRequest("Invalid JSON body"), 400);
   }
 
@@ -444,7 +437,8 @@ app.post("/v1/mailboxes/:id/webhooks", async (c) => {
   let body: RegisterWebhookRequest;
   try {
     body = await c.req.json<RegisterWebhookRequest>();
-  } catch {
+  } catch (err) {
+    logger.warn("JSON parse failed on POST /v1/mailboxes/:id/webhooks", { error: String(err) });
     return c.json(invalidRequest("Invalid JSON body"), 400);
   }
 
@@ -491,7 +485,8 @@ app.post("/v1/domains", async (c) => {
   let body: RegisterDomainRequest;
   try {
     body = await c.req.json<RegisterDomainRequest>();
-  } catch {
+  } catch (err) {
+    logger.warn("JSON parse failed on POST /v1/domains", { error: String(err) });
     return c.json(invalidRequest("Invalid JSON body"), 400);
   }
 
@@ -509,9 +504,10 @@ app.get("/v1/domains", (c) => {
   const caller = c.get("walletAddress");
   if (!caller) return c.json(forbidden("No wallet address in payment"), 403);
 
-  const { limit, page } = parsePaginationParams(c.req.query());
+  const perPage = Math.min(Number(c.req.query("per_page")) || 25, 100);
+  const page = Math.max(Number(c.req.query("page")) || 1, 1);
 
-  const data = listDomains(caller, page, limit);
+  const data = listDomains(caller, page, perPage);
   return c.json(data as DomainListResponse, 200);
 });
 

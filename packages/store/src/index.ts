@@ -1,8 +1,8 @@
 import { Hono } from "hono";
 import { bodyLimit } from "hono/body-limit";
-import { createAgentStackMiddleware, createWalletAllowlistChecker, getNetworkConfig, metricsMiddleware, metricsHandler, requestIdMiddleware, parsePaginationParams } from "@primsh/x402-middleware";
+import { createAgentStackMiddleware, createLogger, createWalletAllowlistChecker, getNetworkConfig, metricsMiddleware, metricsHandler, requestIdMiddleware, forbidden, notFound, invalidRequest } from "@primsh/x402-middleware";
+import type { ApiError } from "@primsh/x402-middleware";
 import type {
-  ApiError,
   CreateBucketRequest,
   CreateBucketResponse,
   BucketResponse,
@@ -28,8 +28,13 @@ import {
   reconcileUsage,
 } from "./service.ts";
 
+const logger = createLogger("store.sh");
+
 const networkConfig = getNetworkConfig();
-const PAY_TO_ADDRESS = process.env.PRIM_PAY_TO ?? "0x0000000000000000000000000000000000000000";
+const PAY_TO_ADDRESS = process.env.PRIM_PAY_TO;
+if (!PAY_TO_ADDRESS) {
+  throw new Error("[store.sh] PRIM_PAY_TO environment variable is required");
+}
 const NETWORK = networkConfig.network;
 const WALLET_INTERNAL_URL = process.env.WALLET_INTERNAL_URL ?? "http://127.0.0.1:3001";
 const checkAllowlist = createWalletAllowlistChecker(WALLET_INTERNAL_URL);
@@ -47,18 +52,6 @@ const STORE_ROUTES = {
   "PUT /v1/buckets/[id]/quota": "$0.01",
   "POST /v1/buckets/[id]/quota/reconcile": "$0.05",
 } as const;
-
-function forbidden(message: string): ApiError {
-  return { error: { code: "forbidden", message } };
-}
-
-function notFound(message: string): ApiError {
-  return { error: { code: "not_found", message } };
-}
-
-function invalidRequest(message: string): ApiError {
-  return { error: { code: "invalid_request", message } };
-}
 
 function r2Error(message: string): ApiError {
   return { error: { code: "r2_error", message } };
@@ -151,7 +144,8 @@ app.post("/v1/buckets", async (c) => {
   let body: CreateBucketRequest;
   try {
     body = await c.req.json<CreateBucketRequest>();
-  } catch {
+  } catch (err) {
+    logger.warn("JSON parse failed on POST /v1/buckets", { error: String(err) });
     return c.json(invalidRequest("Invalid JSON body"), 400);
   }
 
@@ -171,7 +165,8 @@ app.get("/v1/buckets", (c) => {
   const caller = c.get("walletAddress");
   if (!caller) return c.json(forbidden("No wallet address in payment"), 403);
 
-  const { limit, page } = parsePaginationParams(c.req.query());
+  const limit = Math.min(Number(c.req.query("limit")) || 20, 100);
+  const page = Math.max(Number(c.req.query("page")) || 1, 1);
 
   const data = listBuckets(caller, limit, page);
   return c.json(data as BucketListResponse, 200);
@@ -238,7 +233,8 @@ app.get("/v1/buckets/:id/objects", async (c) => {
   if (!caller) return c.json(forbidden("No wallet address in payment"), 403);
 
   const prefix = c.req.query("prefix") || undefined;
-  const { limit, cursor } = parsePaginationParams(c.req.query());
+  const limit = Math.min(Number(c.req.query("limit")) || 100, 1000);
+  const cursor = c.req.query("cursor") || undefined;
 
   const result = await listObjects(c.req.param("id"), caller, prefix, limit, cursor);
   if (!result.ok) {
@@ -312,7 +308,8 @@ app.put("/v1/buckets/:id/quota", async (c) => {
   let body: SetQuotaRequest;
   try {
     body = await c.req.json<SetQuotaRequest>();
-  } catch {
+  } catch (err) {
+    logger.warn("JSON parse failed on PUT /v1/buckets/:id/quota", { error: String(err) });
     return c.json(invalidRequest("Invalid JSON body"), 400);
   }
 

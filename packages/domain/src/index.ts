@@ -1,6 +1,7 @@
 import { Hono } from "hono";
 import { bodyLimit } from "hono/body-limit";
-import { createAgentStackMiddleware, createWalletAllowlistChecker, getNetworkConfig, requestIdMiddleware, parsePaginationParams } from "@primsh/x402-middleware";
+import { createAgentStackMiddleware, createWalletAllowlistChecker, createLogger, getNetworkConfig, requestIdMiddleware, forbidden, notFound, invalidRequest } from "@primsh/x402-middleware";
+import type { ApiError } from "@primsh/x402-middleware";
 
 const LLMS_TXT = `# domain.prim.sh — API Reference
 
@@ -196,7 +197,6 @@ All zones are scoped to the wallet address that paid to create them. Registratio
 `;
 import { HTTPFacilitatorClient, encodePaymentRequiredHeader, decodePaymentSignatureHeader } from "@x402/core/http";
 import type {
-  ApiError,
   CreateZoneRequest,
   CreateZoneResponse,
   ZoneResponse,
@@ -244,7 +244,12 @@ import {
 } from "./service.ts";
 import { getQuoteById } from "./db.ts";
 
-const PAY_TO_ADDRESS = process.env.PRIM_PAY_TO ?? "0x0000000000000000000000000000000000000000";
+const logger = createLogger("domain.sh");
+
+const PAY_TO_ADDRESS = process.env.PRIM_PAY_TO;
+if (!PAY_TO_ADDRESS) {
+  throw new Error("[domain.sh] PRIM_PAY_TO environment variable is required");
+}
 const NETWORK = process.env.PRIM_NETWORK ?? "eip155:8453";
 const WALLET_INTERNAL_URL = process.env.WALLET_INTERNAL_URL ?? "http://127.0.0.1:3001";
 const checkAllowlist = createWalletAllowlistChecker(WALLET_INTERNAL_URL);
@@ -270,18 +275,6 @@ const DOMAIN_ROUTES = {
   "PUT /v1/zones/[zone_id]/records/[id]": "$0.001",
   "DELETE /v1/zones/[zone_id]/records/[id]": "$0.001",
 } as const;
-
-function forbidden(message: string): ApiError {
-  return { error: { code: "forbidden", message } };
-}
-
-function notFound(message: string): ApiError {
-  return { error: { code: "not_found", message } };
-}
-
-function invalidRequest(message: string): ApiError {
-  return { error: { code: "invalid_request", message } };
-}
 
 function cloudflareError(message: string): ApiError {
   return { error: { code: "cloudflare_error", message } };
@@ -332,7 +325,8 @@ app.post("/v1/domains/quote", async (c) => {
   let body: QuoteRequest;
   try {
     body = await c.req.json<QuoteRequest>();
-  } catch {
+  } catch (err) {
+    logger.warn("JSON parse failed on POST /v1/domains/quote", { error: String(err) });
     return c.json(invalidRequest("Invalid JSON body"), 400);
   }
 
@@ -351,7 +345,8 @@ app.post("/v1/domains/register", async (c) => {
   let body: { quote_id?: string };
   try {
     body = await c.req.json<{ quote_id?: string }>();
-  } catch {
+  } catch (err) {
+    logger.warn("JSON parse failed on POST /v1/domains/register", { error: String(err) });
     return c.json(invalidRequest("Invalid JSON body"), 400);
   }
 
@@ -400,7 +395,8 @@ app.post("/v1/domains/register", async (c) => {
   let paymentPayload: ReturnType<typeof decodePaymentSignatureHeader>;
   try {
     paymentPayload = decodePaymentSignatureHeader(paymentHeader);
-  } catch {
+  } catch (err) {
+    logger.warn("payment header decode failed", { error: String(err) });
     return c.json(invalidRequest("Invalid payment header"), 400);
   }
 
@@ -435,7 +431,8 @@ app.post("/v1/domains/register", async (c) => {
   try {
     const decoded = paymentPayload as { payload?: { authorization?: { from?: string } }; authorization?: { from?: string }; from?: string };
     callerWallet = decoded.payload?.authorization?.from ?? decoded.authorization?.from ?? decoded.from;
-  } catch {
+  } catch (err) {
+    logger.warn("wallet extraction from payment header failed", { error: String(err) });
     callerWallet = undefined;
   }
   if (!callerWallet) return c.json(forbidden("Could not determine payer wallet"), 403);
@@ -453,7 +450,8 @@ app.post("/v1/domains/recover", async (c) => {
   let body: RecoverRequest;
   try {
     body = await c.req.json<RecoverRequest>();
-  } catch {
+  } catch (err) {
+    logger.warn("JSON parse failed on POST /v1/domains/recover", { error: String(err) });
     return c.json(invalidRequest("Invalid JSON body"), 400);
   }
 
@@ -528,7 +526,8 @@ app.post("/v1/zones", async (c) => {
   let body: CreateZoneRequest;
   try {
     body = await c.req.json<CreateZoneRequest>();
-  } catch {
+  } catch (err) {
+    logger.warn("JSON parse failed on POST /v1/zones", { error: String(err) });
     return c.json(invalidRequest("Invalid JSON body"), 400);
   }
 
@@ -547,7 +546,8 @@ app.get("/v1/zones", (c) => {
   const caller = c.get("walletAddress");
   if (!caller) return c.json(forbidden("No wallet address in payment"), 403);
 
-  const { limit, page } = parsePaginationParams(c.req.query());
+  const limit = Math.min(Number(c.req.query("limit")) || 20, 100);
+  const page = Math.max(Number(c.req.query("page")) || 1, 1);
 
   const data = listZones(caller, limit, page);
   return c.json(data as ZoneListResponse, 200);
@@ -616,7 +616,8 @@ app.post("/v1/zones/:zone_id/mail-setup", async (c) => {
   let body: MailSetupRequest;
   try {
     body = await c.req.json<MailSetupRequest>();
-  } catch {
+  } catch (err) {
+    logger.warn("JSON parse failed on POST /v1/zones/:zone_id/mail-setup", { error: String(err) });
     return c.json(invalidRequest("Invalid JSON body"), 400);
   }
 
@@ -638,7 +639,8 @@ app.post("/v1/zones/:zone_id/records/batch", async (c) => {
   let body: BatchRecordsRequest;
   try {
     body = await c.req.json<BatchRecordsRequest>();
-  } catch {
+  } catch (err) {
+    logger.warn("JSON parse failed on POST /v1/zones/:zone_id/records/batch", { error: String(err) });
     return c.json(invalidRequest("Invalid JSON body"), 400);
   }
 
@@ -661,7 +663,8 @@ app.post("/v1/zones/:zone_id/records", async (c) => {
   let body: CreateRecordRequest;
   try {
     body = await c.req.json<CreateRecordRequest>();
-  } catch {
+  } catch (err) {
+    logger.warn("JSON parse failed on POST /v1/zones/:zone_id/records", { error: String(err) });
     return c.json(invalidRequest("Invalid JSON body"), 400);
   }
 
@@ -709,7 +712,8 @@ app.put("/v1/zones/:zone_id/records/:id", async (c) => {
   let body: UpdateRecordRequest;
   try {
     body = await c.req.json<UpdateRecordRequest>();
-  } catch {
+  } catch (err) {
+    logger.warn("JSON parse failed on PUT /v1/zones/:zone_id/records/:id", { error: String(err) });
     return c.json(invalidRequest("Invalid JSON body"), 400);
   }
 

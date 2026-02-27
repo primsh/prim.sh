@@ -1,9 +1,9 @@
 import { Hono } from "hono";
 import { bodyLimit } from "hono/body-limit";
 import type { ContentfulStatusCode } from "hono/utils/http-status";
-import { createAgentStackMiddleware, createWalletAllowlistChecker, getNetworkConfig, requestIdMiddleware } from "@primsh/x402-middleware";
+import { createAgentStackMiddleware, createWalletAllowlistChecker, createLogger, getNetworkConfig, requestIdMiddleware, forbidden, notFound, invalidRequest } from "@primsh/x402-middleware";
+import type { ApiError } from "@primsh/x402-middleware";
 import type {
-  ApiError,
   CreateTokenRequest,
   MintRequest,
   CreatePoolRequest,
@@ -179,8 +179,13 @@ Error codes:
 All tokens are scoped to the wallet address that paid to create them. You can only access tokens your wallet owns.
 `;
 
+const logger = createLogger("token.sh");
+
 const networkConfig = getNetworkConfig();
-const PAY_TO_ADDRESS = process.env.PRIM_PAY_TO ?? "0x0000000000000000000000000000000000000000";
+const PAY_TO_ADDRESS = process.env.PRIM_PAY_TO;
+if (!PAY_TO_ADDRESS) {
+  throw new Error("[token.sh] PRIM_PAY_TO environment variable is required");
+}
 const NETWORK = networkConfig.network;
 const WALLET_INTERNAL_URL = process.env.WALLET_INTERNAL_URL ?? "http://127.0.0.1:3001";
 const checkAllowlist = createWalletAllowlistChecker(WALLET_INTERNAL_URL);
@@ -195,18 +200,6 @@ const TOKEN_ROUTES = {
   "GET /v1/tokens/[id]/pool": "$0.001",
   "GET /v1/tokens/[id]/pool/liquidity-params": "$0.001",
 } as const;
-
-function forbidden(message: string): ApiError {
-  return { error: { code: "forbidden", message } };
-}
-
-function notFound(message: string): ApiError {
-  return { error: { code: "not_found", message } };
-}
-
-function invalidRequest(message: string): ApiError {
-  return { error: { code: "invalid_request", message } };
-}
 
 function rpcError(message: string): ApiError {
   return { error: { code: "rpc_error", message } };
@@ -265,7 +258,8 @@ app.post("/v1/tokens", async (c) => {
   let body: CreateTokenRequest;
   try {
     body = await c.req.json<CreateTokenRequest>();
-  } catch {
+  } catch (err) {
+    logger.warn("JSON parse failed on POST /v1/tokens", { error: String(err) });
     return c.json(invalidRequest("Invalid JSON body"), 400);
   }
 
@@ -310,7 +304,8 @@ app.post("/v1/tokens/:id/mint", async (c) => {
   let body: MintRequest;
   try {
     body = await c.req.json<MintRequest>();
-  } catch {
+  } catch (err) {
+    logger.warn("JSON parse failed on POST /v1/tokens/:id/mint", { error: String(err) });
     return c.json(invalidRequest("Invalid JSON body"), 400);
   }
 
@@ -350,7 +345,8 @@ app.post("/v1/tokens/:id/pool", async (c) => {
   let body: CreatePoolRequest;
   try {
     body = await c.req.json<CreatePoolRequest>();
-  } catch {
+  } catch (err) {
+    logger.warn("JSON parse failed on POST /v1/tokens/:id/pool", { error: String(err) });
     return c.json(invalidRequest("Invalid JSON body"), 400);
   }
 

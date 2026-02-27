@@ -1,6 +1,7 @@
 import { Hono } from "hono";
 import { bodyLimit } from "hono/body-limit";
-import { createAgentStackMiddleware, createWalletAllowlistChecker, getNetworkConfig, requestIdMiddleware, parsePaginationParams } from "@primsh/x402-middleware";
+import { createAgentStackMiddleware, createWalletAllowlistChecker, createLogger, getNetworkConfig, requestIdMiddleware, forbidden, notFound, invalidRequest } from "@primsh/x402-middleware";
+import type { ApiError } from "@primsh/x402-middleware";
 
 const LLMS_TXT = `# mem.prim.sh — API Reference
 
@@ -131,7 +132,6 @@ All resources are scoped to the wallet address that paid to create them. Your wa
 `;
 
 import type {
-  ApiError,
   CreateCollectionRequest,
   CollectionResponse,
   CollectionListResponse,
@@ -154,8 +154,13 @@ import {
   cacheDelete,
 } from "./service.ts";
 
+const logger = createLogger("mem.sh");
+
 const networkConfig = getNetworkConfig();
-const PAY_TO_ADDRESS = process.env.PRIM_PAY_TO ?? "0x0000000000000000000000000000000000000000";
+const PAY_TO_ADDRESS = process.env.PRIM_PAY_TO;
+if (!PAY_TO_ADDRESS) {
+  throw new Error("[mem.sh] PRIM_PAY_TO environment variable is required");
+}
 const NETWORK = networkConfig.network;
 const WALLET_INTERNAL_URL = process.env.WALLET_INTERNAL_URL ?? "http://127.0.0.1:3001";
 const checkAllowlist = createWalletAllowlistChecker(WALLET_INTERNAL_URL);
@@ -173,18 +178,6 @@ const MEM_ROUTES = {
 } as const;
 
 // ─── Error helpers ────────────────────────────────────────────────────────
-
-function forbidden(message: string): ApiError {
-  return { error: { code: "forbidden", message } };
-}
-
-function notFound(message: string): ApiError {
-  return { error: { code: "not_found", message } };
-}
-
-function invalidRequest(message: string): ApiError {
-  return { error: { code: "invalid_request", message } };
-}
 
 function backendError(code: string, message: string): ApiError {
   return { error: { code, message } };
@@ -237,7 +230,8 @@ app.post("/v1/collections", async (c) => {
   let body: CreateCollectionRequest;
   try {
     body = await c.req.json<CreateCollectionRequest>();
-  } catch {
+  } catch (err) {
+    logger.warn("JSON parse failed on POST /v1/collections", { error: String(err) });
     return c.json(invalidRequest("Invalid JSON body"), 400);
   }
 
@@ -257,7 +251,8 @@ app.get("/v1/collections", (c) => {
   const caller = c.get("walletAddress");
   if (!caller) return c.json(forbidden("No wallet address in payment"), 403);
 
-  const { limit, page } = parsePaginationParams(c.req.query());
+  const limit = Math.min(Number(c.req.query("limit")) || 20, 100);
+  const page = Math.max(Number(c.req.query("page")) || 1, 1);
 
   const data = listCollections(caller, limit, page);
   return c.json(data as CollectionListResponse, 200);
@@ -300,7 +295,8 @@ app.post("/v1/collections/:id/upsert", async (c) => {
   let body: UpsertRequest;
   try {
     body = await c.req.json<UpsertRequest>();
-  } catch {
+  } catch (err) {
+    logger.warn("JSON parse failed on POST /v1/collections/:id/upsert", { error: String(err) });
     return c.json(invalidRequest("Invalid JSON body"), 400);
   }
 
@@ -322,7 +318,8 @@ app.post("/v1/collections/:id/query", async (c) => {
   let body: QueryRequest;
   try {
     body = await c.req.json<QueryRequest>();
-  } catch {
+  } catch (err) {
+    logger.warn("JSON parse failed on POST /v1/collections/:id/query", { error: String(err) });
     return c.json(invalidRequest("Invalid JSON body"), 400);
   }
 
@@ -346,7 +343,8 @@ app.put("/v1/cache/:namespace/:key", async (c) => {
   let body: CacheSetRequest;
   try {
     body = await c.req.json<CacheSetRequest>();
-  } catch {
+  } catch (err) {
+    logger.warn("JSON parse failed on PUT /v1/cache/:namespace/:key", { error: String(err) });
     return c.json(invalidRequest("Invalid JSON body"), 400);
   }
 

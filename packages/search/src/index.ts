@@ -1,11 +1,17 @@
 import { Hono } from "hono";
 import { bodyLimit } from "hono/body-limit";
-import { createAgentStackMiddleware, createWalletAllowlistChecker, getNetworkConfig, metricsMiddleware, metricsHandler, requestIdMiddleware } from "@primsh/x402-middleware";
-import type { SearchRequest, ExtractRequest, ApiError } from "./api.ts";
+import { createAgentStackMiddleware, createWalletAllowlistChecker, createLogger, getNetworkConfig, metricsMiddleware, metricsHandler, requestIdMiddleware, invalidRequest } from "@primsh/x402-middleware";
+import type { ApiError } from "@primsh/x402-middleware";
+import type { SearchRequest, ExtractRequest } from "./api.ts";
 import { searchWeb, searchNews, extractUrls } from "./service.ts";
 
+const logger = createLogger("search.sh");
+
 const networkConfig = getNetworkConfig();
-const PAY_TO_ADDRESS = process.env.PRIM_PAY_TO ?? "0x0000000000000000000000000000000000000000";
+const PAY_TO_ADDRESS = process.env.PRIM_PAY_TO;
+if (!PAY_TO_ADDRESS) {
+  throw new Error("[search.sh] PRIM_PAY_TO environment variable is required");
+}
 const NETWORK = networkConfig.network;
 const WALLET_INTERNAL_URL = process.env.WALLET_INTERNAL_URL ?? "http://127.0.0.1:3001";
 const checkAllowlist = createWalletAllowlistChecker(WALLET_INTERNAL_URL);
@@ -15,10 +21,6 @@ const SEARCH_ROUTES = {
   "POST /v1/search/news": "$0.01",
   "POST /v1/extract": "$0.005",
 } as const;
-
-function invalidRequest(message: string): ApiError {
-  return { error: { code: "invalid_request", message } };
-}
 
 function providerError(message: string): ApiError {
   return { error: { code: "provider_error", message } };
@@ -80,7 +82,8 @@ app.post("/v1/search", async (c) => {
   let body: SearchRequest;
   try {
     body = await c.req.json<SearchRequest>();
-  } catch {
+  } catch (err) {
+    logger.warn("JSON parse failed on POST /v1/search", { error: String(err) });
     return c.json(invalidRequest("Invalid JSON body"), 400);
   }
 
@@ -106,7 +109,8 @@ app.post("/v1/search/news", async (c) => {
   let body: SearchRequest;
   try {
     body = await c.req.json<SearchRequest>();
-  } catch {
+  } catch (err) {
+    logger.warn("JSON parse failed on POST /v1/search/news", { error: String(err) });
     return c.json(invalidRequest("Invalid JSON body"), 400);
   }
 
@@ -132,7 +136,8 @@ app.post("/v1/extract", async (c) => {
   let body: ExtractRequest;
   try {
     body = await c.req.json<ExtractRequest>();
-  } catch {
+  } catch (err) {
+    logger.warn("JSON parse failed on POST /v1/extract", { error: String(err) });
     return c.json(invalidRequest("Invalid JSON body"), 400);
   }
 

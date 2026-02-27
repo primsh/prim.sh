@@ -1,6 +1,6 @@
 import { Hono } from "hono";
 import { bodyLimit } from "hono/body-limit";
-import { createAgentStackMiddleware, getNetworkConfig, metricsMiddleware, metricsHandler, requestIdMiddleware, parsePaginationParams } from "@primsh/x402-middleware";
+import { createAgentStackMiddleware, createLogger, getNetworkConfig, metricsMiddleware, metricsHandler, requestIdMiddleware, forbidden, notFound } from "@primsh/x402-middleware";
 import { addToAllowlist, removeFromAllowlist, isAllowed, createAllowlistChecker } from "@primsh/x402-middleware/allowlist-db";
 import { join } from "node:path";
 import type {
@@ -34,8 +34,13 @@ import {
 import type { FundRequestCreateRequest, FundRequestDenyRequest, PolicyUpdateRequest, PauseRequest, ResumeRequest } from "./api.ts";
 import { pause, resume, getState } from "./circuit-breaker.ts";
 
+const logger = createLogger("wallet.sh");
+
 const networkConfig = getNetworkConfig();
-const PAY_TO_ADDRESS = process.env.PRIM_PAY_TO ?? "0x0000000000000000000000000000000000000000";
+const PAY_TO_ADDRESS = process.env.PRIM_PAY_TO;
+if (!PAY_TO_ADDRESS) {
+  throw new Error("[wallet.sh] PRIM_PAY_TO environment variable is required");
+}
 const NETWORK = networkConfig.network;
 const INTERNAL_KEY = process.env.PRIM_INTERNAL_KEY;
 const ALLOWLIST_DB_PATH = process.env.PRIM_ALLOWLIST_DB ?? join(process.env.PRIM_DATA_DIR ?? "/var/lib/prim", "allowlist.db");
@@ -54,14 +59,6 @@ const WALLET_ROUTES = {
   "POST /v1/wallets/[address]/pause": "$0.001",
   "POST /v1/wallets/[address]/resume": "$0.001",
 } as const;
-
-function forbidden(message: string): ApiError {
-  return { error: { code: "forbidden", message } };
-}
-
-function notFound(message: string): ApiError {
-  return { error: { code: "not_found", message } };
-}
 
 type AppVariables = { walletAddress: string | undefined };
 const app = new Hono<{ Variables: AppVariables }>();
@@ -132,7 +129,8 @@ app.post("/v1/wallets", async (c) => {
   let body: Partial<WalletRegisterRequest>;
   try {
     body = await c.req.json<Partial<WalletRegisterRequest>>();
-  } catch {
+  } catch (err) {
+    logger.warn("JSON parse failed on POST /v1/wallets", { error: String(err) });
     return c.json({ error: { code: "invalid_request", message: "Invalid JSON body" } } as ApiError, 400);
   }
 
@@ -166,9 +164,11 @@ app.get("/v1/wallets", async (c) => {
     return c.json(forbidden("No wallet address in payment"), 403);
   }
 
-  const { limit, cursor } = parsePaginationParams(c.req.query());
+  const limitParam = c.req.query("limit");
+  const limit = Math.min(Number(limitParam) || 20, 100);
+  const after = c.req.query("after");
 
-  const result = await listWallets(caller, limit, cursor);
+  const result = await listWallets(caller, limit, after);
   return c.json(result as WalletListResponse, 200);
 });
 
@@ -217,7 +217,8 @@ app.post("/v1/wallets/:address/fund-request", async (c) => {
   let body: Partial<FundRequestCreateRequest>;
   try {
     body = await c.req.json<Partial<FundRequestCreateRequest>>();
-  } catch {
+  } catch (err) {
+    logger.warn("JSON parse failed on POST /v1/wallets/:address/fund-request", { error: String(err) });
     return c.json({ error: { code: "invalid_request", message: "Invalid JSON body" } } as ApiError, 400);
   }
 
@@ -242,9 +243,11 @@ app.get("/v1/wallets/:address/fund-requests", (c) => {
     return c.json(forbidden("No wallet address in payment"), 403);
   }
 
-  const { limit, cursor } = parsePaginationParams(c.req.query());
+  const limitParam = c.req.query("limit");
+  const limit = Math.min(Number(limitParam) || 20, 100);
+  const after = c.req.query("after");
 
-  const result = listFundRequests(address, caller, limit, cursor);
+  const result = listFundRequests(address, caller, limit, after);
   if (!result.ok) {
     const { status, code, message } = result;
     return c.json({ error: { code, message } } as ApiError, status as 403 | 404);
@@ -280,7 +283,8 @@ app.post("/v1/fund-requests/:id/deny", async (c) => {
   try {
     const body = await c.req.json<Partial<FundRequestDenyRequest>>();
     reason = body.reason;
-  } catch {
+  } catch (err) {
+    logger.warn("JSON parse failed on POST /v1/fund-requests/:id/deny", { error: String(err) });
     // No body or invalid JSON — reason is optional
   }
 
@@ -316,7 +320,8 @@ app.put("/v1/wallets/:address/policy", async (c) => {
   let body: Partial<PolicyUpdateRequest>;
   try {
     body = await c.req.json<Partial<PolicyUpdateRequest>>();
-  } catch {
+  } catch (err) {
+    logger.warn("JSON parse failed on PUT /v1/wallets/:address/policy", { error: String(err) });
     return c.json({ error: { code: "invalid_request", message: "Invalid JSON body" } } as ApiError, 400);
   }
 
@@ -338,7 +343,8 @@ app.post("/v1/wallets/:address/pause", async (c) => {
   try {
     const body = await c.req.json<Partial<PauseRequest>>();
     scope = body.scope;
-  } catch {
+  } catch (err) {
+    logger.warn("JSON parse failed on POST /v1/wallets/:address/pause", { error: String(err) });
     // scope optional, default to "all"
   }
   const effectiveScope = (scope ?? "all") as import("./api.ts").PauseScope;
@@ -365,7 +371,8 @@ app.post("/v1/wallets/:address/resume", async (c) => {
   try {
     const body = await c.req.json<Partial<ResumeRequest>>();
     scope = body.scope;
-  } catch {
+  } catch (err) {
+    logger.warn("JSON parse failed on POST /v1/wallets/:address/resume", { error: String(err) });
     // scope optional, default to "all"
   }
   const effectiveScope = (scope ?? "all") as import("./api.ts").PauseScope;
@@ -390,7 +397,8 @@ app.post("/v1/admin/circuit-breaker/pause", async (c) => {
   try {
     const body = await c.req.json<{ scope?: string }>();
     scope = body.scope;
-  } catch {
+  } catch (err) {
+    logger.warn("JSON parse failed on POST /v1/admin/circuit-breaker/pause", { error: String(err) });
     return c.json({ error: { code: "invalid_request", message: "Invalid JSON body" } } as ApiError, 400);
   }
 
@@ -408,7 +416,8 @@ app.post("/v1/admin/circuit-breaker/resume", async (c) => {
   try {
     const body = await c.req.json<{ scope?: string }>();
     scope = body.scope;
-  } catch {
+  } catch (err) {
+    logger.warn("JSON parse failed on POST /v1/admin/circuit-breaker/resume", { error: String(err) });
     return c.json({ error: { code: "invalid_request", message: "Invalid JSON body" } } as ApiError, 400);
   }
 
@@ -447,7 +456,8 @@ app.post("/internal/allowlist/add", async (c) => {
   let body: { address?: string; added_by?: string; note?: string };
   try {
     body = await c.req.json();
-  } catch {
+  } catch (err) {
+    logger.warn("JSON parse failed on POST /internal/allowlist/add", { error: String(err) });
     return c.json({ error: { code: "invalid_request", message: "Invalid JSON body" } }, 400);
   }
 

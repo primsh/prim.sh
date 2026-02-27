@@ -3,15 +3,23 @@ import { bodyLimit } from "hono/body-limit";
 import {
   createAgentStackMiddleware,
   createWalletAllowlistChecker,
+  createLogger,
   getNetworkConfig,
   requestIdMiddleware,
+  invalidRequest,
+  notFound,
 } from "@primsh/x402-middleware";
-import type { ApiError } from "./api.ts";
+import type { ApiError } from "@primsh/x402-middleware";
 import type { TrackRequest } from "./api.ts";
 import { trackPackage } from "./service.ts";
 
+const logger = createLogger("track.sh");
+
 const networkConfig = getNetworkConfig();
-const PAY_TO_ADDRESS = process.env.PRIM_PAY_TO ?? "0x0000000000000000000000000000000000000000";
+const PAY_TO_ADDRESS = process.env.PRIM_PAY_TO;
+if (!PAY_TO_ADDRESS) {
+  throw new Error("[track.sh] PRIM_PAY_TO environment variable is required");
+}
 const NETWORK = networkConfig.network;
 const WALLET_INTERNAL_URL = process.env.WALLET_INTERNAL_URL ?? "http://127.0.0.1:3001";
 const checkAllowlist = createWalletAllowlistChecker(WALLET_INTERNAL_URL);
@@ -20,16 +28,8 @@ const TRACK_ROUTES = {
   "POST /v1/track": "$0.05",
 } as const;
 
-function invalidRequest(message: string): ApiError {
-  return { error: { code: "invalid_request", message } };
-}
-
 function providerError(message: string): ApiError {
   return { error: { code: "provider_error", message } };
-}
-
-function notFound(message: string): ApiError {
-  return { error: { code: "not_found", message } };
 }
 
 function rateLimited(message: string): ApiError {
@@ -72,7 +72,8 @@ app.post("/v1/track", async (c) => {
   let body: TrackRequest;
   try {
     body = await c.req.json<TrackRequest>();
-  } catch {
+  } catch (err) {
+    logger.warn("JSON parse failed on POST /v1/track", { error: String(err) });
     return c.json(invalidRequest("Invalid JSON body"), 400);
   }
 

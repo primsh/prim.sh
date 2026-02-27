@@ -17,6 +17,13 @@ vi.mock("@primsh/x402-middleware", () => ({
     async (_c: unknown, next: () => Promise<void>): Promise<void> => {
       await next();
     },
+  createLogger: () => ({
+    debug() {},
+    info() {},
+    warn() {},
+    error() {},
+    child() { return this; },
+  }),
   createWalletAllowlistChecker: () => async () => true,
   getNetworkConfig: () => ({
     network: "eip155:8453",
@@ -28,6 +35,10 @@ vi.mock("@primsh/x402-middleware", () => ({
   metricsMiddleware: () => async (_c: unknown, next: () => Promise<void>) => { await next(); },
   metricsHandler: () => (_c: unknown) => new Response("{}"),
   requestIdMiddleware: () => async (_c: unknown, next: () => Promise<void>) => { await next(); },
+  forbidden: (message: string) => ({ error: { code: "forbidden", message } }),
+  notFound: (message: string) => ({ error: { code: "not_found", message } }),
+  invalidRequest: (message: string) => ({ error: { code: "invalid_request", message } }),
+  serviceError: (code: string, message: string) => ({ error: { code, message } }),
 }));
 
 describe("store.sh app", () => {
