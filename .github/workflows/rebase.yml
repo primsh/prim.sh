@@ -1,0 +1,73 @@
+name: Auto-Rebase
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: auto-rebase
+  cancel-in-progress: true
+
+jobs:
+  rebase:
+    name: Rebase conflicted PRs
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: write
+      pull-requests: write
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Configure git
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+      - name: Find and forward-merge conflicted PRs
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          # Give GitHub time to recalculate mergeability after main moved
+          sleep 15
+
+          mapfile -t entries < <(gh pr list --state open --json number,headRefName,mergeable \
+            --jq '.[] | select(.mergeable == "CONFLICTING") | "\(.number) \(.headRefName)"')
+
+          if [ ${#entries[@]} -eq 0 ]; then
+            echo "No conflicted PRs found"
+            exit 0
+          fi
+
+          for entry in "${entries[@]}"; do
+            pr_num=$(echo "$entry" | cut -d' ' -f1)
+            branch=$(echo "$entry" | cut -d' ' -f2)
+            echo "::group::PR #$pr_num ($branch)"
+
+            git fetch origin "$branch"
+            git checkout -B "$branch" "origin/$branch"
+
+            if git merge origin/main --no-edit; then
+              echo "Clean merge succeeded — pushing"
+              git push origin "$branch"
+            else
+              echo "Merge conflicts detected — requesting Claude resolution"
+              git merge --abort
+              gh pr comment "$pr_num" --body "$(cat <<'BODY'
+          @claude This PR has merge conflicts with main. Resolve them:
+
+          1. Run `git merge origin/main` on this branch
+          2. Resolve all conflict markers in the affected files
+          3. Prefer the PR's changes when the intent is clear; prefer main's changes for infrastructure/config
+          4. Commit the merge resolution and push
+          BODY
+              )"
+            fi
+
+            git checkout main
+            echo "::endgroup::"
+          done
