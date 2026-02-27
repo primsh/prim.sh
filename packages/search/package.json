@@ -4,6 +4,15 @@
   "private": false,
   "type": "module",
   "main": "src/index.ts",
+  "description": "Web search via Tavily API",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/primsh/prim",
+    "directory": "packages/search"
+  },
+  "license": "Apache-2.0",
+  "author": "Prim (https://prim.sh)",
+  "keywords": ["prim", "x402", "search", "tavily"],
   "scripts": {
     "dev": "bun run src/index.ts",
     "start": "bun run src/index.ts",

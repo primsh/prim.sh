@@ -5,6 +5,15 @@
   "type": "module",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
+  "description": "Shared x402 payment middleware for Hono",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/primsh/prim",
+    "directory": "packages/x402-middleware"
+  },
+  "license": "Apache-2.0",
+  "author": "Prim (https://prim.sh)",
+  "keywords": ["prim", "x402", "middleware", "hono", "payment"],
   "dependencies": {
     "@x402/core": "^2.4.0",
     "@x402/evm": "^2.4.0",

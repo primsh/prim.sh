@@ -4,6 +4,15 @@
   "private": false,
   "type": "module",
   "main": "src/index.ts",
+  "description": "Encrypted keystore and CLI for Prim wallet management",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/primsh/prim",
+    "directory": "packages/keystore"
+  },
+  "license": "Apache-2.0",
+  "author": "Prim (https://prim.sh)",
+  "keywords": ["prim", "x402", "keystore", "crypto", "wallet", "cli"],
   "bin": {
     "prim": "src/cli.ts"
   },

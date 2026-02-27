@@ -4,6 +4,15 @@
   "private": false,
   "type": "module",
   "main": "src/index.ts",
+  "description": "Object storage via Cloudflare R2",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/primsh/prim",
+    "directory": "packages/store"
+  },
+  "license": "Apache-2.0",
+  "author": "Prim (https://prim.sh)",
+  "keywords": ["prim", "x402", "storage", "r2", "s3"],
   "scripts": {
     "dev": "bun run src/index.ts",
     "start": "bun run src/index.ts",

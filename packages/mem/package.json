@@ -4,6 +4,15 @@
   "private": false,
   "type": "module",
   "main": "src/index.ts",
+  "description": "Vector memory storage via Qdrant",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/primsh/prim",
+    "directory": "packages/mem"
+  },
+  "license": "Apache-2.0",
+  "author": "Prim (https://prim.sh)",
+  "keywords": ["prim", "x402", "vector", "memory", "qdrant"],
   "scripts": {
     "dev": "bun run src/index.ts",
     "start": "bun run src/index.ts",

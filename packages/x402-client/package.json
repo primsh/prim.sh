@@ -4,6 +4,15 @@
   "private": false,
   "type": "module",
   "main": "src/index.ts",
+  "description": "x402 payment client for agent-to-service requests",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/primsh/prim",
+    "directory": "packages/x402-client"
+  },
+  "license": "Apache-2.0",
+  "author": "Prim (https://prim.sh)",
+  "keywords": ["prim", "x402", "client", "payment", "usdc"],
   "scripts": {
     "dev": "bun run src/index.ts",
     "start": "bun run src/index.ts",

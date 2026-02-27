@@ -4,6 +4,15 @@
   "private": false,
   "type": "module",
   "main": "src/index.ts",
+  "description": "DNS and domain management via Cloudflare",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/primsh/prim",
+    "directory": "packages/domain"
+  },
+  "license": "Apache-2.0",
+  "author": "Prim (https://prim.sh)",
+  "keywords": ["prim", "x402", "dns", "domain", "cloudflare"],
   "scripts": {
     "dev": "bun run src/index.ts",
     "start": "bun run src/index.ts",
