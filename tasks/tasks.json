@@ -82,7 +82,7 @@
                 },
                 {
                   "id": "HRD-5",
-                  "description": "Fix `setUTCHours(24)` in `wallet/src/db.ts` \u2014 use explicit date arithmetic",
+                  "description": "Fix `setUTCHours(24)` in `wallet/src/db.ts` — use explicit date arithmetic",
                   "owner": [
                     "Claude"
                   ],
@@ -183,7 +183,7 @@
                 },
                 {
                   "id": "HRD-12",
-                  "description": "Fail-fast on missing PRIM_PAY_TO \u2014 zero-address fallback \u2192 startup crash with clear error message",
+                  "description": "Fail-fast on missing PRIM_PAY_TO — zero-address fallback → startup crash with clear error message",
                   "owner": [
                     "Claude"
                   ],
@@ -269,7 +269,7 @@
                 },
                 {
                   "id": "HRD-19",
-                  "description": "Fix token test mock typing \u2014 replace vi.fn<any[], any>() biome-ignore with properly typed mocks",
+                  "description": "Fix token test mock typing — replace vi.fn<any[], any>() biome-ignore with properly typed mocks",
                   "owner": [
                     "Claude"
                   ],
@@ -281,7 +281,7 @@
                 },
                 {
                   "id": "HRD-26",
-                  "description": "Add packages/mcp/test/smoke.test.ts \u2014 zero tests on 14-source-file MCP server package",
+                  "description": "Add packages/mcp/test/smoke.test.ts — zero tests on 14-source-file MCP server package",
                   "owner": [
                     "Claude"
                   ],
@@ -298,7 +298,7 @@
               "tasks": [
                 {
                   "id": "HRD-15",
-                  "description": "Fix pagination cursor/page inconsistency \u2014 email treats cursor as numeric offset, wallet as string",
+                  "description": "Fix pagination cursor/page inconsistency — email treats cursor as numeric offset, wallet as string",
                   "owner": [
                     "Claude"
                   ],
@@ -308,7 +308,7 @@
                 },
                 {
                   "id": "HRD-16",
-                  "description": "Add Zod schemas for request body validation \u2014 replace bare c.req.json<T>() with z.parse()",
+                  "description": "Add Zod schemas for request body validation — replace bare c.req.json<T>() with z.parse()",
                   "owner": [
                     "Claude"
                   ],
@@ -351,7 +351,7 @@
               "tasks": [
                 {
                   "id": "HRD-26",
-                  "description": "Add packages/mcp/test/smoke.test.ts \u2014 zero tests on 14-source-file MCP server package",
+                  "description": "Add packages/mcp/test/smoke.test.ts — zero tests on 14-source-file MCP server package",
                   "owner": [
                     "Claude"
                   ],
@@ -399,7 +399,7 @@
               "tasks": [
                 {
                   "id": "HRD-30",
-                  "description": "Replace residual console.warn() \u2192 structured logger in wallet/src/service.ts + email/src/service.ts (HRD-11 residual)",
+                  "description": "Replace residual console.warn() → structured logger in wallet/src/service.ts + email/src/service.ts (HRD-11 residual)",
                   "owner": [
                     "Claude"
                   ],
@@ -566,7 +566,7 @@
           "tasks": [
             {
               "id": "SP-7",
-              "description": "DockerProvider: Docker container tier as default (10\u201350x cheaper than VMs).",
+              "description": "DockerProvider: Docker container tier as default (10–50x cheaper than VMs).",
               "owner": [
                 "Claude"
               ],
@@ -644,7 +644,7 @@
               "tasks": [
                 {
                   "id": "I-4",
-                  "description": "Parallelize CI: split into concurrent jobs (setup \u2192 lint|typecheck|test|gen-check PARA), add concurrency + bun cache",
+                  "description": "Parallelize CI: split into concurrent jobs (setup → lint|typecheck|test|gen-check PARA), add concurrency + bun cache",
                   "owner": [
                     "Claude"
                   ],
@@ -655,7 +655,7 @@
                 },
                 {
                   "id": "I-3",
-                  "description": "CI OpenAPI spec validation \u2014 check that spec response shapes match PaginatedList<T> and error envelopes at build time",
+                  "description": "CI OpenAPI spec validation — check that spec response shapes match PaginatedList<T> and error envelopes at build time",
                   "owner": [
                     "Claude"
                   ],
@@ -686,7 +686,7 @@
                 },
                 {
                   "id": "OPS-5",
-                  "description": "GHA deploy pipeline: SSH deploy key (restricted to deploy.sh) + .github/workflows/deploy.yml (check \u2192 rsync \u2192 restart). Replaces manual sync:vps for prod.",
+                  "description": "GHA deploy pipeline: SSH deploy key (restricted to deploy.sh) + .github/workflows/deploy.yml (check → rsync → restart). Replaces manual sync:vps for prod.",
                   "owner": [
                     "Claude"
                   ],
@@ -714,12 +714,36 @@
                   "plan": "tasks/active/ops-4-load-test-2026-02-26.md"
                 },
                 {
-                  "id": "SEC-1",
-                  "description": "Audit git history for leaked secrets (API keys, passwords, .env values). Remediate with BFG or filter-repo if found.",
+                  "id": "SEC-1a",
+                  "description": "Add `.gitleaks.toml` + pre-commit hook to block new secrets from landing. Non-destructive, no stop-the-world.",
                   "owner": [
                     "Claude"
                   ],
                   "depends": [],
+                  "status": "pending",
+                  "release": "v1.0.0"
+                },
+                {
+                  "id": "SEC-1b",
+                  "description": "Run `gitleaks detect --log-opts=\"--all\"` on full history. Triage findings as true/false positives. Read-only.",
+                  "owner": [
+                    "Claude"
+                  ],
+                  "depends": [
+                    "SEC-1a"
+                  ],
+                  "status": "pending",
+                  "release": "v1.0.0"
+                },
+                {
+                  "id": "SEC-1c",
+                  "description": "If true positives found: rotate active secrets, rewrite history with BFG/filter-repo, force push, all collaborators re-clone.",
+                  "owner": [
+                    "Claude"
+                  ],
+                  "depends": [
+                    "SEC-1b"
+                  ],
                   "status": "pending",
                   "release": "v1.0.0",
                   "plan": "tasks/active/sec-1-git-secrets-audit-2026-02-26.md"
@@ -733,7 +757,7 @@
               "tasks": [
                 {
                   "id": "I-2",
-                  "description": "Migrate TASKS.md \u2192 tasks.json: define schema, convert data, update launch-status.ts + docs, optional TASKS.md codegen.",
+                  "description": "Migrate TASKS.md → tasks.json: define schema, convert data, update launch-status.ts + docs, optional TASKS.md codegen.",
                   "owner": [
                     "Claude"
                   ],
@@ -766,7 +790,7 @@
             },
             {
               "id": "L-14",
-              "description": "Full token launch: create Uniswap pool, fund liquidity, make repo public, announce. Seed pool conservatively ($2\u20133K USDC)",
+              "description": "Full token launch: create Uniswap pool, fund liquidity, make repo public, announce. Seed pool conservatively ($2–3K USDC)",
               "owner": [
                 "Garric",
                 "Claude"
@@ -788,7 +812,7 @@
           "tasks": [
             {
               "id": "L-22",
-              "description": "Mainnet switchover: VPS env files `eip155:84532` \u2192 `eip155:8453`, set prod `PRIM_PAY_TO`, fund facilitator with mainnet USDC",
+              "description": "Mainnet switchover: VPS env files `eip155:84532` → `eip155:8453`, set prod `PRIM_PAY_TO`, fund facilitator with mainnet USDC",
               "owner": [
                 "Garric"
               ],
@@ -826,7 +850,7 @@
               ],
               "depends": [
                 "HRD-20",
-                "SEC-1"
+                "SEC-1c"
               ],
               "status": "pending",
               "release": "v1.0.0"
@@ -835,7 +859,7 @@
         },
         {
           "id": "INFRA-W4",
-          "title": "Prim Factory",
+          "title": "Prim Factory — Foundation",
           "parallelism": "SRL",
           "phases": [
             {
@@ -846,7 +870,9 @@
                 {
                   "id": "I-5",
                   "description": "createPrimApp() factory in x402-middleware: env validation, middleware wiring, health, llms.txt, pricing, error mapping. Migrate track + search as proof.",
-                  "owner": ["Claude"],
+                  "owner": [
+                    "Claude"
+                  ],
                   "depends": [],
                   "status": "pending",
                   "release": null,
@@ -855,16 +881,24 @@
                 {
                   "id": "I-6",
                   "description": "Migrate remaining 8 prims to createPrimApp() (wallet, store, spawn, faucet, email, mem, domain, token). Factory supports opt-out for special middleware.",
-                  "owner": ["Claude"],
-                  "depends": ["I-5"],
+                  "owner": [
+                    "Claude"
+                  ],
+                  "depends": [
+                    "I-5"
+                  ],
                   "status": "pending",
                   "release": null
                 },
                 {
                   "id": "I-7",
                   "description": "Conformance runner: `pnpm test:conformance` verifies every deployed prim passes 5-check contract + generated files up-to-date. Add to CI.",
-                  "owner": ["Claude"],
-                  "depends": ["I-6"],
+                  "owner": [
+                    "Claude"
+                  ],
+                  "depends": [
+                    "I-6"
+                  ],
                   "status": "pending",
                   "release": null,
                   "plan": "tasks/active/i-7-conformance-runner.md"
@@ -873,23 +907,151 @@
             },
             {
               "id": "INFRA-W4-PB",
-              "title": "Scaffolder",
-              "parallelism": "SRL",
+              "title": "Schema Extension",
               "tasks": [
                 {
                   "id": "I-8",
                   "description": "Extend prim.yaml schema: add `providers` section (name, env, status, default), `interface` flags, strengthen routes_map typing. Update Primitive type.",
-                  "owner": ["Claude"],
-                  "depends": ["I-5"],
+                  "owner": [
+                    "Claude"
+                  ],
+                  "depends": [
+                    "I-5"
+                  ],
                   "status": "pending",
                   "release": null,
                   "plan": "tasks/active/i-8-prim-yaml-schema-v2.md"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "INFRA-W5",
+          "title": "Prim Factory — OpenAPI & Generation",
+          "parallelism": "SRL",
+          "phases": [
+            {
+              "id": "INFRA-W5-PA",
+              "title": "OpenAPI Specs",
+              "parallelism": "PARA",
+              "tasks": [
+                {
+                  "id": "I-18",
+                  "description": "Write OpenAPI 3.1 specs for live prims: wallet, store, spawn, faucet, search, email. Full JSON Schema, x402 security scheme, x-price, examples.",
+                  "owner": [
+                    "Claude"
+                  ],
+                  "depends": [
+                    "I-8"
+                  ],
+                  "status": "pending",
+                  "release": null,
+                  "plan": "tasks/active/i-18-openapi-specs-live.md"
                 },
+                {
+                  "id": "I-19",
+                  "description": "Write OpenAPI 3.1 specs for built prims: mem, domain, token. Same standard as I-18. Existing drafts in specs/openapi/ may be partially complete.",
+                  "owner": [
+                    "Claude"
+                  ],
+                  "depends": [
+                    "I-8"
+                  ],
+                  "status": "pending",
+                  "release": null,
+                  "plan": "tasks/active/i-19-openapi-specs-built.md"
+                }
+              ]
+            },
+            {
+              "id": "INFRA-W5-PB",
+              "title": "Build Generators",
+              "parallelism": "PARA",
+              "tasks": [
+                {
+                  "id": "I-12",
+                  "description": "MCP tool generator: `pnpm gen:mcp` reads OpenAPI specs → generates packages/mcp/src/tools/*.ts. Replaces manually maintained tool files.",
+                  "owner": [
+                    "Claude"
+                  ],
+                  "depends": [
+                    "I-18"
+                  ],
+                  "status": "pending",
+                  "release": null,
+                  "plan": "tasks/active/i-12-mcp-generator.md"
+                },
+                {
+                  "id": "I-13",
+                  "description": "CLI command generator: `pnpm gen:cli` reads OpenAPI specs → generates packages/keystore/src/*-commands.ts. Replaces manually maintained CLI files.",
+                  "owner": [
+                    "Claude"
+                  ],
+                  "depends": [
+                    "I-18"
+                  ],
+                  "status": "pending",
+                  "release": null,
+                  "plan": "tasks/active/i-13-cli-generator.md"
+                },
+                {
+                  "id": "I-14",
+                  "description": "OpenAI function schema generator: `pnpm gen:openai` reads OpenAPI specs → outputs JSON with OpenAI-compatible tool definitions for Responses API.",
+                  "owner": [
+                    "Claude"
+                  ],
+                  "depends": [
+                    "I-18"
+                  ],
+                  "status": "pending",
+                  "release": null,
+                  "plan": "tasks/active/i-14-openai-schema-generator.md"
+                }
+              ]
+            },
+            {
+              "id": "INFRA-W5-PC",
+              "title": "Unified Pipeline",
+              "tasks": [
+                {
+                  "id": "I-15",
+                  "description": "Unified gen pipeline: single `pnpm gen` runs gen:prims + gen:tests + gen:mcp + gen:cli + gen:openai. `pnpm gen:check` validates all. CI blocks if stale.",
+                  "owner": [
+                    "Claude"
+                  ],
+                  "depends": [
+                    "I-10",
+                    "I-12",
+                    "I-13",
+                    "I-14"
+                  ],
+                  "status": "pending",
+                  "release": null
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "INFRA-W6",
+          "title": "Prim Factory — Scaffolder & Agent Interfaces",
+          "parallelism": "PARA",
+          "phases": [
+            {
+              "id": "INFRA-W6-PA",
+              "title": "Scaffolder",
+              "parallelism": "SRL",
+              "tasks": [
                 {
                   "id": "I-9",
                   "description": "`pnpm create-prim <id>` scaffolder: reads prim.yaml, generates package.json, tsconfig, vitest.config, install.sh, src/{index,api,service,provider}.ts, smoke.test.ts, README.",
-                  "owner": ["Claude"],
-                  "depends": ["I-8"],
+                  "owner": [
+                    "Claude"
+                  ],
+                  "depends": [
+                    "I-8"
+                  ],
                   "status": "pending",
                   "release": null,
                   "plan": "tasks/active/i-9-prim-scaffolder.md"
@@ -897,8 +1059,12 @@
                 {
                   "id": "I-10",
                   "description": "Smoke test generator: `pnpm gen:tests` reads routes_map + api.ts types, generates conformant smoke.test.ts with all 5 checks. Wire into `pnpm gen`.",
-                  "owner": ["Claude"],
-                  "depends": ["I-9"],
+                  "owner": [
+                    "Claude"
+                  ],
+                  "depends": [
+                    "I-9"
+                  ],
                   "status": "pending",
                   "release": null,
                   "plan": "tasks/active/i-10-smoke-test-generator.md"
@@ -906,8 +1072,12 @@
                 {
                   "id": "I-11",
                   "description": "Interactive prim.yaml creator: `pnpm create-prim --interactive` CLI wizard (id, name, routes, pricing, providers, accent). Also usable as LLM skill.",
-                  "owner": ["Claude"],
-                  "depends": ["I-9"],
+                  "owner": [
+                    "Claude"
+                  ],
+                  "depends": [
+                    "I-9"
+                  ],
                   "status": "pending",
                   "release": null,
                   "plan": "tasks/active/i-11-interactive-prim-creator.md"
@@ -915,71 +1085,76 @@
               ]
             },
             {
-              "id": "INFRA-W4-PC",
-              "title": "Interface Generators",
-              "parallelism": "PARA",
+              "id": "INFRA-W6-PB",
+              "title": "Skills",
               "tasks": [
                 {
-                  "id": "I-12",
-                  "description": "MCP tool generator: `pnpm gen:mcp` reads OpenAPI specs \u2192 generates packages/mcp/src/tools/*.ts. Replaces manually maintained tool files.",
-                  "owner": ["Claude"],
-                  "depends": [],
+                  "id": "I-20",
+                  "description": "Write agent skill docs: getting-started.md, per-prim workflows (wallet, store, spawn, search, email, mem, domain, token), multi-prim.md cross-primitive patterns.",
+                  "owner": [
+                    "Claude"
+                  ],
+                  "depends": [
+                    "I-18"
+                  ],
                   "status": "pending",
                   "release": null,
-                  "plan": "tasks/active/i-12-mcp-generator.md"
-                },
-                {
-                  "id": "I-13",
-                  "description": "CLI command generator: `pnpm gen:cli` reads OpenAPI specs \u2192 generates packages/keystore/src/*-commands.ts. Replaces manually maintained CLI files.",
-                  "owner": ["Claude"],
-                  "depends": [],
-                  "status": "pending",
-                  "release": null,
-                  "plan": "tasks/active/i-13-cli-generator.md"
-                },
-                {
-                  "id": "I-14",
-                  "description": "OpenAI function schema generator: `pnpm gen:openai` reads OpenAPI specs \u2192 outputs JSON with OpenAI-compatible tool definitions for Responses API.",
-                  "owner": ["Claude"],
-                  "depends": [],
-                  "status": "pending",
-                  "release": null,
-                  "plan": "tasks/active/i-14-openai-schema-generator.md"
-                },
-                {
-                  "id": "I-15",
-                  "description": "Unified gen pipeline: single `pnpm gen` runs gen:prims + gen:tests + gen:mcp + gen:cli + gen:openai. `pnpm gen:check` validates all. CI blocks if stale.",
-                  "owner": ["Claude"],
-                  "depends": ["I-10", "I-12", "I-13", "I-14"],
-                  "status": "pending",
-                  "release": null
+                  "plan": "tasks/active/i-20-skills.md"
                 }
               ]
             },
             {
-              "id": "INFRA-W4-PD",
-              "title": "Provider Framework",
-              "parallelism": "SRL",
+              "id": "INFRA-W6-PC",
+              "title": "Plugins",
               "tasks": [
                 {
-                  "id": "I-16",
-                  "description": "PrimProvider base interface in x402-middleware: name, init(config), healthCheck(). Each prim extends with domain methods. Document the contract.",
-                  "owner": ["Claude"],
-                  "depends": ["I-8"],
+                  "id": "I-21",
+                  "description": "Plugin install system: `prim install <primitive|all>`, manifest registry, MCP config injection into Claude/Cursor/VS Code, agent env detection.",
+                  "owner": [
+                    "Claude"
+                  ],
+                  "depends": [
+                    "I-12",
+                    "I-20"
+                  ],
                   "status": "pending",
                   "release": null,
-                  "plan": "tasks/active/i-16-provider-interface.md"
-                },
-                {
-                  "id": "I-17",
-                  "description": "Provider registry + selection utility: config-driven vendor selection (env-based), fallback chains, health-check-on-startup. Migrate search.sh (Tavily) as proof.",
-                  "owner": ["Claude"],
-                  "depends": ["I-16"],
-                  "status": "pending",
-                  "release": null,
-                  "plan": "tasks/active/i-17-provider-registry.md"
+                  "plan": "tasks/active/i-21-plugin-install-system.md"
                 }
               ]
+            }
+          ]
+        },
+        {
+          "id": "INFRA-W7",
+          "title": "Prim Factory — Provider Framework",
+          "parallelism": "SRL",
+          "tasks": [
+            {
+              "id": "I-16",
+              "description": "PrimProvider base interface in x402-middleware: name, init(config), healthCheck(). Each prim extends with domain methods. Document the contract.",
+              "owner": [
+                "Claude"
+              ],
+              "depends": [
+                "I-8"
+              ],
+              "status": "pending",
+              "release": null,
+              "plan": "tasks/active/i-16-provider-interface.md"
+            },
+            {
+              "id": "I-17",
+              "description": "Provider registry + selection utility: config-driven vendor selection (env-based), fallback chains, health-check-on-startup. Migrate search.sh (Tavily) as proof.",
+              "owner": [
+                "Claude"
+              ],
+              "depends": [
+                "I-16"
+              ],
+              "status": "pending",
+              "release": null,
+              "plan": "tasks/active/i-17-provider-registry.md"
             }
           ]
         }
@@ -1263,7 +1438,7 @@
               "tasks": [
                 {
                   "id": "COM-5",
-                  "description": "Build scripts/lib/parse-api.ts \u2014 regex parser extracting interfaces, fields, JSDoc, ERROR_CODES from api.ts files",
+                  "description": "Build scripts/lib/parse-api.ts — regex parser extracting interfaces, fields, JSDoc, ERROR_CODES from api.ts files",
                   "owner": [
                     "Claude"
                   ],
@@ -1275,7 +1450,7 @@
                 },
                 {
                   "id": "COM-6",
-                  "description": "Build scripts/lib/render-llms-txt.ts + wire into gen-prims.ts \u2014 render full llms.txt from Primitive + ParsedApi + route prices",
+                  "description": "Build scripts/lib/render-llms-txt.ts + wire into gen-prims.ts — render full llms.txt from Primitive + ParsedApi + route prices",
                   "owner": [
                     "Claude"
                   ],
@@ -1329,7 +1504,7 @@
           "tasks": [
             {
               "id": "SITE-10",
-              "description": "Wire GHA \u2192 Cloudflare Pages: add deploy-site job (wrangler pages deploy), rename deploy\u2192deploy-vps, add verify smoke check, GitHub Environments (production). Plan: tasks/active/site-10-pages-gha-2026-02-27.md",
+              "description": "Wire GHA → Cloudflare Pages: add deploy-site job (wrangler pages deploy), rename deploy→deploy-vps, add verify smoke check, GitHub Environments (production). Plan: tasks/active/site-10-pages-gha-2026-02-27.md",
               "owner": [
                 "Claude"
               ],
@@ -1366,7 +1541,7 @@
           "tasks": [
             {
               "id": "L-50",
-              "description": "deploy.sh: PaaS above spawn.sh \u2014 push container or repo URL, get live endpoint. Wraps Dokku/Coolify",
+              "description": "deploy.sh: PaaS above spawn.sh — push container or repo URL, get live endpoint. Wraps Dokku/Coolify",
               "owner": [
                 "Claude"
               ],

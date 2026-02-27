@@ -50,6 +50,7 @@ const { createPrimFetch, parseUsdc } = await import("../src/client.ts");
 
 // ── Constants ─────────────────────────────────────────────────────────────────
 
+// Hardhat/Anvil account #0 — well-known public test key, not a real secret
 const TEST_PRIVATE_KEY =
   "0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80" as `0x${string}`;
 
