@@ -63,6 +63,12 @@ jobs:
           bun scripts/upload-release.ts dist/cli.js "latest/cli.js"
           bun scripts/upload-release.ts dist/cli.js.sha256 "$VERSION/cli.js.sha256"
           bun scripts/upload-release.ts dist/cli.js.sha256 "latest/cli.js.sha256"
+          for bin in prim-darwin-arm64 prim-darwin-x64 prim-linux-x64 prim-linux-arm64; do
+            bun scripts/upload-release.ts "dist/${bin}" "$VERSION/${bin}"
+            bun scripts/upload-release.ts "dist/${bin}" "latest/${bin}"
+          done
+          bun scripts/upload-release.ts dist/checksums.sha256 "$VERSION/checksums.sha256"
+          bun scripts/upload-release.ts dist/checksums.sha256 "latest/checksums.sha256"
           echo "$VERSION" | bun scripts/upload-release.ts - "latest/VERSION"
 
       - name: Create GitHub Release
