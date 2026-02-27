@@ -55,6 +55,7 @@ components:
                 - r2_error
                 - rate_limited
                 - quota_exceeded
+                - bucket_name_taken
                 - bucket_limit_exceeded
                 - storage_limit_exceeded
               description: Machine-readable error code.
