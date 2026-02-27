@@ -959,7 +959,7 @@
                   "depends": [
                     "I-8"
                   ],
-                  "status": "pending",
+                  "status": "done",
                   "release": null,
                   "plan": "tasks/active/i-19-openapi-specs-built.md"
                 }
