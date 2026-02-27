@@ -111,27 +111,33 @@ jobs:
           echo "### Conflicted files:" >> $GITHUB_STEP_SUMMARY
           git diff --name-only --diff-filter=U | tee -a $GITHUB_STEP_SUMMARY
 
-      - uses: anthropics/claude-code-action@v1
-        with:
-          claude_code_oauth_token: ${{ secrets.ANTHROPIC_API_KEY }}
-          prompt: |
-            This branch has merge conflicts with main. The merge is in progress —
-            conflict markers (<<<<<<< / ======= / >>>>>>>) are in the working tree.
+      - name: Install Claude Code
+        run: npm install -g @anthropic-ai/claude-code
 
-            IMPORTANT: main is the source of truth. It contains already-merged
-            bug fixes, lint fixes, and CI changes that are correct.
+      - name: Resolve conflicts with Claude
+        env:
+          CLAUDE_CODE_OAUTH_TOKEN: ${{ secrets.ANTHROPIC_API_KEY }}
+        run: |
+          conflicted=$(git diff --name-only --diff-filter=U | tr '\n' ', ')
+          echo "Resolving conflicts in: $conflicted"
 
-            Resolve every conflict:
-            1. Run `git diff --name-only --diff-filter=U` to list conflicted files
-            2. Read each conflicted file and remove all conflict markers:
-               - Default: prefer main's version (it has landed fixes)
-               - Only prefer HEAD when it adds new code that doesn't exist in main
-                 (new functions, new files, new features)
-               - List additions (imports, array entries, YAML lists): keep both
-            3. Run `git add <file>` for each resolved file
-            4. Verify no markers remain: `grep -rn '<<<<<<< ' . --include='*.ts' --include='*.json' --include='*.yaml' --include='*.yml' --include='*.md'` should return nothing
-            5. Run `git commit --no-edit` to complete the merge
-            6. Run `git push`
+          claude -p "This branch has merge conflicts with main. The merge is in progress —
+          conflict markers (<<<<<<< / ======= / >>>>>>>) are in the working tree.
 
-            Do not modify any code beyond resolving conflict markers.
-          claude_args: "--max-turns 10 --model claude-sonnet-4-6"
+          IMPORTANT: main is the source of truth. It contains already-merged
+          bug fixes, lint fixes, and CI changes that are correct.
+
+          Resolve every conflict:
+          1. Run git diff --name-only --diff-filter=U to list conflicted files
+          2. Read each conflicted file and remove all conflict markers:
+             - Default: prefer main's version (it has landed fixes)
+             - Only prefer HEAD when it adds new code that doesn't exist in main
+               (new functions, new files, new features)
+             - List additions (imports, array entries, YAML lists): keep both
+          3. Run git add <file> for each resolved file
+          4. Verify no markers remain: grep -rn '<<<<<<< ' . should return nothing
+          5. Run git commit --no-edit to complete the merge
+          6. Run git push
+
+          Do not modify any code beyond resolving conflict markers." \
+            --max-turns 10 --model claude-sonnet-4-6 --allowedTools "Bash,Read,Edit,Write,Glob,Grep"
