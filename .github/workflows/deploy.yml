@@ -4,6 +4,8 @@ name: Deploy
 # Never runs concurrently — queues instead of cancelling to avoid leaving VPS
 # in a partially-deployed state.
 #
+# Flow: checkout → rsync to VPS → run deploy.sh (install, build, restart)
+#
 # ── Required GitHub secrets ──────────────────────────────────────────────────
 #
 #   VPS_HOST        SSH user@host string, e.g. "root@157.230.187.207"
@@ -12,42 +14,11 @@ name: Deploy
 #
 # ── One-time SSH deploy key setup ────────────────────────────────────────────
 #
-# 1. Generate a deploy-specific Ed25519 keypair (do NOT use your personal key):
-#
-#      ssh-keygen -t ed25519 -f gha-deploy -C "gha-deploy@prim"
-#      # Creates: gha-deploy (private) and gha-deploy.pub (public)
-#
-# 2. Install the public key on the VPS:
-#
-#      ssh root@157.230.187.207 \
-#        "echo '$(cat gha-deploy.pub)' >> ~/.ssh/authorized_keys"
-#
-#    Optional: restrict the key to only run the deploy script
-#    (edit ~/.ssh/authorized_keys on the VPS and prefix the new line with):
-#
-#      command="/opt/prim/deploy/prim/deploy.sh",no-port-forwarding,no-x11-forwarding,no-agent-forwarding
-#
-# 3. Collect known_hosts entry:
-#
-#      ssh-keyscan 157.230.187.207
-#
-# 4. Add secrets in GitHub → repo Settings → Secrets and variables → Actions:
-#
-#      VPS_HOST        root@157.230.187.207
-#      VPS_SSH_KEY     contents of ./gha-deploy (the private key file)
-#      VPS_KNOWN_HOSTS output of ssh-keyscan from step 3
-#
-# 5. Delete the local key files:
-#
-#      rm gha-deploy gha-deploy.pub
-#
-# ── Rollback ─────────────────────────────────────────────────────────────────
-#
-# No automated rollback in v1. If a deploy breaks:
-#   ssh root@157.230.187.207
-#   git -C /opt/prim log --oneline   # find last good SHA
-#   git -C /opt/prim checkout <sha>
-#   bash /opt/prim/deploy/prim/deploy.sh
+# 1. ssh-keygen -t ed25519 -f gha-deploy -C "gha-deploy@prim"
+# 2. Install public key on VPS: ssh root@<IP> "cat >> ~/.ssh/authorized_keys" < gha-deploy.pub
+# 3. ssh-keyscan <VPS_IP>  →  VPS_KNOWN_HOSTS secret
+# 4. Add VPS_HOST, VPS_SSH_KEY, VPS_KNOWN_HOSTS as GitHub Actions secrets
+# 5. rm gha-deploy gha-deploy.pub
 #
 # ─────────────────────────────────────────────────────────────────────────────
 
@@ -67,13 +38,13 @@ jobs:
     name: Deploy to VPS
     runs-on: ubuntu-latest
 
-    # For workflow_run trigger: only deploy when CI succeeded.
-    # workflow_dispatch has no conclusion, so the condition must allow that.
     if: >
       github.event_name == 'workflow_dispatch' ||
       github.event.workflow_run.conclusion == 'success'
 
     steps:
+      - uses: actions/checkout@v4
+
       - name: Setup SSH
         env:
           VPS_SSH_KEY: ${{ secrets.VPS_SSH_KEY }}
@@ -86,7 +57,26 @@ jobs:
           printf '%s\n' "$VPS_KNOWN_HOSTS" > ~/.ssh/known_hosts
           chmod 644 ~/.ssh/known_hosts
 
-      - name: Deploy
+      - name: Rsync to VPS
+        env:
+          VPS_HOST: ${{ secrets.VPS_HOST }}
+        run: |
+          rsync -avz --delete \
+            --exclude='node_modules/' \
+            --exclude='.git/' \
+            --exclude='*.db' \
+            --exclude='*.db-shm' \
+            --exclude='*.db-wal' \
+            --exclude='server.log' \
+            --exclude='.env*' \
+            --exclude='brand/assets/' \
+            --exclude='research/' \
+            --exclude='specs/' \
+            --exclude='.claude/' \
+            --exclude='bun.lock' \
+            ./ "$VPS_HOST":/opt/prim/
+
+      - name: Install, build, restart
         env:
           VPS_HOST: ${{ secrets.VPS_HOST }}
         run: ssh "$VPS_HOST" "bash /opt/prim/deploy/prim/deploy.sh"
