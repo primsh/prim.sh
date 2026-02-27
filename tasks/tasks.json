@@ -1079,9 +1079,9 @@
                   "depends": [
                     "I-9"
                   ],
-                  "status": "pending",
+                  "status": "done",
                   "release": null,
-                  "plan": "tasks/active/i-11-interactive-prim-creator.md"
+                  "plan": "tasks/completed/i-11-interactive-prim-creator.md"
                 }
               ]
             },
@@ -1153,9 +1153,9 @@
               "depends": [
                 "I-16"
               ],
-              "status": "pending",
+              "status": "done",
               "release": null,
-              "plan": "tasks/active/i-17-provider-registry.md"
+              "plan": "tasks/completed/i-17-provider-registry.md"
             }
           ]
         }

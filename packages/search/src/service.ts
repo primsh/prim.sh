@@ -1,30 +1,60 @@
 import { ProviderError } from "./provider.ts";
-import { TavilyClient } from "./tavily.ts";
 import type { SearchRequest, SearchResponse, ExtractRequest, ExtractResponse } from "./api.ts";
 import type { SearchProvider, ExtractProvider } from "./provider.ts";
+import type { ProviderRegistry } from "@primsh/x402-middleware";
 
 type ServiceResult<T> =
   | { ok: true; data: T }
   | { ok: false; status: number; code: string; message: string; retryAfter?: number };
 
-// Module-level singleton — created once per key value, reused across requests.
-let _client: TavilyClient | undefined;
-let _clientKey: string | undefined;
+// ─── Registry injection ───────────────────────────────────────────────────────
+//
+// index.ts calls setRegistry() on startup to wire the provider registry.
+// Service functions use getProvider() which delegates to the registry.
+// For tests, the optional `provider` parameter takes precedence — no registry needed.
 
+let _registry: ProviderRegistry<SearchProvider & ExtractProvider> | undefined;
+let _extractRegistry: ProviderRegistry<ExtractProvider> | undefined;
+
+export function setRegistry(
+  registry: ProviderRegistry<SearchProvider & ExtractProvider>,
+): void {
+  _registry = registry;
+}
+
+export function setExtractRegistry(registry: ProviderRegistry<ExtractProvider>): void {
+  _extractRegistry = registry;
+}
+
+/**
+ * Reset injected registries. Used in tests to restore a clean state between
+ * test cases. In production this is never called.
+ */
 export function resetClient(): void {
-  _client = undefined;
-  _clientKey = undefined;
+  _registry = undefined;
+  _extractRegistry = undefined;
 }
 
-function getClient(): TavilyClient {
-  const key = process.env.TAVILY_API_KEY;
-  if (!key) throw new ProviderError("TAVILY_API_KEY is not configured", "provider_error");
-  if (!_client || _clientKey !== key) {
-    _client = new TavilyClient(key);
-    _clientKey = key;
-  }
-  return _client;
+async function getSearchProvider(override?: SearchProvider): Promise<SearchProvider> {
+  if (override) return override;
+  if (_registry) return _registry.get();
+  throw new ProviderError(
+    "No search provider configured. Call setRegistry() before using service functions.",
+    "provider_error",
+  );
 }
+
+async function getExtractProvider(override?: ExtractProvider): Promise<ExtractProvider> {
+  if (override) return override;
+  if (_extractRegistry) return _extractRegistry.get();
+  if (_registry) return _registry.get();
+  throw new ProviderError(
+    "No extract provider configured. Call setRegistry() before using service functions.",
+    "provider_error",
+  );
+}
+
+// ─── Helpers ──────────────────────────────────────────────────────────────────
 
 function handleProviderError(err: unknown): ServiceResult<never> {
   if (err instanceof ProviderError) {
@@ -44,6 +74,8 @@ function isValidUrl(url: string): boolean {
   }
 }
 
+// ─── Service functions ────────────────────────────────────────────────────────
+
 export async function searchWeb(
   request: SearchRequest,
   provider?: SearchProvider,
@@ -55,7 +87,7 @@ export async function searchWeb(
   const maxResults = Math.max(1, Math.min(request.max_results ?? 5, 20));
 
   try {
-    const p = provider ?? getClient();
+    const p = await getSearchProvider(provider);
     const result = await p.search({ ...request, max_results: maxResults });
     return { ok: true, data: result };
   } catch (err) {
@@ -74,7 +106,7 @@ export async function searchNews(
   const maxResults = Math.max(1, Math.min(request.max_results ?? 5, 20));
 
   try {
-    const p = provider ?? getClient();
+    const p = await getSearchProvider(provider);
     const result = await p.searchNews({ ...request, max_results: maxResults });
     return { ok: true, data: result };
   } catch (err) {
@@ -113,7 +145,7 @@ export async function extractUrls(
   const format = request.format ?? "markdown";
 
   try {
-    const p = provider ?? getClient();
+    const p = await getExtractProvider(provider);
     const result = await p.extract(urls, format);
     return { ok: true, data: result };
   } catch (err) {

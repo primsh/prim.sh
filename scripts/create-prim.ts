@@ -8,11 +8,14 @@
  * Usage:
  *   pnpm create-prim <id>
  *   pnpm create-prim <id> --force
+ *   pnpm create-prim --interactive
  */
 
-import { readFileSync, writeFileSync, existsSync, mkdirSync } from "node:fs";
+import { readFileSync, writeFileSync, existsSync, mkdirSync, readdirSync } from "node:fs";
+import * as readline from "node:readline/promises";
+import { stdin as input, stdout as output } from "node:process";
 import { join, resolve } from "node:path";
-import { parse as parseYaml } from "yaml";
+import { parse as parseYaml, stringify as stringifyYaml } from "yaml";
 
 // ── Types ──────────────────────────────────────────────────────────────────
 
@@ -50,6 +53,11 @@ interface PrimYaml {
   endpoint?: string;
   description: string;
   port: number;
+  type?: string;
+  status?: string;
+  accent?: string;
+  accent_dim?: string;
+  accent_glow?: string;
   env?: string[];
   pricing?: PricingRow[];
   routes_map?: RouteMapping[];
@@ -886,86 +894,430 @@ Apache-2.0
 `;
 }
 
+// ── Interactive wizard ───────────────────────────────────────────────────────
+
+const KNOWN_TYPES = [
+  "crypto", "storage", "compute", "search", "email", "testnet",
+  "defi", "memory", "domains", "logistics", "communication", "intelligence",
+  "operations", "physical", "social",
+];
+
+const KNOWN_ACCENTS: Record<string, string> = {
+  "#8BC34A": "lime-green (wallet)",
+  "#FFB74D": "amber (store)",
+  "#29B6F6": "sky-blue (faucet)",
+  "#00ff88": "neon-green (spawn)",
+  "#C6FF00": "acid-yellow (search)",
+  "#6C8EFF": "indigo (email)",
+  "#FFC107": "gold (token)",
+  "#4DD0E1": "cyan (mem)",
+  "#00ACC1": "teal (domain)",
+  "#FF3D00": "deep-orange (track)",
+};
+
+/** Scan packages/ for existing prim.yaml files and return { id → port, accent } maps */
+function scanExistingPrims(root: string): { ports: number[]; ids: string[]; usedAccents: string[] } {
+  const packagesDir = join(root, "packages");
+  const ports: number[] = [];
+  const ids: string[] = [];
+  const usedAccents: string[] = [];
+
+  if (!existsSync(packagesDir)) return { ports, ids, usedAccents };
+
+  for (const entry of readdirSync(packagesDir, { withFileTypes: true })) {
+    if (!entry.isDirectory()) continue;
+    const yamlPath = join(packagesDir, entry.name, "prim.yaml");
+    if (!existsSync(yamlPath)) continue;
+    try {
+      const data = parseYaml(readFileSync(yamlPath, "utf-8")) as PrimYaml;
+      if (data.id) ids.push(data.id);
+      if (data.port) ports.push(data.port);
+      if (data.accent) usedAccents.push(data.accent.toLowerCase());
+    } catch {
+      // ignore parse errors
+    }
+  }
+
+  return { ports, ids, usedAccents };
+}
+
+/** Derive next available port starting from 3011 */
+function nextPort(usedPorts: number[]): number {
+  const portSet = new Set(usedPorts);
+  let candidate = 3011;
+  while (portSet.has(candidate)) candidate++;
+  return candidate;
+}
+
+/** Suggest accent colors not already in use */
+function unusedAccents(used: string[]): string[] {
+  const usedSet = new Set(used.map((a) => a.toLowerCase()));
+  return Object.keys(KNOWN_ACCENTS).filter((c) => !usedSet.has(c.toLowerCase()));
+}
+
+/** path → operation_id, e.g. "/v1/call" → "call", "/v1/messages/list" → "messages_list" */
+function pathToOperationId(path: string): string {
+  return path
+    .replace(/^\/v1\//, "")
+    .replace(/^\//, "")
+    .replace(/[-/]/g, "_")
+    .replace(/[^a-z0-9_]/gi, "")
+    .toLowerCase();
+}
+
+/** Convert operation_id to PascalCase TypeName, e.g. "search_web" → "SearchWebRequest" */
+function opIdToTypeName(opId: string, suffix: string): string {
+  return (
+    opId
+      .split("_")
+      .map((p) => p.charAt(0).toUpperCase() + p.slice(1))
+      .join("") + suffix
+  );
+}
+
+/** dim an accent hex color by 20% */
+function dimAccent(hex: string): string {
+  const c = hex.replace("#", "");
+  const r = Math.round(parseInt(c.slice(0, 2), 16) * 0.8);
+  const g = Math.round(parseInt(c.slice(2, 4), 16) * 0.8);
+  const b = Math.round(parseInt(c.slice(4, 6), 16) * 0.8);
+  return `#${r.toString(16).padStart(2, "0")}${g.toString(16).padStart(2, "0")}${b.toString(16).padStart(2, "0")}`;
+}
+
+/** hex → rgba glow string */
+function accentGlow(hex: string): string {
+  const c = hex.replace("#", "");
+  const r = parseInt(c.slice(0, 2), 16);
+  const g = parseInt(c.slice(2, 4), 16);
+  const b = parseInt(c.slice(4, 6), 16);
+  return `rgba(${r},${g},${b},0.08)`;
+}
+
+/** Prompt helper: show question, return trimmed answer. Optional default shown in brackets. */
+async function ask(rl: readline.Interface, question: string, defaultVal?: string): Promise<string> {
+  const hint = defaultVal ? ` [${defaultVal}]` : "";
+  const raw = await rl.question(`  ${question}${hint}: `);
+  const answer = raw.trim();
+  return answer !== "" ? answer : (defaultVal ?? "");
+}
+
+/** Prompt for y/n. Returns true for y/Y/yes, false for n/N/no. Default shown in brackets. */
+async function confirm(rl: readline.Interface, question: string, defaultVal = true): Promise<boolean> {
+  const hint = defaultVal ? "[Y/n]" : "[y/N]";
+  const raw = await rl.question(`  ${question} ${hint}: `);
+  const answer = raw.trim().toLowerCase();
+  if (answer === "") return defaultVal;
+  return answer === "y" || answer === "yes";
+}
+
+/** Run the interactive wizard. Returns a PrimYaml ready to write. */
+async function runWizard(root: string): Promise<{ prim: PrimYaml; yamlStr: string } | null> {
+  const { ports: usedPorts, ids: existingIds, usedAccents } = scanExistingPrims(root);
+
+  const rl = readline.createInterface({ input, output });
+
+  console.log("\n  prim.sh interactive creator\n");
+  console.log("  Creates packages/<id>/prim.yaml and optionally scaffolds the package.\n");
+
+  // Step 1: ID
+  let id = "";
+  while (true) {
+    id = await ask(rl, "1. ID (lowercase letters only, e.g. ring)");
+    if (!id) { console.log("  ID is required."); continue; }
+    if (!/^[a-z][a-z0-9-]*$/.test(id)) { console.log("  ID must be lowercase letters/digits/hyphens, starting with a letter."); continue; }
+    if (existingIds.includes(id)) { console.log(`  '${id}' already exists in packages/. Choose a different ID.`); continue; }
+    break;
+  }
+
+  // Step 2: Name
+  const nameSuggestion = `${id}.sh`;
+  const name = await ask(rl, `2. Name`, nameSuggestion);
+
+  // Step 3: Description
+  let description = "";
+  while (!description) {
+    description = await ask(rl, "3. Description (~120 chars, what does it do?)");
+    if (!description) console.log("  Description is required.");
+  }
+
+  // Step 4: Type
+  console.log(`  Known types: ${KNOWN_TYPES.join(", ")}`);
+  const type = await ask(rl, "4. Type (select from list above or enter custom)", KNOWN_TYPES[0]);
+
+  // Step 5: Port
+  const suggestedPort = nextPort(usedPorts);
+  let port = suggestedPort;
+  while (true) {
+    const portStr = await ask(rl, `5. Port`, String(suggestedPort));
+    const parsed = parseInt(portStr, 10);
+    if (isNaN(parsed) || parsed < 1024 || parsed > 65535) {
+      console.log("  Port must be a number between 1024 and 65535.");
+      continue;
+    }
+    if (usedPorts.includes(parsed) && parsed !== suggestedPort) {
+      const override = await confirm(rl, `  Port ${parsed} is already used. Use it anyway?`, false);
+      if (!override) continue;
+    }
+    port = parsed;
+    break;
+  }
+
+  // Step 6: Accent color
+  const available = unusedAccents(usedAccents);
+  if (available.length > 0) {
+    console.log("  Available accent colors:");
+    available.forEach((c, i) => console.log(`    ${i + 1}. ${c} — ${KNOWN_ACCENTS[c]}`));
+    console.log(`    c. Enter custom hex`);
+  }
+  let accent = available[0] ?? "#888888";
+  while (true) {
+    const accentStr = await ask(
+      rl,
+      `6. Accent color (pick number from list above, or enter hex)`,
+      available.length > 0 ? "1" : "#888888",
+    );
+    if (/^\d+$/.test(accentStr)) {
+      const idx = parseInt(accentStr, 10) - 1;
+      if (idx >= 0 && idx < available.length) { accent = available[idx]; break; }
+      console.log(`  Enter a number between 1 and ${available.length}, or a hex color.`);
+    } else if (/^#[0-9a-fA-F]{6}$/.test(accentStr)) {
+      accent = accentStr.toLowerCase();
+      break;
+    } else if (accentStr === "c" || accentStr === "C") {
+      const customHex = await ask(rl, "  Enter hex color (e.g. #FF5722)");
+      if (/^#[0-9a-fA-F]{6}$/.test(customHex)) { accent = customHex.toLowerCase(); break; }
+      console.log("  Invalid hex. Use format #RRGGBB.");
+    } else if (accentStr === "") {
+      break; // use default
+    } else {
+      console.log("  Enter a number from the list or a hex color like #FF5722.");
+    }
+  }
+
+  // Step 7: Routes
+  const routes: RouteMapping[] = [];
+  console.log("\n  Routes (paid API endpoints). At least one is recommended.");
+  let addRoute = await confirm(rl, "  Add a route?", true);
+  while (addRoute) {
+    console.log("  Methods: GET, POST, PUT, DELETE, PATCH");
+    const method = (await ask(rl, "  Method", "POST")).toUpperCase();
+    let path = await ask(rl, "  Path (e.g. /v1/call)", "/v1/" + id);
+    if (!path.startsWith("/")) path = "/" + path;
+    const routeStr = `${method} ${path}`;
+    const opIdSuggestion = pathToOperationId(path);
+    const reqTypeSuggestion = opIdToTypeName(opIdSuggestion, "Request");
+    const resTypeSuggestion = opIdToTypeName(opIdSuggestion, "Response");
+    const priceInput = await ask(rl, "  Price (e.g. $0.01, or 'free')", "$0.01");
+    const price = priceInput === "free" ? "free" : priceInput.startsWith("$") ? priceInput : `$${priceInput}`;
+    const routeDescription = await ask(rl, "  Summary (e.g. 'Make a phone call')", opIdSuggestion.replace(/_/g, " "));
+    const operation_id = await ask(rl, "  Operation ID", opIdSuggestion);
+    const reqType = await ask(rl, "  Request type name", reqTypeSuggestion);
+    const resType = await ask(rl, "  Response type name", resTypeSuggestion);
+
+    routes.push({
+      route: routeStr,
+      request: reqType || null,
+      response: resType || reqTypeSuggestion.replace("Request", "Response"),
+      status: 200,
+      description: routeDescription,
+      notes: undefined,
+    });
+
+    // Record pricing
+    addRoute = await confirm(rl, "  Add another route?", false);
+  }
+
+  // Step 8: Providers
+  const providers: ProviderConfig[] = [];
+  console.log("\n  Providers (optional — upstream APIs this primitive wraps).");
+  let addProvider = await confirm(rl, "  Add a provider?", false);
+  while (addProvider) {
+    const vendorName = await ask(rl, "  Vendor name (e.g. Twilio)");
+    const envVarsRaw = await ask(rl, "  Env vars (comma-separated, e.g. TWILIO_API_KEY)", `${id.toUpperCase()}_API_KEY`);
+    const envVars = envVarsRaw.split(",").map((v) => v.trim()).filter(Boolean);
+    const vendorUrl = await ask(rl, "  Vendor URL (optional)");
+
+    providers.push({
+      name: vendorName.toLowerCase(),
+      env_key: envVars[0],
+      description: vendorUrl || undefined,
+    });
+
+    addProvider = await confirm(rl, "  Add another provider?", false);
+  }
+
+  // Build env list: always include standard env vars + any provider vars
+  const providerEnvVars = providers.flatMap((p) => (p.env_key ? [p.env_key] : []));
+  const env = [
+    "PRIM_PAY_TO",
+    "PRIM_NETWORK",
+    ...providerEnvVars,
+    "WALLET_INTERNAL_URL",
+  ].filter((v, i, a) => a.indexOf(v) === i);
+
+  // Build pricing rows from routes
+  const pricing: PricingRow[] = routes
+    .filter((r) => {
+      // price is stored in routePrices — but at wizard time we need to pull from route definition
+      return true;
+    })
+    .map((r, i) => ({
+      op: r.description,
+      price: "$0.01", // wizard doesn't capture per-route price in PricingRow yet; use route price
+      note: "Per request",
+    }));
+
+  // Assemble prim object
+  const prim: PrimYaml = {
+    id,
+    name,
+    endpoint: `${id}.prim.sh`,
+    status: "building",
+    type,
+    description,
+    port,
+    accent,
+    accent_dim: dimAccent(accent),
+    accent_glow: accentGlow(accent),
+    env,
+    pricing,
+    providers: providers.length > 0 ? providers : undefined,
+    routes_map: routes.length > 0 ? routes : undefined,
+  };
+
+  // Step 9: Preview + confirm
+  const yamlStr = stringifyYaml(prim, { lineWidth: 120 });
+  console.log("\n  ─── prim.yaml preview ───────────────────────────────────────\n");
+  console.log(yamlStr.split("\n").map((l) => "  " + l).join("\n"));
+  console.log("  ────────────────────────────────────────────────────────────\n");
+
+  const confirmed = await confirm(rl, `  Write packages/${id}/prim.yaml?`, true);
+  rl.close();
+
+  if (!confirmed) {
+    console.log("  Aborted. No files written.");
+    return null;
+  }
+
+  return { prim, yamlStr };
+}
+
 // ── Main ────────────────────────────────────────────────────────────────────
+
+async function scaffold(id: string, prim: PrimYaml, force: boolean, root: string): Promise<void> {
+  const pkgDir = join(root, "packages", id);
+  const routePrices = buildRoutePriceMap(prim.routes_map ?? [], prim.pricing);
+
+  console.log(`Scaffolding ${prim.name} (packages/${id})...`);
+
+  // package.json
+  writeFile(join(pkgDir, "package.json"), genPackageJson(prim), force);
+
+  // tsconfig.json
+  writeFile(join(pkgDir, "tsconfig.json"), genTsconfig(), force);
+
+  // vitest.config.ts
+  writeFile(join(pkgDir, "vitest.config.ts"), genVitestConfig(), force);
+
+  // install.sh
+  writeFile(join(pkgDir, "install.sh"), genInstallSh(prim), force);
+
+  // src/index.ts
+  writeFile(join(pkgDir, "src", "index.ts"), genIndexTs(prim, routePrices), force);
+
+  // src/api.ts
+  writeFile(join(pkgDir, "src", "api.ts"), genApiTs(prim), force);
+
+  // src/service.ts
+  writeFile(join(pkgDir, "src", "service.ts"), genServiceTs(prim), force);
+
+  // src/provider.ts (only if providers section exists)
+  const providerContent = genProviderTs(prim);
+  if (providerContent) {
+    writeFile(join(pkgDir, "src", "provider.ts"), providerContent, force);
+  }
+
+  // src/<vendor>.ts (only if providers section exists)
+  const vendorFile = genVendorTs(prim);
+  if (vendorFile) {
+    writeFile(join(pkgDir, "src", vendorFile.filename), vendorFile.content, force);
+  }
+
+  // test/smoke.test.ts
+  writeFile(join(pkgDir, "test", "smoke.test.ts"), genSmokeTestTs(prim, routePrices), force);
+
+  // README.md
+  writeFile(join(pkgDir, "README.md"), genReadme(prim, routePrices), force);
+
+  console.log(`\nDone. ${written} file(s) written, ${skipped} skipped.`);
+  if (written > 0) {
+    console.log(`\nNext steps:`);
+    console.log(`  1. Implement src/api.ts  — define request/response types`);
+    console.log(`  2. Implement src/service.ts — replace TODO stubs`);
+    if ((prim.providers ?? []).length > 0) {
+      console.log(`  3. Implement src/${(prim.providers![0].name ?? "vendor").toLowerCase().replace(/\s+/g, "")}.ts — provider client`);
+    }
+    console.log(`  4. Update test/smoke.test.ts — fill in MOCK_RESPONSE`);
+    console.log(`  5. pnpm -F @primsh/${id} check`);
+  }
+}
 
 const args = process.argv.slice(2);
 const force = args.includes("--force");
-const id = args.find((a) => !a.startsWith("--"));
-
-if (!id) {
-  console.error("Usage: pnpm create-prim <id> [--force]");
-  process.exit(1);
-}
+const interactive = args.includes("--interactive");
 
 const ROOT = resolve(import.meta.dir, "..");
-const pkgDir = join(ROOT, "packages", id);
-const yamlPath = join(pkgDir, "prim.yaml");
 
-if (!existsSync(yamlPath)) {
-  console.error(`Error: prim.yaml not found at ${yamlPath}`);
-  console.error(`Create packages/${id}/prim.yaml first, then re-run.`);
-  process.exit(1);
-}
+if (interactive) {
+  // Interactive wizard mode
+  const result = await runWizard(ROOT);
+  if (!result) process.exit(0);
 
-const raw = readFileSync(yamlPath, "utf-8");
-const prim = parseYaml(raw) as PrimYaml;
+  const { prim, yamlStr } = result;
+  const pkgDir = join(ROOT, "packages", prim.id);
 
-if (!prim.id || !prim.name || !prim.port) {
-  console.error("Error: prim.yaml must have id, name, and port fields");
-  process.exit(1);
-}
+  // Write prim.yaml
+  mkdirSync(pkgDir, { recursive: true });
+  writeFileSync(join(pkgDir, "prim.yaml"), yamlStr, "utf-8");
+  console.log(`\n  Wrote packages/${prim.id}/prim.yaml`);
 
-console.log(`Scaffolding ${prim.name} (packages/${id})...`);
+  // Offer to scaffold
+  const rl2 = readline.createInterface({ input, output });
+  const doScaffold = await rl2.question(`\n  Run scaffolder now? (Y/n): `);
+  rl2.close();
 
-const routePrices = buildRoutePriceMap(prim.routes_map ?? [], prim.pricing);
-
-// package.json
-writeFile(join(pkgDir, "package.json"), genPackageJson(prim), force);
-
-// tsconfig.json
-writeFile(join(pkgDir, "tsconfig.json"), genTsconfig(), force);
-
-// vitest.config.ts
-writeFile(join(pkgDir, "vitest.config.ts"), genVitestConfig(), force);
-
-// install.sh
-writeFile(join(pkgDir, "install.sh"), genInstallSh(prim), force);
-
-// src/index.ts
-writeFile(join(pkgDir, "src", "index.ts"), genIndexTs(prim, routePrices), force);
-
-// src/api.ts
-writeFile(join(pkgDir, "src", "api.ts"), genApiTs(prim), force);
-
-// src/service.ts
-writeFile(join(pkgDir, "src", "service.ts"), genServiceTs(prim), force);
-
-// src/provider.ts (only if providers section exists)
-const providerContent = genProviderTs(prim);
-if (providerContent) {
-  writeFile(join(pkgDir, "src", "provider.ts"), providerContent, force);
-}
-
-// src/<vendor>.ts (only if providers section exists)
-const vendorFile = genVendorTs(prim);
-if (vendorFile) {
-  writeFile(join(pkgDir, "src", vendorFile.filename), vendorFile.content, force);
-}
-
-// test/smoke.test.ts
-writeFile(join(pkgDir, "test", "smoke.test.ts"), genSmokeTestTs(prim, routePrices), force);
-
-// README.md
-writeFile(join(pkgDir, "README.md"), genReadme(prim, routePrices), force);
-
-console.log(`\nDone. ${written} file(s) written, ${skipped} skipped.`);
-if (written > 0) {
-  console.log(`\nNext steps:`);
-  console.log(`  1. Implement src/api.ts  — define request/response types`);
-  console.log(`  2. Implement src/service.ts — replace TODO stubs`);
-  if ((prim.providers ?? []).length > 0) {
-    console.log(`  3. Implement src/${(prim.providers![0].name ?? "vendor").toLowerCase().replace(/\s+/g, "")}.ts — provider client`);
+  if (doScaffold.trim().toLowerCase() !== "n") {
+    await scaffold(prim.id, prim, force, ROOT);
+  } else {
+    console.log(`\n  Run later: pnpm create-prim ${prim.id}`);
   }
-  console.log(`  4. Update test/smoke.test.ts — fill in MOCK_RESPONSE`);
-  console.log(`  5. pnpm -F @primsh/${id} check`);
+} else {
+  // Non-interactive mode: read existing prim.yaml and scaffold
+  const id = args.find((a) => !a.startsWith("--"));
+
+  if (!id) {
+    console.error("Usage: pnpm create-prim <id> [--force]");
+    console.error("       pnpm create-prim --interactive");
+    process.exit(1);
+  }
+
+  const pkgDir = join(ROOT, "packages", id);
+  const yamlPath = join(pkgDir, "prim.yaml");
+
+  if (!existsSync(yamlPath)) {
+    console.error(`Error: prim.yaml not found at ${yamlPath}`);
+    console.error(`Create packages/${id}/prim.yaml first, then re-run.`);
+    console.error(`Or run: pnpm create-prim --interactive`);
+    process.exit(1);
+  }
+
+  const raw = readFileSync(yamlPath, "utf-8");
+  const prim = parseYaml(raw) as PrimYaml;
+
+  if (!prim.id || !prim.name || !prim.port) {
+    console.error("Error: prim.yaml must have id, name, and port fields");
+    process.exit(1);
+  }
+
+  await scaffold(id, prim, force, ROOT);
 }
