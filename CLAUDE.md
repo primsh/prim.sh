@@ -21,9 +21,8 @@ pnpm -r check                            # Lint + typecheck + test (all packages
 pnpm -r test                             # Tests only
 pnpm -r lint                             # Biome lint
 
-# Landing pages (current, pre-monorepo)
-python serve.py                           # Serves locally
-# After P-3: python site/serve.py
+# Landing pages
+bun run site/serve.ts                         # Serves locally on :3000
 ```
 
 ## Project Structure (after P-3 monorepo setup)
@@ -36,7 +35,7 @@ prim/
 │   ├── email/                # @primsh/email (email.sh)
 │   └── spawn/                # @primsh/spawn (spawn.sh)
 ├── site/                     # Landing pages (HTML, moved from root)
-│   ├── serve.py              # Dev server
+│   ├── serve.ts              # Dev server (Bun)
 │   └── <primitive>/index.html
 ├── specs/                    # Product specs
 ├── tasks/                    # Plan docs (active/ and completed/)

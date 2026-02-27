@@ -515,7 +515,7 @@ export function render(cfg: PrimConfig): string {
   // Hero install command
   const installUrl = `https://${cfg.endpoint}/install.sh`;
   const heroBlock =
-    `  <div class="cmd-block"><code>` +
+    `  <div class="cmd-block glow-multi"><code>` +
     `<span class="prompt">$</span> ` +
     `<span class="a">curl</span> ` +
     `<span class="flag">-fsSL</span> ` +
