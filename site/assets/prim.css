@@ -8,8 +8,8 @@
   --cyan:#4DD0E1;--yellow:#FFD54F;--pink:#FF80AB;--gold:#FFC107;--teal:#80CBC4;
   --magenta:#F50057;--lime:#C6FF00;--coral:#FF3D00;--indigo:#3D5AFE;--violet:#D500F9;
   --azure:#00BCD4;--brown:#795548;--emerald:#00E676;--slate:#607D8B;--white:#fff;
-  --wallet:#8BC34A;--mem:#00ACC1;--watch:#78909C;--trace:#AB47BC;
-  --browse:#64B5F6;--auth:#FFCA28;--code:#26C6DA;--faucet:#29B6F6;--launch:#FF7043;
+  --cat-crypto:#00ff88;--cat-compute:#4DD0E1;--cat-storage:#FFB74D;--cat-comms:#6C8EFF;
+  --cat-intelligence:#B39DDB;--cat-identity:#FFC107;--cat-ops:#FF3D00;--cat-physical:#F48FB1;--cat-meta:#E0E0E0;
   --accent:var(--green);--accent-dim:#00cc6a;--accent-glow:rgba(0,255,136,0.08);
 }
 html{scroll-behavior:smooth}
@@ -91,15 +91,15 @@ footer .links a{color:var(--muted)}
 
 /* ── Multi-color glow (prim.sh branded elements) ────────────────────────── */
 @keyframes glow-cycle{
-  0%{box-shadow:0 0 30px color-mix(in srgb,var(--green) 25%,transparent)}
-  12%{box-shadow:0 0 30px color-mix(in srgb,var(--blue) 25%,transparent)}
-  24%{box-shadow:0 0 30px color-mix(in srgb,var(--purple) 25%,transparent)}
-  36%{box-shadow:0 0 30px color-mix(in srgb,var(--orange) 25%,transparent)}
-  48%{box-shadow:0 0 30px color-mix(in srgb,var(--cyan) 25%,transparent)}
-  60%{box-shadow:0 0 30px color-mix(in srgb,var(--pink) 25%,transparent)}
-  72%{box-shadow:0 0 30px color-mix(in srgb,var(--gold) 25%,transparent)}
-  84%{box-shadow:0 0 30px color-mix(in srgb,var(--coral) 25%,transparent)}
-  100%{box-shadow:0 0 30px color-mix(in srgb,var(--green) 25%,transparent)}
+  0%{box-shadow:0 0 30px color-mix(in srgb,var(--cat-crypto) 25%,transparent)}
+  12%{box-shadow:0 0 30px color-mix(in srgb,var(--cat-compute) 25%,transparent)}
+  25%{box-shadow:0 0 30px color-mix(in srgb,var(--cat-storage) 25%,transparent)}
+  37%{box-shadow:0 0 30px color-mix(in srgb,var(--cat-comms) 25%,transparent)}
+  50%{box-shadow:0 0 30px color-mix(in srgb,var(--cat-intelligence) 25%,transparent)}
+  62%{box-shadow:0 0 30px color-mix(in srgb,var(--cat-identity) 25%,transparent)}
+  75%{box-shadow:0 0 30px color-mix(in srgb,var(--cat-ops) 25%,transparent)}
+  87%{box-shadow:0 0 30px color-mix(in srgb,var(--cat-physical) 25%,transparent)}
+  100%{box-shadow:0 0 30px color-mix(in srgb,var(--cat-crypto) 25%,transparent)}
 }
 .glow-multi{animation:glow-cycle 12s ease-in-out infinite}
 

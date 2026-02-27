@@ -108,13 +108,13 @@ export const CATEGORY_COLORS: Record<PrimCategory, string> = {
 /** Map existing `type` values to categories */
 export const TYPE_TO_CATEGORY: Record<string, PrimCategory> = {
   crypto: "crypto", defi: "crypto", testnet: "crypto", payments: "crypto",
-  compute: "compute", execution: "compute", scheduler: "compute",
+  compute: "compute", execution: "compute", scheduler: "compute", scheduling: "compute", deploy: "compute",
   storage: "storage", memory: "storage", secrets: "storage",
-  email: "comms", messaging: "comms", voice: "comms", browser: "comms",
+  email: "comms", messaging: "comms", voice: "comms", phone: "comms", browser: "comms",
   intelligence: "intelligence", ai: "intelligence", search: "intelligence", documentation: "intelligence",
-  auth: "identity", identity: "identity", domains: "identity",
-  observability: "ops", tracing: "ops", logistics: "ops", coordination: "ops",
-  labor: "physical", commerce: "physical", location: "physical", advertising: "physical", legal: "physical",
+  auth: "identity", oauth: "identity", identity: "identity", domains: "identity",
+  observability: "ops", tracing: "ops", logistics: "ops", coordination: "ops", social: "ops",
+  labor: "physical", commerce: "physical", location: "physical", maps: "physical", advertising: "physical", legal: "physical", compliance: "physical",
   meta: "meta",
 };
 

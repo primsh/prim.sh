@@ -12,7 +12,7 @@
 
 import { readFileSync, writeFileSync, existsSync } from "node:fs";
 import { join, resolve } from "node:path";
-import { loadPrimitives, deployed, type Primitive } from "./lib/primitives.js";
+import { loadPrimitives, deployed, TYPE_TO_CATEGORY, type Primitive } from "./lib/primitives.js";
 import { parseApiFile } from "./lib/parse-api.js";
 import { parseRoutePrices, renderLlmsTxt } from "./lib/render-llms-txt.js";
 import { renderSkillsJson } from "./lib/render-skills.js";
@@ -101,9 +101,10 @@ function genCards(prims: Primitive[]): string {
   return cards
     .map((p) => {
       const isLive = p.status === "live" || p.status === "testing";
+      const category = p.category ?? TYPE_TO_CATEGORY[p.type] ?? "meta";
       const cls = [
         "product",
-        p.card_class,
+        `cat-${category}`,
         !isLive && !p.phantom ? "phantom" : "",
         p.phantom ? "phantom" : "",
       ]

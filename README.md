@@ -81,6 +81,8 @@ No API keys. No signup. The wallet *is* the identity.
 | corp.sh | Incorporation, tax, insurance. Legal entities for agents. The fiat bridge. | Phantom |
 | hands.sh | On-demand human labor. Physical tasks, verification, errands. Gig economy API. | Phantom |
 | pins.sh | Coordinates, places, and routing. No maps UI, just structured spatial data. | Phantom |
+| [create.sh](https://create.prim.sh) | Scaffold new prim.sh primitives. Write a prim.yaml spec, get a complete package with passing tests. | Built |
+| [imagine.sh](https://imagine.prim.sh) | Media generation for agents. Images, video, audio. Any model, one API. No API keys. | Built |
 <!-- END:PRIM:PRIMS -->
 
 See the full catalog at [prim.sh/llms.txt](https://prim.sh/llms.txt).

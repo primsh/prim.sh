@@ -102,6 +102,22 @@
       "description": "LLM inference for agents. Any model, any provider, one API. Per-token pricing. No API keys.",
       "llms_txt": "https://prim.sh/infer/llms.txt",
       "openapi": "https://prim.sh/openapi/infer.yaml"
+    },
+    {
+      "id": "create",
+      "name": "create.sh",
+      "status": "building",
+      "endpoint": "https://create.prim.sh",
+      "description": "Scaffold new prim.sh primitives. Write a prim.yaml spec, get a complete package with passing tests.",
+      "openapi": "https://prim.sh/openapi/create.yaml"
+    },
+    {
+      "id": "imagine",
+      "name": "imagine.sh",
+      "status": "building",
+      "endpoint": "https://imagine.prim.sh",
+      "description": "Media generation for agents. Images, video, audio. Any model, one API. No API keys.",
+      "openapi": "https://prim.sh/openapi/imagine.yaml"
     }
   ],
   "discovery": {
