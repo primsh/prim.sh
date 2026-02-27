@@ -105,7 +105,7 @@ export async function runCreateCommand(sub: string, argv: string[]): Promise<voi
     }
 
     default:
-      console.log("Usage: prim create <scaffold|validate|get|get>");
+      console.log("Usage: prim create <scaffold|validate|schema|ports>");
       process.exit(1);
   }
 }

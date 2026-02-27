@@ -1,6 +1,6 @@
 {
   "version": "1.0.0",
-  "generated_at": "2026-02-27T09:21:23.609Z",
+  "generated_at": "2026-02-27T10:19:13.877Z",
   "prims": [
     "wallet",
     "faucet",
@@ -12,7 +12,8 @@
     "mem",
     "domain",
     "track",
-    "infer"
+    "infer",
+    "create"
   ],
-  "tool_count": 97
+  "tool_count": 101
 }
