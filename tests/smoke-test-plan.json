@@ -39,6 +39,12 @@
       "name": "Server Provisioning (spawn.sh)",
       "prompt": "Using your funded wallet, test the full server lifecycle on spawn.prim.sh: (1) Generate a throwaway SSH key pair, (2) register the public key with spawn.prim.sh, (3) list SSH keys to confirm, (4) create a server named 'test-server' with type 'small', image 'ubuntu-24.04', location 'nyc3', attaching your SSH key, (5) poll the server status every 5 seconds until it becomes 'active' (up to 2 minutes), (6) list servers to confirm, (7) DELETE the server immediately — do not leave it running, (8) delete the SSH key. Report the server ID, IP address, and time to become active. IMPORTANT: Always clean up — delete the server and SSH key even if earlier steps fail.",
       "tests": ["SP-1", "SP-2", "SP-3", "SP-4", "SP-5", "SP-6", "SP-7"]
+    },
+    {
+      "id": "infer",
+      "name": "LLM Inference (infer.sh)",
+      "prompt": "Using your funded wallet, test the infer.sh LLM inference service on infer.prim.sh: (1) Check the health endpoint, (2) attempt a chat completion to confirm x402 gating, then pay and verify a valid ChatResponse, (3) attempt an embeddings call to confirm x402 gating, then pay and verify a valid EmbedResponse, (4) attempt to list models to confirm x402 gating, then pay and verify a valid models list. Report each step's result including response shapes and status codes.",
+      "tests": ["INF-H1", "INF-T1", "INF-T2", "INF-T3"]
     }
   ],
   "tests": [
@@ -630,6 +636,67 @@
       "actual_status": 200,
       "actual_body": { "status": "deleted" },
       "result": "pass"
+    },
+
+    {
+      "id": "INF-H1",
+      "service": "infer.sh",
+      "test": "Health check",
+      "method": "GET",
+      "endpoint": "https://infer.prim.sh/",
+      "input": null,
+      "expected": { "status": 200, "body": { "service": "infer.sh", "status": "ok" } },
+      "depends_on": [],
+      "captures": {},
+      "notes": null,
+      "actual_status": null,
+      "actual_body": null,
+      "result": null
+    },
+    {
+      "id": "INF-T1",
+      "service": "infer.sh",
+      "test": "Chat completion",
+      "method": "POST",
+      "endpoint": "https://infer.prim.sh/v1/chat",
+      "input": { "model": "anthropic/claude-sonnet-4", "messages": [{ "role": "user", "content": "Say hello in exactly three words." }] },
+      "expected": { "status": 200, "body": { "id": "string", "object": "chat.completion", "choices": "array (non-empty)" } },
+      "depends_on": ["INF-H1", "F-1"],
+      "captures": {},
+      "notes": "x402 paid ($0.01). Verify response has id, object='chat.completion', choices array with at least one choice containing message.content.",
+      "actual_status": null,
+      "actual_body": null,
+      "result": null
+    },
+    {
+      "id": "INF-T2",
+      "service": "infer.sh",
+      "test": "Generate embeddings",
+      "method": "POST",
+      "endpoint": "https://infer.prim.sh/v1/embed",
+      "input": { "model": "openai/text-embedding-3-small", "input": "Hello world" },
+      "expected": { "status": 200, "body": { "object": "list", "data": "array (non-empty)" } },
+      "depends_on": ["INF-H1", "F-1"],
+      "captures": {},
+      "notes": "x402 paid ($0.001). OpenRouter may not support embeddings — 502 with provider_error counts as soft_fail, not fail.",
+      "actual_status": null,
+      "actual_body": null,
+      "result": null
+    },
+    {
+      "id": "INF-T3",
+      "service": "infer.sh",
+      "test": "List available models",
+      "method": "GET",
+      "endpoint": "https://infer.prim.sh/v1/models",
+      "input": null,
+      "expected": { "status": 200, "body": { "data": "array (non-empty)" } },
+      "depends_on": ["INF-H1", "F-1"],
+      "captures": {},
+      "notes": "x402 paid ($0.01). Verify data array contains model objects with id and pricing fields.",
+      "actual_status": null,
+      "actual_body": null,
+      "result": null
     }
   ]
 }

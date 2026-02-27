@@ -850,7 +850,7 @@
               "description": "Deploy infer.sh to VPS: systemd unit, /etc/prim/infer.env, Caddy route (port 3012), prim.yaml status → deployed, pnpm gen:prims.",
               "owner": ["Garric"],
               "depends": ["INF-5"],
-              "status": "pending",
+              "status": "done",
               "release": null,
               "plan": "tasks/active/inf-infer-sh-pipeline.md"
             }
@@ -1622,7 +1622,7 @@
                 "Claude"
               ],
               "depends": [],
-              "status": "pending",
+              "status": "done",
               "release": null
             },
             {
@@ -1971,7 +1971,7 @@
                 "Claude"
               ],
               "depends": [],
-              "status": "pending",
+              "status": "done",
               "release": null
             },
             {
