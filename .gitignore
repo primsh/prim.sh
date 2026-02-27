@@ -40,6 +40,15 @@ gitleaks-report.sarif
 # Brand assets (large binaries)
 brand/assets/
 
+# Generated deploy configs (deterministic from prim.yaml)
+deploy/prim/generated/
+
+# Vitest timestamp artifacts
+**/*.timestamp-*.mjs
+
+# Original image assets (pre-optimization)
+site/assets/*_orig.*
+
 # OS
 .DS_Store
 Thumbs.db

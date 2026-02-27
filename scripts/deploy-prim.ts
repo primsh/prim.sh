@@ -26,6 +26,16 @@ const CHECK_MODE = process.argv.includes("--check");
 const ASSEMBLE_ONLY = process.argv.includes("--assemble");
 const SKIP_GATE = process.argv.includes("--skip-gate");
 
+// Configurable paths — override via env vars for non-standard deployments
+const PRIM_ROOT = process.env.PRIM_ROOT ?? "/opt/prim";
+const PRIM_ETC = process.env.PRIM_ETC ?? "/etc/prim";
+// BUN_PATH: default to `which bun` at runtime; override via env var for non-standard installs
+import { execSync } from "node:child_process";
+const BUN_PATH = process.env.BUN_PATH ?? (() => {
+  try { return execSync("which bun", { encoding: "utf-8" }).trim(); }
+  catch { return "/usr/local/bin/bun"; }
+})();
+
 // ── Helpers ────────────────────────────────────────────────────────────────
 
 function writeIfChanged(filePath: string, content: string, label: string): boolean {
@@ -84,9 +94,9 @@ After=${afterUnits}
 [Service]
 Type=simple
 User=prim
-WorkingDirectory=/opt/prim
-EnvironmentFile=/etc/prim/${id}.env
-ExecStart=/home/prim/.bun/bin/bun run packages/${id}/src/index.ts
+WorkingDirectory=${PRIM_ROOT}
+EnvironmentFile=${PRIM_ETC}/${id}.env
+ExecStart=${BUN_PATH} run packages/${id}/src/index.ts
 Restart=on-failure
 RestartSec=5
 
@@ -249,11 +259,11 @@ async function main() {
   if (!CHECK_MODE) {
     console.log(`
 Next steps (run on VPS):
-  1. git -C /opt/prim pull --ff-only
+  1. git -C ${PRIM_ROOT} pull --ff-only
   2. cp deploy/prim/services/prim-${primId}.service /etc/systemd/system/
   3. systemctl daemon-reload
-  4. cp deploy/prim/generated/${primId}.env.template /etc/prim/${primId}.env
-     # Then fill in real values: vim /etc/prim/${primId}.env
+  4. cp deploy/prim/generated/${primId}.env.template ${PRIM_ETC}/${primId}.env
+     # Then fill in real values: vim ${PRIM_ETC}/${primId}.env
   5. cp deploy/prim/Caddyfile /etc/caddy/Caddyfile && caddy reload --config /etc/caddy/Caddyfile
   6. systemctl enable --now prim-${primId}
   7. bun scripts/gate-check.ts ${primId} deployed

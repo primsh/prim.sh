@@ -326,9 +326,9 @@
                   "description": "Final repo scrub: .gitignore (generated/, timestamps), delete orig assets, remove ops docs, scrub residual VPS IPs, exclude internal scripts",
                   "owner": ["Claude"],
                   "depends": [],
-                  "status": "pending",
+                  "status": "done",
                   "release": "v1.0.0",
-                  "plan": "tasks/active/hrd-23-repo-scrub.md"
+                  "plan": "tasks/completed/hrd-23-repo-scrub.md"
                 }
               ]
             },
@@ -383,7 +383,8 @@
                   "owner": ["Claude"],
                   "depends": [],
                   "status": "pending",
-                  "release": null
+                  "release": null,
+                  "plan": "tasks/active/hrd-30-console-warn-to-logger.md"
                 },
                 {
                   "id": "HRD-31",

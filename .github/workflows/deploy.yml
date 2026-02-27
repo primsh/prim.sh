@@ -8,7 +8,7 @@ name: Deploy
 #
 # ── Required GitHub secrets ──────────────────────────────────────────────────
 #
-#   VPS_HOST        SSH user@host string, e.g. "root@157.230.187.207"
+#   VPS_HOST        SSH user@host string, e.g. "root@<your-vps-ip>"
 #   VPS_SSH_KEY     Ed25519 private key (see setup below)
 #   VPS_KNOWN_HOSTS Output of: ssh-keyscan <VPS_IP>
 #

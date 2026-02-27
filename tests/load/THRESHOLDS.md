@@ -1,6 +1,6 @@
 # prim.sh Load Test — Capacity Thresholds
 
-Baseline thresholds derived from single-node VPS characteristics (157.230.187.207,
+Baseline thresholds derived from single-node VPS characteristics (<your-vps-ip>,
 Ubuntu 24.04, shared DigitalOcean droplet). All primitives run as Bun/Hono processes
 behind Caddy reverse proxy.
 
@@ -94,7 +94,7 @@ For overnight / extended runs (1–8 hours):
 
 ### p95 > 500ms on health endpoints
 
-1. SSH to VPS: `root@157.230.187.207`
+1. SSH to VPS: `root@<your-vps-ip>`
 2. Check systemd status: `systemctl status prim-wallet prim-store prim-faucet`
 3. Check Bun RSS: `ps aux | grep 'bun run'`
 4. If RSS > 512MB on any service: `systemctl restart prim-<service>`

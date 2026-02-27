@@ -30,9 +30,13 @@ import { getAddress } from "viem";
 
 // ─── Config ──────────────────────────────────────────────────────────────
 
-const WALLET_URL = "https://wallet.prim.sh";
-const FAUCET_URL = "https://faucet.prim.sh";
-const API_URL = "https://api.prim.sh";
+// Override individual service URLs via env vars, or set PRIM_BASE_URL to
+// point all services at a different deployment (e.g. "https://staging.prim.sh").
+// Defaults target the production deployment at prim.sh.
+const BASE = process.env.PRIM_BASE_URL ?? "https://prim.sh";
+const WALLET_URL = process.env.PRIM_WALLET_URL ?? `https://wallet.${new URL(BASE).hostname}`;
+const FAUCET_URL = process.env.PRIM_FAUCET_URL ?? `https://faucet.${new URL(BASE).hostname}`;
+const API_URL = process.env.PRIM_API_URL ?? `https://api.${new URL(BASE).hostname}`;
 
 // ─── Preflight ───────────────────────────────────────────────────────────
 
