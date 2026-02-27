@@ -8,14 +8,14 @@ Part of the [prim.sh](https://prim.sh) agent-native stack. x402 payment (USDC on
 
 | Route | Description | Price | Request | Response |
 |-------|-------------|-------|---------|----------|
-| `POST /v1/wallets` | Register a wallet via EIP-191 signature | $0.01 | `WalletRegisterRequest` | `WalletRegisterResponse` |
+| `POST /v1/wallets` | Register a wallet via EIP-191 signature | $0.01 | `RegisterWalletRequest` | `RegisterWalletResponse` |
 | `GET /v1/wallets` | List registered wallets owned by the calling wallet | $0.001 | `—` | `WalletListResponse` |
 | `GET /v1/wallets/:address` | Get full wallet details including balance, policy, and status | $0.001 | `—` | `WalletDetailResponse` |
-| `DELETE /v1/wallets/:address` | Permanently deactivate a wallet. Irreversible. Pending fund requests cancelled. | $0.01 | `—` | `WalletDeactivateResponse` |
-| `POST /v1/wallets/:address/fund-request` | Request USDC funding for a wallet. A human operator can approve or deny. | $0.001 | `FundRequestCreateRequest` | `FundRequestResponse` |
+| `DELETE /v1/wallets/:address` | Permanently deactivate a wallet. Irreversible. Pending fund requests cancelled. | $0.01 | `—` | `DeactivateWalletResponse` |
+| `POST /v1/wallets/:address/fund-request` | Request USDC funding for a wallet. A human operator can approve or deny. | $0.001 | `CreateFundRequestRequest` | `FundRequestResponse` |
 | `GET /v1/wallets/:address/fund-requests` | List all fund requests for a wallet | $0.001 | `—` | `FundRequestListResponse` |
-| `POST /v1/fund-requests/:id/approve` | Approve a pending fund request. Returns the address to send USDC to. | $0.01 | `—` | `FundRequestApproveResponse` |
-| `POST /v1/fund-requests/:id/deny` | Deny a pending fund request | $0.001 | `FundRequestDenyRequest` | `FundRequestDenyResponse` |
+| `POST /v1/fund-requests/:id/approve` | Approve a pending fund request. Returns the address to send USDC to. | $0.01 | `—` | `ApproveFundRequestResponse` |
+| `POST /v1/fund-requests/:id/deny` | Deny a pending fund request | $0.001 | `DenyFundRequestRequest` | `DenyFundRequestResponse` |
 | `GET /v1/wallets/:address/policy` | Get the spending policy for a wallet | $0.001 | `—` | `PolicyResponse` |
 | `PUT /v1/wallets/:address/policy` | Update spending policy for a wallet. All fields optional. Pass null to remove a limit. | $0.005 | `PolicyUpdateRequest` | `PolicyResponse` |
 | `POST /v1/wallets/:address/pause` | Pause operations for a wallet. Temporarily halts spending without deactivating. | $0.001 | `PauseRequest` | `PauseResponse` |
@@ -31,7 +31,7 @@ Part of the [prim.sh](https://prim.sh) agent-native stack. x402 payment (USDC on
 
 ## Request / Response Types
 
-### `WalletRegisterRequest`
+### `RegisterWalletRequest`
 
 | Field | Type | Required |
 |-------|------|----------|
@@ -41,7 +41,7 @@ Part of the [prim.sh](https://prim.sh) agent-native stack. x402 payment (USDC on
 | `chain` | `string` | optional |
 | `label` | `string` | optional |
 
-### `WalletRegisterResponse`
+### `RegisterWalletResponse`
 
 | Field | Type | Description |
 |-------|------|-------------|
@@ -64,7 +64,7 @@ Part of the [prim.sh](https://prim.sh) agent-native stack. x402 payment (USDC on
 | `policy` | `SpendingPolicy | null` | Spending policy, null if none configured. |
 | `created_at` | `string` | ISO 8601 timestamp when the wallet was created. |
 
-### `WalletDeactivateResponse`
+### `DeactivateWalletResponse`
 
 | Field | Type | Description |
 |-------|------|-------------|
@@ -72,7 +72,7 @@ Part of the [prim.sh](https://prim.sh) agent-native stack. x402 payment (USDC on
 | `deactivated` | `boolean` | Always true on success. |
 | `deactivated_at` | `string` | ISO 8601 timestamp of deactivation. |
 
-### `FundRequestCreateRequest`
+### `CreateFundRequestRequest`
 
 | Field | Type | Required |
 |-------|------|----------|
@@ -90,7 +90,7 @@ Part of the [prim.sh](https://prim.sh) agent-native stack. x402 payment (USDC on
 | `status` | `FundRequestStatus` | Current status of the fund request. |
 | `created_at` | `string` | ISO 8601 timestamp when the request was created. |
 
-### `FundRequestApproveResponse`
+### `ApproveFundRequestResponse`
 
 | Field | Type | Description |
 |-------|------|-------------|
@@ -101,13 +101,13 @@ Part of the [prim.sh](https://prim.sh) agent-native stack. x402 payment (USDC on
 | `chain` | `string` | Chain identifier for the funding transaction. |
 | `approved_at` | `string` | ISO 8601 timestamp when the request was approved. |
 
-### `FundRequestDenyRequest`
+### `DenyFundRequestRequest`
 
 | Field | Type | Required |
 |-------|------|----------|
 | `reason` | `string` | optional |
 
-### `FundRequestDenyResponse`
+### `DenyFundRequestResponse`
 
 | Field | Type | Description |
 |-------|------|-------------|

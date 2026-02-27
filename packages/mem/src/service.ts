@@ -29,8 +29,8 @@ import type {
   UpsertResponse,
   QueryRequest,
   QueryResponse,
-  CacheSetRequest,
-  CacheGetResponse,
+  SetCacheRequest,
+  GetCacheResponse,
 } from "./api.ts";
 
 // ─── ServiceResult ────────────────────────────────────────────────────────
@@ -85,7 +85,7 @@ function rowToCollectionResponse(row: CollectionRow, documentCount: number | nul
   };
 }
 
-function rowToCacheGetResponse(row: CacheEntryRow): CacheGetResponse {
+function rowToGetCacheResponse(row: CacheEntryRow): GetCacheResponse {
   return {
     namespace: row.namespace,
     key: row.key,
@@ -349,9 +349,9 @@ export async function queryDocuments(
 export function cacheSet(
   namespace: string,
   key: string,
-  request: CacheSetRequest,
+  request: SetCacheRequest,
   callerWallet: string,
-): ServiceResult<CacheGetResponse> {
+): ServiceResult<GetCacheResponse> {
   if (!isValidCacheNamespace(namespace)) {
     return {
       ok: false,
@@ -392,14 +392,14 @@ export function cacheSet(
     deleteExpiredEntries(Date.now());
   }
 
-  return { ok: true, data: rowToCacheGetResponse(row) };
+  return { ok: true, data: rowToGetCacheResponse(row) };
 }
 
 export function cacheGet(
   namespace: string,
   key: string,
   callerWallet: string,
-): ServiceResult<CacheGetResponse> {
+): ServiceResult<GetCacheResponse> {
   const row = getCacheEntry(callerWallet, namespace, key);
 
   if (!row) {
@@ -412,7 +412,7 @@ export function cacheGet(
     return { ok: false, status: 404, code: "not_found", message: "Cache key not found" };
   }
 
-  return { ok: true, data: rowToCacheGetResponse(row) };
+  return { ok: true, data: rowToGetCacheResponse(row) };
 }
 
 export function cacheDelete(

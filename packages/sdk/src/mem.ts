@@ -41,7 +41,7 @@ export interface QueryMatch {
   metadata: Record<string, unknown>;
 }
 
-export interface CacheGetResponse {
+export interface GetCacheResponse {
   /** Cache namespace. */
   namespace: string;
   /** Cache key. */
@@ -207,19 +207,19 @@ export function createMemClient(primFetch: (input: RequestInfo | URL, init?: Req
       });
       return res.json() as Promise<QueryCollectionResponse>;
     },
-    async setCache(params: SetCacheParams, req: SetCacheRequest): Promise<CacheGetResponse> {
+    async setCache(params: SetCacheParams, req: SetCacheRequest): Promise<GetCacheResponse> {
       const url = `${baseUrl}/v1/cache/${encodeURIComponent(params.namespace)}/${encodeURIComponent(params.key)}`;
       const res = await primFetch(url, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(req),
       });
-      return res.json() as Promise<CacheGetResponse>;
+      return res.json() as Promise<GetCacheResponse>;
     },
-    async getCache(params: GetCacheParams): Promise<CacheGetResponse> {
+    async getCache(params: GetCacheParams): Promise<GetCacheResponse> {
       const url = `${baseUrl}/v1/cache/${encodeURIComponent(params.namespace)}/${encodeURIComponent(params.key)}`;
       const res = await primFetch(url);
-      return res.json() as Promise<CacheGetResponse>;
+      return res.json() as Promise<GetCacheResponse>;
     },
     async deleteCache(params: DeleteCacheParams): Promise<DeleteCacheResponse> {
       const url = `${baseUrl}/v1/cache/${encodeURIComponent(params.namespace)}/${encodeURIComponent(params.key)}`;

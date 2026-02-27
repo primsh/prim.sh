@@ -44,7 +44,7 @@ export interface CursorPagination {
 
 // ─── Wallet register ──────────────────────────────────────────────────────
 
-export interface WalletRegisterRequest {
+export interface RegisterWalletRequest {
   /** Ethereum address to register (0x... 42 chars, checksummed). */
   address: string;
   /** EIP-191 signature over "Register <address> with prim.sh at <timestamp>". */
@@ -57,7 +57,7 @@ export interface WalletRegisterRequest {
   label?: string;
 }
 
-export interface WalletRegisterResponse {
+export interface RegisterWalletResponse {
   /** Registered Ethereum address. */
   address: string;
   /** Chain identifier. */
@@ -122,7 +122,7 @@ export interface WalletDetailResponse {
 
 // ─── Wallet deactivate ─────────────────────────────────────────────────────
 
-export interface WalletDeactivateResponse {
+export interface DeactivateWalletResponse {
   /** Deactivated Ethereum address. */
   address: string;
   /** Always true on success. */
@@ -133,7 +133,7 @@ export interface WalletDeactivateResponse {
 
 // ─── Fund request ──────────────────────────────────────────────────────────
 
-export interface FundRequestCreateRequest {
+export interface CreateFundRequestRequest {
   /** Requested USDC amount as a decimal string (e.g. "10.00"). */
   amount: string;
   /** Human-readable reason for the funding request. */
@@ -160,7 +160,7 @@ export interface FundRequestResponse {
 /** @deprecated Use PaginatedList<FundRequestResponse> */
 export type FundRequestListResponse = PaginatedList<FundRequestResponse>;
 
-export interface FundRequestApproveResponse {
+export interface ApproveFundRequestResponse {
   /** Fund request ID. */
   id: string;
   /** Always "approved" on success. */
@@ -175,12 +175,12 @@ export interface FundRequestApproveResponse {
   approved_at: string;
 }
 
-export interface FundRequestDenyRequest {
+export interface DenyFundRequestRequest {
   /** Reason for denial. */
   reason?: string;
 }
 
-export interface FundRequestDenyResponse {
+export interface DenyFundRequestResponse {
   /** Fund request ID. */
   id: string;
   /** Always "denied" on success. */

@@ -129,7 +129,7 @@ components:
           description: Stored metadata.
           example: {"source": "wikipedia", "lang": "en"}
 
-    CacheGetResponse:
+    GetCacheResponse:
       type: object
       required: [namespace, key, value, expires_at]
       properties:
@@ -692,7 +692,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/CacheGetResponse"
+                $ref: "#/components/schemas/GetCacheResponse"
               example:
                 namespace: "agent-session"
                 key: "last-query-result"
@@ -741,7 +741,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/CacheGetResponse"
+                $ref: "#/components/schemas/GetCacheResponse"
               example:
                 namespace: "agent-session"
                 key: "last-query-result"

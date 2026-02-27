@@ -14,8 +14,8 @@ Part of the [prim.sh](https://prim.sh) agent-native stack. x402 payment (USDC on
 | `DELETE /v1/collections/:id` | Delete collection and all documents. Irreversible. | $0.01 | `—` | `—` |
 | `POST /v1/collections/:id/upsert` | Embed and store documents. Each document: {id?, text, metadata?}. Existing IDs are replaced. | $0.001 | `UpsertRequest` | `UpsertResponse` |
 | `POST /v1/collections/:id/query` | Semantic search. Fields: text (required), top_k, filter (Qdrant native format). | $0.001 | `QueryRequest` | `QueryResponse` |
-| `PUT /v1/cache/:namespace/:key` | Store a value in the KV cache. Optional ttl in seconds for expiry. | $0.0001 | `CacheSetRequest` | `—` |
-| `GET /v1/cache/:namespace/:key` | Retrieve a cache value. Returns 404 if missing or expired. | $0.0001 | `—` | `CacheGetResponse` |
+| `PUT /v1/cache/:namespace/:key` | Store a value in the KV cache. Optional ttl in seconds for expiry. | $0.0001 | `SetCacheRequest` | `—` |
+| `GET /v1/cache/:namespace/:key` | Retrieve a cache value. Returns 404 if missing or expired. | $0.0001 | `—` | `GetCacheResponse` |
 | `DELETE /v1/cache/:namespace/:key` | Delete a cache entry | $0.0001 | `—` | `—` |
 
 ## Pricing
@@ -76,14 +76,14 @@ Part of the [prim.sh](https://prim.sh) agent-native stack. x402 payment (USDC on
 |-------|------|-------------|
 | `matches` | `QueryMatch[]` | Nearest neighbor matches, ordered by descending score. |
 
-### `CacheSetRequest`
+### `SetCacheRequest`
 
 | Field | Type | Required |
 |-------|------|----------|
 | `value` | `unknown` | required |
 | `ttl` | `number | null` | optional |
 
-### `CacheGetResponse`
+### `GetCacheResponse`
 
 | Field | Type | Description |
 |-------|------|-------------|

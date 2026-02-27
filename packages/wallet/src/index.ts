@@ -10,14 +10,14 @@ import {
 import { createPrimApp } from "@primsh/x402-middleware/create-prim-app";
 import { addToAllowlist, removeFromAllowlist, isAllowed, createAllowlistChecker } from "@primsh/x402-middleware/allowlist-db";
 import type {
-  WalletRegisterRequest,
+  RegisterWalletRequest,
   WalletListResponse,
   WalletDetailResponse,
-  WalletDeactivateResponse,
+  DeactivateWalletResponse,
   FundRequestResponse,
   FundRequestListResponse,
-  FundRequestApproveResponse,
-  FundRequestDenyResponse,
+  ApproveFundRequestResponse,
+  DenyFundRequestResponse,
   PolicyResponse,
   PauseResponse,
   ResumeResponse,
@@ -37,7 +37,7 @@ import {
   pauseWallet,
   resumeWallet,
 } from "./service.ts";
-import type { FundRequestCreateRequest, FundRequestDenyRequest, PolicyUpdateRequest, PauseRequest, ResumeRequest } from "./api.ts";
+import type { CreateFundRequestRequest, DenyFundRequestRequest, PolicyUpdateRequest, PauseRequest, ResumeRequest } from "./api.ts";
 import { pause, resume, getState } from "./circuit-breaker.ts";
 
 const networkConfig = getNetworkConfig();
@@ -121,9 +121,9 @@ app.use(
 
 // POST /v1/wallets — Register wallet via EIP-191 signature (FREE)
 app.post("/v1/wallets", async (c) => {
-  let body: Partial<WalletRegisterRequest>;
+  let body: Partial<RegisterWalletRequest>;
   try {
-    body = await c.req.json<Partial<WalletRegisterRequest>>();
+    body = await c.req.json<Partial<RegisterWalletRequest>>();
   } catch (err) {
     logger.warn("JSON parse failed on POST /v1/wallets", { error: String(err) });
     return c.json({ error: { code: "invalid_request", message: "Invalid JSON body" } } as ApiError, 400);
@@ -198,7 +198,7 @@ app.delete("/v1/wallets/:address", (c) => {
     if (status === 404) return c.json(notFound(result.message), 404);
     return c.json(forbidden(result.message), 403);
   }
-  return c.json(result.data as WalletDeactivateResponse, 200);
+  return c.json(result.data as DeactivateWalletResponse, 200);
 });
 
 // POST /v1/wallets/:address/fund-request
@@ -209,9 +209,9 @@ app.post("/v1/wallets/:address/fund-request", async (c) => {
     return c.json(forbidden("No wallet address in payment"), 403);
   }
 
-  let body: Partial<FundRequestCreateRequest>;
+  let body: Partial<CreateFundRequestRequest>;
   try {
-    body = await c.req.json<Partial<FundRequestCreateRequest>>();
+    body = await c.req.json<Partial<CreateFundRequestRequest>>();
   } catch (err) {
     logger.warn("JSON parse failed on POST /v1/wallets/:address/fund-request", { error: String(err) });
     return c.json({ error: { code: "invalid_request", message: "Invalid JSON body" } } as ApiError, 400);
@@ -263,7 +263,7 @@ app.post("/v1/fund-requests/:id/approve", (c) => {
     const { status, code, message } = result;
     return c.json({ error: { code, message } } as ApiError, status as 403 | 404 | 409);
   }
-  return c.json(result.data as FundRequestApproveResponse, 200);
+  return c.json(result.data as ApproveFundRequestResponse, 200);
 });
 
 // POST /v1/fund-requests/:id/deny
@@ -276,7 +276,7 @@ app.post("/v1/fund-requests/:id/deny", async (c) => {
 
   let reason: string | undefined;
   try {
-    const body = await c.req.json<Partial<FundRequestDenyRequest>>();
+    const body = await c.req.json<Partial<DenyFundRequestRequest>>();
     reason = body.reason;
   } catch (err) {
     logger.warn("JSON parse failed on POST /v1/fund-requests/:id/deny", { error: String(err) });
@@ -288,7 +288,7 @@ app.post("/v1/fund-requests/:id/deny", async (c) => {
     const { status, code, message } = result;
     return c.json({ error: { code, message } } as ApiError, status as 403 | 404 | 409);
   }
-  return c.json(result.data as FundRequestDenyResponse, 200);
+  return c.json(result.data as DenyFundRequestResponse, 200);
 });
 
 // GET /v1/wallets/:address/policy

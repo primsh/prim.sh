@@ -18,16 +18,16 @@ import {
   resetDailySpentIfNeeded,
 } from "./db.ts";
 import type {
-  WalletRegisterRequest,
-  WalletRegisterResponse,
+  RegisterWalletRequest,
+  RegisterWalletResponse,
   WalletListResponse,
   WalletDetailResponse,
-  WalletDeactivateResponse,
-  FundRequestCreateRequest,
+  DeactivateWalletResponse,
+  CreateFundRequestRequest,
   FundRequestResponse,
   FundRequestListResponse,
-  FundRequestApproveResponse,
-  FundRequestDenyResponse,
+  ApproveFundRequestResponse,
+  DenyFundRequestResponse,
   PolicyResponse,
   PolicyUpdateRequest,
   PauseScope,
@@ -48,10 +48,10 @@ function buildRegistrationMessage(address: string, timestamp: string): string {
 }
 
 type RegisterResult =
-  | { ok: true; data: WalletRegisterResponse }
+  | { ok: true; data: RegisterWalletResponse }
   | { ok: false; status: number; code: string; message: string };
 
-export async function registerWallet(request: WalletRegisterRequest): Promise<RegisterResult> {
+export async function registerWallet(request: RegisterWalletRequest): Promise<RegisterResult> {
   const { address, signature, timestamp, chain, label } = request;
 
   // 1. Validate address
@@ -207,7 +207,7 @@ export async function getWallet(
 export function deactivateWallet(
   address: string,
   caller: string,
-): { ok: true; data: WalletDeactivateResponse } | { ok: false; status: 403 | 404; code: string; message: string } {
+): { ok: true; data: DeactivateWalletResponse } | { ok: false; status: 403 | 404; code: string; message: string } {
   const check = checkOwnership(address, caller);
   if (!check.ok) return check;
 
@@ -243,7 +243,7 @@ function fundRequestToResponse(row: import("./db.ts").FundRequestRow): FundReque
 
 export function createFundRequest(
   walletAddress: string,
-  request: FundRequestCreateRequest,
+  request: CreateFundRequestRequest,
   caller: string,
 ): FundRequestResult<FundRequestResponse> {
   const check = checkOwnership(walletAddress, caller);
@@ -299,7 +299,7 @@ export function listFundRequests(
 export function approveFundRequest(
   requestId: string,
   caller: string,
-): FundRequestResult<FundRequestApproveResponse> {
+): FundRequestResult<ApproveFundRequestResponse> {
   const req = getFundRequestById(requestId);
   if (!req) {
     return { ok: false, status: 404, code: "not_found", message: "Fund request not found" };
@@ -334,7 +334,7 @@ export function denyFundRequest(
   requestId: string,
   caller: string,
   reason?: string,
-): FundRequestResult<FundRequestDenyResponse> {
+): FundRequestResult<DenyFundRequestResponse> {
   const req = getFundRequestById(requestId);
   if (!req) {
     return { ok: false, status: 404, code: "not_found", message: "Fund request not found" };

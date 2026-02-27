@@ -3,6 +3,7 @@ name: mem.sh
 endpoint: mem.prim.sh
 status: building
 type: memory
+category: storage
 card_class: p21
 description: "Vector store and cache for agents. Persist long-term knowledge and session state."
 port: 3008
@@ -46,9 +47,9 @@ factory:
   metrics: true
   free_service: false
 
-accent: "#00ACC1"
-accent_dim: "#007a8e"
-accent_glow: "rgba(0,172,193,0.08)"
+accent: "#FFB74D"
+accent_dim: "#cc923e"
+accent_glow: "rgba(255,183,77,0.08)"
 
 tagline: "Memory for agents."
 sub: "Managed vector database. Ephemeral cache. Long-term knowledge retrieval. Give your agent a hippocampus, gated by x402."
@@ -175,24 +176,24 @@ routes_map:
       - { status: 502, code: qdrant_error, description: "Upstream Qdrant error" }
       - { status: 502, code: embedding_error, description: "Embedding model error" }
   - route: "PUT /v1/cache/:namespace/:key"
-    request: CacheSetRequest
+    request: SetCacheRequest
     response: null
     status: 200
     description: "Store a value in the KV cache. Optional ttl in seconds for expiry."
     operation_id: set_cache
-    request_type: CacheSetRequest
+    request_type: SetCacheRequest
     response_type: null
     errors:
       - { status: 400, code: invalid_request, description: "Missing value" }
       - { status: 402, code: payment_required, description: "x402 payment needed" }
   - route: "GET /v1/cache/:namespace/:key"
     request: null
-    response: CacheGetResponse
+    response: GetCacheResponse
     status: 200
     description: "Retrieve a cache value. Returns 404 if missing or expired."
     operation_id: get_cache
     request_type: null
-    response_type: CacheGetResponse
+    response_type: GetCacheResponse
     errors:
       - { status: 402, code: payment_required, description: "x402 payment needed" }
       - { status: 404, code: not_found, description: "Cache entry missing or expired" }

@@ -16,8 +16,8 @@ import type {
   UpsertResponse,
   QueryRequest,
   QueryResponse,
-  CacheSetRequest,
-  CacheGetResponse,
+  SetCacheRequest,
+  GetCacheResponse,
 } from "./api.ts";
 import {
   createCollection,
@@ -183,9 +183,9 @@ app.put("/v1/cache/:namespace/:key", async (c) => {
   const caller = c.get("walletAddress");
   if (!caller) return c.json(forbidden("No wallet address in payment"), 403);
 
-  let body: CacheSetRequest;
+  let body: SetCacheRequest;
   try {
-    body = await c.req.json<CacheSetRequest>();
+    body = await c.req.json<SetCacheRequest>();
   } catch (err) {
     logger.warn("JSON parse failed on PUT /v1/cache/:namespace/:key", { error: String(err) });
     return c.json(invalidRequest("Invalid JSON body"), 400);
@@ -195,7 +195,7 @@ app.put("/v1/cache/:namespace/:key", async (c) => {
   if (!result.ok) {
     return c.json(invalidRequest(result.message), 400);
   }
-  return c.json(result.data as CacheGetResponse, 200);
+  return c.json(result.data as GetCacheResponse, 200);
 });
 
 // GET /v1/cache/:namespace/:key — Get cache entry
@@ -208,7 +208,7 @@ app.get("/v1/cache/:namespace/:key", (c) => {
     if (result.status === 404) return c.json(notFound(result.message), 404);
     return c.json(forbidden(result.message), 403);
   }
-  return c.json(result.data as CacheGetResponse, 200);
+  return c.json(result.data as GetCacheResponse, 200);
 });
 
 // DELETE /v1/cache/:namespace/:key — Delete cache entry

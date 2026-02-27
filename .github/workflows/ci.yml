@@ -10,8 +10,8 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  ci:
-    name: CI
+  setup:
+    name: Setup
     runs-on: ubuntu-latest
 
     steps:
@@ -51,11 +51,89 @@ jobs:
       - name: Build x402-middleware
         run: pnpm --filter @primsh/x402-middleware build
 
+      - name: Tar workspace (excluding .git)
+        run: tar --exclude='.git' -cf workspace.tar .
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: workspace
+          path: workspace.tar
+          retention-days: 1
+
+  lint:
+    name: Lint
+    needs: [setup]
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: workspace
+
+      - name: Extract workspace
+        run: tar -xf workspace.tar
+
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - uses: pnpm/action-setup@v4
+
       - name: Lint
         run: pnpm -r lint
 
+  typecheck:
+    name: Typecheck
+    needs: [setup]
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: workspace
+
+      - name: Extract workspace
+        run: tar -xf workspace.tar
+
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - uses: pnpm/action-setup@v4
+
       - name: Typecheck
         run: pnpm -r typecheck
+
+  test:
+    name: Test
+    needs: [setup]
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: workspace
+
+      - name: Extract workspace
+        run: tar -xf workspace.tar
+
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - uses: pnpm/action-setup@v4
 
       - name: Test
         run: pnpm -r test
@@ -65,40 +143,48 @@ jobs:
 
   gen-check:
     name: Gen check
+    needs: [setup]
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          name: workspace
+
+      - name: Extract workspace
+        run: tar -xf workspace.tar
 
       - uses: oven-sh/setup-bun@v2
         with:
           bun-version: latest
 
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
       - uses: pnpm/action-setup@v4
 
-      - name: Get pnpm store directory
-        id: pnpm-cache
-        run: echo "store=$(pnpm store path)" >> $GITHUB_OUTPUT
+      - name: Validate generated files are up to date
+        run: pnpm gen:check
 
-      - uses: actions/cache@v4
-        with:
-          path: ${{ steps.pnpm-cache.outputs.store }}
-          key: ${{ runner.os }}-pnpm-${{ hashFiles('**/pnpm-lock.yaml') }}
-          restore-keys: |
-            ${{ runner.os }}-pnpm-
+  audit:
+    name: Audit
+    runs-on: ubuntu-latest
 
-      - uses: actions/cache@v4
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
         with:
-          path: ~/.bun/install/cache
-          key: ${{ runner.os }}-bun-${{ hashFiles('**/bun.lock') }}
-          restore-keys: |
-            ${{ runner.os }}-bun-
+          node-version: 22
+
+      - uses: pnpm/action-setup@v4
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
-      - name: Validate generated files are up to date
-        run: pnpm gen:check
+      - name: Dependency audit
+        run: pnpm audit --audit-level=high
 
   secret-scan:
     name: Secret scan
@@ -120,22 +206,3 @@ jobs:
           else
             gitleaks detect --config .gitleaks.toml --source . --log-opts="HEAD~1..HEAD" --redact --verbose
           fi
-
-  audit:
-    name: Audit
-    runs-on: ubuntu-latest
-
-    steps:
-      - uses: actions/checkout@v4
-
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 22
-
-      - uses: pnpm/action-setup@v4
-
-      - name: Install dependencies
-        run: pnpm install --frozen-lockfile
-
-      - name: Dependency audit
-        run: pnpm audit --audit-level=high

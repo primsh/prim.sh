@@ -3,6 +3,7 @@ name: wallet.sh
 endpoint: wallet.prim.sh
 status: live
 type: crypto
+category: crypto
 card_class: p20
 description: "Agent wallets. Generate keys, hold USDC on Base, and pay any x402 invoice."
 port: 3001
@@ -23,9 +24,9 @@ pricing:
     price: "$0.005"
     note: ""
 
-accent: "#8BC34A"
-accent_dim: "#6a9e2a"
-accent_glow: "rgba(139,195,74,0.08)"
+accent: "#00ff88"
+accent_dim: "#00cc6d"
+accent_glow: "rgba(0,255,136,0.08)"
 
 tagline: "Wallets for agents."
 sub: "Create, fund, and spend from on-chain wallets. Base USDC first, multi-chain later. x402-native identity for every agent."
@@ -83,14 +84,14 @@ factory:
 
 routes_map:
   - route: "POST /v1/wallets"
-    request: WalletRegisterRequest
-    response: WalletRegisterResponse
+    request: RegisterWalletRequest
+    response: RegisterWalletResponse
     status: 201
     description: "Register a wallet via EIP-191 signature"
     notes: "Free. No x402 required. Sign message: Register <address> with prim.sh at <timestamp>"
     operation_id: register_wallet
-    request_type: WalletRegisterRequest
-    response_type: WalletRegisterResponse
+    request_type: RegisterWalletRequest
+    response_type: RegisterWalletResponse
     errors:
       - { status: 400, code: invalid_request, description: "Missing fields or invalid signature format" }
       - { status: 403, code: forbidden, description: "Signature does not match address" }
@@ -124,23 +125,23 @@ routes_map:
       - { status: 404, code: not_found, description: "Wallet not found" }
   - route: "DELETE /v1/wallets/:address"
     request: null
-    response: WalletDeactivateResponse
+    response: DeactivateWalletResponse
     status: 200
     description: "Permanently deactivate a wallet. Irreversible. Pending fund requests cancelled."
     operation_id: deactivate_wallet
     request_type: null
-    response_type: WalletDeactivateResponse
+    response_type: DeactivateWalletResponse
     errors:
       - { status: 402, code: payment_required, description: "x402 payment needed" }
       - { status: 403, code: forbidden, description: "Caller does not own this wallet" }
       - { status: 404, code: not_found, description: "Wallet not found" }
   - route: "POST /v1/wallets/:address/fund-request"
-    request: FundRequestCreateRequest
+    request: CreateFundRequestRequest
     response: FundRequestResponse
     status: 200
     description: "Request USDC funding for a wallet. A human operator can approve or deny."
     operation_id: create_fund_request
-    request_type: FundRequestCreateRequest
+    request_type: CreateFundRequestRequest
     response_type: FundRequestResponse
     errors:
       - { status: 400, code: invalid_request, description: "Missing amount or reason" }
@@ -164,25 +165,25 @@ routes_map:
       - { status: 404, code: not_found, description: "Wallet not found" }
   - route: "POST /v1/fund-requests/:id/approve"
     request: null
-    response: FundRequestApproveResponse
+    response: ApproveFundRequestResponse
     status: 200
     description: "Approve a pending fund request. Returns the address to send USDC to."
     operation_id: approve_fund_request
     request_type: null
-    response_type: FundRequestApproveResponse
+    response_type: ApproveFundRequestResponse
     errors:
       - { status: 402, code: payment_required, description: "x402 payment needed" }
       - { status: 403, code: forbidden, description: "Caller not authorized to approve" }
       - { status: 404, code: not_found, description: "Fund request not found" }
       - { status: 409, code: duplicate_request, description: "Already approved or denied" }
   - route: "POST /v1/fund-requests/:id/deny"
-    request: FundRequestDenyRequest
-    response: FundRequestDenyResponse
+    request: DenyFundRequestRequest
+    response: DenyFundRequestResponse
     status: 200
     description: "Deny a pending fund request"
     operation_id: deny_fund_request
-    request_type: FundRequestDenyRequest
-    response_type: FundRequestDenyResponse
+    request_type: DenyFundRequestRequest
+    response_type: DenyFundRequestResponse
     errors:
       - { status: 402, code: payment_required, description: "x402 payment needed" }
       - { status: 403, code: forbidden, description: "Caller not authorized to deny" }

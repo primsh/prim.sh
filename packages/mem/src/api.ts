@@ -108,14 +108,14 @@ export interface QueryResponse {
 
 // ─── Cache types ──────────────────────────────────────────────────────────
 
-export interface CacheSetRequest {
+export interface SetCacheRequest {
   /** Value to store. Any JSON-serializable value. */
   value: unknown;
   /** TTL in seconds. Omit or null for permanent. */
   ttl?: number | null;
 }
 
-export interface CacheGetResponse {
+export interface GetCacheResponse {
   /** Cache namespace (collection name). */
   namespace: string;
   /** Cache key. */
