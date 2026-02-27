@@ -28,7 +28,7 @@
 | Primitive | Why in | Risk |
 |-----------|--------|------|
 | **wallet.sh** | Foundation — can't do anything without it | Low |
-| **store.sh** | Hero demo — ~$0.01/op, reversible, obvious utility | Low |
+| **store.sh** | Hero demo — ~$0.001/call, reversible, obvious utility | Low |
 | **search.sh** | Stateless, no side effects, demonstrates breadth | Low |
 | **feedback.sh** | Agent-native feedback loop. Free endpoint. Dogfoods the platform. | Low |
 
@@ -72,7 +72,9 @@ No credential handout. Testers onboard themselves:
 **Do NOT auto-approve access requests.** v0 is 5 friends. You approve each one by hand:
 
 ```bash
-prim admin approve <id>
+# Approve via CF Worker admin API
+curl -X POST https://api.prim.sh/access/requests/<id>/approve \
+  -H "X-Admin-Key: $PRIM_ADMIN_KEY"
 ```
 
 This is the tightest possible access control — nothing happens without you explicitly saying yes.
@@ -86,10 +88,13 @@ The policy engine (`packages/wallet/src/policy.ts`) already supports per-wallet 
 | `max_per_tx` | $0.50 | No single operation costs more than $0.50. Prevents fat-finger or runaway loops. |
 | `max_per_day` | $5.00 | Daily cap per wallet. Resets at midnight UTC. A tester with $3 can't blow past $5 even if they fund more. |
 
-Set the default policy when approving:
+Set per-wallet policy via the wallet internal API after approving:
 
 ```bash
-prim admin approve <id> --max-per-tx 0.50 --max-per-day 5.00
+curl -X POST https://wallet.prim.sh/internal/policy/set \
+  -H "X-Internal-Key: $PRIM_INTERNAL_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{"wallet":"0x...","max_per_tx":"0.50","max_per_day":"5.00"}'
 ```
 
 If a wallet hits the daily limit, it gets `403 policy_violation` with a clear message. They can try again tomorrow.
@@ -98,15 +103,15 @@ If a wallet hits the daily limit, it gets `403 policy_violation` with a clear me
 
 The real risk isn't USDC — it's provider bills (Tavily, R2). For v0 scope:
 
-| Prim | Provider | Cost to you per op | v0 worst case (5 wallets × $5/day × 7 days) |
-|------|----------|-------------------|----------------------------------------------|
-| store.sh | Cloudflare R2 | ~$0.0004/op | ~$0.70 (negligible) |
-| search.sh | Tavily | ~$0.001/query | ~$1.75 |
-| wallet.sh | Self-hosted | $0 | $0 |
-| feedback.sh | Self-hosted (SQLite) | $0 | $0 |
-| **Total** | | | **~$2.50 worst case** |
+| Prim | Provider | x402 price | Cost to you per op | v0 worst case (5 wallets × $5/day × 7 days) |
+|------|----------|-----------|-------------------|----------------------------------------------|
+| store.sh | Cloudflare R2 | $0.001/call | ~$0.0004/op | ~$0.70 (negligible) |
+| search.sh | Tavily | $0.01/query | ~$0.001/query | ~$1.75 |
+| wallet.sh | Self-hosted | $0.001/call | $0 | $0 |
+| feedback.sh | Self-hosted (SQLite) | free | $0 | $0 |
+| **Total** | | | | **~$2.50 worst case** |
 
-x402 revenue from those same ops: ~$17.50 (you're net positive). Provider cost is not a risk at v0 scale.
+x402 revenue from those same ops covers provider costs with margin. Provider cost is not a risk at v0 scale.
 
 ### Why spawn.sh is cut (the 10K VPS scenario)
 
@@ -192,10 +197,17 @@ This means an agent that hits an error is one hop away from reporting it. No hum
 
 ### Admin review
 
+Admin review is via HTTP (no CLI wrapper for v0):
+
 ```bash
-prim admin feedback list              # See all feedback
-prim admin feedback list --type bug   # Filter by type
+# List all feedback
+curl https://feedback.prim.sh/v1/feedback -H "X-Internal-Key: $PRIM_INTERNAL_KEY"
+
+# Filter by type
+curl "https://feedback.prim.sh/v1/feedback?type=bug" -H "X-Internal-Key: $PRIM_INTERNAL_KEY"
 ```
+
+CLI wrappers (`prim admin feedback list`) are v0.1 — not worth building for 5 testers.
 
 ### Build steps
 
@@ -238,12 +250,13 @@ Checklist (all must pass):
 
 - [ ] `PRIM_NETWORK=eip155:8453` set in `/etc/prim/wallet.env`, `/etc/prim/store.env`, `/etc/prim/search.env`
 - [ ] x402 pricing validated against mainnet gas costs
-- [ ] Circuit breaker tested: `prim admin pause send` → verify 503 → `prim admin resume send`
+- [ ] Circuit breaker tested via HTTP: `curl -X POST wallet.prim.sh/v1/admin/circuit-breaker/pause -H "X-Internal-Key: $KEY" -d '{"scope":"send"}'` → verify 503 on send ops → resume
 - [ ] Faucet guard: faucet.sh rejects requests when `PRIM_NETWORK` is mainnet
 - [ ] Healthcheck passes: `curl https://wallet.prim.sh` → `{"service":"wallet.sh","status":"ok"}`
 - [ ] Same for store.prim.sh, search.prim.sh
 - [ ] Wallet allowlist reviewed — only your test wallets, no stale entries
 - [ ] All VPS env files reviewed — no testnet-only values leaking into mainnet config
+- [ ] Caddy access logs enabled: add `log { output file /var/log/caddy/access.log }` to each server block in Caddyfile, `systemctl reload caddy`
 
 ### G3: Dogfood (you, end-to-end on mainnet)
 **Owner**: you
@@ -321,11 +334,13 @@ Hit a bug? Your agent can report it:
   prim feedback submit --primitive store.sh --type bug --message "..."
 
 Pricing
-  store: $0.01/op, search: $0.005/query
-  You have $5 USDC — that's 500 store ops or 1000 searches.
+  store: $0.001/call, search: $0.01/query
+  You have $5 USDC — that's 5,000 store calls or 500 searches.
 ```
 
 Share in beta group chat.
+
+**Note**: Admin commands (approve, circuit breaker) are HTTP-only for v0. No `prim admin` CLI wrappers yet. Use curl with `X-Internal-Key` or `X-Admin-Key` headers. Document the exact curl commands in a private admin cheatsheet (not in the one-pager).
 
 ### G7: Private beta
 **Owner**: you + 5 testers
@@ -333,10 +348,53 @@ Share in beta group chat.
 
 1. Send one-pager to 5 friends
 2. Be available for questions but don't hand-hold (observe where they struggle)
-3. Monitor VPS logs: `journalctl -u prim-wallet -f` for errors
-4. Check feedback endpoint daily: `prim admin feedback list`
-5. Check circuit breaker daily — ready to pause if anything looks wrong
-6. After 1 week: review feedback submissions, review logs, decide next step
+3. Daily monitoring checklist (all via SSH to VPS):
+   - `journalctl -u prim-wallet -u prim-store -u prim-search -u prim-feedback --since "24 hours ago" --priority=warning` — check for errors
+   - `curl -s https://feedback.prim.sh/v1/feedback -H "X-Internal-Key: $KEY" | jq length` — check feedback count
+   - `for s in wallet store search feedback; do curl -s "https://$s.prim.sh/v1/metrics" | jq '{service: .service, requests: .requests.total, errors: .errors.total, payments: .payments.total}'; done` — metrics snapshot
+   - Check Caddy access logs: `tail -100 /var/log/caddy/access.log | jq .status` — spot 5xx patterns
+4. Circuit breaker ready — can pause all ops in 30 seconds via HTTP
+5. After 1 week: review feedback, metrics snapshots, logs, decide next step
+
+---
+
+## Observability (v0 minimum)
+
+### What exists today
+
+| Capability | Status | How |
+|---|---|---|
+| Structured JSON logging | Done | Every request gets `request_id`, logged to systemd journal |
+| Per-endpoint metrics | Done | `GET /v1/metrics` on each prim — request counts, error rates, p50/p99 latency, payment counts |
+| Health check | Done | `GET /` on every prim + cron script every 5 min |
+| Payment detection | Done | Heuristic in metrics middleware — counts x402-settled requests |
+
+### What's missing (fix in G2)
+
+| Gap | Fix | Effort |
+|---|---|---|
+| **No Caddy access logs** | Add `log` directive to each server block in Caddyfile. One line per service. Without this, requests that fail at the proxy layer are invisible. | 15 min |
+| **Metrics reset on restart** | Acceptable for v0. If a service crashes, you lose pre-crash metrics. Mitigate by taking daily snapshots (curl /v1/metrics > file). | 0 (manual) |
+
+### What's NOT needed for v0
+
+- Prometheus/Grafana (overkill for 5 testers)
+- Persistent metrics store (daily curl snapshots are fine)
+- Alerting webhooks (you're watching logs manually)
+- On-chain revenue query (check wallet balance on basescan)
+- Per-wallet analytics (privacy concern, unnecessary at this scale)
+
+### Key questions you CAN answer during beta
+
+| Question | How |
+|---|---|
+| How many requests hit each prim? | `curl /v1/metrics \| jq .requests.total` |
+| What's the error rate? | `curl /v1/metrics \| jq .errors` |
+| How many payments settled? | `curl /v1/metrics \| jq .payments.total` |
+| What's latency like? | `curl /v1/metrics \| jq .requests.by_endpoint` (p50/p99 per route) |
+| Any proxy-level failures? | Caddy access logs (after G2 fix) |
+| What are agents struggling with? | `curl feedback.prim.sh/v1/feedback` |
+| Total USDC revenue? | Check PRIM_PAY_TO balance on basescan.org |
 
 ---
 
@@ -375,6 +433,7 @@ Share in beta group chat.
 - wallet.sh, store.sh, search.sh, feedback.sh (4 prims, mainnet)
 - `feedback_url` in all error responses + llms.txt
 - Manual access approval with per-wallet spend limits
+- Caddy access logs + in-memory metrics (GET /v1/metrics)
 - One-pager for beta testers
 - CLI install script
 
@@ -387,7 +446,8 @@ Share in beta group chat.
 - spawn.sh, email.sh, token.sh, mem.sh, domain.sh
 - Whitepaper publication
 - Auto-approve for access requests
-- Monitoring/alerting dashboard
+- Persistent metrics / Prometheus / Grafana
+- Alerting webhooks
 - Automated CI deploy
 
 All of this is v0.1+ after we learn from the beta.
@@ -418,7 +478,7 @@ Not calendar dates — sequential gates. Each gate blocks the next.
 | G2: Mainnet switchover | 1-2 hrs | G1 |
 | G3: Dogfood | 1-2 hrs | G2 |
 | G4: Automated smoke | 30 min | G3, L-36 implemented |
-| G5: Feedback endpoint | 2-3 hrs | G2 (needs deployed services for error response change) |
+| G5: Build feedback.sh | 2-3 hrs | G2 (needs deployed services for error response change) |
 | G6: One-pager | 1-2 hrs | G3, G5 (need golden path + feedback URL) |
 | G7: Private beta | 1 week | G4, G6 |
 
