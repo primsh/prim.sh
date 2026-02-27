@@ -4,16 +4,33 @@ name: Deploy
 # Never runs concurrently — queues instead of cancelling to avoid leaving VPS
 # in a partially-deployed state.
 #
-# Flow:
-#   deploy-vps  → rsync to VPS → deploy.sh (install, build, restart)
-#   deploy-site → build static dist → wrangler pages deploy
-#   verify      → smoke check: fetch /_build_id.txt and confirm SHA matches
+# ── Architecture ─────────────────────────────────────────────────────────────
 #
-# ── Required GitHub secrets (production environment) ─────────────────────────
+# Two independent deploy targets, run in parallel:
 #
+#   deploy-vps   API services (wallet.sh, email.sh, etc.)
+#                rsync to VPS → deploy.sh (install, build, restart)
+#                Secrets: VPS_HOST, VPS_SSH_KEY, VPS_KNOWN_HOSTS (repo-level)
+#
+#   deploy-site  Marketing site (prim.sh)
+#                Build static dist from site/ → wrangler pages deploy
+#                Secrets: CF_API_TOKEN, CF_ACCOUNT_ID (production environment)
+#                Variable: PAGES_PROJECT (repo-level)
+#
+#   verify       Smoke check after both jobs complete
+#                Fetches /_build_id.txt from prim.sh and confirms SHA matches
+#
+# Site is served by Cloudflare Pages (project: prim-sh).
+# VPS does NOT serve the site — Caddy only proxies API subdomains.
+#
+# ── Required GitHub secrets ──────────────────────────────────────────────────
+#
+# Repo-level (used by deploy-vps):
 #   VPS_HOST        SSH user@host string, e.g. "root@<your-vps-ip>"
 #   VPS_SSH_KEY     Ed25519 private key (see setup below)
 #   VPS_KNOWN_HOSTS Output of: ssh-keyscan <VPS_IP>
+#
+# Production environment (used by deploy-site):
 #   CF_API_TOKEN    Cloudflare API token (Pages:Edit permission)
 #   CF_ACCOUNT_ID   Cloudflare account ID
 #
