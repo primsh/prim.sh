@@ -135,10 +135,7 @@ Full conventions: `tasks/README.md`. Key rules for this project:
 
 ### Task SOT
 
-`tasks/tasks.json` is the machine-editable source of truth. `TASKS.md` is a human-readable view generated from it.
-
-- Edit tasks: modify `tasks/tasks.json`
-- Regenerate TASKS.md: `bun scripts/gen-tasks-md.ts > TASKS.md`
+`tasks/tasks.json` is the source of truth for all task data.
 
 ### Completion workflow
 
