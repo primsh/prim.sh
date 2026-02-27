@@ -41,29 +41,55 @@ The human's role shifts from **implementer** to **curator** — reviewing PRs, a
 
 ---
 
-## Current State (what exists today)
+## Inventory: Built / Not Built / Build Now / Build Later / Out of Scope
 
-| Component | Status | Notes |
+### Already built (leverage, don't rebuild)
+
+| Component | What it does |
+|---|---|
+| `create.sh` HTTP endpoint | `POST /v1/scaffold` returns complete file manifest. Pure, no side effects. Live today. |
+| `scaffoldPure()` library | Zero-IO scaffold function. Generates 9-11 files from prim.yaml. |
+| `create-prim` CLI | Non-interactive mode works. Reads prim.yaml, scaffolds package. |
+| `create-provider` CLI | Generates provider interface + vendor stub files. |
+| `pnpm gen` pipeline | 10 generators (MCP, CLI, OpenAI, SDK, docs, tests, logos, etc.). Idempotent, offline-capable. |
+| 5-check smoke test contract | Unit-level quality gate enforced for all 18 packages. |
+| CI pipeline (`ci.yml`) | 5 parallel jobs: lint, typecheck, test, gen-check, audit + secret-scan. |
+| Deploy pipeline (`deploy.yml`) | rsync → systemd restart → smoke verify. VPS + Cloudflare Pages. |
+| Gate runner deterministic (`gate-runner.ts`) | 8 groups, 68 HTTP tests, x402 payment, shape matching. `--ci` mode with soft/hard fail gating. |
+| Gate runner canary (`--canary`) | LLM agent reads llms.txt, gets wallet, exercises service end-to-end via infer.sh. |
+| `gen:gate` codegen | Auto-generates test entries from prim.yaml routes_map. 42→68 tests. Idempotent. |
+
+### Build now (Factory V1 — the critical path)
+
+| Component | Phase | Why now |
 |---|---|---|
-| `create.sh` HTTP endpoint | **Live** | `POST /v1/scaffold` returns file manifest. Pure, no side effects. |
-| `scaffoldPure()` library | **Live** | Zero-IO scaffold function. Generates 9-11 files from prim.yaml. |
-| `create-prim` CLI | **Live** | Non-interactive mode works. Interactive mode needs TTY. |
-| `create-provider` CLI | **Live** | Generates provider interface stubs. |
-| `pnpm gen` pipeline | **Live** | 10 generators, idempotent, offline-capable. |
-| 5-check smoke test contract | **Live** | Enforced for all 18 packages. |
-| CI pipeline (GHA) | **Live** | 5 parallel jobs: lint, typecheck, test, gen-check, audit. |
-| Deploy pipeline (GHA) | **Live** | rsync → systemd restart → smoke verify. |
-| Gate runner (deterministic) | **Live** | `gate-runner.ts` — 8 groups, 68 HTTP tests, x402 payment, shape matching. `--ci` mode with soft/hard fail. Results in `tests/runs/`. |
-| Gate runner (`--canary`) | **Done** | LLM agent reads llms.txt, gets wallet, exercises service end-to-end via infer.sh. Catches UX issues deterministic tests miss. |
-| Gate runner (`--spawn`) | **Not built** | Clean-room VPS via spawn.sh → install → wallet → fund → test → teardown. Ultimate isolation. |
-| `gen:gate` codegen | **Done** | Auto-generates test entries from prim.yaml routes_map. 42→68 tests. Idempotent. |
-| Gate CI workflow (I-32) | **Not built** | `.github/workflows/gate.yml` — runs gate-runner on PR, soft-fail testing prims, hard-fail live prims. |
-| `pr.sh` | **Does not exist** | No primitive for opening PRs. |
-| `providers.sh` | **Does not exist** | No primitive for scaffolding providers. |
-| `dekeys.sh` | **Planning** | Plan doc at `tasks/active/dk-1-dekeys-plan.md`. |
-| Pre-built provider library | **Does not exist** | Provider implementations are hand-written. |
-| CI flood control | **Does not exist** | No dedup, no auto-close, no rate limiting on inbound PRs. |
-| Auto-merge on green | **Does not exist** | PRs require manual merge. |
+| Provider template library + `gen-providers.ts` | 1 | Makes scaffolded code functional, not stubs. Validates the core thesis. |
+| Upgrade `create.sh` to generate working implementations | 2 | Agents get test-passing code without human edits. |
+| `pr.sh` primitive | 3 | Closes the loop: agent → code → PR → CI. No pr.sh = no flywheel. |
+| Gate CI workflow (`gate.yml`, I-32) | 4 | Gate runner exists but doesn't run in CI. Straightforward GHA wrapper. |
+| Auto-merge for `agent-pr` label | 4 | Green CI = ship. No human in the merge loop. |
+
+### Build later (after Factory V1 proves out)
+
+| Component | Phase | Why later |
+|---|---|---|
+| `providers.sh` primitive | 5 | Useful but not required — agents can use create-provider CLI via code.sh until then. |
+| CI flood control (dedup, rate limit, stale cleanup) | 6 | Premature until agent PR volume is real. Start with manual monitoring. |
+| Auto-register systemd units in `deploy.sh` | 7 | Nice-to-have. Manual `systemctl enable` is fine at <30 services. |
+| DNS automation (domain.sh integration) | 7 | One `POST` to domain.sh per new prim. Can be manual for now. |
+| Secrets provisioning command | 7 | Bridges to dekeys.sh. Manual SSH is tolerable at current scale. |
+| Gate runner `--spawn` mode | — | Clean-room VPS testing. Layers 1-3 cover the critical path. |
+| Zod schema generation from prim.yaml | 2+ | Eliminates hand-written validation. Can be added incrementally. |
+
+### Out of scope (not building)
+
+| Component | Why not |
+|---|---|
+| AI code review in the merge loop | Merge decision is deterministic (CI green → merge). LLM is in the canary (post-deploy usability), not pre-merge. |
+| Multi-repo support for pr.sh | pr.sh targets the prim repo only. No generic GitHub automation platform. |
+| Agent orchestration / task assignment | The factory doesn't decide what to build. Agents decide. The factory executes. |
+| Custom runtimes per primitive | All prims run on Bun. Container isolation is spawn.sh's job, not the factory's. |
+| Horizontal VPS scaling | Single VPS handles current load. When we hit the ceiling, spawn.sh provisions more nodes. Not a factory concern. |
 
 ---
 
@@ -416,24 +442,92 @@ systemctl reload caddy
 
 ---
 
-## What We're NOT Building
+## Rollout Strategy
 
-- **AI code review in the merge loop** — The merge decision is deterministic (CI green → merge). The LLM is in the _canary_, which validates usability post-deploy, not pre-merge. No LLM decides whether code ships.
-- **Multi-repo support** — pr.sh targets the prim repo only. No generic GitHub automation.
-- **Agent orchestration** — The factory doesn't decide what to build. Agents decide. The factory executes.
-- **Custom runtimes** — All prims run on Bun. No container-per-prim isolation (spawn.sh exists for that).
+The factory doesn't launch as a big bang. Stable release stays untouched. A small beta cohort validates the loop. Then we scale or fix and repeat.
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│  STABLE (now)          BETA                 GA                  │
+│  ─────────────         ────                 ──                  │
+│  9 live prims          3-5 invited agents   auto-merge on green │
+│  human merges          manual merge review  agent-pr label      │
+│  manual deploy         CI gates enforced    auto-deploy         │
+│  no agent PRs          PRs to main branch   flood control live  │
+│                        canary validates     canary + spawn      │
+│                                                                 │
+│  ◄── we are here       ◄── Factory V1       ◄── Factory V2      │
+└─────────────────────────────────────────────────────────────────┘
+```
+
+### Stable (current state, unchanged)
+
+- 9 live prims running in production, untouched by factory changes
+- Human-authored PRs, human-merged, human-deployed
+- Gate runner validates on schedule, canary runs manually
+- **Nothing changes here until beta proves out**
+
+### Beta (Factory V1 ships, invite-only)
+
+- Invite 3-5 agents (internal or trusted partners) to use `create.sh` + `pr.sh`
+- Agent PRs land on `main` but require **manual merge review** (no auto-merge yet)
+- CI gates (ci.yml + gate.yml) run on every agent PR — must pass to be merge-eligible
+- Human curator reviews: is this prim appropriate? Does the generated code look sane?
+- After merge: deploy is still the existing GHA pipeline (no changes to stable deploy)
+- `--canary` runs post-deploy to validate agent usability
+- **Exit criteria for beta**: 5+ agent-generated prims merged with zero human code edits required
+
+### GA (Factory V2, auto-merge enabled)
+
+- Auto-merge on green for `agent-pr` labeled PRs
+- CI flood control live (dedup, rate limiting, stale cleanup)
+- Auto-register new systemd units in deploy.sh
+- `--canary` as promotion gate (testing→live)
+- `--spawn` for release-grade validation
+- Human review only for CODEOWNERS-protected paths (x402-middleware, deploy/)
+- **Exit criteria**: sustained agent PR throughput with <5% revert rate
+
+### Rollback at any stage
+
+If beta produces bad outcomes (broken prims, CI overload, quality issues):
+1. Remove `agent-pr` label handling from CI → agent PRs require human merge again
+2. Rate-limit or disable pr.sh → agents can't open PRs
+3. Revert to stable — zero impact on running prims since factory only adds, never modifies live services
+
+The factory is additive. It can't break what's already running.
+
+---
+
+## Factory V1 Milestone (the MVP)
+
+Factory V1 is the minimum viable flywheel. An agent can go from idea to merged PR with zero human code edits. Human still reviews and merges.
+
+**What ships in V1**:
+- Provider template library validated against 3-5 real providers (Phase 1, partial)
+- `create.sh` generates functional implementations, not stubs (Phase 2)
+- `pr.sh` primitive (Phase 3)
+- `gate.yml` wired in CI (I-32, Phase 4 partial)
+- Manual merge review (no auto-merge)
+
+**What does NOT ship in V1**:
+- Auto-merge, flood control, providers.sh, auto-deploy, dekeys.sh
+- These are Factory V2 (GA) scope
+
+**V1 validates the thesis**: can the factory generate code good enough that a human reviewer approves without edits? If yes, auto-merge is safe to enable. If no, fix the generators before scaling.
 
 ---
 
 ## Success Metrics
 
-| Metric | Current | Target |
-|---|---|---|
-| Time from idea to passing smoke test | ~4 hours (human) | <5 minutes (agent + factory) |
-| Time from passing tests to live in production | ~30 min (manual deploy) | <10 min (auto-merge + auto-deploy) |
-| Primitives with complete provider implementations | 9/34 | 25/34 |
-| Agent-generated PRs merged without human code edits | 0% | >80% |
-| CI false positive rate | Unknown | <5% |
+| Metric | Current | V1 (Beta) | V2 (GA) |
+|---|---|---|---|
+| Time: idea → passing smoke test | ~4 hrs (human) | <10 min (agent) | <5 min |
+| Time: tests pass → live in production | ~30 min (manual) | ~30 min (same) | <10 min (auto) |
+| Prims with working provider implementations | 9/34 | 14/34 | 25/34 |
+| Agent PRs merged without human code edits | 0% | >50% | >80% |
+| Agent PRs that pass CI on first attempt | N/A | >70% | >90% |
+| CI false positive rate | Unknown | <10% | <5% |
+| Reverts caused by agent PRs | N/A | 0 | <5% of merges |
 
 ---
 
