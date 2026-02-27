@@ -1,6 +1,6 @@
 import { Hono } from "hono";
 import { bodyLimit } from "hono/body-limit";
-import { createAgentStackMiddleware, createWalletAllowlistChecker, metricsMiddleware, metricsHandler, requestIdMiddleware } from "@primsh/x402-middleware";
+import { createAgentStackMiddleware, createWalletAllowlistChecker, metricsMiddleware, metricsHandler, requestIdMiddleware, parsePaginationParams } from "@primsh/x402-middleware";
 import type {
   CreateServerRequest,
   CreateServerResponse,
@@ -162,10 +162,7 @@ app.get("/v1/servers", (c) => {
     return c.json(forbidden("No wallet address in payment"), 403);
   }
 
-  const limitParam = c.req.query("limit");
-  const pageParam = c.req.query("page");
-  const limit = Math.min(Number(limitParam) || 20, 100);
-  const page = Math.max(Number(pageParam) || 1, 1);
+  const { limit, page } = parsePaginationParams(c.req.query());
 
   const data = listServers(caller, limit, page);
   return c.json(data as ServerListResponse, 200);

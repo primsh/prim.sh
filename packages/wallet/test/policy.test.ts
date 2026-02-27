@@ -225,8 +225,8 @@ describe("wallet detail and list reflect paused state", () => {
     setPauseState(address, "send", new Date().toISOString());
 
     const result = await listWallets(CALLER, 20);
-    expect(result.wallets).toHaveLength(1);
-    expect(result.wallets[0].paused).toBe(true);
+    expect(result.data).toHaveLength(1);
+    expect(result.data[0].paused).toBe(true);
   });
 
   it("listWallets shows paused=false for active wallet", async () => {
@@ -234,7 +234,7 @@ describe("wallet detail and list reflect paused state", () => {
     mockGetUsdcBalance.mockResolvedValue({ balance: "0.00", funded: false });
 
     const result = await listWallets(CALLER, 20);
-    expect(result.wallets[0].paused).toBe(false);
+    expect(result.data[0].paused).toBe(false);
   });
 
   it("getWallet shows policy when set", async () => {
@@ -248,6 +248,39 @@ describe("wallet detail and list reflect paused state", () => {
       expect(result.data.policy).not.toBeNull();
       expect(result.data.policy?.maxPerTx).toBe("100.00");
       expect(result.data.policy?.maxPerDay).toBe("500.00");
+    }
+  });
+});
+
+// ─── HRD-4: corrupted JSON safety ──────────────────────────────────────
+
+describe("policyRowToResponse — corrupted allowed_primitives JSON", () => {
+  it("returns allowedPrimitives: null and warns on invalid JSON", () => {
+    const { address } = registerTestWallet(CALLER);
+    upsertPolicy(address, { allowed_primitives: "not-json{" });
+
+    const warnSpy = vi.spyOn(console, "warn").mockImplementation(() => {});
+
+    const result = getSpendingPolicy(address, CALLER);
+    expect(result.ok).toBe(true);
+    if (result.ok) {
+      expect(result.data.allowedPrimitives).toBeNull();
+    }
+    expect(warnSpy).toHaveBeenCalledWith(
+      expect.stringContaining("corrupted allowed_primitives JSON"),
+    );
+
+    warnSpy.mockRestore();
+  });
+
+  it("returns valid allowedPrimitives when JSON is well-formed", () => {
+    const { address } = registerTestWallet(CALLER);
+    upsertPolicy(address, { allowed_primitives: JSON.stringify(["email.sh", "spawn.sh"]) });
+
+    const result = getSpendingPolicy(address, CALLER);
+    expect(result.ok).toBe(true);
+    if (result.ok) {
+      expect(result.data.allowedPrimitives).toEqual(["email.sh", "spawn.sh"]);
     }
   });
 });

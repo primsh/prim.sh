@@ -11,6 +11,7 @@ import type {
   RouteConfig as AgentStackRouteConfigEntry,
 } from "./types.ts";
 import { createLogger } from "./logger.js";
+import { RateLimiter } from "./rate-limit.js";
 
 const log = createLogger("x402-middleware", { module: "allowlist" });
 
@@ -105,6 +106,9 @@ export function createAgentStackMiddleware(
   const freeRoutes = new Set(options.freeRoutes ?? []);
   const allowlist = buildAllowlist(options);
   const accessUrl = options.accessUrl ?? process.env.PRIM_ACCESS_URL;
+  const rateLimiter = options.rateLimit
+    ? new RateLimiter(typeof options.rateLimit === "object" ? options.rateLimit : {})
+    : null;
 
   const effectiveRoutes: Record<string, RouteConfig> = {};
 
@@ -158,6 +162,24 @@ export function createAgentStackMiddleware(
     return true;
   }
 
+  function checkRateLimit(c: Parameters<MiddlewareHandler>[0]): Response | null {
+    if (!rateLimiter) return null;
+    const wallet = c.get(WALLET_ADDRESS_KEY) as string | undefined;
+    if (!wallet) return null; // No wallet yet — let x402 handle 402
+    const result = rateLimiter.check(wallet);
+    c.header("X-RateLimit-Limit", String(rateLimiter.max));
+    c.header("X-RateLimit-Remaining", String(result.remaining));
+    c.header("X-RateLimit-Reset", String(Math.ceil(result.resetMs / 1000)));
+    if (!result.allowed) {
+      return c.json({
+        error: "rate_limited",
+        message: "Too many requests. Try again later.",
+        retry_after: Math.ceil(result.resetMs / 1000),
+      }, 429);
+    }
+    return null;
+  }
+
   if (Object.keys(effectiveRoutes).length === 0) {
     return async (c: Parameters<MiddlewareHandler>[0], next: Parameters<MiddlewareHandler>[1]) => {
       extractWalletAddress(c);
@@ -170,6 +192,8 @@ export function createAgentStackMiddleware(
           ...(accessUrl && { access_url: accessUrl }),
         }, 403);
       }
+      const rateLimitResponse = checkRateLimit(c);
+      if (rateLimitResponse) return rateLimitResponse;
       await next();
     };
   }
@@ -197,6 +221,8 @@ export function createAgentStackMiddleware(
           ...(accessUrl && { access_url: accessUrl }),
         }, 403);
     }
+    const rateLimitResponse = checkRateLimit(c);
+    if (rateLimitResponse) return rateLimitResponse;
     return payment(c, next);
   };
 }

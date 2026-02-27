@@ -1,6 +1,6 @@
 import { Hono } from "hono";
 import { bodyLimit } from "hono/body-limit";
-import { createAgentStackMiddleware, getNetworkConfig, metricsMiddleware, metricsHandler, requestIdMiddleware } from "@primsh/x402-middleware";
+import { createAgentStackMiddleware, getNetworkConfig, metricsMiddleware, metricsHandler, requestIdMiddleware, parsePaginationParams } from "@primsh/x402-middleware";
 import { addToAllowlist, removeFromAllowlist, isAllowed, createAllowlistChecker } from "@primsh/x402-middleware/allowlist-db";
 import { join } from "node:path";
 import type {
@@ -166,11 +166,9 @@ app.get("/v1/wallets", async (c) => {
     return c.json(forbidden("No wallet address in payment"), 403);
   }
 
-  const limitParam = c.req.query("limit");
-  const limit = Math.min(Number(limitParam) || 20, 100);
-  const after = c.req.query("after");
+  const { limit, cursor } = parsePaginationParams(c.req.query());
 
-  const result = await listWallets(caller, limit, after);
+  const result = await listWallets(caller, limit, cursor);
   return c.json(result as WalletListResponse, 200);
 });
 
@@ -244,11 +242,9 @@ app.get("/v1/wallets/:address/fund-requests", (c) => {
     return c.json(forbidden("No wallet address in payment"), 403);
   }
 
-  const limitParam = c.req.query("limit");
-  const limit = Math.min(Number(limitParam) || 20, 100);
-  const after = c.req.query("after");
+  const { limit, cursor } = parsePaginationParams(c.req.query());
 
-  const result = listFundRequests(address, caller, limit, after);
+  const result = listFundRequests(address, caller, limit, cursor);
   if (!result.ok) {
     const { status, code, message } = result;
     return c.json({ error: { code, message } } as ApiError, status as 403 | 404);

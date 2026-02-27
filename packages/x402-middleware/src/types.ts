@@ -15,6 +15,8 @@ export interface AgentStackMiddlewareOptions {
   checkAllowlist?: (address: string) => Promise<boolean>;
   /** URL where blocked agents can request access (included in 403 response) */
   accessUrl?: string;
+  /** Per-wallet rate limiting. Pass `true` for defaults (60 req/min) or a config object. */
+  rateLimit?: boolean | { max?: number; windowMs?: number };
 }
 
 export type { Network, PaymentPayload, PaymentRequired } from "@x402/core/types";

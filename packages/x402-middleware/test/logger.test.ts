@@ -23,7 +23,9 @@ describe("createLogger", () => {
   let capture: ReturnType<typeof captureStdout>;
 
   beforeEach(() => {
+    // biome-ignore lint/performance/noDelete: env vars require delete to remove (= undefined sets "undefined")
     delete process.env.LOG_LEVEL;
+    // biome-ignore lint/performance/noDelete: env vars require delete to remove (= undefined sets "undefined")
     delete process.env.NODE_ENV;
     capture = captureStdout();
   });
@@ -167,6 +169,7 @@ describe("requestIdMiddleware", () => {
       headers: { "X-Request-Id": "req-abc" },
     });
 
+    // biome-ignore lint/style/noNonNullAssertion: test setup guarantees capture is defined
     const parsed = JSON.parse(capture!.lines[0]);
     expect(parsed.request_id).toBe("req-abc");
   });

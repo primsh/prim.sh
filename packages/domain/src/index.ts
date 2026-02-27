@@ -1,6 +1,6 @@
 import { Hono } from "hono";
 import { bodyLimit } from "hono/body-limit";
-import { createAgentStackMiddleware, createWalletAllowlistChecker, getNetworkConfig, requestIdMiddleware } from "@primsh/x402-middleware";
+import { createAgentStackMiddleware, createWalletAllowlistChecker, getNetworkConfig, requestIdMiddleware, parsePaginationParams } from "@primsh/x402-middleware";
 
 const LLMS_TXT = `# domain.prim.sh — API Reference
 
@@ -547,8 +547,7 @@ app.get("/v1/zones", (c) => {
   const caller = c.get("walletAddress");
   if (!caller) return c.json(forbidden("No wallet address in payment"), 403);
 
-  const limit = Math.min(Number(c.req.query("limit")) || 20, 100);
-  const page = Math.max(Number(c.req.query("page")) || 1, 1);
+  const { limit, page } = parsePaginationParams(c.req.query());
 
   const data = listZones(caller, limit, page);
   return c.json(data as ZoneListResponse, 200);

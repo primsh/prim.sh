@@ -56,9 +56,10 @@ export interface TokenResponse {
   createdAt: string;
 }
 
-export interface TokenListResponse {
-  tokens: TokenResponse[];
-}
+import type { PaginatedList } from "@primsh/x402-middleware";
+
+/** @deprecated Use PaginatedList<TokenResponse> */
+export type TokenListResponse = PaginatedList<TokenResponse>;
 
 export interface MintRequest {
   to: string;

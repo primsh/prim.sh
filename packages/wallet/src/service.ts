@@ -126,7 +126,16 @@ export async function listWallets(owner: string, limit: number, after?: string):
   const lastRow = rows[rows.length - 1];
   const cursor = rows.length === limit && lastRow ? lastRow.address : null;
 
-  return { wallets, cursor };
+  return {
+    data: wallets,
+    pagination: {
+      total: null,
+      page: null,
+      per_page: limit,
+      cursor,
+      has_more: cursor !== null,
+    },
+  };
 }
 
 type OwnershipCheckResult =
@@ -273,8 +282,14 @@ export function listFundRequests(
   return {
     ok: true,
     data: {
-      requests: rows.map(fundRequestToResponse),
-      cursor,
+      data: rows.map(fundRequestToResponse),
+      pagination: {
+        total: null,
+        page: null,
+        per_page: limit,
+        cursor,
+        has_more: cursor !== null,
+      },
     },
   };
 }
@@ -345,12 +360,21 @@ type PolicyResult<T> =
   | { ok: true; data: T }
   | { ok: false; status: number; code: string; message: string };
 
+function parsePrimitivesList(walletAddress: string, raw: string): string[] | null {
+  try {
+    return JSON.parse(raw) as string[];
+  } catch {
+    console.warn(`wallet ${walletAddress}: corrupted allowed_primitives JSON: ${raw}`);
+    return null;
+  }
+}
+
 function policyRowToResponse(walletAddress: string, row: ReturnType<typeof getPolicy>): PolicyResponse {
   return {
     walletAddress,
     maxPerTx: row?.max_per_tx ?? null,
     maxPerDay: row?.max_per_day ?? null,
-    allowedPrimitives: row?.allowed_primitives ? (JSON.parse(row.allowed_primitives) as string[]) : null,
+    allowedPrimitives: row?.allowed_primitives ? parsePrimitivesList(walletAddress, row.allowed_primitives) : null,
     dailySpent: row?.daily_spent ?? "0.00",
     dailyResetAt: row?.daily_reset_at ?? new Date(Date.now() + 86400000).toISOString(),
   };

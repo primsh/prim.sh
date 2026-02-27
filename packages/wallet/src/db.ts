@@ -368,7 +368,8 @@ export function updateFundRequestStatus(
 
 function nextMidnightUtc(): string {
   const d = new Date();
-  d.setUTCHours(24, 0, 0, 0);
+  d.setUTCDate(d.getUTCDate() + 1);
+  d.setUTCHours(0, 0, 0, 0);
   return d.toISOString();
 }
 

@@ -100,9 +100,9 @@ describe("listFundRequests — has requests", () => {
 
     expect(result.ok).toBe(true);
     if (result.ok) {
-      expect(result.data.requests).toHaveLength(2);
-      expect(result.data.requests[0].status).toBe("pending");
-      expect(result.data.cursor).toBeNull();
+      expect(result.data.data).toHaveLength(2);
+      expect(result.data.data[0].status).toBe("pending");
+      expect(result.data.pagination.cursor).toBeNull();
     }
   });
 });
@@ -115,8 +115,8 @@ describe("listFundRequests — empty", () => {
 
     expect(result.ok).toBe(true);
     if (result.ok) {
-      expect(result.data.requests).toHaveLength(0);
-      expect(result.data.cursor).toBeNull();
+      expect(result.data.data).toHaveLength(0);
+      expect(result.data.pagination.cursor).toBeNull();
     }
   });
 });

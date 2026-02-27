@@ -175,8 +175,14 @@ export function listCollections(
   const total = countCollectionsByOwner(callerWallet);
 
   return {
-    collections: rows.map((r) => rowToCollectionResponse(r, null)),
-    meta: { page, per_page: limit, total },
+    data: rows.map((r) => rowToCollectionResponse(r, null)),
+    pagination: {
+      total,
+      page,
+      per_page: limit,
+      cursor: null,
+      has_more: offset + rows.length < total,
+    },
   };
 }
 

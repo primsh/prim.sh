@@ -340,10 +340,14 @@ export function listMailboxes(
     : countMailboxesByOwner(callerWallet);
 
   return {
-    mailboxes: rows.map(rowToResponse),
-    total,
-    page,
-    per_page: perPage,
+    data: rows.map(rowToResponse),
+    pagination: {
+      total,
+      page,
+      per_page: perPage,
+      cursor: null,
+      has_more: offset + rows.length < total,
+    },
   };
 }
 
@@ -435,7 +439,19 @@ export async function listMessages(
       hasAttachment: m.hasAttachment,
       preview: m.preview,
     }));
-    return { ok: true, data: { messages, total: result.total, position: result.position } };
+    return {
+      ok: true,
+      data: {
+        data: messages,
+        pagination: {
+          total: result.total,
+          page: null,
+          per_page: limit,
+          cursor: String(result.position + messages.length),
+          has_more: result.position + messages.length < result.total,
+        },
+      },
+    };
   } catch (err) {
     if (err instanceof JmapError) {
       return { ok: false, status: err.statusCode, code: err.code, message: err.message };
@@ -590,7 +606,13 @@ export async function renewMailbox(
 // ─── Webhooks (R-7) ──────────────────────────────────────────────────
 
 function webhookToResponse(row: import("./db.ts").WebhookRow): WebhookResponse {
-  const events: string[] = JSON.parse(row.events);
+  let events: string[];
+  try {
+    events = JSON.parse(row.events) as string[];
+  } catch {
+    console.warn(`webhook ${row.id}: corrupted events JSON: ${row.events}`);
+    events = [];
+  }
   return {
     id: row.id,
     url: row.url,
@@ -656,8 +678,14 @@ export function listWebhooks(
   return {
     ok: true,
     data: {
-      webhooks: rows.map(webhookToResponse),
-      total: rows.length,
+      data: rows.map(webhookToResponse),
+      pagination: {
+        total: rows.length,
+        page: 1,
+        per_page: rows.length,
+        cursor: null,
+        has_more: false,
+      },
     },
   };
 }
@@ -824,10 +852,14 @@ export function listDomains(
   const rows = getDomainsByOwner(callerWallet, perPage, offset);
   const total = countDomainsByOwner(callerWallet);
   return {
-    domains: rows.map(domainToResponse),
-    total,
-    page,
-    per_page: perPage,
+    data: rows.map(domainToResponse),
+    pagination: {
+      total,
+      page,
+      per_page: perPage,
+      cursor: null,
+      has_more: offset + rows.length < total,
+    },
   };
 }
 

@@ -281,11 +281,13 @@ export function listServers(
   const total = countServersByOwner(callerWallet);
 
   return {
-    servers: rows.map(rowToServerResponse),
-    meta: {
+    data: rows.map(rowToServerResponse),
+    pagination: {
+      total,
       page,
       per_page: limit,
-      total,
+      cursor: null,
+      has_more: offset + rows.length < total,
     },
   };
 }
@@ -305,7 +307,7 @@ export async function getServer(
       const provider = getProvider(row.provider);
       const live = await provider.getServer(row.provider_resource_id);
       if (live.status !== row.status || live.ipv4 !== row.public_ipv4) {
-        updateServerStatus(row.id, live.status, live.ipv4, live.ipv6);
+        updateServerStatus(row.id, live.status, live.ipv4 ?? undefined, live.ipv6 ?? undefined);
         row.status = live.status;
         row.public_ipv4 = live.ipv4;
         row.public_ipv6 = live.ipv6;
@@ -602,7 +604,16 @@ export async function registerSshKey(
 
 export function listSshKeys(callerWallet: string): SshKeyListResponse {
   const rows = getSshKeysByOwner(callerWallet);
-  return { ssh_keys: rows.map(rowToSshKeyResponse) };
+  return {
+    data: rows.map(rowToSshKeyResponse),
+    pagination: {
+      total: rows.length,
+      page: 1,
+      per_page: rows.length,
+      cursor: null,
+      has_more: false,
+    },
+  };
 }
 
 export async function deleteSshKey(

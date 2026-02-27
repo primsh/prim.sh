@@ -172,8 +172,14 @@ export function listBuckets(
   const total = countBucketsByOwner(callerWallet);
 
   return {
-    buckets: rows.map(rowToBucketResponse),
-    meta: { page, per_page: limit, total },
+    data: rows.map(rowToBucketResponse),
+    pagination: {
+      total,
+      page,
+      per_page: limit,
+      cursor: null,
+      has_more: offset + rows.length < total,
+    },
   };
 }
 
@@ -381,15 +387,19 @@ export async function listObjects(
     return {
       ok: true,
       data: {
-        objects: result.objects.map((o) => ({
+        data: result.objects.map((o) => ({
           key: o.key,
           size: o.size,
           etag: o.etag,
           last_modified: o.lastModified,
         })),
-        is_truncated: result.isTruncated,
-        next_cursor: result.nextToken,
-        meta: { prefix: prefix ?? null, limit: maxKeys },
+        pagination: {
+          total: null,
+          page: null,
+          per_page: maxKeys,
+          cursor: result.nextToken,
+          has_more: result.isTruncated,
+        },
       },
     };
   } catch (err) {

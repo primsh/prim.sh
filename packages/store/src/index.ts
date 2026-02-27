@@ -1,6 +1,6 @@
 import { Hono } from "hono";
 import { bodyLimit } from "hono/body-limit";
-import { createAgentStackMiddleware, createWalletAllowlistChecker, getNetworkConfig, metricsMiddleware, metricsHandler, requestIdMiddleware } from "@primsh/x402-middleware";
+import { createAgentStackMiddleware, createWalletAllowlistChecker, getNetworkConfig, metricsMiddleware, metricsHandler, requestIdMiddleware, parsePaginationParams } from "@primsh/x402-middleware";
 import type {
   ApiError,
   CreateBucketRequest,
@@ -171,8 +171,7 @@ app.get("/v1/buckets", (c) => {
   const caller = c.get("walletAddress");
   if (!caller) return c.json(forbidden("No wallet address in payment"), 403);
 
-  const limit = Math.min(Number(c.req.query("limit")) || 20, 100);
-  const page = Math.max(Number(c.req.query("page")) || 1, 1);
+  const { limit, page } = parsePaginationParams(c.req.query());
 
   const data = listBuckets(caller, limit, page);
   return c.json(data as BucketListResponse, 200);
@@ -239,8 +238,7 @@ app.get("/v1/buckets/:id/objects", async (c) => {
   if (!caller) return c.json(forbidden("No wallet address in payment"), 403);
 
   const prefix = c.req.query("prefix") || undefined;
-  const limit = Math.min(Number(c.req.query("limit")) || 100, 1000);
-  const cursor = c.req.query("cursor") || undefined;
+  const { limit, cursor } = parsePaginationParams(c.req.query());
 
   const result = await listObjects(c.req.param("id"), caller, prefix, limit, cursor);
   if (!result.ok) {

@@ -1,6 +1,6 @@
 import { Hono } from "hono";
 import { bodyLimit } from "hono/body-limit";
-import { createAgentStackMiddleware, createWalletAllowlistChecker, getNetworkConfig, metricsMiddleware, metricsHandler, requestIdMiddleware } from "@primsh/x402-middleware";
+import { createAgentStackMiddleware, createWalletAllowlistChecker, getNetworkConfig, metricsMiddleware, metricsHandler, requestIdMiddleware, parsePaginationParams } from "@primsh/x402-middleware";
 import type {
   ApiError,
   CreateMailboxRequest,
@@ -327,11 +327,10 @@ app.get("/v1/mailboxes", (c) => {
   const caller = c.get("walletAddress");
   if (!caller) return c.json(forbidden("No wallet address in payment"), 403);
 
-  const perPage = Math.min(Number(c.req.query("per_page")) || 25, 100);
-  const page = Math.max(Number(c.req.query("page")) || 1, 1);
+  const { limit, page } = parsePaginationParams(c.req.query());
   const includeExpired = c.req.query("include_expired") === "true";
 
-  const data = listMailboxes(caller, page, perPage, includeExpired);
+  const data = listMailboxes(caller, page, limit, includeExpired);
   return c.json(data as MailboxListResponse, 200);
 });
 
@@ -385,8 +384,8 @@ app.get("/v1/mailboxes/:id/messages", async (c) => {
   const caller = c.get("walletAddress");
   if (!caller) return c.json(forbidden("No wallet address in payment"), 403);
 
-  const limit = Math.min(Math.max(Number(c.req.query("limit")) || 20, 1), 100);
-  const position = Math.max(Number(c.req.query("position")) || 0, 0);
+  const { limit, cursor } = parsePaginationParams(c.req.query());
+  const position = cursor ? Math.max(Number(cursor), 0) : Math.max(Number(c.req.query("position")) || 0, 0);
   const folder = (c.req.query("folder") ?? "inbox") as "inbox" | "drafts" | "sent" | "all";
   if (!["inbox", "drafts", "sent", "all"].includes(folder)) {
     return c.json(invalidRequest("folder must be inbox, drafts, sent, or all"), 400);
@@ -510,10 +509,9 @@ app.get("/v1/domains", (c) => {
   const caller = c.get("walletAddress");
   if (!caller) return c.json(forbidden("No wallet address in payment"), 403);
 
-  const perPage = Math.min(Number(c.req.query("per_page")) || 25, 100);
-  const page = Math.max(Number(c.req.query("page")) || 1, 1);
+  const { limit, page } = parsePaginationParams(c.req.query());
 
-  const data = listDomains(caller, page, perPage);
+  const data = listDomains(caller, page, limit);
   return c.json(data as DomainListResponse, 200);
 });
 

@@ -30,6 +30,8 @@ export const ERROR_CODES = [
 
 export type ErrorCode = (typeof ERROR_CODES)[number];
 
+import type { PaginatedList } from "@primsh/x402-middleware";
+
 // ─── Cursor pagination ─────────────────────────────────────────────────────
 
 export interface CursorPagination {
@@ -65,9 +67,8 @@ export interface WalletListItem {
   createdAt: string;
 }
 
-export interface WalletListResponse extends CursorPagination {
-  wallets: WalletListItem[];
-}
+/** @deprecated Use PaginatedList<WalletListItem> */
+export type WalletListResponse = PaginatedList<WalletListItem>;
 
 export interface SpendingPolicy {
   maxPerTx: string | null;
@@ -113,9 +114,8 @@ export interface FundRequestResponse {
   createdAt: string;
 }
 
-export interface FundRequestListResponse extends CursorPagination {
-  requests: FundRequestResponse[];
-}
+/** @deprecated Use PaginatedList<FundRequestResponse> */
+export type FundRequestListResponse = PaginatedList<FundRequestResponse>;
 
 export interface FundRequestApproveResponse {
   id: string;

@@ -90,10 +90,8 @@ export interface ServerListMeta {
   total: number;
 }
 
-export interface ServerListResponse {
-  servers: ServerResponse[];
-  meta: ServerListMeta;
-}
+/** @deprecated Use PaginatedList<ServerResponse> */
+export type ServerListResponse = PaginatedList<ServerResponse>;
 
 // ─── Delete server ────────────────────────────────────────────────────────
 
@@ -145,6 +143,7 @@ export interface SshKeyResponse {
   created_at: string;
 }
 
-export interface SshKeyListResponse {
-  ssh_keys: SshKeyResponse[];
-}
+import type { PaginatedList } from "@primsh/x402-middleware";
+
+/** @deprecated Use PaginatedList<SshKeyResponse> */
+export type SshKeyListResponse = PaginatedList<SshKeyResponse>;

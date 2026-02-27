@@ -342,9 +342,9 @@ describe("domain.sh", () => {
       await createZone({ domain: "b-domain.com" }, OTHER);
 
       const list = listZones(CALLER, 20, 1);
-      expect(list.zones).toHaveLength(1);
-      expect(list.zones[0].domain).toBe("a-domain.com");
-      expect(list.meta.total).toBe(1);
+      expect(list.data).toHaveLength(1);
+      expect(list.data[0].domain).toBe("a-domain.com");
+      expect(list.pagination.total).toBe(1);
     });
 
     it("list zones — pagination works", async () => {
@@ -353,11 +353,11 @@ describe("domain.sh", () => {
       await createZone({ domain: "third.com" }, CALLER);
 
       const page1 = listZones(CALLER, 2, 1);
-      expect(page1.zones).toHaveLength(2);
-      expect(page1.meta.total).toBe(3);
+      expect(page1.data).toHaveLength(2);
+      expect(page1.pagination.total).toBe(3);
 
       const page2 = listZones(CALLER, 2, 2);
-      expect(page2.zones).toHaveLength(1);
+      expect(page2.data).toHaveLength(1);
     });
 
     it("get zone — owner can access", async () => {
@@ -503,7 +503,7 @@ describe("domain.sh", () => {
       const result = listRecords(zoneId, CALLER);
       expect(result.ok).toBe(true);
       if (!result.ok) return;
-      expect(result.data.records).toHaveLength(2);
+      expect(result.data.data).toHaveLength(2);
     });
 
     it("list records — non-owner gets 403", () => {

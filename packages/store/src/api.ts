@@ -44,14 +44,10 @@ export interface CreateBucketResponse {
   bucket: BucketResponse;
 }
 
-export interface BucketListResponse {
-  buckets: BucketResponse[];
-  meta: {
-    page: number;
-    per_page: number;
-    total: number;
-  };
-}
+import type { PaginatedList } from "@primsh/x402-middleware";
+
+/** @deprecated Use PaginatedList<BucketResponse> */
+export type BucketListResponse = PaginatedList<BucketResponse>;
 
 // ─── Object types ─────────────────────────────────────────────────────────
 
@@ -62,15 +58,8 @@ export interface ObjectResponse {
   last_modified: string;
 }
 
-export interface ObjectListResponse {
-  objects: ObjectResponse[];
-  is_truncated: boolean;
-  next_cursor: string | null;
-  meta: {
-    prefix: string | null;
-    limit: number;
-  };
-}
+/** @deprecated Use PaginatedList<ObjectResponse> */
+export type ObjectListResponse = PaginatedList<ObjectResponse>;
 
 export interface PutObjectResponse {
   key: string;

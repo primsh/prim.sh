@@ -363,11 +363,11 @@ describe("email service", () => {
       await createMailbox({}, WALLET_B);
 
       const resultA = listMailboxes(WALLET_A, 1, 25);
-      expect(resultA.total).toBe(2);
-      expect(resultA.mailboxes.length).toBe(2);
+      expect(resultA.pagination.total).toBe(2);
+      expect(resultA.data.length).toBe(2);
 
       const resultB = listMailboxes(WALLET_B, 1, 25);
-      expect(resultB.total).toBe(1);
+      expect(resultB.pagination.total).toBe(1);
     });
 
     it("paginates correctly", async () => {
@@ -378,10 +378,10 @@ describe("email service", () => {
       await createMailbox({}, WALLET_A);
 
       const result = listMailboxes(WALLET_A, 1, 2);
-      expect(result.mailboxes.length).toBe(2);
-      expect(result.total).toBe(3);
-      expect(result.page).toBe(1);
-      expect(result.per_page).toBe(2);
+      expect(result.data.length).toBe(2);
+      expect(result.pagination.total).toBe(3);
+      expect(result.pagination.page).toBe(1);
+      expect(result.pagination.per_page).toBe(2);
     });
   });
 
@@ -513,9 +513,9 @@ describe("email service", () => {
 
       expect(result.ok).toBe(true);
       if (!result.ok) return;
-      expect(result.data.messages).toHaveLength(1);
-      expect(result.data.messages[0].from.email).toBe("[email protected]");
-      expect(result.data.total).toBe(1);
+      expect(result.data.data).toHaveLength(1);
+      expect(result.data.data[0].from.email).toBe("[email protected]");
+      expect(result.data.pagination.total).toBe(1);
     });
 
     it("returns not_found for wrong wallet", async () => {
@@ -1049,8 +1049,8 @@ describe("email service", () => {
 
       expect(result.ok).toBe(true);
       if (!result.ok) return;
-      expect(result.data.webhooks).toHaveLength(2);
-      expect(result.data.total).toBe(2);
+      expect(result.data.data).toHaveLength(2);
+      expect(result.data.pagination.total).toBe(2);
     });
 
     it("returns not_found for wrong wallet", () => {
@@ -1060,6 +1060,38 @@ describe("email service", () => {
 
       expect(result.ok).toBe(false);
       if (!result.ok) expect(result.code).toBe("not_found");
+    });
+
+    it("returns events: [] and warns when events JSON is corrupted (HRD-4)", () => {
+      seedRow("mbx_test", WALLET_A);
+      // Insert a webhook row with corrupted events JSON directly into the mock store
+      // biome-ignore lint/suspicious/noExplicitAny: accessing mock internals
+      const webhookStore = (dbMock as any)._webhooks as Map<string, Record<string, unknown>>;
+      webhookStore.set("wh_corrupted", {
+        id: "wh_corrupted",
+        mailbox_id: "mbx_test",
+        owner_wallet: WALLET_A,
+        url: "http://localhost:3000/hook",
+        secret_enc: null,
+        events: "broken{json",
+        status: "active",
+        consecutive_failures: 0,
+        created_at: Date.now(),
+      });
+
+      const warnSpy = vi.spyOn(console, "warn").mockImplementation(() => {});
+
+      const result = listWebhooks("mbx_test", WALLET_A);
+
+      expect(result.ok).toBe(true);
+      if (!result.ok) return;
+      expect(result.data.data).toHaveLength(1);
+      expect(result.data.data[0].events).toEqual([]);
+      expect(warnSpy).toHaveBeenCalledWith(
+        expect.stringContaining("corrupted events JSON"),
+      );
+
+      warnSpy.mockRestore();
     });
   });
 

@@ -42,14 +42,10 @@ export interface CreateCollectionRequest {
   dimension?: number;
 }
 
-export interface CollectionListResponse {
-  collections: CollectionResponse[];
-  meta: {
-    page: number;
-    per_page: number;
-    total: number;
-  };
-}
+import type { PaginatedList } from "@primsh/x402-middleware";
+
+/** @deprecated Use PaginatedList<CollectionResponse> */
+export type CollectionListResponse = PaginatedList<CollectionResponse>;
 
 // ─── Vector types ─────────────────────────────────────────────────────────
 

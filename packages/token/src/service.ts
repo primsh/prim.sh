@@ -224,7 +224,16 @@ export function listTokens(callerWallet: string): ServiceResult<TokenListRespons
   const rows = getDeploymentsByOwner(callerWallet);
   return {
     ok: true,
-    data: { tokens: rows.map(rowToTokenResponse) },
+    data: {
+      data: rows.map(rowToTokenResponse),
+      pagination: {
+        total: rows.length,
+        page: 1,
+        per_page: rows.length,
+        cursor: null,
+        has_more: false,
+      },
+    },
   };
 }
 

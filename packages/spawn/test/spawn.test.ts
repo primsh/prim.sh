@@ -390,17 +390,17 @@ describe("listServers", () => {
     insertTestServer({ owner_wallet: OTHER }); // should not appear
 
     const result = listServers(CALLER, 20, 1);
-    expect(result.servers).toHaveLength(2);
-    for (const s of result.servers) {
+    expect(result.data).toHaveLength(2);
+    for (const s of result.data) {
       expect(s.owner_wallet).toBe(CALLER);
     }
   });
 
   it("list empty — returns empty array with meta", () => {
     const result = listServers(CALLER, 20, 1);
-    expect(result.servers).toHaveLength(0);
-    expect(result.meta.total).toBe(0);
-    expect(result.meta.page).toBe(1);
+    expect(result.data).toHaveLength(0);
+    expect(result.pagination.total).toBe(0);
+    expect(result.pagination.page).toBe(1);
   });
 
   it("list — pagination meta is correct", () => {
@@ -409,10 +409,10 @@ describe("listServers", () => {
     insertTestServer({ owner_wallet: CALLER });
 
     const result = listServers(CALLER, 2, 1);
-    expect(result.servers).toHaveLength(2);
-    expect(result.meta.per_page).toBe(2);
-    expect(result.meta.total).toBe(3);
-    expect(result.meta.page).toBe(1);
+    expect(result.data).toHaveLength(2);
+    expect(result.pagination.per_page).toBe(2);
+    expect(result.pagination.total).toBe(3);
+    expect(result.pagination.page).toBe(1);
   });
 });
 
@@ -679,15 +679,15 @@ describe("listSshKeys", () => {
     insertTestSshKey({ owner_wallet: OTHER });
 
     const result = listSshKeys(CALLER);
-    expect(result.ssh_keys).toHaveLength(2);
-    for (const k of result.ssh_keys) {
+    expect(result.data).toHaveLength(2);
+    for (const k of result.data) {
       expect(k.owner_wallet).toBe(CALLER);
     }
   });
 
   it("list SSH keys (empty) — returns empty array", () => {
     const result = listSshKeys(CALLER);
-    expect(result.ssh_keys).toHaveLength(0);
+    expect(result.data).toHaveLength(0);
   });
 });
 

@@ -46,14 +46,10 @@ export interface CreateZoneResponse {
   zone: ZoneResponse;
 }
 
-export interface ZoneListResponse {
-  zones: ZoneResponse[];
-  meta: {
-    page: number;
-    per_page: number;
-    total: number;
-  };
-}
+import type { PaginatedList } from "@primsh/x402-middleware";
+
+/** @deprecated Use PaginatedList<ZoneResponse> */
+export type ZoneListResponse = PaginatedList<ZoneResponse>;
 
 // ─── Record types ────────────────────────────────────────────────────────
 
@@ -90,9 +86,8 @@ export interface UpdateRecordRequest {
   priority?: number;
 }
 
-export interface RecordListResponse {
-  records: RecordResponse[];
-}
+/** @deprecated Use PaginatedList<RecordResponse> */
+export type RecordListResponse = PaginatedList<RecordResponse>;
 
 // ─── Domain search types ──────────────────────────────────────────────────
 

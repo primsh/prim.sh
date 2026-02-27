@@ -293,22 +293,22 @@ describe("createCollection", () => {
 describe("listCollections", () => {
   it("returns empty list when no collections", () => {
     const result = listCollections(WALLET, 20, 1);
-    expect(result.collections).toHaveLength(0);
-    expect(result.meta.total).toBe(0);
+    expect(result.data).toHaveLength(0);
+    expect(result.pagination.total).toBe(0);
   });
 
   it("lists owned collections", async () => {
     await createCollection({ name: "col-a" }, WALLET);
     await createCollection({ name: "col-b" }, WALLET);
     const result = listCollections(WALLET, 20, 1);
-    expect(result.collections).toHaveLength(2);
-    expect(result.meta.total).toBe(2);
+    expect(result.data).toHaveLength(2);
+    expect(result.pagination.total).toBe(2);
   });
 
   it("excludes other wallet collections", async () => {
     await createCollection({ name: "col-other" }, WALLET_B);
     const result = listCollections(WALLET, 20, 1);
-    expect(result.collections).toHaveLength(0);
+    expect(result.data).toHaveLength(0);
   });
 
   it("paginates correctly", async () => {
@@ -317,15 +317,15 @@ describe("listCollections", () => {
     }
     const page1 = listCollections(WALLET, 2, 1);
     const page2 = listCollections(WALLET, 2, 2);
-    expect(page1.collections).toHaveLength(2);
-    expect(page2.collections).toHaveLength(2);
-    expect(page1.meta.total).toBe(5);
+    expect(page1.data).toHaveLength(2);
+    expect(page2.data).toHaveLength(2);
+    expect(page1.pagination.total).toBe(5);
   });
 
   it("sets document_count to null for all list entries", async () => {
     await createCollection({ name: "listed" }, WALLET);
     const result = listCollections(WALLET, 20, 1);
-    expect(result.collections[0].document_count).toBeNull();
+    expect(result.data[0].document_count).toBeNull();
   });
 });
 
@@ -384,7 +384,7 @@ describe("deleteCollection", () => {
     if (!created.ok) throw new Error("setup failed");
     await deleteCollection(created.data.id, WALLET);
     const list = listCollections(WALLET, 20, 1);
-    expect(list.collections).toHaveLength(0);
+    expect(list.data).toHaveLength(0);
   });
 
   it("returns not_found for unknown id", async () => {
@@ -1025,7 +1025,7 @@ describe("document_count", () => {
   it("is null in list response", async () => {
     await createCollection({ name: "doccount-list" }, WALLET);
     const list = listCollections(WALLET, 20, 1);
-    expect(list.collections[0].document_count).toBeNull();
+    expect(list.data[0].document_count).toBeNull();
   });
 
   it("is live points_count in single-get", async () => {

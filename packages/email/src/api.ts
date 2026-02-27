@@ -54,12 +54,10 @@ export interface RenewMailboxRequest {
   ttl_ms?: number;
 }
 
-export interface MailboxListResponse {
-  mailboxes: MailboxResponse[];
-  total: number;
-  page: number;
-  per_page: number;
-}
+import type { PaginatedList } from "@primsh/x402-middleware";
+
+/** @deprecated Use PaginatedList<MailboxResponse> */
+export type MailboxListResponse = PaginatedList<MailboxResponse>;
 
 export interface DeleteMailboxResponse {
   id: string;
@@ -90,11 +88,8 @@ export interface EmailDetail extends EmailMessage {
   htmlBody: string | null;
 }
 
-export interface EmailListResponse {
-  messages: EmailMessage[];
-  total: number;
-  position: number;
-}
+/** @deprecated Use PaginatedList<EmailMessage> */
+export type EmailListResponse = PaginatedList<EmailMessage>;
 
 // ─── Send types (R-6) ─────────────────────────────────────────────────
 
@@ -128,10 +123,8 @@ export interface WebhookResponse {
   created_at: string;
 }
 
-export interface WebhookListResponse {
-  webhooks: WebhookResponse[];
-  total: number;
-}
+/** @deprecated Use PaginatedList<WebhookResponse> */
+export type WebhookListResponse = PaginatedList<WebhookResponse>;
 
 export interface DeleteWebhookResponse {
   id: string;
@@ -176,12 +169,8 @@ export interface DomainResponse {
   dkim_records?: DnsRecord[];
 }
 
-export interface DomainListResponse {
-  domains: DomainResponse[];
-  total: number;
-  page: number;
-  per_page: number;
-}
+/** @deprecated Use PaginatedList<DomainResponse> */
+export type DomainListResponse = PaginatedList<DomainResponse>;
 
 export interface DeleteDomainResponse {
   id: string;

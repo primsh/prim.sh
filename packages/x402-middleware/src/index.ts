@@ -4,6 +4,8 @@ export * from "./network-config";
 export * from "./metrics";
 export * from "./logger";
 export * from "./request-id";
+export * from "./pagination";
+export * from "./rate-limit";
 
 export { x402ResourceServer } from "@x402/core/server";
 export { HTTPFacilitatorClient } from "@x402/core/http";

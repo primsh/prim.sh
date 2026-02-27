@@ -214,6 +214,7 @@ describe("Wallet allowlist", () => {
   }
 
   afterEach(() => {
+    // biome-ignore lint/performance/noDelete: env vars require delete to remove (= undefined sets "undefined")
     delete process.env.PRIM_ALLOWLIST;
   });
 
@@ -379,6 +380,7 @@ describe("Dynamic allowlist (checkAllowlist callback)", () => {
   }
 
   afterEach(() => {
+    // biome-ignore lint/performance/noDelete: env vars require delete to remove (= undefined sets "undefined")
     delete process.env.PRIM_ALLOWLIST;
   });
 
@@ -450,6 +452,116 @@ describe("Dynamic allowlist (checkAllowlist callback)", () => {
       headers: { "PAYMENT-SIGNATURE": makePaymentHeader("0xBlockedWallet") },
     });
     expect(res.status).toBe(403);
+  });
+});
+
+// ─── Per-wallet rate limiting ─────────────────────────────────────────────
+
+describe("Per-wallet rate limiting", () => {
+  function makePaymentHeader(from: string) {
+    const paymentPayload = {
+      x402Version: 2,
+      scheme: "exact",
+      network: TEST_NETWORK,
+      payload: {
+        authorization: {
+          from,
+          to: TEST_PAY_TO,
+          value: "1000",
+          validAfter: "0",
+          validBefore: "999999999999",
+          nonce: "0x01",
+        },
+        signature: `0x${"ab".repeat(65)}`,
+      },
+    };
+    return encodePaymentSignatureHeader(paymentPayload);
+  }
+
+  function createRateLimitedApp(max = 2) {
+    const app = new Hono();
+    app.use(
+      "*",
+      createAgentStackMiddleware(
+        {
+          payTo: TEST_PAY_TO,
+          network: TEST_NETWORK,
+          facilitatorUrl: "https://x402.example",
+          freeRoutes: ["GET /free"],
+          rateLimit: { max, windowMs: 60_000 },
+        },
+        routes,
+      ),
+    );
+    app.get("/free", (c) => c.json({ route: "free" }));
+    app.get("/paid", (c) => c.json({ route: "paid" }));
+    return app;
+  }
+
+  it("returns 429 after exceeding rate limit", async () => {
+    const app = createRateLimitedApp(2);
+    const header = makePaymentHeader("0xRateLimitTest");
+
+    await app.request("/free", { method: "GET", headers: { "PAYMENT-SIGNATURE": header } });
+    await app.request("/free", { method: "GET", headers: { "PAYMENT-SIGNATURE": header } });
+    const res = await app.request("/free", { method: "GET", headers: { "PAYMENT-SIGNATURE": header } });
+
+    expect(res.status).toBe(429);
+    const body = await res.json();
+    expect(body.error).toBe("rate_limited");
+    expect(typeof body.retry_after).toBe("number");
+  });
+
+  it("includes rate limit headers on allowed requests", async () => {
+    const app = createRateLimitedApp(5);
+    const header = makePaymentHeader("0xHeaderTest");
+
+    const res = await app.request("/free", { method: "GET", headers: { "PAYMENT-SIGNATURE": header } });
+
+    expect(res.status).toBe(200);
+    expect(res.headers.get("X-RateLimit-Limit")).toBe("5");
+    expect(res.headers.get("X-RateLimit-Remaining")).toBe("4");
+    expect(res.headers.get("X-RateLimit-Reset")).toBeTruthy();
+  });
+
+  it("tracks different wallets independently", async () => {
+    const app = createRateLimitedApp(1);
+    const headerA = makePaymentHeader("0xWalletA");
+    const headerB = makePaymentHeader("0xWalletB");
+
+    await app.request("/free", { method: "GET", headers: { "PAYMENT-SIGNATURE": headerA } });
+    const resA = await app.request("/free", { method: "GET", headers: { "PAYMENT-SIGNATURE": headerA } });
+    expect(resA.status).toBe(429);
+
+    const resB = await app.request("/free", { method: "GET", headers: { "PAYMENT-SIGNATURE": headerB } });
+    expect(resB.status).toBe(200);
+  });
+
+  it("does not rate limit requests without payment header", async () => {
+    const app = createRateLimitedApp(1);
+
+    const res1 = await app.request("/free", { method: "GET" });
+    const res2 = await app.request("/free", { method: "GET" });
+
+    expect(res1.status).toBe(200);
+    expect(res2.status).toBe(200);
+  });
+
+  it("rateLimit: true uses defaults", () => {
+    const app = new Hono();
+    // Should not throw
+    app.use(
+      "*",
+      createAgentStackMiddleware(
+        {
+          payTo: TEST_PAY_TO,
+          network: TEST_NETWORK,
+          freeRoutes: ["GET /free"],
+          rateLimit: true,
+        },
+        { "GET /free": "$0.00" },
+      ),
+    );
   });
 });
 

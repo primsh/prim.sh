@@ -218,8 +218,8 @@ describe("custom domains (R-9)", () => {
 
       const result = listDomains(WALLET_A, 1, 25);
 
-      expect(result.total).toBe(2);
-      expect(result.domains).toHaveLength(2);
+      expect(result.pagination.total).toBe(2);
+      expect(result.data).toHaveLength(2);
     });
   });
 

@@ -202,8 +202,14 @@ export function listZones(
   const total = countZonesByOwner(callerWallet);
 
   return {
-    zones: rows.map(rowToZoneResponse),
-    meta: { page, per_page: limit, total },
+    data: rows.map(rowToZoneResponse),
+    pagination: {
+      total,
+      page,
+      per_page: limit,
+      cursor: null,
+      has_more: offset + rows.length < total,
+    },
   };
 }
 
@@ -349,7 +355,19 @@ export function listRecords(
   if (!check.ok) return check;
 
   const rows = getRecordsByZone(zoneId);
-  return { ok: true, data: { records: rows.map(rowToRecordResponse) } };
+  return {
+    ok: true,
+    data: {
+      data: rows.map(rowToRecordResponse),
+      pagination: {
+        total: rows.length,
+        page: 1,
+        per_page: rows.length,
+        cursor: null,
+        has_more: false,
+      },
+    },
+  };
 }
 
 export function getRecord(

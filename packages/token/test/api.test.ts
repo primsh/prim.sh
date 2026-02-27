@@ -400,15 +400,15 @@ describe("token.sh", () => {
       const result = listTokens(CALLER);
       expect(result.ok).toBe(true);
       if (!result.ok) return;
-      expect(result.data.tokens).toHaveLength(1);
-      expect(result.data.tokens[0].name).toBe("Kelly Claude Token");
+      expect(result.data.data).toHaveLength(1);
+      expect(result.data.data[0].name).toBe("Kelly Claude Token");
     });
 
     it("empty list when no tokens", () => {
       const result = listTokens(CALLER);
       expect(result.ok).toBe(true);
       if (!result.ok) return;
-      expect(result.data.tokens).toHaveLength(0);
+      expect(result.data.data).toHaveLength(0);
     });
 
     it("multiple tokens for same owner", async () => {
@@ -418,7 +418,7 @@ describe("token.sh", () => {
       const result = listTokens(CALLER);
       expect(result.ok).toBe(true);
       if (!result.ok) return;
-      expect(result.data.tokens).toHaveLength(2);
+      expect(result.data.data).toHaveLength(2);
     });
   });
 

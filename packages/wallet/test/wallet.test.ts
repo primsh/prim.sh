@@ -232,7 +232,7 @@ describe("Wallet ownership logic (via service)", () => {
     registerTestWallet(OTHER_CALLER);
 
     const result = await listWallets(CALLER, 20);
-    expect(result.wallets).toHaveLength(1);
+    expect(result.data).toHaveLength(1);
   });
 });
 
