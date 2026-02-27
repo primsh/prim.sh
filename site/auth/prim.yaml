@@ -8,3 +8,17 @@ card_class: p17
 description: "OAuth broker for agents. Get access tokens for external services without managing flows."
 tagline: "OAuth for agents."
 sub: "Get access tokens for GitHub, Google, Slack, and more. Agent-initiated OAuth flows without a browser. x402 auth."
+
+providers:
+  - name: github-apps
+    status: planned
+    url: https://docs.github.com/en/apps
+  - name: google-oauth
+    status: planned
+    url: https://developers.google.com/identity
+  - name: slack-oauth
+    status: planned
+    url: https://api.slack.com/authentication/oauth-v2
+  - name: discord-oauth
+    status: planned
+    url: https://discord.com/developers/docs/topics/oauth2

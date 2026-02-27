@@ -1,0 +1,143 @@
+name: Auto-Rebase
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: auto-rebase
+  cancel-in-progress: false
+
+jobs:
+  find-conflicts:
+    name: Find conflicted PRs
+    runs-on: ubuntu-latest
+    outputs:
+      conflicted: ${{ steps.find.outputs.conflicted }}
+
+    permissions:
+      contents: write
+      pull-requests: write
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Configure git
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+      - name: Find and triage conflicted PRs
+        id: find
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          # Give GitHub time to recalculate mergeability after main moved
+          sleep 15
+
+          needs_claude='[]'
+
+          mapfile -t entries < <(gh pr list --state open --json number,headRefName,mergeable \
+            --jq '.[] | select(.mergeable == "CONFLICTING") | "\(.number) \(.headRefName)"')
+
+          if [ ${#entries[@]} -eq 0 ]; then
+            echo "No conflicted PRs found"
+            echo "conflicted=[]" >> $GITHUB_OUTPUT
+            exit 0
+          fi
+
+          for entry in "${entries[@]}"; do
+            pr_num=$(echo "$entry" | cut -d' ' -f1)
+            branch=$(echo "$entry" | cut -d' ' -f2)
+            echo "::group::PR #$pr_num ($branch)"
+
+            git fetch origin "$branch"
+            git checkout -B "$branch" "origin/$branch"
+
+            if git merge origin/main --no-edit; then
+              echo "Clean merge — pushing"
+              git push origin "$branch"
+            else
+              echo "Conflicts — queuing for Claude"
+              git merge --abort
+              needs_claude=$(echo "$needs_claude" | jq -c \
+                --arg n "$pr_num" --arg b "$branch" \
+                '. + [{"number": ($n | tonumber), "branch": $b}]')
+            fi
+
+            git checkout main
+            echo "::endgroup::"
+          done
+
+          echo "conflicted=$needs_claude" >> $GITHUB_OUTPUT
+          echo "Needs Claude resolution: $needs_claude"
+
+  resolve:
+    name: "Resolve #${{ matrix.pr.number }}"
+    needs: find-conflicts
+    if: needs.find-conflicts.outputs.conflicted != '[]'
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        pr: ${{ fromJson(needs.find-conflicts.outputs.conflicted) }}
+      max-parallel: 3
+
+    permissions:
+      contents: write
+      pull-requests: write
+      id-token: write
+
+    timeout-minutes: 10
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ matrix.pr.branch }}
+          fetch-depth: 0
+
+      - name: Configure git
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+      - name: Start merge (leave conflict markers)
+        run: |
+          git fetch origin main
+          git merge origin/main --no-edit || true
+          echo "### Conflicted files:" >> $GITHUB_STEP_SUMMARY
+          git diff --name-only --diff-filter=U | tee -a $GITHUB_STEP_SUMMARY
+
+      - name: Install Claude Code
+        run: npm install -g @anthropic-ai/claude-code
+
+      - name: Resolve conflicts with Claude
+        env:
+          CLAUDE_CODE_OAUTH_TOKEN: ${{ secrets.ANTHROPIC_API_KEY }}
+        run: |
+          conflicted=$(git diff --name-only --diff-filter=U | tr '\n' ', ')
+          echo "Resolving conflicts in: $conflicted"
+
+          claude -p "This branch has merge conflicts with main. The merge is in progress —
+          conflict markers (<<<<<<< / ======= / >>>>>>>) are in the working tree.
+
+          IMPORTANT: main is the source of truth. It contains already-merged
+          bug fixes, lint fixes, and CI changes that are correct.
+
+          Resolve every conflict:
+          1. Run git diff --name-only --diff-filter=U to list conflicted files
+          2. Read each conflicted file and remove all conflict markers:
+             - Default: prefer main's version (it has landed fixes)
+             - Only prefer HEAD when it adds new code that doesn't exist in main
+               (new functions, new files, new features)
+             - List additions (imports, array entries, YAML lists): keep both
+          3. Run git add <file> for each resolved file
+          4. Verify no markers remain: grep -rn '<<<<<<< ' . should return nothing
+          5. Run git commit --no-edit to complete the merge
+          6. Run git push
+
+          Do not modify any code beyond resolving conflict markers." \
+            --max-turns 10 --model claude-sonnet-4-6 --allowedTools "Bash,Read,Edit,Write,Glob,Grep"

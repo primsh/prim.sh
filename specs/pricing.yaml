@@ -414,7 +414,7 @@ primitives:
         notes: "SQLite delete"
 
   - name: domain.sh
-    description: DNS zones + domain registration via Cloudflare + NameSilo
+    description: DNS zones + domain registration via Cloudflare + Namecheap
     free_routes:
       - "GET /"
       - "GET /llms.txt"
@@ -425,17 +425,17 @@ primitives:
         x402_price: "$0.001"
         provider_cost: "$0.00"
         margin_pct: 100
-        notes: "NameSilo availability API (free)"
+        notes: "Namecheap availability API (free)"
       - endpoint: "POST /v1/domains/quote"
         x402_price: "$0.001"
         provider_cost: "$0.00"
         margin_pct: 100
-        notes: "NameSilo price lookup (free)"
+        notes: "Namecheap price lookup (free)"
       - endpoint: "POST /v1/domains/register"
         x402_price: "dynamic"
         provider_cost: "varies"
         margin_pct: "varies"
-        notes: "NameSilo registration ($8-40/yr depending on TLD). Price quoted via /quote endpoint"
+        notes: "Namecheap registration ($8-40/yr depending on TLD). Price quoted via /quote endpoint"
       - endpoint: "GET /v1/domains/{domain}/status"
         x402_price: "$0.001"
         provider_cost: "$0.00"
@@ -507,34 +507,83 @@ primitives:
         margin_pct: 100
         notes: "Cloudflare DNS delete"
 
-# ─── Pricing Risk Summary ─────────────────────────────────────────────────
-#
-# HIGH RISK:
-#   spawn.sh POST /v1/servers  — $0.01 charge vs $4/mo DO cost (-39,900% margin)
-#     Action: needs recurring billing model (hourly/daily x402 charges or deposit)
-#
-#   search.sh POST /v1/extract — $0.005 charge = $0.005 Tavily cost (0% margin)
-#     Action: raise to $0.01 or accept as loss leader for search bundle
-#
-# MODERATE RISK:
-#   token.sh POST /v1/tokens   — $1.00 charge vs ~$0.10 gas (Base L2 normal)
-#     90% margin normally, but mainnet gas spikes during congestion could
-#     push cost above $1. Consider gas price oracle + dynamic pricing.
-#
-#   domain.sh POST /v1/domains/register — dynamic pricing from NameSilo
-#     Margin depends on markup over registrar wholesale. Need to verify
-#     markup logic covers all TLD pricing tiers.
-#
-# HEALTHY (90-100% margin):
-#   All SQLite-only operations (wallet, store metadata, email metadata)
-#   All self-hosted services (email JMAP, mem Qdrant, store R2 free tier)
-#   Token read operations (free RPC calls)
-#
-# Infrastructure cost baseline (monthly):
-#   DigitalOcean VPS: $12/mo (s-1vcpu-2gb)
-#   Cloudflare: $0 (free plan — R2 free tier, DNS free, Pages free)
-#   Qdrant: $0 (self-hosted on VPS)
-#   Stalwart: $0 (self-hosted on VPS)
-#   Tavily: $0-$100/mo (usage-based, $5/1K calls)
-#   NameSilo: per-registration (pass-through)
-#   Circle USDC faucet: $0 (testnet only)
+infrastructure:
+  - item: vps
+    provider: digitalocean
+    monthly_usd: 12.00
+    billing: fixed
+    notes: "s-1vcpu-2gb. Hosts wallet, store, email, faucet, spawn, search, mem, token, domain"
+  - item: domain_prim_sh
+    provider: namecheap
+    monthly_usd: 2.92
+    billing: fixed
+    notes: "prim.sh, $34.98/yr amortized. Order 195616489 (2026-02-25)"
+  - item: domain_primitiveshell_com
+    provider: namecheap
+    monthly_usd: 0.96
+    billing: fixed
+    notes: "primitiveshell.com, $11.48/yr incl. ICANN. Order 195781641 (2026-02-27)"
+  - item: domain_primitiveshell_org
+    provider: namecheap
+    monthly_usd: 0.61
+    billing: fixed
+    notes: "primitiveshell.org, $7.28/yr incl. ICANN. Order 195781641 (2026-02-27)"
+  - item: x_premium
+    provider: x
+    monthly_usd: 11.00
+    billing: fixed
+    notes: "@useprim marketing"
+  - item: github_team
+    provider: github
+    monthly_usd: 4.00
+    billing: fixed
+    notes: "primsh org, Team plan — branch protection on private repo. INV122146484 (2026-02-27)"
+  - item: cloudflare
+    provider: cloudflare
+    monthly_usd: 0.00
+    billing: fixed
+    notes: "free plan — R2, DNS, Pages"
+  - item: qdrant
+    provider: self_hosted
+    monthly_usd: 0.00
+    billing: fixed
+    notes: "self-hosted on VPS"
+  - item: stalwart
+    provider: self_hosted
+    monthly_usd: 0.00
+    billing: fixed
+    notes: "self-hosted on VPS"
+  - item: tavily
+    provider: tavily
+    monthly_usd: null
+    billing: usage
+    rate_usd_per_1k_calls: 5.00
+    notes: "$0-100/mo depending on search.sh volume"
+  - item: namecheap_registrations
+    provider: namecheap
+    monthly_usd: null
+    billing: pass_through
+    notes: "per-registration cost passed through to agent via dynamic pricing"
+  - item: circle_faucet
+    provider: circle
+    monthly_usd: 0.00
+    billing: fixed
+    notes: "testnet USDC only, free"
+
+risk_flags:
+  - primitive: spawn.sh
+    endpoint: "POST /v1/servers"
+    severity: high
+    description: "$0.01 one-time charge vs $4/mo DO droplet (-39,900% margin). Needs recurring billing model."
+  - primitive: search.sh
+    endpoint: "POST /v1/extract"
+    severity: high
+    description: "At cost (0% margin). Accepted as loss leader for search bundle."
+  - primitive: token.sh
+    endpoint: "POST /v1/tokens"
+    severity: moderate
+    description: "90% margin at normal Base L2 gas (~$0.10). Mainnet congestion can push gas above $1. Needs gas oracle."
+  - primitive: domain.sh
+    endpoint: "POST /v1/domains/register"
+    severity: moderate
+    description: "Dynamic pricing via Namecheap. Margin depends on TLD wholesale cost. No fixed margin guarantee."
