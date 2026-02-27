@@ -35,7 +35,7 @@ describe("crypto", () => {
     const encrypted = encryptPassword("test-password");
     const parts = encrypted.split(":");
     // XOR first byte of ciphertext to guarantee it's different
-    const firstByte = parseInt(parts[1].slice(0, 2), 16);
+    const firstByte = Number.parseInt(parts[1].slice(0, 2), 16);
     const flipped = (firstByte ^ 0x01).toString(16).padStart(2, "0");
     const tampered = `${parts[0]}:${flipped}${parts[1].slice(2)}:${parts[2]}`;
     expect(() => decryptPassword(tampered)).toThrow();
