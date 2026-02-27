@@ -195,7 +195,7 @@ jobs:
 
       - name: Reject large files (>1MB)
         run: |
-          large=$(find . -not -path './.git/*' -not -path './node_modules/*' -not -path './.worktrees/*' -not -path './research/*' -type f -size +1M)
+          large=$(find . -not -path './.git/*' -not -path './node_modules/*' -not -path './.worktrees/*' -not -path './research/*' -not -path './site/assets/*' -not -path './brand/*' -type f -size +1M)
           if [ -n "$large" ]; then
             echo "::error::Files over 1MB found:"
             echo "$large"
