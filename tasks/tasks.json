@@ -17,7 +17,9 @@
                 {
                   "id": "HRD-3",
                   "description": "Expand wallet smoke test to 5-check contract (match `track/test/smoke.test.ts`)",
-                  "owner": ["Claude"],
+                  "owner": [
+                    "Claude"
+                  ],
                   "depends": [],
                   "status": "done",
                   "release": "v1.0.0"
@@ -25,8 +27,12 @@
                 {
                   "id": "HRD-4",
                   "description": "Add try-catch around `JSON.parse` calls in service layers (wallet, email, store).",
-                  "owner": ["Claude"],
-                  "depends": ["HRD-3"],
+                  "owner": [
+                    "Claude"
+                  ],
+                  "depends": [
+                    "HRD-3"
+                  ],
                   "status": "done",
                   "release": "v1.0.0",
                   "plan": "tasks/completed/hrd-4-json-parse-safety.md"
@@ -34,8 +40,12 @@
                 {
                   "id": "HRD-8",
                   "description": "Standardize pagination: define shared response shape across all list endpoints.",
-                  "owner": ["Claude"],
-                  "depends": ["HRD-4"],
+                  "owner": [
+                    "Claude"
+                  ],
+                  "depends": [
+                    "HRD-4"
+                  ],
                   "status": "done",
                   "release": "v1.0.0",
                   "plan": "tasks/completed/hrd-8-pagination-standard.md"
@@ -43,8 +53,12 @@
                 {
                   "id": "HRD-10",
                   "description": "Add per-wallet rate limiting to x402-middleware (configurable, default 60/min).",
-                  "owner": ["Claude"],
-                  "depends": ["HRD-8"],
+                  "owner": [
+                    "Claude"
+                  ],
+                  "depends": [
+                    "HRD-8"
+                  ],
                   "status": "done",
                   "release": "v1.0.0",
                   "plan": "tasks/completed/hrd-10-rate-limiting.md"
@@ -59,15 +73,19 @@
                 {
                   "id": "HRD-2",
                   "description": "Fix `allowlist-db.ts` DB handle leak: use singleton pattern from `wallet/db.ts`",
-                  "owner": ["Claude"],
+                  "owner": [
+                    "Claude"
+                  ],
                   "depends": [],
                   "status": "done",
                   "release": "v1.0.0"
                 },
                 {
                   "id": "HRD-5",
-                  "description": "Fix `setUTCHours(24)` in `wallet/src/db.ts` — use explicit date arithmetic",
-                  "owner": ["Claude"],
+                  "description": "Fix `setUTCHours(24)` in `wallet/src/db.ts` \u2014 use explicit date arithmetic",
+                  "owner": [
+                    "Claude"
+                  ],
                   "depends": [],
                   "status": "done",
                   "release": "v1.0.0"
@@ -82,7 +100,9 @@
                 {
                   "id": "HRD-1",
                   "description": "Remove `*.db` + `server.log` from repo; scrub `.env.email` from git history",
-                  "owner": ["Garric"],
+                  "owner": [
+                    "Garric"
+                  ],
                   "depends": [],
                   "status": "pending",
                   "release": "v1.0.0"
@@ -90,7 +110,9 @@
                 {
                   "id": "HRD-6",
                   "description": "Create `SECURITY.md` (referenced by CONTRIBUTING.md but missing)",
-                  "owner": ["Claude"],
+                  "owner": [
+                    "Claude"
+                  ],
                   "depends": [],
                   "status": "done",
                   "release": "v1.0.0"
@@ -98,7 +120,9 @@
                 {
                   "id": "HRD-7",
                   "description": "Add `pnpm -r lint` + `pnpm -r typecheck` to `.github/workflows/ci.yml`",
-                  "owner": ["Claude"],
+                  "owner": [
+                    "Claude"
+                  ],
                   "depends": [],
                   "status": "done",
                   "release": "v1.0.0"
@@ -106,10 +130,171 @@
                 {
                   "id": "HRD-9",
                   "description": "Add per-package `README.md` (purpose, install, API summary)",
-                  "owner": ["Claude"],
+                  "owner": [
+                    "Claude"
+                  ],
                   "depends": [],
                   "status": "done",
                   "release": "v1.0.0"
+                },
+                {
+                  "id": "HRD-20",
+                  "description": "Scrub sensitive data: VPS IP from runbook, treasury wallet from plan doc, personal emails from completed task, infra details from CLAUDE.md",
+                  "owner": [
+                    "Garric"
+                  ],
+                  "depends": [],
+                  "status": "pending",
+                  "release": "v1.0.0"
+                },
+                {
+                  "id": "HRD-21",
+                  "description": "Add package.json metadata (description, repository, license, author, keywords) to all packages",
+                  "owner": [
+                    "Claude"
+                  ],
+                  "depends": [],
+                  "status": "pending",
+                  "release": "v1.0.0"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "HRD-W2",
+          "title": "Code Quality",
+          "parallelism": "SRL",
+          "phases": [
+            {
+              "id": "HRD-W2-PA",
+              "title": "Error Handling & Config",
+              "parallelism": "SRL",
+              "tasks": [
+                {
+                  "id": "HRD-11",
+                  "description": "Replace silent catch blocks with logger.warn() across all handlers (~7 files, ~30 catch blocks)",
+                  "owner": [
+                    "Claude"
+                  ],
+                  "depends": [],
+                  "status": "pending",
+                  "release": "v1.0.0"
+                },
+                {
+                  "id": "HRD-12",
+                  "description": "Fail-fast on missing PRIM_PAY_TO \u2014 zero-address fallback \u2192 startup crash with clear error message",
+                  "owner": [
+                    "Claude"
+                  ],
+                  "depends": [
+                    "HRD-11"
+                  ],
+                  "status": "pending",
+                  "release": "v1.0.0"
+                }
+              ]
+            },
+            {
+              "id": "HRD-W2-PB",
+              "title": "API Surface Consistency",
+              "parallelism": "SRL",
+              "tasks": [
+                {
+                  "id": "HRD-13",
+                  "description": "Extract shared error helpers (forbidden, notFound, invalidRequest, serviceError) into @primsh/x402-middleware",
+                  "owner": [
+                    "Claude"
+                  ],
+                  "depends": [
+                    "HRD-12"
+                  ],
+                  "status": "pending",
+                  "release": "v1.0.0"
+                },
+                {
+                  "id": "HRD-14",
+                  "description": "Normalize all API response fields to snake_case (created_at not createdAt) across api.ts + service.ts",
+                  "owner": [
+                    "Claude"
+                  ],
+                  "depends": [
+                    "HRD-13"
+                  ],
+                  "status": "pending",
+                  "release": "v1.0.0"
+                }
+              ]
+            },
+            {
+              "id": "HRD-W2-PC",
+              "title": "Test Backfill",
+              "parallelism": "PARA",
+              "tasks": [
+                {
+                  "id": "HRD-17",
+                  "description": "Backfill spawn/test/smoke.test.ts to 5-check contract (currently only 2 assertions)",
+                  "owner": [
+                    "Claude"
+                  ],
+                  "depends": [
+                    "HRD-14"
+                  ],
+                  "status": "pending",
+                  "release": "v1.0.0"
+                },
+                {
+                  "id": "HRD-18",
+                  "description": "Add email/test/smoke.test.ts with 5-check contract (currently missing)",
+                  "owner": [
+                    "Claude"
+                  ],
+                  "depends": [
+                    "HRD-14"
+                  ],
+                  "status": "pending",
+                  "release": "v1.0.0"
+                },
+                {
+                  "id": "HRD-19",
+                  "description": "Fix token test mock typing \u2014 replace vi.fn<any[], any>() biome-ignore with properly typed mocks",
+                  "owner": [
+                    "Claude"
+                  ],
+                  "depends": [
+                    "HRD-14"
+                  ],
+                  "status": "pending",
+                  "release": "v1.0.0"
+                }
+              ]
+            },
+            {
+              "id": "HRD-W2-PD",
+              "title": "Validation & Pagination",
+              "parallelism": "SRL",
+              "tasks": [
+                {
+                  "id": "HRD-15",
+                  "description": "Fix pagination cursor/page inconsistency \u2014 email treats cursor as numeric offset, wallet as string",
+                  "owner": [
+                    "Claude"
+                  ],
+                  "depends": [],
+                  "status": "pending",
+                  "release": null
+                },
+                {
+                  "id": "HRD-16",
+                  "description": "Add Zod schemas for request body validation \u2014 replace bare c.req.json<T>() with z.parse()",
+                  "owner": [
+                    "Claude"
+                  ],
+                  "depends": [
+                    "HRD-15"
+                  ],
+                  "status": "pending",
+                  "release": null
                 }
               ]
             }
@@ -259,7 +444,7 @@
           "tasks": [
             {
               "id": "SP-7",
-              "description": "DockerProvider: Docker container tier as default (10–50x cheaper than VMs).",
+              "description": "DockerProvider: Docker container tier as default (10\u201350x cheaper than VMs).",
               "owner": [
                 "Claude"
               ],
@@ -356,13 +541,25 @@
               "owner": [
                 "Garric"
               ],
-              "depends": [],
+              "depends": [
+                "HRD-20"
+              ],
               "status": "pending",
               "release": "v1.0.0"
             },
             {
+              "id": "I-3",
+              "description": "CI OpenAPI spec validation \u2014 check that spec response shapes match PaginatedList<T> and error envelopes at build time",
+              "owner": [
+                "Claude"
+              ],
+              "depends": [],
+              "status": "pending",
+              "release": null
+            },
+            {
               "id": "I-2",
-              "description": "Migrate TASKS.md → tasks.json: define schema, convert data, update launch-status.ts + docs, optional TASKS.md codegen.",
+              "description": "Migrate TASKS.md \u2192 tasks.json: define schema, convert data, update launch-status.ts + docs, optional TASKS.md codegen.",
               "owner": [
                 "Claude"
               ],
@@ -370,6 +567,17 @@
               "status": "pending",
               "release": null,
               "plan": "tasks/active/i-2-migrate-tasks-json-2026-02-26.md"
+            },
+            {
+              "id": "OPS-5",
+              "description": "GHA deploy pipeline: SSH deploy key (restricted to deploy.sh) + .github/workflows/deploy.yml (check \u2192 rsync \u2192 restart). Replaces manual sync:vps for prod.",
+              "owner": [
+                "Claude"
+              ],
+              "depends": [],
+              "status": "pending",
+              "release": null,
+              "plan": "tasks/active/ops-5-gha-deploy-2026-02-26.md"
             }
           ]
         },
@@ -393,7 +601,7 @@
             },
             {
               "id": "L-14",
-              "description": "Full token launch: create Uniswap pool, fund liquidity, make repo public, announce. Seed pool conservatively ($2–3K USDC)",
+              "description": "Full token launch: create Uniswap pool, fund liquidity, make repo public, announce. Seed pool conservatively ($2\u20133K USDC)",
               "owner": [
                 "Garric",
                 "Claude"
@@ -415,7 +623,7 @@
           "tasks": [
             {
               "id": "L-22",
-              "description": "Mainnet switchover: VPS env files `eip155:84532` → `eip155:8453`, set prod `PRIM_PAY_TO`, fund facilitator with mainnet USDC",
+              "description": "Mainnet switchover: VPS env files `eip155:84532` \u2192 `eip155:8453`, set prod `PRIM_PAY_TO`, fund facilitator with mainnet USDC",
               "owner": [
                 "Garric"
               ],
@@ -582,6 +790,26 @@
               "depends": [],
               "status": "pending",
               "release": null
+            },
+            {
+              "id": "COM-1",
+              "description": "Add CHANGELOG.md tracking version history, breaking changes, new primitives, and security patches",
+              "owner": [
+                "Claude"
+              ],
+              "depends": [],
+              "status": "pending",
+              "release": null
+            },
+            {
+              "id": "COM-2",
+              "description": "Add CODE_OF_CONDUCT.md (Contributor Covenant)",
+              "owner": [
+                "Claude"
+              ],
+              "depends": [],
+              "status": "done",
+              "release": null
             }
           ]
         },
@@ -597,7 +825,9 @@
                 {
                   "id": "SITE-3",
                   "description": "Fix site bugs: `.principles` missing mobile breakpoint, missing `.img-fade` on index banner, dead `.wordmark` CSS, dead `HTTP_METHODS` const, dead `.s2` class refs",
-                  "owner": ["Claude"],
+                  "owner": [
+                    "Claude"
+                  ],
                   "depends": [],
                   "status": "done",
                   "release": null
@@ -605,7 +835,9 @@
                 {
                   "id": "SITE-4",
                   "description": "OG + Twitter Card meta tags on all pages (`index.html` + `template.ts`): `og:title`, `og:description`, `og:image`, `twitter:card`",
-                  "owner": ["Claude"],
+                  "owner": [
+                    "Claude"
+                  ],
                   "depends": [],
                   "status": "done",
                   "release": null
@@ -613,7 +845,9 @@
                 {
                   "id": "SITE-5",
                   "description": "SEO baseline: `<meta name=\"description\">`, `theme-color`, `apple-touch-icon` on all pages",
-                  "owner": ["Claude"],
+                  "owner": [
+                    "Claude"
+                  ],
                   "depends": [],
                   "status": "done",
                   "release": null
@@ -621,7 +855,9 @@
                 {
                   "id": "SITE-6",
                   "description": "Custom 404 page: styled with prim.css, links home",
-                  "owner": ["Claude"],
+                  "owner": [
+                    "Claude"
+                  ],
                   "depends": [],
                   "status": "done",
                   "release": null
@@ -629,7 +865,9 @@
                 {
                   "id": "SITE-7",
                   "description": "Smooth scroll + scroll-hint anchors to first content section",
-                  "owner": ["Claude"],
+                  "owner": [
+                    "Claude"
+                  ],
                   "depends": [],
                   "status": "done",
                   "release": null
@@ -637,9 +875,21 @@
                 {
                   "id": "SITE-8",
                   "description": "Fix `.hero` structure: sections + footer render inside hero flexbox on sub-pages",
-                  "owner": ["Claude"],
+                  "owner": [
+                    "Claude"
+                  ],
                   "depends": [],
                   "status": "done",
+                  "release": null
+                },
+                {
+                  "id": "SITE-9",
+                  "description": "Per-product install.sh: generator script (scripts/gen-install-scripts.ts), serve route (/<id>/install.sh), hero block replaced with install one-liner. Plan: tasks/active/site-9-per-product-install-2026-02-26.md",
+                  "owner": [
+                    "Claude"
+                  ],
+                  "depends": [],
+                  "status": "pending",
                   "release": null
                 }
               ]
@@ -659,7 +909,7 @@
           "tasks": [
             {
               "id": "L-50",
-              "description": "deploy.sh: PaaS above spawn.sh — push container or repo URL, get live endpoint. Wraps Dokku/Coolify",
+              "description": "deploy.sh: PaaS above spawn.sh \u2014 push container or repo URL, get live endpoint. Wraps Dokku/Coolify",
               "owner": [
                 "Claude"
               ],

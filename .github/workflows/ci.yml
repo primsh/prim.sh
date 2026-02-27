@@ -46,5 +46,15 @@ jobs:
       - name: Check generated files
         run: pnpm gen:check
 
+      - name: Lint
+        run: pnpm -r lint
+
+      - name: Validate OpenAPI specs
+        continue-on-error: true
+        run: pnpm check:openapi
+
+      - name: Typecheck
+        run: pnpm -r typecheck
+
       - name: Test
         run: pnpm -r test

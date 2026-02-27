@@ -123,3 +123,10 @@ Append-only log. When a task is marked done, move its row here and remove from T
 | SITE-1 | SSR site: template + per-prim YAML, serve.ts | 2026-02-26 |
 | BIZ-1 | Master pricing list: `specs/pricing.yaml` | 2026-02-26 |
 | BIZ-4 | Pricing endpoint: `GET /pricing` on each service | 2026-02-26 |
+| I-3 | Coverage gate: set `reportsDirectory` in each vitest.config.ts | 2026-02-26 |
+| E-9 | Rename mail hostname: DNS A record `mail.prim.sh`, update Stalwart config | 2026-02-26 |
+| OPS-2 | Structured logging: JSON logger with request_id, replace console.log | 2026-02-26 |
+| L-47 | Clean up API URL redundancy: `api.prim.sh/api/*` → `api.prim.sh/*` | 2026-02-26 |
+| BIZ-2 | Expense dashboard: `bun scripts/expenses.ts` | 2026-02-26 |
+| BIZ-3 | Cost transparency doc: `docs/costs.md` | 2026-02-26 |
+| COM-2 | Add CODE_OF_CONDUCT.md (Contributor Covenant) | 2026-02-26 |
