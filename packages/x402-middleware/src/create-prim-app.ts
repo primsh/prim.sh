@@ -16,12 +16,12 @@ import { Hono } from "hono";
 import { bodyLimit } from "hono/body-limit";
 import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
-import { createAgentStackMiddleware, createWalletAllowlistChecker } from "./middleware.ts";
-import { createLogger } from "./logger.ts";
-import { getNetworkConfig } from "./network-config.ts";
-import { metricsMiddleware, metricsHandler } from "./metrics.ts";
-import { requestIdMiddleware } from "./request-id.ts";
-import type { AgentStackRouteConfig } from "./types.ts";
+import { createAgentStackMiddleware, createWalletAllowlistChecker } from "./middleware.js";
+import { createLogger } from "./logger.js";
+import { getNetworkConfig } from "./network-config.js";
+import { metricsMiddleware, metricsHandler } from "./metrics.js";
+import { requestIdMiddleware } from "./request-id.js";
+import type { AgentStackRouteConfig } from "./types.js";
 
 export type AppVariables = { walletAddress: string | undefined };
 

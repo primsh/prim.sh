@@ -9,7 +9,7 @@ import type {
   AgentStackMiddlewareOptions,
   AgentStackRouteConfig,
   RouteConfig as AgentStackRouteConfigEntry,
-} from "./types.ts";
+} from "./types.js";
 import { createLogger } from "./logger.js";
 import { RateLimiter } from "./rate-limit.js";
 
