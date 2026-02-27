@@ -89,6 +89,10 @@ mem.prim.sh {
 
 search.prim.sh {
     import security_headers
+    log {
+        output file /var/log/caddy/search-access.log
+        format json
+    }
     request_body {
         max_size 1MB
     }
@@ -117,6 +121,10 @@ spawn.prim.sh {
 
 store.prim.sh {
     import security_headers
+    log {
+        output file /var/log/caddy/store-access.log
+        format json
+    }
     request_body {
         max_size 128MB
     }
@@ -159,6 +167,10 @@ track.prim.sh {
 
 wallet.prim.sh {
     import security_headers
+    log {
+        output file /var/log/caddy/wallet-access.log
+        format json
+    }
     request_body {
         max_size 1MB
     }
