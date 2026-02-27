@@ -28,7 +28,13 @@ domain.prim.sh {
     request_body {
         max_size 1MB
     }
-    reverse_proxy localhost:3009
+    handle /install.sh {
+        root * /opt/prim/packages/domain
+        file_server
+    }
+    handle {
+        reverse_proxy localhost:3009
+    }
 }
 
 email.prim.sh {
@@ -36,12 +42,20 @@ email.prim.sh {
     request_body {
         max_size 25MB
     }
-    reverse_proxy localhost:3006
+    handle /install.sh {
+        root * /opt/prim/packages/email
+        file_server
+    }
+    handle {
+        reverse_proxy localhost:3006
+    }
 }
 
 mail.prim.sh {
     import security_headers
-    request_body { max_size 25MB }
+    request_body {
+        max_size 25MB
+    }
     reverse_proxy localhost:8080
 }
 
@@ -50,7 +64,13 @@ faucet.prim.sh {
     request_body {
         max_size 1MB
     }
-    reverse_proxy localhost:3003
+    handle /install.sh {
+        root * /opt/prim/packages/faucet
+        file_server
+    }
+    handle {
+        reverse_proxy localhost:3003
+    }
 }
 
 mem.prim.sh {
@@ -58,7 +78,13 @@ mem.prim.sh {
     request_body {
         max_size 1MB
     }
-    reverse_proxy localhost:3008
+    handle /install.sh {
+        root * /opt/prim/packages/mem
+        file_server
+    }
+    handle {
+        reverse_proxy localhost:3008
+    }
 }
 
 search.prim.sh {
@@ -66,7 +92,13 @@ search.prim.sh {
     request_body {
         max_size 1MB
     }
-    reverse_proxy localhost:3005
+    handle /install.sh {
+        root * /opt/prim/packages/search
+        file_server
+    }
+    handle {
+        reverse_proxy localhost:3005
+    }
 }
 
 spawn.prim.sh {
@@ -74,7 +106,13 @@ spawn.prim.sh {
     request_body {
         max_size 1MB
     }
-    reverse_proxy localhost:3004
+    handle /install.sh {
+        root * /opt/prim/packages/spawn
+        file_server
+    }
+    handle {
+        reverse_proxy localhost:3004
+    }
 }
 
 store.prim.sh {
@@ -82,7 +120,13 @@ store.prim.sh {
     request_body {
         max_size 128MB
     }
-    reverse_proxy localhost:3002
+    handle /install.sh {
+        root * /opt/prim/packages/store
+        file_server
+    }
+    handle {
+        reverse_proxy localhost:3002
+    }
 }
 
 token.prim.sh {
@@ -90,7 +134,13 @@ token.prim.sh {
     request_body {
         max_size 1MB
     }
-    reverse_proxy localhost:3007
+    handle /install.sh {
+        root * /opt/prim/packages/token
+        file_server
+    }
+    handle {
+        reverse_proxy localhost:3007
+    }
 }
 
 track.prim.sh {
@@ -98,7 +148,13 @@ track.prim.sh {
     request_body {
         max_size 1MB
     }
-    reverse_proxy localhost:3010
+    handle /install.sh {
+        root * /opt/prim/packages/track
+        file_server
+    }
+    handle {
+        reverse_proxy localhost:3010
+    }
 }
 
 wallet.prim.sh {
@@ -106,5 +162,25 @@ wallet.prim.sh {
     request_body {
         max_size 1MB
     }
-    reverse_proxy localhost:3001
+    handle /install.sh {
+        root * /opt/prim/packages/wallet
+        file_server
+    }
+    handle {
+        reverse_proxy localhost:3001
+    }
+}
+
+prim.sh {
+    import security_headers
+    request_body {
+        max_size 1MB
+    }
+    handle /pricing.json {
+        root * /opt/prim/site
+        file_server
+    }
+    handle {
+        reverse_proxy localhost:3000
+    }
 }
