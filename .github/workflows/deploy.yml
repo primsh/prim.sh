@@ -4,13 +4,22 @@ name: Deploy
 # Never runs concurrently — queues instead of cancelling to avoid leaving VPS
 # in a partially-deployed state.
 #
-# Flow: checkout → rsync to VPS → run deploy.sh (install, build, restart)
+# Flow:
+#   deploy-vps  → rsync to VPS → deploy.sh (install, build, restart)
+#   deploy-site → build static dist → wrangler pages deploy
+#   verify      → smoke check: fetch /_build_id.txt and confirm SHA matches
 #
-# ── Required GitHub secrets ──────────────────────────────────────────────────
+# ── Required GitHub secrets (production environment) ─────────────────────────
 #
 #   VPS_HOST        SSH user@host string, e.g. "root@157.230.187.207"
 #   VPS_SSH_KEY     Ed25519 private key (see setup below)
 #   VPS_KNOWN_HOSTS Output of: ssh-keyscan <VPS_IP>
+#   CF_API_TOKEN    Cloudflare API token (Pages:Edit permission)
+#   CF_ACCOUNT_ID   Cloudflare account ID
+#
+# ── Required GitHub repository variable ──────────────────────────────────────
+#
+#   PAGES_PROJECT   Cloudflare Pages project name (e.g. "prim-sh")
 #
 # ── One-time SSH deploy key setup ────────────────────────────────────────────
 #
@@ -34,9 +43,10 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
-  deploy:
+  deploy-vps:
     name: Deploy to VPS
     runs-on: ubuntu-latest
+    environment: production
 
     if: >
       github.event_name == 'workflow_dispatch' ||
@@ -85,3 +95,57 @@ jobs:
         env:
           VPS_HOST: ${{ secrets.VPS_HOST }}
         run: ssh "$VPS_HOST" "bash /opt/prim/deploy/prim/deploy.sh"
+
+  deploy-site:
+    name: Deploy site → Cloudflare Pages
+    runs-on: ubuntu-latest
+    environment: production
+
+    if: >
+      github.event_name == 'workflow_dispatch' ||
+      github.event.workflow_run.conclusion == 'success'
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build static dist
+        run: |
+          mkdir -p site-dist
+          # Copy all web-deliverable files; exclude server-side .ts/.py files
+          rsync -a \
+            --include='*/' \
+            --include='*.html' --include='*.css' --include='*.js' \
+            --include='*.jpg' --include='*.jpeg' --include='*.png' \
+            --include='*.ico' --include='*.svg' --include='*.webp' \
+            --include='*.txt' --include='*.json' \
+            --exclude='*' \
+            site/ site-dist/
+          # Build ID for smoke check verification
+          echo "$GITHUB_SHA" > site-dist/_build_id.txt
+
+      - uses: cloudflare/wrangler-action@v4
+        with:
+          apiToken: ${{ secrets.CF_API_TOKEN }}
+          accountId: ${{ secrets.CF_ACCOUNT_ID }}
+          command: pages deploy site-dist --project-name ${{ vars.PAGES_PROJECT }}
+
+  verify:
+    name: Smoke check
+    needs: [deploy-vps, deploy-site]
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Verify site build ID
+        run: |
+          expected="${{ github.sha }}"
+          for i in $(seq 1 6); do
+            actual=$(curl -sf https://prim.sh/_build_id.txt || echo "")
+            if [ "$actual" = "$expected" ]; then
+              echo "Build ID verified: $actual"
+              exit 0
+            fi
+            echo "Attempt $i: got '$actual', waiting..."
+            sleep 10
+          done
+          echo "Smoke check failed: expected $expected"
+          exit 1
