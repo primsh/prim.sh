@@ -6,7 +6,7 @@
 
 The cloud was built for humans. Every service — compute, storage, email, DNS, payments — requires a human to sign up, enter credentials, click through a dashboard, and manage an account. AI agents can't do any of this. They need infrastructure, but infrastructure won't let them in.
 
-Prim is an infrastructure network where agents are the sole customers. Payment is the only credential. No signup, no GUI, no KYC. 27 independent primitives — from wallets to email to compute — accessible through a single protocol: x402 (USDC on Base).
+Prim is an infrastructure network where agents are the sole customers. Payment is the only credential. No signup, no GUI, no KYC. Dozens of independent primitives — from wallets to email to compute — accessible through a single protocol: x402 (USDC on Base).
 
 But building agent infrastructure creates two bottlenecks that can't be solved by hiring more engineers:
 
@@ -51,7 +51,7 @@ Prim builds on this foundation: every primitive is an x402 endpoint. The agent's
 
 ---
 
-## 2. Architecture: 27 Independent Primitives
+## 2. Architecture: Independent Primitives
 
 Prim is not a platform. It is a collection of independent infrastructure services — **primitives** — each accessible via REST with x402 payment.
 
@@ -59,17 +59,19 @@ Prim is not a platform. It is a collection of independent infrastructure service
 
 | Category | Primitives | What they provide |
 |----------|-----------|-------------------|
-| **Platform** | wallet, id | Wallets, reputation, identity |
-| **Core infrastructure** | spawn, store, vault, dns, cron, pipe, code | Compute, storage, secrets, DNS, scheduling, messaging, sandboxed execution |
-| **Communication** | email, ring, browse | Email, phone/SMS, headless browsers |
-| **Intelligence** | mem, infer, seek, docs | Vector memory, model routing, web search, API documentation |
-| **Operations** | watch, trace, auth | Observability, tracing, OAuth brokering |
-| **Physical world** | pins, mart, ship, hands, pay, corp | Geolocation, purchasing, shipping, human labor, fiat payments, legal entities |
-| **Social** | hive, ads | Agent social graph, context-targeted ads |
+| **Identity** | wallet, id, auth, domain | Wallets, reputation, OAuth brokering, DNS/domains |
+| **Crypto** | faucet, pay, token | Testnet faucet, fiat payments, token operations |
+| **Compute** | spawn, cron, code | VPS provisioning, scheduling, sandboxed execution |
+| **Storage** | store, vault, mem | Object storage, secrets, vector memory |
+| **Comms** | email, ring, browse, pipe | Email, phone/SMS, headless browsers, messaging |
+| **Intelligence** | infer, search, seek, imagine, docs | Model routing, web search, deep research, image generation, API documentation |
+| **Ops** | watch, trace, track, hive, ship | Observability, tracing, analytics, agent coordination, shipping |
+| **Physical** | pins, mart, hands, corp, ads | Geolocation, purchasing, human labor, legal entities, context-targeted ads |
+| **Meta** | create | Primitive scaffolding and validation |
 
 ### 2.2 Design principles
 
-1. **Each primitive is independent.** No shared database. No coupling between primitives. Use one or all 27.
+1. **Each primitive is independent.** No shared database. No coupling between primitives. Use one or all of them.
 2. **x402 payment is the auth layer.** Every endpoint returns 402 → agent pays → gets resource. The wallet address is the identity.
 3. **Each primitive wraps existing services.** email.sh wraps Stalwart. spawn.sh wraps Hetzner/DigitalOcean. store.sh wraps Cloudflare R2. Prim is a shell — thin API layers that make human-gated services accessible to agents.
 4. **Pay per call.** Micropayments via x402. Every request is priced individually. No subscriptions, no metering, no minimums.
@@ -89,7 +91,7 @@ All interfaces are **code-generated** from a single specification file (`prim.ya
 
 ## 3. The Factory: Solving the Code Bottleneck
 
-A single human team cannot build 27 primitives and keep pace with demand for new ones. The factory is a codegen pipeline that reduces "build a new primitive" to "write a spec file."
+A single human team cannot build every primitive and keep pace with demand for new ones. The factory is a codegen pipeline that reduces "build a new primitive" to "write a spec file."
 
 ### 3.1 prim.yaml — the primitive specification
 
@@ -146,24 +148,24 @@ The factory enables agents to contribute new primitives:
 
 ```
 Agent discovers missing capability
-  → calls create.sh POST /v1/scaffold with prim.yaml spec
+  → calls create.sh POST /v1/scaffold with prim.yaml spec       ← live
   → factory generates complete package (routes, types, tests, docs)
   → agent implements service layer (the actual provider integration)
-  → calls pr.sh POST /v1/pr/create to open a PR
+  → opens a PR (pr.sh planned — Phase 3)
   → GHA runs: schema validation → codegen verification → smoke tests
-  → spawn.sh provisions ephemeral test agent to exercise the new prim
-  → auto-merge if CI green + dedup check passes (mem.sh semantic search)
+  → ephemeral test agent exercises the new prim (planned — Phase 3)
+  → dedup check via semantic search (planned — Phase 3)
   → pnpm gen regenerates all downstream artifacts
   → new primitive is live and discoverable
 ```
 
-The human is removed from the code supply chain. An agent writes a spec, the factory generates the boilerplate, CI validates the contribution, and the primitive goes live.
+Today, create.sh scaffolds packages and the factory generates boilerplate. The remaining steps — automated PR creation, ephemeral testing, semantic dedup — are planned for Phase 3 (see Section 9).
 
 ---
 
 ## 4. DeKeys: Solving the Supply Bottleneck
 
-The factory solves code contribution. But every primitive wraps an external service that requires a provider API key — and getting that key requires a human to sign up for an account. One human maintaining 27 primitives with 1-3 providers each is ~50 account signups, plus redundancy, plus new providers. The supply side is bottlenecked by human capacity.
+The factory solves code contribution. But every primitive wraps an external service that requires a provider API key — and getting that key requires a human to sign up for an account. One human maintaining dozens of primitives with 1-3 providers each is ~50+ account signups, plus redundancy, plus new providers. The supply side is bottlenecked by human capacity.
 
 DeKeys is a capacity marketplace where agents contribute underutilized API keys and earn credits to spend across the prim ecosystem.
 
@@ -291,11 +293,11 @@ Agents contribute idle API keys to the DeKeys pool. Their spare capacity powers 
 
 ### 5.3 Builder
 
-Agents contribute new primitives via the factory pipeline. Write a prim.yaml spec → create.sh scaffolds the package → implement the service layer → pr.sh opens a PR → CI validates → auto-merge. The catalog grows without human engineering effort.
+Agents contribute new primitives via the factory pipeline. Write a prim.yaml spec → create.sh scaffolds the package → implement the service layer → open a PR → CI validates → merge. Today this requires human review; Phase 3 automates PR creation and merge gating.
 
 ### 5.4 Tester
 
-When a new primitive is contributed, spawn.sh provisions an ephemeral agent to exercise every endpoint against the OpenAPI spec. The test agent validates structural correctness (5-check contract), response shapes, error handling, and payment flow. No human QA.
+When a new primitive is contributed, it must pass the 5-check smoke test contract in CI (structural correctness, response shapes, error handling). In Phase 3, spawn.sh will provision ephemeral test agents to exercise every endpoint against the OpenAPI spec, including payment flow validation.
 
 ### 5.5 Marketer
 
@@ -361,7 +363,7 @@ The key difference from DePIN: contributing an API key has **near-zero marginal 
 The key proxy architecture ensures:
 
 - Prims never see raw provider keys (proxy boundary)
-- Keys encrypted at rest (AES-256-GCM via vault.sh)
+- Keys encrypted at rest (AES-256-GCM)
 - Per-key usage tracking (which agent used which key, how many calls)
 - Rate limits enforced at the proxy layer (never exceed tier limits)
 
@@ -372,8 +374,8 @@ Agent-contributed primitives are validated through:
 - **Schema validation** — prim.yaml must conform to the specification
 - **Codegen verification** — factory must produce valid output from the spec
 - **5-check smoke tests** — structural correctness enforced by auto-generated tests
-- **Ephemeral test agents** — spawned via spawn.sh to exercise every endpoint
-- **Semantic dedup** — mem.sh checks for overlapping functionality (>80% similarity flags human review)
+- **Ephemeral test agents** (planned) — spawn.sh will provision test agents to exercise every endpoint
+- **Semantic dedup** (planned) — mem.sh will check for overlapping functionality (>80% similarity flags human review)
 - **Sandboxed execution** — contributed prims run in isolated containers, no access to other prims' state
 
 ### 7.3 Payment security
