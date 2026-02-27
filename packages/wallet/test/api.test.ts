@@ -5,11 +5,15 @@
  */
 
 import { describe, expect, it, beforeAll, afterAll, beforeEach, vi } from "vitest";
+
+vi.hoisted(() => {
+  process.env.PRIM_PAY_TO = "0x0000000000000000000000000000000000000001";
+  process.env.WALLET_DB_PATH = ":memory:";
+});
+
 import { privateKeyToAccount, generatePrivateKey } from "viem/accounts";
 import { getAddress } from "viem";
 import { encodePaymentSignatureHeader } from "@x402/core/http";
-
-process.env.WALLET_DB_PATH = ":memory:";
 
 const NETWORK = "eip155:8453";
 

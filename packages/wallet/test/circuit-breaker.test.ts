@@ -6,7 +6,10 @@
 
 import { describe, expect, it, beforeEach, afterEach, vi } from "vitest";
 
-process.env.WALLET_DB_PATH = ":memory:";
+vi.hoisted(() => {
+  process.env.PRIM_PAY_TO = "0x0000000000000000000000000000000000000001";
+  process.env.WALLET_DB_PATH = ":memory:";
+});
 
 // Stub fetch for x402 middleware (needed for app import)
 const mockFetch = vi.fn(async (input: RequestInfo | URL) => {
