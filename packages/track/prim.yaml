@@ -22,6 +22,24 @@ pricing:
     price: "$0.05"
     note: "Per lookup"
 
+providers:
+  - name: trackingmore
+    env: [TRACKINGMORE_API_KEY]
+    status: active
+    default: true
+    url: https://www.trackingmore.com/
+
+interfaces:
+  mcp: true
+  cli: true
+  openai: true
+  rest: true
+
+factory:
+  max_body_size: "1MB"
+  metrics: true
+  free_service: false
+
 tagline: "Package tracking for agents."
 sub: "USPS, FedEx, UPS, DHL, and 1000+ carriers. Real-time status, ETA, full event history. Stateless lookup via x402."
 
@@ -65,6 +83,9 @@ routes_map:
     response: TrackResponse
     status: 200
     description: "Track a package by tracking number and carrier. Returns status, ETA, and full event history."
+    operation_id: track_package
+    request_type: TrackRequest
+    response_type: TrackResponse
     errors:
       - { status: 400, code: invalid_request, description: "Missing tracking_number or invalid carrier" }
       - { status: 402, code: payment_required, description: "x402 payment needed" }

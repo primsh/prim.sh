@@ -19,6 +19,17 @@ pricing:
     price: "free"
     note: "Testnet only"
 
+interfaces:
+  mcp: true
+  cli: true
+  openai: true
+  rest: true
+
+factory:
+  max_body_size: "1MB"
+  metrics: true
+  free_service: true
+
 accent: "#29B6F6"
 accent_dim: "#1a9dd4"
 accent_glow: "rgba(41,182,246,0.08)"
@@ -71,6 +82,9 @@ routes_map:
     status: 200
     description: "Dispense 10 test USDC on Base Sepolia. Rate limit: once per 2 hours per address."
     notes: "Free. No x402 payment required."
+    operation_id: drip_usdc
+    request_type: DripRequest
+    response_type: DripResponse
     errors:
       - { status: 400, code: invalid_request, description: "Missing or invalid address" }
       - { status: 403, code: wallet_not_allowed, description: "Wallet not on allowlist (private beta)" }
@@ -83,6 +97,9 @@ routes_map:
     status: 200
     description: "Dispense 0.01 test ETH on Base Sepolia. Rate limit: once per 1 hour per address."
     notes: "Free. No x402 payment required."
+    operation_id: drip_eth
+    request_type: DripRequest
+    response_type: DripResponse
     errors:
       - { status: 400, code: invalid_request, description: "Missing or invalid address" }
       - { status: 403, code: wallet_not_allowed, description: "Wallet not on allowlist (private beta)" }
@@ -95,6 +112,9 @@ routes_map:
     status: 200
     description: "Check rate limit status for a wallet address across both faucets."
     notes: "Free. Call this before dripping to avoid 429s."
+    operation_id: get_faucet_status
+    request_type: null
+    response_type: FaucetStatusResponse
     query_params:
       - { name: address, type: string, description: "EVM wallet address (required)" }
     errors:

@@ -13,6 +13,29 @@ env:
   - PRIM_NETWORK
   - DO_API_TOKEN
   - WALLET_INTERNAL_URL
+
+providers:
+  - name: digitalocean
+    env: [DO_API_TOKEN]
+    status: active
+    default: true
+    url: https://www.digitalocean.com/
+  - name: hetzner
+    env: [HETZNER_API_KEY]
+    status: active
+    default: false
+    url: https://www.hetzner.com/cloud/
+
+interfaces:
+  mcp: true
+  cli: true
+  openai: true
+  rest: true
+
+factory:
+  max_body_size: "1MB"
+  metrics: true
+  free_service: false
 pricing:
   - op: "Create server"
     price: "$0.01"
@@ -88,6 +111,9 @@ routes_map:
     status: 201
     description: "Provision a new VPS. Returns immediately with status 'initializing'."
     notes: "Poll GET /v1/servers/:id until status is 'running' to get IP address."
+    operation_id: create_server
+    request_type: CreateServerRequest
+    response_type: CreateServerResponse
     errors:
       - { status: 400, code: invalid_request, description: "Missing required fields" }
       - { status: 402, code: payment_required, description: "x402 payment needed" }
@@ -98,6 +124,9 @@ routes_map:
     response: ServerListResponse
     status: 200
     description: "List all servers owned by the calling wallet"
+    operation_id: list_servers
+    request_type: null
+    response_type: ServerListResponse
     query_params:
       - { name: limit, type: integer, description: "1-100, default 20" }
       - { name: page, type: integer, description: "1-based page number, default 1" }
@@ -109,6 +138,9 @@ routes_map:
     response: ServerResponse
     status: 200
     description: "Get full details for a single server. Poll this until status='running'."
+    operation_id: get_server
+    request_type: null
+    response_type: ServerResponse
     errors:
       - { status: 402, code: payment_required, description: "x402 payment needed" }
       - { status: 403, code: forbidden, description: "Server belongs to a different wallet" }
@@ -118,6 +150,9 @@ routes_map:
     response: DeleteServerResponse
     status: 200
     description: "Destroy a server and release its resources. Unused deposit is refunded."
+    operation_id: delete_server
+    request_type: null
+    response_type: DeleteServerResponse
     errors:
       - { status: 402, code: payment_required, description: "x402 payment needed" }
       - { status: 403, code: forbidden, description: "Server belongs to a different wallet" }
@@ -128,6 +163,9 @@ routes_map:
     response: ActionOnlyResponse
     status: 200
     description: "Start a stopped server"
+    operation_id: start_server
+    request_type: null
+    response_type: ActionOnlyResponse
     errors:
       - { status: 402, code: payment_required, description: "x402 payment needed" }
       - { status: 403, code: forbidden, description: "Server belongs to a different wallet" }
@@ -138,6 +176,9 @@ routes_map:
     response: ActionOnlyResponse
     status: 200
     description: "Stop a running server (graceful shutdown)"
+    operation_id: stop_server
+    request_type: null
+    response_type: ActionOnlyResponse
     errors:
       - { status: 402, code: payment_required, description: "x402 payment needed" }
       - { status: 403, code: forbidden, description: "Server belongs to a different wallet" }
@@ -148,6 +189,9 @@ routes_map:
     response: ActionOnlyResponse
     status: 200
     description: "Reboot a running server"
+    operation_id: reboot_server
+    request_type: null
+    response_type: ActionOnlyResponse
     errors:
       - { status: 402, code: payment_required, description: "x402 payment needed" }
       - { status: 403, code: forbidden, description: "Server belongs to a different wallet" }
@@ -158,6 +202,9 @@ routes_map:
     response: ResizeResponse
     status: 200
     description: "Change server type (CPU/RAM). Server must be stopped first. Deposit adjusted."
+    operation_id: resize_server
+    request_type: ResizeRequest
+    response_type: ResizeResponse
     errors:
       - { status: 400, code: invalid_request, description: "Missing type field or invalid value" }
       - { status: 402, code: payment_required, description: "x402 payment needed" }
@@ -169,6 +216,9 @@ routes_map:
     response: RebuildResponse
     status: 200
     description: "Reinstall from a fresh OS image. All data on server is destroyed."
+    operation_id: rebuild_server
+    request_type: RebuildRequest
+    response_type: RebuildResponse
     errors:
       - { status: 400, code: invalid_request, description: "Missing image field" }
       - { status: 402, code: payment_required, description: "x402 payment needed" }
@@ -180,6 +230,9 @@ routes_map:
     response: SshKeyResponse
     status: 201
     description: "Register a public SSH key. Returned ID can be used in ssh_keys when creating a server."
+    operation_id: create_ssh_key
+    request_type: CreateSshKeyRequest
+    response_type: SshKeyResponse
     errors:
       - { status: 400, code: invalid_request, description: "Missing name or public_key" }
       - { status: 402, code: payment_required, description: "x402 payment needed" }
@@ -189,6 +242,9 @@ routes_map:
     response: SshKeyListResponse
     status: 200
     description: "List all SSH keys registered by the calling wallet"
+    operation_id: list_ssh_keys
+    request_type: null
+    response_type: SshKeyListResponse
     errors:
       - { status: 402, code: payment_required, description: "x402 payment needed" }
       - { status: 403, code: forbidden, description: "Missing wallet in payment" }
@@ -197,6 +253,9 @@ routes_map:
     response: null
     status: 200
     description: "Remove an SSH key. Keys in use by active servers remain until server is rebuilt."
+    operation_id: delete_ssh_key
+    request_type: null
+    response_type: null
     errors:
       - { status: 402, code: payment_required, description: "x402 payment needed" }
       - { status: 403, code: forbidden, description: "Key belongs to a different wallet" }

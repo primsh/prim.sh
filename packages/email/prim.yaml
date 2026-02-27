@@ -15,6 +15,24 @@ env:
   - STALWART_API_KEY
   - EMAIL_DEFAULT_DOMAIN
   - WALLET_INTERNAL_URL
+providers:
+  - name: stalwart
+    env: [STALWART_URL, STALWART_API_KEY]
+    status: active
+    default: true
+    url: https://stalw.art/
+
+interfaces:
+  mcp: true
+  cli: true
+  openai: true
+  rest: true
+
+factory:
+  max_body_size: "25MB"
+  metrics: true
+  free_service: false
+
 deploy:
   max_body_size: "25MB"
   extra_caddy:
@@ -103,6 +121,9 @@ routes_map:
     response: MailboxResponse
     status: 201
     description: "Create a mailbox. Optional: username, domain, ttl_ms."
+    operation_id: create_mailbox
+    request_type: CreateMailboxRequest
+    response_type: MailboxResponse
     errors:
       - { status: 400, code: invalid_request, description: "Missing fields or invalid characters" }
       - { status: 402, code: payment_required, description: "x402 payment needed" }
@@ -112,6 +133,9 @@ routes_map:
     response: MailboxListResponse
     status: 200
     description: "List mailboxes owned by the calling wallet (paginated)"
+    operation_id: list_mailboxes
+    request_type: null
+    response_type: MailboxListResponse
     query_params:
       - { name: limit, type: integer, description: "1-100, default 20" }
       - { name: after, type: string, description: "Cursor from previous response" }
@@ -123,6 +147,9 @@ routes_map:
     response: MailboxResponse
     status: 200
     description: "Get mailbox metadata including expires_at"
+    operation_id: get_mailbox
+    request_type: null
+    response_type: MailboxResponse
     errors:
       - { status: 402, code: payment_required, description: "x402 payment needed" }
       - { status: 403, code: forbidden, description: "Resource owned by a different wallet" }
@@ -132,6 +159,9 @@ routes_map:
     response: DeleteMailboxResponse
     status: 200
     description: "Permanently delete a mailbox and all messages"
+    operation_id: delete_mailbox
+    request_type: null
+    response_type: DeleteMailboxResponse
     errors:
       - { status: 402, code: payment_required, description: "x402 payment needed" }
       - { status: 403, code: forbidden, description: "Resource owned by a different wallet" }
@@ -141,6 +171,9 @@ routes_map:
     response: MailboxResponse
     status: 200
     description: "Extend mailbox TTL by ttl_ms milliseconds"
+    operation_id: renew_mailbox
+    request_type: RenewMailboxRequest
+    response_type: MailboxResponse
     errors:
       - { status: 402, code: payment_required, description: "x402 payment needed" }
       - { status: 403, code: forbidden, description: "Resource owned by a different wallet" }
@@ -151,6 +184,9 @@ routes_map:
     response: EmailListResponse
     status: 200
     description: "List messages in a mailbox, newest first"
+    operation_id: list_messages
+    request_type: null
+    response_type: EmailListResponse
     query_params:
       - { name: limit, type: integer, description: "1-100, default 20" }
       - { name: after, type: integer, description: "Position-based cursor for pagination" }
@@ -163,6 +199,9 @@ routes_map:
     response: EmailDetail
     status: 200
     description: "Get full message including textBody and htmlBody"
+    operation_id: get_message
+    request_type: null
+    response_type: EmailDetail
     errors:
       - { status: 402, code: payment_required, description: "x402 payment needed" }
       - { status: 403, code: forbidden, description: "Resource owned by a different wallet" }
@@ -172,6 +211,9 @@ routes_map:
     response: SendMessageResponse
     status: 200
     description: "Send email from a mailbox. Requires to, subject, and body or html."
+    operation_id: send_message
+    request_type: SendMessageRequest
+    response_type: SendMessageResponse
     errors:
       - { status: 400, code: invalid_request, description: "Missing required fields" }
       - { status: 402, code: payment_required, description: "x402 payment needed" }
@@ -183,6 +225,9 @@ routes_map:
     response: WebhookResponse
     status: 201
     description: "Register a webhook URL for message.received events. Optional secret for HMAC signing."
+    operation_id: register_webhook
+    request_type: RegisterWebhookRequest
+    response_type: WebhookResponse
     errors:
       - { status: 400, code: invalid_request, description: "Missing or invalid webhook URL" }
       - { status: 402, code: payment_required, description: "x402 payment needed" }
@@ -194,6 +239,9 @@ routes_map:
     response: WebhookListResponse
     status: 200
     description: "List webhooks for a mailbox"
+    operation_id: list_webhooks
+    request_type: null
+    response_type: WebhookListResponse
     errors:
       - { status: 402, code: payment_required, description: "x402 payment needed" }
       - { status: 403, code: forbidden, description: "Resource owned by a different wallet" }
@@ -203,6 +251,9 @@ routes_map:
     response: DeleteWebhookResponse
     status: 200
     description: "Delete a webhook"
+    operation_id: delete_webhook
+    request_type: null
+    response_type: DeleteWebhookResponse
     errors:
       - { status: 402, code: payment_required, description: "x402 payment needed" }
       - { status: 403, code: forbidden, description: "Resource owned by a different wallet" }
@@ -212,6 +263,9 @@ routes_map:
     response: DomainResponse
     status: 201
     description: "Register a custom domain. Returns required_records for DNS."
+    operation_id: register_domain
+    request_type: RegisterDomainRequest
+    response_type: DomainResponse
     errors:
       - { status: 400, code: invalid_request, description: "Invalid domain name" }
       - { status: 402, code: payment_required, description: "x402 payment needed" }
@@ -221,6 +275,9 @@ routes_map:
     response: DomainListResponse
     status: 200
     description: "List registered custom domains (paginated)"
+    operation_id: list_domains
+    request_type: null
+    response_type: DomainListResponse
     query_params:
       - { name: limit, type: integer, description: "1-100, default 20" }
       - { name: after, type: string, description: "Cursor from previous response" }
@@ -232,6 +289,9 @@ routes_map:
     response: DomainResponse
     status: 200
     description: "Get domain details and verification status"
+    operation_id: get_domain
+    request_type: null
+    response_type: DomainResponse
     errors:
       - { status: 402, code: payment_required, description: "x402 payment needed" }
       - { status: 403, code: forbidden, description: "Resource owned by a different wallet" }
@@ -241,6 +301,9 @@ routes_map:
     response: VerifyDomainResponse
     status: 200
     description: "Verify DNS records. On success: status → verified, dkim_records returned."
+    operation_id: verify_domain
+    request_type: null
+    response_type: VerifyDomainResponse
     errors:
       - { status: 402, code: payment_required, description: "x402 payment needed" }
       - { status: 403, code: forbidden, description: "Resource owned by a different wallet" }
@@ -251,6 +314,9 @@ routes_map:
     response: DeleteDomainResponse
     status: 200
     description: "Remove a custom domain registration"
+    operation_id: delete_domain
+    request_type: null
+    response_type: DeleteDomainResponse
     errors:
       - { status: 402, code: payment_required, description: "x402 payment needed" }
       - { status: 403, code: forbidden, description: "Resource owned by a different wallet" }

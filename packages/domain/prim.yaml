@@ -29,6 +29,29 @@ pricing:
     price: "free"
     note: "First 1M/mo"
 
+providers:
+  - name: cloudflare
+    env: [CLOUDFLARE_API_TOKEN, CLOUDFLARE_ZONE_ID]
+    status: active
+    default: true
+    url: https://www.cloudflare.com/
+  - name: namesilo
+    env: [NAMESILO_API_KEY]
+    status: active
+    default: false
+    url: https://www.namesilo.com/
+
+interfaces:
+  mcp: true
+  cli: true
+  openai: true
+  rest: true
+
+factory:
+  max_body_size: "1MB"
+  metrics: true
+  free_service: false
+
 accent: "#4DD0E1"
 accent_dim: "#3ab8c7"
 accent_glow: "rgba(77,208,225,0.08)"
@@ -81,6 +104,9 @@ routes_map:
     response: DomainSearchResponse
     status: 200
     description: "Check availability and pricing for a domain query"
+    operation_id: search_domains
+    request_type: null
+    response_type: DomainSearchResponse
     query_params:
       - { name: query, type: string, description: "Domain name or keyword to search" }
       - { name: tlds, type: string, description: "Comma-separated TLDs (e.g. com,xyz,io)" }
@@ -92,6 +118,9 @@ routes_map:
     response: QuoteResponse
     status: 200
     description: "Get a 15-minute price quote for a domain"
+    operation_id: quote_domain
+    request_type: QuoteRequest
+    response_type: QuoteResponse
     errors:
       - { status: 400, code: invalid_request, description: "Missing domain or invalid years" }
       - { status: 402, code: payment_required, description: "x402 payment needed" }
@@ -101,6 +130,9 @@ routes_map:
     response: RegistrationStatusResponse
     status: 200
     description: "Full post-registration pipeline status (ns_propagated, zone_active, all_ready)"
+    operation_id: get_domain_status
+    request_type: null
+    response_type: RegistrationStatusResponse
     errors:
       - { status: 402, code: payment_required, description: "x402 payment needed" }
       - { status: 404, code: not_found, description: "Domain not found" }
@@ -109,6 +141,9 @@ routes_map:
     response: CreateZoneResponse
     status: 201
     description: "Create a Cloudflare DNS zone. Returns nameservers to set at your registrar."
+    operation_id: create_zone
+    request_type: CreateZoneRequest
+    response_type: CreateZoneResponse
     errors:
       - { status: 400, code: invalid_request, description: "Missing domain or invalid domain name" }
       - { status: 402, code: payment_required, description: "x402 payment needed" }
@@ -119,6 +154,9 @@ routes_map:
     response: ZoneListResponse
     status: 200
     description: "List DNS zones owned by the calling wallet (paginated)"
+    operation_id: list_zones
+    request_type: null
+    response_type: ZoneListResponse
     query_params:
       - { name: limit, type: integer, description: "1-100, default 20" }
       - { name: after, type: string, description: "Cursor from previous response" }
@@ -130,6 +168,9 @@ routes_map:
     response: ZoneResponse
     status: 200
     description: "Get zone details"
+    operation_id: get_zone
+    request_type: null
+    response_type: ZoneResponse
     errors:
       - { status: 402, code: payment_required, description: "x402 payment needed" }
       - { status: 403, code: forbidden, description: "Resource belongs to a different wallet" }
@@ -139,6 +180,9 @@ routes_map:
     response: null
     status: 200
     description: "Delete zone and all records. Irreversible."
+    operation_id: delete_zone
+    request_type: null
+    response_type: null
     errors:
       - { status: 402, code: payment_required, description: "x402 payment needed" }
       - { status: 403, code: forbidden, description: "Resource belongs to a different wallet" }
@@ -149,6 +193,9 @@ routes_map:
     response: ActivateResponse
     status: 200
     description: "Request Cloudflare NS re-check for faster activation"
+    operation_id: activate_zone
+    request_type: null
+    response_type: ActivateResponse
     errors:
       - { status: 402, code: payment_required, description: "x402 payment needed" }
       - { status: 403, code: forbidden, description: "Resource belongs to a different wallet" }
@@ -159,6 +206,9 @@ routes_map:
     response: VerifyResponse
     status: 200
     description: "Check DNS propagation for all zone records"
+    operation_id: verify_zone
+    request_type: null
+    response_type: VerifyResponse
     errors:
       - { status: 402, code: payment_required, description: "x402 payment needed" }
       - { status: 403, code: forbidden, description: "Resource belongs to a different wallet" }
@@ -168,6 +218,9 @@ routes_map:
     response: MailSetupResponse
     status: 200
     description: "Configure MX, SPF, DMARC, DKIM in one call. Idempotent."
+    operation_id: setup_mail
+    request_type: MailSetupRequest
+    response_type: MailSetupResponse
     errors:
       - { status: 400, code: invalid_request, description: "Missing required mail server fields" }
       - { status: 402, code: payment_required, description: "x402 payment needed" }
@@ -179,6 +232,9 @@ routes_map:
     response: BatchRecordsResponse
     status: 200
     description: "Create, update, and delete DNS records in one atomic request"
+    operation_id: batch_records
+    request_type: BatchRecordsRequest
+    response_type: BatchRecordsResponse
     errors:
       - { status: 400, code: invalid_request, description: "Invalid record fields or values" }
       - { status: 402, code: payment_required, description: "x402 payment needed" }
@@ -190,6 +246,9 @@ routes_map:
     response: RecordResponse
     status: 201
     description: "Create a DNS record (A, AAAA, CNAME, MX, TXT, SRV, CAA, NS)"
+    operation_id: create_record
+    request_type: CreateRecordRequest
+    response_type: RecordResponse
     errors:
       - { status: 400, code: invalid_request, description: "Missing or invalid record fields" }
       - { status: 402, code: payment_required, description: "x402 payment needed" }
@@ -201,6 +260,9 @@ routes_map:
     response: RecordListResponse
     status: 200
     description: "List all records in a DNS zone"
+    operation_id: list_records
+    request_type: null
+    response_type: RecordListResponse
     errors:
       - { status: 402, code: payment_required, description: "x402 payment needed" }
       - { status: 403, code: forbidden, description: "Resource belongs to a different wallet" }
@@ -210,6 +272,9 @@ routes_map:
     response: RecordResponse
     status: 200
     description: "Get a single DNS record"
+    operation_id: get_record
+    request_type: null
+    response_type: RecordResponse
     errors:
       - { status: 402, code: payment_required, description: "x402 payment needed" }
       - { status: 403, code: forbidden, description: "Resource belongs to a different wallet" }
@@ -219,6 +284,9 @@ routes_map:
     response: RecordResponse
     status: 200
     description: "Update a DNS record"
+    operation_id: update_record
+    request_type: UpdateRecordRequest
+    response_type: RecordResponse
     errors:
       - { status: 400, code: invalid_request, description: "Invalid record fields" }
       - { status: 402, code: payment_required, description: "x402 payment needed" }
@@ -230,6 +298,9 @@ routes_map:
     response: null
     status: 200
     description: "Delete a DNS record"
+    operation_id: delete_record
+    request_type: null
+    response_type: null
     errors:
       - { status: 402, code: payment_required, description: "x402 payment needed" }
       - { status: 403, code: forbidden, description: "Resource belongs to a different wallet" }

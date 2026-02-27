@@ -32,6 +32,24 @@ pricing:
 deploy:
   max_body_size: "128MB"
 
+providers:
+  - name: cloudflare-r2
+    env: [CLOUDFLARE_ACCOUNT_ID, R2_ACCESS_KEY_ID, R2_SECRET_ACCESS_KEY]
+    status: active
+    default: true
+    url: https://developers.cloudflare.com/r2/
+
+interfaces:
+  mcp: true
+  cli: true
+  openai: true
+  rest: true
+
+factory:
+  max_body_size: "128MB"
+  metrics: true
+  free_service: false
+
 accent: "#FFB74D"
 accent_dim: "#e6a040"
 accent_glow: "rgba(255,183,77,0.08)"
@@ -90,6 +108,9 @@ routes_map:
     response: CreateBucketResponse
     status: 201
     description: "Create a new storage bucket"
+    operation_id: create_bucket
+    request_type: CreateBucketRequest
+    response_type: CreateBucketResponse
     errors:
       - { status: 400, code: invalid_request, description: "Invalid bucket name or name already taken" }
       - { status: 402, code: payment_required, description: "x402 payment needed" }
@@ -100,6 +121,9 @@ routes_map:
     response: BucketListResponse
     status: 200
     description: "List all buckets owned by the calling wallet"
+    operation_id: list_buckets
+    request_type: null
+    response_type: BucketListResponse
     query_params:
       - { name: limit, type: integer, description: "1-100, default 20" }
       - { name: page, type: integer, description: "1-based page number, default 1" }
@@ -111,6 +135,9 @@ routes_map:
     response: BucketResponse
     status: 200
     description: "Get details for a single bucket. Caller must own the bucket."
+    operation_id: get_bucket
+    request_type: null
+    response_type: BucketResponse
     errors:
       - { status: 402, code: payment_required, description: "x402 payment needed" }
       - { status: 403, code: forbidden, description: "Bucket belongs to a different wallet" }
@@ -120,6 +147,9 @@ routes_map:
     response: null
     status: 200
     description: "Delete a bucket. Bucket must be empty first."
+    operation_id: delete_bucket
+    request_type: null
+    response_type: null
     errors:
       - { status: 402, code: payment_required, description: "x402 payment needed" }
       - { status: 403, code: forbidden, description: "Bucket belongs to a different wallet" }
@@ -131,6 +161,9 @@ routes_map:
     status: 200
     description: "Upload an object. Key may include slashes. Content-Length header required."
     notes: "Request body is raw bytes. Fails with 413 if upload exceeds quota."
+    operation_id: put_object
+    request_type: null
+    response_type: PutObjectResponse
     errors:
       - { status: 400, code: invalid_request, description: "Missing or invalid body" }
       - { status: 402, code: payment_required, description: "x402 payment needed" }
@@ -144,6 +177,9 @@ routes_map:
     response: ObjectListResponse
     status: 200
     description: "List objects in a bucket. Cursor-based pagination."
+    operation_id: list_objects
+    request_type: null
+    response_type: ObjectListResponse
     query_params:
       - { name: prefix, type: string, description: "Filter by key prefix (e.g. notes/)" }
       - { name: limit, type: integer, description: "1-1000, default 100" }
@@ -158,6 +194,9 @@ routes_map:
     response: "Raw bytes (application/octet-stream)"
     status: 200
     description: "Download an object. Response body is streamed directly."
+    operation_id: get_object
+    request_type: null
+    response_type: null
     errors:
       - { status: 402, code: payment_required, description: "x402 payment needed" }
       - { status: 403, code: forbidden, description: "Bucket belongs to a different wallet" }
@@ -168,6 +207,9 @@ routes_map:
     response: DeleteObjectResponse
     status: 200
     description: "Delete an object from a bucket"
+    operation_id: delete_object
+    request_type: null
+    response_type: DeleteObjectResponse
     errors:
       - { status: 402, code: payment_required, description: "x402 payment needed" }
       - { status: 403, code: forbidden, description: "Bucket belongs to a different wallet" }
@@ -178,6 +220,9 @@ routes_map:
     response: QuotaResponse
     status: 200
     description: "Get quota and usage for a bucket"
+    operation_id: get_quota
+    request_type: null
+    response_type: QuotaResponse
     errors:
       - { status: 402, code: payment_required, description: "x402 payment needed" }
       - { status: 403, code: forbidden, description: "Bucket belongs to a different wallet" }
@@ -187,6 +232,9 @@ routes_map:
     response: QuotaResponse
     status: 200
     description: "Set the storage quota for a bucket. Pass null to reset to default (100 MB)."
+    operation_id: set_quota
+    request_type: SetQuotaRequest
+    response_type: QuotaResponse
     errors:
       - { status: 400, code: invalid_request, description: "Invalid quota value" }
       - { status: 402, code: payment_required, description: "x402 payment needed" }
@@ -198,6 +246,9 @@ routes_map:
     response: ReconcileResponse
     status: 200
     description: "Recompute bucket usage by scanning actual R2 storage. Use when usage_bytes appears incorrect."
+    operation_id: reconcile_quota
+    request_type: null
+    response_type: ReconcileResponse
     errors:
       - { status: 402, code: payment_required, description: "x402 payment needed" }
       - { status: 403, code: forbidden, description: "Bucket belongs to a different wallet" }

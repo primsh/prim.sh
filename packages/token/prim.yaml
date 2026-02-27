@@ -29,6 +29,24 @@ pricing:
     price: "$0.001"
     note: "Per request"
 
+providers:
+  - name: viem
+    env: [BASE_RPC_URL]
+    status: active
+    default: true
+    url: https://viem.sh/
+
+interfaces:
+  mcp: true
+  cli: true
+  openai: true
+  rest: true
+
+factory:
+  max_body_size: "1MB"
+  metrics: true
+  free_service: false
+
 accent: "#FFC107"
 accent_dim: "#ffa000"
 accent_glow: "rgba(255,193,7,0.08)"
@@ -81,6 +99,9 @@ routes_map:
     status: 201
     description: "Deploy a new ERC-20 token. Returns immediately with deployStatus: 'pending'."
     notes: "Poll GET /v1/tokens/:id until deployStatus is 'confirmed' before minting or pooling."
+    operation_id: deploy_token
+    request_type: CreateTokenRequest
+    response_type: TokenResponse
     errors:
       - { status: 400, code: invalid_request, description: "Missing required fields or invalid values" }
       - { status: 402, code: payment_required, description: "x402 payment needed" }
@@ -90,6 +111,9 @@ routes_map:
     response: TokenListResponse
     status: 200
     description: "List tokens deployed by the authenticated wallet"
+    operation_id: list_tokens
+    request_type: null
+    response_type: TokenListResponse
     errors:
       - { status: 402, code: payment_required, description: "x402 payment needed" }
       - { status: 403, code: forbidden, description: "Missing wallet in payment" }
@@ -98,6 +122,9 @@ routes_map:
     response: TokenResponse
     status: 200
     description: "Get token details: deployStatus, contractAddress, supply, pool"
+    operation_id: get_token
+    request_type: null
+    response_type: TokenResponse
     errors:
       - { status: 402, code: payment_required, description: "x402 payment needed" }
       - { status: 403, code: forbidden, description: "Token belongs to a different wallet" }
@@ -107,6 +134,9 @@ routes_map:
     response: MintResponse
     status: 200
     description: "Mint additional tokens to an address. Requires mintable=true at deploy time."
+    operation_id: mint_tokens
+    request_type: MintRequest
+    response_type: MintResponse
     errors:
       - { status: 400, code: not_mintable, description: "Token deployed with mintable=false" }
       - { status: 402, code: payment_required, description: "x402 payment needed" }
@@ -119,6 +149,9 @@ routes_map:
     response: SupplyResponse
     status: 200
     description: "Live on-chain total supply from contract"
+    operation_id: get_token_supply
+    request_type: null
+    response_type: SupplyResponse
     errors:
       - { status: 402, code: payment_required, description: "x402 payment needed" }
       - { status: 403, code: forbidden, description: "Token belongs to a different wallet" }
@@ -129,6 +162,9 @@ routes_map:
     response: PoolResponse
     status: 201
     description: "Create and initialize a Uniswap V3 pool paired with USDC. One pool per token."
+    operation_id: create_pool
+    request_type: CreatePoolRequest
+    response_type: PoolResponse
     errors:
       - { status: 400, code: invalid_request, description: "Missing pricePerToken or invalid feeTier" }
       - { status: 402, code: payment_required, description: "x402 payment needed" }
@@ -141,6 +177,9 @@ routes_map:
     response: PoolResponse
     status: 200
     description: "Get pool details: poolAddress, token0, token1, fee, sqrtPriceX96, tick"
+    operation_id: get_pool
+    request_type: null
+    response_type: PoolResponse
     errors:
       - { status: 402, code: payment_required, description: "x402 payment needed" }
       - { status: 403, code: forbidden, description: "Token belongs to a different wallet" }
@@ -151,6 +190,9 @@ routes_map:
     response: LiquidityParamsResponse
     status: 200
     description: "Get calldata for adding liquidity. Returns approvals[] and position manager params."
+    operation_id: get_liquidity_params
+    request_type: null
+    response_type: LiquidityParamsResponse
     query_params:
       - { name: tokenAmount, type: string, description: "Raw token amount to add as liquidity" }
       - { name: usdcAmount, type: string, description: "Raw USDC amount to pair (6 decimals)" }

@@ -919,7 +919,7 @@
                   "depends": [
                     "I-5"
                   ],
-                  "status": "pending",
+                  "status": "done",
                   "release": null,
                   "plan": "tasks/active/i-8-prim-yaml-schema-v2.md"
                 }

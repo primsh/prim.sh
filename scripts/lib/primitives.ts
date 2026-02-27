@@ -53,6 +53,32 @@ export interface RouteMapping {
   notes?: string;
   query_params?: RouteQueryParam[];
   errors?: RouteError[];
+  operation_id?: string;
+  request_type?: string | null;
+  response_type?: string | null;
+}
+
+export type ProviderStatus = "active" | "planned" | "deprecated";
+
+export interface Provider {
+  name: string;
+  env: string[];
+  status: ProviderStatus;
+  default: boolean;
+  url?: string;
+}
+
+export interface Interfaces {
+  mcp: boolean;
+  cli: boolean;
+  openai: boolean;
+  rest: boolean;
+}
+
+export interface FactoryConfig {
+  max_body_size?: string;   // default "1MB"
+  metrics?: boolean;         // default true
+  free_service?: boolean;    // default false
 }
 
 export interface Primitive {
@@ -76,6 +102,9 @@ export interface Primitive {
   limits?: string[];
   ownership?: string;
   routes_map?: RouteMapping[];
+  providers?: Provider[];
+  interfaces?: Interfaces;
+  factory?: FactoryConfig;
 }
 
 // ── Loader ─────────────────────────────────────────────────────────────────
@@ -123,6 +152,14 @@ export function getDeployConfig(p: Primitive): Required<DeployConfig> {
     max_body_size: p.deploy?.max_body_size ?? "1MB",
     systemd_after: p.deploy?.systemd_after ?? [],
     extra_caddy: p.deploy?.extra_caddy ?? [],
+  };
+}
+
+export function getFactoryConfig(p: Primitive): Required<FactoryConfig> {
+  return {
+    max_body_size: p.factory?.max_body_size ?? "1MB",
+    metrics: p.factory?.metrics ?? true,
+    free_service: p.factory?.free_service ?? false,
   };
 }
 

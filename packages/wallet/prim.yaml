@@ -70,6 +70,17 @@ limits:
 
 ownership: "All resources scoped to the wallet address extracted from the x402 payment signature. Wallet registration uses EIP-191 signature for ownership proof."
 
+interfaces:
+  mcp: true
+  cli: true
+  openai: true
+  rest: true
+
+factory:
+  max_body_size: "1MB"
+  metrics: true
+  free_service: false
+
 routes_map:
   - route: "POST /v1/wallets"
     request: WalletRegisterRequest
@@ -77,6 +88,9 @@ routes_map:
     status: 201
     description: "Register a wallet via EIP-191 signature"
     notes: "Free. No x402 required. Sign message: Register <address> with prim.sh at <timestamp>"
+    operation_id: register_wallet
+    request_type: WalletRegisterRequest
+    response_type: WalletRegisterResponse
     errors:
       - { status: 400, code: invalid_request, description: "Missing fields or invalid signature format" }
       - { status: 403, code: forbidden, description: "Signature does not match address" }
@@ -86,6 +100,9 @@ routes_map:
     response: WalletListResponse
     status: 200
     description: "List registered wallets owned by the calling wallet"
+    operation_id: list_wallets
+    request_type: null
+    response_type: WalletListResponse
     query_params:
       - { name: limit, type: integer, description: "1-100, default 20" }
       - { name: after, type: string, description: "Cursor from previous response" }
@@ -98,6 +115,9 @@ routes_map:
     response: WalletDetailResponse
     status: 200
     description: "Get full wallet details including balance, policy, and status"
+    operation_id: get_wallet
+    request_type: null
+    response_type: WalletDetailResponse
     errors:
       - { status: 402, code: payment_required, description: "x402 payment needed" }
       - { status: 403, code: forbidden, description: "Caller does not own this wallet" }
@@ -107,6 +127,9 @@ routes_map:
     response: WalletDeactivateResponse
     status: 200
     description: "Permanently deactivate a wallet. Irreversible. Pending fund requests cancelled."
+    operation_id: deactivate_wallet
+    request_type: null
+    response_type: WalletDeactivateResponse
     errors:
       - { status: 402, code: payment_required, description: "x402 payment needed" }
       - { status: 403, code: forbidden, description: "Caller does not own this wallet" }
@@ -116,6 +139,9 @@ routes_map:
     response: FundRequestResponse
     status: 200
     description: "Request USDC funding for a wallet. A human operator can approve or deny."
+    operation_id: create_fund_request
+    request_type: FundRequestCreateRequest
+    response_type: FundRequestResponse
     errors:
       - { status: 400, code: invalid_request, description: "Missing amount or reason" }
       - { status: 402, code: payment_required, description: "x402 payment needed" }
@@ -126,6 +152,9 @@ routes_map:
     response: FundRequestListResponse
     status: 200
     description: "List all fund requests for a wallet"
+    operation_id: list_fund_requests
+    request_type: null
+    response_type: FundRequestListResponse
     query_params:
       - { name: limit, type: integer, description: "1-100, default 20" }
       - { name: after, type: string, description: "Cursor from previous response" }
@@ -138,6 +167,9 @@ routes_map:
     response: FundRequestApproveResponse
     status: 200
     description: "Approve a pending fund request. Returns the address to send USDC to."
+    operation_id: approve_fund_request
+    request_type: null
+    response_type: FundRequestApproveResponse
     errors:
       - { status: 402, code: payment_required, description: "x402 payment needed" }
       - { status: 403, code: forbidden, description: "Caller not authorized to approve" }
@@ -148,6 +180,9 @@ routes_map:
     response: FundRequestDenyResponse
     status: 200
     description: "Deny a pending fund request"
+    operation_id: deny_fund_request
+    request_type: FundRequestDenyRequest
+    response_type: FundRequestDenyResponse
     errors:
       - { status: 402, code: payment_required, description: "x402 payment needed" }
       - { status: 403, code: forbidden, description: "Caller not authorized to deny" }
@@ -158,6 +193,9 @@ routes_map:
     response: PolicyResponse
     status: 200
     description: "Get the spending policy for a wallet"
+    operation_id: get_policy
+    request_type: null
+    response_type: PolicyResponse
     errors:
       - { status: 402, code: payment_required, description: "x402 payment needed" }
       - { status: 403, code: forbidden, description: "Caller does not own this wallet" }
@@ -167,6 +205,9 @@ routes_map:
     response: PolicyResponse
     status: 200
     description: "Update spending policy for a wallet. All fields optional. Pass null to remove a limit."
+    operation_id: update_policy
+    request_type: PolicyUpdateRequest
+    response_type: PolicyResponse
     errors:
       - { status: 400, code: invalid_request, description: "Invalid JSON body or field values" }
       - { status: 402, code: payment_required, description: "x402 payment needed" }
@@ -177,6 +218,9 @@ routes_map:
     response: PauseResponse
     status: 200
     description: "Pause operations for a wallet. Temporarily halts spending without deactivating."
+    operation_id: pause_wallet
+    request_type: PauseRequest
+    response_type: PauseResponse
     errors:
       - { status: 400, code: invalid_request, description: "Invalid scope value" }
       - { status: 402, code: payment_required, description: "x402 payment needed" }
@@ -187,6 +231,9 @@ routes_map:
     response: ResumeResponse
     status: 200
     description: "Resume operations for a paused wallet"
+    operation_id: resume_wallet
+    request_type: ResumeRequest
+    response_type: ResumeResponse
     errors:
       - { status: 400, code: invalid_request, description: "Invalid scope value" }
       - { status: 402, code: payment_required, description: "x402 payment needed" }

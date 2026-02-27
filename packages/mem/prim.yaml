@@ -28,6 +28,24 @@ pricing:
     price: "$0.0001"
     note: "Per operation"
 
+providers:
+  - name: qdrant
+    env: [QDRANT_URL]
+    status: active
+    default: true
+    url: https://qdrant.tech/
+
+interfaces:
+  mcp: true
+  cli: true
+  openai: true
+  rest: true
+
+factory:
+  max_body_size: "1MB"
+  metrics: true
+  free_service: false
+
 accent: "#00ACC1"
 accent_dim: "#007a8e"
 accent_glow: "rgba(0,172,193,0.08)"
@@ -78,6 +96,9 @@ routes_map:
     response: CollectionResponse
     status: 201
     description: "Create a vector collection"
+    operation_id: create_collection
+    request_type: CreateCollectionRequest
+    response_type: CollectionResponse
     errors:
       - { status: 400, code: invalid_request, description: "Missing name or invalid fields" }
       - { status: 402, code: payment_required, description: "x402 payment needed" }
@@ -88,6 +109,9 @@ routes_map:
     response: CollectionListResponse
     status: 200
     description: "List collections owned by the calling wallet (paginated). document_count is null — use GET :id."
+    operation_id: list_collections
+    request_type: null
+    response_type: CollectionListResponse
     query_params:
       - { name: limit, type: integer, description: "1-100, default 20" }
       - { name: after, type: string, description: "Cursor from previous response" }
@@ -99,6 +123,9 @@ routes_map:
     response: CollectionResponse
     status: 200
     description: "Get collection with live document_count from Qdrant"
+    operation_id: get_collection
+    request_type: null
+    response_type: CollectionResponse
     errors:
       - { status: 402, code: payment_required, description: "x402 payment needed" }
       - { status: 403, code: forbidden, description: "Resource belongs to a different wallet" }
@@ -109,6 +136,9 @@ routes_map:
     response: null
     status: 200
     description: "Delete collection and all documents. Irreversible."
+    operation_id: delete_collection
+    request_type: null
+    response_type: null
     errors:
       - { status: 402, code: payment_required, description: "x402 payment needed" }
       - { status: 403, code: forbidden, description: "Resource belongs to a different wallet" }
@@ -119,6 +149,9 @@ routes_map:
     response: UpsertResponse
     status: 200
     description: "Embed and store documents. Each document: {id?, text, metadata?}. Existing IDs are replaced."
+    operation_id: upsert_documents
+    request_type: UpsertRequest
+    response_type: UpsertResponse
     errors:
       - { status: 400, code: invalid_request, description: "Missing documents or invalid fields" }
       - { status: 402, code: payment_required, description: "x402 payment needed" }
@@ -131,6 +164,9 @@ routes_map:
     response: QueryResponse
     status: 200
     description: "Semantic search. Fields: text (required), top_k, filter (Qdrant native format)."
+    operation_id: query_collection
+    request_type: QueryRequest
+    response_type: QueryResponse
     errors:
       - { status: 400, code: invalid_request, description: "Missing text or invalid filter" }
       - { status: 402, code: payment_required, description: "x402 payment needed" }
@@ -143,6 +179,9 @@ routes_map:
     response: null
     status: 200
     description: "Store a value in the KV cache. Optional ttl in seconds for expiry."
+    operation_id: set_cache
+    request_type: CacheSetRequest
+    response_type: null
     errors:
       - { status: 400, code: invalid_request, description: "Missing value" }
       - { status: 402, code: payment_required, description: "x402 payment needed" }
@@ -151,6 +190,9 @@ routes_map:
     response: CacheGetResponse
     status: 200
     description: "Retrieve a cache value. Returns 404 if missing or expired."
+    operation_id: get_cache
+    request_type: null
+    response_type: CacheGetResponse
     errors:
       - { status: 402, code: payment_required, description: "x402 payment needed" }
       - { status: 404, code: not_found, description: "Cache entry missing or expired" }
@@ -159,6 +201,9 @@ routes_map:
     response: null
     status: 200
     description: "Delete a cache entry"
+    operation_id: delete_cache
+    request_type: null
+    response_type: null
     errors:
       - { status: 402, code: payment_required, description: "x402 payment needed" }
       - { status: 404, code: not_found, description: "Cache entry not found" }

@@ -24,6 +24,24 @@ pricing:
     price: "$0.005"
     note: "Per URL"
 
+providers:
+  - name: tavily
+    env: [TAVILY_API_KEY]
+    status: active
+    default: true
+    url: https://tavily.com/
+
+interfaces:
+  mcp: true
+  cli: true
+  openai: true
+  rest: true
+
+factory:
+  max_body_size: "1MB"
+  metrics: true
+  free_service: false
+
 accent: "#C6FF00"
 accent_dim: "#a8d900"
 accent_glow: "rgba(198,255,0,0.08)"
@@ -74,6 +92,9 @@ routes_map:
     response: SearchResponse
     status: 200
     description: "Search the web and return ranked results with optional AI-generated answer"
+    operation_id: search_web
+    request_type: SearchRequest
+    response_type: SearchResponse
     errors:
       - { status: 400, code: invalid_request, description: "Missing or invalid query" }
       - { status: 402, code: payment_required, description: "x402 payment needed" }
@@ -84,6 +105,9 @@ routes_map:
     response: SearchResponse
     status: 200
     description: "Search for recent news articles, ordered by recency"
+    operation_id: search_news
+    request_type: SearchRequest
+    response_type: SearchResponse
     errors:
       - { status: 400, code: invalid_request, description: "Missing or invalid query" }
       - { status: 402, code: payment_required, description: "x402 payment needed" }
@@ -95,6 +119,9 @@ routes_map:
     status: 200
     description: "Extract readable content from one or more URLs as markdown or plain text"
     notes: "Failed extractions are in the failed array. Request succeeds if at least one URL was attempted."
+    operation_id: extract_url
+    request_type: ExtractRequest
+    response_type: ExtractResponse
     errors:
       - { status: 400, code: invalid_request, description: "Missing urls field or invalid URL format" }
       - { status: 402, code: payment_required, description: "x402 payment needed" }
