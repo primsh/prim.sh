@@ -165,7 +165,8 @@ export function loadPrimitives(root?: string): Primitive[] {
   const packagesDir = join(ROOT, "packages");
   const packageDirs = readdirSync(packagesDir, { withFileTypes: true })
     .filter((d) => d.isDirectory())
-    .map((d) => d.name);
+    .map((d) => d.name)
+    .sort();
 
   for (const dir of packageDirs) {
     const yamlPath = join(packagesDir, dir, "prim.yaml");
@@ -183,7 +184,7 @@ export function loadPrimitives(root?: string): Primitive[] {
       phantom: false,
       ...p,
     }))
-    .sort((a, b) => (a.order ?? 999) - (b.order ?? 999)) as Primitive[];
+    .sort((a, b) => (a.order ?? 999) - (b.order ?? 999) || a.id.localeCompare(b.id)) as Primitive[];
 }
 
 // ── Defaults ───────────────────────────────────────────────────────────────
