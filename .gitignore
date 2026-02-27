@@ -33,6 +33,10 @@ TASKS.md
 *.log
 server.log
 
+# Security scan output (never commit — may contain secret values)
+gitleaks-report.json
+gitleaks-report.sarif
+
 # Brand assets (large binaries)
 brand/assets/
 
