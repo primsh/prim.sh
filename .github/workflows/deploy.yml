@@ -127,6 +127,12 @@ jobs:
 
       - uses: oven-sh/setup-bun@v2
 
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - uses: pnpm/action-setup@v4
+
       - name: Build static dist
         run: |
           mkdir -p site-dist
