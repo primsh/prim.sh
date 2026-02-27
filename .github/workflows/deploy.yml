@@ -125,6 +125,8 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - uses: oven-sh/setup-bun@v2
+
       - name: Build static dist
         run: |
           mkdir -p site-dist
@@ -137,6 +139,8 @@ jobs:
             --include='*.txt' --include='*.json' \
             --exclude='*' \
             site/ site-dist/
+          # Substitute brand template placeholders in index.html
+          bun run site/build.ts
           # Build ID for smoke check verification
           echo "$GITHUB_SHA" > site-dist/_build_id.txt
 
