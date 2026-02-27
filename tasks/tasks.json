@@ -421,6 +421,117 @@
               ]
             }
           ]
+        },
+        {
+          "id": "HRD-W4",
+          "title": "Smoke Test CLI Fixes",
+          "parallelism": "PARA",
+          "phases": [
+            {
+              "id": "HRD-W4-PA",
+              "title": "CLI Bugs",
+              "parallelism": "SRL",
+              "tasks": [
+                {
+                  "id": "HRD-32",
+                  "description": "`--help` exits code 1; on some subcommands (e.g. `email create --help`) hits paid API before showing usage",
+                  "owner": [
+                    "Claude"
+                  ],
+                  "depends": [],
+                  "status": "pending",
+                  "release": null
+                },
+                {
+                  "id": "HRD-33",
+                  "description": "`spawn get` returns human-readable text while all other commands return JSON. Add `--json` flag globally.",
+                  "owner": [
+                    "Claude"
+                  ],
+                  "depends": [],
+                  "status": "pending",
+                  "release": null
+                },
+                {
+                  "id": "HRD-34",
+                  "description": "`--ssh-keys` flag parses single string char-by-char \u2014 `sk_abc` becomes error \"key not found: s\"",
+                  "owner": [
+                    "Claude"
+                  ],
+                  "depends": [],
+                  "status": "pending",
+                  "release": null
+                },
+                {
+                  "id": "HRD-35",
+                  "description": "Email CLI errors double-print \u2014 both `handleError` and `wrapCommand` catch block write to stderr",
+                  "owner": [
+                    "Claude"
+                  ],
+                  "depends": [],
+                  "status": "pending",
+                  "release": null
+                },
+                {
+                  "id": "HRD-36",
+                  "description": "`store ls BUCKET_ID` returns bucket metadata instead of listing objects. API has GET /v1/buckets/{id}/objects.",
+                  "owner": [
+                    "Claude"
+                  ],
+                  "depends": [],
+                  "status": "pending",
+                  "release": null
+                },
+                {
+                  "id": "HRD-37",
+                  "description": "CLI defaults to eip155:8453 (mainnet); server runs eip155:84532. Silent 500 with no diagnostic error msg.",
+                  "owner": [
+                    "Claude"
+                  ],
+                  "depends": [],
+                  "status": "pending",
+                  "release": null
+                }
+              ]
+            },
+            {
+              "id": "HRD-W4-PB",
+              "title": "CLI UX Gaps",
+              "parallelism": "PARA",
+              "tasks": [
+                {
+                  "id": "HRD-38",
+                  "description": "Show x402 cost per request in CLI output (e.g. `Paid: 0.001 USDC`) or via `--verbose` flag",
+                  "owner": [
+                    "Claude"
+                  ],
+                  "depends": [],
+                  "status": "pending",
+                  "release": null
+                },
+                {
+                  "id": "HRD-39",
+                  "description": "`wallet balance` shows mainnet chain (eip155:8453) even when wallet funded on testnet (eip155:84532)",
+                  "owner": [
+                    "Claude"
+                  ],
+                  "depends": [],
+                  "status": "pending",
+                  "release": null
+                },
+                {
+                  "id": "HRD-40",
+                  "description": "Add `prim wallet info` and `prim wallet policy` CLI commands wrapping paid GET /v1/wallets/{addr} endpoints",
+                  "owner": [
+                    "Claude"
+                  ],
+                  "depends": [],
+                  "status": "pending",
+                  "release": null
+                }
+              ]
+            }
+          ]
         }
       ],
       "description": "Code quality, security, and reliability fixes from open-source readiness review."
@@ -511,6 +622,16 @@
           "title": "email.sh",
           "parallelism": "SRL",
           "tasks": [
+            {
+              "id": "E-8",
+              "description": "Fix mailbox creation 500: POST /v1/mailboxes crashes after x402 payment succeeds. User charged, no mailbox.",
+              "owner": [
+                "Claude"
+              ],
+              "depends": [],
+              "status": "pending",
+              "release": "v1.0.0"
+            },
             {
               "id": "E-4",
               "description": "Domain warmup: send low-volume emails to engaged recipients, ramp over weeks",
@@ -622,6 +743,47 @@
               "status": "pending",
               "release": "v1.0.0",
               "plan": "tasks/active/prim-2-token-utility-2026-02-26.md"
+            }
+          ]
+        },
+        {
+          "id": "PRIMS-W6",
+          "title": "issue.sh",
+          "parallelism": "SRL",
+          "tasks": [
+            {
+              "id": "FB-1",
+              "description": "issue.sh MVP: POST /v1/issues \u2014 agents file structured bug reports + feature requests via x402. Bug reports free.",
+              "owner": [
+                "Claude"
+              ],
+              "depends": [],
+              "status": "pending",
+              "release": null
+            },
+            {
+              "id": "FB-2",
+              "description": "issue.sh read endpoints: GET /v1/issues, GET /v1/issues/:id, POST /v1/issues/:id/comments. x402 paid.",
+              "owner": [
+                "Claude"
+              ],
+              "depends": [
+                "FB-1"
+              ],
+              "status": "pending",
+              "release": null
+            },
+            {
+              "id": "FB-3",
+              "description": "issue.sh \u2192 GitHub sync: auto-create GitHub issues from agent reports. Label by primitive + severity.",
+              "owner": [
+                "Claude"
+              ],
+              "depends": [
+                "FB-1"
+              ],
+              "status": "pending",
+              "release": null
             }
           ]
         }
@@ -854,6 +1016,16 @@
               ],
               "status": "pending",
               "release": "v1.0.0"
+            },
+            {
+              "id": "OPS-6",
+              "description": "Fund treasury wallet 0x09D896... with testnet ETH on Base Sepolia \u2014 faucet ETH drip returns 502",
+              "owner": [
+                "Garric"
+              ],
+              "depends": [],
+              "status": "pending",
+              "release": null
             }
           ]
         },
@@ -1314,6 +1486,16 @@
               "depends": [],
               "status": "done",
               "release": null
+            },
+            {
+              "id": "COM-9",
+              "description": "llms.txt references `POST api.prim.sh/access/request` which returns 404. Remove or implement.",
+              "owner": [
+                "Claude"
+              ],
+              "depends": [],
+              "status": "pending",
+              "release": null
             }
           ]
         },
@@ -1557,6 +1739,63 @@
                 "Claude"
               ],
               "depends": [],
+              "status": "backlog",
+              "release": null
+            },
+            {
+              "id": "I-23",
+              "description": "create.sh: implement service layer for POST /v1/scaffold (returns file manifest as JSON), POST /v1/validate, GET /v1/schema, GET /v1/ports. Package already scaffolded.",
+              "owner": [
+                "Claude"
+              ],
+              "depends": [],
+              "status": "backlog",
+              "release": null
+            },
+            {
+              "id": "I-24",
+              "description": "pr.sh: GitHub PR primitive. Wraps gh API. Create/update/status/comments. Scoped to prim repo. Plan: tasks/research/agent-contribution-pipeline.md",
+              "owner": [
+                "Claude"
+              ],
+              "depends": [
+                "I-23"
+              ],
+              "status": "backlog",
+              "release": null
+            },
+            {
+              "id": "I-25",
+              "description": "issue.sh: GitHub issue primitive. Create/list/comment. Dedup via mem.sh semantic search before creating.",
+              "owner": [
+                "Claude"
+              ],
+              "depends": [],
+              "status": "backlog",
+              "release": null
+            },
+            {
+              "id": "I-26",
+              "description": "Agent contribution GHA: auto-test PRs that add new prims (validate schema, run scaffolder, smoke tests, spawn agent to exercise endpoints). Auto-merge if green.",
+              "owner": [
+                "Claude"
+              ],
+              "depends": [
+                "I-23",
+                "I-24"
+              ],
+              "status": "backlog",
+              "release": null
+            },
+            {
+              "id": "I-27",
+              "description": "Provider key donation system: agents contribute API keys to expand provider coverage. Encrypted custody, usage tracking, health validation, credit/karma incentives.",
+              "owner": [
+                "Claude"
+              ],
+              "depends": [
+                "I-22"
+              ],
               "status": "backlog",
               "release": null
             }
