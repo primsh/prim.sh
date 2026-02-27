@@ -3,9 +3,9 @@ import { bodyLimit } from "hono/body-limit";
 import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
 
-const LLMS_TXT = readFileSync(
-  resolve(import.meta.dir, "../../../site/track/llms.txt"), "utf-8"
-);
+const LLMS_TXT = import.meta.dir
+  ? readFileSync(resolve(import.meta.dir, "../../../site/track/llms.txt"), "utf-8")
+  : "";
 import {
   createAgentStackMiddleware,
   createWalletAllowlistChecker,

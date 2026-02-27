@@ -533,6 +533,17 @@
               "parallelism": "SRL",
               "tasks": [
                 {
+                  "id": "I-6",
+                  "description": "Migrate 8 prims (wallet, store, spawn, faucet, email, mem, domain, token) to createPrimApp() factory in @primsh/x402-middleware",
+                  "owner": [
+                    "Claude"
+                  ],
+                  "depends": [],
+                  "status": "done",
+                  "release": null,
+                  "plan": null
+                },
+                {
                   "id": "I-4",
                   "description": "Parallelize CI: split into concurrent jobs (setup \u2192 lint|typecheck|test|gen-check PARA), add concurrency + bun cache",
                   "owner": [

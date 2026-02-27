@@ -1,27 +1,39 @@
-import { Hono } from "hono";
-import { isAddress, getAddress } from "viem";
-import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
-
-const LLMS_TXT = readFileSync(
-  resolve(import.meta.dir, "../../../site/faucet/llms.txt"), "utf-8"
-);
-import { getNetworkConfig, createWalletAllowlistChecker, createLogger, metricsMiddleware, metricsHandler, requestIdMiddleware } from "@primsh/x402-middleware";
+import { isAddress, getAddress } from "viem";
+import {
+  getNetworkConfig,
+  createWalletAllowlistChecker,
+  createAgentStackMiddleware,
+} from "@primsh/x402-middleware";
+import { createPrimApp } from "@primsh/x402-middleware/create-prim-app";
 import { RateLimiter } from "./rate-limit.ts";
 import { dripUsdc, dripEth } from "./service.ts";
 
-const logger = createLogger("faucet.sh");
-
+// faucet.sh is a free service: no x402 middleware, no PRIM_PAY_TO required.
+// It uses createWalletAllowlistChecker for allowlist checks in route handlers.
 const WALLET_INTERNAL_URL = process.env.WALLET_INTERNAL_URL ?? "http://127.0.0.1:3001";
 const checkAllowlist = createWalletAllowlistChecker(WALLET_INTERNAL_URL);
 
-const app = new Hono();
+const app = createPrimApp(
+  {
+    serviceName: "faucet.sh",
+    llmsTxtPath: import.meta.dir ? resolve(import.meta.dir, "../../../site/faucet/llms.txt") : undefined,
+    routes: {},
+    metricsName: "faucet.prim.sh",
+    freeService: true,
+    skipHealthCheck: true,
+    pricing: {
+      routes: [
+        { method: "POST", path: "/v1/faucet/usdc", price_usdc: "0", description: "Dispense test USDC (free, rate-limited)" },
+        { method: "POST", path: "/v1/faucet/eth", price_usdc: "0", description: "Dispense test ETH (free, rate-limited)" },
+        { method: "GET", path: "/v1/faucet/status", price_usdc: "0", description: "Rate limit status" },
+      ],
+    },
+  },
+  { createAgentStackMiddleware, createWalletAllowlistChecker },
+);
 
-app.use("*", requestIdMiddleware());
-
-app.use("*", metricsMiddleware());
-
-app.get("/v1/metrics", metricsHandler("faucet.prim.sh"));
+const logger = (app as typeof app & { logger: { warn: (msg: string, extra?: Record<string, unknown>) => void } }).logger;
 
 // Rate limiters (SQLite-backed, persist across restarts)
 const usdcLimiter = new RateLimiter("usdc", 2 * 60 * 60 * 1000); // 2 hours
@@ -44,13 +56,7 @@ app.use("*", async (c, next) => {
   return next();
 });
 
-// GET /llms.txt — machine-readable API reference (free)
-app.get("/llms.txt", (c) => {
-  c.header("Content-Type", "text/plain; charset=utf-8");
-  return c.body(LLMS_TXT);
-});
-
-// GET / — Health check
+// GET / — Health check (custom: includes network + testnet fields)
 app.get("/", (c) => {
   const config = getNetworkConfig();
   return c.json({
@@ -58,20 +64,6 @@ app.get("/", (c) => {
     status: "ok",
     network: config.network,
     testnet: config.isTestnet,
-  });
-});
-
-// GET /pricing — machine-readable pricing (free)
-app.get("/pricing", (c) => {
-  return c.json({
-    service: "faucet.prim.sh",
-    currency: "USDC",
-    network: "eip155:8453",
-    routes: [
-      { method: "POST", path: "/v1/faucet/usdc", price_usdc: "0", description: "Dispense test USDC (free, rate-limited)" },
-      { method: "POST", path: "/v1/faucet/eth", price_usdc: "0", description: "Dispense test ETH (free, rate-limited)" },
-      { method: "GET", path: "/v1/faucet/status", price_usdc: "0", description: "Rate limit status" },
-    ],
   });
 });
 

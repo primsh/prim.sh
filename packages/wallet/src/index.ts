@@ -1,10 +1,14 @@
-import { Hono } from "hono";
-import { bodyLimit } from "hono/body-limit";
-import { createAgentStackMiddleware, createLogger, getNetworkConfig, metricsMiddleware, metricsHandler, requestIdMiddleware, forbidden, notFound } from "@primsh/x402-middleware";
-import { addToAllowlist, removeFromAllowlist, isAllowed, createAllowlistChecker } from "@primsh/x402-middleware/allowlist-db";
-import { join } from "node:path";
-import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
+import { join } from "node:path";
+import {
+  createAgentStackMiddleware,
+  createWalletAllowlistChecker,
+  getNetworkConfig,
+  forbidden,
+  notFound,
+} from "@primsh/x402-middleware";
+import { createPrimApp } from "@primsh/x402-middleware/create-prim-app";
+import { addToAllowlist, removeFromAllowlist, isAllowed, createAllowlistChecker } from "@primsh/x402-middleware/allowlist-db";
 import type {
   WalletRegisterRequest,
   WalletListResponse,
@@ -36,17 +40,8 @@ import {
 import type { FundRequestCreateRequest, FundRequestDenyRequest, PolicyUpdateRequest, PauseRequest, ResumeRequest } from "./api.ts";
 import { pause, resume, getState } from "./circuit-breaker.ts";
 
-const LLMS_TXT = readFileSync(
-  resolve(import.meta.dir, "../../../site/wallet/llms.txt"), "utf-8"
-);
-
-const logger = createLogger("wallet.sh");
-
 const networkConfig = getNetworkConfig();
-const PAY_TO_ADDRESS = process.env.PRIM_PAY_TO;
-if (!PAY_TO_ADDRESS) {
-  throw new Error("[wallet.sh] PRIM_PAY_TO environment variable is required");
-}
+const PAY_TO_ADDRESS = process.env.PRIM_PAY_TO as string; // validated by createPrimApp
 const NETWORK = networkConfig.network;
 const INTERNAL_KEY = process.env.PRIM_INTERNAL_KEY;
 const ALLOWLIST_DB_PATH = process.env.PRIM_ALLOWLIST_DB ?? join(process.env.PRIM_DATA_DIR ?? "/var/lib/prim", "allowlist.db");
@@ -66,19 +61,38 @@ const WALLET_ROUTES = {
   "POST /v1/wallets/[address]/resume": "$0.001",
 } as const;
 
-type AppVariables = { walletAddress: string | undefined };
-const app = new Hono<{ Variables: AppVariables }>();
+// wallet.sh wires its own x402 middleware (skipX402: true) because it uses
+// a local SQLite allowlist checker instead of the wallet.sh HTTP checker.
+const app = createPrimApp(
+  {
+    serviceName: "wallet.sh",
+    llmsTxtPath: import.meta.dir ? resolve(import.meta.dir, "../../../site/wallet/llms.txt") : undefined,
+    routes: WALLET_ROUTES,
+    metricsName: "wallet.prim.sh",
+    skipX402: true,
+    pricing: {
+      routes: [
+        { method: "GET", path: "/v1/wallets", price_usdc: "0.001", description: "List wallets" },
+        { method: "GET", path: "/v1/wallets/{address}", price_usdc: "0.001", description: "Get wallet detail" },
+        { method: "DELETE", path: "/v1/wallets/{address}", price_usdc: "0.01", description: "Deactivate wallet" },
+        { method: "GET", path: "/v1/wallets/{address}/fund-requests", price_usdc: "0.001", description: "List fund requests" },
+        { method: "POST", path: "/v1/wallets/{address}/fund-request", price_usdc: "0.001", description: "Create fund request" },
+        { method: "POST", path: "/v1/fund-requests/{id}/approve", price_usdc: "0.01", description: "Approve fund request" },
+        { method: "POST", path: "/v1/fund-requests/{id}/deny", price_usdc: "0.001", description: "Deny fund request" },
+        { method: "GET", path: "/v1/wallets/{address}/policy", price_usdc: "0.001", description: "Get spending policy" },
+        { method: "PUT", path: "/v1/wallets/{address}/policy", price_usdc: "0.005", description: "Update spending policy" },
+        { method: "POST", path: "/v1/wallets/{address}/pause", price_usdc: "0.001", description: "Pause wallet" },
+        { method: "POST", path: "/v1/wallets/{address}/resume", price_usdc: "0.001", description: "Resume wallet" },
+      ],
+    },
+  },
+  { createAgentStackMiddleware, createWalletAllowlistChecker },
+);
 
-app.use("*", requestIdMiddleware());
+const logger = (app as typeof app & { logger: { warn: (msg: string, extra?: Record<string, unknown>) => void } }).logger;
 
-app.use("*", bodyLimit({
-  maxSize: 1024 * 1024,
-  onError: (c) => c.json({ error: "Request too large" }, 413),
-}));
-
-app.use("*", metricsMiddleware());
-
-app.get("/v1/metrics", metricsHandler("wallet.prim.sh"));
+// Register x402 manually — wallet uses local SQLite allowlist checker
+app.get("/v1/metrics", () => new Response()); // placeholder registered by factory; metrics route already registered above
 
 app.use(
   "*",
@@ -104,38 +118,6 @@ app.use(
     { ...WALLET_ROUTES },
   ),
 );
-
-app.get("/", (c) => {
-  return c.json({ service: "wallet.sh", status: "ok" });
-});
-
-// GET /llms.txt — machine-readable API reference (free)
-app.get("/llms.txt", (c) => {
-  c.header("Content-Type", "text/plain; charset=utf-8");
-  return c.body(LLMS_TXT);
-});
-
-// GET /pricing — machine-readable pricing (free)
-app.get("/pricing", (c) => {
-  return c.json({
-    service: "wallet.prim.sh",
-    currency: "USDC",
-    network: "eip155:8453",
-    routes: [
-      { method: "GET", path: "/v1/wallets", price_usdc: "0.001", description: "List wallets" },
-      { method: "GET", path: "/v1/wallets/{address}", price_usdc: "0.001", description: "Get wallet detail" },
-      { method: "DELETE", path: "/v1/wallets/{address}", price_usdc: "0.01", description: "Deactivate wallet" },
-      { method: "GET", path: "/v1/wallets/{address}/fund-requests", price_usdc: "0.001", description: "List fund requests" },
-      { method: "POST", path: "/v1/wallets/{address}/fund-request", price_usdc: "0.001", description: "Create fund request" },
-      { method: "POST", path: "/v1/fund-requests/{id}/approve", price_usdc: "0.01", description: "Approve fund request" },
-      { method: "POST", path: "/v1/fund-requests/{id}/deny", price_usdc: "0.001", description: "Deny fund request" },
-      { method: "GET", path: "/v1/wallets/{address}/policy", price_usdc: "0.001", description: "Get spending policy" },
-      { method: "PUT", path: "/v1/wallets/{address}/policy", price_usdc: "0.005", description: "Update spending policy" },
-      { method: "POST", path: "/v1/wallets/{address}/pause", price_usdc: "0.001", description: "Pause wallet" },
-      { method: "POST", path: "/v1/wallets/{address}/resume", price_usdc: "0.001", description: "Resume wallet" },
-    ],
-  });
-});
 
 // POST /v1/wallets — Register wallet via EIP-191 signature (FREE)
 app.post("/v1/wallets", async (c) => {
