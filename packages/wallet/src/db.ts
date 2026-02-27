@@ -216,6 +216,14 @@ export function deactivateWallet(address: string): void {
   ).run(deactivatedAt, now, address);
 }
 
+export function reactivateWallet(address: string): void {
+  const db = getDb();
+  const now = Date.now();
+  db.query(
+    "UPDATE wallets SET deactivated_at = NULL, updated_at = ? WHERE address = ?",
+  ).run(now, address);
+}
+
 export function getExecution(idempotencyKey: string): ExecutionRow | null {
   const db = getDb();
   return (
