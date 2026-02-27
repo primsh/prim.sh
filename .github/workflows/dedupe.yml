@@ -1,0 +1,94 @@
+name: Dedupe Issues
+
+on:
+  issues:
+    types: [opened]
+
+permissions:
+  issues: write
+
+jobs:
+  dedupe:
+    name: Detect duplicate issues
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/github-script@v7
+        with:
+          script: |
+            const newIssue = context.payload.issue;
+            const newTitle = newIssue.title;
+
+            // Normalize: lowercase, strip punctuation, split into words
+            function normalize(title) {
+              return title
+                .toLowerCase()
+                .replace(/[^\w\s]/g, '')
+                .split(/\s+/)
+                .filter(w => w.length > 2); // skip short stop words
+            }
+
+            function wordOverlap(titleA, titleB) {
+              const wordsA = new Set(normalize(titleA));
+              const wordsB = new Set(normalize(titleB));
+              if (wordsA.size === 0 || wordsB.size === 0) return 0;
+              const intersection = [...wordsA].filter(w => wordsB.has(w));
+              const union = new Set([...wordsA, ...wordsB]);
+              return intersection.length / union.size;
+            }
+
+            // Fetch open issues (up to 100, excluding the new one)
+            const { data: issues } = await github.rest.issues.listForRepo({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              state: 'open',
+              per_page: 100,
+            });
+
+            const candidates = issues.filter(
+              i => i.number !== newIssue.number && !i.pull_request
+            );
+
+            const THRESHOLD = 0.60;
+            const matches = candidates
+              .map(i => ({ number: i.number, score: wordOverlap(newTitle, i.title) }))
+              .filter(m => m.score >= THRESHOLD)
+              .sort((a, b) => b.score - a.score);
+
+            if (matches.length === 0) return;
+
+            const topMatch = matches[0];
+            const body = matches.length === 1
+              ? `Possible duplicate of #${topMatch.number}.`
+              : `Possible duplicate of #${topMatch.number} (and ${matches.length - 1} other issue(s): ${matches.slice(1).map(m => `#${m.number}`).join(', ')}).`;
+
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: newIssue.number,
+              body,
+            });
+
+            // Ensure the label exists before applying it
+            try {
+              await github.rest.issues.getLabel({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                name: 'possible-duplicate',
+              });
+            } catch {
+              await github.rest.issues.createLabel({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                name: 'possible-duplicate',
+                color: 'cfd3d7',
+                description: 'May be a duplicate of an existing issue',
+              });
+            }
+
+            await github.rest.issues.addLabels({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: newIssue.number,
+              labels: ['possible-duplicate'],
+            });
