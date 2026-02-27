@@ -707,6 +707,20 @@
           ]
         },
         {
+          "id": "PRIMS-W3B",
+          "title": "faucet.sh",
+          "tasks": [
+            {
+              "id": "FC-3",
+              "description": "Treasury wallet pool: faucet creates N ephemeral wallets via wallet.sh, pre-funds each, round-robins drip requests across pool. Eliminates single-wallet nonce bottleneck under concurrent load.",
+              "owner": [],
+              "depends": [],
+              "status": "pending",
+              "release": null
+            }
+          ]
+        },
+        {
           "id": "PRIMS-W4",
           "title": "track.sh",
           "tasks": [
