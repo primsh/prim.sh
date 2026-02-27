@@ -35,7 +35,7 @@ const pkgDir = join(ROOT, "packages");
 
 const dirs = readdirSync(pkgDir).filter((d) =>
   existsSync(join(pkgDir, d, "prim.yaml"))
-);
+).sort();
 
 let written = 0;
 

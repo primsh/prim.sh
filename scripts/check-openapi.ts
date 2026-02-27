@@ -335,7 +335,7 @@ function routeMatches(route: string, pattern: string): boolean {
 
 // ── Main ──────────────────────────────────────────────────────────────────
 
-const specFiles = readdirSync(SPECS_DIR).filter((f) => f.endsWith(".yaml"));
+const specFiles = readdirSync(SPECS_DIR).filter((f) => f.endsWith(".yaml")).sort();
 let hasErrors = false;
 
 console.log(`Checking ${specFiles.length} OpenAPI specs...\n`);

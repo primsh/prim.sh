@@ -432,7 +432,28 @@ ${urls.join("\n")}
     2
   ) + "\n";
 
-  applyFullFile(join(ROOT, "site/pricing.json"), pricingJson);
+  const pricingPath = join(ROOT, "site/pricing.json");
+  if (CHECK_MODE) {
+    const existing = existsSync(pricingPath) ? readFileSync(pricingPath, "utf8") : null;
+    if (existing) {
+      const existingParsed = JSON.parse(existing);
+      const newParsed = JSON.parse(pricingJson);
+      const matches =
+        JSON.stringify({ ...existingParsed, updated: "" }) ===
+        JSON.stringify({ ...newParsed, updated: "" });
+      if (!matches) {
+        console.error(`  ✗ ${pricingPath} is out of date — run pnpm gen:prims`);
+        anyFailed = true;
+      } else {
+        console.log(`  ✓ ${pricingPath}`);
+      }
+    } else {
+      console.error(`  ✗ ${pricingPath} missing — run pnpm gen:prims`);
+      anyFailed = true;
+    }
+  } else {
+    applyFullFile(pricingPath, pricingJson);
+  }
 }
 
 // 14. site/discovery.json — full primitive registry for agent discovery
