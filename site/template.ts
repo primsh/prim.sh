@@ -553,8 +553,14 @@ ${renderFooter(`<a href="/">${BRAND.name}</a> / ${esc(cfg.name)}`)}
 
 // ── Head helpers ──────────────────────────────────────────────────────────────
 
+/** Cache-bust hash — set by build.ts via setBuildHash(), falls back to timestamp */
+let _buildHash = Date.now().toString(36);
+export function setBuildHash(hash: string): void {
+  _buildHash = hash;
+}
+
 function inlineCSS(accent: string, accentDim: string, accentGlow: string): string {
-  return `<link rel="stylesheet" href="/assets/prim.css">
+  return `<link rel="stylesheet" href="/assets/prim.css?v=${_buildHash}">
 <style>:root{--accent:${accent};--accent-dim:${accentDim};--accent-glow:${accentGlow}}</style>`;
 }
 

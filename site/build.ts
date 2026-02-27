@@ -8,8 +8,12 @@
 import { readFileSync, writeFileSync, mkdirSync, cpSync, existsSync, readdirSync } from "node:fs";
 import { resolve, join } from "node:path";
 import { parse } from "yaml";
-import { render, renderFooter, type PrimConfig } from "./template.ts";
+import { render, renderFooter, setBuildHash, type PrimConfig } from "./template.ts";
 import { BRAND } from "../brand.ts";
+
+// Set cache-bust hash for template CSS references
+const buildHash = process.env.GITHUB_SHA?.slice(0, 8) ?? Date.now().toString(36);
+setBuildHash(buildHash);
 
 const ROOT = resolve(import.meta.dir, "..");
 
@@ -22,8 +26,14 @@ const out = src
   .replace("{{closer}}", BRAND.closer)
   .replace("{{footer}}", renderFooter(BRAND.name));
 
+// Cache-bust CSS in homepage (prim subpages handled by template.ts setBuildHash)
+const outBusted = out.replace(
+  'href="/assets/prim.css"',
+  `href="/assets/prim.css?v=${buildHash}"`
+);
+
 mkdirSync(resolve(ROOT, "site-dist"), { recursive: true });
-writeFileSync(resolve(ROOT, "site-dist/index.html"), out);
+writeFileSync(resolve(ROOT, "site-dist/index.html"), outBusted);
 console.log("[build] site-dist/index.html written");
 
 // ── access page ──────────────────────────────────────────────────────────────
