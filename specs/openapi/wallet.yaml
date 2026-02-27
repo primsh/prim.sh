@@ -83,21 +83,21 @@ components:
 
     SpendingPolicy:
       type: object
-      required: [maxPerTx, maxPerDay, dailySpent, dailyResetAt]
+      required: [max_per_tx, max_per_day, daily_spent, daily_reset_at]
       properties:
-        maxPerTx:
+        max_per_tx:
           type: ["string", "null"]
           description: Maximum USDC per transaction (e.g. "1.00"), or null for no limit
           example: "1.00"
-        maxPerDay:
+        max_per_day:
           type: ["string", "null"]
           description: Maximum USDC per day (e.g. "10.00"), or null for no limit
           example: "10.00"
-        dailySpent:
+        daily_spent:
           type: string
           description: USDC spent today so far
           example: "0.005"
-        dailyResetAt:
+        daily_reset_at:
           type: string
           format: date-time
           description: ISO 8601 timestamp when the daily counter resets
@@ -105,7 +105,7 @@ components:
 
     WalletListItem:
       type: object
-      required: [address, chain, balance, funded, paused, createdAt]
+      required: [address, chain, balance, funded, paused, created_at]
       properties:
         address:
           type: string
@@ -126,7 +126,7 @@ components:
         paused:
           type: boolean
           description: Whether the wallet is currently paused
-        createdAt:
+        created_at:
           type: string
           format: date-time
           description: ISO 8601 timestamp when the wallet was registered
@@ -134,7 +134,7 @@ components:
 
     WalletDetail:
       type: object
-      required: [address, chain, balance, funded, paused, createdBy, policy, createdAt]
+      required: [address, chain, balance, funded, paused, created_by, policy, created_at]
       properties:
         address:
           type: string
@@ -155,7 +155,7 @@ components:
         paused:
           type: boolean
           description: Whether the wallet is currently paused
-        createdBy:
+        created_by:
           type: string
           description: Address of the wallet that registered this wallet (or self if self-registered)
           example: "0xAbCd1234567890abcdef1234567890ABCDEF1234"
@@ -164,7 +164,7 @@ components:
             - $ref: "#/components/schemas/SpendingPolicy"
             - type: "null"
           description: Active spending policy, or null if none set
-        createdAt:
+        created_at:
           type: string
           format: date-time
           description: ISO 8601 timestamp when the wallet was registered
@@ -172,13 +172,13 @@ components:
 
     FundRequest:
       type: object
-      required: [id, walletAddress, amount, reason, status, createdAt]
+      required: [id, wallet_address, amount, reason, status, created_at]
       properties:
         id:
           type: string
           description: Unique fund request ID
           example: "fr_abc123"
-        walletAddress:
+        wallet_address:
           type: string
           pattern: "^0x[a-fA-F0-9]{40}$"
           description: Wallet address the request is for
@@ -195,7 +195,7 @@ components:
           type: string
           enum: [pending, approved, denied]
           description: Current status of the fund request
-        createdAt:
+        created_at:
           type: string
           format: date-time
           description: ISO 8601 timestamp when the request was created
@@ -203,32 +203,32 @@ components:
 
     PolicyResponse:
       type: object
-      required: [walletAddress, maxPerTx, maxPerDay, allowedPrimitives, dailySpent, dailyResetAt]
+      required: [wallet_address, max_per_tx, max_per_day, allowed_primitives, daily_spent, daily_reset_at]
       properties:
-        walletAddress:
+        wallet_address:
           type: string
           pattern: "^0x[a-fA-F0-9]{40}$"
           description: Wallet address the policy applies to
           example: "0xAbCd1234567890abcdef1234567890ABCDEF1234"
-        maxPerTx:
+        max_per_tx:
           type: ["string", "null"]
           description: Maximum USDC per transaction, or null for no limit
           example: "1.00"
-        maxPerDay:
+        max_per_day:
           type: ["string", "null"]
           description: Maximum USDC per day, or null for no limit
           example: "10.00"
-        allowedPrimitives:
+        allowed_primitives:
           type: ["array", "null"]
           items:
             type: string
           description: Allowed primitive hostnames (e.g. ["store.prim.sh"]), or null for all primitives
           example: ["store.prim.sh", "search.prim.sh"]
-        dailySpent:
+        daily_spent:
           type: string
           description: USDC spent today so far
           example: "0.005"
-        dailyResetAt:
+        daily_reset_at:
           type: string
           format: date-time
           description: ISO 8601 timestamp when the daily counter resets
@@ -322,7 +322,7 @@ paths:
             application/json:
               schema:
                 type: object
-                required: [address, chain, label, registeredAt, createdAt]
+                required: [address, chain, label, registered_at, created_at]
                 properties:
                   address:
                     type: string
@@ -334,11 +334,11 @@ paths:
                   label:
                     type: ["string", "null"]
                     example: "my-agent-wallet"
-                  registeredAt:
+                  registered_at:
                     type: string
                     format: date-time
                     example: "2026-02-25T12:00:00.000Z"
-                  createdAt:
+                  created_at:
                     type: string
                     format: date-time
                     example: "2026-02-25T12:00:00.000Z"
@@ -346,8 +346,8 @@ paths:
                 address: "0xAbCd1234567890abcdef1234567890ABCDEF1234"
                 chain: "base"
                 label: "my-agent-wallet"
-                registeredAt: "2026-02-25T12:00:00.000Z"
-                createdAt: "2026-02-25T12:00:00.000Z"
+                registered_at: "2026-02-25T12:00:00.000Z"
+                created_at: "2026-02-25T12:00:00.000Z"
         "400":
           description: Missing required fields or invalid signature
           content:
@@ -432,7 +432,7 @@ paths:
                     balance: "5.25"
                     funded: true
                     paused: false
-                    createdAt: "2026-02-25T12:00:00.000Z"
+                    created_at: "2026-02-25T12:00:00.000Z"
                 cursor: null
         "402":
           description: Payment required
@@ -500,13 +500,13 @@ paths:
                 balance: "5.25"
                 funded: true
                 paused: false
-                createdBy: "0xAbCd1234567890abcdef1234567890ABCDEF1234"
+                created_by: "0xAbCd1234567890abcdef1234567890ABCDEF1234"
                 policy:
-                  maxPerTx: "1.00"
-                  maxPerDay: "10.00"
-                  dailySpent: "0.005"
-                  dailyResetAt: "2026-02-27T00:00:00.000Z"
-                createdAt: "2026-02-25T12:00:00.000Z"
+                  max_per_tx: "1.00"
+                  max_per_day: "10.00"
+                  daily_spent: "0.005"
+                  daily_reset_at: "2026-02-27T00:00:00.000Z"
+                created_at: "2026-02-25T12:00:00.000Z"
         "402":
           description: Payment required
           content:
@@ -551,7 +551,7 @@ paths:
             application/json:
               schema:
                 type: object
-                required: [address, deactivated, deactivatedAt]
+                required: [address, deactivated, deactivated_at]
                 properties:
                   address:
                     type: string
@@ -560,14 +560,14 @@ paths:
                   deactivated:
                     type: boolean
                     example: true
-                  deactivatedAt:
+                  deactivated_at:
                     type: string
                     format: date-time
                     example: "2026-02-25T12:05:00.000Z"
               example:
                 address: "0xAbCd1234567890abcdef1234567890ABCDEF1234"
                 deactivated: true
-                deactivatedAt: "2026-02-25T12:05:00.000Z"
+                deactivated_at: "2026-02-25T12:05:00.000Z"
         "402":
           description: Payment required
           content:
@@ -646,11 +646,11 @@ paths:
                 $ref: "#/components/schemas/FundRequest"
               example:
                 id: "fr_abc123"
-                walletAddress: "0xAbCd1234567890abcdef1234567890ABCDEF1234"
+                wallet_address: "0xAbCd1234567890abcdef1234567890ABCDEF1234"
                 amount: "10.00"
                 reason: "Need funds to run search queries for research task"
                 status: "pending"
-                createdAt: "2026-02-25T12:00:00.000Z"
+                created_at: "2026-02-25T12:00:00.000Z"
         "400":
           description: Missing required fields
           content:
@@ -754,11 +754,11 @@ paths:
               example:
                 requests:
                   - id: "fr_abc123"
-                    walletAddress: "0xAbCd1234567890abcdef1234567890ABCDEF1234"
+                    wallet_address: "0xAbCd1234567890abcdef1234567890ABCDEF1234"
                     amount: "10.00"
                     reason: "Need funds to run search queries for research task"
                     status: "pending"
-                    createdAt: "2026-02-25T12:00:00.000Z"
+                    created_at: "2026-02-25T12:00:00.000Z"
                 cursor: null
         "402":
           description: Payment required
@@ -819,7 +819,7 @@ paths:
             application/json:
               schema:
                 type: object
-                required: [id, status, fundingAddress, amount, chain, approvedAt]
+                required: [id, status, funding_address, amount, chain, approved_at]
                 properties:
                   id:
                     type: string
@@ -828,7 +828,7 @@ paths:
                     type: string
                     enum: [approved]
                     example: "approved"
-                  fundingAddress:
+                  funding_address:
                     type: string
                     pattern: "^0x[a-fA-F0-9]{40}$"
                     description: Address to send USDC to in order to fulfill the request
@@ -840,17 +840,17 @@ paths:
                   chain:
                     type: string
                     example: "base"
-                  approvedAt:
+                  approved_at:
                     type: string
                     format: date-time
                     example: "2026-02-25T12:10:00.000Z"
               example:
                 id: "fr_abc123"
                 status: "approved"
-                fundingAddress: "0xAbCd1234567890abcdef1234567890ABCDEF1234"
+                funding_address: "0xAbCd1234567890abcdef1234567890ABCDEF1234"
                 amount: "10.00"
                 chain: "base"
-                approvedAt: "2026-02-25T12:10:00.000Z"
+                approved_at: "2026-02-25T12:10:00.000Z"
         "402":
           description: Payment required
           content:
@@ -931,7 +931,7 @@ paths:
             application/json:
               schema:
                 type: object
-                required: [id, status, reason, deniedAt]
+                required: [id, status, reason, denied_at]
                 properties:
                   id:
                     type: string
@@ -944,7 +944,7 @@ paths:
                     type: ["string", "null"]
                     description: Denial reason if provided, otherwise null
                     example: "Insufficient justification provided"
-                  deniedAt:
+                  denied_at:
                     type: string
                     format: date-time
                     example: "2026-02-25T12:10:00.000Z"
@@ -952,7 +952,7 @@ paths:
                 id: "fr_abc123"
                 status: "denied"
                 reason: "Insufficient justification provided"
-                deniedAt: "2026-02-25T12:10:00.000Z"
+                denied_at: "2026-02-25T12:10:00.000Z"
         "402":
           description: Payment required
           content:
@@ -1006,7 +1006,7 @@ paths:
       summary: Get spending policy
       description: |
         Returns the current spending policy for the wallet. The calling wallet must own
-        the address. Policy fields `maxPerTx`, `maxPerDay`, and `allowedPrimitives` are
+        the address. Policy fields `max_per_tx`, `max_per_day`, and `allowed_primitives` are
         null when no limit has been set.
       tags: [paid]
       security:
@@ -1020,12 +1020,12 @@ paths:
               schema:
                 $ref: "#/components/schemas/PolicyResponse"
               example:
-                walletAddress: "0xAbCd1234567890abcdef1234567890ABCDEF1234"
-                maxPerTx: "1.00"
-                maxPerDay: "10.00"
-                allowedPrimitives: ["store.prim.sh", "search.prim.sh"]
-                dailySpent: "0.005"
-                dailyResetAt: "2026-02-27T00:00:00.000Z"
+                wallet_address: "0xAbCd1234567890abcdef1234567890ABCDEF1234"
+                max_per_tx: "1.00"
+                max_per_day: "10.00"
+                allowed_primitives: ["store.prim.sh", "search.prim.sh"]
+                daily_spent: "0.005"
+                daily_reset_at: "2026-02-27T00:00:00.000Z"
         "402":
           description: Payment required
           content:
@@ -1101,12 +1101,12 @@ paths:
               schema:
                 $ref: "#/components/schemas/PolicyResponse"
               example:
-                walletAddress: "0xAbCd1234567890abcdef1234567890ABCDEF1234"
-                maxPerTx: "1.00"
-                maxPerDay: "10.00"
-                allowedPrimitives: ["store.prim.sh", "search.prim.sh"]
-                dailySpent: "0.005"
-                dailyResetAt: "2026-02-27T00:00:00.000Z"
+                wallet_address: "0xAbCd1234567890abcdef1234567890ABCDEF1234"
+                max_per_tx: "1.00"
+                max_per_day: "10.00"
+                allowed_primitives: ["store.prim.sh", "search.prim.sh"]
+                daily_spent: "0.005"
+                daily_reset_at: "2026-02-27T00:00:00.000Z"
         "400":
           description: Invalid policy values
           content:
@@ -1194,9 +1194,9 @@ paths:
             application/json:
               schema:
                 type: object
-                required: [walletAddress, paused, scope, pausedAt]
+                required: [wallet_address, paused, scope, paused_at]
                 properties:
-                  walletAddress:
+                  wallet_address:
                     type: string
                     pattern: "^0x[a-fA-F0-9]{40}$"
                     example: "0xAbCd1234567890abcdef1234567890ABCDEF1234"
@@ -1207,15 +1207,15 @@ paths:
                     type: string
                     enum: [all, send, swap]
                     example: "all"
-                  pausedAt:
+                  paused_at:
                     type: string
                     format: date-time
                     example: "2026-02-25T12:15:00.000Z"
               example:
-                walletAddress: "0xAbCd1234567890abcdef1234567890ABCDEF1234"
+                wallet_address: "0xAbCd1234567890abcdef1234567890ABCDEF1234"
                 paused: true
                 scope: "all"
-                pausedAt: "2026-02-25T12:15:00.000Z"
+                paused_at: "2026-02-25T12:15:00.000Z"
         "400":
           description: Invalid scope value
           content:
@@ -1298,9 +1298,9 @@ paths:
             application/json:
               schema:
                 type: object
-                required: [walletAddress, paused, scope, resumedAt]
+                required: [wallet_address, paused, scope, resumed_at]
                 properties:
-                  walletAddress:
+                  wallet_address:
                     type: string
                     pattern: "^0x[a-fA-F0-9]{40}$"
                     example: "0xAbCd1234567890abcdef1234567890ABCDEF1234"
@@ -1311,15 +1311,15 @@ paths:
                     type: string
                     enum: [all, send, swap]
                     example: "all"
-                  resumedAt:
+                  resumed_at:
                     type: string
                     format: date-time
                     example: "2026-02-25T12:20:00.000Z"
               example:
-                walletAddress: "0xAbCd1234567890abcdef1234567890ABCDEF1234"
+                wallet_address: "0xAbCd1234567890abcdef1234567890ABCDEF1234"
                 paused: false
                 scope: "all"
-                resumedAt: "2026-02-25T12:20:00.000Z"
+                resumed_at: "2026-02-25T12:20:00.000Z"
         "400":
           description: Invalid scope value
           content:

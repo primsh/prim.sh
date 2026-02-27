@@ -946,7 +946,7 @@
                   "depends": [
                     "I-8"
                   ],
-                  "status": "pending",
+                  "status": "done",
                   "release": null,
                   "plan": "tasks/active/i-18-openapi-specs-live.md"
                 },
