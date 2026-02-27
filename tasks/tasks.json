@@ -154,7 +154,7 @@
                     "Claude"
                   ],
                   "depends": [],
-                  "status": "pending",
+                  "status": "done",
                   "release": "v1.0.0"
                 }
               ]
@@ -178,7 +178,7 @@
                     "Claude"
                   ],
                   "depends": [],
-                  "status": "pending",
+                  "status": "done",
                   "release": "v1.0.0"
                 },
                 {
@@ -190,7 +190,7 @@
                   "depends": [
                     "HRD-11"
                   ],
-                  "status": "pending",
+                  "status": "done",
                   "release": "v1.0.0"
                 }
               ]
@@ -209,7 +209,7 @@
                   "depends": [
                     "HRD-12"
                   ],
-                  "status": "pending",
+                  "status": "done",
                   "release": "v1.0.0"
                 },
                 {
