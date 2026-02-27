@@ -131,8 +131,6 @@ function renderBadgeStr(badge: string): string {
   return `<div class="badge">${bold(escaped)}</div>`;
 }
 
-const HTTP_METHODS = /^(POST|GET|PUT|DELETE|PATCH|HEAD|OPTIONS)\s/;
-
 /** Colorize a single line in a code section */
 function colorizeLine(line: string): string {
   if (line === "") return "";
@@ -165,6 +163,31 @@ function colorizeHeroBlock(raw: string): string {
       return esc(line);
     })
     .join("\n");
+}
+
+// ── footer ────────────────────────────────────────────────────────────────────
+
+/** Render the shared footer. crumb = "prim.sh" or "prim.sh / wallet.sh" */
+export function renderFooter(crumb: string): string {
+  return `<footer>
+  <div class="footer-crumb">${crumb}</div>
+  <div class="links">
+    <a href="/wallet" style="color:var(--wallet)">wallet</a>
+    <a href="/faucet" style="color:var(--faucet)">faucet</a>
+    <a href="/spawn" style="color:var(--green)">spawn</a>
+    <a href="/store" style="color:var(--orange)">store</a>
+    <a href="/email" style="color:var(--blue)">email</a>
+    <a href="/search" style="color:var(--lime)">search</a>
+  </div>
+  <div class="links">
+    <a href="https://x.com/useprim">x</a>
+    <a href="https://github.com/primsh">github</a>
+    <a href="https://discord.gg/ccqcdFaZGJ">discord</a>
+    <a href="/access">access</a>
+    <a href="/llms.txt">llms.txt</a>
+  </div>
+  <div class="copyright">&copy; 2026 prim.sh</div>
+</footer>`;
 }
 
 // ── section renderers ─────────────────────────────────────────────────────────
@@ -331,12 +354,13 @@ function renderComingSoon(cfg: PrimConfig): string {
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>${esc(cfg.name)} — ${esc(cfg.tagline)}</title>
+${headMeta(cfg)}
 ${inlineCSS(cfg.accent, cfg.accent_dim, cfg.accent_glow)}
 </head>
 <body>
 <div class="hero">
   <img class="logomark" src="/assets/hero.jpg" alt=">|">
-  <div class="hero-hd"><a href="/">prim.sh / <span>${esc(cfg.name)}</span></a></div>
+  <div class="hero-hd"><a href="/" class="pill"><span class="parent">prim.sh</span><span class="sep">/</span><span class="child">${esc(cfg.name)}</span></a></div>
   <div class="logo"><span>${esc(namePart)}</span>.${ext ?? "sh"}</div>
   <div class="tagline">${esc(cfg.tagline)}</div>
   <div class="sub">${esc(cfg.sub)}</div>
@@ -344,23 +368,37 @@ ${inlineCSS(cfg.accent, cfg.accent_dim, cfg.accent_glow)}
     <div class="badge">Part of <strong>prim.sh</strong></div>
     <span class="badge ${cls}">${label}</span>
   </div>
-  <div class="scroll-hint">↓ scroll</div>
 </div>
-<footer>
-  <div>${esc(cfg.name)} — part of <a href="/">prim.sh</a></div>
-  <div class="links"><a href="/">prim.sh</a></div>
-  <div style="margin-top:0.75rem;font-size:0.8rem;color:#444">This page is for humans. The API is for agents.</div>
-</footer>
+${renderFooter(`<a href="/">prim.sh</a> / ${esc(cfg.name)}`)}
 <img src="/assets/banner.jpg" alt="" class="img-fade" style="width:100%;display:block;margin:0;padding:0">
 </body>
 </html>`;
 }
 
-// ── CSS ───────────────────────────────────────────────────────────────────────
+// ── Head helpers ──────────────────────────────────────────────────────────────
 
 function inlineCSS(accent: string, accentDim: string, accentGlow: string): string {
   return `<link rel="stylesheet" href="/assets/prim.css">
 <style>:root{--accent:${accent};--accent-dim:${accentDim};--accent-glow:${accentGlow}}</style>`;
+}
+
+function headMeta(cfg: PrimConfig): string {
+  const title = `${esc(cfg.name)} — ${esc(cfg.tagline)}`;
+  const desc = esc(cfg.sub);
+  return `<meta name="description" content="${desc}">
+<meta name="theme-color" content="#0a0a0a">
+<meta property="og:type" content="website">
+<meta property="og:title" content="${title}">
+<meta property="og:description" content="${desc}">
+<meta property="og:image" content="https://prim.sh/assets/hero.jpg">
+<meta property="og:url" content="https://prim.sh/${esc(cfg.id)}">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:site" content="@useprim">
+<meta name="twitter:title" content="${title}">
+<meta name="twitter:description" content="${desc}">
+<meta name="twitter:image" content="https://prim.sh/assets/hero.jpg">
+<link rel="icon" type="image/jpeg" href="/assets/favicon.jpg">
+<link rel="apple-touch-icon" href="/assets/logo.png">`;
 }
 
 // ── main render ───────────────────────────────────────────────────────────────
@@ -411,12 +449,13 @@ export function render(cfg: PrimConfig): string {
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>${esc(cfg.name)} — ${esc(cfg.tagline)}</title>
+${headMeta(cfg)}
 ${inlineCSS(cfg.accent, cfg.accent_dim, cfg.accent_glow)}
 </head>
 <body>
 <div class="hero">
   <img class="logomark" src="/assets/hero.jpg" alt=">|">
-  <div class="hero-hd"><a href="/">prim.sh / <span>${esc(cfg.name)}</span></a></div>
+  <div class="hero-hd"><a href="/" class="pill"><span class="parent">prim.sh</span><span class="sep">/</span><span class="child">${esc(cfg.name)}</span></a></div>
   <div class="logo"><span>${esc(namePart ?? cfg.id)}</span>.${esc(ext ?? "sh")}</div>
   <div class="tagline">${esc(cfg.tagline)}</div>
   <div class="sub">${esc(cfg.sub)}</div>
@@ -424,18 +463,14 @@ ${heroBlock}
   <div class="badges">
     ${badgesHtml}
   </div>
-  <div class="scroll-hint">↓ scroll</div>
-  <img src="/assets/prims.jpg" alt="prim.sh primitives" class="img-fade" style="width:calc(100% + 4rem);margin-left:-2rem;display:block;margin-top:2rem">
+</div>
+<img id="content" src="/assets/prims.jpg" alt="prim.sh primitives" class="img-fade" style="width:100%;display:block">
 
 ${sectionsHtml}
 
 ${ctaHtml}
 
-<footer>
-  <div>${esc(cfg.name)} — part of <a href="/">prim.sh</a></div>
-  <div class="links"><a href="https://prim.sh/${cfg.id}">Docs</a><a href="https://${esc(cfg.endpoint)}">API</a><a href="/">prim.sh</a></div>
-  <div style="margin-top:0.75rem;font-size:0.8rem;color:#444">This page is for humans. The API is for agents.</div>
-</footer>
+${renderFooter(`<a href="/">prim.sh</a> / ${esc(cfg.name)}`)}
 <img src="/assets/banner.jpg" alt="" class="img-fade" style="width:100%;display:block;margin:0;padding:0">
 </body>
 </html>`;

@@ -4,28 +4,24 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>access — prim.sh</title>
+<meta name="description" content="Request access to the prim.sh private beta. Submit your wallet address or redeem an invite code.">
+<meta name="theme-color" content="#0a0a0a">
+<meta property="og:type" content="website">
+<meta property="og:title" content="access — prim.sh">
+<meta property="og:description" content="Request access to the prim.sh private beta.">
+<meta property="og:image" content="https://prim.sh/assets/hero.jpg">
+<meta property="og:url" content="https://prim.sh/access">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:site" content="@useprim">
+<meta name="twitter:title" content="access — prim.sh">
+<meta name="twitter:description" content="Request access to the prim.sh private beta.">
+<meta name="twitter:image" content="https://prim.sh/assets/hero.jpg">
 <link rel="icon" type="image/jpeg" href="/assets/favicon.jpg">
+<link rel="apple-touch-icon" href="/assets/logo.png">
+<link rel="stylesheet" href="/assets/prim.css">
 <style>
-*{margin:0;padding:0;box-sizing:border-box}
-:root{--bg:#0a0a0a;--surface:#111;--border:#1a1a1a;--text:#e0e0e0;--muted:#666;--code-bg:#0d0d0d;--accent:#FFCA28;--accent-glow:rgba(255,202,40,0.07)}
-body{background:var(--bg);color:var(--text);font-family:'SF Mono',SFMono-Regular,'Cascadia Code',Consolas,monospace;line-height:1.6;overflow-x:hidden}
-a{color:var(--accent);text-decoration:none}a:hover{text-decoration:underline}
-
-.hero{min-height:50vh;display:flex;flex-direction:column;justify-content:center;align-items:center;text-align:center;padding:4rem 2rem;position:relative}
-.hero::before{content:'';position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:500px;height:500px;background:radial-gradient(circle,var(--accent-glow) 0%,transparent 70%);pointer-events:none}
-.logo{font-size:2.5rem;font-weight:700;letter-spacing:-0.03em;margin-bottom:0.5rem}
-.logo .a{color:var(--accent)}
-.tagline{font-size:1.1rem;color:var(--muted);margin-bottom:0.5rem}
-.sub{font-size:0.95rem;color:var(--muted);max-width:480px}
-
-section{max-width:720px;margin:0 auto;padding:3rem 2rem}
-h2{font-size:1.3rem;margin-bottom:1.25rem;font-weight:600;color:var(--accent)}
-p{color:var(--muted);font-size:0.9rem;margin-bottom:1rem}
-pre{background:var(--code-bg);border:1px solid var(--border);border-radius:8px;padding:1.5rem;overflow-x:auto;font-size:0.85rem;line-height:1.7;margin:1rem 0}
-code{font-family:inherit}
-.g{color:#00ff88}.cm{color:#444}.w{color:var(--text)}.ac{color:var(--accent)}.m{color:var(--muted)}
-
-.form-wrap{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:2rem}
+:root{--accent:#FFCA28;--accent-dim:#e6b625;--accent-glow:rgba(255,202,40,0.08)}
+.form-wrap{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:2rem;box-shadow:0 0 30px color-mix(in srgb,var(--accent) 25%,transparent)}
 label{display:block;font-size:0.85rem;color:var(--muted);margin-bottom:0.4rem;margin-top:1.25rem}
 label:first-of-type{margin-top:0}
 input,textarea{width:100%;background:var(--code-bg);border:1px solid var(--border);border-radius:6px;padding:0.75rem 1rem;color:var(--text);font-family:inherit;font-size:0.9rem;outline:none;transition:border-color 0.2s;resize:vertical}
@@ -36,25 +32,23 @@ textarea{min-height:80px}
 .msg{margin-top:1rem;padding:0.75rem 1rem;border-radius:6px;font-size:0.9rem;display:none}
 .msg.ok{background:rgba(0,255,136,0.07);border:1px solid rgba(0,255,136,0.2);color:#00ff88}
 .msg.err{background:rgba(255,107,107,0.07);border:1px solid rgba(255,107,107,0.2);color:#FF6B6B}
-
-.divider{border:none;border-top:1px solid var(--border);margin:0}
-
-footer{text-align:center;padding:2.5rem 2rem;color:var(--muted);font-size:0.8rem;border-top:1px solid var(--border)}
-footer a{color:var(--muted)}footer a:hover{color:var(--text)}
 </style>
 </head>
 <body>
 
 <div class="hero">
-  <div class="logo"><span class="a">access</span>.prim.sh</div>
+  <img class="logomark" src="/assets/hero.jpg" alt=">|">
+  <div class="hero-hd"><a href="/" class="pill"><span class="parent">prim.sh</span><span class="sep">/</span><span class="child">access</span></a></div>
+  <div class="logo"><span>access</span>.prim.sh</div>
   <div class="tagline">Private beta. Request access to the stack.</div>
   <div class="sub">Prim is currently invite-only. Submit your wallet address and we'll review your request.</div>
+
 </div>
 
-<section>
-  <h2>Request access</h2>
+<section id="form">
+  <h2><span>Request access</span></h2>
   <div class="form-wrap">
-    <form id="form" autocomplete="off">
+    <form id="access-form" autocomplete="off">
       <label for="wallet">Wallet address <span style="color:var(--accent)">*</span></label>
       <input id="wallet" type="text" placeholder="0x..." spellcheck="false">
       <label for="reason">What are you building? <span style="color:var(--muted);font-size:0.8rem">(optional)</span></label>
@@ -65,47 +59,42 @@ footer a{color:var(--muted)}footer a:hover{color:var(--text)}
   </div>
 </section>
 
-<hr class="divider">
-
 <section>
-  <h2>Have an invite code?</h2>
-  <p>Invite codes skip the queue. Redeem one directly:</p>
-  <pre><code><span class="cm"># Redeem an invite code</span>
-<span class="w">curl -X POST https://api.prim.sh/invites/redeem \
+  <h2><span>Have an invite code?</span></h2>
+  <p style="color:var(--muted)">Invite codes skip the queue. Redeem one directly:</p>
+  <pre><code><span class="cc"># Redeem an invite code</span>
+curl -X POST https://api.prim.sh/invites/redeem \
   -H "Content-Type: application/json" \
-  -d '{"code":"<span class="ac">your-invite-code</span>","wallet":"<span class="ac">0x...</span>"}'</span>
+  -d '{"code":"<span class="a">your-invite-code</span>","wallet":"<span class="a">0x...</span>"}'
 
-<span class="cm"># → 200</span>
-<span class="w">{ "ok": true, "wallet": "<span class="ac">0x...</span>" }</span></code></pre>
+<span class="cc"># → 200</span>
+{ "ok": true, "wallet": "<span class="a">0x...</span>" }</code></pre>
 </section>
 
-<hr class="divider">
-
 <section>
-  <h2>For agents</h2>
-  <p>When your wallet isn't allowlisted, any prim.sh primitive returns a 403 with an <code style="color:var(--accent)">access_url</code>. POST to it to request access autonomously — no human required.</p>
-  <pre><code><span class="cm"># 403 from any prim.sh endpoint</span>
-<span class="w">{
-  "error": "<span class="ac">wallet_not_allowed</span>",
-  "access_url": "<span class="ac">https://prim.sh/access</span>"
-}</span>
+  <h2><span>For agents</span></h2>
+  <p style="color:var(--muted)">When your wallet isn't allowlisted, any prim.sh primitive returns a 403 with an <code style="color:var(--accent)">access_url</code>. POST to it to request access autonomously — no human required.</p>
+  <pre><code><span class="cc"># 403 from any prim.sh endpoint</span>
+{
+  "error": "<span class="a">wallet_not_allowed</span>",
+  "access_url": "<span class="a">https://prim.sh/access</span>"
+}
 
-<span class="cm"># Submit access request (public, no auth)</span>
-<span class="w">curl -X POST https://api.prim.sh/access/request \
+<span class="cc"># Submit access request (public, no auth)</span>
+curl -X POST https://api.prim.sh/access/request \
   -H "Content-Type: application/json" \
-  -d '{"wallet":"<span class="ac">0x...</span>","reason":"<span class="ac">building X agent</span>"}'</span>
+  -d '{"wallet":"<span class="a">0x...</span>","reason":"<span class="a">building X agent</span>"}'
 
-<span class="cm"># → 201</span>
-<span class="w">{ "id": "<span class="ac">a1b2c3d4</span>", "status": "<span class="ac">pending</span>" }</span></code></pre>
-  <p>Requests are reviewed manually. Once approved, your wallet is added to the allowlist and subsequent requests proceed to x402 payment.</p>
+<span class="cc"># → 201</span>
+{ "id": "<span class="a">a1b2c3d4</span>", "status": "<span class="a">pending</span>" }</code></pre>
+  <p style="color:var(--muted)">Requests are reviewed manually. Once approved, your wallet is added to the allowlist and subsequent requests proceed to x402 payment.</p>
 </section>
 
-<footer>
-  <a href="/">← prim.sh</a>
-</footer>
+{{footer:access}}
+<img src="/assets/banner.jpg" alt="" class="img-fade" style="width:100%;display:block;margin:0;padding:0">
 
 <script>
-const form = document.getElementById('form');
+const form = document.getElementById('access-form');
 const btn = document.getElementById('btn');
 const msg = document.getElementById('msg');
 

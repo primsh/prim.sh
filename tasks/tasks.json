@@ -12,96 +12,77 @@
             {
               "id": "HRD-W1-PA",
               "title": "Service Layer + Middleware",
+              "parallelism": "SRL",
               "tasks": [
                 {
                   "id": "HRD-3",
                   "description": "Expand wallet smoke test to 5-check contract (match `track/test/smoke.test.ts`)",
-                  "owner": [
-                    "Claude"
-                  ],
+                  "owner": ["Claude"],
                   "depends": [],
-                  "status": "pending",
+                  "status": "done",
                   "release": "v1.0.0"
                 },
                 {
                   "id": "HRD-4",
                   "description": "Add try-catch around `JSON.parse` calls in service layers (wallet, email, store).",
-                  "owner": [
-                    "Claude"
-                  ],
-                  "depends": [
-                    "HRD-3"
-                  ],
-                  "status": "pending",
+                  "owner": ["Claude"],
+                  "depends": ["HRD-3"],
+                  "status": "done",
                   "release": "v1.0.0",
-                  "plan": "tasks/active/hrd-4-json-parse-safety.md"
+                  "plan": "tasks/completed/hrd-4-json-parse-safety.md"
                 },
                 {
                   "id": "HRD-8",
                   "description": "Standardize pagination: define shared response shape across all list endpoints.",
-                  "owner": [
-                    "Claude"
-                  ],
-                  "depends": [
-                    "HRD-4"
-                  ],
-                  "status": "pending",
+                  "owner": ["Claude"],
+                  "depends": ["HRD-4"],
+                  "status": "done",
                   "release": "v1.0.0",
-                  "plan": "tasks/active/hrd-8-pagination-standard.md"
+                  "plan": "tasks/completed/hrd-8-pagination-standard.md"
                 },
                 {
                   "id": "HRD-10",
                   "description": "Add per-wallet rate limiting to x402-middleware (configurable, default 60/min).",
-                  "owner": [
-                    "Claude"
-                  ],
-                  "depends": [
-                    "HRD-8"
-                  ],
-                  "status": "pending",
+                  "owner": ["Claude"],
+                  "depends": ["HRD-8"],
+                  "status": "done",
                   "release": "v1.0.0",
-                  "plan": "tasks/active/hrd-10-rate-limiting.md"
+                  "plan": "tasks/completed/hrd-10-rate-limiting.md"
                 }
-              ],
-              "parallelism": "SRL"
+              ]
             },
             {
               "id": "HRD-W1-PB",
               "title": "Wallet DB Fixes",
+              "parallelism": "PARA",
               "tasks": [
                 {
                   "id": "HRD-2",
                   "description": "Fix `allowlist-db.ts` DB handle leak: use singleton pattern from `wallet/db.ts`",
-                  "owner": [
-                    "Claude"
-                  ],
+                  "owner": ["Claude"],
                   "depends": [],
-                  "status": "pending",
+                  "status": "done",
                   "release": "v1.0.0"
                 },
                 {
                   "id": "HRD-5",
                   "description": "Fix `setUTCHours(24)` in `wallet/src/db.ts` — use explicit date arithmetic",
-                  "owner": [
-                    "Claude"
-                  ],
+                  "owner": ["Claude"],
                   "depends": [],
-                  "status": "pending",
+                  "status": "done",
                   "release": "v1.0.0"
                 }
-              ],
-              "parallelism": "PARA"
+              ]
             },
             {
               "id": "HRD-W1-PC",
               "title": "Repo-Level Hygiene",
+              "parallelism": "PARA",
               "tasks": [
                 {
                   "id": "HRD-1",
                   "description": "Remove `*.db` + `server.log` from repo; scrub `.env.email` from git history",
-                  "owner": [
-                    "Garric"
-                  ],
+                  "owner": ["Garric"],
                   "depends": [],
                   "status": "pending",
                   "release": "v1.0.0"
@@ -109,35 +90,28 @@
                 {
                   "id": "HRD-6",
                   "description": "Create `SECURITY.md` (referenced by CONTRIBUTING.md but missing)",
-                  "owner": [
-                    "Claude"
-                  ],
+                  "owner": ["Claude"],
                   "depends": [],
-                  "status": "pending",
+                  "status": "done",
                   "release": "v1.0.0"
                 },
                 {
                   "id": "HRD-7",
                   "description": "Add `pnpm -r lint` + `pnpm -r typecheck` to `.github/workflows/ci.yml`",
-                  "owner": [
-                    "Claude"
-                  ],
+                  "owner": ["Claude"],
                   "depends": [],
-                  "status": "pending",
+                  "status": "done",
                   "release": "v1.0.0"
                 },
                 {
                   "id": "HRD-9",
                   "description": "Add per-package `README.md` (purpose, install, API summary)",
-                  "owner": [
-                    "Claude"
-                  ],
+                  "owner": ["Claude"],
                   "depends": [],
-                  "status": "pending",
+                  "status": "done",
                   "release": "v1.0.0"
                 }
-              ],
-              "parallelism": "PARA"
+              ]
             }
           ]
         }
@@ -608,6 +582,67 @@
               "depends": [],
               "status": "pending",
               "release": null
+            }
+          ]
+        },
+        {
+          "id": "COMM-W3",
+          "title": "Site",
+          "phases": [
+            {
+              "id": "COMM-W3-PA",
+              "title": "Site Polish",
+              "parallelism": "PARA",
+              "tasks": [
+                {
+                  "id": "SITE-3",
+                  "description": "Fix site bugs: `.principles` missing mobile breakpoint, missing `.img-fade` on index banner, dead `.wordmark` CSS, dead `HTTP_METHODS` const, dead `.s2` class refs",
+                  "owner": ["Claude"],
+                  "depends": [],
+                  "status": "done",
+                  "release": null
+                },
+                {
+                  "id": "SITE-4",
+                  "description": "OG + Twitter Card meta tags on all pages (`index.html` + `template.ts`): `og:title`, `og:description`, `og:image`, `twitter:card`",
+                  "owner": ["Claude"],
+                  "depends": [],
+                  "status": "done",
+                  "release": null
+                },
+                {
+                  "id": "SITE-5",
+                  "description": "SEO baseline: `<meta name=\"description\">`, `theme-color`, `apple-touch-icon` on all pages",
+                  "owner": ["Claude"],
+                  "depends": [],
+                  "status": "done",
+                  "release": null
+                },
+                {
+                  "id": "SITE-6",
+                  "description": "Custom 404 page: styled with prim.css, links home",
+                  "owner": ["Claude"],
+                  "depends": [],
+                  "status": "done",
+                  "release": null
+                },
+                {
+                  "id": "SITE-7",
+                  "description": "Smooth scroll + scroll-hint anchors to first content section",
+                  "owner": ["Claude"],
+                  "depends": [],
+                  "status": "done",
+                  "release": null
+                },
+                {
+                  "id": "SITE-8",
+                  "description": "Fix `.hero` structure: sections + footer render inside hero flexbox on sub-pages",
+                  "owner": ["Claude"],
+                  "depends": [],
+                  "status": "done",
+                  "release": null
+                }
+              ]
             }
           ]
         }

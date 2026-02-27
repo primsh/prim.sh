@@ -5,7 +5,7 @@
 import { parse } from "yaml";
 import { readFileSync, existsSync, readdirSync } from "node:fs";
 import { resolve, join } from "node:path";
-import { render, type PrimConfig } from "./template.ts";
+import { render, renderFooter, type PrimConfig } from "./template.ts";
 import { BRAND } from "../brand.ts";
 
 const PORT = Number(process.env.PORT ?? 3000);
@@ -17,12 +17,34 @@ const INDEX_PATH = join(ROOT, "site/index.html");
 const INDEX_TEMPLATE = readFileSync(INDEX_PATH, "utf-8")
   .replace("{{tagline}}", BRAND.tagline)
   .replace("{{sub}}", BRAND.sub)
-  .replace("{{closer}}", BRAND.closer);
+  .replace("{{closer}}", BRAND.closer)
+  .replace("{{footer}}", renderFooter("prim.sh"));
+
+const NOT_FOUND_HTML = `<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>404 — prim.sh</title>
+<link rel="icon" type="image/jpeg" href="/assets/favicon.jpg">
+<link rel="stylesheet" href="/assets/prim.css">
+</head>
+<body>
+<div class="hero" style="justify-content:center;min-height:80vh">
+  <div class="logo"><span>404</span></div>
+  <div class="tagline">Not found.</div>
+  <div class="sub">That path doesn't exist. <a href="/">Back to prim.sh</a></div>
+</div>
+</body>
+</html>`;
+
+const ACCESS_PATH = join(ROOT, "site/access/index.html");
+const ACCESS_TEMPLATE = readFileSync(ACCESS_PATH, "utf-8")
+  .replace("{{footer:access}}", renderFooter(`<a href="/">prim.sh</a> / access`));
 
 const STATIC_ROUTES: Record<string, string> = {
   "/terms": join(ROOT, "site/terms/index.html"),
   "/privacy": join(ROOT, "site/privacy/index.html"),
-  "/access": join(ROOT, "site/access/index.html"),
   "/install": join(ROOT, "site/install.sh"),
   "/install.sh": join(ROOT, "site/install.sh"),
 };
@@ -118,6 +140,13 @@ const server = Bun.serve({
       });
     }
 
+    // Access page — rendered with footer substitution
+    if (pathname === "/access") {
+      return new Response(ACCESS_TEMPLATE, {
+        headers: { "Content-Type": "text/html; charset=utf-8" },
+      });
+    }
+
     // Static exact routes
     if (STATIC_ROUTES[pathname]) {
       return serveFile(STATIC_ROUTES[pathname]);
@@ -161,7 +190,10 @@ const server = Bun.serve({
       }
     }
 
-    return new Response("Not Found", { status: 404 });
+    return new Response(NOT_FOUND_HTML, {
+      status: 404,
+      headers: { "Content-Type": "text/html; charset=utf-8" },
+    });
   },
 });
 

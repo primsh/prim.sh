@@ -3,8 +3,21 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>prim.sh</title>
+<title>prim.sh — The agent-native stack</title>
+<meta name="description" content="Zero signup. One payment token. Infinite primitives. 27 infrastructure APIs for autonomous agents, paid via x402 USDC on Base.">
+<meta name="theme-color" content="#0a0a0a">
+<meta property="og:type" content="website">
+<meta property="og:title" content="prim.sh — The agent-native stack">
+<meta property="og:description" content="Zero signup. One payment token. Infinite primitives. 27 infrastructure APIs for autonomous agents.">
+<meta property="og:image" content="https://prim.sh/assets/hero.jpg">
+<meta property="og:url" content="https://prim.sh">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:site" content="@useprim">
+<meta name="twitter:title" content="prim.sh — The agent-native stack">
+<meta name="twitter:description" content="Zero signup. One payment token. Infinite primitives.">
+<meta name="twitter:image" content="https://prim.sh/assets/hero.jpg">
 <link rel="icon" type="image/jpeg" href="/assets/favicon.jpg">
+<link rel="apple-touch-icon" href="/assets/logo.png">
 <link rel="stylesheet" href="/assets/prim.css">
 <style>
 /* Landing-specific overrides */
@@ -13,8 +26,8 @@
 .manifesto{padding:2.5rem;margin:2rem auto;max-width:700px}.manifesto p{font-size:1rem;margin-bottom:1.25rem;line-height:1.6}
 /* Product grid */
 .products{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:1.5rem;max-width:1200px;width:100%;margin-bottom:2rem;padding:0 1rem}
-.product{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:2rem 1.5rem;text-align:left;transition:box-shadow 0.3s,border-color 0.2s;box-shadow:0 0 20px color-mix(in srgb,var(--glow,var(--accent)) 12%,transparent)}
-.product:hover:not(.soon):not(.phantom){border-color:#333;box-shadow:0 0 30px color-mix(in srgb,var(--glow,var(--accent)) 25%,transparent)}
+.product{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:2rem 1.5rem;text-align:left;transition:box-shadow 0.3s,border-color 0.2s;box-shadow:0 0 30px color-mix(in srgb,var(--glow,var(--accent)) 25%,transparent)}
+.product:hover:not(.soon):not(.phantom){border-color:#333;box-shadow:0 0 40px color-mix(in srgb,var(--glow,var(--accent)) 35%,transparent)}
 .product-name{font-size:1.6rem;font-weight:700;margin-bottom:0.15rem}
 .product-type{font-size:0.8rem;margin-bottom:0.75rem;text-transform:uppercase;letter-spacing:0.05em}
 .product-desc{color:var(--muted);font-size:0.85rem;margin-bottom:1rem;line-height:1.5}
@@ -50,18 +63,15 @@
 .product.pfaucet .product-name,.product.pfaucet .product-type,.product.pfaucet .product-link{color:var(--faucet)}.product.pfaucet{--glow:var(--faucet)}
 .product.plaunch .product-name,.product.plaunch .product-type,.product.plaunch .product-link{color:var(--launch)}.product.plaunch{--glow:var(--launch)}
 /* soon/phantom */
-.product.soon{opacity:0.32;pointer-events:none}.product.phantom{opacity:0.15;pointer-events:none;filter:blur(6px);user-select:none}
+.product.soon{opacity:0.32;pointer-events:none}.product.phantom{opacity:0.30;pointer-events:none;filter:blur(4px);user-select:none}
 .product.soon:hover{border-color:var(--border)}.soon-label{font-size:0.75rem;color:#444;text-transform:uppercase;letter-spacing:0.1em;font-weight:600;margin-top:0.25rem;display:block}
 /* Principles */
 .principles{display:grid;grid-template-columns:repeat(2,1fr);gap:1.5rem;margin:2rem 0}
-.principle{background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:1.5rem;box-shadow:0 0 20px color-mix(in srgb,var(--white) 6%,transparent)}
+.principle{background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:1.5rem;box-shadow:0 0 30px color-mix(in srgb,var(--accent) 25%,transparent)}
 .principle .num{font-size:2rem;font-weight:700;color:#333;margin-bottom:0.5rem}
 .principle h3{color:var(--text);font-size:1.1rem;margin-bottom:0.5rem}.principle p{color:var(--muted);font-size:0.9rem}
 /* CTA install */
 .install{display:inline-flex;align-items:center;gap:0.75rem;margin-top:1rem;background:var(--code-bg);border:1px solid var(--border);border-radius:6px;padding:0.6rem 1rem 0.6rem 1.25rem;font-size:0.9rem;color:var(--green)}
-/* Socials */
-footer .socials{margin-top:1.25rem;display:flex;justify-content:center;gap:2rem;font-size:0.8rem}
-footer .socials a{color:#555}footer .socials a:hover{color:var(--muted)}
 /* Responsive */
 @media(max-width:900px){.products{grid-template-columns:repeat(2,1fr)}}
 @media(max-width:600px){.products{grid-template-columns:1fr}}
@@ -71,18 +81,21 @@ footer .socials a{color:#555}footer .socials a:hover{color:var(--muted)}
 
 <div class="hero">
   <img class="logomark" src="/assets/hero.jpg" alt=">|">
+  <div class="hero-hd"><a href="/" class="pill"><span class="parent">prim.sh</span></a></div>
   <div class="logo"><span>prim</span>.sh</div>
   <div class="tagline">{{tagline}}</div>
   <div class="sub">{{sub}}</div>
-  <div class="cmd-block"><code><span class="prompt">$</span> curl -fsSL prim.sh/install.sh | sh</code><button class="copy-btn" onclick="const b=this,c=this.closest('.cmd-block').querySelector('code');navigator.clipboard.writeText(c.textContent.trim()).then(()=>{b.textContent='copied';b.classList.add('copied');setTimeout(()=>{b.textContent='copy';b.classList.remove('copied')},2000)})">copy</button></div>
+  <div class="cmd-block glow-multi"><code><span class="prompt">$</span> curl -fsSL prim.sh/install.sh | sh</code><button class="copy-btn" onclick="const b=this,c=this.closest('.cmd-block').querySelector('code');navigator.clipboard.writeText(c.textContent.trim()).then(()=>{b.textContent='copied';b.classList.add('copied');setTimeout(()=>{b.textContent='copy';b.classList.remove('copied')},2000)})">copy</button></div>
   <div class="badges">
-    <div class="badge">27 primitives</div>
-    <div class="badge">x402 · Base</div>
-    <span class="badge status-live">● Live</span>
+    <div class="badge glow-multi">27 primitives</div>
+    <div class="badge glow-multi">x402 · USDC on Base</div>
+    <div class="badge glow-multi">No signup</div>
+    <div class="badge glow-multi">Pay per call</div>
+    <div class="badge glow-multi">REST · MCP · OpenAPI</div>
+    <span class="badge glow-multi status-live">● Live</span>
   </div>
-  <div class="scroll-hint">↓ scroll</div>
 
-  <div class="products">
+  <div id="products" class="products">
 <!-- BEGIN:PRIM:CARDS -->
     <div class="product p20">
       <div class="product-name">wallet.sh</div>
@@ -222,31 +235,13 @@ footer .socials a{color:#555}footer .socials a:hover{color:var(--muted)}
       <div class="product-desc">Buy physical goods via API. x402 to fiat proxy. Headless checkout.</div>
       <span class="soon-label">soon</span>
     </div>
-    <div class="product p19 phantom">
-      <div class="product-name">corp.sh</div>
-      <div class="product-type">compliance</div>
-      <div class="product-desc">Incorporation, tax, insurance. Legal entities for agents. The fiat bridge.</div>
-      <span class="soon-label">soon</span>
-    </div>
-    <div class="product p17 phantom">
-      <div class="product-name">hands.sh</div>
-      <div class="product-type">labor</div>
-      <div class="product-desc">On-demand human labor. Physical tasks, verification, errands. Gig economy API.</div>
-      <span class="soon-label">soon</span>
-    </div>
-    <div class="product p11 phantom">
-      <div class="product-name">pins.sh</div>
-      <div class="product-type">maps</div>
-      <div class="product-desc">Coordinates, places, and routing. No maps UI, just structured spatial data.</div>
-      <span class="soon-label">soon</span>
-    </div>
 <!-- END:PRIM:CARDS -->
   </div>
 </div>
 
 <section>
   <h2>Why prim.sh</h2>
-  <div class="manifesto">
+  <div class="manifesto glow-multi">
     <p>Agents need infrastructure. Not dashboards, not consoles, not onboarding wizards — <strong>infrastructure as API calls.</strong></p>
     <p>Today, every cloud service requires a human to create an account. An agent can't sign up for AWS. It can't verify an email. It can't provide a credit card. <strong>The entire cloud is gated by human identity.</strong></p>
     <p>prim.sh removes the gate. <strong>x402 payment is the only credential.</strong> Pay and compute. Pay and store. Pay and send. No accounts, no sessions, no cookies. Every request is self-contained.</p>
@@ -256,20 +251,20 @@ footer .socials a{color:#555}footer .socials a:hover{color:var(--muted)}
 
 <section>
   <h2>Agents Unblocked</h2>
-  <pre><code><span class="cm"># Agent: "Launch a SaaS product"</span>
+  <pre class="glow-multi"><code><span class="cm"># Agent: "Launch a SaaS product"</span>
 
-<span class="s2" style="color:var(--wallet)">wallet</span> <span class="w">→ Generate keys, fund with USDC</span>
-<span class="s2" style="color:var(--faucet)">faucet</span> <span class="w">→ Get testnet ETH for gas</span>
+<span style="color:var(--wallet)">wallet</span> <span class="w">→ Generate keys, fund with USDC</span>
+<span style="color:var(--faucet)">faucet</span> <span class="w">→ Get testnet ETH for gas</span>
 <span class="g">spawn</span>  <span class="w">→ Spin up a backend server</span>
-<span class="s2" style="color:var(--launch)">launch</span> <span class="w">→ Deploy the app, get a URL</span>
+<span style="color:var(--launch)">launch</span> <span class="w">→ Deploy the app, get a URL</span>
 <span class="o">store</span>  <span class="w">→ Persist user data</span>
 <span class="p">vault</span>  <span class="w">→ Store API keys</span>
 <span class="cy">dns</span>    <span class="w">→ Point domain at the server</span>
 <span class="b">email</span>  <span class="w">→ Send receipts and alerts</span>
 <span class="pk">pipe</span>   <span class="w">→ Webhook event queue</span>
 <span class="y">cron</span>   <span class="w">→ Scheduled billing jobs</span>
-<span class="s2" style="color:var(--mem)">mem</span>    <span class="w">→ Remember user preferences</span>
-<span class="s2" style="color:var(--watch)">watch</span>  <span class="w">→ Monitor uptime and errors</span>
+<span style="color:var(--mem)">mem</span>    <span class="w">→ Remember user preferences</span>
+<span style="color:var(--watch)">watch</span>  <span class="w">→ Monitor uptime and errors</span>
 <span class="z">auth</span>   <span class="w">→ Connect to Stripe without sharing keys</span>
 
 <span class="cm"># Total human involvement: zero.</span>
@@ -279,56 +274,26 @@ footer .socials a{color:#555}footer .socials a:hover{color:var(--muted)}
 <section>
   <h2>Principles</h2>
   <div class="principles">
-    <div class="principle"><div class="num">01</div><h3>Built for agents</h3><p>The agent is the customer, not the developer. No human in the loop at runtime. Every primitive is designed for autonomous use.</p></div>
-    <div class="principle"><div class="num">02</div><h3>Pain points are primitives</h3><p>If a feature requires a human to operate, that's a primitive pain point. We build the prim for it.</p></div>
-    <div class="principle"><div class="num">03</div><h3>No GUI</h3><p>Every action is an API call. REST, MCP, or OpenAI function spec. There is no dashboard.</p></div>
-    <div class="principle"><div class="num">04</div><h3>No signup</h3><p>x402 payment is the entire auth flow. First request creates the resource. No accounts, no sessions, no cookies.</p></div>
-    <div class="principle"><div class="num">05</div><h3>Pay, don't prove</h3><p>Agents don't have passports. Payment proves intent. Identity is a wallet, not a person.</p></div>
-    <div class="principle"><div class="num">06</div><h3>No lock-in</h3><p>Use what you need, leave when you're done. No contracts, no minimums, no vendor coupling.</p></div>
-    <div class="principle"><div class="num">07</div><h3>Composable</h3><p>Use one prim or all twenty-seven. No coupling, no bundling. Each primitive is independent.</p></div>
-    <div class="principle"><div class="num">08</div><h3>Pay per call</h3><p>Micropayments via x402. Every request is priced individually. No subscriptions, no metering.</p></div>
+    <div class="principle glow-multi"><div class="num">01</div><h3>Built for agents</h3><p>The agent is the customer, not the developer. No human in the loop at runtime. Every primitive is designed for autonomous use.</p></div>
+    <div class="principle glow-multi"><div class="num">02</div><h3>Pain points are primitives</h3><p>If a feature requires a human to operate, that's a primitive pain point. We build the prim for it.</p></div>
+    <div class="principle glow-multi"><div class="num">03</div><h3>No GUI</h3><p>Every action is an API call. REST, MCP, or OpenAI function spec. There is no dashboard.</p></div>
+    <div class="principle glow-multi"><div class="num">04</div><h3>No signup</h3><p>x402 payment is the entire auth flow. First request creates the resource. No accounts, no sessions, no cookies.</p></div>
+    <div class="principle glow-multi"><div class="num">05</div><h3>Pay, don't prove</h3><p>Agents don't have passports. Payment proves intent. Identity is a wallet, not a person.</p></div>
+    <div class="principle glow-multi"><div class="num">06</div><h3>No lock-in</h3><p>Use what you need, leave when you're done. No contracts, no minimums, no vendor coupling.</p></div>
+    <div class="principle glow-multi"><div class="num">07</div><h3>Composable</h3><p>Use one prim or all twenty-seven. No coupling, no bundling. Each primitive is independent.</p></div>
+    <div class="principle glow-multi"><div class="num">08</div><h3>Pay per call</h3><p>Micropayments via x402. Every request is priced individually. No subscriptions, no metering.</p></div>
   </div>
 </section>
 
 <div class="cta-section">
   <h2 style="margin-bottom:0.5rem">{{closer}}</h2>
-  <div class="install" style="margin-top:2rem">
+  <div class="install glow-multi" style="margin-top:2rem">
     <code>curl -fsSL prim.sh/install.sh | sh</code>
     <button class="copy-btn" onclick="const b=this;navigator.clipboard.writeText('curl -fsSL prim.sh/install.sh | sh').then(()=>{b.textContent='copied';b.classList.add('copied');setTimeout(()=>{b.textContent='copy';b.classList.remove('copied')},2000)})">copy</button>
   </div>
 </div>
 
-<footer>
-  <div>prim.sh</div>
-  <div class="links">
-    <a href="/wallet" style="color:var(--wallet)">wallet</a>
-    <a href="/faucet" style="color:var(--faucet)">faucet</a>
-    <a href="/spawn" style="color:var(--green)">spawn</a>
-    <a href="/launch" style="color:var(--launch)">launch</a>
-    <a href="/store" style="color:var(--orange)">store</a>
-    <a href="/email" style="color:var(--blue)">email</a>
-    <a href="/ring" style="color:var(--red)">ring</a>
-    <a href="/pipe" style="color:var(--pink)">pipe</a>
-    <a href="/vault" style="color:var(--purple)">vault</a>
-    <a href="/dns" style="color:var(--cyan)">dns</a>
-    <a href="/cron" style="color:var(--yellow)">cron</a>
-    <a href="/code" style="color:var(--code)">code</a>
-    <a href="/mem" style="color:var(--mem)">mem</a>
-    <a href="/search" style="color:var(--lime)">search</a>
-    <a href="/browse" style="color:var(--browse)">browse</a>
-    <a href="/watch" style="color:var(--watch)">watch</a>
-    <a href="/trace" style="color:var(--trace)">trace</a>
-    <a href="/auth" style="color:var(--auth)">auth</a>
-  </div>
-  <div class="socials">
-    <a href="https://x.com/useprim">x · @useprim</a>
-    <a href="https://github.com/primsh">github · primsh</a>
-    <a href="https://discord.gg/ccqcdFaZGJ">discord</a>
-    <a href="/access">request access</a>
-    <a href="/docs/costs">costs</a>
-  </div>
-  <div style="margin-top:1rem;font-size:0.75rem;color:#444">This page is for humans. The API is for agents.</div>
-</footer>
-<img src="/assets/banner.jpg" alt="" style="width:100%;display:block;margin:0;padding:0">
+{{footer}}
+<img src="/assets/banner.jpg" alt="" class="img-fade" style="width:100%;display:block;margin:0;padding:0">
 </body>
 </html>
