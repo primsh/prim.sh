@@ -377,7 +377,7 @@
                   "description": "Backfill store/test/smoke.test.ts to 5-check contract (currently 49 lines)",
                   "owner": ["Claude"],
                   "depends": [],
-                  "status": "pending",
+                  "status": "done",
                   "release": null
                 }
               ]
