@@ -17,10 +17,11 @@ if [[ "${1:-}" == "--dry-run" ]]; then
   DRY_RUN=true
 fi
 
-ENV_DIR="/etc/prim"
+# shellcheck source=../deploy/prim/prim-env.sh
+source "$(dirname "${BASH_SOURCE[0]}")/../deploy/prim/prim-env.sh"
+
 LOG_FILE="/var/log/prim-g2-switchover.log"
-MAINNET="eip155:8453"
-TESTNET="eip155:84532"
+# V0 scope: intentionally limited to these 3 prims (not all deployed services)
 V0_SERVICES=(wallet store search)
 
 log() {

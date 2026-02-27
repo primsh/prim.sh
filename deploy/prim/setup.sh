@@ -5,10 +5,8 @@
 
 set -euo pipefail
 
-REPO_URL="https://github.com/useprim/prim.sh"
-REPO_DIR="/opt/prim"
-PRIM_USER="prim"
-ENV_DIR="/etc/prim"
+# shellcheck source=prim-env.sh
+source "$(dirname "${BASH_SOURCE[0]}")/prim-env.sh"
 # BEGIN:PRIM:SERVICES
 SERVICES=(wallet faucet spawn store email search infer)
 # END:PRIM:SERVICES
