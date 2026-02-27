@@ -246,6 +246,13 @@ gitleaks detect --source . --log-opts="--all" --verbose
 **Owner**: you
 **Time**: 1-2 hours
 
+**Pre-condition**: Merge all open PRs to main before executing this checklist. `deploy.yml` fires automatically after CI passes — it rsyncs to VPS and restarts services. Confirm the workflow completed successfully in GitHub Actions before proceeding.
+
+```bash
+# Verify latest code is live on VPS
+curl https://wallet.prim.sh  # check reported version or sha matches latest main
+```
+
 Checklist (all must pass):
 
 - [ ] `PRIM_NETWORK=eip155:8453` set in `/etc/prim/wallet.env`, `/etc/prim/store.env`, `/etc/prim/search.env`
