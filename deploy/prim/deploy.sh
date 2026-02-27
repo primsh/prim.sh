@@ -9,7 +9,7 @@ set -euo pipefail
 REPO_DIR="/opt/prim"
 PRIM_USER="prim"
 # BEGIN:PRIM:SERVICES
-SERVICES=(wallet faucet spawn store email search site)
+SERVICES=(wallet faucet spawn store email search)
 # END:PRIM:SERVICES
 
 log() { echo "[deploy] $*"; }
@@ -28,6 +28,11 @@ for svc in "${SERVICES[@]}"; do
   systemctl restart "prim-$svc"
   log "  prim-$svc restarted"
 done
+
+# ── 4. Restart site ───────────────────────────────────────────────────────────
+log "Restarting prim-site..."
+systemctl restart prim-site
+log "  prim-site restarted"
 
 log ""
 log "Deploy complete. Check logs with: journalctl -u prim-wallet -f"

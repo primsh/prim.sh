@@ -116,19 +116,19 @@ Request:
   maxSupply      string | null  optional  Maximum mintable supply as a raw integer string. Null = unlimited. Only applies if mintable is true.
 
 Response (201):
-  id               string                              Token ID (e.g. "tok_abc123").
-  contractAddress  string | null                       Deployed contract address. Null while deployStatus is "pending".
-  ownerWallet      string                              Ethereum address of the wallet that deployed the token.
-  name             string                              Token name.
-  symbol           string                              Token symbol.
-  decimals         number                              Decimal places.
-  initialSupply    string                              Initial supply as a raw integer string.
-  totalMinted      string                              Total minted supply as a raw integer string.
-  mintable         boolean                             Whether additional tokens can be minted.
-  maxSupply        string | null                       Maximum mintable supply as a raw integer string. Null = unlimited.
-  txHash           string                              Deployment transaction hash.
-  deployStatus     "pending" | "confirmed" | "failed"  Deployment status. Poll until "confirmed" before minting or creating a pool.
-  createdAt        string                              ISO 8601 timestamp when the token was created.
+  id                string                              Token ID (e.g. "tok_abc123").
+  contract_address  string | null                       Deployed contract address. Null while deploy_status is "pending".
+  owner_wallet      string                              Ethereum address of the wallet that deployed the token.
+  name              string                              Token name.
+  symbol            string                              Token symbol.
+  decimals          number                              Decimal places.
+  initial_supply    string                              Initial supply as a raw integer string.
+  total_minted      string                              Total minted supply as a raw integer string.
+  mintable          boolean                             Whether additional tokens can be minted.
+  max_supply        string | null                       Maximum mintable supply as a raw integer string. Null = unlimited.
+  tx_hash           string                              Deployment transaction hash.
+  deploy_status     "pending" | "confirmed" | "failed"  Deployment status. Poll until "confirmed" before minting or creating a pool.
+  created_at        string                              ISO 8601 timestamp when the token was created.
 
 Errors:
   400  invalid_request   Missing required fields or invalid values
@@ -161,19 +161,19 @@ Path params:
   id  string  required  id parameter
 
 Response (200):
-  id               string                              Token ID (e.g. "tok_abc123").
-  contractAddress  string | null                       Deployed contract address. Null while deployStatus is "pending".
-  ownerWallet      string                              Ethereum address of the wallet that deployed the token.
-  name             string                              Token name.
-  symbol           string                              Token symbol.
-  decimals         number                              Decimal places.
-  initialSupply    string                              Initial supply as a raw integer string.
-  totalMinted      string                              Total minted supply as a raw integer string.
-  mintable         boolean                             Whether additional tokens can be minted.
-  maxSupply        string | null                       Maximum mintable supply as a raw integer string. Null = unlimited.
-  txHash           string                              Deployment transaction hash.
-  deployStatus     "pending" | "confirmed" | "failed"  Deployment status. Poll until "confirmed" before minting or creating a pool.
-  createdAt        string                              ISO 8601 timestamp when the token was created.
+  id                string                              Token ID (e.g. "tok_abc123").
+  contract_address  string | null                       Deployed contract address. Null while deploy_status is "pending".
+  owner_wallet      string                              Ethereum address of the wallet that deployed the token.
+  name              string                              Token name.
+  symbol            string                              Token symbol.
+  decimals          number                              Decimal places.
+  initial_supply    string                              Initial supply as a raw integer string.
+  total_minted      string                              Total minted supply as a raw integer string.
+  mintable          boolean                             Whether additional tokens can be minted.
+  max_supply        string | null                       Maximum mintable supply as a raw integer string. Null = unlimited.
+  tx_hash           string                              Deployment transaction hash.
+  deploy_status     "pending" | "confirmed" | "failed"  Deployment status. Poll until "confirmed" before minting or creating a pool.
+  created_at        string                              ISO 8601 timestamp when the token was created.
 
 Errors:
   402  payment_required  x402 payment needed
@@ -196,10 +196,10 @@ Request:
   amount  string  required  Amount to mint as a raw integer string.
 
 Response (200):
-  txHash  string     Mint transaction hash.
-  to      string     Recipient address.
-  amount  string     Amount minted as a raw integer string.
-  status  "pending"  Always "pending" — mint is submitted on-chain asynchronously.
+  tx_hash  string     Mint transaction hash.
+  to       string     Recipient address.
+  amount   string     Amount minted as a raw integer string.
+  status   "pending"  Always "pending" — mint is submitted on-chain asynchronously.
 
 Errors:
   400  not_mintable        Token deployed with mintable=false
@@ -221,9 +221,9 @@ Path params:
   id  string  required  id parameter
 
 Response (200):
-  tokenId          string  Token ID.
-  contractAddress  string  Deployed contract address.
-  totalSupply      string  Live on-chain total supply as a raw integer string.
+  token_id          string  Token ID.
+  contract_address  string  Deployed contract address.
+  total_supply      string  Live on-chain total supply as a raw integer string.
 
 Errors:
   402  payment_required  x402 payment needed
@@ -247,13 +247,13 @@ Request:
   feeTier        number  optional  Uniswap V3 fee tier. 500 | 3000 | 10000, default 3000.
 
 Response (201):
-  poolAddress   string  Uniswap V3 pool contract address.
-  token0        string  First token address in the pool pair.
-  token1        string  Second token address in the pool pair.
-  fee           number  Fee tier (e.g. 3000 = 0.3%).
-  sqrtPriceX96  string  Initial sqrtPriceX96 as a string.
-  tick          number  Initial tick.
-  txHash        string  Pool creation transaction hash.
+  pool_address    string  Uniswap V3 pool contract address.
+  token0          string  First token address in the pool pair.
+  token1          string  Second token address in the pool pair.
+  fee             number  Fee tier (e.g. 3000 = 0.3%).
+  sqrt_price_x96  string  Initial sqrtPriceX96 as a string.
+  tick            number  Initial tick.
+  tx_hash         string  Pool creation transaction hash.
 
 Errors:
   400  invalid_request   Missing pricePerToken or invalid feeTier
@@ -275,13 +275,13 @@ Path params:
   id  string  required  id parameter
 
 Response (200):
-  poolAddress   string  Uniswap V3 pool contract address.
-  token0        string  First token address in the pool pair.
-  token1        string  Second token address in the pool pair.
-  fee           number  Fee tier (e.g. 3000 = 0.3%).
-  sqrtPriceX96  string  Initial sqrtPriceX96 as a string.
-  tick          number  Initial tick.
-  txHash        string  Pool creation transaction hash.
+  pool_address    string  Uniswap V3 pool contract address.
+  token0          string  First token address in the pool pair.
+  token1          string  Second token address in the pool pair.
+  fee             number  Fee tier (e.g. 3000 = 0.3%).
+  sqrt_price_x96  string  Initial sqrtPriceX96 as a string.
+  tick            number  Initial tick.
+  tx_hash         string  Pool creation transaction hash.
 
 Errors:
   402  payment_required  x402 payment needed
@@ -305,19 +305,19 @@ Query params:
   usdcAmount   string  optional  Raw USDC amount to pair (6 decimals)
 
 Response (200):
-  positionManagerAddress  string               Uniswap V3 NonfungiblePositionManager contract address.
-  token0                  string               First token address.
-  token1                  string               Second token address.
-  fee                     number               Fee tier.
-  tickLower               number               Lower tick bound for the liquidity range.
-  tickUpper               number               Upper tick bound for the liquidity range.
-  amount0Desired          string               Desired amount of token0 to add as a raw integer string.
-  amount1Desired          string               Desired amount of token1 to add as a raw integer string.
-  amount0Min              string               Minimum amount of token0 (slippage protection) as a raw integer string.
-  amount1Min              string               Minimum amount of token1 (slippage protection) as a raw integer string.
-  recipient               string               Address to receive the liquidity position NFT.
-  deadline                number               Transaction deadline as a Unix timestamp.
-  approvals               LiquidityApproval[]  ERC-20 approvals to submit on-chain before calling addLiquidity.
+  position_manager_address  string               Uniswap V3 NonfungiblePositionManager contract address.
+  token0                    string               First token address.
+  token1                    string               Second token address.
+  fee                       number               Fee tier.
+  tick_lower                number               Lower tick bound for the liquidity range.
+  tick_upper                number               Upper tick bound for the liquidity range.
+  amount0_desired           string               Desired amount of token0 to add as a raw integer string.
+  amount1_desired           string               Desired amount of token1 to add as a raw integer string.
+  amount0_min               string               Minimum amount of token0 (slippage protection) as a raw integer string.
+  amount1_min               string               Minimum amount of token1 (slippage protection) as a raw integer string.
+  recipient                 string               Address to receive the liquidity position NFT.
+  deadline                  number               Transaction deadline as a Unix timestamp.
+  approvals                 LiquidityApproval[]  ERC-20 approvals to submit on-chain before calling addLiquidity.
 
 Errors:
   400  invalid_request   Missing tokenAmount or usdcAmount

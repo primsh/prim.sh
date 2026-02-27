@@ -202,7 +202,7 @@ primitives:
   - id: mart
     name: mart.sh
     type: commerce
-    card_class: p13
+    card_class: p10
     description: "Buy physical goods via API. x402 to fiat proxy. Headless checkout."
     status: idea
     order: 22

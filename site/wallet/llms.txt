@@ -112,11 +112,11 @@ Request:
   label      string  optional  Human-readable label for this wallet.
 
 Response (201):
-  address       string         Registered Ethereum address.
-  chain         string         Chain identifier.
-  label         string | null  Label if provided, null otherwise.
-  registeredAt  string         ISO 8601 timestamp when the wallet was registered.
-  createdAt     string         ISO 8601 timestamp when the record was created.
+  address        string         Registered Ethereum address.
+  chain          string         Chain identifier.
+  label          string | null  Label if provided, null otherwise.
+  registered_at  string         ISO 8601 timestamp when the wallet was registered.
+  created_at     string         ISO 8601 timestamp when the record was created.
 
 Errors:
   400  invalid_request    Missing fields or invalid signature format
@@ -154,14 +154,14 @@ Path params:
   address  string  required  address parameter
 
 Response (200):
-  address    string                 Ethereum address.
-  chain      string                 Chain identifier.
-  balance    string                 USDC balance as a decimal string.
-  funded     boolean                Whether the wallet has ever been funded.
-  paused     boolean                Whether the wallet is currently paused.
-  createdBy  string                 Address that registered this wallet (or self).
-  policy     SpendingPolicy | null  Spending policy, null if none configured.
-  createdAt  string                 ISO 8601 timestamp when the wallet was created.
+  address     string                 Ethereum address.
+  chain       string                 Chain identifier.
+  balance     string                 USDC balance as a decimal string.
+  funded      boolean                Whether the wallet has ever been funded.
+  paused      boolean                Whether the wallet is currently paused.
+  created_by  string                 Address that registered this wallet (or self).
+  policy      SpendingPolicy | null  Spending policy, null if none configured.
+  created_at  string                 ISO 8601 timestamp when the wallet was created.
 
 Errors:
   402  payment_required  x402 payment needed
@@ -180,9 +180,9 @@ Path params:
   address  string  required  address parameter
 
 Response (200):
-  address        string   Deactivated Ethereum address.
-  deactivated    boolean  Always true on success.
-  deactivatedAt  string   ISO 8601 timestamp of deactivation.
+  address         string   Deactivated Ethereum address.
+  deactivated     boolean  Always true on success.
+  deactivated_at  string   ISO 8601 timestamp of deactivation.
 
 Errors:
   402  payment_required  x402 payment needed
@@ -205,12 +205,12 @@ Request:
   reason  string  required  Human-readable reason for the funding request.
 
 Response (200):
-  id             string             Fund request ID (e.g. "fr_abc123").
-  walletAddress  string             Wallet address the request is for.
-  amount         string             Requested USDC amount as a decimal string.
-  reason         string             Reason provided by the requester.
-  status         FundRequestStatus  Current status of the fund request.
-  createdAt      string             ISO 8601 timestamp when the request was created.
+  id              string             Fund request ID (e.g. "fr_abc123").
+  wallet_address  string             Wallet address the request is for.
+  amount          string             Requested USDC amount as a decimal string.
+  reason          string             Reason provided by the requester.
+  status          FundRequestStatus  Current status of the fund request.
+  created_at      string             ISO 8601 timestamp when the request was created.
 
 Errors:
   400  invalid_request   Missing amount or reason
@@ -252,12 +252,12 @@ Path params:
   id  string  required  id parameter
 
 Response (200):
-  id              string      Fund request ID.
-  status          "approved"  Always "approved" on success.
-  fundingAddress  string      Send USDC to this address to fulfill the request.
-  amount          string      Approved USDC amount as a decimal string.
-  chain           string      Chain identifier for the funding transaction.
-  approvedAt      string      ISO 8601 timestamp when the request was approved.
+  id               string      Fund request ID.
+  status           "approved"  Always "approved" on success.
+  funding_address  string      Send USDC to this address to fulfill the request.
+  amount           string      Approved USDC amount as a decimal string.
+  chain            string      Chain identifier for the funding transaction.
+  approved_at      string      ISO 8601 timestamp when the request was approved.
 
 Errors:
   402  payment_required   x402 payment needed
@@ -280,10 +280,10 @@ Request:
   reason  string  optional  Reason for denial.
 
 Response (200):
-  id        string         Fund request ID.
-  status    "denied"       Always "denied" on success.
-  reason    string | null  Denial reason if provided, null otherwise.
-  deniedAt  string         ISO 8601 timestamp when the request was denied.
+  id         string         Fund request ID.
+  status     "denied"       Always "denied" on success.
+  reason     string | null  Denial reason if provided, null otherwise.
+  denied_at  string         ISO 8601 timestamp when the request was denied.
 
 Errors:
   402  payment_required   x402 payment needed
@@ -303,12 +303,12 @@ Path params:
   address  string  required  address parameter
 
 Response (200):
-  walletAddress      string           Wallet address this policy applies to.
-  maxPerTx           string | null    Max USDC per transaction, null = no limit.
-  maxPerDay          string | null    Max USDC per day, null = no limit.
-  allowedPrimitives  string[] | null  Allowed primitive hostnames (e.g. ["store.prim.sh"]), null = all allowed.
-  dailySpent         string           USDC spent today as a decimal string.
-  dailyResetAt       string           ISO 8601 timestamp when the daily counter resets.
+  wallet_address      string           Wallet address this policy applies to.
+  max_per_tx          string | null    Max USDC per transaction, null = no limit.
+  max_per_day         string | null    Max USDC per day, null = no limit.
+  allowed_primitives  string[] | null  Allowed primitive hostnames (e.g. ["store.prim.sh"]), null = all allowed.
+  daily_spent         string           USDC spent today as a decimal string.
+  daily_reset_at      string           ISO 8601 timestamp when the daily counter resets.
 
 Errors:
   402  payment_required  x402 payment needed
@@ -332,12 +332,12 @@ Request:
   allowedPrimitives  string[] | null  optional  Allowed primitive hostnames. Pass null to allow all.
 
 Response (200):
-  walletAddress      string           Wallet address this policy applies to.
-  maxPerTx           string | null    Max USDC per transaction, null = no limit.
-  maxPerDay          string | null    Max USDC per day, null = no limit.
-  allowedPrimitives  string[] | null  Allowed primitive hostnames (e.g. ["store.prim.sh"]), null = all allowed.
-  dailySpent         string           USDC spent today as a decimal string.
-  dailyResetAt       string           ISO 8601 timestamp when the daily counter resets.
+  wallet_address      string           Wallet address this policy applies to.
+  max_per_tx          string | null    Max USDC per transaction, null = no limit.
+  max_per_day         string | null    Max USDC per day, null = no limit.
+  allowed_primitives  string[] | null  Allowed primitive hostnames (e.g. ["store.prim.sh"]), null = all allowed.
+  daily_spent         string           USDC spent today as a decimal string.
+  daily_reset_at      string           ISO 8601 timestamp when the daily counter resets.
 
 Errors:
   400  invalid_request   Invalid JSON body or field values
@@ -360,10 +360,10 @@ Request:
   scope  PauseScope  optional  Scope to pause. "all" | "send" | "swap". Default "all".
 
 Response (200):
-  walletAddress  string      Wallet address that was paused.
-  paused         boolean     Always true on success.
-  scope          PauseScope  Scope that was paused.
-  pausedAt       string      ISO 8601 timestamp when the wallet was paused.
+  wallet_address  string      Wallet address that was paused.
+  paused          boolean     Always true on success.
+  scope           PauseScope  Scope that was paused.
+  paused_at       string      ISO 8601 timestamp when the wallet was paused.
 
 Errors:
   400  invalid_request   Invalid scope value
@@ -386,10 +386,10 @@ Request:
   scope  PauseScope  optional  Scope to resume. "all" | "send" | "swap". Default "all".
 
 Response (200):
-  walletAddress  string      Wallet address that was resumed.
-  paused         boolean     Always false on success (wallet is unpaused).
-  scope          PauseScope  Scope that was resumed.
-  resumedAt      string      ISO 8601 timestamp when the wallet was resumed.
+  wallet_address  string      Wallet address that was resumed.
+  paused          boolean     Always false on success (wallet is unpaused).
+  scope           PauseScope  Scope that was resumed.
+  resumed_at      string      ISO 8601 timestamp when the wallet was resumed.
 
 Errors:
   400  invalid_request   Invalid scope value

@@ -253,17 +253,17 @@ Path params:
   msgId  string  required  msgId parameter
 
 Response (200):
-  id             string          Message ID.
-  from           EmailAddress    Sender address.
-  to             EmailAddress[]  Recipient addresses.
-  subject        string          Email subject line.
-  receivedAt     string          ISO 8601 timestamp when the message was received.
-  size           number          Message size in bytes.
-  hasAttachment  boolean         Whether the message has attachments.
-  preview        string          Short preview text (first ~100 chars of body).
-  cc             EmailAddress[]  CC recipient addresses.
-  textBody       string | null   Plain-text body. Null if not present.
-  htmlBody       string | null   HTML body. Null if not present.
+  id              string          Message ID.
+  from            EmailAddress    Sender address.
+  to              EmailAddress[]  Recipient addresses.
+  subject         string          Email subject line.
+  received_at     string          ISO 8601 timestamp when the message was received.
+  size            number          Message size in bytes.
+  has_attachment  boolean         Whether the message has attachments.
+  preview         string          Short preview text (first ~100 chars of body).
+  cc              EmailAddress[]  CC recipient addresses.
+  text_body       string | null   Plain-text body. Null if not present.
+  html_body       string | null   HTML body. Null if not present.
 
 Errors:
   402  payment_required  x402 payment needed
