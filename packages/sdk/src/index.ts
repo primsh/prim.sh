@@ -12,7 +12,4 @@ export * from "./mem.js";
 export { ZoneResponse, RecordResponse, DomainSearchResult, QuoteResponse, RegisterResponse, RecoverResponse, ConfigureNsResponse, RegistrationStatusResponse, VerifyResponse, ActivateResponse, MailSetupResponse, BatchRecordsResponse, QuoteDomainRequest, RecoverRegistrationRequest, CreateZoneRequest, SetupMailRequest, BatchRecordsRequest, CreateRecordRequest, UpdateRecordRequest, SearchDomainsParams, GetDomainStatusParams, ConfigureNsParams, ListZonesParams, GetZoneParams, DeleteZoneParams, ActivateZoneParams, VerifyZoneParams, SetupMailParams, BatchRecordsParams, CreateRecordParams, ListRecordsParams, GetRecordParams, UpdateRecordParams, DeleteRecordParams, SearchDomainsResponse, CreateZoneResponse, ListZonesResponse, DeleteZoneResponse, ListRecordsResponse, DeleteRecordResponse, createDomainClient } from "./domain.js";
 // Skipped from domain: RegisterDomainRequest (name collision)
 export * from "./track.js";
-export { ChatRequest, ChatResponse, Choice, ContentPart, EmbedRequest, EmbedResponse, EmbeddingData, Message, ModelInfo, ModelPricing, ModelsResponse, Tool, ToolCall, Usage, createInferClient } from "./infer.js";
-export * from "./create.js";
-export { DescribeRequest, DescribeResponse, GenerateRequest, GenerateResponse, UpscaleRequest, UpscaleResponse, createImagineClient } from "./imagine.js";
-// Skipped from imagine: ModelsResponse (name collision)
+export * from "./infer.js";
