@@ -3,10 +3,11 @@ name: ship.sh
 endpoint: ship.prim.sh
 status: phantom
 type: logistics
+category: ops
 card_class: p27
 description: "Shipping labels for agents. EasyPost or Shippo. USPS, FedEx, UPS, DHL."
-accent: "#A5D6A7"
-accent_dim: "#43a047"
-accent_glow: "rgba(165,214,167,0.08)"
+accent: "#FF3D00"
+accent_dim: "#cc3100"
+accent_glow: "rgba(255,61,0,0.08)"
 tagline: "Shipping labels for agents."
 sub: "Create shipping labels for USPS, FedEx, UPS, DHL. Get rates, print labels, track packages. x402 auth."

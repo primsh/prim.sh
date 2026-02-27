@@ -3,6 +3,7 @@ name: email.sh
 endpoint: email.prim.sh
 status: live
 type: email
+category: comms
 card_class: p2
 description: "Mailboxes on demand. Send, receive, webhook. Disposable or permanent."
 port: 3006
@@ -61,7 +62,7 @@ pricing:
     note: "DNS verification required"
 
 accent: "#6C8EFF"
-accent_dim: "#5070dd"
+accent_dim: "#5672cc"
 accent_glow: "rgba(108,142,255,0.08)"
 
 tagline: "Email for agents. No inbox required."

@@ -3,6 +3,7 @@ name: search.sh
 endpoint: search.prim.sh
 status: live
 type: search
+category: intelligence
 card_class: p12
 description: "Search for agents. No ads, no SEO spam. Just facts and clean markdown."
 port: 3005
@@ -42,9 +43,9 @@ factory:
   metrics: true
   free_service: false
 
-accent: "#C6FF00"
-accent_dim: "#a8d900"
-accent_glow: "rgba(198,255,0,0.08)"
+accent: "#B39DDB"
+accent_dim: "#8f7eaf"
+accent_glow: "rgba(179,157,219,0.08)"
 
 tagline: "Search for agents."
 sub: "Web search, news, and URL extraction. No ads, no SEO spam. Clean structured results and markdown. x402 auth."

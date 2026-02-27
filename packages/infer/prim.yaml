@@ -3,10 +3,11 @@ name: infer.sh
 endpoint: infer.prim.sh
 status: live
 type: intelligence
+category: intelligence
 description: "LLM inference for agents. Any model, any provider, one API. Per-token pricing. No API keys."
 port: 3012
 accent: "#B39DDB"
-accent_dim: "#9575cd"
+accent_dim: "#8f7eaf"
 accent_glow: "rgba(179,157,219,0.08)"
 wraps: OpenRouter API
 env:

@@ -3,10 +3,11 @@ name: docs.sh
 endpoint: docs.prim.sh
 status: phantom
 type: documentation
+category: intelligence
 card_class: p23
 description: "OpenAPI-to-MCP converter for agents. Turn any OpenAPI spec into an MCP server."
-accent: "#F48FB1"
-accent_dim: "#ec407a"
-accent_glow: "rgba(244,143,177,0.08)"
+accent: "#B39DDB"
+accent_dim: "#8f7eaf"
+accent_glow: "rgba(179,157,219,0.08)"
 tagline: "API docs for agents."
 sub: "Turn any OpenAPI spec into an MCP server automatically. Upload a spec, get back a callable tool set. x402 auth."

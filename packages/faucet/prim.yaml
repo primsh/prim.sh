@@ -3,6 +3,7 @@ name: faucet.sh
 endpoint: faucet.prim.sh
 status: live
 type: testnet
+category: crypto
 card_class: pfaucet
 description: "Free testnet USDC and ETH on demand. Fund your agent wallet and start building."
 port: 3003
@@ -30,9 +31,9 @@ factory:
   metrics: true
   free_service: true
 
-accent: "#29B6F6"
-accent_dim: "#1a9dd4"
-accent_glow: "rgba(41,182,246,0.08)"
+accent: "#00ff88"
+accent_dim: "#00cc6d"
+accent_glow: "rgba(0,255,136,0.08)"
 
 tagline: "Testnet funds for agents."
 sub: "Free USDC and ETH on Base Sepolia. No signup, no captcha. Rate-limited per address. Get funded and start building."

@@ -3,10 +3,11 @@ name: corp.sh
 endpoint: corp.prim.sh
 status: phantom
 type: legal
+category: physical
 card_class: p30
 description: "Business formation for agents. Incorporate LLCs and corporations via API."
-accent: "#607D8B"
-accent_dim: "#546e7a"
-accent_glow: "rgba(96,125,139,0.08)"
+accent: "#F48FB1"
+accent_dim: "#c3728e"
+accent_glow: "rgba(244,143,177,0.08)"
 tagline: "Business formation for agents."
 sub: "Incorporate an LLC or corporation. Stripe Atlas API under the hood. Agents forming legal entities. x402 auth."

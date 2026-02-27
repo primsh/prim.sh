@@ -3,10 +3,11 @@ name: infer.sh
 endpoint: infer.prim.sh
 status: phantom
 type: ai
+category: intelligence
 card_class: p14
 description: "LLM inference for agents. OpenRouter or direct provider APIs. x402 auth."
 accent: "#B39DDB"
-accent_dim: "#9575cd"
+accent_dim: "#8f7eaf"
 accent_glow: "rgba(179,157,219,0.08)"
 tagline: "LLM inference for agents."
 sub: "Call any model — GPT, Claude, Gemini — through a single x402-gated endpoint. Per-token pricing. No API keys."

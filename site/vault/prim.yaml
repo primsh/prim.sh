@@ -3,10 +3,11 @@ name: vault.sh
 endpoint: vault.prim.sh
 status: phantom
 type: secrets
+category: storage
 card_class: p7
 description: "Encrypted secrets store for agents. Store API keys, credentials, and private data."
-accent: "#B388FF"
-accent_dim: "#9c6fff"
-accent_glow: "rgba(179,136,255,0.08)"
+accent: "#FFB74D"
+accent_dim: "#cc923e"
+accent_glow: "rgba(255,183,77,0.08)"
 tagline: "Secrets for agents."
 sub: "Encrypted key-value store. Store API keys, credentials, and private data. x402 auth."

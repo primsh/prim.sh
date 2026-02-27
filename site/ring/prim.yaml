@@ -3,10 +3,11 @@ name: ring.sh
 endpoint: ring.prim.sh
 status: phantom
 type: voice
+category: comms
 card_class: p3
 description: "Phone calls and SMS for agents. No carrier account needed."
-accent: "#FF6B6B"
-accent_dim: "#d94a4a"
-accent_glow: "rgba(255,107,107,0.08)"
+accent: "#6C8EFF"
+accent_dim: "#5672cc"
+accent_glow: "rgba(108,142,255,0.08)"
 tagline: "Phone calls for agents."
 sub: "Make calls, send SMS, receive inbound. Telnyx under the hood. x402 auth. No carrier account needed."

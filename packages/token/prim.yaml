@@ -3,6 +3,7 @@ name: token.sh
 endpoint: token.prim.sh
 status: building
 type: defi
+category: crypto
 card_class: p9
 description: "Deploy ERC-20 tokens and Uniswap V3 pools. No wallet setup required."
 port: 3007
@@ -47,9 +48,9 @@ factory:
   metrics: true
   free_service: false
 
-accent: "#FFC107"
-accent_dim: "#ffa000"
-accent_glow: "rgba(255,193,7,0.08)"
+accent: "#00ff88"
+accent_dim: "#00cc6d"
+accent_glow: "rgba(0,255,136,0.08)"
 
 tagline: "Tokens for agents."
 sub: "Deploy ERC-20 tokens. Create Uniswap V3 pools. Mint supply. All via API, no wallet setup required."

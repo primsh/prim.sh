@@ -16,6 +16,8 @@ import * as readline from "node:readline/promises";
 import { stdin as input, stdout as output } from "node:process";
 import { join, resolve } from "node:path";
 import { parse as parseYaml, stringify as stringifyYaml } from "yaml";
+import { TYPE_TO_CATEGORY, CATEGORY_COLORS } from "./lib/primitives.js";
+import type { PrimCategory } from "./lib/primitives.js";
 
 // ── Types ──────────────────────────────────────────────────────────────────
 
@@ -54,6 +56,7 @@ interface PrimYaml {
   description: string;
   port: number;
   type?: string;
+  category?: string;
   status?: string;
   accent?: string;
   accent_dim?: string;
@@ -902,18 +905,82 @@ const KNOWN_TYPES = [
   "operations", "physical", "social",
 ];
 
-const KNOWN_ACCENTS: Record<string, string> = {
-  "#8BC34A": "lime-green (wallet)",
-  "#FFB74D": "amber (store)",
-  "#29B6F6": "sky-blue (faucet)",
-  "#00ff88": "neon-green (spawn)",
-  "#C6FF00": "acid-yellow (search)",
-  "#6C8EFF": "indigo (email)",
-  "#FFC107": "gold (token)",
-  "#4DD0E1": "cyan (mem)",
-  "#00ACC1": "teal (domain)",
-  "#FF3D00": "deep-orange (track)",
-};
+// ── Color wheel ────────────────────────────────────────────────────────────
+
+/** Convert HSL (h: 0-360, s: 0-100, l: 0-100) to hex */
+function hslToHex(h: number, s: number, l: number): string {
+  const s1 = s / 100;
+  const l1 = l / 100;
+  const c = (1 - Math.abs(2 * l1 - 1)) * s1;
+  const x = c * (1 - Math.abs(((h / 60) % 2) - 1));
+  const m = l1 - c / 2;
+  let r = 0, g = 0, b = 0;
+  if (h < 60)       { r = c; g = x; }
+  else if (h < 120) { r = x; g = c; }
+  else if (h < 180) { g = c; b = x; }
+  else if (h < 240) { g = x; b = c; }
+  else if (h < 300) { r = x; b = c; }
+  else              { r = c; b = x; }
+  const toHex = (v: number) => Math.round((v + m) * 255).toString(16).padStart(2, "0");
+  return `#${toHex(r)}${toHex(g)}${toHex(b)}`;
+}
+
+/** Convert hex to HSL hue (0-360) */
+function hexToHue(hex: string): number {
+  const c = hex.replace("#", "");
+  const r = parseInt(c.slice(0, 2), 16) / 255;
+  const g = parseInt(c.slice(2, 4), 16) / 255;
+  const b = parseInt(c.slice(4, 6), 16) / 255;
+  const max = Math.max(r, g, b), min = Math.min(r, g, b);
+  const d = max - min;
+  if (d === 0) return 0;
+  let h = 0;
+  if (max === r) h = ((g - b) / d) % 6;
+  else if (max === g) h = (b - r) / d + 2;
+  else h = (r - g) / d + 4;
+  h = Math.round(h * 60);
+  return h < 0 ? h + 360 : h;
+}
+
+/** Find the hue with maximum distance from all existing hues on the color wheel */
+function nextHue(usedHues: number[]): number {
+  if (usedHues.length === 0) return 0;
+  if (usedHues.length === 1) return (usedHues[0] + 180) % 360;
+
+  const sorted = [...usedHues].sort((a, b) => a - b);
+  let bestMid = 0;
+  let bestGap = 0;
+
+  for (let i = 0; i < sorted.length; i++) {
+    const next = i + 1 < sorted.length ? sorted[i + 1] : sorted[0] + 360;
+    const gap = next - sorted[i];
+    if (gap > bestGap) {
+      bestGap = gap;
+      bestMid = (sorted[i] + gap / 2) % 360;
+    }
+  }
+  return Math.round(bestMid);
+}
+
+/** Generate a neon accent color maximally distant from existing accents.
+ *  Neon range: full saturation (100%), high lightness (55-65%). */
+function suggestAccent(usedAccents: string[]): string {
+  const usedHues = usedAccents.map(hexToHue);
+  const hue = nextHue(usedHues);
+  return hslToHex(hue, 100, 60);
+}
+
+/** Generate N candidate colors, each maximally spaced from existing + previously suggested */
+function suggestAccents(usedAccents: string[], count: number): string[] {
+  const results: string[] = [];
+  const allAccents = [...usedAccents];
+  for (let i = 0; i < count; i++) {
+    const hex = suggestAccent(allAccents);
+    results.push(hex);
+    allAccents.push(hex);
+  }
+  return results;
+}
 
 /** Scan packages/ for existing prim.yaml files and return { id → port, accent } maps */
 function scanExistingPrims(root: string): { ports: number[]; ids: string[]; usedAccents: string[] } {
@@ -938,6 +1005,22 @@ function scanExistingPrims(root: string): { ports: number[]; ids: string[]; used
     }
   }
 
+  // Also scan site/ prim.yaml for coming-soon prims
+  const siteDir = join(root, "site");
+  if (existsSync(siteDir)) {
+    for (const entry of readdirSync(siteDir, { withFileTypes: true })) {
+      if (!entry.isDirectory()) continue;
+      const yamlPath = join(siteDir, entry.name, "prim.yaml");
+      if (!existsSync(yamlPath)) continue;
+      try {
+        const data = parseYaml(readFileSync(yamlPath, "utf-8")) as PrimYaml;
+        if (data.accent) usedAccents.push(data.accent.toLowerCase());
+      } catch {
+        // ignore
+      }
+    }
+  }
+
   return { ports, ids, usedAccents };
 }
 
@@ -947,12 +1030,6 @@ function nextPort(usedPorts: number[]): number {
   let candidate = 3011;
   while (portSet.has(candidate)) candidate++;
   return candidate;
-}
-
-/** Suggest accent colors not already in use */
-function unusedAccents(used: string[]): string[] {
-  const usedSet = new Set(used.map((a) => a.toLowerCase()));
-  return Object.keys(KNOWN_ACCENTS).filter((c) => !usedSet.has(c.toLowerCase()));
 }
 
 /** path → operation_id, e.g. "/v1/call" → "call", "/v1/messages/list" → "messages_list" */
@@ -1062,36 +1139,16 @@ async function runWizard(root: string): Promise<{ prim: PrimYaml; yamlStr: strin
     break;
   }
 
-  // Step 6: Accent color
-  const available = unusedAccents(usedAccents);
-  if (available.length > 0) {
-    console.log("  Available accent colors:");
-    available.forEach((c, i) => console.log(`    ${i + 1}. ${c} — ${KNOWN_ACCENTS[c]}`));
-    console.log(`    c. Enter custom hex`);
-  }
-  let accent = available[0] ?? "#888888";
-  while (true) {
-    const accentStr = await ask(
-      rl,
-      `6. Accent color (pick number from list above, or enter hex)`,
-      available.length > 0 ? "1" : "#888888",
-    );
-    if (/^\d+$/.test(accentStr)) {
-      const idx = parseInt(accentStr, 10) - 1;
-      if (idx >= 0 && idx < available.length) { accent = available[idx]; break; }
-      console.log(`  Enter a number between 1 and ${available.length}, or a hex color.`);
-    } else if (/^#[0-9a-fA-F]{6}$/.test(accentStr)) {
-      accent = accentStr.toLowerCase();
-      break;
-    } else if (accentStr === "c" || accentStr === "C") {
-      const customHex = await ask(rl, "  Enter hex color (e.g. #FF5722)");
-      if (/^#[0-9a-fA-F]{6}$/.test(customHex)) { accent = customHex.toLowerCase(); break; }
-      console.log("  Invalid hex. Use format #RRGGBB.");
-    } else if (accentStr === "") {
-      break; // use default
-    } else {
-      console.log("  Enter a number from the list or a hex color like #FF5722.");
-    }
+  // Step 6: Category + accent color (derived from type → category → color)
+  const category = (TYPE_TO_CATEGORY[type] ?? "meta") as PrimCategory;
+  const categoryColor = CATEGORY_COLORS[category];
+  console.log(`  Category: ${category} (from type "${type}")`);
+  console.log(`  Accent: ${categoryColor} (category color)`);
+  let accent = categoryColor;
+  const customAccent = await ask(rl, `6. Accent color (enter to accept, or custom hex)`, categoryColor);
+  if (/^#[0-9a-fA-F]{6}$/.test(customAccent) && customAccent.toLowerCase() !== categoryColor.toLowerCase()) {
+    accent = customAccent.toLowerCase();
+    console.log(`  Using custom accent: ${accent}`);
   }
 
   // Step 7: Routes
@@ -1174,6 +1231,7 @@ async function runWizard(root: string): Promise<{ prim: PrimYaml; yamlStr: strin
     endpoint: `${id}.prim.sh`,
     status: "building",
     type,
+    category,
     description,
     port,
     accent,

@@ -3,10 +3,11 @@ name: ads.sh
 endpoint: ads.prim.sh
 status: phantom
 type: advertising
+category: physical
 card_class: p31
 description: "Advertising for agents. Place and manage ad campaigns via API. x402 auth."
-accent: "#FFCC80"
-accent_dim: "#ffa726"
-accent_glow: "rgba(255,204,128,0.08)"
+accent: "#F48FB1"
+accent_dim: "#c3728e"
+accent_glow: "rgba(244,143,177,0.08)"
 tagline: "Advertising for agents."
 sub: "Place and manage ad campaigns programmatically. Agents promoting products and services without logging into dashboards. x402 auth."

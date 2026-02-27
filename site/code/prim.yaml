@@ -3,10 +3,11 @@ name: code.sh
 endpoint: code.prim.sh
 status: phantom
 type: execution
+category: compute
 card_class: p11
 description: "Sandboxed code execution for agents. Run untrusted code safely. x402 auth."
-accent: "#26C6DA"
-accent_dim: "#00acc1"
-accent_glow: "rgba(38,198,218,0.08)"
+accent: "#4DD0E1"
+accent_dim: "#3ea6b4"
+accent_glow: "rgba(77,208,225,0.08)"
 tagline: "Code execution for agents."
 sub: "Run arbitrary code in sandboxed environments. E2B or Firecracker under the hood. x402 auth. No server setup."

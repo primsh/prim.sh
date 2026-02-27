@@ -3,10 +3,11 @@ name: mart.sh
 endpoint: mart.prim.sh
 status: phantom
 type: commerce
+category: physical
 card_class: p26
 description: "E-commerce for agents. Search, buy, and track products via Amazon or eBay API."
-accent: "#FF3D00"
-accent_dim: "#dd2c00"
-accent_glow: "rgba(255,61,0,0.08)"
+accent: "#F48FB1"
+accent_dim: "#c3728e"
+accent_glow: "rgba(244,143,177,0.08)"
 tagline: "E-commerce for agents."
 sub: "Search products, place orders, track shipments. Amazon and eBay API under the hood. x402 auth."

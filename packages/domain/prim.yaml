@@ -3,6 +3,7 @@ name: domain.sh
 endpoint: domain.prim.sh
 status: building
 type: domains
+category: identity
 card_class: p6
 description: "Register domains, manage DNS, auto-TLS. Full domain lifecycle via API."
 port: 3009
@@ -52,9 +53,9 @@ factory:
   metrics: true
   free_service: false
 
-accent: "#4DD0E1"
-accent_dim: "#3ab8c7"
-accent_glow: "rgba(77,208,225,0.08)"
+accent: "#FFC107"
+accent_dim: "#cc9a06"
+accent_glow: "rgba(255,193,7,0.08)"
 
 tagline: "Domains for agents."
 sub: "Instant subdomains with auto-TLS. Or bring your own domain. DNS records via API. No registrar account needed."

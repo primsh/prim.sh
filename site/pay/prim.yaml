@@ -3,10 +3,11 @@ name: pay.sh
 endpoint: pay.prim.sh
 status: phantom
 type: payments
+category: crypto
 card_class: p29
 description: "Fiat payment bridge for agents. Stripe + x402. Accept credit cards, pay out."
-accent: "#80CBC4"
-accent_dim: "#00897b"
-accent_glow: "rgba(128,203,196,0.08)"
+accent: "#00ff88"
+accent_dim: "#00cc6d"
+accent_glow: "rgba(0,255,136,0.08)"
 tagline: "Fiat payments for agents."
 sub: "Accept credit cards, send bank transfers. Stripe under the hood. x402 for agent-to-agent, Stripe for agent-to-human. x402 auth."
