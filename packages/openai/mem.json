@@ -1,0 +1,233 @@
+[
+  {
+    "type": "function",
+    "function": {
+      "name": "mem_collection_create",
+      "description": "Create a collection. Creates a new vector collection owned by the paying wallet address. Price: $0.01 via x402 (USDC on Base).",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "Collection name. Must be unique per wallet."
+          },
+          "distance": {
+            "type": "string",
+            "description": "Distance metric (default Cosine).",
+            "enum": [
+              "Cosine",
+              "Euclid",
+              "Dot"
+            ]
+          },
+          "dimension": {
+            "type": "integer",
+            "description": "Vector dimension (default 1536 for text-embedding-3-small)."
+          }
+        },
+        "required": [
+          "name"
+        ]
+      }
+    }
+  },
+  {
+    "type": "function",
+    "function": {
+      "name": "mem_collection_list",
+      "description": "List collections. Returns all collections owned by the paying wallet address. Price: $0.001 via x402 (USDC on Base).",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "limit": {
+            "type": "integer",
+            "description": "Number of collections per page (1–100, default 20).",
+            "minimum": 1,
+            "maximum": 100
+          },
+          "page": {
+            "type": "integer",
+            "description": "Page number (1-based, default 1).",
+            "minimum": 1
+          }
+        }
+      }
+    }
+  },
+  {
+    "type": "function",
+    "function": {
+      "name": "mem_collection_get",
+      "description": "Get collection details. Returns details for a single collection including live document_count. Price: $0.001 via x402 (USDC on Base).",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "Collection ID (UUID)."
+          }
+        },
+        "required": [
+          "id"
+        ]
+      }
+    }
+  },
+  {
+    "type": "function",
+    "function": {
+      "name": "mem_collection_delete",
+      "description": "Delete a collection. Deletes a collection and all its documents. Price: $0.01 via x402 (USDC on Base).",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "Collection ID (UUID)."
+          }
+        },
+        "required": [
+          "id"
+        ]
+      }
+    }
+  },
+  {
+    "type": "function",
+    "function": {
+      "name": "mem_upsert",
+      "description": "Upsert documents. Embeds and stores documents in the collection. Price: $0.001 via x402 (USDC on Base).",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "Collection ID (UUID)."
+          },
+          "documents": {
+            "type": "array",
+            "description": "Documents to embed and upsert.",
+            "items": {
+              "type": "object"
+            }
+          }
+        },
+        "required": [
+          "id",
+          "documents"
+        ]
+      }
+    }
+  },
+  {
+    "type": "function",
+    "function": {
+      "name": "mem_query",
+      "description": "Semantic query. Embeds the query text and searches the collection for semantically similar documents. Price: $0.001 via x402 (USDC on Base).",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "Collection ID (UUID)."
+          },
+          "text": {
+            "type": "string",
+            "description": "Query text to embed and search."
+          },
+          "top_k": {
+            "type": "integer",
+            "description": "Maximum number of results to return (default 10)."
+          },
+          "filter": {
+            "description": "Qdrant-native filter passthrough for metadata filtering."
+          }
+        },
+        "required": [
+          "id",
+          "text"
+        ]
+      }
+    }
+  },
+  {
+    "type": "function",
+    "function": {
+      "name": "mem_cache_put",
+      "description": "Set cache entry. Stores a value under the given namespace and key. Price: $0.0001 via x402 (USDC on Base).",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "namespace": {
+            "type": "string",
+            "description": "Cache namespace (scoped to wallet)."
+          },
+          "key": {
+            "type": "string",
+            "description": "Cache key."
+          },
+          "value": {
+            "description": "Value to store (any JSON-serializable type)."
+          },
+          "ttl": {
+            "type": "integer",
+            "description": "TTL in seconds. Omit or null for permanent."
+          }
+        },
+        "required": [
+          "namespace",
+          "key",
+          "value"
+        ]
+      }
+    }
+  },
+  {
+    "type": "function",
+    "function": {
+      "name": "mem_cache_get",
+      "description": "Get cache entry. Returns the stored value for the given namespace and key. Price: $0.0001 via x402 (USDC on Base).",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "namespace": {
+            "type": "string",
+            "description": "Cache namespace."
+          },
+          "key": {
+            "type": "string",
+            "description": "Cache key."
+          }
+        },
+        "required": [
+          "namespace",
+          "key"
+        ]
+      }
+    }
+  },
+  {
+    "type": "function",
+    "function": {
+      "name": "mem_cache_delete",
+      "description": "Delete cache entry. Deletes the cache entry for the given namespace and key. Price: $0.0001 via x402 (USDC on Base).",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "namespace": {
+            "type": "string",
+            "description": "Cache namespace."
+          },
+          "key": {
+            "type": "string",
+            "description": "Cache key."
+          }
+        },
+        "required": [
+          "namespace",
+          "key"
+        ]
+      }
+    }
+  }
+]

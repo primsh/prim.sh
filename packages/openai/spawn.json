@@ -1,0 +1,275 @@
+[
+  {
+    "type": "function",
+    "function": {
+      "name": "spawn_server_create",
+      "description": "Create a server. Provisions a new VPS. Price: $0.01 via x402 (USDC on Base).",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "Server name (provider-level label)."
+          },
+          "type": {
+            "type": "string",
+            "description": "Server type slug. Only `small` is available in beta."
+          },
+          "image": {
+            "type": "string",
+            "description": "OS image slug."
+          },
+          "location": {
+            "type": "string",
+            "description": "Data center location slug."
+          },
+          "provider": {
+            "type": "string",
+            "description": "Cloud provider. Defaults to Hetzner."
+          },
+          "ssh_keys": {
+            "type": "array",
+            "description": "Array of SSH key IDs (from `POST /v1/ssh-keys`) to install.",
+            "items": {
+              "type": "string"
+            }
+          },
+          "user_data": {
+            "type": "string",
+            "description": "Cloud-init user data script to run on first boot."
+          }
+        },
+        "required": [
+          "name",
+          "type",
+          "image",
+          "location"
+        ]
+      }
+    }
+  },
+  {
+    "type": "function",
+    "function": {
+      "name": "spawn_server_list",
+      "description": "List servers. Returns all servers owned by the authenticated wallet, paginated. Price: $0.001 via x402 (USDC on Base).",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "limit": {
+            "type": "integer",
+            "description": "Number of servers to return. Max 100.",
+            "minimum": 1,
+            "maximum": 100
+          },
+          "page": {
+            "type": "integer",
+            "description": "Page number (1-indexed).",
+            "minimum": 1
+          }
+        }
+      }
+    }
+  },
+  {
+    "type": "function",
+    "function": {
+      "name": "spawn_server_get",
+      "description": "Get server. Returns full details for a single server. Price: $0.001 via x402 (USDC on Base).",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "Prim server ID."
+          }
+        },
+        "required": [
+          "id"
+        ]
+      }
+    }
+  },
+  {
+    "type": "function",
+    "function": {
+      "name": "spawn_server_delete",
+      "description": "Delete server. Destroys the server and releases its resources. Price: $0.005 via x402 (USDC on Base).",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "Prim server ID."
+          }
+        },
+        "required": [
+          "id"
+        ]
+      }
+    }
+  },
+  {
+    "type": "function",
+    "function": {
+      "name": "spawn_server_start",
+      "description": "Start server. Starts a stopped server. Price: $0.002 via x402 (USDC on Base).",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "Prim server ID."
+          }
+        },
+        "required": [
+          "id"
+        ]
+      }
+    }
+  },
+  {
+    "type": "function",
+    "function": {
+      "name": "spawn_server_stop",
+      "description": "Stop server. Stops a running server (graceful shutdown). Price: $0.002 via x402 (USDC on Base).",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "Prim server ID."
+          }
+        },
+        "required": [
+          "id"
+        ]
+      }
+    }
+  },
+  {
+    "type": "function",
+    "function": {
+      "name": "spawn_server_reboot",
+      "description": "Reboot server. Reboots a running server. Price: $0.002 via x402 (USDC on Base).",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "Prim server ID."
+          }
+        },
+        "required": [
+          "id"
+        ]
+      }
+    }
+  },
+  {
+    "type": "function",
+    "function": {
+      "name": "spawn_server_resize",
+      "description": "Resize server. Changes the server type (CPU/RAM). Price: $0.01 via x402 (USDC on Base).",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "Prim server ID."
+          },
+          "type": {
+            "type": "string",
+            "description": "Target server type slug."
+          },
+          "upgrade_disk": {
+            "type": "boolean",
+            "description": "Whether to upgrade the disk alongside the CPU/RAM. Irreversible if true. (default: false)"
+          }
+        },
+        "required": [
+          "id",
+          "type"
+        ]
+      }
+    }
+  },
+  {
+    "type": "function",
+    "function": {
+      "name": "spawn_server_rebuild",
+      "description": "Rebuild server. Reinstalls the server from a fresh OS image. Price: $0.005 via x402 (USDC on Base).",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "Prim server ID."
+          },
+          "image": {
+            "type": "string",
+            "description": "OS image slug to rebuild with."
+          }
+        },
+        "required": [
+          "id",
+          "image"
+        ]
+      }
+    }
+  },
+  {
+    "type": "function",
+    "function": {
+      "name": "spawn_ssh_key_create",
+      "description": "Register SSH key. Registers a public SSH key with the provider. Price: $0.001 via x402 (USDC on Base).",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "Human-readable label for this key."
+          },
+          "public_key": {
+            "type": "string",
+            "description": "The public key string (e.g. `ssh-ed25519 AAAA...`)."
+          }
+        },
+        "required": [
+          "name",
+          "public_key"
+        ]
+      }
+    }
+  },
+  {
+    "type": "function",
+    "function": {
+      "name": "spawn_ssh_key_list",
+      "description": "List SSH keys. Returns all SSH keys registered by the authenticated wallet. Price: $0.001 via x402 (USDC on Base).",
+      "parameters": {
+        "type": "object",
+        "properties": {}
+      }
+    }
+  },
+  {
+    "type": "function",
+    "function": {
+      "name": "spawn_ssh_key_delete",
+      "description": "Delete SSH key. Removes an SSH key from the provider. Price: $0.001 via x402 (USDC on Base).",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "Prim SSH key ID."
+          }
+        },
+        "required": [
+          "id"
+        ]
+      }
+    }
+  }
+]

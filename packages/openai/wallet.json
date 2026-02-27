@@ -1,0 +1,238 @@
+[
+  {
+    "type": "function",
+    "function": {
+      "name": "wallet_register",
+      "description": "Register a wallet. Register an Ethereum wallet address via EIP-191 signature. Free — no payment required.",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "address": {
+            "type": "string",
+            "description": "Ethereum wallet address to register",
+            "pattern": "^0x[a-fA-F0-9]{40}$"
+          },
+          "signature": {
+            "type": "string",
+            "description": "EIP-191 signature over the registration message"
+          },
+          "timestamp": {
+            "type": "string",
+            "description": "ISO 8601 UTC timestamp used in the signed message (must be within 5 min of now)",
+            "format": "date-time"
+          },
+          "chain": {
+            "type": "string",
+            "description": "Chain identifier. Defaults to \"base\"."
+          },
+          "label": {
+            "type": "string",
+            "description": "Optional human-readable label for this wallet"
+          }
+        },
+        "required": [
+          "address",
+          "signature",
+          "timestamp"
+        ]
+      }
+    }
+  },
+  {
+    "type": "function",
+    "function": {
+      "name": "wallet_list",
+      "description": "List registered wallets. Returns a paginated list of wallets registered by the caller's address. Price: $0.001 via x402 (USDC on Base).",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "limit": {
+            "type": "integer",
+            "description": "Number of wallets to return (1–100, default 20)",
+            "minimum": 1,
+            "maximum": 100
+          },
+          "after": {
+            "type": "string",
+            "description": "Cursor from a previous response for pagination"
+          }
+        }
+      }
+    }
+  },
+  {
+    "type": "function",
+    "function": {
+      "name": "wallet_get",
+      "description": "Get wallet details. Returns full details for a single wallet, including balance, policy, and status. Price: $0.001 via x402 (USDC on Base).",
+      "parameters": {
+        "type": "object",
+        "properties": {}
+      }
+    }
+  },
+  {
+    "type": "function",
+    "function": {
+      "name": "wallet_deactivate",
+      "description": "Deactivate a wallet. Permanently deactivates the wallet. Price: $0.01 via x402 (USDC on Base).",
+      "parameters": {
+        "type": "object",
+        "properties": {}
+      }
+    }
+  },
+  {
+    "type": "function",
+    "function": {
+      "name": "wallet_fund_request_create",
+      "description": "Create a fund request. Request USDC funding for a wallet. Price: $0.001 via x402 (USDC on Base).",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "amount": {
+            "type": "string",
+            "description": "Requested USDC amount as a decimal string (e.g. \"10.00\")"
+          },
+          "reason": {
+            "type": "string",
+            "description": "Human-readable reason for the funding request"
+          }
+        },
+        "required": [
+          "amount",
+          "reason"
+        ]
+      }
+    }
+  },
+  {
+    "type": "function",
+    "function": {
+      "name": "wallet_fund_request_list",
+      "description": "List fund requests for a wallet. Returns a paginated list of all fund requests for the given wallet address. Price: $0.001 via x402 (USDC on Base).",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "limit": {
+            "type": "integer",
+            "description": "Number of requests to return (1–100, default 20)",
+            "minimum": 1,
+            "maximum": 100
+          },
+          "after": {
+            "type": "string",
+            "description": "Cursor from a previous response for pagination"
+          }
+        }
+      }
+    }
+  },
+  {
+    "type": "function",
+    "function": {
+      "name": "wallet_fund_request_approve",
+      "description": "Approve a fund request. Approve a pending fund request. Price: $0.01 via x402 (USDC on Base).",
+      "parameters": {
+        "type": "object",
+        "properties": {}
+      }
+    }
+  },
+  {
+    "type": "function",
+    "function": {
+      "name": "wallet_fund_request_deny",
+      "description": "Deny a fund request. Deny a pending fund request. Price: $0.001 via x402 (USDC on Base).",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "reason": {
+            "type": "string",
+            "description": "Optional reason for denying the request"
+          }
+        }
+      }
+    }
+  },
+  {
+    "type": "function",
+    "function": {
+      "name": "wallet_policy_get",
+      "description": "Get spending policy. Returns the current spending policy for the wallet. Price: $0.001 via x402 (USDC on Base).",
+      "parameters": {
+        "type": "object",
+        "properties": {}
+      }
+    }
+  },
+  {
+    "type": "function",
+    "function": {
+      "name": "wallet_policy_update",
+      "description": "Update spending policy. Update the spending policy for the wallet. Price: $0.005 via x402 (USDC on Base).",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "maxPerTx": {
+            "type": "string",
+            "description": "Maximum USDC per transaction. Pass null to remove the limit."
+          },
+          "maxPerDay": {
+            "type": "string",
+            "description": "Maximum USDC per day. Pass null to remove the limit."
+          },
+          "allowedPrimitives": {
+            "type": "array",
+            "description": "Allowed primitive hostnames. Pass null to allow all.",
+            "items": {
+              "type": "string"
+            }
+          }
+        }
+      }
+    }
+  },
+  {
+    "type": "function",
+    "function": {
+      "name": "wallet_pause",
+      "description": "Pause a wallet. Pause all or a subset of operations for a wallet. Price: $0.001 via x402 (USDC on Base).",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "scope": {
+            "type": "string",
+            "description": "Which operations to pause (default: \"all\")",
+            "enum": [
+              "all",
+              "send",
+              "swap"
+            ]
+          }
+        }
+      }
+    }
+  },
+  {
+    "type": "function",
+    "function": {
+      "name": "wallet_resume",
+      "description": "Resume a paused wallet. Resume operations for a paused wallet. Price: $0.001 via x402 (USDC on Base).",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "scope": {
+            "type": "string",
+            "description": "Which operations to resume (default: \"all\")",
+            "enum": [
+              "all",
+              "send",
+              "swap"
+            ]
+          }
+        }
+      }
+    }
+  }
+]

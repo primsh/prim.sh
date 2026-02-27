@@ -1,0 +1,390 @@
+[
+  {
+    "type": "function",
+    "function": {
+      "name": "email_mailbox_create",
+      "description": "Create a mailbox. Creates a new email mailbox owned by the paying wallet address. Price: $0.05 via x402 (USDC on Base).",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "username": {
+            "type": "string",
+            "description": "Desired local part of the email address. Generated randomly if omitted."
+          },
+          "domain": {
+            "type": "string",
+            "description": "Email domain to use. Must be a verified custom domain or the shared default domain."
+          },
+          "ttl_ms": {
+            "type": "integer",
+            "description": "Mailbox lifetime in milliseconds. Defaults to 7 days (604800000). Pass null for no expiry."
+          }
+        }
+      }
+    }
+  },
+  {
+    "type": "function",
+    "function": {
+      "name": "email_mailbox_list",
+      "description": "List mailboxes. Returns all mailboxes owned by the paying wallet address. Price: $0.001 via x402 (USDC on Base).",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "limit": {
+            "type": "integer",
+            "description": "Number of mailboxes per page (1–100, default 20).",
+            "minimum": 1,
+            "maximum": 100
+          },
+          "page": {
+            "type": "integer",
+            "description": "Page number (1-based, default 1).",
+            "minimum": 1
+          }
+        }
+      }
+    }
+  },
+  {
+    "type": "function",
+    "function": {
+      "name": "email_mailbox_get",
+      "description": "Get mailbox details. Returns details for a single mailbox. Price: $0.001 via x402 (USDC on Base).",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "Mailbox ID."
+          }
+        },
+        "required": [
+          "id"
+        ]
+      }
+    }
+  },
+  {
+    "type": "function",
+    "function": {
+      "name": "email_mailbox_delete",
+      "description": "Delete a mailbox. Permanently deletes a mailbox and all its messages. Price: $0.01 via x402 (USDC on Base).",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "Mailbox ID."
+          }
+        },
+        "required": [
+          "id"
+        ]
+      }
+    }
+  },
+  {
+    "type": "function",
+    "function": {
+      "name": "email_mailbox_renew",
+      "description": "Renew mailbox TTL. Extends the expiry time of a mailbox. Price: $0.01 via x402 (USDC on Base).",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "Mailbox ID."
+          },
+          "ttl_ms": {
+            "type": "integer",
+            "description": "Additional milliseconds to extend the mailbox TTL. Defaults to 7 days (604800000)."
+          }
+        },
+        "required": [
+          "id"
+        ]
+      }
+    }
+  },
+  {
+    "type": "function",
+    "function": {
+      "name": "email_messages_list",
+      "description": "List messages in a mailbox. Returns messages in a mailbox, newest first. Price: $0.001 via x402 (USDC on Base).",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "Mailbox ID."
+          },
+          "limit": {
+            "type": "integer",
+            "description": "Maximum number of messages to return (1–100, default 20).",
+            "minimum": 1,
+            "maximum": 100
+          },
+          "position": {
+            "type": "integer",
+            "description": "Zero-based position offset to start from (default 0).",
+            "minimum": 0
+          }
+        },
+        "required": [
+          "id"
+        ]
+      }
+    }
+  },
+  {
+    "type": "function",
+    "function": {
+      "name": "email_message_get",
+      "description": "Get message detail. Returns the full content of a single message including body. Price: $0.001 via x402 (USDC on Base).",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "Mailbox ID."
+          },
+          "msgId": {
+            "type": "string",
+            "description": "Message ID."
+          }
+        },
+        "required": [
+          "id",
+          "msgId"
+        ]
+      }
+    }
+  },
+  {
+    "type": "function",
+    "function": {
+      "name": "email_send",
+      "description": "Send email from a mailbox. Sends an outbound email from the mailbox address. Price: $0.01 via x402 (USDC on Base).",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "Mailbox ID."
+          },
+          "to": {
+            "type": "string",
+            "description": "Recipient email address.",
+            "format": "email"
+          },
+          "subject": {
+            "type": "string",
+            "description": "Email subject line."
+          },
+          "body": {
+            "type": "string",
+            "description": "Plain-text message body."
+          },
+          "html": {
+            "type": "string",
+            "description": "HTML message body. Can be provided alongside `body` for multipart messages."
+          },
+          "cc": {
+            "type": "string",
+            "description": "CC recipient email address.",
+            "format": "email"
+          },
+          "bcc": {
+            "type": "string",
+            "description": "BCC recipient email address.",
+            "format": "email"
+          }
+        },
+        "required": [
+          "id",
+          "to",
+          "subject"
+        ]
+      }
+    }
+  },
+  {
+    "type": "function",
+    "function": {
+      "name": "email_webhook_create",
+      "description": "Register a webhook. Registers a webhook URL to receive notifications for this mailbox. Price: $0.01 via x402 (USDC on Base).",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "Mailbox ID."
+          },
+          "url": {
+            "type": "string",
+            "description": "HTTPS URL to receive webhook events.",
+            "format": "uri"
+          },
+          "secret": {
+            "type": "string",
+            "description": "Optional signing secret. Used to generate HMAC-SHA256 signatures."
+          },
+          "events": {
+            "type": "array",
+            "description": "Event types to subscribe to. Defaults to all events.",
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        "required": [
+          "id",
+          "url"
+        ]
+      }
+    }
+  },
+  {
+    "type": "function",
+    "function": {
+      "name": "email_webhook_list",
+      "description": "List webhooks for a mailbox. Returns all registered webhooks for a mailbox. Price: $0.001 via x402 (USDC on Base).",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "Mailbox ID."
+          }
+        },
+        "required": [
+          "id"
+        ]
+      }
+    }
+  },
+  {
+    "type": "function",
+    "function": {
+      "name": "email_webhook_delete",
+      "description": "Delete a webhook. Removes a webhook registration from a mailbox. Price: $0.001 via x402 (USDC on Base).",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "Mailbox ID."
+          },
+          "whId": {
+            "type": "string",
+            "description": "Webhook ID."
+          }
+        },
+        "required": [
+          "id",
+          "whId"
+        ]
+      }
+    }
+  },
+  {
+    "type": "function",
+    "function": {
+      "name": "email_domain_register",
+      "description": "Register an email domain. Registers a custom domain for use with email.prim.sh mailboxes. Price: $0.05 via x402 (USDC on Base).",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "domain": {
+            "type": "string",
+            "description": "Domain name to register (e.g. \"example.com\")."
+          }
+        },
+        "required": [
+          "domain"
+        ]
+      }
+    }
+  },
+  {
+    "type": "function",
+    "function": {
+      "name": "email_domain_list",
+      "description": "List registered domains. Returns all domains registered by the paying wallet address. Price: $0.001 via x402 (USDC on Base).",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "limit": {
+            "type": "integer",
+            "description": "Number of domains per page (1–100, default 20).",
+            "minimum": 1,
+            "maximum": 100
+          },
+          "page": {
+            "type": "integer",
+            "description": "Page number (1-based, default 1).",
+            "minimum": 1
+          }
+        }
+      }
+    }
+  },
+  {
+    "type": "function",
+    "function": {
+      "name": "email_domain_get",
+      "description": "Get domain details. Returns details for a single domain. Price: $0.001 via x402 (USDC on Base).",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "Domain ID."
+          }
+        },
+        "required": [
+          "id"
+        ]
+      }
+    }
+  },
+  {
+    "type": "function",
+    "function": {
+      "name": "email_domain_delete",
+      "description": "Delete a domain. Removes a custom domain registration. Price: $0.01 via x402 (USDC on Base).",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "Domain ID."
+          }
+        },
+        "required": [
+          "id"
+        ]
+      }
+    }
+  },
+  {
+    "type": "function",
+    "function": {
+      "name": "email_domain_verify",
+      "description": "Verify domain ownership. Checks that the required DNS records are present and live for this domain. Price: $0.01 via x402 (USDC on Base).",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "Domain ID."
+          }
+        },
+        "required": [
+          "id"
+        ]
+      }
+    }
+  }
+]

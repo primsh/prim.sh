@@ -1005,7 +1005,7 @@
                   "depends": [
                     "I-18"
                   ],
-                  "status": "pending",
+                  "status": "done",
                   "release": null,
                   "plan": "tasks/active/i-14-openai-schema-generator.md"
                 }
