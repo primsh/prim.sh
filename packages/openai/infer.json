@@ -1,0 +1,104 @@
+[
+  {
+    "type": "function",
+    "function": {
+      "name": "infer_chat",
+      "description": "Chat completion. Supports streaming, tool use, structured output. Price: $0.01 via x402 (USDC on Base).",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "model": {
+            "type": "string"
+          },
+          "messages": {
+            "type": "array",
+            "items": {
+              "type": "object"
+            }
+          },
+          "temperature": {
+            "type": "number"
+          },
+          "max_tokens": {
+            "type": "number"
+          },
+          "top_p": {
+            "type": "number"
+          },
+          "frequency_penalty": {
+            "type": "number"
+          },
+          "presence_penalty": {
+            "type": "number"
+          },
+          "stop": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "stream": {
+            "type": "boolean"
+          },
+          "tools": {
+            "type": "array",
+            "items": {
+              "type": "object"
+            }
+          },
+          "tool_choice": {
+            "type": "string",
+            "enum": [
+              "none",
+              "auto",
+              "required"
+            ]
+          },
+          "response_format": {
+            "type": "object"
+          }
+        },
+        "required": [
+          "model",
+          "messages"
+        ]
+      }
+    }
+  },
+  {
+    "type": "function",
+    "function": {
+      "name": "infer_embed",
+      "description": "Generate embeddings for text input. Returns vector array. Price: $0.001 via x402 (USDC on Base).",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "model": {
+            "type": "string"
+          },
+          "input": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        "required": [
+          "model",
+          "input"
+        ]
+      }
+    }
+  },
+  {
+    "type": "function",
+    "function": {
+      "name": "infer_list_models",
+      "description": "List available models with pricing and capabilities. Price: $0.01 via x402 (USDC on Base).",
+      "parameters": {
+        "type": "object",
+        "properties": {}
+      }
+    }
+  }
+]

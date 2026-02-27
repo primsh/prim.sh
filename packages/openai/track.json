@@ -1,0 +1,25 @@
+[
+  {
+    "type": "function",
+    "function": {
+      "name": "track_track_package",
+      "description": "Track a package by tracking number and carrier. Returns status, ETA, and full event history. Price: $0.05 via x402 (USDC on Base).",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "tracking_number": {
+            "type": "string",
+            "description": "Shipment tracking number."
+          },
+          "carrier": {
+            "type": "string",
+            "description": "Carrier slug (e.g. \"usps\", \"ups\", \"fedex\"). Omit to auto-detect."
+          }
+        },
+        "required": [
+          "tracking_number"
+        ]
+      }
+    }
+  }
+]

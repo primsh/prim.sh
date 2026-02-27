@@ -1,16 +1,19 @@
 {
   "version": "1.0.0",
-  "generated_at": "2026-02-27T08:38:46.057Z",
+  "generated_at": "2026-02-27T09:09:14.297Z",
   "prims": [
-    "domain",
-    "email",
+    "wallet",
     "faucet",
-    "mem",
-    "search",
     "spawn",
     "store",
+    "email",
+    "search",
     "token",
-    "wallet"
+    "mem",
+    "domain",
+    "track",
+    "infer",
+    "create"
   ],
-  "tool_count": 93
+  "tool_count": 101
 }

@@ -105,6 +105,9 @@ export interface Primitive {
   providers?: Provider[];
   interfaces?: Interfaces;
   factory?: FactoryConfig;
+  accent?: string;
+  accent_dim?: string;
+  accent_glow?: string;
 }
 
 // ── Loader ─────────────────────────────────────────────────────────────────
@@ -173,6 +176,20 @@ export function getGateOverrides(p: Primitive): Required<GateConfig> {
 }
 
 // ── Filters ────────────────────────────────────────────────────────────────
+
+export type InterfaceSurface = "mcp" | "cli" | "openai" | "rest";
+
+/** Primitives eligible for a given integration surface (has OpenAPI spec + interface enabled) */
+export function primsForInterface(surface: InterfaceSurface, root?: string): Primitive[] {
+  const ROOT = root ?? resolve(new URL("../..", import.meta.url).pathname);
+  const prims = loadPrimitives(root);
+  return prims.filter((p) => {
+    // Must have an OpenAPI spec
+    if (!existsSync(join(ROOT, "specs/openapi", `${p.id}.yaml`))) return false;
+    // Interface flag defaults to true if absent
+    return p.interfaces?.[surface] !== false;
+  });
+}
 
 /** Primitives on VPS (status = live) */
 export function deployed(prims: Primitive[]): Primitive[] {

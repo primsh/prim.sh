@@ -18,6 +18,7 @@
 import { readFileSync, writeFileSync, existsSync } from "node:fs";
 import { join, resolve } from "node:path";
 import { parse as parseYaml } from "yaml";
+import { primsForInterface } from "./lib/primitives.js";
 
 const ROOT = resolve(import.meta.dir, "..");
 const CHECK_MODE = process.argv.includes("--check");
@@ -918,7 +919,8 @@ const keystoreSrcDir = join(ROOT, "packages/keystore/src");
 
 // Prims with OpenAPI specs that have CLI commands
 // (wallet is excluded — its CLI is part of cli.ts directly)
-const CLI_PRIMS = ["search", "mem", "token", "faucet", "email", "domain", "store", "spawn"];
+// wallet excluded — its CLI is hand-maintained in cli.ts
+const CLI_PRIMS = primsForInterface("cli").map((p) => p.id).filter((id) => id !== "wallet");
 
 const primsToProcess = TARGET_PRIM ? [TARGET_PRIM] : CLI_PRIMS;
 

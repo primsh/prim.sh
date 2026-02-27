@@ -20,6 +20,7 @@
 import { readFileSync, writeFileSync, existsSync } from "node:fs";
 import { join, resolve } from "node:path";
 import { parse as parseYaml } from "yaml";
+import { primsForInterface } from "./lib/primitives.js";
 
 const ROOT = resolve(import.meta.dir, "..");
 const SPECS_DIR = join(ROOT, "specs/openapi");
@@ -93,8 +94,7 @@ interface OpenApiSpec {
 
 // ── Supported prims ────────────────────────────────────────────────────────
 
-const PRIMS = ["wallet", "store", "spawn", "faucet", "search", "email", "mem", "domain", "token"] as const;
-type PrimId = (typeof PRIMS)[number];
+const PRIMS = primsForInterface("mcp").map((p) => p.id);
 
 // ── $ref resolver ──────────────────────────────────────────────────────────
 
@@ -403,7 +403,7 @@ interface GeneratedSection {
   handlerDef: string;
 }
 
-function generateSections(prim: PrimId, spec: OpenApiSpec): GeneratedSection {
+function generateSections(prim: string, spec: OpenApiSpec): GeneratedSection {
   const SKIP_OP_IDS = new Set(["healthCheck", "getLlmsTxt"]);
 
   const toolDefs: ToolDef[] = [];
@@ -517,7 +517,7 @@ function generateSections(prim: PrimId, spec: OpenApiSpec): GeneratedSection {
   return { toolsDef, handlerDef };
 }
 
-function buildFullFile(prim: PrimId, toolsDef: string, handlerDef: string): string {
+function buildFullFile(prim: string, toolsDef: string, handlerDef: string): string {
   return [
     `import type { Tool } from "@modelcontextprotocol/sdk/types.js";`,
     `import type { CallToolResult } from "@modelcontextprotocol/sdk/types.js";`,

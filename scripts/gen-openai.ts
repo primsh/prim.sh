@@ -15,9 +15,10 @@
  *   bun scripts/gen-openai.ts --check  # diff against disk, exit 1 if stale
  */
 
-import { readFileSync, writeFileSync, existsSync, mkdirSync, readdirSync } from "node:fs";
+import { readFileSync, writeFileSync, existsSync, mkdirSync } from "node:fs";
 import { join, resolve, basename } from "node:path";
 import { parse as parseYaml } from "yaml";
+import { primsForInterface } from "./lib/primitives.js";
 
 const ROOT = resolve(import.meta.dir, "..");
 const SPECS_DIR = join(ROOT, "specs", "openapi");
@@ -399,12 +400,8 @@ function specToTools(specId: string, spec: OpenApiSpec): OpenAiFunction[] {
       if (!operationId) continue;
       if (SKIP_OPERATIONS.has(operationId)) continue;
 
-      // Resolve tool name: spec override > global map > skip
-      const toolName = overrides[operationId] ?? OPERATION_ID_TO_TOOL_NAME[operationId];
-      if (!toolName) {
-        console.warn(`  ! [${specId}] No tool name mapping for operationId: ${operationId} — skipping`);
-        continue;
-      }
+      // Resolve tool name: spec override > global map > auto-derive
+      const toolName = overrides[operationId] ?? OPERATION_ID_TO_TOOL_NAME[operationId] ?? `${specId}_${operationId.replace(/([A-Z])/g, "_$1").toLowerCase().replace(/^_/, "")}`;
 
       const description = buildDescription(op);
       const { properties, required } = buildParameters(spec, op);
@@ -457,9 +454,7 @@ if (!CHECK_MODE) {
   mkdirSync(OUTPUT_DIR, { recursive: true });
 }
 
-const specFiles = readdirSync(SPECS_DIR)
-  .filter((f) => f.endsWith(".yaml"))
-  .sort();
+const specFiles = primsForInterface("openai").map((p) => `${p.id}.yaml`);
 
 console.log(`Processing ${specFiles.length} OpenAPI specs`);
 console.log(CHECK_MODE ? "Mode: check\n" : "Mode: generate\n");
