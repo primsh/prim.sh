@@ -301,29 +301,33 @@ async function finalizeMailbox(
       jmap_drafts_id: session.draftsId,
       jmap_sent_id: session.sentId,
     };
-  } catch (err) {
-    if (!(err instanceof JmapError)) throw err;
-    // JMAP bootstrap failed — mailbox is still usable, session will be discovered lazily
+  } catch (_err) {
+    // JMAP bootstrap failed (network timeout, DNS, JmapError, etc.)
+    // Mailbox is still usable — session will be discovered lazily
   }
 
   const id = generateId();
 
-  insertMailbox({
-    id,
-    stalwart_name: username,
-    address,
-    domain,
-    owner_wallet: callerWallet,
-    password_hash: passwordHash,
-    password_enc: passwordEnc,
-    quota: 0,
-    created_at: now,
-    expires_at: expiresAt,
-    ...jmapData,
-  });
+  try {
+    insertMailbox({
+      id,
+      stalwart_name: username,
+      address,
+      domain,
+      owner_wallet: callerWallet,
+      password_hash: passwordHash,
+      password_enc: passwordEnc,
+      quota: 0,
+      created_at: now,
+      expires_at: expiresAt,
+      ...jmapData,
+    });
+  } catch (_err) {
+    return { ok: false, status: 500, code: "provider_error", message: "Failed to persist mailbox" };
+  }
 
   const row = getMailboxById(id);
-  if (!row) throw new Error("Failed to retrieve mailbox after insert");
+  if (!row) return { ok: false, status: 500, code: "provider_error", message: "Failed to retrieve mailbox after insert" };
 
   return { ok: true, data: rowToResponse(row) };
 }

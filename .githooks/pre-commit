@@ -1,0 +1,21 @@
+#!/bin/sh
+# Pre-commit hook: run gitleaks on staged changes
+# Install: git config core.hooksPath .githooks
+
+# Skip if gitleaks is not installed (non-blocking for devs without it)
+if ! command -v gitleaks >/dev/null 2>&1; then
+  echo "warning: gitleaks not installed -- skipping secret scan"
+  echo "  Install: brew install gitleaks"
+  exit 0
+fi
+
+# Scan only staged changes (fast)
+gitleaks protect --staged --config .gitleaks.toml --verbose
+EXIT_CODE=$?
+
+if [ $EXIT_CODE -ne 0 ]; then
+  echo ""
+  echo "gitleaks detected secrets in staged files"
+  echo "  Fix the issue or use --no-verify to bypass (not recommended)"
+  exit 1
+fi

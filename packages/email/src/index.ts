@@ -122,7 +122,7 @@ app.post("/v1/mailboxes", async (c) => {
   if (!result.ok) {
     if (result.code === "invalid_request") return c.json(invalidRequest(result.message), 400);
     if (result.code === "username_taken") return c.json(serviceError("username_taken", result.message), 409);
-    if (result.code === "conflict") return c.json(stalwartError(result.message), 500);
+    if (result.code === "conflict") return c.json(stalwartError(result.message), (result.status ?? 503) as 503);
     return c.json(stalwartError(result.message), result.status as 502);
   }
   return c.json(result.data as MailboxResponse, 201);

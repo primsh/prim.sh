@@ -25,7 +25,8 @@
     "sync:vps:dry": "bash scripts/sync-vps.sh --dry-run",
     "test:conformance": "bun scripts/conformance.ts",
     "create-prim": "bun scripts/create-prim.ts",
-    "create-provider": "bun scripts/create-provider.ts"
+    "create-provider": "bun scripts/create-provider.ts",
+    "prepare": "git config core.hooksPath .githooks"
   },
   "devDependencies": {
     "@biomejs/biome": "^1.9.0",
