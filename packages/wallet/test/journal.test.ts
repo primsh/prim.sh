@@ -181,7 +181,7 @@ describe("insertDeadLetter", () => {
       .query<DlRow, [string]>(
         "SELECT execution_id, reason, payload FROM dead_letters WHERE execution_id = ?",
       )
-      .get<DlRow>("key_dl1");
+      .get("key_dl1");
 
     expect(row).not.toBeNull();
     expect(row?.reason).toBe("RPC timeout");
@@ -198,7 +198,7 @@ describe("insertDeadLetter", () => {
       .query<DlNullRow, []>(
         "SELECT execution_id, reason FROM dead_letters WHERE execution_id IS NULL",
       )
-      .all<DlNullRow>();
+      .all();
 
     expect(rows.length).toBeGreaterThanOrEqual(1);
     const dlRow = rows.find((r) => r.reason === "orphan error");

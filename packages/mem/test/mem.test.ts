@@ -278,7 +278,7 @@ describe("createCollection", () => {
   it("calls Qdrant createCollection with correct params", async () => {
     await createCollection({ name: "test-col", dimension: 512, distance: "Euclid" }, WALLET);
     const call = mockFetch.mock.calls.find(
-      ([url, init]) =>
+      ([url, init]: [URL | RequestInfo, RequestInit?]) =>
         typeof url === "string" &&
         url.includes("/collections/") &&
         (init as RequestInit)?.method === "PUT",
@@ -470,7 +470,7 @@ describe("upsertDocuments", () => {
     if (!result.ok) return;
     // Verify Qdrant upsert was called with payload containing metadata
     const upsertCall = mockFetch.mock.calls.find(
-      ([url, init]) =>
+      ([url, init]: [URL | RequestInfo, RequestInit?]) =>
         typeof url === "string" &&
         url.includes("/points") &&
         !url.includes("/query") &&
@@ -569,7 +569,7 @@ describe("upsertDocuments", () => {
     expect(result.ok).toBe(true);
     // The 'text' from metadata should be silently dropped (reserved key)
     const upsertCall = mockFetch.mock.calls.find(
-      ([url, init]) =>
+      ([url, init]: [URL | RequestInfo, RequestInit?]) =>
         typeof url === "string" &&
         url.includes("/points") &&
         !url.includes("/query") &&
@@ -605,7 +605,7 @@ describe("queryDocuments", () => {
     const id = await makeCollection();
     await queryDocuments(id, { text: "test" }, WALLET);
     const queryCall = mockFetch.mock.calls.find(
-      ([url, init]) =>
+      ([url, init]: [URL | RequestInfo, RequestInit?]) =>
         typeof url === "string" &&
         url.includes("/points/query") &&
         (init as RequestInit)?.method === "POST",
@@ -618,7 +618,7 @@ describe("queryDocuments", () => {
     const id = await makeCollection();
     await queryDocuments(id, { text: "test", top_k: 25 }, WALLET);
     const queryCall = mockFetch.mock.calls.find(
-      ([url, init]) =>
+      ([url, init]: [URL | RequestInfo, RequestInit?]) =>
         typeof url === "string" &&
         url.includes("/points/query") &&
         (init as RequestInit)?.method === "POST",
@@ -631,7 +631,7 @@ describe("queryDocuments", () => {
     const id = await makeCollection();
     await queryDocuments(id, { text: "test", top_k: 999 }, WALLET);
     const queryCall = mockFetch.mock.calls.find(
-      ([url, init]) =>
+      ([url, init]: [URL | RequestInfo, RequestInit?]) =>
         typeof url === "string" &&
         url.includes("/points/query") &&
         (init as RequestInit)?.method === "POST",
@@ -645,7 +645,7 @@ describe("queryDocuments", () => {
     const filter = { must: [{ key: "source", match: { value: "chat" } }] };
     await queryDocuments(id, { text: "test", filter }, WALLET);
     const queryCall = mockFetch.mock.calls.find(
-      ([url, init]) =>
+      ([url, init]: [URL | RequestInfo, RequestInit?]) =>
         typeof url === "string" &&
         url.includes("/points/query") &&
         (init as RequestInit)?.method === "POST",

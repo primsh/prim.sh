@@ -255,7 +255,8 @@ export function updateRecordRow(id: string, params: {
   if (params.priority !== undefined) { sets.push("priority = ?"); values.push(params.priority); }
 
   values.push(id);
-  db.query(`UPDATE records SET ${sets.join(", ")} WHERE id = ?`).run(...values);
+  // biome-ignore lint/suspicious/noExplicitAny: dynamic SQL params built from validated fields
+  db.query(`UPDATE records SET ${sets.join(", ")} WHERE id = ?`).run(...(values as any[]));
 }
 
 export function deleteRecordRow(id: string): void {
@@ -345,5 +346,6 @@ export function updateRegistration(id: string, params: {
   if (params.namesilo_order_id !== undefined) { sets.push("namesilo_order_id = ?"); values.push(params.namesilo_order_id); }
 
   values.push(id);
-  db.query(`UPDATE registrations SET ${sets.join(", ")} WHERE id = ?`).run(...values);
+  // biome-ignore lint/suspicious/noExplicitAny: dynamic SQL params built from validated fields
+  db.query(`UPDATE registrations SET ${sets.join(", ")} WHERE id = ?`).run(...(values as any[]));
 }

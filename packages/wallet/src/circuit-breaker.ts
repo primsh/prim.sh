@@ -47,7 +47,7 @@ export function assertNotPaused(flowType: string): void {
 
 export function getState(): Record<string, string | null> {
   const db = getDb();
-  const rows = db.query("SELECT * FROM circuit_breaker").all() as CircuitBreakerRow[];
+  const rows = db.query<CircuitBreakerRow>("SELECT * FROM circuit_breaker").all();
   const state: Record<string, string | null> = {};
   for (const row of rows) {
     state[row.scope] = row.paused_at;

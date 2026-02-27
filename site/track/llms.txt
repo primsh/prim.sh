@@ -1,26 +1,124 @@
-# track.sh
+# track.prim.sh
 
-> Shipment tracking for agents. Real-time package status from any carrier.
+Package tracking for agents. USPS, FedEx, UPS, DHL and 1000+ carriers. Status, ETA, full event history.
 
 Base URL: https://track.prim.sh
-Auth: x402 (USDC on Base, chain `eip155:8453`)
-Status: deployed
+Auth: x402 (USDC on Base Sepolia). GET /, GET /pricing, GET /v1/metrics are free.
+Chain: Base Sepolia (eip155:84532) during beta.
+
+Install:
+  curl -fsSL https://track.prim.sh/install.sh | sh
+
+Limits:
+  1000+ carriers supported via TrackingMore API
+  Rate limit applies per wallet
+
+---
+
+## Quick Start
+
+  1. POST /v1/track with {tracking_number, carrier} → get package status, ETA, events ($0.05)
+
+## Tips
+
+  - Pass carrier slug (e.g. 'ups', 'fedex', 'usps', 'dhl') for accurate routing.
+  - Omit carrier if unknown — the service will attempt auto-detection.
+  - Poll periodically until status is 'delivered' for delivery confirmation workflows.
+  - events array contains full tracking history ordered newest-first.
+
+---
+
+## x402 Payment
+
+  1. Make request. Server returns 402 with Payment-Required header.
+  2. Sign EIP-3009 transferWithAuthorization.
+  3. Retry with Payment-Signature header (base64-encoded signed authorization).
+
+Error envelope:
+  {"error": {"code": "<code>", "message": "<msg>"}}
+
+Error codes:
+  invalid_request
+  not_found
+  rate_limited
+  provider_error
+
+---
 
 ## Endpoints
 
-- `POST /v1/track` — track a shipment by tracking number and optional carrier.
+### GET /
 
-## Pricing
+Health check.
 
-- Per tracking request.
+Free.
 
-See human docs at `https://prim.sh/track` for carrier coverage and rate limits.
+Response (200):
+  service  string  "track.sh"
+  status   string  "ok"
 
-## Examples
+---
 
-```bash
-# Track a shipment
-curl -X POST https://track.prim.sh/v1/track \
-  -H "X-402-Payment: $TOKEN" \
-  -d '{"tracking_number": "1Z999AA10123456784", "carrier": "ups"}'
-```
+### GET /pricing
+
+Machine-readable pricing for all endpoints.
+
+Free.
+
+Response (200):
+  service   string  "track.prim.sh"
+  currency  string  "USDC"
+  network   string  "eip155:8453"
+  routes    array   Route pricing list
+    .method       string  HTTP method
+    .path         string  URL path
+    .price_usdc   string  Price in USDC (decimal string)
+    .description  string  Human-readable description
+
+---
+
+### GET /v1/metrics
+
+Operational metrics. Uptime, request counts, latency percentiles, error rates.
+
+Free.
+
+Response (200):
+  service     string  "track.prim.sh"
+  uptime_s    number  Seconds since last restart
+  requests    object  Request counts and latencies by endpoint
+  payments    object  Payment counts by endpoint
+  errors      object  Error counts by status code
+
+---
+
+### POST /v1/track
+
+Track a package by tracking number and carrier. Returns status, ETA, and full event history.
+
+Price: $0.05
+
+Request:
+  tracking_number  string  required  Shipment tracking number.
+  carrier          string  optional  Carrier slug (e.g. "usps", "ups", "fedex"). Omit to auto-detect.
+
+Response (200):
+  tracking_number  string         Tracking number echoed back.
+  carrier          string         Detected or specified carrier slug.
+  status           string         Current status summary (e.g. "Delivered").
+  status_detail    string         Detailed current status description.
+  eta              string         Estimated delivery date (ISO 8601). Only present if available.
+  location         TrackLocation  Current package location. Only present if available.
+  events           TrackEvent[]   Chronological list of tracking events (newest first).
+
+Errors:
+  400  invalid_request   Missing tracking_number or invalid carrier
+  402  payment_required  x402 payment needed
+  429  rate_limited      Too many requests
+  502  provider_error    TrackingMore API error
+
+---
+
+## Ownership
+
+Stateless. No package data is stored per wallet. Each request is an independent lookup.

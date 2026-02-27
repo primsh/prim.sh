@@ -3,7 +3,10 @@
   "compilerOptions": {
     "outDir": "dist",
     "rootDir": ".",
-    "allowImportingTsExtensions": true
+    "allowImportingTsExtensions": true,
+    "paths": {
+      "bun:sqlite": ["./src/__mocks__/bun-sqlite.ts"]
+    }
   },
   "include": ["src", "test"]
 }

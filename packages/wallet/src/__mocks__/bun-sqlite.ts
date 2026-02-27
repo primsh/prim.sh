@@ -33,23 +33,23 @@ interface RunResult {
   lastInsertRowid: number;
 }
 
-class PreparedStatement {
+class PreparedStatement<TRow = QueryResult> {
   private stmt: NodeSqliteStmt;
 
   constructor(stmt: NodeSqliteStmt) {
     this.stmt = stmt;
   }
 
-  get<T = QueryResult>(...args: unknown[]): T | null {
+  get(...args: unknown[]): TRow | null {
     const params = args.flat();
     const result = params.length > 0 ? this.stmt.get(...params) : this.stmt.get();
-    return (result as T | undefined) ?? null;
+    return (result as TRow | undefined) ?? null;
   }
 
-  all<T = QueryResult>(...args: unknown[]): T[] {
+  all(...args: unknown[]): TRow[] {
     const params = args.flat();
     const result = params.length > 0 ? this.stmt.all(...params) : this.stmt.all();
-    return result as T[];
+    return result as TRow[];
   }
 
   run(...args: unknown[]): RunResult {
@@ -86,7 +86,7 @@ export class Database {
     return { changes: changesRow?.n ?? 0, lastInsertRowid: liRow?.id ?? 0 };
   }
 
-  query<T = QueryResult, _P = unknown[]>(sql: string): PreparedStatement {
+  query<T = QueryResult, _P = unknown[]>(sql: string): PreparedStatement<T> {
     return new PreparedStatement(this.db.prepare(sql));
   }
 
@@ -112,7 +112,7 @@ export class Database {
     this.db.exec(sql);
   }
 
-  prepare(sql: string): PreparedStatement {
+  prepare(sql: string): PreparedStatement<QueryResult> {
     return new PreparedStatement(this.db.prepare(sql));
   }
 

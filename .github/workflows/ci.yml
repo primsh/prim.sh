@@ -10,8 +10,8 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  setup:
-    name: Setup
+  ci:
+    name: CI
     runs-on: ubuntu-latest
 
     steps:
@@ -51,145 +51,21 @@ jobs:
       - name: Build x402-middleware
         run: pnpm --filter @primsh/x402-middleware build
 
-      - name: Upload workspace
-        uses: actions/upload-artifact@v4
-        with:
-          name: workspace
-          path: .
-          retention-days: 1
+      - name: Lint
+        run: pnpm -r lint
 
-  lint:
-    name: Lint
-    needs: [setup]
-    runs-on: ubuntu-latest
+      - name: Typecheck
+        run: pnpm -r typecheck
 
-    steps:
-      - uses: actions/download-artifact@v4
-        with:
-          name: workspace
+      - name: Test
+        run: pnpm -r test
 
-      - uses: oven-sh/setup-bun@v2
-        with:
-          bun-version: latest
+      - name: Gen check
+        run: pnpm gen:check
 
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 22
-
-      - uses: pnpm/action-setup@v4
-
-      - run: pnpm -r lint
-
-  typecheck:
-    name: Typecheck
-    needs: [setup]
-    runs-on: ubuntu-latest
-
-    steps:
-      - uses: actions/download-artifact@v4
-        with:
-          name: workspace
-
-      - uses: oven-sh/setup-bun@v2
-        with:
-          bun-version: latest
-
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 22
-
-      - uses: pnpm/action-setup@v4
-
-      - run: pnpm -r typecheck
-
-  test:
-    name: Test
-    needs: [setup]
-    runs-on: ubuntu-latest
-
-    steps:
-      - uses: actions/download-artifact@v4
-        with:
-          name: workspace
-
-      - uses: oven-sh/setup-bun@v2
-        with:
-          bun-version: latest
-
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 22
-
-      - uses: pnpm/action-setup@v4
-
-      - run: pnpm -r test
-
-  gen-check:
-    name: Gen check
-    needs: [setup]
-    runs-on: ubuntu-latest
-
-    steps:
-      - uses: actions/download-artifact@v4
-        with:
-          name: workspace
-
-      - uses: oven-sh/setup-bun@v2
-        with:
-          bun-version: latest
-
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 22
-
-      - uses: pnpm/action-setup@v4
-
-      - run: pnpm gen:check
-
-  conformance:
-    name: Conformance
-    needs: [setup, test, gen-check]
-    runs-on: ubuntu-latest
-
-    steps:
-      - uses: actions/download-artifact@v4
-        with:
-          name: workspace
-
-      - uses: oven-sh/setup-bun@v2
-        with:
-          bun-version: latest
-
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 22
-
-      - uses: pnpm/action-setup@v4
-
-      - run: pnpm test:conformance
-
-  validate-openapi:
-    name: Validate OpenAPI
-    needs: [setup]
-    runs-on: ubuntu-latest
-    continue-on-error: true
-
-    steps:
-      - uses: actions/download-artifact@v4
-        with:
-          name: workspace
-
-      - uses: oven-sh/setup-bun@v2
-        with:
-          bun-version: latest
-
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 22
-
-      - uses: pnpm/action-setup@v4
-
-      - run: pnpm check:openapi
+      - name: Validate OpenAPI
+        run: pnpm check:openapi
+        continue-on-error: true
 
   secret-scan:
     name: Secret scan
