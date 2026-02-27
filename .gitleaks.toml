@@ -30,6 +30,12 @@ regexes = [
     "0x8be0079c531659141344cd1fd0a4f28419497f9722a3daafe3b4186f6b6457e0",
     # WALLET_MASTER_KEY placeholder (64 'a's — not a real key)
     "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    # OpenAPI spec example Ethereum addresses (public contract addresses, not secrets)
+    "0xAbCd1234567890abcdef1234567890abCDEF1234",
+    "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+    # OpenAPI spec placeholder tokens (not real secrets)
+    "rt_abc123def456",
+    "ctk_a1b2c3d4e5f6",
 ]
 
 # Paths excluded from all scans
