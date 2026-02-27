@@ -97,6 +97,8 @@ interface CanaryStepResult {
   status: number | null;
   ok: boolean;
   note: string | null;
+  request_body: unknown;
+  response_body: unknown;
 }
 
 interface CanaryGroupResult {
@@ -367,7 +369,8 @@ ${groupPrompt}
 For each task:
 1. Decide which API call to make based on the docs
 2. Make the call using the http_request tool (you have a funded wallet — x402 payments are handled automatically)
-3. Report: did it work? was anything confusing?
+3. If a call fails, try once more with a corrected request. If it fails again, report the failure and move to the next task. Do NOT retry the same endpoint more than twice.
+4. Report: did it work? was anything confusing?
 
 When you have completed all tasks, provide a final structured report with:
 - Which steps worked and which failed
@@ -527,11 +530,13 @@ async function runCanaryGroup(
   const uxNotes: string[] = [];
   let agentSummary: string | null = null;
   const MAX_ROUNDS = 10;
+  const failCounts = new Map<string, number>(); // "METHOD url" → consecutive fail count
+  const MAX_RETRIES_PER_ENDPOINT = 2;
 
   for (let round = 0; round < MAX_ROUNDS; round++) {
     // Call infer.sh /v1/chat
     const chatRequest = {
-      model: process.env.CANARY_MODEL ?? "openai/gpt-4o-mini",
+      model: process.env.CANARY_MODEL ?? "anthropic/claude-sonnet-4-5",
       messages,
       tools: CANARY_TOOLS,
       tool_choice: "auto",
@@ -624,7 +629,33 @@ async function runCanaryGroup(
 
       const method = String(parsedArgs.method ?? "GET");
       const url = String(parsedArgs.url ?? "");
+      const reqBody = parsedArgs.body ?? null;
+      const endpointKey = `${method} ${url}`;
       let stepResult: CanaryStepResult;
+
+      // Check retry limit — if this endpoint already failed MAX_RETRIES_PER_ENDPOINT times, skip
+      const priorFails = failCounts.get(endpointKey) ?? 0;
+      if (priorFails >= MAX_RETRIES_PER_ENDPOINT) {
+        stepResult = {
+          tool_call_id: tc.id,
+          method,
+          url,
+          status: null,
+          ok: false,
+          note: `skipped: failed ${priorFails} times already`,
+          request_body: reqBody,
+          response_body: null,
+        };
+        toolResults.push({
+          role: "tool",
+          tool_call_id: tc.id,
+          content: JSON.stringify({
+            error: `This endpoint has failed ${priorFails} times. Stop retrying and move to the next task.`,
+          }),
+        });
+        steps.push(stepResult);
+        continue;
+      }
 
       try {
         const result = await executeToolCall(toolCall, primFetch);
@@ -635,7 +666,15 @@ async function runCanaryGroup(
           status: result.status,
           ok: result.ok,
           note: null,
+          request_body: reqBody,
+          response_body: result.body,
         };
+
+        if (!result.ok) {
+          failCounts.set(endpointKey, priorFails + 1);
+        } else {
+          failCounts.set(endpointKey, 0); // reset on success
+        }
 
         toolResults.push({
           role: "tool",
@@ -644,6 +683,7 @@ async function runCanaryGroup(
         });
       } catch (err) {
         const errMsg = err instanceof Error ? err.message : String(err);
+        failCounts.set(endpointKey, priorFails + 1);
         stepResult = {
           tool_call_id: tc.id,
           method,
@@ -651,6 +691,8 @@ async function runCanaryGroup(
           status: null,
           ok: false,
           note: `request failed: ${errMsg}`,
+          request_body: reqBody,
+          response_body: null,
         };
 
         toolResults.push({
