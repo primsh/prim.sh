@@ -695,6 +695,14 @@
               "status": "pending",
               "release": null,
               "plan": "tasks/active/sp-7-docker-provider-2026-02-26.md"
+            },
+            {
+              "id": "SP-8",
+              "description": "Nested spawn: POST /v1/servers/{id}/containers — create/list/destroy containers on an existing spawn via SSH+Docker. Enables spawn-inside-spawn for agent replication.",
+              "owner": [],
+              "depends": ["SP-7"],
+              "status": "pending",
+              "release": null
             }
           ]
         },
