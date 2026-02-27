@@ -74,10 +74,6 @@ jobs:
       github.event.workflow_run.conclusion == 'success'
 
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      # ── SSH setup ────────────────────────────────────────────────────────────
       - name: Setup SSH
         env:
           VPS_SSH_KEY: ${{ secrets.VPS_SSH_KEY }}
@@ -90,30 +86,7 @@ jobs:
           printf '%s\n' "$VPS_KNOWN_HOSTS" > ~/.ssh/known_hosts
           chmod 644 ~/.ssh/known_hosts
 
-      # ── Rsync source ─────────────────────────────────────────────────────────
-      # Excludes mirror scripts/sync-vps.sh exactly.
-      - name: Rsync source to VPS
+      - name: Deploy
         env:
           VPS_HOST: ${{ secrets.VPS_HOST }}
-        run: |
-          rsync -avz --delete \
-            --exclude='node_modules/' \
-            --exclude='.git/' \
-            --exclude='*.db' \
-            --exclude='*.db-shm' \
-            --exclude='*.db-wal' \
-            --exclude='server.log' \
-            --exclude='.env*' \
-            --exclude='brand/assets/' \
-            --exclude='research/' \
-            --exclude='specs/' \
-            --exclude='.claude/' \
-            --exclude='bun.lock' \
-            ./ "$VPS_HOST":/opt/prim/
-
-      # ── Remote deploy ─────────────────────────────────────────────────────────
-      - name: Run deploy script on VPS
-        env:
-          VPS_HOST: ${{ secrets.VPS_HOST }}
-        run: |
-          ssh "$VPS_HOST" "bash /opt/prim/deploy/prim/deploy.sh"
+        run: ssh "$VPS_HOST" "bash /opt/prim/deploy/prim/deploy.sh"
