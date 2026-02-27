@@ -1,0 +1,10 @@
+# v0 critical path — requires @garricn approval
+packages/wallet/          @garricn
+packages/store/           @garricn
+packages/search/          @garricn
+packages/x402-middleware/ @garricn
+deploy/                   @garricn
+
+# Infrastructure
+.github/workflows/        @garricn
+.githooks/                @garricn
