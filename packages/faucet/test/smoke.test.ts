@@ -1,6 +1,8 @@
 import { describe, expect, it, vi, beforeEach } from "vitest";
 
-process.env.PRIM_NETWORK = "eip155:84532"; // testnet for free service
+vi.hoisted(() => {
+  process.env.PRIM_NETWORK = "eip155:84532"; // testnet for free service
+});
 
 // Stub bun:sqlite so db.ts doesn't fail in vitest (Node runtime)
 vi.mock("bun:sqlite", () => {

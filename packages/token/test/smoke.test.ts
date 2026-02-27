@@ -1,8 +1,10 @@
 import { describe, expect, it, vi, beforeEach } from "vitest";
 import type { Context, Next } from "hono";
 
-process.env.PRIM_NETWORK = "eip155:8453";
-process.env.PRIM_PAY_TO = "0x0000000000000000000000000000000000000001";
+vi.hoisted(() => {
+  process.env.PRIM_NETWORK = "eip155:8453";
+  process.env.PRIM_PAY_TO = "0x0000000000000000000000000000000000000001";
+});
 
 // Stub bun:sqlite so db.ts doesn't fail in vitest (Node runtime)
 vi.mock("bun:sqlite", () => {

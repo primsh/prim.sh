@@ -1,8 +1,10 @@
 import { describe, expect, it, vi, beforeEach } from "vitest";
 import type { Context, Next } from "hono";
 
-process.env.PRIM_NETWORK = "eip155:8453";
-process.env.PRIM_PAY_TO = "0x0000000000000000000000000000000000000001";
+vi.hoisted(() => {
+  process.env.PRIM_NETWORK = "eip155:8453";
+  process.env.PRIM_PAY_TO = "0x0000000000000000000000000000000000000001";
+});
 
 // Bypass x402 so the handler is reachable in unit tests.
 // The middleware passthrough also sets walletAddress so wallet-guard checks pass.
