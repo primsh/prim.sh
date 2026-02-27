@@ -9,6 +9,7 @@
     "test": "pnpm -r test",
     "check": "pnpm -r lint && pnpm -r typecheck && pnpm -r test",
     "build:binaries": "pnpm --filter @primsh/keystore build:binaries",
+    "gen": "bun scripts/gen-prims.ts && bun scripts/gen-mcp.ts && bun scripts/gen-cli.ts && bun scripts/gen-openai.ts && bun scripts/gen-tests.ts",
     "gen:prims": "bun scripts/gen-prims.ts",
     "gen:mcp": "bun scripts/gen-mcp.ts",
     "gen:cli": "bun scripts/gen-cli.ts",
