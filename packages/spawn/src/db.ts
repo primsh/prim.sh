@@ -147,7 +147,7 @@ export function countActiveServersByOwner(owner: string): number {
   const db = getDb();
   const row = db
     .query<{ count: number }, [string]>(
-      "SELECT COUNT(*) as count FROM servers WHERE owner_wallet = ? AND status NOT IN ('deleted', 'archived', 'destroying')",
+      "SELECT COUNT(*) as count FROM servers WHERE owner_wallet = ? AND status NOT IN ('deleted', 'archived', 'destroying', 'destroyed')",
     )
     .get(owner) as { count: number } | null;
   return row?.count ?? 0;
