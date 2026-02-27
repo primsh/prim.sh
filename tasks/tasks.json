@@ -334,7 +334,9 @@
                 {
                   "id": "HRD-23",
                   "description": "Final repo scrub: .gitignore (generated/, timestamps), delete orig assets, remove ops docs, scrub residual VPS IPs, exclude internal scripts",
-                  "owner": ["Claude"],
+                  "owner": [
+                    "Claude"
+                  ],
                   "depends": [],
                   "status": "done",
                   "release": "v1.0.0",
@@ -349,8 +351,10 @@
               "tasks": [
                 {
                   "id": "HRD-26",
-                  "description": "Add packages/mcp/test/smoke.test.ts — zero tests on 14-source-file MCP server package",
-                  "owner": ["Claude"],
+                  "description": "Add packages/mcp/test/smoke.test.ts \u2014 zero tests on 14-source-file MCP server package",
+                  "owner": [
+                    "Claude"
+                  ],
                   "depends": [],
                   "status": "done",
                   "release": null,
@@ -359,7 +363,9 @@
                 {
                   "id": "HRD-27",
                   "description": "Backfill search/test/smoke.test.ts to 5-check contract (currently 12 lines)",
-                  "owner": ["Claude"],
+                  "owner": [
+                    "Claude"
+                  ],
                   "depends": [],
                   "status": "done",
                   "release": null
@@ -367,7 +373,9 @@
                 {
                   "id": "HRD-28",
                   "description": "Backfill domain/test/smoke.test.ts to 5-check contract (currently 37 lines)",
-                  "owner": ["Claude"],
+                  "owner": [
+                    "Claude"
+                  ],
                   "depends": [],
                   "status": "done",
                   "release": null
@@ -375,7 +383,9 @@
                 {
                   "id": "HRD-29",
                   "description": "Backfill store/test/smoke.test.ts to 5-check contract (currently 49 lines)",
-                  "owner": ["Claude"],
+                  "owner": [
+                    "Claude"
+                  ],
                   "depends": [],
                   "status": "done",
                   "release": null
@@ -389,8 +399,10 @@
               "tasks": [
                 {
                   "id": "HRD-30",
-                  "description": "Replace residual console.warn() → structured logger in wallet/src/service.ts + email/src/service.ts (HRD-11 residual)",
-                  "owner": ["Claude"],
+                  "description": "Replace residual console.warn() \u2192 structured logger in wallet/src/service.ts + email/src/service.ts (HRD-11 residual)",
+                  "owner": [
+                    "Claude"
+                  ],
                   "depends": [],
                   "status": "pending",
                   "release": null,
@@ -399,7 +411,9 @@
                 {
                   "id": "HRD-31",
                   "description": "Extract shared CLI error handler in keystore/src/cli.ts (11 identical try-catch blocks)",
-                  "owner": ["Claude"],
+                  "owner": [
+                    "Claude"
+                  ],
                   "depends": [],
                   "status": "done",
                   "release": null
@@ -1157,6 +1171,37 @@
             }
           ],
           "plan": "tasks/active/comm-w4-llms-txt-codegen-2026-02-26.md"
+        },
+        {
+          "id": "COMM-W5",
+          "title": "Pages Production Pipeline",
+          "parallelism": "SRL",
+          "tasks": [
+            {
+              "id": "SITE-10",
+              "description": "Wire GHA \u2192 Cloudflare Pages: add deploy-site job (wrangler pages deploy), rename deploy\u2192deploy-vps, add verify smoke check, GitHub Environments (production). Plan: tasks/active/site-10-pages-gha-2026-02-27.md",
+              "owner": [
+                "Claude"
+              ],
+              "depends": [],
+              "status": "pending",
+              "release": null,
+              "plan": "tasks/active/site-10-pages-gha-2026-02-27.md"
+            },
+            {
+              "id": "SITE-11",
+              "description": "Remove prim-site from VPS: stop/disable systemd unit, remove Caddy prim.sh block, remove restart from deploy.sh, exclude site/ from rsync in deploy.yml + sync-vps.sh. Plan: tasks/active/site-11-prim-site-removal-2026-02-27.md",
+              "owner": [
+                "Claude"
+              ],
+              "depends": [
+                "SITE-10"
+              ],
+              "status": "pending",
+              "release": null,
+              "plan": "tasks/active/site-11-prim-site-removal-2026-02-27.md"
+            }
+          ]
         }
       ],
       "description": "Docs, Discord, brand assets, marketing."
