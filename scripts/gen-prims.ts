@@ -205,6 +205,14 @@ function genBashEndpoints(prims: Primitive[]): string {
   return `ENDPOINTS=(\n${lines.join("\n")}\n)`;
 }
 
+function genBashMetricsEndpoints(prims: Primitive[]): string {
+  const lines = deployed(prims).map((p) => {
+    const host = p.endpoint ?? `${p.id}.prim.sh`;
+    return `  "https://${host}/v1/metrics"`;
+  });
+  return `ENDPOINTS=(\n${lines.join("\n")}\n)`;
+}
+
 // ── Main ───────────────────────────────────────────────────────────────────
 
 const prims = loadPrimitives();
@@ -251,7 +259,10 @@ applyOrCheck(join(ROOT, "deploy/prim/setup.sh"), "SERVICES", genBashServices(pri
 // 7. deploy/prim/healthcheck.sh — ENDPOINTS array
 applyOrCheck(join(ROOT, "deploy/prim/healthcheck.sh"), "ENDPOINTS", genBashEndpoints(prims), "bash");
 
-// 8. Per-page status badge + pricing
+// 8. scripts/metrics-snapshot.sh — ENDPOINTS array (with /v1/metrics path)
+applyOrCheck(join(ROOT, "scripts/metrics-snapshot.sh"), "ENDPOINTS", genBashMetricsEndpoints(prims), "bash");
+
+// 9. Per-page status badge + pricing
 for (const p of prims) {
   const pagePath = join(ROOT, "site", p.id, "index.html");
   if (!existsSync(pagePath)) continue;

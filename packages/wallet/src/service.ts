@@ -8,6 +8,7 @@ import {
   getWalletByAddress,
   getWalletsByOwner,
   deactivateWallet as dbDeactivateWallet,
+  reactivateWallet,
   insertFundRequest,
   getFundRequestById,
   getFundRequestsByWallet,
@@ -89,8 +90,22 @@ export async function registerWallet(request: RegisterWalletRequest): Promise<Re
     return { ok: false, status: 409, code: "already_registered", message: "Wallet already registered" };
   }
 
-  // 5. Insert wallet
+  // 5. Insert or reactivate wallet
   const effectiveChain = chain ?? DEFAULT_CHAIN;
+  if (existing?.deactivated_at) {
+    reactivateWallet(normalizedAddress);
+    return {
+      ok: true,
+      data: {
+        address: normalizedAddress,
+        chain: existing.chain,
+        label: existing.label ?? null,
+        registered_at: new Date().toISOString(),
+        created_at: new Date(existing.created_at).toISOString(),
+      },
+    };
+  }
+
   insertWallet({ address: normalizedAddress, chain: effectiveChain, createdBy: normalizedAddress, label });
 
   return {
