@@ -29,10 +29,5 @@ for svc in "${SERVICES[@]}"; do
   log "  prim-$svc restarted"
 done
 
-# ── 4. Restart site ───────────────────────────────────────────────────────────
-log "Restarting prim-site..."
-systemctl restart prim-site
-log "  prim-site restarted"
-
 log ""
 log "Deploy complete. Check logs with: journalctl -u prim-wallet -f"
