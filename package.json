@@ -36,7 +36,7 @@
     "gen:docs": "bun scripts/gen-docs.ts",
     "gen:logos": "bun scripts/gen-logos.ts",
     "gen:gate": "bun scripts/gen-gate.ts",
-    "gen:check": "bun scripts/gen-openapi.ts --check && bun scripts/gen-prims.ts --check && bun scripts/gen-mcp.ts --check && bun scripts/gen-cli.ts --check && bun scripts/gen-openai.ts --check && bun scripts/gen-tests.ts --check && bun scripts/gen-docs.ts --check && bun scripts/gen-sdk.ts --check && bun scripts/gen-logos.ts --check",
+    "gen:check": "bun scripts/gen-openapi.ts --check && bun scripts/gen-prims.ts --check && bun scripts/gen-mcp.ts --check && bun scripts/gen-cli.ts --check && bun scripts/gen-openai.ts --check && bun scripts/gen-tests.ts --check && bun scripts/gen-docs.ts --check && bun scripts/gen-sdk.ts --check",
     "push:github-profile": "bun scripts/gen-prims.ts && bun scripts/push-github-profile.ts",
     "gate": "bun scripts/gate-check.ts",
     "deploy:prim": "bun scripts/deploy-prim.ts",

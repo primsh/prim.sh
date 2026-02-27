@@ -258,6 +258,9 @@ function checkSpec(specFile: string): CheckResult {
     const specPaths = extractSpecPaths(spec);
     const indexRoutes = extractIndexRoutes(indexContent);
 
+    // Routes provided by x402 middleware (createAgentStackMiddleware), not in index.ts
+    const middlewareRoutes = new Set(["GET /", "GET /llms.txt"]);
+
     // Convert index routes to a set of "METHOD /path" for lookup
     const indexRouteSet = new Set(
       indexRoutes.map((r) => `${r.method} ${r.path}`)
@@ -266,6 +269,8 @@ function checkSpec(specFile: string): CheckResult {
     for (const specRoute of specPaths) {
       const honoPath = specPathToHonoPattern(specRoute.path);
       const key = `${specRoute.method} ${honoPath}`;
+
+      if (middlewareRoutes.has(key)) continue;
 
       if (!indexRouteSet.has(key)) {
         // Check if any index route matches with param wildcards
