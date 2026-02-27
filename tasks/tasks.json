@@ -278,6 +278,16 @@
                   ],
                   "status": "pending",
                   "release": "v1.0.0"
+                },
+                {
+                  "id": "HRD-26",
+                  "description": "Add packages/mcp/test/smoke.test.ts \u2014 zero tests on 14-source-file MCP server package",
+                  "owner": [
+                    "Claude"
+                  ],
+                  "depends": [],
+                  "status": "done",
+                  "release": null
                 }
               ]
             },
