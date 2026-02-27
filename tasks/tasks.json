@@ -278,6 +278,16 @@
                   ],
                   "status": "pending",
                   "release": "v1.0.0"
+                },
+                {
+                  "id": "HRD-28",
+                  "description": "Backfill domain/test/smoke.test.ts to 5-check contract (currently 37 lines, only 1 real check)",
+                  "owner": [
+                    "Claude"
+                  ],
+                  "depends": [],
+                  "status": "done",
+                  "release": "v1.0.0"
                 }
               ]
             },
