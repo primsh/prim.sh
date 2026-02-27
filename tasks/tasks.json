@@ -945,7 +945,7 @@
                     "Claude"
                   ],
                   "depends": [],
-                  "status": "pending",
+                  "status": "done",
                   "release": null
                 }
               ]
@@ -1027,7 +1027,7 @@
               ]
             }
           ],
-          "plan": "tasks/active/comm-w3-llms-txt-codegen-2026-02-26.md"
+          "plan": "tasks/active/comm-w4-llms-txt-codegen-2026-02-26.md"
         }
       ],
       "description": "Docs, Discord, brand assets, marketing."

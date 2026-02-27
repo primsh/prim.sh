@@ -155,3 +155,4 @@ Append-only log. When a task is marked done, move its row here and remove from T
 | SITE-6 | Custom 404 page | 2026-02-26 |
 | SITE-7 | Smooth scroll + scroll-hint anchors | 2026-02-26 |
 | SITE-8 | Fix `.hero` flexbox structure on sub-pages | 2026-02-26 |
+2026-02-26 | SITE-9 | Per-product install.sh: generator, serve route, hero block | done
