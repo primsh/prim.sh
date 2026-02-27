@@ -3,16 +3,20 @@ name: Code Review
 on:
   pull_request:
     types: [opened, synchronize]
+  issue_comment:
+    types: [created]
 
 concurrency:
-  group: review-${{ github.event.pull_request.number }}
+  group: review-${{ github.event.pull_request.number || github.event.issue.number }}
   cancel-in-progress: true
 
 jobs:
   review:
     name: Claude review
     runs-on: ubuntu-latest
-    if: github.actor != 'claude-code[bot]'
+    if: |
+      (github.event_name == 'pull_request' && github.actor != 'claude-code[bot]')
+      || (github.event_name == 'issue_comment' && github.event.issue.pull_request && contains(github.event.comment.body, '@claude'))
     timeout-minutes: 10
 
     permissions:
