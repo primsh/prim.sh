@@ -186,6 +186,33 @@ jobs:
       - name: Dependency audit
         run: pnpm audit --audit-level=high
 
+  safeguards:
+    name: Safeguards
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Reject large files (>1MB)
+        run: |
+          large=$(find . -not -path './.git/*' -not -path './node_modules/*' -not -path './.worktrees/*' -type f -size +1M)
+          if [ -n "$large" ]; then
+            echo "::error::Files over 1MB found:"
+            echo "$large"
+            exit 1
+          fi
+
+      - name: Reject local dev paths
+        run: |
+          # Catch macOS/Windows/Linux home dir paths that leak local machine info.
+          # /home/prim/ is the VPS service user — intentionally allowed.
+          hits=$(git grep -n -E '/Users/[a-zA-Z]|C:\\Users\\|/home/(?!prim)[a-z]' -- '*.ts' '*.js' '*.json' '*.yaml' '*.yml' '*.md' '*.html' '*.css' ':!pnpm-lock.yaml' ':!tests/runs/*' 2>/dev/null || true)
+          if [ -n "$hits" ]; then
+            echo "::error::Local dev paths detected (remove before committing):"
+            echo "$hits"
+            exit 1
+          fi
+
   secret-scan:
     name: Secret scan
     runs-on: ubuntu-latest
