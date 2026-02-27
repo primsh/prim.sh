@@ -7,7 +7,7 @@
 #
 # Do not duplicate these values in individual scripts.
 
-REPO_URL="https://github.com/useprim/prim.sh"
+REPO_URL="https://github.com/primsh/prim.sh"
 REPO_DIR="/opt/prim"
 PRIM_USER="prim"
 ENV_DIR="/etc/prim"
