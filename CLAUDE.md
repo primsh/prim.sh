@@ -143,14 +143,10 @@ Full conventions: `tasks/README.md`. Key rules for this project:
 ### Completion workflow
 
 1. Update `status` to `"done"` in `tasks/tasks.json`
-2. Append row to `tasks/completed/log.md`
-3. Remove task entry from `tasks/tasks.json`
-4. Regenerate TASKS.md: `bun scripts/gen-tasks-md.ts > TASKS.md`
-5. If plan doc exists: `git mv tasks/active/<plan>.md tasks/completed/`
+2. If plan doc exists: `git mv tasks/active/<plan>.md tasks/completed/`
 
 ### What does NOT belong in tasks.json / TASKS.md
 
-- Done tasks (go to `tasks/completed/log.md`)
 - Research notes (go to `tasks/research/`)
 - Milestone retrospectives (go to `tasks/completed/milestones.md`)
 - Plan doc indexes (live in `tasks/README.md`)

@@ -82,7 +82,7 @@
                 },
                 {
                   "id": "HRD-5",
-                  "description": "Fix `setUTCHours(24)` in `wallet/src/db.ts` — use explicit date arithmetic",
+                  "description": "Fix `setUTCHours(24)` in `wallet/src/db.ts` \u2014 use explicit date arithmetic",
                   "owner": [
                     "Claude"
                   ],
@@ -183,7 +183,7 @@
                 },
                 {
                   "id": "HRD-12",
-                  "description": "Fail-fast on missing PRIM_PAY_TO — zero-address fallback → startup crash with clear error message",
+                  "description": "Fail-fast on missing PRIM_PAY_TO \u2014 zero-address fallback \u2192 startup crash with clear error message",
                   "owner": [
                     "Claude"
                   ],
@@ -269,7 +269,7 @@
                 },
                 {
                   "id": "HRD-19",
-                  "description": "Fix token test mock typing — replace vi.fn<any[], any>() biome-ignore with properly typed mocks",
+                  "description": "Fix token test mock typing \u2014 replace vi.fn<any[], any>() biome-ignore with properly typed mocks",
                   "owner": [
                     "Claude"
                   ],
@@ -288,7 +288,7 @@
               "tasks": [
                 {
                   "id": "HRD-15",
-                  "description": "Fix pagination cursor/page inconsistency — email treats cursor as numeric offset, wallet as string",
+                  "description": "Fix pagination cursor/page inconsistency \u2014 email treats cursor as numeric offset, wallet as string",
                   "owner": [
                     "Claude"
                   ],
@@ -298,7 +298,7 @@
                 },
                 {
                   "id": "HRD-16",
-                  "description": "Add Zod schemas for request body validation — replace bare c.req.json<T>() with z.parse()",
+                  "description": "Add Zod schemas for request body validation \u2014 replace bare c.req.json<T>() with z.parse()",
                   "owner": [
                     "Claude"
                   ],
@@ -456,7 +456,7 @@
           "tasks": [
             {
               "id": "SP-7",
-              "description": "DockerProvider: Docker container tier as default (10–50x cheaper than VMs).",
+              "description": "DockerProvider: Docker container tier as default (10\u201350x cheaper than VMs).",
               "owner": [
                 "Claude"
               ],
@@ -534,7 +534,7 @@
               "tasks": [
                 {
                   "id": "I-4",
-                  "description": "Parallelize CI: split into concurrent jobs (setup → lint|typecheck|test|gen-check PARA), add concurrency + bun cache",
+                  "description": "Parallelize CI: split into concurrent jobs (setup \u2192 lint|typecheck|test|gen-check PARA), add concurrency + bun cache",
                   "owner": [
                     "Claude"
                   ],
@@ -545,7 +545,7 @@
                 },
                 {
                   "id": "I-3",
-                  "description": "CI OpenAPI spec validation — check that spec response shapes match PaginatedList<T> and error envelopes at build time",
+                  "description": "CI OpenAPI spec validation \u2014 check that spec response shapes match PaginatedList<T> and error envelopes at build time",
                   "owner": [
                     "Claude"
                   ],
@@ -576,7 +576,7 @@
                 },
                 {
                   "id": "OPS-5",
-                  "description": "GHA deploy pipeline: SSH deploy key (restricted to deploy.sh) + .github/workflows/deploy.yml (check → rsync → restart). Replaces manual sync:vps for prod.",
+                  "description": "GHA deploy pipeline: SSH deploy key (restricted to deploy.sh) + .github/workflows/deploy.yml (check \u2192 rsync \u2192 restart). Replaces manual sync:vps for prod.",
                   "owner": [
                     "Claude"
                   ],
@@ -623,7 +623,7 @@
               "tasks": [
                 {
                   "id": "I-2",
-                  "description": "Migrate TASKS.md → tasks.json: define schema, convert data, update launch-status.ts + docs, optional TASKS.md codegen.",
+                  "description": "Migrate TASKS.md \u2192 tasks.json: define schema, convert data, update launch-status.ts + docs, optional TASKS.md codegen.",
                   "owner": [
                     "Claude"
                   ],
@@ -656,7 +656,7 @@
             },
             {
               "id": "L-14",
-              "description": "Full token launch: create Uniswap pool, fund liquidity, make repo public, announce. Seed pool conservatively ($2–3K USDC)",
+              "description": "Full token launch: create Uniswap pool, fund liquidity, make repo public, announce. Seed pool conservatively ($2\u20133K USDC)",
               "owner": [
                 "Garric",
                 "Claude"
@@ -678,7 +678,7 @@
           "tasks": [
             {
               "id": "L-22",
-              "description": "Mainnet switchover: VPS env files `eip155:84532` → `eip155:8453`, set prod `PRIM_PAY_TO`, fund facilitator with mainnet USDC",
+              "description": "Mainnet switchover: VPS env files `eip155:84532` \u2192 `eip155:8453`, set prod `PRIM_PAY_TO`, fund facilitator with mainnet USDC",
               "owner": [
                 "Garric"
               ],
@@ -977,17 +977,21 @@
                 {
                   "id": "COM-3",
                   "description": "Add JSDoc field annotations to all api.ts interfaces (10 prims), create faucet api.ts, add missing ERROR_CODES to search + track",
-                  "owner": ["Claude"],
+                  "owner": [
+                    "Claude"
+                  ],
                   "depends": [],
-                  "status": "pending",
+                  "status": "done",
                   "release": null
                 },
                 {
                   "id": "COM-4",
                   "description": "Add llms.txt fields to prim.yaml (quick_start, tips, limits, ownership, routes_map) + update Primitive type in primitives.ts",
-                  "owner": ["Claude"],
+                  "owner": [
+                    "Claude"
+                  ],
                   "depends": [],
-                  "status": "pending",
+                  "status": "done",
                   "release": null
                 }
               ]
@@ -999,18 +1003,27 @@
               "tasks": [
                 {
                   "id": "COM-5",
-                  "description": "Build scripts/lib/parse-api.ts — regex parser extracting interfaces, fields, JSDoc, ERROR_CODES from api.ts files",
-                  "owner": ["Claude"],
-                  "depends": ["COM-3"],
-                  "status": "pending",
+                  "description": "Build scripts/lib/parse-api.ts \u2014 regex parser extracting interfaces, fields, JSDoc, ERROR_CODES from api.ts files",
+                  "owner": [
+                    "Claude"
+                  ],
+                  "depends": [
+                    "COM-3"
+                  ],
+                  "status": "done",
                   "release": null
                 },
                 {
                   "id": "COM-6",
-                  "description": "Build scripts/lib/render-llms-txt.ts + wire into gen-prims.ts — render full llms.txt from Primitive + ParsedApi + route prices",
-                  "owner": ["Claude"],
-                  "depends": ["COM-4", "COM-5"],
-                  "status": "pending",
+                  "description": "Build scripts/lib/render-llms-txt.ts + wire into gen-prims.ts \u2014 render full llms.txt from Primitive + ParsedApi + route prices",
+                  "owner": [
+                    "Claude"
+                  ],
+                  "depends": [
+                    "COM-4",
+                    "COM-5"
+                  ],
+                  "status": "done",
                   "release": null
                 }
               ]
@@ -1023,17 +1036,25 @@
                 {
                   "id": "COM-7",
                   "description": "Add GET /llms.txt handler + freeRoutes to all prims; remove embedded LLMS_TXT consts from email/domain/token/mem index.ts",
-                  "owner": ["Claude"],
-                  "depends": ["COM-6"],
-                  "status": "pending",
+                  "owner": [
+                    "Claude"
+                  ],
+                  "depends": [
+                    "COM-6"
+                  ],
+                  "status": "done",
                   "release": null
                 },
                 {
                   "id": "COM-8",
                   "description": "Add llms.txt to gen-prims.ts --check mode; verify CI workflow runs gen:check",
-                  "owner": ["Claude"],
-                  "depends": ["COM-6"],
-                  "status": "pending",
+                  "owner": [
+                    "Claude"
+                  ],
+                  "depends": [
+                    "COM-6"
+                  ],
+                  "status": "done",
                   "release": null
                 }
               ]
@@ -1054,7 +1075,7 @@
           "tasks": [
             {
               "id": "L-50",
-              "description": "deploy.sh: PaaS above spawn.sh — push container or repo URL, get live endpoint. Wraps Dokku/Coolify",
+              "description": "deploy.sh: PaaS above spawn.sh \u2014 push container or repo URL, get live endpoint. Wraps Dokku/Coolify",
               "owner": [
                 "Claude"
               ],
