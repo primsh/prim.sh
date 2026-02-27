@@ -1,0 +1,2 @@
+# Ignore k6 JSON output but keep the directory
+*.json
