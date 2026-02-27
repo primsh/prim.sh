@@ -266,12 +266,12 @@ export function renderFooter(crumb: string): string {
   return `<footer>
   <div class="footer-crumb">${crumb}</div>
   <div class="links">
-    <a href="/wallet" style="color:var(--wallet)">wallet</a>
-    <a href="/faucet" style="color:var(--faucet)">faucet</a>
-    <a href="/spawn" style="color:var(--green)">spawn</a>
-    <a href="/store" style="color:var(--orange)">store</a>
-    <a href="/email" style="color:var(--blue)">email</a>
-    <a href="/search" style="color:var(--lime)">search</a>
+    <a href="/wallet" style="color:var(--cat-crypto)">wallet</a>
+    <a href="/faucet" style="color:var(--cat-crypto)">faucet</a>
+    <a href="/spawn" style="color:var(--cat-compute)">spawn</a>
+    <a href="/store" style="color:var(--cat-storage)">store</a>
+    <a href="/email" style="color:var(--cat-comms)">email</a>
+    <a href="/search" style="color:var(--cat-intelligence)">search</a>
   </div>
   <div class="links">
     <a href="https://x.com/useprim">x</a>
