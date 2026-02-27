@@ -11,6 +11,8 @@ Part of the [prim.sh](https://prim.sh) agent-native stack. x402 payment (USDC on
 | `POST /v1/faucet/usdc` | Dispense 10 test USDC on Base Sepolia. Rate limit: once per 2 hours per address. | $0.01 | `DripRequest` | `DripResponse` |
 | `POST /v1/faucet/eth` | Dispense 0.01 test ETH on Base Sepolia. Rate limit: once per 1 hour per address. | $0.01 | `DripRequest` | `DripResponse` |
 | `GET /v1/faucet/status` | Check rate limit status for a wallet address across both faucets. | $0.01 | `—` | `FaucetStatusResponse` |
+| `GET /v1/faucet/treasury` | Check treasury wallet ETH balance and refill status. | $0.01 | `—` | `TreasuryStatus` |
+| `POST /v1/faucet/refill` | Batch-claim testnet ETH from Coinbase CDP faucet into treasury. Rate limited to once per 10 minutes. | $0.01 | `—` | `RefillResult` |
 
 ## Pricing
 
@@ -45,6 +47,23 @@ Part of the [prim.sh](https://prim.sh) agent-native stack. x402 payment (USDC on
 | `usdc` | `FaucetAvailability` | USDC faucet availability (2-hour cooldown). |
 | `eth` | `FaucetAvailability` | ETH faucet availability (1-hour cooldown). |
 
+### `TreasuryStatus`
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `address` | `string` |  |
+| `eth_balance` | `string` |  |
+| `needs_refill` | `boolean` |  |
+
+### `RefillResult`
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `claimed` | `number` |  |
+| `failed` | `number` |  |
+| `estimated_eth` | `string` |  |
+| `tx_hashes` | `string[]` |  |
+
 ## Usage
 
 ```bash
@@ -62,6 +81,10 @@ curl -X POST https://faucet.prim.sh/v1/faucet/usdc \
 
 - `PRIM_NETWORK`
 - `CIRCLE_API_KEY`
+- `CDP_API_KEY_ID`
+- `CDP_API_KEY_SECRET`
+- `FAUCET_REFILL_THRESHOLD_ETH`
+- `FAUCET_REFILL_BATCH_SIZE`
 
 ## Development
 

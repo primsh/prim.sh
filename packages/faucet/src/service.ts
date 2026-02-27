@@ -1,8 +1,9 @@
-import { createWalletClient, http, parseEther } from "viem";
+import { createWalletClient, createPublicClient, http, parseEther, formatEther } from "viem";
 import { baseSepolia } from "viem/chains";
 import { privateKeyToAccount } from "viem/accounts";
 import type { Address, Hex } from "viem";
 import { getNetworkConfig } from "@primsh/x402-middleware";
+import type { TreasuryStatus, RefillResult } from "./api.ts";
 
 export interface DripResult {
   tx_hash: string;
@@ -25,6 +26,78 @@ const ERC20_TRANSFER_ABI = [
     outputs: [{ name: "", type: "bool" }],
   },
 ] as const;
+
+/** Check treasury wallet ETH balance and whether it needs refill. */
+export async function getTreasuryBalance(): Promise<TreasuryStatus> {
+  const treasuryKey = process.env.FAUCET_TREASURY_KEY;
+  if (!treasuryKey) {
+    throw new Error("FAUCET_TREASURY_KEY not configured");
+  }
+
+  const netConfig = getNetworkConfig();
+  const rpcUrl = process.env.BASE_RPC_URL ?? netConfig.rpcUrl;
+  const account = privateKeyToAccount(treasuryKey as Hex);
+
+  const client = createPublicClient({
+    chain: baseSepolia,
+    transport: http(rpcUrl),
+  });
+
+  const balance = await client.getBalance({ address: account.address });
+  const thresholdStr = process.env.FAUCET_REFILL_THRESHOLD_ETH ?? "0.02";
+
+  return {
+    address: account.address,
+    eth_balance: formatEther(balance),
+    needs_refill: balance < parseEther(thresholdStr),
+  };
+}
+
+/** Claim testnet ETH from Coinbase CDP faucet in batch. */
+export async function refillTreasury(batchSize?: number): Promise<RefillResult> {
+  const treasuryKey = process.env.FAUCET_TREASURY_KEY;
+  if (!treasuryKey) {
+    throw new Error("FAUCET_TREASURY_KEY not configured");
+  }
+
+  const cdpKeyId = process.env.CDP_API_KEY_ID;
+  const cdpKeySecret = process.env.CDP_API_KEY_SECRET;
+  if (!cdpKeyId || !cdpKeySecret) {
+    throw new Error("CDP_API_KEY_ID and CDP_API_KEY_SECRET required for refill");
+  }
+
+  const account = privateKeyToAccount(treasuryKey as Hex);
+  const size = Math.min(batchSize ?? 100, 200);
+
+  const { CdpClient } = await import("@coinbase/cdp-sdk");
+  const cdp = new CdpClient({
+    apiKeyId: cdpKeyId,
+    apiKeySecret: cdpKeySecret,
+  });
+
+  const claims = Array.from({ length: size }, () =>
+    cdp.evm.requestFaucet({ address: account.address, network: "base-sepolia", token: "eth" }),
+  );
+
+  const results = await Promise.allSettled(claims);
+  const txHashes: string[] = [];
+  let failed = 0;
+
+  for (const r of results) {
+    if (r.status === "fulfilled") {
+      txHashes.push(r.value.transactionHash);
+    } else {
+      failed++;
+    }
+  }
+
+  return {
+    claimed: txHashes.length,
+    failed,
+    estimated_eth: (txHashes.length * 0.0001).toFixed(4),
+    tx_hashes: txHashes,
+  };
+}
 
 /**
  * Dispense test USDC via the Circle Faucet API.
@@ -138,6 +211,20 @@ export async function dripEth(address: string): Promise<DripResult> {
   const dripAmount = process.env.FAUCET_DRIP_ETH ?? "0.01";
 
   const account = privateKeyToAccount(treasuryKey as Hex);
+
+  // Pre-check: ensure treasury has enough for drip + gas
+  const publicClient = createPublicClient({
+    chain: baseSepolia,
+    transport: http(rpcUrl),
+  });
+  const balance = await publicClient.getBalance({ address: account.address });
+  const needed = parseEther(dripAmount) + parseEther("0.001");
+  if (balance < needed) {
+    const err = new Error("Treasury ETH balance too low. Call POST /v1/faucet/refill.");
+    (err as Error & { code: string }).code = "treasury_low";
+    throw err;
+  }
+
   const client = createWalletClient({
     account,
     chain: baseSepolia,

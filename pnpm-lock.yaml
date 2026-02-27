@@ -102,6 +102,9 @@ importers:
 
   packages/faucet:
     dependencies:
+      '@coinbase/cdp-sdk':
+        specifier: ^1.44.0
+        version: 1.44.1(bufferutil@4.1.0)(typescript@5.9.3)(utf-8-validate@5.0.10)
       '@primsh/x402-middleware':
         specifier: workspace:*
         version: link:../x402-middleware

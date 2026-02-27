@@ -24,6 +24,7 @@
     "check": "pnpm lint && pnpm typecheck && pnpm test"
   },
   "dependencies": {
+    "@coinbase/cdp-sdk": "^1.44.0",
     "@primsh/x402-middleware": "workspace:*",
     "hono": "^4.4.7",
     "viem": "^2.21.0"

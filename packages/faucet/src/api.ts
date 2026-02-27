@@ -21,6 +21,7 @@ export const ERROR_CODES = [
   "mainnet_rejected",
   "rate_limited",
   "faucet_error",
+  "treasury_low",
 ] as const;
 
 export type ErrorCode = (typeof ERROR_CODES)[number];
@@ -43,6 +44,21 @@ export interface DripResponse {
   chain: string;
   /** Backend that dispensed the tokens. "circle" | "treasury". Only present on USDC drips. */
   source?: string;
+}
+
+// ─── Treasury types ──────────────────────────────────────────────────────
+
+export interface TreasuryStatus {
+  address: string;
+  eth_balance: string;
+  needs_refill: boolean;
+}
+
+export interface RefillResult {
+  claimed: number;
+  failed: number;
+  estimated_eth: string;
+  tx_hashes: string[];
 }
 
 // ─── Status types ─────────────────────────────────────────────────────────

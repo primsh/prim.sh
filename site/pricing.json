@@ -102,6 +102,18 @@
           "path": "/v1/faucet/status",
           "price_usdc": "0.001",
           "description": "Check rate limit status for a wallet address across both faucets."
+        },
+        {
+          "method": "GET",
+          "path": "/v1/faucet/treasury",
+          "price_usdc": "0.001",
+          "description": "Check treasury wallet ETH balance and refill status."
+        },
+        {
+          "method": "POST",
+          "path": "/v1/faucet/refill",
+          "price_usdc": "0.001",
+          "description": "Batch-claim testnet ETH from Coinbase CDP faucet into treasury. Rate limited to once per 10 minutes."
         }
       ]
     },

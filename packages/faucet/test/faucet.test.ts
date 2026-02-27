@@ -20,8 +20,9 @@ process.env.FAUCET_DB_PATH = ":memory:";
 
 const mockSendTransaction = vi.fn<[], Promise<`0x${string}`>>();
 const mockWriteContract = vi.fn<[], Promise<`0x${string}`>>();
+const mockGetBalance = vi.fn<[], Promise<bigint>>();
 
-// ─── Mock viem wallet client ───────────────────────────────────────────────
+// ─── Mock viem wallet + public clients ────────────────────────────────────
 
 vi.mock("viem", async (importOriginal) => {
   const actual = await importOriginal<typeof import("viem")>();
@@ -31,8 +32,21 @@ vi.mock("viem", async (importOriginal) => {
       sendTransaction: mockSendTransaction,
       writeContract: mockWriteContract,
     })),
+    createPublicClient: vi.fn(() => ({
+      getBalance: mockGetBalance,
+    })),
   };
 });
+
+// ─── Mock @coinbase/cdp-sdk ───────────────────────────────────────────────
+
+const mockRequestFaucet = vi.fn();
+
+vi.mock("@coinbase/cdp-sdk", () => ({
+  CdpClient: vi.fn().mockImplementation(() => ({
+    evm: { requestFaucet: mockRequestFaucet },
+  })),
+}));
 
 // ─── Mock fetch (Circle Faucet API + wallet.sh allowlist) ─────────────────
 
@@ -100,11 +114,17 @@ beforeEach(() => {
   mockCircleFetch.mockReset();
   mockSendTransaction.mockReset();
   mockWriteContract.mockReset();
+  mockGetBalance.mockReset();
+  mockRequestFaucet.mockReset();
+  // Default: treasury has plenty of ETH
+  mockGetBalance.mockResolvedValue(1000000000000000000n); // 1 ETH
   process.env.PRIM_NETWORK = "eip155:84532";
   process.env.CIRCLE_API_KEY = "test-api-key";
   process.env.FAUCET_TREASURY_KEY =
     "0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80";
   process.env.FAUCET_DRIP_ETH = "0.01";
+  process.env.CDP_API_KEY_ID = "test-cdp-key-id";
+  process.env.CDP_API_KEY_SECRET = "test-cdp-key-secret";
   // Reset SQLite DB between tests to ensure isolation
   resetDb();
 });
@@ -387,6 +407,117 @@ describe("GET /v1/faucet/status", () => {
     expect(res.status).toBe(400);
     const body = (await res.json()) as { error: { code: string } };
     expect(body.error.code).toBe("invalid_request");
+  });
+});
+
+// ─── Treasury balance endpoint ────────────────────────────────────────────
+
+describe("GET /v1/faucet/treasury", () => {
+  it("returns 200 with treasury status shape", async () => {
+    mockGetBalance.mockResolvedValue(50000000000000000n); // 0.05 ETH
+    const res = await app.request("/v1/faucet/treasury");
+    expect(res.status).toBe(200);
+    const body = (await res.json()) as Record<string, unknown>;
+    expect(body.address).toBeDefined();
+    expect(body.eth_balance).toBe("0.05");
+    expect(body.needs_refill).toBe(false);
+  });
+
+  it("needs_refill is true when below threshold", async () => {
+    mockGetBalance.mockResolvedValue(10000000000000000n); // 0.01 ETH (below default 0.02)
+    const res = await app.request("/v1/faucet/treasury");
+    expect(res.status).toBe(200);
+    const body = (await res.json()) as Record<string, unknown>;
+    expect(body.needs_refill).toBe(true);
+  });
+
+  it("returns 502 when FAUCET_TREASURY_KEY missing", async () => {
+    const orig = process.env.FAUCET_TREASURY_KEY;
+    // biome-ignore lint/performance/noDelete: process.env must use delete to truly unset
+    delete process.env.FAUCET_TREASURY_KEY;
+
+    const res = await app.request("/v1/faucet/treasury");
+    expect(res.status).toBe(502);
+    const body = (await res.json()) as { error: { code: string } };
+    expect(body.error.code).toBe("faucet_error");
+
+    process.env.FAUCET_TREASURY_KEY = orig;
+  });
+});
+
+// ─── Refill endpoint ─────────────────────────────────────────────────────
+
+describe("POST /v1/faucet/refill", () => {
+  it("returns 200 with refill result on success", async () => {
+    mockRequestFaucet.mockResolvedValue({ transactionHash: "0xCdpTx1" });
+    const res = await postJson("/v1/faucet/refill", {});
+    expect(res.status).toBe(200);
+    const body = (await res.json()) as Record<string, unknown>;
+    expect(body.claimed).toBe(100);
+    expect(body.failed).toBe(0);
+    expect(body.estimated_eth).toBe("0.0100");
+    expect(Array.isArray(body.tx_hashes)).toBe(true);
+  });
+
+  it("handles partial failures", async () => {
+    let callCount = 0;
+    mockRequestFaucet.mockImplementation(() => {
+      callCount++;
+      if (callCount % 3 === 0) {
+        return Promise.reject(new Error("rate limited"));
+      }
+      return Promise.resolve({ transactionHash: `0xCdpTx${callCount}` });
+    });
+
+    const res = await postJson("/v1/faucet/refill", { batch_size: 9 });
+    expect(res.status).toBe(200);
+    const body = (await res.json()) as Record<string, unknown>;
+    expect(body.claimed).toBe(6);
+    expect(body.failed).toBe(3);
+  });
+
+  it("rate limited — returns 429 on second call within 10 minutes", async () => {
+    mockRequestFaucet.mockResolvedValue({ transactionHash: "0xCdpTx1" });
+    const first = await postJson("/v1/faucet/refill", { batch_size: 1 });
+    expect(first.status).toBe(200);
+
+    const second = await postJson("/v1/faucet/refill", { batch_size: 1 });
+    expect(second.status).toBe(429);
+    const body = (await second.json()) as { error: { code: string; retryAfter: number } };
+    expect(body.error.code).toBe("rate_limited");
+    expect(body.error.retryAfter).toBeGreaterThan(0);
+  });
+
+  it("returns 502 when CDP env vars missing", async () => {
+    const origId = process.env.CDP_API_KEY_ID;
+    const origSecret = process.env.CDP_API_KEY_SECRET;
+    // biome-ignore lint/performance/noDelete: process.env must use delete to truly unset
+    delete process.env.CDP_API_KEY_ID;
+    // biome-ignore lint/performance/noDelete: process.env must use delete to truly unset
+    delete process.env.CDP_API_KEY_SECRET;
+
+    const res = await postJson("/v1/faucet/refill", {});
+    expect(res.status).toBe(502);
+    const body = (await res.json()) as { error: { code: string; message: string } };
+    expect(body.error.code).toBe("faucet_error");
+    expect(body.error.message).toContain("CDP_API_KEY");
+
+    process.env.CDP_API_KEY_ID = origId;
+    process.env.CDP_API_KEY_SECRET = origSecret;
+  });
+});
+
+// ─── ETH drip treasury_low ───────────────────────────────────────────────
+
+describe("POST /v1/faucet/eth — treasury_low", () => {
+  it("returns 503 with treasury_low when balance is too low", async () => {
+    mockGetBalance.mockResolvedValue(1000000000000n); // 0.000001 ETH — way too low
+    const addr = "0x14dc79964DA2C08Da15fd353D30FF18283C7bD3c";
+    const res = await postJson("/v1/faucet/eth", { address: addr });
+    expect(res.status).toBe(503);
+    const body = (await res.json()) as { error: { code: string; message: string } };
+    expect(body.error.code).toBe("treasury_low");
+    expect(body.error.message).toContain("POST /v1/faucet/refill");
   });
 });
 

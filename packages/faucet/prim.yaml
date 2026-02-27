@@ -12,6 +12,10 @@ phantom: false
 env:
   - PRIM_NETWORK
   - CIRCLE_API_KEY
+  - CDP_API_KEY_ID
+  - CDP_API_KEY_SECRET
+  - FAUCET_REFILL_THRESHOLD_ETH
+  - FAUCET_REFILL_BATCH_SIZE
 pricing:
   - op: "USDC drip"
     price: "free"
@@ -61,6 +65,8 @@ quick_start:
   - "POST /v1/faucet/usdc with {\"address\": \"0x...\"} → receive 10 test USDC (free)"
   - "POST /v1/faucet/eth with {\"address\": \"0x...\"} → receive 0.01 test ETH (free)"
   - "GET /v1/faucet/status?address=0x... → check cooldown before dripping"
+  - "GET /v1/faucet/treasury → check treasury ETH balance"
+  - "POST /v1/faucet/refill → batch-claim ETH from CDP faucet into treasury"
 
 tips:
   - "No x402 payment required — faucet is entirely free."
@@ -106,6 +112,7 @@ routes_map:
       - { status: 403, code: wallet_not_allowed, description: "Wallet not on allowlist (private beta)" }
       - { status: 403, code: mainnet_rejected, description: "Faucet only operates on testnet" }
       - { status: 429, code: rate_limited, description: "Address already dripped within 1 hour. retryAfter in response." }
+      - { status: 503, code: treasury_low, description: "Treasury ETH too low. Call POST /v1/faucet/refill." }
       - { status: 502, code: faucet_error, description: "Treasury wallet failed to send ETH" }
   - route: "GET /v1/faucet/status"
     request: null
@@ -120,6 +127,29 @@ routes_map:
       - { name: address, type: string, description: "EVM wallet address (required)" }
     errors:
       - { status: 400, code: invalid_request, description: "Missing or invalid address query param" }
+  - route: "GET /v1/faucet/treasury"
+    request: null
+    response: TreasuryStatus
+    status: 200
+    description: "Check treasury wallet ETH balance and refill status."
+    notes: "Free. No allowlist required."
+    operation_id: get_treasury_status
+    request_type: null
+    response_type: TreasuryStatus
+    errors:
+      - { status: 502, code: faucet_error, description: "FAUCET_TREASURY_KEY not configured" }
+  - route: "POST /v1/faucet/refill"
+    request: null
+    response: RefillResult
+    status: 200
+    description: "Batch-claim testnet ETH from Coinbase CDP faucet into treasury. Rate limited to once per 10 minutes."
+    notes: "Free. No allowlist required. Requires CDP_API_KEY_ID and CDP_API_KEY_SECRET."
+    operation_id: refill_treasury
+    request_type: null
+    response_type: RefillResult
+    errors:
+      - { status: 429, code: rate_limited, description: "Refill called within 10 minutes. retryAfter in response." }
+      - { status: 502, code: faucet_error, description: "CDP API keys not configured" }
 
 cta:
   headline: "Testnet funds are a **POST request**."
@@ -143,6 +173,8 @@ sections:
     title: "API"
     highlight: "reference"
     lines:
-      - "POST  /v1/faucet/usdc  # Drip 10 USDC (2hr cooldown)"
-      - "POST  /v1/faucet/eth   # Drip 0.01 ETH (1hr cooldown)"
-      - "GET   /v1/faucet/status # Check cooldown status for address"
+      - "POST  /v1/faucet/usdc     # Drip 10 USDC (2hr cooldown)"
+      - "POST  /v1/faucet/eth      # Drip 0.01 ETH (1hr cooldown)"
+      - "GET   /v1/faucet/status    # Check cooldown status for address"
+      - "GET   /v1/faucet/treasury  # Check treasury ETH balance"
+      - "POST  /v1/faucet/refill    # Refill treasury from CDP (10min cooldown)"

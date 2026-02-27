@@ -582,6 +582,8 @@ Limits:
   1. POST /v1/faucet/usdc with {"address": "0x..."} → receive 10 test USDC (free)
   2. POST /v1/faucet/eth with {"address": "0x..."} → receive 0.01 test ETH (free)
   3. GET /v1/faucet/status?address=0x... → check cooldown before dripping
+  4. GET /v1/faucet/treasury → check treasury ETH balance
+  5. POST /v1/faucet/refill → batch-claim ETH from CDP faucet into treasury
 
 ## Tips
 
@@ -603,6 +605,7 @@ Error codes:
   mainnet_rejected
   rate_limited
   faucet_error
+  treasury_low
 
 ---
 
@@ -699,6 +702,7 @@ Errors:
   403  wallet_not_allowed  Wallet not on allowlist (private beta)
   403  mainnet_rejected    Faucet only operates on testnet
   429  rate_limited        Address already dripped within 1 hour. retryAfter in response.
+  503  treasury_low        Treasury ETH too low. Call POST /v1/faucet/refill.
   502  faucet_error        Treasury wallet failed to send ETH
 
 ---
@@ -719,6 +723,40 @@ Response (200):
 
 Errors:
   400  invalid_request  Missing or invalid address query param
+
+---
+
+### GET /v1/faucet/treasury
+
+Check treasury wallet ETH balance and refill status.
+
+Free. No allowlist required.
+
+Response (200):
+  address       string
+  eth_balance   string
+  needs_refill  boolean
+
+Errors:
+  502  faucet_error  FAUCET_TREASURY_KEY not configured
+
+---
+
+### POST /v1/faucet/refill
+
+Batch-claim testnet ETH from Coinbase CDP faucet into treasury. Rate limited to once per 10 minutes.
+
+Free. No allowlist required. Requires CDP_API_KEY_ID and CDP_API_KEY_SECRET.
+
+Response (200):
+  claimed        number
+  failed         number
+  estimated_eth  string
+  tx_hashes      string[]
+
+Errors:
+  429  rate_limited  Refill called within 10 minutes. retryAfter in response.
+  502  faucet_error  CDP API keys not configured
 
 ---
 

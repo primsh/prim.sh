@@ -1,6 +1,6 @@
 {
   "version": "1.0.0",
-  "generated": "2026-02-27T10:28:28.247Z",
+  "generated": "2026-02-27T10:49:30.911Z",
   "primitives": [
     {
       "id": "auth",
@@ -399,6 +399,18 @@
           "id": "get_faucet_status",
           "route": "GET /v1/faucet/status",
           "description": "Check rate limit status for a wallet address across both faucets.",
+          "price": "$0.00"
+        },
+        {
+          "id": "get_treasury_status",
+          "route": "GET /v1/faucet/treasury",
+          "description": "Check treasury wallet ETH balance and refill status.",
+          "price": "$0.00"
+        },
+        {
+          "id": "refill_treasury",
+          "route": "POST /v1/faucet/refill",
+          "description": "Batch-claim testnet ETH from Coinbase CDP faucet into treasury. Rate limited to once per 10 minutes.",
           "price": "$0.00"
         }
       ],

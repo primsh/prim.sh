@@ -8,7 +8,7 @@ import {
 } from "@primsh/x402-middleware";
 import { createPrimApp } from "@primsh/x402-middleware/create-prim-app";
 import { RateLimiter } from "./rate-limit.ts";
-import { dripUsdc, dripEth } from "./service.ts";
+import { dripUsdc, dripEth, getTreasuryBalance, refillTreasury } from "./service.ts";
 
 // faucet.sh is a free service: no x402 middleware, no PRIM_PAY_TO required.
 // It uses createWalletAllowlistChecker for allowlist checks in route handlers.
@@ -28,6 +28,8 @@ const app = createPrimApp(
         { method: "POST", path: "/v1/faucet/usdc", price_usdc: "0", description: "Dispense test USDC (free, rate-limited)" },
         { method: "POST", path: "/v1/faucet/eth", price_usdc: "0", description: "Dispense test ETH (free, rate-limited)" },
         { method: "GET", path: "/v1/faucet/status", price_usdc: "0", description: "Rate limit status" },
+        { method: "GET", path: "/v1/faucet/treasury", price_usdc: "0", description: "Treasury balance" },
+        { method: "POST", path: "/v1/faucet/refill", price_usdc: "0", description: "Refill treasury from CDP faucet" },
       ],
     },
   },
@@ -39,11 +41,12 @@ const logger = createLogger("faucet.sh");
 // Rate limiters (SQLite-backed, persist across restarts)
 const usdcLimiter = new RateLimiter("usdc", 2 * 60 * 60 * 1000); // 2 hours
 const ethLimiter = new RateLimiter("eth", 60 * 60 * 1000); // 1 hour
+const refillLimiter = new RateLimiter("refill", 10 * 60 * 1000); // 10 minutes
 
 // Testnet guard — refuse to serve on mainnet
 app.use("*", async (c, next) => {
   // Allow health check and pricing on any network
-  if (c.req.method === "GET" && (c.req.path === "/" || c.req.path === "/pricing" || c.req.path === "/llms.txt" || c.req.path === "/v1/metrics")) {
+  if (c.req.method === "GET" && (c.req.path === "/" || c.req.path === "/pricing" || c.req.path === "/llms.txt" || c.req.path === "/v1/metrics" || c.req.path === "/v1/faucet/treasury")) {
     return next();
   }
 
@@ -168,6 +171,10 @@ app.post("/v1/faucet/eth", async (c) => {
     return c.json(result, 200);
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);
+    const code = (err as Error & { code?: string }).code;
+    if (code === "treasury_low") {
+      return c.json({ error: { code: "treasury_low", message } }, 503);
+    }
     return c.json({ error: { code: "faucet_error", message } }, 502);
   }
 });
@@ -197,6 +204,63 @@ app.get("/v1/faucet/status", (c) => {
       retry_after_ms: ethCheck.retryAfterMs,
     },
   });
+});
+
+// GET /v1/faucet/treasury — Treasury ETH balance
+app.get("/v1/faucet/treasury", async (c) => {
+  try {
+    const status = await getTreasuryBalance();
+    return c.json(status, 200);
+  } catch (err) {
+    const message = err instanceof Error ? err.message : String(err);
+    return c.json({ error: { code: "faucet_error", message } }, 502);
+  }
+});
+
+// POST /v1/faucet/refill — Batch-claim testnet ETH from CDP faucet
+app.post("/v1/faucet/refill", async (c) => {
+  const rateCheck = refillLimiter.check("__refill__");
+  if (!rateCheck.allowed) {
+    const retryAfter = Math.ceil(rateCheck.retryAfterMs / 1000);
+    return new Response(
+      JSON.stringify({
+        error: {
+          code: "rate_limited",
+          message: `Refill available in ${Math.ceil(retryAfter / 60)} minutes`,
+          retryAfter,
+        },
+      }),
+      {
+        status: 429,
+        headers: {
+          "Content-Type": "application/json",
+          "Retry-After": String(retryAfter),
+        },
+      },
+    );
+  }
+
+  try {
+    let batchSize: number | undefined;
+    try {
+      const body = await c.req.json<{ batch_size?: number }>();
+      if (body.batch_size != null) {
+        batchSize = body.batch_size;
+      }
+    } catch {
+      // No body or invalid JSON — use defaults
+    }
+
+    const result = await refillTreasury(batchSize);
+    refillLimiter.record("__refill__");
+    return c.json(result, 200);
+  } catch (err) {
+    const message = err instanceof Error ? err.message : String(err);
+    if (message.includes("CDP_API_KEY")) {
+      return c.json({ error: { code: "faucet_error", message } }, 502);
+    }
+    return c.json({ error: { code: "faucet_error", message } }, 500);
+  }
 });
 
 export default app;
