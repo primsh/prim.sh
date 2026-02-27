@@ -1501,7 +1501,7 @@
               "parallelism": "PARA",
               "tasks": [
                 {
-                  "id": "I-33",
+                  "id": "I-36",
                   "description": "gen:openapi — generate OpenAPI 3.1 specs from api.ts types + prim.yaml routes_map. Closes YAML→everything loop. track/infer/imagine currently invisible to MCP/CLI/OpenAI gen.",
                   "owner": ["Claude"],
                   "depends": [],
@@ -1509,7 +1509,7 @@
                   "release": null
                 },
                 {
-                  "id": "I-34",
+                  "id": "I-37",
                   "description": "Dynamic deploy.sh SERVICES — read prim.yaml status:live instead of hardcoded array. 4 prims (token, mem, domain, track) missing from auto-restart.",
                   "owner": ["Claude"],
                   "depends": [],

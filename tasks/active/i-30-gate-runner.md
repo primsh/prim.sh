@@ -35,7 +35,7 @@ A prim moves from `testing` → `live` only when both layers pass.
 | I-31 | Infer test group in smoke-test-plan.json (4 tests) | **done** |
 | I-32 | CI gate workflow (`.github/workflows/gate.yml`) | pending |
 | I-33 | `gen:gate` — codegen test entries from prim.yaml routes_map | **done** |
-| I-34 | Agent canary (`--canary` flag on gate runner) | pending |
+| I-34 | Agent canary (`--canary` flag on gate runner) | **done** |
 
 ### What's built
 
