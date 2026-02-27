@@ -39,9 +39,8 @@ prim/
 │   └── <primitive>/index.html
 ├── specs/                    # Product specs
 ├── tasks/                    # Plan docs (active/ and completed/)
-│   ├── tasks.json            # SOT for task data (edit this, not TASKS.md)
+│   ├── tasks.json            # SOT for all task data
 │   └── tasks.schema.json     # JSON Schema draft 2020-12
-├── TASKS.md                  # Human-readable view (generated from tasks.json)
 ├── package.json              # Workspace root
 ├── pnpm-workspace.yaml
 ├── tsconfig.base.json
@@ -135,18 +134,19 @@ Full conventions: `tasks/README.md`. Key rules for this project:
 
 ### Task SOT
 
-`tasks/tasks.json` is the source of truth for all task data.
+`tasks/tasks.json` is the sole source of truth. **TASKS.md does not exist and must never be generated or referenced.** All task reads and writes go through `tasks/tasks.json` directly.
 
 ### Completion workflow
 
 1. Update `status` to `"done"` in `tasks/tasks.json`
 2. If plan doc exists: `git mv tasks/active/<plan>.md tasks/completed/`
 
-### What does NOT belong in tasks.json / TASKS.md
+### What does NOT belong in tasks.json
 
 - Research notes (go to `tasks/research/`)
 - Milestone retrospectives (go to `tasks/completed/milestones.md`)
 - Plan doc indexes (live in `tasks/README.md`)
+- Generated markdown views (no TASKS.md — read tasks.json directly)
 
 ## Landing Page Design System
 
