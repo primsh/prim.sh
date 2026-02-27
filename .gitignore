@@ -49,6 +49,9 @@ site-dist/
 # Generated logos (regenerate with: bun scripts/gen-logos.ts)
 site/assets/logos/
 
+# Generated OG images (regenerate with: bun scripts/gen-og-images.ts)
+site/assets/og/
+
 # Vitest timestamp artifacts
 **/*.timestamp-*.mjs
 

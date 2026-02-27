@@ -484,13 +484,13 @@ function headMeta(cfg: PrimConfig): string {
 <meta property="og:type" content="website">
 <meta property="og:title" content="${title}">
 <meta property="og:description" content="${desc}">
-<meta property="og:image" content="https://prim.sh/assets/banner.jpg">
+<meta property="og:image" content="https://prim.sh/assets/og/${esc(cfg.id)}.png">
 <meta property="og:url" content="https://prim.sh/${esc(cfg.id)}">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:site" content="@useprim">
 <meta name="twitter:title" content="${title}">
 <meta name="twitter:description" content="${desc}">
-<meta name="twitter:image" content="https://prim.sh/assets/banner.jpg">
+<meta name="twitter:image" content="https://prim.sh/assets/og/${esc(cfg.id)}.png">
 <link rel="icon" type="image/jpeg" href="/assets/favicon.jpg">
 <link rel="apple-touch-icon" href="/assets/logo.png">`;
 }
