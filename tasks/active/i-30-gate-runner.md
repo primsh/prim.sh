@@ -22,7 +22,7 @@ The loop: **prim factory creates prims → gate runner validates them → live.*
 - `scripts/gate-runner.ts` — deterministic HTTP runner with:
   - `--dry-run`: lists all 7 groups, 42 tests
   - `--group <id>`: run a single group
-  - `--ci`: gating logic (deployed prims soft-fail, live prims hard-fail)
+  - `--ci`: gating logic (testing prims soft-fail, live prims hard-fail)
   - Template variable substitution + capture store (cross-test data flow)
   - Shape matching (loose schema: `"string"`, `"array (non-empty)"`, etc.)
   - x402 payment via `createPrimFetch` from `@primsh/x402-client`
@@ -33,7 +33,7 @@ The loop: **prim factory creates prims → gate runner validates them → live.*
 
 - `--dry-run`: all groups display correctly
 - `--group discovery`: 6/6 health checks pass against live endpoints
-- `--ci --group infer`: deployed prim failure correctly treated as non-blocking (exit 0 + warning)
+- `--ci --group infer`: testing prim failure correctly treated as non-blocking (exit 0 + warning)
 - Results file written to `tests/runs/`
 
 ### What's NOT built yet
@@ -62,8 +62,8 @@ scripts/gate-runner.ts
 
 | Prim status change | Test result | CI outcome |
 |-------------------|-------------|------------|
-| New prim → deployed | Tests pass | Prim can go live |
-| New prim → deployed | Tests fail (below threshold) | Warn, don't block CI. Prim stays building. |
+| New prim → live | Tests pass | Prim can go live |
+| New prim → live | Tests fail (below threshold) | Warn, don't block CI. Prim stays building. |
 | Already live prim | Tests pass | CI passes |
 | Already live prim | Tests fail | **CI fails** — regression detected |
 
@@ -77,7 +77,7 @@ Trigger: push to main, or PR that modifies `packages/*/prim.yaml`.
 
 Steps:
 1. Detect which prims changed status (diff prim.yaml files)
-2. Categorize: new prim (building→deployed) vs already live
+2. Categorize: new prim (building→live) vs already live
 3. Run `bun scripts/gate-runner.ts --ci --group <changed-prims>`
 4. Gating:
    - New prim below threshold: annotate PR with warning, don't fail
@@ -90,7 +90,7 @@ Needs: funded wallet (GH secret), spawn.sh access for `--spawn` mode.
 
 Extend `pnpm gen` to auto-generate smoke-test-plan.json entries from prim.yaml `routes_map`.
 
-For each deployed prim, emit:
+For each live prim, emit:
 - Health check test (free GET /)
 - One test per route in `routes_map` (method, endpoint, expected status + response shape from api.ts types)
 

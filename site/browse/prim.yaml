@@ -1,7 +1,7 @@
 id: browse
 name: browse.sh
 endpoint: browse.prim.sh
-status: soon
+status: phantom
 type: browser
 card_class: p16
 description: "Headless browser for agents. Playwright or Browserbase. Click, fill, screenshot."

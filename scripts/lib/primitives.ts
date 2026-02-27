@@ -11,7 +11,7 @@ import { parse as parseYaml } from "yaml";
 
 // ── Types ──────────────────────────────────────────────────────────────────
 
-export type PrimStatus = "idea" | "planning" | "building" | "testing" | "deployed" | "live";
+export type PrimStatus = "idea" | "planning" | "building" | "testing" | "live";
 
 export interface PricingRow {
   op: string;
@@ -23,7 +23,7 @@ export interface GateConfig {
   coverage_threshold?: number;  // default 80
   allow_todo?: boolean;          // default false
   skip_smoke?: boolean;          // default false
-  approved_by?: string;          // required for deployed → live
+  approved_by?: string;          // required for testing → live
 }
 
 export interface DeployConfig {
@@ -174,9 +174,9 @@ export function getGateOverrides(p: Primitive): Required<GateConfig> {
 
 // ── Filters ────────────────────────────────────────────────────────────────
 
-/** Primitives on VPS (status = deployed or live) */
+/** Primitives on VPS (status = live) */
 export function deployed(prims: Primitive[]): Primitive[] {
-  return prims.filter((p) => p.status === "deployed" || p.status === "live");
+  return prims.filter((p) => p.status === "live");
 }
 
 /** Primitives that have a packages/<id>/ directory */

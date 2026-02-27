@@ -203,10 +203,10 @@ async function main() {
 
   console.log(`\n=== Deploy Artifacts: ${primId} ===\n`);
 
-  // Gate check (testing → deployed)
+  // Gate check (testing → live)
   if (!SKIP_GATE && !CHECK_MODE) {
-    console.log("Running gate check (testing → deployed)...");
-    const gate = await runGateCheck(primId, "deployed");
+    console.log("Running gate check (testing → live)...");
+    const gate = await runGateCheck(primId, "live");
     if (!gate.pass) {
       console.log("\nGate FAILED:");
       for (const f of gate.failures) console.log(`  ✗ ${f}`);
@@ -266,7 +266,7 @@ Next steps (run on VPS):
      # Then fill in real values: vim ${PRIM_ETC}/${primId}.env
   5. cp deploy/prim/Caddyfile /etc/caddy/Caddyfile && caddy reload --config /etc/caddy/Caddyfile
   6. systemctl enable --now prim-${primId}
-  7. bun scripts/gate-check.ts ${primId} deployed
+  7. bun scripts/gate-check.ts ${primId} live
 `);
   }
 }

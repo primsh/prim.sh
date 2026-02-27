@@ -13,7 +13,7 @@ Smoke test completeness is uneven. search has only Check 1. faucet uses non-stan
 
 ### What conformance checks
 
-For each package with a `prim.yaml` where `status` is `deployed` or `live`:
+For each package with a `prim.yaml` where `status` is `live`:
 
 **Structural checks** (static analysis, no test execution):
 1. `test/smoke.test.ts` exists

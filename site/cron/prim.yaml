@@ -1,7 +1,7 @@
 id: cron
 name: cron.sh
 endpoint: cron.prim.sh
-status: soon
+status: phantom
 type: scheduler
 card_class: p8
 description: "Scheduled jobs for agents. HTTP callbacks on a cron schedule. No servers needed."

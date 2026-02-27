@@ -42,7 +42,7 @@ a{color:var(--accent);text-decoration:none}a:hover{text-decoration:underline}
 .badge.status-live{background:rgba(0,255,100,0.1);border-color:rgba(0,255,100,0.4);color:#00ff64}
 .badge.status-built{background:rgba(255,200,0,0.08);border-color:rgba(255,200,0,0.3);color:#ffc800}
 .badge.status-building{background:rgba(255,140,0,0.08);border-color:rgba(255,140,0,0.3);color:#ff8c00}
-.badge.status-soon{background:var(--surface);border-color:var(--border);color:var(--muted)}
+.badge.status-phantom{background:var(--surface);border-color:var(--border);color:var(--muted)}
 
 
 /* ── Layout ──────────────────────────────────────────────────────────────── */

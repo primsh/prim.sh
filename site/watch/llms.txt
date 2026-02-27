@@ -4,7 +4,7 @@
 
 Base URL: https://watch.prim.sh  
 Auth: x402 (USDC on Base, chain `eip155:8453`)
-Status: Coming soon. This primitive is not yet available.
+Status: Phantom. This primitive is not yet available.
 
 ## Endpoints
 

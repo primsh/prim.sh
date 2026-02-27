@@ -1,7 +1,7 @@
 id: faucet
 name: faucet.sh
 endpoint: faucet.prim.sh
-status: deployed
+status: live
 type: testnet
 card_class: pfaucet
 description: "Free testnet USDC and ETH on demand. Fund your agent wallet and start building."

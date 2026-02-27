@@ -1,7 +1,7 @@
 id: mart
 name: mart.sh
 endpoint: mart.prim.sh
-status: soon
+status: phantom
 type: commerce
 card_class: p26
 description: "E-commerce for agents. Search, buy, and track products via Amazon or eBay API."

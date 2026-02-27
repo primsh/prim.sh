@@ -1,7 +1,7 @@
 id: code
 name: code.sh
 endpoint: code.prim.sh
-status: soon
+status: phantom
 type: execution
 card_class: p11
 description: "Sandboxed code execution for agents. Run untrusted code safely. x402 auth."

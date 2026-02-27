@@ -99,11 +99,11 @@ function genCards(prims: Primitive[]): string {
   const cards = prims.filter((p) => p.show_on_index !== false);
   return cards
     .map((p) => {
-      const isLive = p.status === "deployed" || p.status === "live" || p.status === "testing";
+      const isLive = p.status === "live" || p.status === "testing";
       const cls = [
         "product",
         p.card_class,
-        !isLive && !p.phantom ? "soon" : "",
+        !isLive && !p.phantom ? "phantom" : "",
         p.phantom ? "phantom" : "",
       ]
         .filter(Boolean)
@@ -111,7 +111,7 @@ function genCards(prims: Primitive[]): string {
 
       const link = isLive
         ? `      <a href="/${p.id}" class="product-link">→ ${p.name}</a>`
-        : `      <span class="soon-label">soon</span>`;
+        : `      <span class="phantom-label">phantom</span>`;
 
       return `    <div class="${cls}">
       <div class="product-name">${p.name}</div>
@@ -124,7 +124,7 @@ ${link}
 }
 
 function genLlmsTxtSections(prims: Primitive[]): string {
-  const live = prims.filter((p) => p.status === "deployed" || p.status === "live");
+  const live = prims.filter((p) => p.status === "live");
   const built = prims.filter((p) => p.status === "building" || p.status === "testing");
   const planned = prims.filter((p) => p.status === "idea" || p.status === "planning");
 
@@ -144,13 +144,11 @@ function genReadmeTable(prims: Primitive[]): string {
     .filter((p) => p.show_on_index !== false)
     .map((p) => {
       const statusLabel =
-        p.status === "deployed"
-          ? "Live (testnet)"
-          : p.status === "live"
-            ? "Live"
-            : p.status === "building" || p.status === "testing"
-              ? "Built"
-              : "Coming soon";
+        p.status === "live"
+          ? "Live"
+          : p.status === "building" || p.status === "testing"
+            ? "Built"
+            : "Phantom";
       const link = p.endpoint ? `[${p.name}](https://${p.endpoint})` : p.name;
       return `| ${link} | ${p.description} | ${statusLabel} |`;
     });
@@ -167,23 +165,21 @@ function genPreDeployEnvs(prims: Primitive[]): string {
 
 function genStatusBadge(p: Primitive): string {
   const labels: Record<string, string> = {
-    deployed: "● Live (testnet)",
     live: "● Live",
     testing: "○ Built — testing",
     building: "○ Built — deploy pending",
     planning: "◌ In planning",
-    idea: "◌ Coming soon",
+    idea: "◌ Phantom",
   };
   const classes: Record<string, string> = {
-    deployed: "status-testing",
     live: "status-live",
     testing: "status-built",
     building: "status-built",
     planning: "status-building",
-    idea: "status-soon",
+    idea: "status-phantom",
   };
   const label = labels[p.status] ?? p.status;
-  const cls = classes[p.status] ?? "status-soon";
+  const cls = classes[p.status] ?? "status-phantom";
   return `    <span class="badge ${cls}">${label}</span>`;
 }
 

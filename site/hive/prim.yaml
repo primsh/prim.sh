@@ -1,7 +1,7 @@
 id: hive
 name: hive.sh
 endpoint: hive.prim.sh
-status: soon
+status: phantom
 type: coordination
 card_class: p24
 description: "Agent discovery and collaboration via A2A protocol. Register agent cards, delegate tasks."

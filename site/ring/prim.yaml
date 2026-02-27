@@ -1,7 +1,7 @@
 id: ring
 name: ring.sh
 endpoint: ring.prim.sh
-status: soon
+status: phantom
 type: voice
 card_class: p3
 description: "Phone calls and SMS for agents. No carrier account needed."

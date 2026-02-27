@@ -79,7 +79,7 @@ Response (200):
 
 Chat completion. Supports streaming, tool use, structured output.
 
-Price: $pass-through + 10%
+Price: $0.01
 
 Request:
   model              string                                                                           required

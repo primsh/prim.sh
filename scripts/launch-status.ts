@@ -31,7 +31,7 @@ if (!VPS_IP) {
 }
 const FETCH_TIMEOUT = 10_000;
 
-// Derived from prim.yaml status=deployed|live — no hardcoded list
+// Derived from prim.yaml status=live — no hardcoded list
 const LIVE_SERVICES = deployed(loadPrimitives()).map(
   (p) => p.endpoint ?? `${p.id}.prim.sh`,
 );

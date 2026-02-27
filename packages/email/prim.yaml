@@ -1,7 +1,7 @@
 id: email
 name: email.sh
 endpoint: email.prim.sh
-status: deployed
+status: live
 type: email
 card_class: p2
 description: "Mailboxes on demand. Send, receive, webhook. Disposable or permanent."

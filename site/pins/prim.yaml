@@ -1,7 +1,7 @@
 id: pins
 name: pins.sh
 endpoint: pins.prim.sh
-status: soon
+status: phantom
 type: location
 card_class: p25
 description: "Location data for agents. Places, geocoding, routing via Google Maps or Overture."

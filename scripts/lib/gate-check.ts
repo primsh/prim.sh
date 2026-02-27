@@ -3,8 +3,7 @@
  *
  * Validates a primitive is ready for a status transition:
  *   building → testing  (local quality gates)
- *   testing  → deployed (infra ready)
- *   deployed → live     (confirmed working)
+ *   testing  → live     (confirmed working)
  */
 
 import { execSync } from "node:child_process";
@@ -13,7 +12,7 @@ import { join, resolve } from "node:path";
 import { resolve4 } from "node:dns/promises";
 import { loadPrimitives, getGateOverrides } from "./primitives.js";
 
-export type GateTarget = "testing" | "deployed" | "live";
+export type GateTarget = "testing" | "live";
 
 export interface GateResult {
   pass: boolean;
@@ -136,9 +135,9 @@ async function checkBuildingToTesting(
   }
 }
 
-// ── testing → deployed ─────────────────────────────────────────────────────
+// ── testing → live (infra checks) ─────────────────────────────────────────
 
-async function checkTestingToDeployed(
+async function checkTestingToLive(
   primId: string,
   root: string,
   failures: string[],
@@ -194,9 +193,9 @@ async function checkTestingToDeployed(
   void deployConfig;
 }
 
-// ── deployed → live ────────────────────────────────────────────────────────
+// ── live confirmation checks ────────────────────────────────────────────────
 
-async function checkDeployedToLive(
+async function checkLiveConfirmation(
   primId: string,
   root: string,
   failures: string[],
@@ -331,11 +330,9 @@ export async function runGateCheck(
     case "testing":
       await checkBuildingToTesting(primId, rootDir, failures, warnings);
       break;
-    case "deployed":
-      await checkTestingToDeployed(primId, rootDir, failures, warnings);
-      break;
     case "live":
-      await checkDeployedToLive(primId, rootDir, failures, warnings);
+      await checkTestingToLive(primId, rootDir, failures, warnings);
+      await checkLiveConfirmation(primId, rootDir, failures, warnings);
       break;
   }
 

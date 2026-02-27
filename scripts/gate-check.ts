@@ -9,8 +9,7 @@
  *
  * Target statuses:
  *   testing   — local quality gates (building → testing)
- *   deployed  — infra ready (testing → deployed)
- *   live      — confirmed working (deployed → live)
+ *   live      — confirmed working (testing → live)
  *
  * Exit 0 = pass
  * Exit 1 = fail
@@ -21,7 +20,7 @@
 import { loadPrimitives } from "./lib/primitives.js";
 import { runGateCheck, type GateTarget } from "./lib/gate-check.js";
 
-const VALID_TARGETS: GateTarget[] = ["testing", "deployed", "live"];
+const VALID_TARGETS: GateTarget[] = ["testing", "live"];
 
 async function main() {
   const primId = process.argv[2];

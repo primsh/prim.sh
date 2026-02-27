@@ -36,7 +36,7 @@
     },
     "status": {
       "type": "string",
-      "enum": ["idea", "planning", "building", "testing", "deployed", "live"],
+      "enum": ["idea", "planning", "building", "testing", "live"],
       "description": "Development status"
     },
     "accent": {

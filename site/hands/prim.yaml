@@ -1,7 +1,7 @@
 id: hands
 name: hands.sh
 endpoint: hands.prim.sh
-status: soon
+status: phantom
 type: labor
 card_class: p28
 description: "Human labor on demand for agents. Delegate tasks requiring physical action."

@@ -2,7 +2,7 @@
 /**
  * gen-install-scripts.ts — Generate per-primitive install.sh files
  *
- * Reads site/install.sh as the base template, discovers all non-`soon`
+ * Reads site/install.sh as the base template, discovers all non-`phantom`
  * primitives from packages/<id>/prim.yaml, and writes a customized
  * install.sh to packages/<id>/install.sh.
  *
@@ -41,7 +41,7 @@ let written = 0;
 
 for (const id of dirs) {
   const cfg = loadYaml(join(pkgDir, id, "prim.yaml"));
-  if (!cfg || cfg.status === "soon") continue;
+  if (!cfg || cfg.status === "phantom") continue;
 
   const { name, endpoint } = cfg;
 

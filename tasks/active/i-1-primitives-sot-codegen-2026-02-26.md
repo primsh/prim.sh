@@ -12,7 +12,7 @@ Primitive metadata is scattered and drifts constantly:
 - Status: TASKS.md, llms.txt, README, site cards — all manual
 - Pricing: `specs/pricing.yaml` hand-maintained, duplicated in per-page HTML
 - Env vars: `scripts/pre-deploy.ts` hardcoded arrays drift from actual `process.env` calls
-- Site cards: `site/index.html` active/soon state is hand-maintained
+- Site cards: `site/index.html` active/phantom state is hand-maintained
 - Per-page status badges and pricing tables are hand-maintained HTML
 
 One `prim.yaml` per primitive → run `pnpm gen:prims` → everything updates.
@@ -53,9 +53,9 @@ When a primitive gets built, its root entry stays but package yaml takes precede
 
 | State | Site card | llms.txt section |
 |---|---|---|
-| `coming_soon` | disabled (soon) | Planned |
-| `building` | disabled (soon) | Planned |
-| `built` | disabled (soon) | Built (not deployed) |
+| `coming_soon` | disabled (phantom) | Planned |
+| `building` | disabled (phantom) | Planned |
+| `built` | disabled (phantom) | Built (not deployed) |
 | `testing` | active (link) | Live |
 | `production` | active (link) | Live |
 
@@ -94,13 +94,13 @@ For non-HTML files (llms.txt, README, pre-deploy.ts):
 </div>
 ```
 
-Soon card (status != testing/production):
+Phantom card (status != testing/production):
 ```html
-<div class="product p<n> soon">
+<div class="product p<n> phantom">
   <div class="product-name">vault.sh</div>
   <div class="product-type">secrets</div>
   <div class="product-desc">...</div>
-  <span class="soon-label">soon</span>
+  <span class="phantom-label">phantom</span>
 </div>
 ```
 

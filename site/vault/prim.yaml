@@ -1,7 +1,7 @@
 id: vault
 name: vault.sh
 endpoint: vault.prim.sh
-status: soon
+status: phantom
 type: secrets
 card_class: p7
 description: "Encrypted secrets store for agents. Store API keys, credentials, and private data."

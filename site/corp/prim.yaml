@@ -1,7 +1,7 @@
 id: corp
 name: corp.sh
 endpoint: corp.prim.sh
-status: soon
+status: phantom
 type: legal
 card_class: p30
 description: "Business formation for agents. Incorporate LLCs and corporations via API."

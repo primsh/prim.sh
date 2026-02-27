@@ -1,7 +1,7 @@
 id: wallet
 name: wallet.sh
 endpoint: wallet.prim.sh
-status: deployed
+status: live
 type: crypto
 card_class: p20
 description: "Agent wallets. Generate keys, hold USDC on Base, and pay any x402 invoice."

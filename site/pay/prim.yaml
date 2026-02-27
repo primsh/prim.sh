@@ -1,7 +1,7 @@
 id: pay
 name: pay.sh
 endpoint: pay.prim.sh
-status: soon
+status: phantom
 type: payments
 card_class: p29
 description: "Fiat payment bridge for agents. Stripe + x402. Accept credit cards, pay out."

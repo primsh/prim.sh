@@ -163,7 +163,7 @@ Type names are PascalCase from operation_id:
 id: search
 name: search.sh
 endpoint: search.prim.sh
-status: deployed
+status: live
 type: search
 description: "Search for agents. No ads, no SEO spam. Just facts and clean markdown."
 port: 3005

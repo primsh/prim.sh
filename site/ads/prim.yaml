@@ -1,7 +1,7 @@
 id: ads
 name: ads.sh
 endpoint: ads.prim.sh
-status: soon
+status: phantom
 type: advertising
 card_class: p31
 description: "Advertising for agents. Place and manage ad campaigns via API. x402 auth."

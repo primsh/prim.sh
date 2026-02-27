@@ -1,7 +1,7 @@
 id: infer
 name: infer.sh
 endpoint: infer.prim.sh
-status: soon
+status: phantom
 type: ai
 card_class: p14
 description: "LLM inference for agents. OpenRouter or direct provider APIs. x402 auth."

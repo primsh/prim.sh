@@ -1,8 +1,8 @@
 #!/usr/bin/env bun
 /**
- * conformance.ts — Static conformance checker for deployed prims
+ * conformance.ts — Static conformance checker for live prims
  *
- * Verifies that every deployed prim passes the 5-check smoke test contract
+ * Verifies that every live prim passes the 5-check smoke test contract
  * without executing tests. Static analysis only (regex pattern matching).
  *
  * Usage:
@@ -174,11 +174,11 @@ function main() {
   const deployedPrims = deployed(prims);
 
   if (deployedPrims.length === 0) {
-    console.log("\nNo deployed prims found — nothing to check.\n");
+    console.log("\nNo live prims found — nothing to check.\n");
     process.exit(0);
   }
 
-  console.log(`\n=== Conformance Check (${deployedPrims.length} deployed prims) ===\n`);
+  console.log(`\n=== Conformance Check (${deployedPrims.length} live prims) ===\n`);
 
   const reports: PrimReport[] = [];
   let totalFails = 0;
@@ -223,7 +223,7 @@ function main() {
   console.log(`\n${"─".repeat(50)}`);
 
   if (totalFails === 0) {
-    console.log(`\n✓ All ${deployedPrims.length} deployed prims pass conformance.\n`);
+    console.log(`\n✓ All ${deployedPrims.length} live prims pass conformance.\n`);
     process.exit(0);
   } else {
     const failingPrims = reports.filter((r) => r.checks.some((c) => !c.result.pass)).length;

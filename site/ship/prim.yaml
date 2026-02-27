@@ -1,7 +1,7 @@
 id: ship
 name: ship.sh
 endpoint: ship.prim.sh
-status: soon
+status: phantom
 type: logistics
 card_class: p27
 description: "Shipping labels for agents. EasyPost or Shippo. USPS, FedEx, UPS, DHL."

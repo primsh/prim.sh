@@ -661,7 +661,7 @@ async function main() {
         liveFailure = true;
         console.log(c.red(`CI FAIL: ${r.id} (${testDef.service}) is live and failed`));
       } else {
-        // deployed or building — warn only
+        // building or testing — warn only
         console.log(
           c.yellow(`CI WARN: ${r.id} (${testDef.service}) is ${status} — failure is non-blocking`),
         );

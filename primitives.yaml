@@ -68,7 +68,7 @@ primitives:
     order: 9
     phantom: false
 
-  # ── Unbuilt (coming soon) ──────────────────────────────────────────────────
+  # ── Unbuilt (phantom) ───────────────────────────────────────────────────────
   - id: deploy
     name: deploy.sh
     type: deploy

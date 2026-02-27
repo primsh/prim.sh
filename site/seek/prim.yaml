@@ -1,7 +1,7 @@
 id: seek
 name: seek.sh
 endpoint: seek.prim.sh
-status: soon
+status: phantom
 type: search
 card_class: p15
 description: "Deep search for agents. Brave Search API or SearXNG. Privacy-first results."

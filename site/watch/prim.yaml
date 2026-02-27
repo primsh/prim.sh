@@ -1,7 +1,7 @@
 id: watch
 name: watch.sh
 endpoint: watch.prim.sh
-status: soon
+status: phantom
 type: observability
 card_class: p18
 description: "OpenTelemetry collector for agents. Metrics, traces, and logs via API."

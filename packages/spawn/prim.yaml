@@ -1,7 +1,7 @@
 id: spawn
 name: spawn.sh
 endpoint: spawn.prim.sh
-status: deployed
+status: live
 type: compute
 card_class: p1
 description: "VPS in one API call. Deploy, scale, destroy. Per-second billing."

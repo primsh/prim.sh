@@ -71,7 +71,7 @@ export interface PrimConfig {
   id: string;
   name: string;
   endpoint: string;
-  status: "deployed" | "testing" | "built" | "building" | "soon";
+  status: "live" | "testing" | "built" | "building" | "phantom";
   type?: string;
   card_class?: string;
   description?: string;
@@ -110,7 +110,7 @@ function bold(s: string): string {
 /** Status badge label + class */
 function statusInfo(status: string): { cls: string; label: string } {
   switch (status) {
-    case "deployed":
+    case "live":
       return { cls: "status-live", label: "● Live" };
     case "testing":
       return { cls: "status-testing", label: "● Live (testnet)" };
@@ -119,7 +119,7 @@ function statusInfo(status: string): { cls: string; label: string } {
     case "building":
       return { cls: "status-building", label: "◌ Building" };
     default:
-      return { cls: "status-soon", label: "○ Coming soon" };
+      return { cls: "status-phantom", label: "○ Phantom" };
   }
 }
 
@@ -434,7 +434,7 @@ function renderSection(s: Section): string {
   }
 }
 
-// ── coming-soon template ──────────────────────────────────────────────────────
+// ── phantom template ─────────────────────────────────────────────────────────
 
 function renderComingSoon(cfg: PrimConfig): string {
   const primId = cfg.id;
@@ -498,8 +498,8 @@ function headMeta(cfg: PrimConfig): string {
 // ── main render ───────────────────────────────────────────────────────────────
 
 export function render(cfg: PrimConfig): string {
-  // Coming-soon pages use minimal template
-  if (!cfg.sections && cfg.status === "soon") {
+  // Phantom pages use minimal template
+  if (!cfg.sections && cfg.status === "phantom") {
     return renderComingSoon(cfg);
   }
 

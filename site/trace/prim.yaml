@@ -1,7 +1,7 @@
 id: trace
 name: trace.sh
 endpoint: trace.prim.sh
-status: soon
+status: phantom
 type: tracing
 card_class: p19
 description: "Distributed tracing for agents. OpenTelemetry + Jaeger. Track multi-agent workflows."

@@ -83,7 +83,7 @@ Verify all 5 checks pass.
 
 ## Phase 2: Deploy infer.sh (INF-6)
 
-1. **prim.yaml**: Change `status: building` → `status: deployed`
+1. **prim.yaml**: Change `status: building` → `status: live`
 2. **gen-prims**: Run `pnpm gen:prims` — auto-updates SERVICES arrays in deploy.sh, setup.sh, healthcheck.sh
 3. **Systemd unit**: Create `deploy/prim/services/prim-infer.service` (copy prim-search.service, change packages/search → packages/infer, port → 3012)
 4. **Env template**: Create `deploy/prim/generated/infer.env.template` with PRIM_PAY_TO, PRIM_NETWORK, OPENROUTER_API_KEY, WALLET_INTERNAL_URL, PRIM_INTERNAL_KEY
@@ -127,4 +127,4 @@ New group `infer` with 4 tests:
 - [ ] Verify env var name is OPENROUTER_API_KEY everywhere (not INFER_API_KEY)
 - [ ] Verify GET /v1/models handler does NOT parse JSON body
 - [ ] Verify 5/5 smoke tests pass with realistic mock data
-- [ ] Run `pnpm gen:prims` after changing status to deployed
+- [ ] Run `pnpm gen:prims` after changing status to live
