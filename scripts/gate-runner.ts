@@ -10,6 +10,9 @@
  *   bun scripts/gate-runner.ts --group store    # Run specific group
  *   bun scripts/gate-runner.ts --ci             # CI mode: exit 1 if live prim fails
  *   bun scripts/gate-runner.ts --dry-run        # Show what would be tested
+ *   bun scripts/gate-runner.ts --canary         # Agent canary mode
+ *   bun scripts/gate-runner.ts --canary --group infer  # Canary for one group
+ *   bun scripts/gate-runner.ts --dry-run --canary      # Dry-run canary
  */
 
 import { parseArgs } from "node:util";
@@ -79,6 +82,47 @@ interface RunResult {
   summary: { total: number; pass: number; fail: number; blocked: number };
 }
 
+// ── Canary Types ────────────────────────────────────────────────────────────
+
+interface CanaryToolCall {
+  id: string;
+  name: string;
+  arguments: Record<string, unknown>;
+}
+
+interface CanaryStepResult {
+  tool_call_id: string;
+  method: string;
+  url: string;
+  status: number | null;
+  ok: boolean;
+  note: string | null;
+}
+
+interface CanaryGroupResult {
+  group_id: string;
+  group_name: string;
+  verdict: "pass" | "warn" | "fail" | "error";
+  steps: CanaryStepResult[];
+  ux_notes: string[];
+  agent_summary: string | null;
+  error: string | null;
+}
+
+interface CanaryRunResult {
+  timestamp: string;
+  mode: "canary";
+  network: string;
+  groups: CanaryGroupResult[];
+  summary: {
+    total_groups: number;
+    pass: number;
+    warn: number;
+    fail: number;
+    error: number;
+  };
+}
+
 // ── ANSI Colors ────────────────────────────────────────────────────────────
 
 const c = {
@@ -97,6 +141,7 @@ const { values: args } = parseArgs({
     group: { type: "string", short: "g" },
     ci: { type: "boolean", default: false },
     "dry-run": { type: "boolean", default: false },
+    canary: { type: "boolean", default: false },
   },
   strict: true,
 });
@@ -106,6 +151,7 @@ const { values: args } = parseArgs({
 const ROOT = resolve(new URL("..", import.meta.url).pathname);
 const PLAN_PATH = join(ROOT, "tests", "smoke-test-plan.json");
 const RUNS_DIR = join(ROOT, "tests", "runs");
+const SITE_DIR = join(ROOT, "site");
 
 // ── JSON Path Resolver ─────────────────────────────────────────────────────
 
@@ -268,6 +314,420 @@ function getServiceStatus(service: string, statusMap: Map<string, string>): stri
   return statusMap.get(service) ?? "building";
 }
 
+// ── Canary Helpers ─────────────────────────────────────────────────────────
+
+/**
+ * Determine which prim IDs are covered by a group.
+ * Extracts unique service names from the group's tests and strips ".sh".
+ */
+function getGroupPrimIds(group: GroupDef, testIndex: Map<string, TestDef>): string[] {
+  const services = new Set<string>();
+  for (const testId of group.tests) {
+    const t = testIndex.get(testId);
+    if (t?.service) services.add(t.service.replace(/\.sh$/, ""));
+  }
+  return Array.from(services);
+}
+
+/**
+ * Load llms.txt content for a prim from site/<prim>/llms.txt.
+ * Returns null if not found.
+ */
+async function loadLlmsTxt(primId: string): Promise<string | null> {
+  const llmsPath = join(SITE_DIR, primId, "llms.txt");
+  if (!existsSync(llmsPath)) return null;
+  const f = Bun.file(llmsPath);
+  return await f.text();
+}
+
+/**
+ * Load the root site/llms.txt (platform overview).
+ */
+async function loadRootLlmsTxt(): Promise<string | null> {
+  const llmsPath = join(SITE_DIR, "llms.txt");
+  if (!existsSync(llmsPath)) return null;
+  const f = Bun.file(llmsPath);
+  return await f.text();
+}
+
+/**
+ * Build the canary prompt for a group using the template.
+ */
+function buildCanaryPrompt(
+  groupPrompt: string,
+  serviceName: string,
+  endpoint: string,
+  llmsTxt: string,
+): string {
+  return `You are testing ${serviceName} (${endpoint}).
+
+Read the API documentation below, then complete the following tasks:
+${groupPrompt}
+
+For each task:
+1. Decide which API call to make based on the docs
+2. Make the call using the http_request tool (you have a funded wallet — x402 payments are handled automatically)
+3. Report: did it work? was anything confusing?
+
+When you have completed all tasks, provide a final structured report with:
+- Which steps worked and which failed
+- Any UX observations (confusing error messages, unclear docs, missing info, broken workflows)
+- Overall assessment
+
+## API Documentation
+${llmsTxt}`;
+}
+
+/**
+ * Tool definitions for the canary agent.
+ * The agent calls these to make HTTP requests; gate runner executes them.
+ */
+const CANARY_TOOLS = [
+  {
+    type: "function",
+    function: {
+      name: "http_request",
+      description: "Make an HTTP request to a prim.sh API endpoint. x402 payments are handled automatically.",
+      parameters: {
+        type: "object",
+        properties: {
+          method: {
+            type: "string",
+            enum: ["GET", "POST", "PUT", "DELETE", "PATCH"],
+            description: "HTTP method",
+          },
+          url: {
+            type: "string",
+            description: "Full URL to request (e.g. https://store.prim.sh/v1/buckets)",
+          },
+          body: {
+            type: "object",
+            description: "Request body for POST/PUT/PATCH. Omit for GET/DELETE.",
+          },
+          headers: {
+            type: "object",
+            description: "Additional request headers (optional).",
+            additionalProperties: { type: "string" },
+          },
+        },
+        required: ["method", "url"],
+      },
+    },
+  },
+];
+
+/**
+ * Execute a single tool call from the agent.
+ * Returns the HTTP response as a structured object.
+ */
+async function executeToolCall(
+  toolCall: CanaryToolCall,
+  primFetch: typeof fetch,
+): Promise<{ status: number; body: unknown; ok: boolean }> {
+  const { method, url, body, headers: extraHeaders } = toolCall.arguments as {
+    method: string;
+    url: string;
+    body?: Record<string, unknown>;
+    headers?: Record<string, string>;
+  };
+
+  const fetchInit: RequestInit = { method };
+  const reqHeaders: Record<string, string> = { ...(extraHeaders ?? {}) };
+
+  if (body !== undefined && (method === "POST" || method === "PUT" || method === "PATCH")) {
+    fetchInit.body = JSON.stringify(body);
+    reqHeaders["Content-Type"] = "application/json";
+  }
+
+  if (Object.keys(reqHeaders).length > 0) {
+    fetchInit.headers = reqHeaders;
+  }
+
+  const response = await primFetch(url, fetchInit);
+  const contentType = response.headers.get("content-type") ?? "";
+  let responseBody: unknown = null;
+
+  try {
+    if (contentType.includes("application/json")) {
+      responseBody = await response.json();
+    } else {
+      responseBody = await response.text();
+    }
+  } catch {
+    // Body parse failure — not critical
+  }
+
+  return {
+    status: response.status,
+    body: responseBody,
+    ok: response.ok,
+  };
+}
+
+/**
+ * Run a multi-turn agent loop for one group.
+ *
+ * 1. Send system prompt + user message (group prompt + llms.txt) to infer.sh
+ * 2. If agent calls tools, execute them and send results back
+ * 3. Repeat until agent stops or max rounds reached
+ * 4. Parse final message for structured results
+ */
+async function runCanaryGroup(
+  group: GroupDef,
+  testIndex: Map<string, TestDef>,
+  primFetch: typeof fetch,
+  inferEndpoint: string,
+): Promise<CanaryGroupResult> {
+  const primIds = getGroupPrimIds(group, testIndex);
+
+  // Gather llms.txt content — use group-specific if single prim, else root
+  let llmsTxt: string | null = null;
+  if (primIds.length === 1) {
+    llmsTxt = await loadLlmsTxt(primIds[0]);
+  }
+  if (!llmsTxt) {
+    // Multi-prim group or missing per-prim llms.txt — fall back to root
+    llmsTxt = await loadRootLlmsTxt();
+  }
+  if (!llmsTxt) {
+    llmsTxt = "(API documentation not found. Proceed based on your knowledge of the service.)";
+  }
+
+  // Determine service display name and endpoint from first prim
+  const firstPrimId = primIds[0] ?? group.id;
+  const serviceName = `${firstPrimId}.sh`;
+  const endpoint = `${firstPrimId}.prim.sh`;
+
+  const promptText = buildCanaryPrompt(group.prompt, serviceName, endpoint, llmsTxt);
+
+  // OpenAI-compatible messages
+  type ChatMessage = {
+    role: "system" | "user" | "assistant" | "tool";
+    content: string | null;
+    tool_call_id?: string;
+    tool_calls?: Array<{
+      id: string;
+      type: "function";
+      function: { name: string; arguments: string };
+    }>;
+  };
+
+  const messages: ChatMessage[] = [
+    {
+      role: "system",
+      content: "You are an API tester for prim.sh. Use the http_request tool to make API calls. Be concise and structured in your final report.",
+    },
+    {
+      role: "user",
+      content: promptText,
+    },
+  ];
+
+  const steps: CanaryStepResult[] = [];
+  const uxNotes: string[] = [];
+  let agentSummary: string | null = null;
+  const MAX_ROUNDS = 10;
+
+  for (let round = 0; round < MAX_ROUNDS; round++) {
+    // Call infer.sh /v1/chat
+    const chatRequest = {
+      model: process.env.CANARY_MODEL ?? "openai/gpt-4o-mini",
+      messages,
+      tools: CANARY_TOOLS,
+      tool_choice: "auto",
+      max_tokens: 2048,
+      temperature: 0.1,
+    };
+
+    const inferResponse = await primFetch(`${inferEndpoint}/v1/chat`, {
+      method: "POST",
+      body: JSON.stringify(chatRequest),
+      headers: { "Content-Type": "application/json" },
+    });
+
+    if (!inferResponse.ok) {
+      const errBody = await inferResponse.text().catch(() => "(unreadable)");
+      return {
+        group_id: group.id,
+        group_name: group.name,
+        verdict: "error",
+        steps,
+        ux_notes: uxNotes,
+        agent_summary: null,
+        error: `infer.sh returned ${inferResponse.status}: ${errBody.slice(0, 200)}`,
+      };
+    }
+
+    const chatResponse = await inferResponse.json() as {
+      choices: Array<{
+        message: {
+          role: string;
+          content: string | null;
+          tool_calls?: Array<{
+            id: string;
+            type: string;
+            function: { name: string; arguments: string };
+          }>;
+        };
+        finish_reason: string;
+      }>;
+    };
+
+    const choice = chatResponse.choices?.[0];
+    if (!choice) {
+      return {
+        group_id: group.id,
+        group_name: group.name,
+        verdict: "error",
+        steps,
+        ux_notes: uxNotes,
+        agent_summary: null,
+        error: "infer.sh returned no choices",
+      };
+    }
+
+    const assistantMsg = choice.message;
+
+    // Add assistant message to conversation
+    messages.push({
+      role: "assistant",
+      content: assistantMsg.content ?? null,
+      tool_calls: assistantMsg.tool_calls?.map((tc) => ({
+        id: tc.id,
+        type: "function" as const,
+        function: tc.function,
+      })),
+    });
+
+    // If no tool calls, agent is done
+    if (!assistantMsg.tool_calls || assistantMsg.tool_calls.length === 0) {
+      agentSummary = assistantMsg.content ?? null;
+      break;
+    }
+
+    // Execute each tool call
+    const toolResults: ChatMessage[] = [];
+
+    for (const tc of assistantMsg.tool_calls) {
+      let parsedArgs: Record<string, unknown>;
+      try {
+        parsedArgs = JSON.parse(tc.function.arguments) as Record<string, unknown>;
+      } catch {
+        parsedArgs = {};
+      }
+
+      const toolCall: CanaryToolCall = {
+        id: tc.id,
+        name: tc.function.name,
+        arguments: parsedArgs,
+      };
+
+      const method = String(parsedArgs.method ?? "GET");
+      const url = String(parsedArgs.url ?? "");
+      let stepResult: CanaryStepResult;
+
+      try {
+        const result = await executeToolCall(toolCall, primFetch);
+        stepResult = {
+          tool_call_id: tc.id,
+          method,
+          url,
+          status: result.status,
+          ok: result.ok,
+          note: null,
+        };
+
+        toolResults.push({
+          role: "tool",
+          tool_call_id: tc.id,
+          content: JSON.stringify({ status: result.status, body: result.body }),
+        });
+      } catch (err) {
+        const errMsg = err instanceof Error ? err.message : String(err);
+        stepResult = {
+          tool_call_id: tc.id,
+          method,
+          url,
+          status: null,
+          ok: false,
+          note: `request failed: ${errMsg}`,
+        };
+
+        toolResults.push({
+          role: "tool",
+          tool_call_id: tc.id,
+          content: JSON.stringify({ error: errMsg }),
+        });
+      }
+
+      steps.push(stepResult);
+    }
+
+    // Add tool results to conversation
+    for (const tr of toolResults) {
+      messages.push(tr);
+    }
+
+    // If finish_reason is "stop" (no tool calls to process), we're done
+    if (choice.finish_reason === "stop") {
+      agentSummary = assistantMsg.content ?? null;
+      break;
+    }
+  }
+
+  // Extract UX notes from agent summary
+  if (agentSummary) {
+    // Look for lines that mention confusion, issues, or observations
+    const notePatterns = [
+      /ux[:\s]+(.+)/gi,
+      /observation[s]?[:\s]+(.+)/gi,
+      /confus(?:ing|ed)[:\s]+(.+)/gi,
+      /unclear[:\s]+(.+)/gi,
+      /issue[s]?[:\s]+(.+)/gi,
+      /note[s]?[:\s]+(.+)/gi,
+    ];
+
+    for (const pattern of notePatterns) {
+      let match: RegExpExecArray | null;
+      pattern.lastIndex = 0;
+      while ((match = pattern.exec(agentSummary)) !== null) {
+        const note = match[1].trim();
+        if (note.length > 10 && !uxNotes.includes(note)) {
+          uxNotes.push(note);
+        }
+      }
+    }
+  }
+
+  // Determine verdict
+  const totalSteps = steps.length;
+  const failedSteps = steps.filter((s) => !s.ok && s.status !== null).length;
+  const errorSteps = steps.filter((s) => s.status === null).length;
+
+  let verdict: CanaryGroupResult["verdict"];
+  if (totalSteps === 0) {
+    verdict = "warn"; // Agent made no calls — something went wrong
+  } else if (errorSteps > 0) {
+    verdict = "error";
+  } else if (failedSteps === 0) {
+    verdict = "pass";
+  } else if (failedSteps < totalSteps) {
+    verdict = "warn";
+  } else {
+    verdict = "fail";
+  }
+
+  return {
+    group_id: group.id,
+    group_name: group.name,
+    verdict,
+    steps,
+    ux_notes: uxNotes,
+    agent_summary: agentSummary,
+    error: null,
+  };
+}
+
 // ── Main ───────────────────────────────────────────────────────────────────
 
 async function main() {
@@ -315,25 +775,212 @@ async function main() {
   // ── Dry Run ────────────────────────────────────────────────────────────
 
   if (args["dry-run"]) {
-    console.log(`\n${c.bold("Gate Runner — Dry Run")}`);
-    console.log(`Plan: ${plan.plan}`);
-    console.log(`Network: ${plan.network}\n`);
+    if (args.canary) {
+      console.log(`\n${c.bold("Gate Runner — Canary Dry Run")}`);
+      console.log(`Plan: ${plan.plan}`);
+      console.log(`Network: ${plan.network}`);
+      console.log(`Mode: ${c.cyan("canary")} — agent drives LLM inference via infer.prim.sh\n`);
 
-    for (const group of groups) {
-      const tests = group.tests
-        .map((id) => testIndex.get(id))
-        .filter((t): t is TestDef => t !== undefined);
-      console.log(`${c.bold(`Group: ${group.id}`)} (${tests.length} tests)`);
-      for (const t of tests) {
-        const method = t.method.padEnd(6);
-        console.log(`  ${c.dim(t.id.padEnd(8))} ${method} ${t.endpoint}  ${c.dim(t.test)}`);
+      for (const group of groups) {
+        const primIds = getGroupPrimIds(group, testIndex);
+        const llmsPath = primIds.length === 1
+          ? `site/${primIds[0]}/llms.txt`
+          : "site/llms.txt (multi-prim fallback)";
+        console.log(`${c.bold(`Group: ${group.id}`)} (${group.name})`);
+        console.log(`  ${c.dim("prims:")}     ${primIds.join(", ")}`);
+        console.log(`  ${c.dim("llms.txt:")}  ${llmsPath}`);
+        console.log(`  ${c.dim("prompt:")}    ${group.prompt.slice(0, 100)}…`);
+        console.log();
       }
-      console.log();
+    } else {
+      console.log(`\n${c.bold("Gate Runner — Dry Run")}`);
+      console.log(`Plan: ${plan.plan}`);
+      console.log(`Network: ${plan.network}\n`);
+
+      for (const group of groups) {
+        const tests = group.tests
+          .map((id) => testIndex.get(id))
+          .filter((t): t is TestDef => t !== undefined);
+        console.log(`${c.bold(`Group: ${group.id}`)} (${tests.length} tests)`);
+        for (const t of tests) {
+          const method = t.method.padEnd(6);
+          console.log(`  ${c.dim(t.id.padEnd(8))} ${method} ${t.endpoint}  ${c.dim(t.test)}`);
+        }
+        console.log();
+      }
     }
     process.exit(0);
   }
 
   // ── Live Run Setup ─────────────────────────────────────────────────────
+
+  // Build primFetch for paid routes (used in both deterministic and canary)
+  let primFetch: typeof fetch;
+  try {
+    primFetch = createPrimFetch({
+      keystore: true,
+      maxPayment: "1.00",
+    });
+  } catch {
+    // Fall back to AGENT_PRIVATE_KEY env
+    const pk = process.env.AGENT_PRIVATE_KEY;
+    if (!pk) {
+      console.error(
+        c.red("No wallet available. Set AGENT_PRIVATE_KEY or configure keystore at ~/.prim/keys/"),
+      );
+      process.exit(1);
+    }
+    primFetch = createPrimFetch({
+      privateKey: pk as `0x${string}`,
+      maxPayment: "1.00",
+    });
+  }
+
+  // ── Canary Mode ────────────────────────────────────────────────────────
+
+  if (args.canary) {
+    const inferEndpoint = process.env.INFER_ENDPOINT ?? "https://infer.prim.sh";
+    const timestamp = new Date().toISOString();
+
+    console.log(`\n${c.bold("Gate Runner — Canary Mode")}`);
+    console.log(`Plan: ${plan.plan}`);
+    console.log(`Network: ${plan.network}`);
+    console.log(`Infer: ${inferEndpoint}`);
+    console.log(`Mode: ${args.ci ? "CI" : "local"}\n`);
+
+    const canaryResults: CanaryGroupResult[] = [];
+
+    for (const group of groups) {
+      console.log(c.bold(`\n── ${group.name} (${group.id}) ──`));
+      console.log(c.dim("  Running agent canary…"));
+
+      let result: CanaryGroupResult;
+      try {
+        result = await runCanaryGroup(group, testIndex, primFetch, inferEndpoint);
+      } catch (err) {
+        const errMsg = err instanceof Error ? err.message : String(err);
+        result = {
+          group_id: group.id,
+          group_name: group.name,
+          verdict: "error",
+          steps: [],
+          ux_notes: [],
+          agent_summary: null,
+          error: errMsg,
+        };
+      }
+
+      canaryResults.push(result);
+
+      // Print step results
+      for (const step of result.steps) {
+        const statusStr = step.status !== null ? String(step.status) : "err";
+        const icon = step.ok ? c.green("●") : c.red("✗");
+        const note = step.note ? c.dim(` (${step.note})`) : "";
+        console.log(`  ${icon} ${step.method.padEnd(6)} ${step.url}  ${statusStr}${note}`);
+      }
+
+      // Print verdict
+      const verdictStr =
+        result.verdict === "pass"
+          ? c.green("pass")
+          : result.verdict === "warn"
+            ? c.yellow("warn")
+            : result.verdict === "error"
+              ? c.yellow("error")
+              : c.red("fail");
+
+      console.log(`  ${c.bold("verdict:")} ${verdictStr}`);
+
+      if (result.error) {
+        console.log(`  ${c.red("error:")} ${result.error}`);
+      }
+
+      if (result.ux_notes.length > 0) {
+        console.log(`  ${c.dim("UX notes:")}`);
+        for (const note of result.ux_notes) {
+          console.log(`    ${c.dim("·")} ${note}`);
+        }
+      }
+
+      if (result.agent_summary) {
+        const summary = result.agent_summary.slice(0, 300);
+        const truncated = result.agent_summary.length > 300 ? "…" : "";
+        console.log(`  ${c.dim("summary:")} ${summary}${truncated}`);
+      }
+    }
+
+    // ── Canary Summary ────────────────────────────────────────────────
+
+    const totalGroups = canaryResults.length;
+    const passCount = canaryResults.filter((r) => r.verdict === "pass").length;
+    const warnCount = canaryResults.filter((r) => r.verdict === "warn").length;
+    const failCount = canaryResults.filter((r) => r.verdict === "fail").length;
+    const errorCount = canaryResults.filter((r) => r.verdict === "error").length;
+
+    console.log(`\n${c.bold("Canary Results")}`);
+    console.log("═══════════════════");
+
+    for (const r of canaryResults) {
+      const verdictStr =
+        r.verdict === "pass"
+          ? c.green("pass")
+          : r.verdict === "warn"
+            ? c.yellow("warn")
+            : r.verdict === "error"
+              ? c.yellow("error")
+              : c.red("fail");
+      const stepsStr = `${r.steps.filter((s) => s.ok).length}/${r.steps.length} steps ok`;
+      console.log(`${r.group_id.padEnd(14)} ${verdictStr}  ${c.dim(stepsStr)}`);
+    }
+
+    console.log("─────────────────");
+    const overallColor = failCount > 0 || errorCount > 0 ? c.red : warnCount > 0 ? c.yellow : c.green;
+    let summaryExtra = "";
+    if (failCount > 0) summaryExtra += `${failCount} fail`;
+    if (warnCount > 0) summaryExtra += summaryExtra ? `, ${warnCount} warn` : `${warnCount} warn`;
+    if (errorCount > 0) summaryExtra += summaryExtra ? `, ${errorCount} error` : `${errorCount} error`;
+    console.log(
+      `${"Total".padEnd(14)} ${overallColor(`${passCount}/${totalGroups}`)} groups  ${summaryExtra ? `(${summaryExtra})` : ""}\n`,
+    );
+
+    // ── Write Canary Results ──────────────────────────────────────────
+
+    if (!existsSync(RUNS_DIR)) {
+      mkdirSync(RUNS_DIR, { recursive: true });
+    }
+
+    const dateStr = new Date().toISOString().slice(0, 10);
+    const resultPath = join(RUNS_DIR, `${dateStr}-canary.json`);
+
+    const canaryRunResult: CanaryRunResult = {
+      timestamp,
+      mode: "canary",
+      network: plan.network,
+      groups: canaryResults,
+      summary: {
+        total_groups: totalGroups,
+        pass: passCount,
+        warn: warnCount,
+        fail: failCount,
+        error: errorCount,
+      },
+    };
+
+    await Bun.write(resultPath, JSON.stringify(canaryRunResult, null, 2) + "\n");
+    console.log(`Results: ${resultPath}`);
+
+    // ── CI Gating (canary) ────────────────────────────────────────────
+
+    if (args.ci && failCount > 0) {
+      console.log(c.red("\nCI canary FAILED — one or more groups failed\n"));
+      process.exit(1);
+    }
+
+    process.exit(0);
+  }
+
+  // ── Deterministic Live Run ─────────────────────────────────────────────
 
   console.log(`\n${c.bold("Gate Runner")}`);
   console.log(`Plan: ${plan.plan}`);
@@ -356,28 +1003,6 @@ async function main() {
   // EIP-191 registration needs special handling — set placeholders
   // These require actual crypto signing, so we mark them as needing generation
   captureStore.set("iso_timestamp", new Date().toISOString());
-
-  // Build primFetch for paid routes
-  let primFetch: typeof fetch;
-  try {
-    primFetch = createPrimFetch({
-      keystore: true,
-      maxPayment: "1.00",
-    });
-  } catch {
-    // Fall back to AGENT_PRIVATE_KEY env
-    const pk = process.env.AGENT_PRIVATE_KEY;
-    if (!pk) {
-      console.error(
-        c.red("No wallet available. Set AGENT_PRIVATE_KEY or configure keystore at ~/.prim/keys/"),
-      );
-      process.exit(1);
-    }
-    primFetch = createPrimFetch({
-      privateKey: pk as `0x${string}`,
-      maxPayment: "1.00",
-    });
-  }
 
   // Load prim status map for gating
   const primStatusMap = buildPrimStatusMap();

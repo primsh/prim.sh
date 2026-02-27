@@ -1,0 +1,2 @@
+# OpenAPI spec shorthand — /openapi/wallet → /openapi/wallet.yaml
+/openapi/:prim  /openapi/:prim.yaml  200

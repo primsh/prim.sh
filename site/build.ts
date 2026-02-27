@@ -5,7 +5,7 @@
 // Cards in index.html are managed by gen-prims.ts (source of truth).
 // This script only does brand copy substitution and prim subpage rendering.
 
-import { readFileSync, writeFileSync, mkdirSync, existsSync, readdirSync } from "node:fs";
+import { readFileSync, writeFileSync, mkdirSync, cpSync, existsSync, readdirSync } from "node:fs";
 import { resolve, join } from "node:path";
 import { parse } from "yaml";
 import { render, renderFooter, type PrimConfig } from "./template.ts";
@@ -74,3 +74,88 @@ for (const id of primIds) {
   primCount++;
 }
 console.log(`[build] ${primCount} prim pages written`);
+
+// ── per-prim llms.txt ───────────────────────────────────────────────────────
+
+let llmsCount = 0;
+for (const id of primIds) {
+  const candidates = [
+    join(ROOT, `site/${id}/llms.txt`),
+    join(ROOT, `packages/${id}/llms.txt`),
+  ];
+  for (const p of candidates) {
+    if (existsSync(p)) {
+      mkdirSync(resolve(ROOT, `site-dist/${id}`), { recursive: true });
+      cpSync(p, resolve(ROOT, `site-dist/${id}/llms.txt`));
+      llmsCount++;
+      break;
+    }
+  }
+}
+console.log(`[build] ${llmsCount} per-prim llms.txt copied`);
+
+// ── discovery / static files ────────────────────────────────────────────────
+
+const staticFiles = [
+  "llms.txt",
+  "llms-full.txt",
+  "pricing.json",
+  "discovery.json",
+  "sitemap.xml",
+  "robots.txt",
+  "_headers",
+  "_redirects",
+];
+
+for (const f of staticFiles) {
+  const src = resolve(ROOT, `site/${f}`);
+  if (existsSync(src)) {
+    cpSync(src, resolve(ROOT, `site-dist/${f}`));
+    console.log(`[build] site-dist/${f} copied`);
+  }
+}
+
+// ── .well-known ─────────────────────────────────────────────────────────────
+
+const wellKnownDir = resolve(ROOT, "site/.well-known");
+if (existsSync(wellKnownDir)) {
+  mkdirSync(resolve(ROOT, "site-dist/.well-known"), { recursive: true });
+  for (const f of readdirSync(wellKnownDir)) {
+    cpSync(join(wellKnownDir, f), resolve(ROOT, `site-dist/.well-known/${f}`));
+    console.log(`[build] site-dist/.well-known/${f} copied`);
+  }
+}
+
+// ── OpenAPI specs ───────────────────────────────────────────────────────────
+
+const openapiDir = resolve(ROOT, "specs/openapi");
+if (existsSync(openapiDir)) {
+  mkdirSync(resolve(ROOT, "site-dist/openapi"), { recursive: true });
+  let specCount = 0;
+  for (const f of readdirSync(openapiDir)) {
+    if (f.endsWith(".yaml")) {
+      cpSync(join(openapiDir, f), resolve(ROOT, `site-dist/openapi/${f}`));
+      specCount++;
+    }
+  }
+  console.log(`[build] ${specCount} OpenAPI specs copied to site-dist/openapi/`);
+}
+
+// ── terms / privacy ─────────────────────────────────────────────────────────
+
+for (const page of ["terms", "privacy"]) {
+  const pagePath = resolve(ROOT, `site/${page}/index.html`);
+  if (existsSync(pagePath)) {
+    mkdirSync(resolve(ROOT, `site-dist/${page}`), { recursive: true });
+    cpSync(pagePath, resolve(ROOT, `site-dist/${page}/index.html`));
+    console.log(`[build] site-dist/${page}/index.html copied`);
+  }
+}
+
+// ── assets ──────────────────────────────────────────────────────────────────
+
+const assetsDir = resolve(ROOT, "site/assets");
+if (existsSync(assetsDir)) {
+  cpSync(assetsDir, resolve(ROOT, "site-dist/assets"), { recursive: true });
+  console.log("[build] site-dist/assets/ copied");
+}

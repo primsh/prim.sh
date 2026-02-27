@@ -15,6 +15,7 @@ import { join, resolve } from "node:path";
 import { loadPrimitives, deployed, type Primitive } from "./lib/primitives.js";
 import { parseApiFile } from "./lib/parse-api.js";
 import { parseRoutePrices, renderLlmsTxt } from "./lib/render-llms-txt.js";
+import { renderSkillsJson } from "./lib/render-skills.js";
 
 const ROOT = resolve(import.meta.dir, "..");
 const CHECK_MODE = process.argv.includes("--check");
@@ -278,6 +279,210 @@ for (const p of primsWithRoutes) {
   const routePrices = parseRoutePrices(indexPath);
   const content = renderLlmsTxt(p, parsedApi, routePrices);
   applyFullFile(llmsPath, content);
+}
+
+// 10. site/skills.json — machine-readable skill registry
+{
+  const skillsContent = renderSkillsJson(prims);
+  const skillsPath = join(ROOT, "site/skills.json");
+  if (CHECK_MODE) {
+    const existing = existsSync(skillsPath) ? readFileSync(skillsPath, "utf8") : null;
+    if (existing) {
+      // Compare ignoring `generated` timestamp (always changes)
+      const existingParsed = JSON.parse(existing);
+      const newParsed = JSON.parse(skillsContent);
+      const matches =
+        JSON.stringify({ ...existingParsed, generated: "" }) ===
+        JSON.stringify({ ...newParsed, generated: "" });
+      if (!matches) {
+        console.error("  ✗ site/skills.json is out of date — run pnpm gen:prims");
+        anyFailed = true;
+      } else {
+        console.log("  ✓ site/skills.json");
+      }
+    } else {
+      console.error("  ✗ site/skills.json missing — run pnpm gen:prims");
+      anyFailed = true;
+    }
+  } else {
+    applyFullFile(skillsPath, skillsContent);
+  }
+}
+
+// 11. site/llms-full.txt — concatenation of root llms.txt + all per-prim llms.txt
+{
+  const rootLlms = readFileSync(join(ROOT, "site/llms.txt"), "utf8");
+  const sections = [rootLlms.trimEnd()];
+  for (const p of prims) {
+    const primLlmsPath = join(ROOT, "site", p.id, "llms.txt");
+    if (!existsSync(primLlmsPath)) continue;
+    const content = readFileSync(primLlmsPath, "utf8").trimEnd();
+    if (content) sections.push(content);
+  }
+  const fullContent = sections.join("\n\n---\n\n") + "\n";
+  applyFullFile(join(ROOT, "site/llms-full.txt"), fullContent);
+}
+
+// 12. site/sitemap.xml
+{
+  const BASE_URL = "https://prim.sh";
+  const staticPages = ["/", "/access", "/terms", "/privacy", "/llms.txt", "/llms-full.txt", "/pricing.json", "/discovery.json"];
+  const urls: string[] = [];
+
+  for (const page of staticPages) {
+    urls.push(`  <url><loc>${BASE_URL}${page}</loc></url>`);
+  }
+
+  for (const p of prims) {
+    const pagePath = join(ROOT, "site", p.id, "index.html");
+    if (!existsSync(pagePath)) continue;
+    urls.push(`  <url><loc>${BASE_URL}/${p.id}/</loc></url>`);
+    const llmsPath = join(ROOT, "site", p.id, "llms.txt");
+    if (existsSync(llmsPath)) {
+      urls.push(`  <url><loc>${BASE_URL}/${p.id}/llms.txt</loc></url>`);
+    }
+  }
+
+  // Also include per-prim llms.txt even without an index.html page
+  for (const p of prims) {
+    const pagePath = join(ROOT, "site", p.id, "index.html");
+    if (existsSync(pagePath)) continue; // already handled above
+    const llmsPath = join(ROOT, "site", p.id, "llms.txt");
+    if (existsSync(llmsPath)) {
+      urls.push(`  <url><loc>${BASE_URL}/${p.id}/llms.txt</loc></url>`);
+    }
+  }
+
+  const sitemap = `<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+${urls.join("\n")}
+</urlset>
+`;
+  applyFullFile(join(ROOT, "site/sitemap.xml"), sitemap);
+}
+
+// 13. site/pricing.json — generated from prim.yaml pricing data
+{
+  const builtPrims = prims.filter(
+    (p) => (p.status === "live" || p.status === "building" || p.status === "testing") && p.pricing && p.pricing.length > 0
+  );
+
+  const services = builtPrims.map((p) => {
+    const endpoint = p.endpoint ?? `${p.id}.prim.sh`;
+    const routes: { method: string; path: string; price_usdc: string; description: string }[] = [];
+
+    // If routes_map exists, generate per-route pricing from it
+    if (p.routes_map && p.routes_map.length > 0) {
+      // Build a price lookup from pricing rows (op → price string)
+      // Try to match routes to pricing ops; fall back to a default price
+      const defaultPrice = p.pricing!.find((r) => r.op.toLowerCase().includes("read") || r.op.toLowerCase().includes("api call"));
+      const defaultPriceStr = defaultPrice ? defaultPrice.price.replace("$", "") : "0.001";
+
+      for (const rm of p.routes_map) {
+        const [method, path] = rm.route.split(" ", 2);
+        // Find matching pricing row
+        let price = defaultPriceStr;
+        for (const pr of p.pricing!) {
+          const opLower = pr.op.toLowerCase();
+          const descLower = rm.description.toLowerCase();
+          const routeLower = rm.route.toLowerCase();
+          if (
+            descLower.includes(opLower) ||
+            opLower.includes(method.toLowerCase()) ||
+            (opLower.includes("deploy") && descLower.includes("deploy")) ||
+            (opLower.includes("create") && (descLower.includes("create") || method === "POST")) ||
+            (opLower.includes("mint") && descLower.includes("mint")) ||
+            (opLower.includes("pool") && descLower.includes("pool"))
+          ) {
+            price = pr.price.replace("$", "");
+            break;
+          }
+        }
+        routes.push({
+          method,
+          path: path.replace(/:(\w+)/g, "{$1}"),
+          price_usdc: price,
+          description: rm.description,
+        });
+      }
+    } else {
+      // No routes_map: emit one row per pricing entry
+      for (const pr of p.pricing!) {
+        routes.push({
+          method: "—",
+          path: "—",
+          price_usdc: pr.price.replace("$", "").replace("free", "0"),
+          description: `${pr.op}${pr.note ? ` (${pr.note})` : ""}`,
+        });
+      }
+    }
+
+    return { service: endpoint, description: p.description, routes };
+  });
+
+  const pricingJson = JSON.stringify(
+    {
+      updated: new Date().toISOString().slice(0, 10),
+      currency: "USDC",
+      network: "eip155:84532",
+      services,
+    },
+    null,
+    2
+  ) + "\n";
+
+  applyFullFile(join(ROOT, "site/pricing.json"), pricingJson);
+}
+
+// 14. site/discovery.json — full primitive registry for agent discovery
+{
+  const builtPrims = prims.filter(
+    (p) => p.status === "live" || p.status === "building" || p.status === "testing"
+  );
+
+  const primitives = builtPrims.map((p) => {
+    const endpoint = p.endpoint ?? `${p.id}.prim.sh`;
+    const entry: Record<string, string> = {
+      id: p.id,
+      name: p.name,
+      status: p.status,
+      endpoint: `https://${endpoint}`,
+      description: p.description,
+    };
+    // Only include llms_txt if the file exists
+    const llmsPath = join(ROOT, "site", p.id, "llms.txt");
+    if (existsSync(llmsPath)) {
+      entry.llms_txt = `https://prim.sh/${p.id}/llms.txt`;
+    }
+    // Only include openapi if the spec file exists
+    const openapiPath = join(ROOT, "specs/openapi", `${p.id}.yaml`);
+    if (existsSync(openapiPath)) {
+      entry.openapi = `https://prim.sh/openapi/${p.id}.yaml`;
+    }
+    return entry;
+  });
+
+  const discoveryContent = JSON.stringify(
+    {
+      name: "prim.sh",
+      description: "The agent-native stack",
+      version: "beta",
+      network: "eip155:84532",
+      primitives,
+      discovery: {
+        llms_txt: "https://prim.sh/llms.txt",
+        llms_full: "https://prim.sh/llms-full.txt",
+        pricing: "https://prim.sh/pricing.json",
+        openai_plugin: "https://prim.sh/.well-known/ai-plugin.json",
+        mcp: "https://prim.sh/.well-known/mcp.json",
+        sitemap: "https://prim.sh/sitemap.xml",
+      },
+    },
+    null,
+    2
+  ) + "\n";
+
+  applyFullFile(join(ROOT, "site/discovery.json"), discoveryContent);
 }
 
 if (CHECK_MODE && anyFailed) {

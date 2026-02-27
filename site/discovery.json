@@ -1,0 +1,131 @@
+{
+  "name": "prim.sh",
+  "description": "The agent-native stack",
+  "version": "beta",
+  "network": "eip155:84532",
+  "primitives": [
+    {
+      "id": "wallet",
+      "name": "wallet.sh",
+      "status": "live",
+      "endpoint": "https://wallet.prim.sh",
+      "description": "Agent wallets. Generate keys, hold USDC on Base, and pay any x402 invoice.",
+      "llms_txt": "https://prim.sh/wallet/llms.txt",
+      "openapi": "https://prim.sh/openapi/wallet.yaml"
+    },
+    {
+      "id": "faucet",
+      "name": "faucet.sh",
+      "status": "live",
+      "endpoint": "https://faucet.prim.sh",
+      "description": "Free testnet USDC and ETH on demand. Fund your agent wallet and start building.",
+      "llms_txt": "https://prim.sh/faucet/llms.txt",
+      "openapi": "https://prim.sh/openapi/faucet.yaml"
+    },
+    {
+      "id": "spawn",
+      "name": "spawn.sh",
+      "status": "live",
+      "endpoint": "https://spawn.prim.sh",
+      "description": "VPS in one API call. Deploy, scale, destroy. Per-second billing.",
+      "llms_txt": "https://prim.sh/spawn/llms.txt",
+      "openapi": "https://prim.sh/openapi/spawn.yaml"
+    },
+    {
+      "id": "store",
+      "name": "store.sh",
+      "status": "live",
+      "endpoint": "https://store.prim.sh",
+      "description": "Object storage. Persist artifacts across ephemeral VMs. S3-compatible.",
+      "llms_txt": "https://prim.sh/store/llms.txt",
+      "openapi": "https://prim.sh/openapi/store.yaml"
+    },
+    {
+      "id": "email",
+      "name": "email.sh",
+      "status": "live",
+      "endpoint": "https://email.prim.sh",
+      "description": "Mailboxes on demand. Send, receive, webhook. Disposable or permanent.",
+      "llms_txt": "https://prim.sh/email/llms.txt",
+      "openapi": "https://prim.sh/openapi/email.yaml"
+    },
+    {
+      "id": "search",
+      "name": "search.sh",
+      "status": "live",
+      "endpoint": "https://search.prim.sh",
+      "description": "Search for agents. No ads, no SEO spam. Just facts and clean markdown.",
+      "llms_txt": "https://prim.sh/search/llms.txt",
+      "openapi": "https://prim.sh/openapi/search.yaml"
+    },
+    {
+      "id": "token",
+      "name": "token.sh",
+      "status": "building",
+      "endpoint": "https://token.prim.sh",
+      "description": "Deploy ERC-20 tokens and Uniswap V3 pools. No wallet setup required.",
+      "llms_txt": "https://prim.sh/token/llms.txt",
+      "openapi": "https://prim.sh/openapi/token.yaml"
+    },
+    {
+      "id": "mem",
+      "name": "mem.sh",
+      "status": "building",
+      "endpoint": "https://mem.prim.sh",
+      "description": "Vector store and cache for agents. Persist long-term knowledge and session state.",
+      "llms_txt": "https://prim.sh/mem/llms.txt",
+      "openapi": "https://prim.sh/openapi/mem.yaml"
+    },
+    {
+      "id": "domain",
+      "name": "domain.sh",
+      "status": "building",
+      "endpoint": "https://domain.prim.sh",
+      "description": "Register domains, manage DNS, auto-TLS. Full domain lifecycle via API.",
+      "llms_txt": "https://prim.sh/domain/llms.txt",
+      "openapi": "https://prim.sh/openapi/domain.yaml"
+    },
+    {
+      "id": "track",
+      "name": "track.sh",
+      "status": "building",
+      "endpoint": "https://track.prim.sh",
+      "description": "Package tracking for agents. USPS, FedEx, UPS, DHL and 1000+ carriers. Status, ETA, full event history.",
+      "llms_txt": "https://prim.sh/track/llms.txt",
+      "openapi": "https://prim.sh/openapi/track.yaml"
+    },
+    {
+      "id": "infer",
+      "name": "infer.sh",
+      "status": "live",
+      "endpoint": "https://infer.prim.sh",
+      "description": "LLM inference for agents. Any model, any provider, one API. Per-token pricing. No API keys.",
+      "llms_txt": "https://prim.sh/infer/llms.txt",
+      "openapi": "https://prim.sh/openapi/infer.yaml"
+    },
+    {
+      "id": "create",
+      "name": "create.sh",
+      "status": "building",
+      "endpoint": "https://create.prim.sh",
+      "description": "Scaffold new prim.sh primitives. Write a prim.yaml spec, get a complete package with passing tests.",
+      "openapi": "https://prim.sh/openapi/create.yaml"
+    },
+    {
+      "id": "imagine",
+      "name": "imagine.sh",
+      "status": "building",
+      "endpoint": "https://imagine.prim.sh",
+      "description": "Media generation for agents. Images, video, audio. Any model, one API. No API keys.",
+      "openapi": "https://prim.sh/openapi/imagine.yaml"
+    }
+  ],
+  "discovery": {
+    "llms_txt": "https://prim.sh/llms.txt",
+    "llms_full": "https://prim.sh/llms-full.txt",
+    "pricing": "https://prim.sh/pricing.json",
+    "openai_plugin": "https://prim.sh/.well-known/ai-plugin.json",
+    "mcp": "https://prim.sh/.well-known/mcp.json",
+    "sitemap": "https://prim.sh/sitemap.xml"
+  }
+}

@@ -1,0 +1,17 @@
+{
+  "schema_version": "v1",
+  "name_for_human": "Prim",
+  "name_for_model": "prim",
+  "description_for_human": "Infrastructure primitives for autonomous agents. Wallets, storage, email, compute, search, and more. Pay with USDC, get resources.",
+  "description_for_model": "Prim provides infrastructure primitives for agents. Each primitive is an independent HTTP API authenticated via x402 (USDC payment on Base). Available primitives: wallet (key management), store (object storage), spawn (VPS provisioning), faucet (testnet tokens), search (web search), email (mailboxes), infer (LLM inference), token (ERC-20 deployment), mem (vector store), domain (DNS management), track (package tracking), create (scaffolding), imagine (media generation). Call any endpoint; on 402 response, sign an EIP-3009 payment and retry.",
+  "auth": {
+    "type": "none"
+  },
+  "api": {
+    "type": "openapi",
+    "url": "https://prim.sh/openapi/wallet.yaml"
+  },
+  "logo_url": "https://prim.sh/assets/logo.png",
+  "contact_email": "hello@prim.sh",
+  "legal_info_url": "https://prim.sh/terms"
+}

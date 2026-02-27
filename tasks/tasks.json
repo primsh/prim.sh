@@ -1445,7 +1445,7 @@
               "description": "Agent canary: --canary flag on gate-runner.ts. For each group, sends prompt + prim's llms.txt to infer.sh, agent reasons about API and makes real x402 calls, reports structured results + UX observations. Catches issues deterministic tests miss (confusing errors, missing docs, broken workflows).",
               "owner": ["Claude"],
               "depends": ["I-30"],
-              "status": "pending",
+              "status": "done",
               "release": null,
               "plan": "tasks/active/i-30-gate-runner.md"
             }

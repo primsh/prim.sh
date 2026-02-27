@@ -1,0 +1,4249 @@
+# Prim
+
+The agent-native stack. Infrastructure primitives for autonomous agents.
+No signup. No GUI. No KYC. Pay with USDC, get resources.
+
+Status: Private beta on Base Sepolia testnet.
+
+Prim provides 6 live infrastructure primitives, each accepting x402 payment
+(USDC on Base) as the sole authentication mechanism. An agent with a funded
+wallet can consume any primitive without human intervention.
+
+---
+
+## Access (Private Beta)
+
+All paid endpoints enforce an allowlist during beta. If you receive:
+  403 {"error": {"code": "wallet_not_allowed", "message": "..."}}
+
+Request access:
+
+  POST https://api.prim.sh/access/request
+  Content-Type: application/json
+
+  {"wallet": "0xYourWalletAddress", "reason": "optional reason"}
+
+  → 201 {"id": "abc123", "status": "pending"}
+
+Your request will be reviewed. Once approved, your wallet is allowlisted
+and all paid primitives become accessible.
+
+---
+
+## x402 Payment
+
+x402 is the payment protocol used by all prim paid endpoints.
+Implements EIP-3009 transferWithAuthorization for gasless USDC transfers.
+
+Full flow:
+
+  1. Call any paid endpoint normally (no special headers).
+  2. Receive HTTP 402 with header:
+       Payment-Required: price=<amount> network=base payTo=<address>
+  3. Sign EIP-3009 transferWithAuthorization from your funded wallet.
+       Signed payload is a JSON object containing:
+         from           Your wallet address
+         to             The payTo address from the Payment-Required header
+         value          Amount in USDC atomic units (6 decimals)
+         validAfter     Unix timestamp (0 for immediate)
+         validBefore    Unix timestamp (expiry, ~5 min from now)
+         nonce          Random 32-byte hex
+         signature      ECDSA signature of the EIP-3009 struct hash
+  4. Retry the identical request with header:
+       Payment-Signature: <base64url-encoded JSON of the signed authorization>
+  5. Server verifies and settles. You receive your response.
+
+Libraries that handle this automatically:
+  TypeScript: @x402/fetch (drop-in fetch replacement)
+  Any language: implement the 402→sign→retry loop manually
+
+Chain: eip155:84532 (Base Sepolia) during beta.
+Token: USDC (6 decimals).
+
+Free routes available on every primitive:
+  GET /          Health check
+  GET /pricing   Machine-readable pricing for all endpoints (JSON)
+  GET /v1/metrics  Operational metrics (uptime, request counts, latencies)
+
+Common payment errors:
+  402  payment_required   No payment sent. Check Payment-Required header.
+  403  wallet_not_allowed  Wallet not on allowlist. Request access first.
+  403  wallet_paused       Wallet operations paused by policy.
+  403  policy_violation    Payment exceeds spending policy limits.
+
+---
+
+## Getting Started
+
+### Option A: CLI (recommended)
+
+  curl -fsSL prim.sh/install.sh | sh
+
+  prim wallet create        # Generate and register a wallet
+  prim faucet usdc          # Get 10 test USDC (free, 2hr cooldown)
+  prim faucet eth           # Get 0.01 test ETH (free, 1hr cooldown)
+  prim store create-bucket  # Create a storage bucket (pays via x402)
+  prim search web "query"   # Web search (pays via x402)
+
+Run prim <command> --help for options.
+
+### Option B: HTTP directly
+
+  1. Generate an EVM private key (any standard wallet library).
+
+  2. Register the wallet (free):
+       POST https://wallet.prim.sh/v1/wallets
+       {"address": "0x...", "signature": "0x...", "timestamp": "2026-02-26T00:00:00Z"}
+
+       Message to sign: "Register <address> with prim.sh at <timestamp>"
+
+  3. Get test USDC (free):
+       POST https://faucet.prim.sh/v1/faucet/usdc
+       {"address": "0x..."}
+
+  4. Use any primitive. On 402, sign and retry with Payment-Signature header.
+
+---
+
+<!-- BEGIN:PRIM:STATUS -->
+## Live Primitives
+
+- wallet.sh — wallet.prim.sh — Agent wallets. Generate keys, hold USDC on Base, and pay any x402 invoice.
+- faucet.sh — faucet.prim.sh — Free testnet USDC and ETH on demand. Fund your agent wallet and start building.
+- spawn.sh — spawn.prim.sh — VPS in one API call. Deploy, scale, destroy. Per-second billing.
+- store.sh — store.prim.sh — Object storage. Persist artifacts across ephemeral VMs. S3-compatible.
+- email.sh — email.prim.sh — Mailboxes on demand. Send, receive, webhook. Disposable or permanent.
+- search.sh — search.prim.sh — Search for agents. No ads, no SEO spam. Just facts and clean markdown.
+- infer.sh — infer.prim.sh — LLM inference for agents. Any model, any provider, one API. Per-token pricing. No API keys.
+
+## Built (Not Yet Deployed)
+
+- token.sh — Deploy ERC-20 tokens and Uniswap V3 pools. No wallet setup required.
+- mem.sh — Vector store and cache for agents. Persist long-term knowledge and session state.
+- domain.sh — Register domains, manage DNS, auto-TLS. Full domain lifecycle via API.
+- track.sh — Package tracking for agents. USPS, FedEx, UPS, DHL and 1000+ carriers. Status, ETA, full event history.
+- create.sh — Scaffold new prim.sh primitives. Write a prim.yaml spec, get a complete package with passing tests.
+- imagine.sh — Media generation for agents. Images, video, audio. Any model, one API. No API keys.
+
+## Planned Primitives
+
+- deploy.sh — Push code, get an endpoint. Container or repo URL to live service. No server config.
+- ring.sh — Phone numbers via API. SMS, voice, TTS. No Twilio account needed.
+- pipe.sh — Pub/sub channels, webhook relays, event queues. Agent-to-agent glue.
+- vault.sh — Store API keys, tokens, credentials. Scoped access. Ephemeral or persistent.
+- cron.sh — Run code on a schedule without a server. Cron, intervals, one-shots.
+- code.sh — Sandboxed code execution for agents. Short-lived jobs instead of long-lived servers.
+- browse.sh — Headless Chromium sessions for agents. Click, type, and capture pages via API.
+- watch.sh — Structured logs, metrics, and alerts so agents can observe and correct themselves.
+- trace.sh — Distributed tracing across services. Follow a request from wallet to spawn to store.
+- auth.sh — Managed OAuth broker. Connect to third-party APIs without giving agents passwords.
+- hive.sh — Discover peers. Share knowledge. Establish reputation. A social graph for software.
+- id.sh — Reputation scores. Know Your Agent. Verifiable credentials. Trust layer.
+- mart.sh — Buy physical goods via API. x402 to fiat proxy. Headless checkout.
+- corp.sh — Incorporation, tax, insurance. Legal entities for agents. The fiat bridge.
+- hands.sh — On-demand human labor. Physical tasks, verification, errands. Gig economy API.
+- pins.sh — Coordinates, places, and routing. No maps UI, just structured spatial data.
+- seek.sh — Deep research agent. Multi-step search + synthesis.
+- docs.sh — OpenAPI → MCP converter. Turn any API spec into agent tools.
+- ads.sh — Programmatic advertising for agents. Buy and sell attention.
+- pay.sh — Stripe + x402 bridge. Accept fiat payments from humans.
+- ship.sh — Shipping labels and tracking via EasyPost. Physical world logistics.
+<!-- END:PRIM:STATUS -->
+
+---
+
+# wallet.prim.sh
+
+Agent wallets. Generate keys, hold USDC on Base, and pay any x402 invoice.
+
+Base URL: https://wallet.prim.sh
+Auth: x402 (USDC on Base Sepolia). GET /, GET /pricing, GET /v1/metrics are free.
+Chain: Base Sepolia (eip155:84532) during beta.
+
+Install:
+  curl -fsSL https://wallet.prim.sh/install.sh | sh
+
+Limits:
+  Max wallets per owner: 100
+
+---
+
+## Quick Start
+
+  1. POST /v1/wallets with EIP-191 signature → register wallet (free)
+  2. POST faucet.prim.sh/v1/faucet/usdc → get 10 test USDC
+  3. Call any paid endpoint → receive 402 → sign payment → resend
+
+## Tips
+
+  - Wallet registration is free — no x402 payment required.
+  - The signed message must be: Register <address> with prim.sh at <timestamp>
+  - Timestamp must be within 5 minutes of server time (ISO 8601 UTC).
+  - Use @x402/fetch or any x402-compatible client to handle payments automatically.
+  - Pause a wallet to temporarily block spending without deactivating it.
+
+---
+
+## x402 Payment
+
+  1. Make request. Server returns 402 with Payment-Required header.
+  2. Sign EIP-3009 transferWithAuthorization.
+  3. Retry with Payment-Signature header (base64-encoded signed authorization).
+
+Error envelope:
+  {"error": {"code": "<code>", "message": "<msg>"}}
+
+Error codes:
+  not_found
+  forbidden
+  insufficient_balance
+  wallet_paused
+  policy_violation
+  duplicate_request
+  invalid_request
+  not_implemented
+
+---
+
+## Endpoints
+
+### GET /
+
+Health check.
+
+Free.
+
+Response (200):
+  service  string  "wallet.sh"
+  status   string  "ok"
+
+---
+
+### GET /pricing
+
+Machine-readable pricing for all endpoints.
+
+Free.
+
+Response (200):
+  service   string  "wallet.prim.sh"
+  currency  string  "USDC"
+  network   string  "eip155:8453"
+  routes    array   Route pricing list
+    .method       string  HTTP method
+    .path         string  URL path
+    .price_usdc   string  Price in USDC (decimal string)
+    .description  string  Human-readable description
+
+---
+
+### GET /v1/metrics
+
+Operational metrics. Uptime, request counts, latency percentiles, error rates.
+
+Free.
+
+Response (200):
+  service     string  "wallet.prim.sh"
+  uptime_s    number  Seconds since last restart
+  requests    object  Request counts and latencies by endpoint
+  payments    object  Payment counts by endpoint
+  errors      object  Error counts by status code
+
+---
+
+### POST /v1/wallets
+
+Register a wallet via EIP-191 signature
+
+Free. No x402 required. Sign message: Register <address> with prim.sh at <timestamp>
+
+Request:
+  address    string  required  Ethereum address to register (0x... 42 chars, checksummed).
+  signature  string  required  EIP-191 signature over "Register <address> with prim.sh at <timestamp>".
+  timestamp  string  required  ISO 8601 UTC timestamp used in the signed message. Must be within 5 minutes of server time.
+  chain      string  optional  Chain identifier. Default "base".
+  label      string  optional  Human-readable label for this wallet.
+
+Response (201):
+  address        string         Registered Ethereum address.
+  chain          string         Chain identifier.
+  label          string | null  Label if provided, null otherwise.
+  registered_at  string         ISO 8601 timestamp when the wallet was registered.
+  created_at     string         ISO 8601 timestamp when the record was created.
+
+Errors:
+  400  invalid_request    Missing fields or invalid signature format
+  403  forbidden          Signature does not match address
+  409  duplicate_request  Wallet already registered
+
+---
+
+### GET /v1/wallets
+
+List registered wallets owned by the calling wallet
+
+Price: $0.001
+
+Query params:
+  limit  integer  optional  1-100, default 20
+  after  string   optional  Cursor from previous response
+
+Response (200): WalletListResponse
+
+Errors:
+  402  payment_required  x402 payment needed
+  403  forbidden         No wallet address in payment
+  429  rate_limited      Too many requests
+
+---
+
+### GET /v1/wallets/:address
+
+Get full wallet details including balance, policy, and status
+
+Price: $0.001
+
+Path params:
+  address  string  required  address parameter
+
+Response (200):
+  address     string                 Ethereum address.
+  chain       string                 Chain identifier.
+  balance     string                 USDC balance as a decimal string.
+  funded      boolean                Whether the wallet has ever been funded.
+  paused      boolean                Whether the wallet is currently paused.
+  created_by  string                 Address that registered this wallet (or self).
+  policy      SpendingPolicy | null  Spending policy, null if none configured.
+  created_at  string                 ISO 8601 timestamp when the wallet was created.
+
+Errors:
+  402  payment_required  x402 payment needed
+  403  forbidden         Caller does not own this wallet
+  404  not_found         Wallet not found
+
+---
+
+### DELETE /v1/wallets/:address
+
+Permanently deactivate a wallet. Irreversible. Pending fund requests cancelled.
+
+Price: $0.01
+
+Path params:
+  address  string  required  address parameter
+
+Response (200):
+  address         string   Deactivated Ethereum address.
+  deactivated     boolean  Always true on success.
+  deactivated_at  string   ISO 8601 timestamp of deactivation.
+
+Errors:
+  402  payment_required  x402 payment needed
+  403  forbidden         Caller does not own this wallet
+  404  not_found         Wallet not found
+
+---
+
+### POST /v1/wallets/:address/fund-request
+
+Request USDC funding for a wallet. A human operator can approve or deny.
+
+Price: $0.001
+
+Path params:
+  address  string  required  address parameter
+
+Request:
+  amount  string  required  Requested USDC amount as a decimal string (e.g. "10.00").
+  reason  string  required  Human-readable reason for the funding request.
+
+Response (200):
+  id              string             Fund request ID (e.g. "fr_abc123").
+  wallet_address  string             Wallet address the request is for.
+  amount          string             Requested USDC amount as a decimal string.
+  reason          string             Reason provided by the requester.
+  status          FundRequestStatus  Current status of the fund request.
+  created_at      string             ISO 8601 timestamp when the request was created.
+
+Errors:
+  400  invalid_request   Missing amount or reason
+  402  payment_required  x402 payment needed
+  403  forbidden         Caller does not own this wallet
+  404  not_found         Wallet not found
+
+---
+
+### GET /v1/wallets/:address/fund-requests
+
+List all fund requests for a wallet
+
+Price: $0.001
+
+Path params:
+  address  string  required  address parameter
+
+Query params:
+  limit  integer  optional  1-100, default 20
+  after  string   optional  Cursor from previous response
+
+Response (200): FundRequestListResponse
+
+Errors:
+  402  payment_required  x402 payment needed
+  403  forbidden         Caller does not own this wallet
+  404  not_found         Wallet not found
+
+---
+
+### POST /v1/fund-requests/:id/approve
+
+Approve a pending fund request. Returns the address to send USDC to.
+
+Price: $0.01
+
+Path params:
+  id  string  required  id parameter
+
+Response (200):
+  id               string      Fund request ID.
+  status           "approved"  Always "approved" on success.
+  funding_address  string      Send USDC to this address to fulfill the request.
+  amount           string      Approved USDC amount as a decimal string.
+  chain            string      Chain identifier for the funding transaction.
+  approved_at      string      ISO 8601 timestamp when the request was approved.
+
+Errors:
+  402  payment_required   x402 payment needed
+  403  forbidden          Caller not authorized to approve
+  404  not_found          Fund request not found
+  409  duplicate_request  Already approved or denied
+
+---
+
+### POST /v1/fund-requests/:id/deny
+
+Deny a pending fund request
+
+Price: $0.001
+
+Path params:
+  id  string  required  id parameter
+
+Request:
+  reason  string  optional  Reason for denial.
+
+Response (200):
+  id         string         Fund request ID.
+  status     "denied"       Always "denied" on success.
+  reason     string | null  Denial reason if provided, null otherwise.
+  denied_at  string         ISO 8601 timestamp when the request was denied.
+
+Errors:
+  402  payment_required   x402 payment needed
+  403  forbidden          Caller not authorized to deny
+  404  not_found          Fund request not found
+  409  duplicate_request  Already approved or denied
+
+---
+
+### GET /v1/wallets/:address/policy
+
+Get the spending policy for a wallet
+
+Price: $0.001
+
+Path params:
+  address  string  required  address parameter
+
+Response (200):
+  wallet_address      string           Wallet address this policy applies to.
+  max_per_tx          string | null    Max USDC per transaction, null = no limit.
+  max_per_day         string | null    Max USDC per day, null = no limit.
+  allowed_primitives  string[] | null  Allowed primitive hostnames (e.g. ["store.prim.sh"]), null = all allowed.
+  daily_spent         string           USDC spent today as a decimal string.
+  daily_reset_at      string           ISO 8601 timestamp when the daily counter resets.
+
+Errors:
+  402  payment_required  x402 payment needed
+  403  forbidden         Caller does not own this wallet
+  404  not_found         Wallet not found
+
+---
+
+### PUT /v1/wallets/:address/policy
+
+Update spending policy for a wallet. All fields optional. Pass null to remove a limit.
+
+Price: $0.005
+
+Path params:
+  address  string  required  address parameter
+
+Request:
+  maxPerTx           string | null    optional  Max USDC per transaction. Pass null to remove the limit.
+  maxPerDay          string | null    optional  Max USDC per day. Pass null to remove the limit.
+  allowedPrimitives  string[] | null  optional  Allowed primitive hostnames. Pass null to allow all.
+
+Response (200):
+  wallet_address      string           Wallet address this policy applies to.
+  max_per_tx          string | null    Max USDC per transaction, null = no limit.
+  max_per_day         string | null    Max USDC per day, null = no limit.
+  allowed_primitives  string[] | null  Allowed primitive hostnames (e.g. ["store.prim.sh"]), null = all allowed.
+  daily_spent         string           USDC spent today as a decimal string.
+  daily_reset_at      string           ISO 8601 timestamp when the daily counter resets.
+
+Errors:
+  400  invalid_request   Invalid JSON body or field values
+  402  payment_required  x402 payment needed
+  403  forbidden         Caller does not own this wallet
+  404  not_found         Wallet not found
+
+---
+
+### POST /v1/wallets/:address/pause
+
+Pause operations for a wallet. Temporarily halts spending without deactivating.
+
+Price: $0.001
+
+Path params:
+  address  string  required  address parameter
+
+Request:
+  scope  PauseScope  optional  Scope to pause. "all" | "send" | "swap". Default "all".
+
+Response (200):
+  wallet_address  string      Wallet address that was paused.
+  paused          boolean     Always true on success.
+  scope           PauseScope  Scope that was paused.
+  paused_at       string      ISO 8601 timestamp when the wallet was paused.
+
+Errors:
+  400  invalid_request   Invalid scope value
+  402  payment_required  x402 payment needed
+  403  forbidden         Caller does not own this wallet
+  404  not_found         Wallet not found
+
+---
+
+### POST /v1/wallets/:address/resume
+
+Resume operations for a paused wallet
+
+Price: $0.001
+
+Path params:
+  address  string  required  address parameter
+
+Request:
+  scope  PauseScope  optional  Scope to resume. "all" | "send" | "swap". Default "all".
+
+Response (200):
+  wallet_address  string      Wallet address that was resumed.
+  paused          boolean     Always false on success (wallet is unpaused).
+  scope           PauseScope  Scope that was resumed.
+  resumed_at      string      ISO 8601 timestamp when the wallet was resumed.
+
+Errors:
+  400  invalid_request   Invalid scope value
+  402  payment_required  x402 payment needed
+  403  forbidden         Caller does not own this wallet
+  404  not_found         Wallet not found
+
+---
+
+## Ownership
+
+All resources scoped to the wallet address extracted from the x402 payment signature. Wallet registration uses EIP-191 signature for ownership proof.
+
+---
+
+# faucet.prim.sh
+
+Free testnet USDC and ETH on demand. Fund your agent wallet and start building.
+
+Base URL: https://faucet.prim.sh
+Auth: None (free, rate-limited by address). Wallet must be on allowlist during beta.
+Chain: Base Sepolia (eip155:84532) during beta.
+
+Install:
+  curl -fsSL https://faucet.prim.sh/install.sh | sh
+
+Limits:
+  USDC: 10 USDC per drip, 2-hour cooldown per address
+  ETH: 0.01 ETH per drip, 1-hour cooldown per address
+  Network: Base Sepolia (eip155:84532) only
+
+---
+
+## Quick Start
+
+  1. POST /v1/faucet/usdc with {"address": "0x..."} → receive 10 test USDC (free)
+  2. POST /v1/faucet/eth with {"address": "0x..."} → receive 0.01 test ETH (free)
+  3. GET /v1/faucet/status?address=0x... → check cooldown before dripping
+
+## Tips
+
+  - No x402 payment required — faucet is entirely free.
+  - Check GET /v1/faucet/status before dripping to avoid wasted 429 responses.
+  - ETH cooldown is 1 hour; USDC cooldown is 2 hours per address.
+  - USDC uses Circle Faucet API with treasury wallet ERC-20 transfer as fallback.
+  - faucet.sh only operates on Base Sepolia — mainnet addresses return 403.
+
+---
+
+## Error envelope
+
+  {"error": {"code": "<code>", "message": "<msg>"}}
+
+Error codes:
+  invalid_request
+  wallet_not_allowed
+  mainnet_rejected
+  rate_limited
+  faucet_error
+
+---
+
+## Endpoints
+
+### GET /
+
+Health check.
+
+Free.
+
+Response (200):
+  service  string  "faucet.sh"
+  status   string  "ok"
+
+---
+
+### GET /pricing
+
+Machine-readable pricing for all endpoints.
+
+Free.
+
+Response (200):
+  service   string  "faucet.prim.sh"
+  currency  string  "USDC"
+  network   string  "eip155:8453"
+  routes    array   Route pricing list
+    .method       string  HTTP method
+    .path         string  URL path
+    .price_usdc   string  Price in USDC (decimal string)
+    .description  string  Human-readable description
+
+---
+
+### GET /v1/metrics
+
+Operational metrics. Uptime, request counts, latency percentiles, error rates.
+
+Free.
+
+Response (200):
+  service     string  "faucet.prim.sh"
+  uptime_s    number  Seconds since last restart
+  requests    object  Request counts and latencies by endpoint
+  payments    object  Payment counts by endpoint
+  errors      object  Error counts by status code
+
+---
+
+### POST /v1/faucet/usdc
+
+Dispense 10 test USDC on Base Sepolia. Rate limit: once per 2 hours per address.
+
+Free. No x402 payment required.
+
+Request:
+  address  string  required  EVM wallet address to drip to (0x... 42 chars).
+
+Response (200):
+  tx_hash   string  Transaction hash on Base Sepolia. May be "pending" if Circle returns 204.
+  amount    string  Amount dispensed as a decimal string (e.g. "10.00" for USDC, "0.01" for ETH).
+  currency  string  Currency dispensed: "USDC" or "ETH".
+  chain     string  CAIP-2 chain identifier (e.g. "eip155:84532").
+  source    string  Backend that dispensed the tokens. "circle" | "treasury". Only present on USDC drips.
+
+Errors:
+  400  invalid_request     Missing or invalid address
+  403  wallet_not_allowed  Wallet not on allowlist (private beta)
+  403  mainnet_rejected    Faucet only operates on testnet
+  429  rate_limited        Address already dripped within 2 hours. retryAfter in response.
+  502  faucet_error        Both Circle and treasury fallback failed
+
+---
+
+### POST /v1/faucet/eth
+
+Dispense 0.01 test ETH on Base Sepolia. Rate limit: once per 1 hour per address.
+
+Free. No x402 payment required.
+
+Request:
+  address  string  required  EVM wallet address to drip to (0x... 42 chars).
+
+Response (200):
+  tx_hash   string  Transaction hash on Base Sepolia. May be "pending" if Circle returns 204.
+  amount    string  Amount dispensed as a decimal string (e.g. "10.00" for USDC, "0.01" for ETH).
+  currency  string  Currency dispensed: "USDC" or "ETH".
+  chain     string  CAIP-2 chain identifier (e.g. "eip155:84532").
+  source    string  Backend that dispensed the tokens. "circle" | "treasury". Only present on USDC drips.
+
+Errors:
+  400  invalid_request     Missing or invalid address
+  403  wallet_not_allowed  Wallet not on allowlist (private beta)
+  403  mainnet_rejected    Faucet only operates on testnet
+  429  rate_limited        Address already dripped within 1 hour. retryAfter in response.
+  502  faucet_error        Treasury wallet failed to send ETH
+
+---
+
+### GET /v1/faucet/status
+
+Check rate limit status for a wallet address across both faucets.
+
+Free. Call this before dripping to avoid 429s.
+
+Query params:
+  address  string  optional  EVM wallet address (required)
+
+Response (200):
+  address  string              The queried wallet address (checksummed).
+  usdc     FaucetAvailability  USDC faucet availability (2-hour cooldown).
+  eth      FaucetAvailability  ETH faucet availability (1-hour cooldown).
+
+Errors:
+  400  invalid_request  Missing or invalid address query param
+
+---
+
+## Ownership
+
+Rate-limited by wallet address. No wallet registration required — anyone can drip to any address.
+
+---
+
+# spawn.prim.sh
+
+VPS in one API call. Deploy, scale, destroy. Per-second billing.
+
+Base URL: https://spawn.prim.sh
+Auth: x402 (USDC on Base Sepolia). GET /, GET /pricing, GET /v1/metrics are free.
+Chain: Base Sepolia (eip155:84532) during beta.
+
+Install:
+  curl -fsSL https://spawn.prim.sh/install.sh | sh
+
+Limits:
+  Max concurrent servers per wallet: 3
+  Available types: small (2 vCPU, 4 GB RAM) only during beta
+  Locations: nyc3, sfo3, ams3, lon1, fra1, sgp1, tor1, blr1, syd1 (DigitalOcean)
+  Images: ubuntu-24.04, ubuntu-22.04, debian-12, fedora-41
+
+---
+
+## Quick Start
+
+  1. POST /v1/ssh-keys with name + public_key → register SSH key
+  2. POST /v1/servers with name, type, image, location → create server ($0.01)
+  3. Poll GET /v1/servers/:id until status is "running" → get IP address
+  4. DELETE /v1/servers/:id when done → release resources and get deposit refund
+
+## Tips
+
+  - Server returns immediately with status 'initializing' — poll until 'running' for the IP.
+  - Register SSH keys first via POST /v1/ssh-keys to enable passwordless SSH access.
+  - Unused deposit is refunded on DELETE. Budget for the expected runtime.
+  - Only 'small' type (2 vCPU, 4 GB RAM) is available during beta.
+  - user_data field accepts cloud-init scripts to automate first-boot setup.
+  - Server must be stopped before resize. stop → resize → start.
+
+---
+
+## x402 Payment
+
+  1. Make request. Server returns 402 with Payment-Required header.
+  2. Sign EIP-3009 transferWithAuthorization.
+  3. Retry with Payment-Signature header (base64-encoded signed authorization).
+
+Error envelope:
+  {"error": {"code": "<code>", "message": "<msg>"}}
+
+Error codes:
+  not_found
+  forbidden
+  invalid_request
+  insufficient_deposit
+  provider_error
+  rate_limited
+  not_implemented
+  server_limit_exceeded
+  type_not_allowed
+
+---
+
+## Endpoints
+
+### GET /
+
+Health check.
+
+Free.
+
+Response (200):
+  service  string  "spawn.sh"
+  status   string  "ok"
+
+---
+
+### GET /pricing
+
+Machine-readable pricing for all endpoints.
+
+Free.
+
+Response (200):
+  service   string  "spawn.prim.sh"
+  currency  string  "USDC"
+  network   string  "eip155:8453"
+  routes    array   Route pricing list
+    .method       string  HTTP method
+    .path         string  URL path
+    .price_usdc   string  Price in USDC (decimal string)
+    .description  string  Human-readable description
+
+---
+
+### GET /v1/metrics
+
+Operational metrics. Uptime, request counts, latency percentiles, error rates.
+
+Free.
+
+Response (200):
+  service     string  "spawn.prim.sh"
+  uptime_s    number  Seconds since last restart
+  requests    object  Request counts and latencies by endpoint
+  payments    object  Payment counts by endpoint
+  errors      object  Error counts by status code
+
+---
+
+### POST /v1/servers
+
+Provision a new VPS. Returns immediately with status 'initializing'.
+
+Poll GET /v1/servers/:id until status is 'running' to get IP address.
+
+Price: $0.01
+
+Request:
+  name       string    required  Server name (provider-level label).
+  type       string    required  Server type slug. Only "small" (2 vCPU, 4 GB RAM) available in beta.
+  image      string    required  OS image slug (e.g. "ubuntu-24.04", "debian-12").
+  location   string    required  Data center slug (e.g. "nyc3", "sfo3", "lon1").
+  provider   string    optional  Cloud provider. Default "digitalocean".
+  ssh_keys   string[]  optional  SSH key IDs from POST /v1/ssh-keys to install on the server.
+  user_data  string    optional  Cloud-init script to run on first boot.
+
+Response (201):
+  server             ServerResponse  Created server object (initial status: "initializing").
+  action             ActionResponse  Action object tracking the provisioning progress.
+  deposit_charged    string          USDC charged for this server as a decimal string.
+  deposit_remaining  string          Remaining USDC deposit balance as a decimal string.
+
+Errors:
+  400  invalid_request        Missing required fields
+  402  payment_required       x402 payment needed
+  403  server_limit_exceeded  Wallet has reached 3 concurrent server limit
+  502  provider_error         Cloud provider API error
+
+---
+
+### GET /v1/servers
+
+List all servers owned by the calling wallet
+
+Price: $0.001
+
+Query params:
+  limit  integer  optional  1-100, default 20
+  page   integer  optional  1-based page number, default 1
+
+Response (200): ServerListResponse
+
+Errors:
+  402  payment_required  x402 payment needed
+  403  forbidden         Missing wallet in payment
+
+---
+
+### GET /v1/servers/:id
+
+Get full details for a single server. Poll this until status='running'.
+
+Price: $0.001
+
+Path params:
+  id  string  required  id parameter
+
+Response (200):
+  id            string        Prim server ID (e.g. "srv_abc123").
+  provider      string        Cloud provider (e.g. "digitalocean").
+  provider_id   string        Provider-assigned server ID.
+  name          string        Server name (label).
+  type          string        Server type slug (e.g. "small").
+  status        ServerStatus  Current server lifecycle status.
+  image         string        OS image slug (e.g. "ubuntu-24.04").
+  location      string        Data center slug (e.g. "nyc3").
+  public_net    PublicNet     Public IP addresses.
+  owner_wallet  string        Ethereum address of the server owner.
+  created_at    string        ISO 8601 timestamp when the server was created.
+
+Errors:
+  402  payment_required  x402 payment needed
+  403  forbidden         Server belongs to a different wallet
+  404  not_found         Server not found
+
+---
+
+### DELETE /v1/servers/:id
+
+Destroy a server and release its resources. Unused deposit is refunded.
+
+Price: $0.005
+
+Path params:
+  id  string  required  id parameter
+
+Response (200):
+  status            "deleted"  Always "deleted" on success.
+  deposit_refunded  string     USDC refunded to wallet as a decimal string.
+
+Errors:
+  402  payment_required  x402 payment needed
+  403  forbidden         Server belongs to a different wallet
+  404  not_found         Server not found
+  502  provider_error    Cloud provider API error
+
+---
+
+### POST /v1/servers/:id/start
+
+Start a stopped server
+
+Price: $0.002
+
+Path params:
+  id  string  required  id parameter
+
+Response (200):
+  action  ActionResponse  Action object for the requested operation.
+
+Errors:
+  402  payment_required  x402 payment needed
+  403  forbidden         Server belongs to a different wallet
+  404  not_found         Server not found
+  502  provider_error    Cloud provider API error
+
+---
+
+### POST /v1/servers/:id/stop
+
+Stop a running server (graceful shutdown)
+
+Price: $0.002
+
+Path params:
+  id  string  required  id parameter
+
+Response (200):
+  action  ActionResponse  Action object for the requested operation.
+
+Errors:
+  402  payment_required  x402 payment needed
+  403  forbidden         Server belongs to a different wallet
+  404  not_found         Server not found
+  502  provider_error    Cloud provider API error
+
+---
+
+### POST /v1/servers/:id/reboot
+
+Reboot a running server
+
+Price: $0.002
+
+Path params:
+  id  string  required  id parameter
+
+Response (200):
+  action  ActionResponse  Action object for the requested operation.
+
+Errors:
+  402  payment_required  x402 payment needed
+  403  forbidden         Server belongs to a different wallet
+  404  not_found         Server not found
+  502  provider_error    Cloud provider API error
+
+---
+
+### POST /v1/servers/:id/resize
+
+Change server type (CPU/RAM). Server must be stopped first. Deposit adjusted.
+
+Price: $0.01
+
+Path params:
+  id  string  required  id parameter
+
+Request:
+  type          string   required  Target server type slug.
+  upgrade_disk  boolean  optional  Upgrade disk along with CPU/RAM. Irreversible if true. Default false.
+
+Response (200):
+  action         ActionResponse  Action object (command: "resize").
+  new_type       string          Target server type after resize.
+  deposit_delta  string          USDC deposit change as a decimal string. Positive = charged, negative = refunded.
+
+Errors:
+  400  invalid_request   Missing type field or invalid value
+  402  payment_required  x402 payment needed
+  403  forbidden         Server belongs to a different wallet
+  404  not_found         Server not found
+  502  provider_error    Cloud provider API error
+
+---
+
+### POST /v1/servers/:id/rebuild
+
+Reinstall from a fresh OS image. All data on server is destroyed.
+
+Price: $0.005
+
+Path params:
+  id  string  required  id parameter
+
+Request:
+  image  string  required  OS image slug to rebuild with (e.g. "debian-12").
+
+Response (200):
+  action         ActionResponse  Action object (command: "rebuild").
+  root_password  string | null   New root password if no SSH keys configured. Null if SSH keys are installed.
+
+Errors:
+  400  invalid_request   Missing image field
+  402  payment_required  x402 payment needed
+  403  forbidden         Server belongs to a different wallet
+  404  not_found         Server not found
+  502  provider_error    Cloud provider API error
+
+---
+
+### POST /v1/ssh-keys
+
+Register a public SSH key. Returned ID can be used in ssh_keys when creating a server.
+
+Price: $0.001
+
+Request:
+  name        string  required  Human-readable label for this SSH key.
+  public_key  string  required  Public key string (e.g. "ssh-ed25519 AAAA...").
+
+Response (201):
+  id            string  Prim SSH key ID (e.g. "key_abc123").
+  provider      string  Cloud provider.
+  provider_id   string  Provider-assigned key ID.
+  name          string  Key label.
+  fingerprint   string  SSH key fingerprint.
+  owner_wallet  string  Ethereum address of the key owner.
+  created_at    string  ISO 8601 timestamp when the key was registered.
+
+Errors:
+  400  invalid_request   Missing name or public_key
+  402  payment_required  x402 payment needed
+  502  provider_error    Cloud provider API error
+
+---
+
+### GET /v1/ssh-keys
+
+List all SSH keys registered by the calling wallet
+
+Price: $0.001
+
+Response (200): SshKeyListResponse
+
+Errors:
+  402  payment_required  x402 payment needed
+  403  forbidden         Missing wallet in payment
+
+---
+
+### DELETE /v1/ssh-keys/:id
+
+Remove an SSH key. Keys in use by active servers remain until server is rebuilt.
+
+Price: $0.001
+
+Path params:
+  id  string  required  id parameter
+
+Response (200): {} (empty object)
+
+Errors:
+  402  payment_required  x402 payment needed
+  403  forbidden         Key belongs to a different wallet
+  404  not_found         SSH key not found
+  502  provider_error    Cloud provider API error
+
+---
+
+## Ownership
+
+All servers and SSH keys are scoped to the wallet address extracted from the x402 payment.
+
+---
+
+# store.prim.sh
+
+Object storage. Persist artifacts across ephemeral VMs. S3-compatible.
+
+Base URL: https://store.prim.sh
+Auth: x402 (USDC on Base Sepolia). GET /, GET /pricing, GET /v1/metrics are free.
+Chain: Base Sepolia (eip155:84532) during beta.
+
+Install:
+  curl -fsSL https://store.prim.sh/install.sh | sh
+
+Limits:
+  Max buckets per wallet: 10
+  Default per-bucket quota: 100 MB
+  Max total storage per wallet: 1 GB
+  Max object size: 5 GB (limited by max_body_size: 128MB for API)
+
+---
+
+## Quick Start
+
+  1. POST /v1/buckets → create a bucket ($0.05)
+  2. PUT /v1/buckets/:id/objects/:key with raw bytes body → upload object
+  3. GET /v1/buckets/:id/objects/:key → download object
+
+## Tips
+
+  - Wallet address from x402 payment is the bucket owner. No separate auth needed.
+  - Content-Length header is required on PUT — missing it returns 411.
+  - Key may include slashes (e.g. notes/2026/feb.txt) for path-like organization.
+  - Call POST /v1/buckets/:id/quota/reconcile if usage_bytes seems incorrect after bulk deletes.
+  - Delete all objects before deleting a bucket — non-empty bucket delete is rejected.
+
+---
+
+## x402 Payment
+
+  1. Make request. Server returns 402 with Payment-Required header.
+  2. Sign EIP-3009 transferWithAuthorization.
+  3. Retry with Payment-Signature header (base64-encoded signed authorization).
+
+Error envelope:
+  {"error": {"code": "<code>", "message": "<msg>"}}
+
+Error codes:
+  not_found
+  forbidden
+  invalid_request
+  r2_error
+  rate_limited
+  bucket_name_taken
+  quota_exceeded
+
+---
+
+## Endpoints
+
+### GET /
+
+Health check.
+
+Free.
+
+Response (200):
+  service  string  "store.sh"
+  status   string  "ok"
+
+---
+
+### GET /pricing
+
+Machine-readable pricing for all endpoints.
+
+Free.
+
+Response (200):
+  service   string  "store.prim.sh"
+  currency  string  "USDC"
+  network   string  "eip155:8453"
+  routes    array   Route pricing list
+    .method       string  HTTP method
+    .path         string  URL path
+    .price_usdc   string  Price in USDC (decimal string)
+    .description  string  Human-readable description
+
+---
+
+### GET /v1/metrics
+
+Operational metrics. Uptime, request counts, latency percentiles, error rates.
+
+Free.
+
+Response (200):
+  service     string  "store.prim.sh"
+  uptime_s    number  Seconds since last restart
+  requests    object  Request counts and latencies by endpoint
+  payments    object  Payment counts by endpoint
+  errors      object  Error counts by status code
+
+---
+
+### POST /v1/buckets
+
+Create a new storage bucket
+
+Price: $0.05
+
+Request:
+  name      string  required  Bucket name. Unique per wallet. 3-63 chars, alphanumeric + hyphens.
+  location  string  optional  Storage region (e.g. "us-east-1"). Defaults to primary region.
+
+Response (201):
+  bucket  BucketResponse  The created bucket.
+
+Errors:
+  400  invalid_request        Invalid bucket name or name already taken
+  402  payment_required       x402 payment needed
+  403  bucket_limit_exceeded  Wallet has reached 10 bucket limit
+  502  r2_error               Upstream R2 error
+
+---
+
+### GET /v1/buckets
+
+List all buckets owned by the calling wallet
+
+Price: $0.001
+
+Query params:
+  limit  integer  optional  1-100, default 20
+  page   integer  optional  1-based page number, default 1
+
+Response (200): BucketListResponse
+
+Errors:
+  402  payment_required  x402 payment needed
+  403  forbidden         Missing wallet address in payment
+
+---
+
+### GET /v1/buckets/:id
+
+Get details for a single bucket. Caller must own the bucket.
+
+Price: $0.001
+
+Path params:
+  id  string  required  id parameter
+
+Response (200):
+  id            string         Bucket ID (UUID).
+  name          string         Bucket name. Unique per wallet. Alphanumeric, hyphens, underscores.
+  location      string | null  Storage region (e.g. "us-east-1"). Null = default region.
+  owner_wallet  string         Ethereum address of the bucket owner.
+  quota_bytes   number | null  Per-bucket quota in bytes. Null = default (100 MB).
+  usage_bytes   number         Current storage usage in bytes.
+  created_at    string         ISO 8601 timestamp when the bucket was created.
+
+Errors:
+  402  payment_required  x402 payment needed
+  403  forbidden         Bucket belongs to a different wallet
+  404  not_found         Bucket not found
+
+---
+
+### DELETE /v1/buckets/:id
+
+Delete a bucket. Bucket must be empty first.
+
+Price: $0.01
+
+Path params:
+  id  string  required  id parameter
+
+Response (200): {} (empty object)
+
+Errors:
+  402  payment_required  x402 payment needed
+  403  forbidden         Bucket belongs to a different wallet
+  404  not_found         Bucket not found
+  502  r2_error          Upstream R2 error
+
+---
+
+### PUT /v1/buckets/:id/objects/:key
+
+Upload an object. Key may include slashes. Content-Length header required.
+
+Request body is raw bytes. Fails with 413 if upload exceeds quota.
+
+Price: $0.001
+
+Path params:
+  id   string  required  id parameter
+  key  string  required  key parameter
+
+Response (200):
+  key   string  Object key as stored.
+  size  number  Object size in bytes.
+  etag  string  ETag (MD5 hash).
+
+Errors:
+  400  invalid_request         Missing or invalid body
+  402  payment_required        x402 payment needed
+  403  forbidden               Bucket belongs to a different wallet
+  404  not_found               Bucket not found
+  413  quota_exceeded          Upload would exceed bucket quota
+  413  storage_limit_exceeded  Upload would exceed wallet 1 GB limit
+  502  r2_error                Upstream R2 error
+
+---
+
+### GET /v1/buckets/:id/objects
+
+List objects in a bucket. Cursor-based pagination.
+
+Price: $0.001
+
+Path params:
+  id  string  required  id parameter
+
+Query params:
+  prefix  string   optional  Filter by key prefix (e.g. notes/)
+  limit   integer  optional  1-1000, default 100
+  cursor  string   optional  Cursor from previous response's next_cursor
+
+Response (200): ObjectListResponse
+
+Errors:
+  402  payment_required  x402 payment needed
+  403  forbidden         Bucket belongs to a different wallet
+  404  not_found         Bucket not found
+  502  r2_error          Upstream R2 error
+
+---
+
+### GET /v1/buckets/:id/objects/:key
+
+Download an object. Response body is streamed directly.
+
+Price: $0.001
+
+Path params:
+  id   string  required  id parameter
+  key  string  required  key parameter
+
+Response (200): Raw bytes (application/octet-stream)
+
+Errors:
+  402  payment_required  x402 payment needed
+  403  forbidden         Bucket belongs to a different wallet
+  404  not_found         Bucket or object not found
+  502  r2_error          Upstream R2 error
+
+---
+
+### DELETE /v1/buckets/:id/objects/:key
+
+Delete an object from a bucket
+
+Price: $0.001
+
+Path params:
+  id   string  required  id parameter
+  key  string  required  key parameter
+
+Response (200):
+  status  "deleted"  Always "deleted" on success.
+
+Errors:
+  402  payment_required  x402 payment needed
+  403  forbidden         Bucket belongs to a different wallet
+  404  not_found         Bucket or object not found
+  502  r2_error          Upstream R2 error
+
+---
+
+### GET /v1/buckets/:id/quota
+
+Get quota and usage for a bucket
+
+Price: $0.001
+
+Path params:
+  id  string  required  id parameter
+
+Response (200):
+  bucket_id    string         Bucket ID.
+  quota_bytes  number | null  Per-bucket quota in bytes. Null = default (100 MB).
+  usage_bytes  number         Current storage usage in bytes.
+  usage_pct    number | null  Usage as a percentage (0-100). Null if quota_bytes is null.
+
+Errors:
+  402  payment_required  x402 payment needed
+  403  forbidden         Bucket belongs to a different wallet
+  404  not_found         Bucket not found
+
+---
+
+### PUT /v1/buckets/:id/quota
+
+Set the storage quota for a bucket. Pass null to reset to default (100 MB).
+
+Price: $0.01
+
+Path params:
+  id  string  required  id parameter
+
+Request:
+  quota_bytes  number | null  required  New quota in bytes. Pass null to reset to default (100 MB).
+
+Response (200):
+  bucket_id    string         Bucket ID.
+  quota_bytes  number | null  Per-bucket quota in bytes. Null = default (100 MB).
+  usage_bytes  number         Current storage usage in bytes.
+  usage_pct    number | null  Usage as a percentage (0-100). Null if quota_bytes is null.
+
+Errors:
+  400  invalid_request   Invalid quota value
+  402  payment_required  x402 payment needed
+  403  forbidden         Bucket belongs to a different wallet
+  404  not_found         Bucket not found
+  502  r2_error          Upstream R2 error
+
+---
+
+### POST /v1/buckets/:id/quota/reconcile
+
+Recompute bucket usage by scanning actual R2 storage. Use when usage_bytes appears incorrect.
+
+Price: $0.05
+
+Path params:
+  id  string  required  id parameter
+
+Response (200):
+  bucket_id       string  Bucket ID.
+  previous_bytes  number  Storage usage recorded before reconciliation, in bytes.
+  actual_bytes    number  Actual storage usage recomputed from R2, in bytes.
+  delta_bytes     number  Difference (actual - previous). Negative means recorded was overstated.
+
+Errors:
+  402  payment_required  x402 payment needed
+  403  forbidden         Bucket belongs to a different wallet
+  404  not_found         Bucket not found
+  502  r2_error          Upstream R2 error
+
+---
+
+## Ownership
+
+All buckets and objects are scoped to the wallet address extracted from the x402 payment. Callers can only access their own buckets.
+
+---
+
+# email.prim.sh
+
+Mailboxes on demand. Send, receive, webhook. Disposable or permanent.
+
+Base URL: https://email.prim.sh
+Auth: x402 (USDC on Base Sepolia). GET /, GET /pricing, GET /v1/metrics are free.
+Chain: Base Sepolia (eip155:84532) during beta.
+
+Install:
+  curl -fsSL https://email.prim.sh/install.sh | sh
+
+Limits:
+  Max message size: 25 MB
+  Mailbox default TTL: 24 hours (86400 seconds)
+  Webhooks per mailbox: no hard limit documented
+
+---
+
+## Quick Start
+
+  1. POST /v1/mailboxes with {"domain": "mail.prim.sh"} → create mailbox ($0.05)
+  2. POST /v1/mailboxes/:id/send with to, subject, body → send email ($0.01)
+  3. GET /v1/mailboxes/:id/messages → poll for inbound messages
+  4. POST /v1/mailboxes/:id/webhooks → register webhook for real-time delivery
+
+## Tips
+
+  - Mailboxes have a 24-hour TTL by default — extend with POST /v1/mailboxes/:id/renew.
+  - Webhook fires on message.received with X-Prim-Signature for HMAC verification.
+  - DELETE /v1/mailboxes/:id permanently deletes the mailbox and all messages.
+  - Custom domains require DNS verification — check POST /v1/domains/:id/verify.
+  - GET /v1/mailboxes/:id/messages returns newest-first with position-based pagination.
+
+---
+
+## x402 Payment
+
+  1. Make request. Server returns 402 with Payment-Required header.
+  2. Sign EIP-3009 transferWithAuthorization.
+  3. Retry with Payment-Signature header (base64-encoded signed authorization).
+
+Error envelope:
+  {"error": {"code": "<code>", "message": "<msg>"}}
+
+Error codes:
+  not_found
+  forbidden
+  invalid_request
+  stalwart_error
+  conflict
+  username_taken
+  jmap_error
+  expired
+
+---
+
+## Endpoints
+
+### GET /
+
+Health check.
+
+Free.
+
+Response (200):
+  service  string  "email.sh"
+  status   string  "ok"
+
+---
+
+### GET /pricing
+
+Machine-readable pricing for all endpoints.
+
+Free.
+
+Response (200):
+  service   string  "email.prim.sh"
+  currency  string  "USDC"
+  network   string  "eip155:8453"
+  routes    array   Route pricing list
+    .method       string  HTTP method
+    .path         string  URL path
+    .price_usdc   string  Price in USDC (decimal string)
+    .description  string  Human-readable description
+
+---
+
+### GET /v1/metrics
+
+Operational metrics. Uptime, request counts, latency percentiles, error rates.
+
+Free.
+
+Response (200):
+  service     string  "email.prim.sh"
+  uptime_s    number  Seconds since last restart
+  requests    object  Request counts and latencies by endpoint
+  payments    object  Payment counts by endpoint
+  errors      object  Error counts by status code
+
+---
+
+### POST /v1/mailboxes
+
+Create a mailbox. Optional: username, domain, ttl_ms.
+
+Price: $0.05
+
+Request:
+  username  string  optional  Desired username. Omit for random generation.
+  domain    string  optional  Domain for the mailbox (must be registered). Omit for default domain.
+  ttl_ms    number  optional  TTL in milliseconds. Omit for permanent mailbox.
+
+Response (201):
+  id          string         Mailbox ID (e.g. "mbx_abc123").
+  address     string         Full email address (e.g. "abc123@mail.prim.sh").
+  username    string         Username portion of the email address.
+  domain      string         Domain portion of the email address.
+  status      MailboxStatus  Current status: "active" | "expired" | "deleted".
+  created_at  string         ISO 8601 timestamp when the mailbox was created.
+  expires_at  string | null  ISO 8601 timestamp when the mailbox expires. Null if permanent.
+
+Errors:
+  400  invalid_request   Missing fields or invalid characters
+  402  payment_required  x402 payment needed
+  409  username_taken    Username already in use on that domain
+
+---
+
+### GET /v1/mailboxes
+
+List mailboxes owned by the calling wallet (paginated)
+
+Price: $0.001
+
+Query params:
+  limit  integer  optional  1-100, default 20
+  after  string   optional  Cursor from previous response
+
+Response (200): MailboxListResponse
+
+Errors:
+  402  payment_required  x402 payment needed
+  403  forbidden         Resource owned by a different wallet
+
+---
+
+### GET /v1/mailboxes/:id
+
+Get mailbox metadata including expires_at
+
+Price: $0.001
+
+Path params:
+  id  string  required  id parameter
+
+Response (200):
+  id          string         Mailbox ID (e.g. "mbx_abc123").
+  address     string         Full email address (e.g. "abc123@mail.prim.sh").
+  username    string         Username portion of the email address.
+  domain      string         Domain portion of the email address.
+  status      MailboxStatus  Current status: "active" | "expired" | "deleted".
+  created_at  string         ISO 8601 timestamp when the mailbox was created.
+  expires_at  string | null  ISO 8601 timestamp when the mailbox expires. Null if permanent.
+
+Errors:
+  402  payment_required  x402 payment needed
+  403  forbidden         Resource owned by a different wallet
+  404  not_found         Mailbox not found
+
+---
+
+### DELETE /v1/mailboxes/:id
+
+Permanently delete a mailbox and all messages
+
+Price: $0.01
+
+Path params:
+  id  string  required  id parameter
+
+Response (200):
+  id       string  Mailbox ID that was deleted.
+  deleted  true    Always true on success.
+
+Errors:
+  402  payment_required  x402 payment needed
+  403  forbidden         Resource owned by a different wallet
+  404  not_found         Mailbox not found
+
+---
+
+### POST /v1/mailboxes/:id/renew
+
+Extend mailbox TTL by ttl_ms milliseconds
+
+Price: $0.01
+
+Path params:
+  id  string  required  id parameter
+
+Request:
+  ttl_ms  number  optional  Extension duration in milliseconds. Omit to apply default TTL.
+
+Response (200):
+  id          string         Mailbox ID (e.g. "mbx_abc123").
+  address     string         Full email address (e.g. "abc123@mail.prim.sh").
+  username    string         Username portion of the email address.
+  domain      string         Domain portion of the email address.
+  status      MailboxStatus  Current status: "active" | "expired" | "deleted".
+  created_at  string         ISO 8601 timestamp when the mailbox was created.
+  expires_at  string | null  ISO 8601 timestamp when the mailbox expires. Null if permanent.
+
+Errors:
+  402  payment_required  x402 payment needed
+  403  forbidden         Resource owned by a different wallet
+  404  not_found         Mailbox not found
+  410  expired           Mailbox already expired
+
+---
+
+### GET /v1/mailboxes/:id/messages
+
+List messages in a mailbox, newest first
+
+Price: $0.001
+
+Path params:
+  id  string  required  id parameter
+
+Query params:
+  limit  integer  optional  1-100, default 20
+  after  integer  optional  Position-based cursor for pagination
+
+Response (200): EmailListResponse
+
+Errors:
+  402  payment_required  x402 payment needed
+  403  forbidden         Resource owned by a different wallet
+  404  not_found         Mailbox not found
+
+---
+
+### GET /v1/mailboxes/:id/messages/:msgId
+
+Get full message including textBody and htmlBody
+
+Price: $0.001
+
+Path params:
+  id     string  required  id parameter
+  msgId  string  required  msgId parameter
+
+Response (200):
+  id              string          Message ID.
+  from            EmailAddress    Sender address.
+  to              EmailAddress[]  Recipient addresses.
+  subject         string          Email subject line.
+  received_at     string          ISO 8601 timestamp when the message was received.
+  size            number          Message size in bytes.
+  has_attachment  boolean         Whether the message has attachments.
+  preview         string          Short preview text (first ~100 chars of body).
+  cc              EmailAddress[]  CC recipient addresses.
+  text_body       string | null   Plain-text body. Null if not present.
+  html_body       string | null   HTML body. Null if not present.
+
+Errors:
+  402  payment_required  x402 payment needed
+  403  forbidden         Resource owned by a different wallet
+  404  not_found         Mailbox or message not found
+
+---
+
+### POST /v1/mailboxes/:id/send
+
+Send email from a mailbox. Requires to, subject, and body or html.
+
+Price: $0.01
+
+Path params:
+  id  string  required  id parameter
+
+Request:
+  to       string  required  Recipient email address.
+  subject  string  required  Email subject line.
+  body     string  optional  Plain-text body. Either body or html is required.
+  html     string  optional  HTML body. Either body or html is required.
+  cc       string  optional  CC recipient email address.
+  bcc      string  optional  BCC recipient email address.
+
+Response (200):
+  message_id  string  Message ID assigned by the mail server.
+  status      "sent"  Always "sent" on success.
+
+Errors:
+  400  invalid_request   Missing required fields
+  402  payment_required  x402 payment needed
+  403  forbidden         Resource owned by a different wallet
+  404  not_found         Mailbox not found
+  502  stalwart_error    Upstream Stalwart mail server error
+
+---
+
+### POST /v1/mailboxes/:id/webhooks
+
+Register a webhook URL for message.received events. Optional secret for HMAC signing.
+
+Price: $0.01
+
+Path params:
+  id  string  required  id parameter
+
+Request:
+  url     string    required  HTTPS URL to receive webhook POST requests.
+  secret  string    optional  HMAC secret for X-Prim-Signature verification.
+  events  string[]  optional  Events to subscribe to. Defaults to ["message.received"].
+
+Response (201):
+  id          string    Webhook ID (e.g. "wh_abc123").
+  url         string    Webhook endpoint URL.
+  events      string[]  Subscribed events.
+  status      string    Webhook status.
+  created_at  string    ISO 8601 timestamp when the webhook was created.
+
+Errors:
+  400  invalid_request   Missing or invalid webhook URL
+  402  payment_required  x402 payment needed
+  403  forbidden         Resource owned by a different wallet
+  404  not_found         Mailbox not found
+  409  conflict          Duplicate webhook URL
+
+---
+
+### GET /v1/mailboxes/:id/webhooks
+
+List webhooks for a mailbox
+
+Price: $0.001
+
+Path params:
+  id  string  required  id parameter
+
+Response (200): WebhookListResponse
+
+Errors:
+  402  payment_required  x402 payment needed
+  403  forbidden         Resource owned by a different wallet
+  404  not_found         Mailbox not found
+
+---
+
+### DELETE /v1/mailboxes/:id/webhooks/:whId
+
+Delete a webhook
+
+Price: $0.001
+
+Path params:
+  id    string  required  id parameter
+  whId  string  required  whId parameter
+
+Response (200):
+  id       string  Webhook ID that was deleted.
+  deleted  true    Always true on success.
+
+Errors:
+  402  payment_required  x402 payment needed
+  403  forbidden         Resource owned by a different wallet
+  404  not_found         Mailbox or webhook not found
+
+---
+
+### POST /v1/domains
+
+Register a custom domain. Returns required_records for DNS.
+
+Price: $0.05
+
+Request:
+  domain  string  required  Domain name to register (e.g. "myproject.com").
+
+Response (201):
+  id                string         Domain registration ID.
+  domain            string         Registered domain name.
+  status            string         Verification status ("pending" | "verified").
+  owner_wallet      string         Ethereum address of the domain owner.
+  created_at        string         ISO 8601 timestamp when the domain was registered.
+  verified_at       string | null  ISO 8601 timestamp when the domain was verified. Null if unverified.
+  required_records  DnsRecord[]    DNS records that must be added to verify the domain.
+  dkim_records      DnsRecord[]    DKIM DNS records. Only present after successful verification.
+
+Errors:
+  400  invalid_request   Invalid domain name
+  402  payment_required  x402 payment needed
+  409  conflict          Domain already registered
+
+---
+
+### GET /v1/domains
+
+List registered custom domains (paginated)
+
+Price: $0.001
+
+Query params:
+  limit  integer  optional  1-100, default 20
+  after  string   optional  Cursor from previous response
+
+Response (200): DomainListResponse
+
+Errors:
+  402  payment_required  x402 payment needed
+  403  forbidden         Resource owned by a different wallet
+
+---
+
+### GET /v1/domains/:id
+
+Get domain details and verification status
+
+Price: $0.001
+
+Path params:
+  id  string  required  id parameter
+
+Response (200):
+  id                string         Domain registration ID.
+  domain            string         Registered domain name.
+  status            string         Verification status ("pending" | "verified").
+  owner_wallet      string         Ethereum address of the domain owner.
+  created_at        string         ISO 8601 timestamp when the domain was registered.
+  verified_at       string | null  ISO 8601 timestamp when the domain was verified. Null if unverified.
+  required_records  DnsRecord[]    DNS records that must be added to verify the domain.
+  dkim_records      DnsRecord[]    DKIM DNS records. Only present after successful verification.
+
+Errors:
+  402  payment_required  x402 payment needed
+  403  forbidden         Resource owned by a different wallet
+  404  not_found         Domain not found
+
+---
+
+### POST /v1/domains/:id/verify
+
+Verify DNS records. On success: status → verified, dkim_records returned.
+
+Price: $0.01
+
+Path params:
+  id  string  required  id parameter
+
+Response (200):
+  id                    string                Domain registration ID.
+  domain                string                Domain name.
+  status                string                Updated verification status.
+  verified_at           string | null         ISO 8601 timestamp when the domain was verified. Null if not yet verified.
+  verification_results  VerificationResult[]  Per-record verification results.
+  dkim_records          DnsRecord[]           DKIM records to add to DNS. Only present on successful verification.
+
+Errors:
+  402  payment_required  x402 payment needed
+  403  forbidden         Resource owned by a different wallet
+  404  not_found         Domain not found
+  502  stalwart_error    DNS verification failed
+
+---
+
+### DELETE /v1/domains/:id
+
+Remove a custom domain registration
+
+Price: $0.01
+
+Path params:
+  id  string  required  id parameter
+
+Response (200):
+  id       string  Domain registration ID that was deleted.
+  deleted  true    Always true on success.
+  warning  string  Warning message if domain had active mailboxes.
+
+Errors:
+  402  payment_required  x402 payment needed
+  403  forbidden         Resource owned by a different wallet
+  404  not_found         Domain not found
+
+---
+
+## Ownership
+
+All mailboxes and domains are scoped to the wallet address extracted from the x402 payment.
+
+---
+
+# search.prim.sh
+
+Search for agents. No ads, no SEO spam. Just facts and clean markdown.
+
+Base URL: https://search.prim.sh
+Auth: x402 (USDC on Base Sepolia). GET /, GET /pricing, GET /v1/metrics are free.
+Chain: Base Sepolia (eip155:84532) during beta.
+
+Install:
+  curl -fsSL https://search.prim.sh/install.sh | sh
+
+Limits:
+  Max results per search: 20
+  Rate limit applies per wallet — check Retry-After header on 429
+
+---
+
+## Quick Start
+
+  1. POST /v1/search with {"query": "...", "max_results": 5} → web search results
+  2. POST /v1/search/news with {"query": "..."} → recent news articles
+  3. POST /v1/extract with {"urls": ["https://..."]} → clean markdown content
+
+## Tips
+
+  - Set include_answer: true to get an AI-generated summary alongside search results.
+  - Use exclude_domains to remove noise sources (e.g. reddit.com, quora.com).
+  - POST /v1/extract accepts a single URL string or an array of URLs.
+  - Failed extractions (paywalls, 404s) are reported in the failed array — the request still succeeds.
+  - Check Retry-After header on 429 responses before retrying.
+
+---
+
+## x402 Payment
+
+  1. Make request. Server returns 402 with Payment-Required header.
+  2. Sign EIP-3009 transferWithAuthorization.
+  3. Retry with Payment-Signature header (base64-encoded signed authorization).
+
+Error envelope:
+  {"error": {"code": "<code>", "message": "<msg>"}}
+
+Error codes:
+  invalid_request
+  rate_limited
+  provider_error
+
+---
+
+## Endpoints
+
+### GET /
+
+Health check.
+
+Free.
+
+Response (200):
+  service  string  "search.sh"
+  status   string  "ok"
+
+---
+
+### GET /pricing
+
+Machine-readable pricing for all endpoints.
+
+Free.
+
+Response (200):
+  service   string  "search.prim.sh"
+  currency  string  "USDC"
+  network   string  "eip155:8453"
+  routes    array   Route pricing list
+    .method       string  HTTP method
+    .path         string  URL path
+    .price_usdc   string  Price in USDC (decimal string)
+    .description  string  Human-readable description
+
+---
+
+### GET /v1/metrics
+
+Operational metrics. Uptime, request counts, latency percentiles, error rates.
+
+Free.
+
+Response (200):
+  service     string  "search.prim.sh"
+  uptime_s    number  Seconds since last restart
+  requests    object  Request counts and latencies by endpoint
+  payments    object  Payment counts by endpoint
+  errors      object  Error counts by status code
+
+---
+
+### POST /v1/search
+
+Search the web and return ranked results with optional AI-generated answer
+
+Price: $0.01
+
+Request:
+  query            string                             required  Search query string.
+  max_results      number                             optional  Maximum number of results to return. 1-20, default 10.
+  search_depth     "basic" | "advanced"               optional  Search depth. "basic" | "advanced", default "basic".
+  country          string                             optional  Two-letter ISO 3166-1 country code to bias results (e.g. "US").
+  time_range       "day" | "week" | "month" | "year"  optional  Restrict results by recency. "day" | "week" | "month" | "year".
+  include_answer   boolean                            optional  Include AI-generated answer summarizing top results. Default false.
+  include_domains  string[]                           optional  Restrict results to these domains only (e.g. ["docs.base.org"]).
+  exclude_domains  string[]                           optional  Exclude results from these domains (e.g. ["reddit.com"]).
+
+Response (200):
+  query          string          Search query echoed back.
+  answer         string          AI-generated answer summarizing top results. Only present if include_answer was true.
+  results        SearchResult[]  Ranked search results.
+  response_time  number          Time taken to complete the search in milliseconds.
+
+Errors:
+  400  invalid_request   Missing or invalid query
+  402  payment_required  x402 payment needed
+  429  rate_limited      Too many requests. Check Retry-After header.
+  502  provider_error    Upstream search provider unavailable
+
+---
+
+### POST /v1/search/news
+
+Search for recent news articles, ordered by recency
+
+Price: $0.01
+
+Request:
+  query            string                             required  Search query string.
+  max_results      number                             optional  Maximum number of results to return. 1-20, default 10.
+  search_depth     "basic" | "advanced"               optional  Search depth. "basic" | "advanced", default "basic".
+  country          string                             optional  Two-letter ISO 3166-1 country code to bias results (e.g. "US").
+  time_range       "day" | "week" | "month" | "year"  optional  Restrict results by recency. "day" | "week" | "month" | "year".
+  include_answer   boolean                            optional  Include AI-generated answer summarizing top results. Default false.
+  include_domains  string[]                           optional  Restrict results to these domains only (e.g. ["docs.base.org"]).
+  exclude_domains  string[]                           optional  Exclude results from these domains (e.g. ["reddit.com"]).
+
+Response (200):
+  query          string          Search query echoed back.
+  answer         string          AI-generated answer summarizing top results. Only present if include_answer was true.
+  results        SearchResult[]  Ranked search results.
+  response_time  number          Time taken to complete the search in milliseconds.
+
+Errors:
+  400  invalid_request   Missing or invalid query
+  402  payment_required  x402 payment needed
+  429  rate_limited      Too many requests
+  502  provider_error    Upstream search provider unavailable
+
+---
+
+### POST /v1/extract
+
+Extract readable content from one or more URLs as markdown or plain text
+
+Failed extractions are in the failed array. Request succeeds if at least one URL was attempted.
+
+Price: $0.005
+
+Request:
+  urls    string | string[]    required  URL string or array of URLs to extract content from.
+  format  "markdown" | "text"  optional  Output format. "markdown" | "text", default "markdown".
+
+Response (200):
+  results        ExtractResult[]     Successfully extracted pages.
+  failed         FailedExtraction[]  Pages that could not be extracted.
+  response_time  number              Time taken to complete the extraction in milliseconds.
+
+Errors:
+  400  invalid_request   Missing urls field or invalid URL format
+  402  payment_required  x402 payment needed
+  429  rate_limited      Too many requests
+  502  provider_error    Upstream extraction provider unavailable
+
+---
+
+## Ownership
+
+Stateless. No resources stored per wallet. Each request is independent.
+
+---
+
+# token.prim.sh
+
+Deploy ERC-20 tokens and Uniswap V3 pools. No wallet setup required.
+
+Base URL: https://token.prim.sh
+Auth: x402 (USDC on Base Sepolia). GET /, GET /pricing, GET /v1/metrics are free.
+Chain: Base Sepolia (eip155:84532) during beta.
+
+Install:
+  curl -fsSL https://token.prim.sh/install.sh | sh
+
+Limits:
+  One Uniswap V3 pool per token (pool_exists error on second attempt)
+  Mint requires mintable=true at deploy time — immutable after deployment
+
+---
+
+## Quick Start
+
+  1. POST /v1/tokens with name, symbol, initialSupply → deploy ERC-20 ($1.00)
+  2. Poll GET /v1/tokens/:id until deployStatus is 'confirmed' → get contractAddress
+  3. POST /v1/tokens/:id/mint → mint additional supply (mintable=true required)
+  4. POST /v1/tokens/:id/pool with pricePerToken → create Uniswap V3 pool ($0.50)
+
+## Tips
+
+  - Deploy is asynchronous — poll GET /v1/tokens/:id until deployStatus is 'confirmed' before minting or creating a pool.
+  - All supply values are strings representing raw integers (e.g. '1000000000000000000' for 1 token with 18 decimals).
+  - USDC has 6 decimals — $1 USDC = '1000000' in raw units.
+  - One pool per token. POST /v1/tokens/:id/pool returns 409 pool_exists if already created.
+  - liquidity-params response includes approvals[] — submit each on-chain before calling addLiquidity.
+
+---
+
+## x402 Payment
+
+  1. Make request. Server returns 402 with Payment-Required header.
+  2. Sign EIP-3009 transferWithAuthorization.
+  3. Retry with Payment-Signature header (base64-encoded signed authorization).
+
+Error envelope:
+  {"error": {"code": "<code>", "message": "<msg>"}}
+
+Error codes:
+  not_found
+  forbidden
+  invalid_request
+  not_mintable
+  exceeds_max_supply
+  pool_exists
+  rpc_error
+
+---
+
+## Endpoints
+
+### GET /
+
+Health check.
+
+Free.
+
+Response (200):
+  service  string  "token.sh"
+  status   string  "ok"
+
+---
+
+### GET /pricing
+
+Machine-readable pricing for all endpoints.
+
+Free.
+
+Response (200):
+  service   string  "token.prim.sh"
+  currency  string  "USDC"
+  network   string  "eip155:8453"
+  routes    array   Route pricing list
+    .method       string  HTTP method
+    .path         string  URL path
+    .price_usdc   string  Price in USDC (decimal string)
+    .description  string  Human-readable description
+
+---
+
+### GET /v1/metrics
+
+Operational metrics. Uptime, request counts, latency percentiles, error rates.
+
+Free.
+
+Response (200):
+  service     string  "token.prim.sh"
+  uptime_s    number  Seconds since last restart
+  requests    object  Request counts and latencies by endpoint
+  payments    object  Payment counts by endpoint
+  errors      object  Error counts by status code
+
+---
+
+### POST /v1/tokens
+
+Deploy a new ERC-20 token. Returns immediately with deployStatus: 'pending'.
+
+Poll GET /v1/tokens/:id until deployStatus is 'confirmed' before minting or pooling.
+
+Price: $1.00
+
+Request:
+  name           string         required  Token name (e.g. "AgentCoin").
+  symbol         string         required  Token symbol (e.g. "AGT").
+  decimals       number         optional  Decimal places. Default 18.
+  initialSupply  string         required  Initial supply as a raw integer string (e.g. "1000000000000000000" = 1 token at 18 decimals).
+  mintable       boolean        optional  Whether additional tokens can be minted after deployment. Default false.
+  maxSupply      string | null  optional  Maximum mintable supply as a raw integer string. Null = unlimited. Only applies if mintable is true.
+
+Response (201):
+  id                string                              Token ID (e.g. "tok_abc123").
+  contract_address  string | null                       Deployed contract address. Null while deploy_status is "pending".
+  owner_wallet      string                              Ethereum address of the wallet that deployed the token.
+  name              string                              Token name.
+  symbol            string                              Token symbol.
+  decimals          number                              Decimal places.
+  initial_supply    string                              Initial supply as a raw integer string.
+  total_minted      string                              Total minted supply as a raw integer string.
+  mintable          boolean                             Whether additional tokens can be minted.
+  max_supply        string | null                       Maximum mintable supply as a raw integer string. Null = unlimited.
+  tx_hash           string                              Deployment transaction hash.
+  deploy_status     "pending" | "confirmed" | "failed"  Deployment status. Poll until "confirmed" before minting or creating a pool.
+  created_at        string                              ISO 8601 timestamp when the token was created.
+
+Errors:
+  400  invalid_request   Missing required fields or invalid values
+  402  payment_required  x402 payment needed
+  502  rpc_error         Base RPC error
+
+---
+
+### GET /v1/tokens
+
+List tokens deployed by the authenticated wallet
+
+Price: $0.001
+
+Response (200): TokenListResponse
+
+Errors:
+  402  payment_required  x402 payment needed
+  403  forbidden         Missing wallet in payment
+
+---
+
+### GET /v1/tokens/:id
+
+Get token details: deployStatus, contractAddress, supply, pool
+
+Price: $0.001
+
+Path params:
+  id  string  required  id parameter
+
+Response (200):
+  id                string                              Token ID (e.g. "tok_abc123").
+  contract_address  string | null                       Deployed contract address. Null while deploy_status is "pending".
+  owner_wallet      string                              Ethereum address of the wallet that deployed the token.
+  name              string                              Token name.
+  symbol            string                              Token symbol.
+  decimals          number                              Decimal places.
+  initial_supply    string                              Initial supply as a raw integer string.
+  total_minted      string                              Total minted supply as a raw integer string.
+  mintable          boolean                             Whether additional tokens can be minted.
+  max_supply        string | null                       Maximum mintable supply as a raw integer string. Null = unlimited.
+  tx_hash           string                              Deployment transaction hash.
+  deploy_status     "pending" | "confirmed" | "failed"  Deployment status. Poll until "confirmed" before minting or creating a pool.
+  created_at        string                              ISO 8601 timestamp when the token was created.
+
+Errors:
+  402  payment_required  x402 payment needed
+  403  forbidden         Token belongs to a different wallet
+  404  not_found         Token ID does not exist
+
+---
+
+### POST /v1/tokens/:id/mint
+
+Mint additional tokens to an address. Requires mintable=true at deploy time.
+
+Price: $0.10
+
+Path params:
+  id  string  required  id parameter
+
+Request:
+  to      string  required  Recipient address to mint tokens to.
+  amount  string  required  Amount to mint as a raw integer string.
+
+Response (200):
+  tx_hash  string     Mint transaction hash.
+  to       string     Recipient address.
+  amount   string     Amount minted as a raw integer string.
+  status   "pending"  Always "pending" — mint is submitted on-chain asynchronously.
+
+Errors:
+  400  not_mintable        Token deployed with mintable=false
+  402  payment_required    x402 payment needed
+  403  forbidden           Token belongs to a different wallet
+  404  not_found           Token ID does not exist
+  422  exceeds_max_supply  Mint would exceed maxSupply
+  502  rpc_error           Base RPC error
+
+---
+
+### GET /v1/tokens/:id/supply
+
+Live on-chain total supply from contract
+
+Price: $0.001
+
+Path params:
+  id  string  required  id parameter
+
+Response (200):
+  token_id          string  Token ID.
+  contract_address  string  Deployed contract address.
+  total_supply      string  Live on-chain total supply as a raw integer string.
+
+Errors:
+  402  payment_required  x402 payment needed
+  403  forbidden         Token belongs to a different wallet
+  404  not_found         Token ID does not exist
+  502  rpc_error         Base RPC error
+
+---
+
+### POST /v1/tokens/:id/pool
+
+Create and initialize a Uniswap V3 pool paired with USDC. One pool per token.
+
+Price: $0.50
+
+Path params:
+  id  string  required  id parameter
+
+Request:
+  pricePerToken  string  required  Initial price per token in USDC as a decimal string (e.g. "0.001").
+  feeTier        number  optional  Uniswap V3 fee tier. 500 | 3000 | 10000, default 3000.
+
+Response (201):
+  pool_address    string  Uniswap V3 pool contract address.
+  token0          string  First token address in the pool pair.
+  token1          string  Second token address in the pool pair.
+  fee             number  Fee tier (e.g. 3000 = 0.3%).
+  sqrt_price_x96  string  Initial sqrtPriceX96 as a string.
+  tick            number  Initial tick.
+  tx_hash         string  Pool creation transaction hash.
+
+Errors:
+  400  invalid_request   Missing pricePerToken or invalid feeTier
+  402  payment_required  x402 payment needed
+  403  forbidden         Token belongs to a different wallet
+  404  not_found         Token ID does not exist
+  409  pool_exists       Pool already exists for this token
+  502  rpc_error         Base RPC error
+
+---
+
+### GET /v1/tokens/:id/pool
+
+Get pool details: poolAddress, token0, token1, fee, sqrtPriceX96, tick
+
+Price: $0.001
+
+Path params:
+  id  string  required  id parameter
+
+Response (200):
+  pool_address    string  Uniswap V3 pool contract address.
+  token0          string  First token address in the pool pair.
+  token1          string  Second token address in the pool pair.
+  fee             number  Fee tier (e.g. 3000 = 0.3%).
+  sqrt_price_x96  string  Initial sqrtPriceX96 as a string.
+  tick            number  Initial tick.
+  tx_hash         string  Pool creation transaction hash.
+
+Errors:
+  402  payment_required  x402 payment needed
+  403  forbidden         Token belongs to a different wallet
+  404  not_found         Token or pool not found
+  502  rpc_error         Base RPC error
+
+---
+
+### GET /v1/tokens/:id/pool/liquidity-params
+
+Get calldata for adding liquidity. Returns approvals[] and position manager params.
+
+Price: $0.001
+
+Path params:
+  id  string  required  id parameter
+
+Query params:
+  tokenAmount  string  optional  Raw token amount to add as liquidity
+  usdcAmount   string  optional  Raw USDC amount to pair (6 decimals)
+
+Response (200):
+  position_manager_address  string               Uniswap V3 NonfungiblePositionManager contract address.
+  token0                    string               First token address.
+  token1                    string               Second token address.
+  fee                       number               Fee tier.
+  tick_lower                number               Lower tick bound for the liquidity range.
+  tick_upper                number               Upper tick bound for the liquidity range.
+  amount0_desired           string               Desired amount of token0 to add as a raw integer string.
+  amount1_desired           string               Desired amount of token1 to add as a raw integer string.
+  amount0_min               string               Minimum amount of token0 (slippage protection) as a raw integer string.
+  amount1_min               string               Minimum amount of token1 (slippage protection) as a raw integer string.
+  recipient                 string               Address to receive the liquidity position NFT.
+  deadline                  number               Transaction deadline as a Unix timestamp.
+  approvals                 LiquidityApproval[]  ERC-20 approvals to submit on-chain before calling addLiquidity.
+
+Errors:
+  400  invalid_request   Missing tokenAmount or usdcAmount
+  402  payment_required  x402 payment needed
+  403  forbidden         Token belongs to a different wallet
+  404  not_found         Token or pool not found
+  502  rpc_error         Base RPC error
+
+---
+
+## Ownership
+
+Tokens are scoped to the wallet address extracted from the x402 payment. Only the deploying wallet can mint or create pools.
+
+---
+
+# mem.prim.sh
+
+Vector store and cache for agents. Persist long-term knowledge and session state.
+
+Base URL: https://mem.prim.sh
+Auth: x402 (USDC on Base Sepolia). GET /, GET /pricing, GET /v1/metrics are free.
+Chain: Base Sepolia (eip155:84532) during beta.
+
+Install:
+  curl -fsSL https://mem.prim.sh/install.sh | sh
+
+Limits:
+  Max document text size: governed by 1 MB body limit
+  KV cache entries: no hard limit documented
+  Vector dimension: 1536 (Google text-embedding-004)
+
+---
+
+## Quick Start
+
+  1. POST /v1/collections with {"name": "my-brain"} → create vector collection ($0.01)
+  2. POST /v1/collections/:id/upsert with documents array → embed and store text
+  3. POST /v1/collections/:id/query with {"text": "..."} → semantic search
+  4. PUT /v1/cache/:namespace/:key with {"value": ..., "ttl": 3600} → store in KV cache
+
+## Tips
+
+  - Upsert replaces existing documents with the same ID — safe to call repeatedly.
+  - GET /v1/collections list response has null document_count — use GET :id for live count.
+  - KV cache ttl is in seconds. Omit ttl for permanent storage.
+  - Use filter (Qdrant native format) in query for metadata-filtered vector search.
+  - Embedding is included — just pass text strings, no need to pre-compute vectors.
+
+---
+
+## x402 Payment
+
+  1. Make request. Server returns 402 with Payment-Required header.
+  2. Sign EIP-3009 transferWithAuthorization.
+  3. Retry with Payment-Signature header (base64-encoded signed authorization).
+
+Error envelope:
+  {"error": {"code": "<code>", "message": "<msg>"}}
+
+Error codes:
+  not_found
+  forbidden
+  invalid_request
+  qdrant_error
+  embedding_error
+  rate_limited
+  collection_name_taken
+
+---
+
+## Endpoints
+
+### GET /
+
+Health check.
+
+Free.
+
+Response (200):
+  service  string  "mem.sh"
+  status   string  "ok"
+
+---
+
+### GET /pricing
+
+Machine-readable pricing for all endpoints.
+
+Free.
+
+Response (200):
+  service   string  "mem.prim.sh"
+  currency  string  "USDC"
+  network   string  "eip155:8453"
+  routes    array   Route pricing list
+    .method       string  HTTP method
+    .path         string  URL path
+    .price_usdc   string  Price in USDC (decimal string)
+    .description  string  Human-readable description
+
+---
+
+### GET /v1/metrics
+
+Operational metrics. Uptime, request counts, latency percentiles, error rates.
+
+Free.
+
+Response (200):
+  service     string  "mem.prim.sh"
+  uptime_s    number  Seconds since last restart
+  requests    object  Request counts and latencies by endpoint
+  payments    object  Payment counts by endpoint
+  errors      object  Error counts by status code
+
+---
+
+### POST /v1/collections
+
+Create a vector collection
+
+Price: $0.01
+
+Request:
+  name       string                       required  Collection name. Unique per wallet.
+  distance   "Cosine" | "Euclid" | "Dot"  optional  Distance metric for similarity search. Default "Cosine".
+  dimension  number                       optional  Vector dimension. Must match the embedding model used. Default 1536.
+
+Response (201):
+  id              string         Collection ID (UUID).
+  name            string         Collection name. Unique per wallet.
+  owner_wallet    string         Ethereum address of the collection owner.
+  dimension       number         Embedding vector dimension (e.g. 1536 for text-embedding-3-small).
+  distance        string         Distance metric: "Cosine" | "Euclid" | "Dot".
+  document_count  number | null  Live Qdrant points_count — null in list responses to avoid N+1 calls.
+  created_at      string         ISO 8601 timestamp when the collection was created.
+
+Errors:
+  400  invalid_request        Missing name or invalid fields
+  402  payment_required       x402 payment needed
+  409  collection_name_taken  Name already exists for this wallet
+  502  qdrant_error           Upstream Qdrant error
+
+---
+
+### GET /v1/collections
+
+List collections owned by the calling wallet (paginated). document_count is null — use GET :id.
+
+Price: $0.001
+
+Query params:
+  limit  integer  optional  1-100, default 20
+  after  string   optional  Cursor from previous response
+
+Response (200): CollectionListResponse
+
+Errors:
+  402  payment_required  x402 payment needed
+  403  forbidden         Resource belongs to a different wallet
+
+---
+
+### GET /v1/collections/:id
+
+Get collection with live document_count from Qdrant
+
+Price: $0.001
+
+Path params:
+  id  string  required  id parameter
+
+Response (200):
+  id              string         Collection ID (UUID).
+  name            string         Collection name. Unique per wallet.
+  owner_wallet    string         Ethereum address of the collection owner.
+  dimension       number         Embedding vector dimension (e.g. 1536 for text-embedding-3-small).
+  distance        string         Distance metric: "Cosine" | "Euclid" | "Dot".
+  document_count  number | null  Live Qdrant points_count — null in list responses to avoid N+1 calls.
+  created_at      string         ISO 8601 timestamp when the collection was created.
+
+Errors:
+  402  payment_required  x402 payment needed
+  403  forbidden         Resource belongs to a different wallet
+  404  not_found         Collection not found
+  502  qdrant_error      Upstream Qdrant error
+
+---
+
+### DELETE /v1/collections/:id
+
+Delete collection and all documents. Irreversible.
+
+Price: $0.01
+
+Path params:
+  id  string  required  id parameter
+
+Response (200): {} (empty object)
+
+Errors:
+  402  payment_required  x402 payment needed
+  403  forbidden         Resource belongs to a different wallet
+  404  not_found         Collection not found
+  502  qdrant_error      Upstream Qdrant error
+
+---
+
+### POST /v1/collections/:id/upsert
+
+Embed and store documents. Each document: {id?, text, metadata?}. Existing IDs are replaced.
+
+Price: $0.001
+
+Path params:
+  id  string  required  id parameter
+
+Request:
+  documents  UpsertDocument[]  required  Documents to upsert. Existing IDs are overwritten.
+
+Response (200):
+  upserted  number    Number of documents upserted.
+  ids       string[]  IDs of upserted documents (auto-generated UUIDs if not provided).
+
+Errors:
+  400  invalid_request   Missing documents or invalid fields
+  402  payment_required  x402 payment needed
+  403  forbidden         Resource belongs to a different wallet
+  404  not_found         Collection not found
+  502  qdrant_error      Upstream Qdrant error
+  502  embedding_error   Embedding model error
+
+---
+
+### POST /v1/collections/:id/query
+
+Semantic search. Fields: text (required), top_k, filter (Qdrant native format).
+
+Price: $0.001
+
+Path params:
+  id  string  required  id parameter
+
+Request:
+  text    string   required  Query text to embed and search against.
+  top_k   number   optional  Number of nearest neighbors to return. Default 10.
+  filter  unknown  optional  Qdrant-native filter passthrough.
+
+Response (200):
+  matches  QueryMatch[]  Nearest neighbor matches, ordered by descending score.
+
+Errors:
+  400  invalid_request   Missing text or invalid filter
+  402  payment_required  x402 payment needed
+  403  forbidden         Resource belongs to a different wallet
+  404  not_found         Collection not found
+  502  qdrant_error      Upstream Qdrant error
+  502  embedding_error   Embedding model error
+
+---
+
+### PUT /v1/cache/:namespace/:key
+
+Store a value in the KV cache. Optional ttl in seconds for expiry.
+
+Price: $0.0001
+
+Path params:
+  namespace  string  required  namespace parameter
+  key        string  required  key parameter
+
+Request:
+  value  unknown        required  Value to store. Any JSON-serializable value.
+  ttl    number | null  optional  TTL in seconds. Omit or null for permanent.
+
+Response (200): {} (empty object)
+
+Errors:
+  400  invalid_request   Missing value
+  402  payment_required  x402 payment needed
+
+---
+
+### GET /v1/cache/:namespace/:key
+
+Retrieve a cache value. Returns 404 if missing or expired.
+
+Price: $0.0001
+
+Path params:
+  namespace  string  required  namespace parameter
+  key        string  required  key parameter
+
+Response (200):
+  namespace   string         Cache namespace (collection name).
+  key         string         Cache key.
+  value       unknown        Stored value.
+  expires_at  string | null  ISO string expiry time, or null if permanent.
+
+Errors:
+  402  payment_required  x402 payment needed
+  404  not_found         Cache entry missing or expired
+
+---
+
+### DELETE /v1/cache/:namespace/:key
+
+Delete a cache entry
+
+Price: $0.0001
+
+Path params:
+  namespace  string  required  namespace parameter
+  key        string  required  key parameter
+
+Response (200): {} (empty object)
+
+Errors:
+  402  payment_required  x402 payment needed
+  404  not_found         Cache entry not found
+
+---
+
+## Ownership
+
+All collections and cache entries are scoped to the wallet address extracted from the x402 payment.
+
+---
+
+# domain.prim.sh
+
+Register domains, manage DNS, auto-TLS. Full domain lifecycle via API.
+
+Base URL: https://domain.prim.sh
+Auth: x402 (USDC on Base Sepolia). GET /, GET /pricing, GET /v1/metrics are free.
+Chain: Base Sepolia (eip155:84532) during beta.
+
+Install:
+  curl -fsSL https://domain.prim.sh/install.sh | sh
+
+Limits:
+  Domain price quotes valid for 15 minutes (quote_expired error after)
+  Rate limit on PUT /v1/zones/:zoneId/activate — back off before retrying
+
+---
+
+## Quick Start
+
+  1. GET /v1/domains/search?query=myagent&tlds=com,xyz → check availability
+  2. POST /v1/domains/quote with {domain, years} → get price quote (15-min validity)
+  3. POST /v1/zones with {domain} → create Cloudflare DNS zone ($0.05)
+  4. POST /v1/zones/:zoneId/records → add DNS records
+
+## Tips
+
+  - Domain registration is async: save the recovery_token in case zone setup fails.
+  - Use POST /v1/domains/recover with recovery_token to retry Cloudflare zone setup after partial failure.
+  - POST /v1/zones/:zoneId/mail-setup configures MX, SPF, DMARC, DKIM in a single idempotent call.
+  - POST /v1/zones/:zoneId/records/batch for bulk record changes in one atomic request.
+  - GET /v1/zones/:zoneId/verify checks DNS propagation for all zone records.
+
+---
+
+## x402 Payment
+
+  1. Make request. Server returns 402 with Payment-Required header.
+  2. Sign EIP-3009 transferWithAuthorization.
+  3. Retry with Payment-Signature header (base64-encoded signed authorization).
+
+Error envelope:
+  {"error": {"code": "<code>", "message": "<msg>"}}
+
+Error codes:
+  not_found
+  forbidden
+  invalid_request
+  cloudflare_error
+  rate_limited
+  domain_taken
+  quote_expired
+  registrar_error
+  registration_failed
+
+---
+
+## Endpoints
+
+### GET /
+
+Health check.
+
+Free.
+
+Response (200):
+  service  string  "domain.sh"
+  status   string  "ok"
+
+---
+
+### GET /pricing
+
+Machine-readable pricing for all endpoints.
+
+Free.
+
+Response (200):
+  service   string  "domain.prim.sh"
+  currency  string  "USDC"
+  network   string  "eip155:8453"
+  routes    array   Route pricing list
+    .method       string  HTTP method
+    .path         string  URL path
+    .price_usdc   string  Price in USDC (decimal string)
+    .description  string  Human-readable description
+
+---
+
+### GET /v1/metrics
+
+Operational metrics. Uptime, request counts, latency percentiles, error rates.
+
+Free.
+
+Response (200):
+  service     string  "domain.prim.sh"
+  uptime_s    number  Seconds since last restart
+  requests    object  Request counts and latencies by endpoint
+  payments    object  Payment counts by endpoint
+  errors      object  Error counts by status code
+
+---
+
+### GET /v1/domains/search
+
+Check availability and pricing for a domain query
+
+Price: $0.001
+
+Query params:
+  query  string  optional  Domain name or keyword to search
+  tlds   string  optional  Comma-separated TLDs (e.g. com,xyz,io)
+
+Response (200):
+  results  DomainSearchResult[]  Search results for each queried domain.
+
+Errors:
+  402  payment_required  x402 payment needed
+  502  registrar_error   NameSilo API error
+
+---
+
+### POST /v1/domains/quote
+
+Get a 15-minute price quote for a domain
+
+Price: $0.001
+
+Request:
+  domain  string  required  Domain name to quote (e.g. "example.com").
+  years   number  optional  Number of years to register. Default 1.
+
+Response (200):
+  quote_id            string  Quote ID to use when calling POST /v1/domains/register.
+  domain              string  Domain name quoted.
+  available           true    Always true — quote is only returned for available domains.
+  years               number  Number of years in the quote.
+  registrar_cost_usd  number  Registrar cost in USD (internal cost).
+  total_cost_usd      number  Total cost in USD charged to the caller.
+  currency            string  Currency code (e.g. "USD").
+  expires_at          string  ISO 8601 timestamp when the quote expires. Use within the window to avoid quote_expired.
+
+Errors:
+  400  invalid_request   Missing domain or invalid years
+  402  payment_required  x402 payment needed
+  502  registrar_error   NameSilo API error
+
+---
+
+### GET /v1/domains/:domain/status
+
+Full post-registration pipeline status (ns_propagated, zone_active, all_ready)
+
+Price: $0.001
+
+Path params:
+  domain  string  required  domain parameter
+
+Response (200):
+  domain                      string             Domain name.
+  purchased                   true               Always true — only returned for registered domains.
+  zone_id                     string | null      Cloudflare zone ID. Null if zone not yet created.
+  zone_status                 ZoneStatus | null  Current zone status. Null if zone not yet created.
+  ns_configured_at_registrar  boolean            Whether nameservers are configured at the registrar.
+  ns_propagated               boolean            Whether nameservers have propagated in DNS.
+  ns_expected                 string[]           Expected Cloudflare nameservers.
+  ns_actual                   string[]           Nameservers currently found in DNS.
+  zone_active                 boolean            Whether the Cloudflare zone is active.
+  all_ready                   boolean            Whether the domain is fully set up and ready.
+  next_action                 string | null      Human-readable next action required. Null if all_ready is true.
+
+Errors:
+  402  payment_required  x402 payment needed
+  404  not_found         Domain not found
+
+---
+
+### POST /v1/zones
+
+Create a Cloudflare DNS zone. Returns nameservers to set at your registrar.
+
+Price: $0.05
+
+Request:
+  domain  string  required  Domain name to create a zone for (e.g. "example.com").
+
+Response (201):
+  zone  ZoneResponse  The created zone.
+
+Errors:
+  400  invalid_request   Missing domain or invalid domain name
+  402  payment_required  x402 payment needed
+  409  domain_taken      Zone already exists for this domain
+  502  cloudflare_error  Cloudflare API error
+
+---
+
+### GET /v1/zones
+
+List DNS zones owned by the calling wallet (paginated)
+
+Price: $0.001
+
+Query params:
+  limit  integer  optional  1-100, default 20
+  after  string   optional  Cursor from previous response
+
+Response (200): ZoneListResponse
+
+Errors:
+  402  payment_required  x402 payment needed
+  403  forbidden         Resource belongs to a different wallet
+
+---
+
+### GET /v1/zones/:id
+
+Get zone details
+
+Price: $0.001
+
+Path params:
+  id  string  required  id parameter
+
+Response (200):
+  id            string      Cloudflare zone ID.
+  domain        string      Domain name (e.g. "example.com").
+  status        ZoneStatus  Zone status: "pending" | "active" | "moved".
+  name_servers  string[]    Cloudflare nameservers to delegate to.
+  owner_wallet  string      Ethereum address of the zone owner.
+  created_at    string      ISO 8601 timestamp when the zone was created.
+
+Errors:
+  402  payment_required  x402 payment needed
+  403  forbidden         Resource belongs to a different wallet
+  404  not_found         Zone not found
+
+---
+
+### DELETE /v1/zones/:id
+
+Delete zone and all records. Irreversible.
+
+Price: $0.01
+
+Path params:
+  id  string  required  id parameter
+
+Response (200): {} (empty object)
+
+Errors:
+  402  payment_required  x402 payment needed
+  403  forbidden         Resource belongs to a different wallet
+  404  not_found         Zone not found
+  502  cloudflare_error  Cloudflare API error
+
+---
+
+### PUT /v1/zones/:zone_id/activate
+
+Request Cloudflare NS re-check for faster activation
+
+Price: $0.001
+
+Path params:
+  zone_id  string  required  zone_id parameter
+
+Response (200):
+  zone_id               string      Cloudflare zone ID.
+  status                ZoneStatus  Updated zone status.
+  activation_requested  true        Always true — activation was requested from Cloudflare.
+
+Errors:
+  402  payment_required  x402 payment needed
+  403  forbidden         Resource belongs to a different wallet
+  404  not_found         Zone not found
+  429  rate_limited      Too many zone_activate calls
+
+---
+
+### GET /v1/zones/:zone_id/verify
+
+Check DNS propagation for all zone records
+
+Price: $0.001
+
+Path params:
+  zone_id  string  required  zone_id parameter
+
+Response (200):
+  domain          string                Domain name.
+  nameservers     NsVerifyResult        Nameserver propagation result.
+  records         RecordVerifyResult[]  Per-record propagation results.
+  all_propagated  boolean               Whether all records and nameservers have propagated.
+  zone_status     ZoneStatus | null     Current Cloudflare zone status. Null if zone not found.
+
+Errors:
+  402  payment_required  x402 payment needed
+  403  forbidden         Resource belongs to a different wallet
+  404  not_found         Zone not found
+
+---
+
+### POST /v1/zones/:zone_id/mail-setup
+
+Configure MX, SPF, DMARC, DKIM in one call. Idempotent.
+
+Price: $0.005
+
+Path params:
+  zone_id  string  required  zone_id parameter
+
+Request:
+  mail_server     string  required  Mail server hostname (e.g. "mail.prim.sh").
+  mail_server_ip  string  required  Mail server IPv4 address (used for SPF record).
+  dkim            object  optional  DKIM keys to configure. Provide rsa and/or ed25519.
+
+Response (200):
+  records  MailSetupRecordResult[]  DNS records created or updated by the mail setup.
+
+Errors:
+  400  invalid_request   Missing required mail server fields
+  402  payment_required  x402 payment needed
+  403  forbidden         Resource belongs to a different wallet
+  404  not_found         Zone not found
+  502  cloudflare_error  Cloudflare API error
+
+---
+
+### POST /v1/zones/:zone_id/records/batch
+
+Create, update, and delete DNS records in one atomic request
+
+Price: $0.005
+
+Path params:
+  zone_id  string  required  zone_id parameter
+
+Request:
+  create  BatchCreateEntry[]  optional  Records to create.
+  update  BatchUpdateEntry[]  optional  Records to update.
+  delete  BatchDeleteEntry[]  optional  Records to delete.
+
+Response (200):
+  created  RecordResponse[]  Successfully created records.
+  updated  RecordResponse[]  Successfully updated records.
+  deleted  object            IDs of deleted records.
+
+Errors:
+  400  invalid_request   Invalid record fields or values
+  402  payment_required  x402 payment needed
+  403  forbidden         Resource belongs to a different wallet
+  404  not_found         Zone or record not found
+  502  cloudflare_error  Cloudflare API error
+
+---
+
+### POST /v1/zones/:zone_id/records
+
+Create a DNS record (A, AAAA, CNAME, MX, TXT, SRV, CAA, NS)
+
+Price: $0.001
+
+Path params:
+  zone_id  string  required  zone_id parameter
+
+Request:
+  type      RecordType  required  DNS record type.
+  name      string      required  DNS record name (hostname).
+  content   string      required  DNS record value.
+  ttl       number      optional  TTL in seconds. Default 1 (auto).
+  proxied   boolean     optional  Enable Cloudflare proxying. Default false.
+  priority  number      optional  Priority for MX and SRV records.
+
+Response (201):
+  id          string         DNS record ID.
+  zone_id     string         Zone ID this record belongs to.
+  type        RecordType     DNS record type.
+  name        string         DNS record name (hostname, relative to zone).
+  content     string         DNS record value.
+  ttl         number         TTL in seconds.
+  proxied     boolean        Whether Cloudflare proxying is enabled.
+  priority    number | null  Priority for MX and SRV records. Null for other types.
+  created_at  string         ISO 8601 timestamp when the record was created.
+  updated_at  string         ISO 8601 timestamp when the record was last updated.
+
+Errors:
+  400  invalid_request   Missing or invalid record fields
+  402  payment_required  x402 payment needed
+  403  forbidden         Resource belongs to a different wallet
+  404  not_found         Zone not found
+  502  cloudflare_error  Cloudflare API error
+
+---
+
+### GET /v1/zones/:zone_id/records
+
+List all records in a DNS zone
+
+Price: $0.001
+
+Path params:
+  zone_id  string  required  zone_id parameter
+
+Response (200): RecordListResponse
+
+Errors:
+  402  payment_required  x402 payment needed
+  403  forbidden         Resource belongs to a different wallet
+  404  not_found         Zone not found
+
+---
+
+### GET /v1/zones/:zone_id/records/:id
+
+Get a single DNS record
+
+Price: $0.001
+
+Path params:
+  zone_id  string  required  zone_id parameter
+  id       string  required  id parameter
+
+Response (200):
+  id          string         DNS record ID.
+  zone_id     string         Zone ID this record belongs to.
+  type        RecordType     DNS record type.
+  name        string         DNS record name (hostname, relative to zone).
+  content     string         DNS record value.
+  ttl         number         TTL in seconds.
+  proxied     boolean        Whether Cloudflare proxying is enabled.
+  priority    number | null  Priority for MX and SRV records. Null for other types.
+  created_at  string         ISO 8601 timestamp when the record was created.
+  updated_at  string         ISO 8601 timestamp when the record was last updated.
+
+Errors:
+  402  payment_required  x402 payment needed
+  403  forbidden         Resource belongs to a different wallet
+  404  not_found         Zone or record not found
+
+---
+
+### PUT /v1/zones/:zone_id/records/:id
+
+Update a DNS record
+
+Price: $0.001
+
+Path params:
+  zone_id  string  required  zone_id parameter
+  id       string  required  id parameter
+
+Request:
+  type      RecordType  optional  DNS record type.
+  name      string      optional  DNS record name.
+  content   string      optional  DNS record value.
+  ttl       number      optional  TTL in seconds.
+  proxied   boolean     optional  Enable Cloudflare proxying.
+  priority  number      optional  Priority for MX and SRV records.
+
+Response (200):
+  id          string         DNS record ID.
+  zone_id     string         Zone ID this record belongs to.
+  type        RecordType     DNS record type.
+  name        string         DNS record name (hostname, relative to zone).
+  content     string         DNS record value.
+  ttl         number         TTL in seconds.
+  proxied     boolean        Whether Cloudflare proxying is enabled.
+  priority    number | null  Priority for MX and SRV records. Null for other types.
+  created_at  string         ISO 8601 timestamp when the record was created.
+  updated_at  string         ISO 8601 timestamp when the record was last updated.
+
+Errors:
+  400  invalid_request   Invalid record fields
+  402  payment_required  x402 payment needed
+  403  forbidden         Resource belongs to a different wallet
+  404  not_found         Zone or record not found
+  502  cloudflare_error  Cloudflare API error
+
+---
+
+### DELETE /v1/zones/:zone_id/records/:id
+
+Delete a DNS record
+
+Price: $0.001
+
+Path params:
+  zone_id  string  required  zone_id parameter
+  id       string  required  id parameter
+
+Response (200): {} (empty object)
+
+Errors:
+  402  payment_required  x402 payment needed
+  403  forbidden         Resource belongs to a different wallet
+  404  not_found         Zone or record not found
+  502  cloudflare_error  Cloudflare API error
+
+---
+
+## Ownership
+
+All DNS zones and records are scoped to the wallet address extracted from the x402 payment.
+
+---
+
+# track.prim.sh
+
+Package tracking for agents. USPS, FedEx, UPS, DHL and 1000+ carriers. Status, ETA, full event history.
+
+Base URL: https://track.prim.sh
+Auth: x402 (USDC on Base Sepolia). GET /, GET /pricing, GET /v1/metrics are free.
+Chain: Base Sepolia (eip155:84532) during beta.
+
+Install:
+  curl -fsSL https://track.prim.sh/install.sh | sh
+
+Limits:
+  1000+ carriers supported via TrackingMore API
+  Rate limit applies per wallet
+
+---
+
+## Quick Start
+
+  1. POST /v1/track with {tracking_number, carrier} → get package status, ETA, events ($0.05)
+
+## Tips
+
+  - Pass carrier slug (e.g. 'ups', 'fedex', 'usps', 'dhl') for accurate routing.
+  - Omit carrier if unknown — the service will attempt auto-detection.
+  - Poll periodically until status is 'delivered' for delivery confirmation workflows.
+  - events array contains full tracking history ordered newest-first.
+
+---
+
+## x402 Payment
+
+  1. Make request. Server returns 402 with Payment-Required header.
+  2. Sign EIP-3009 transferWithAuthorization.
+  3. Retry with Payment-Signature header (base64-encoded signed authorization).
+
+Error envelope:
+  {"error": {"code": "<code>", "message": "<msg>"}}
+
+Error codes:
+  invalid_request
+  not_found
+  rate_limited
+  provider_error
+
+---
+
+## Endpoints
+
+### GET /
+
+Health check.
+
+Free.
+
+Response (200):
+  service  string  "track.sh"
+  status   string  "ok"
+
+---
+
+### GET /pricing
+
+Machine-readable pricing for all endpoints.
+
+Free.
+
+Response (200):
+  service   string  "track.prim.sh"
+  currency  string  "USDC"
+  network   string  "eip155:8453"
+  routes    array   Route pricing list
+    .method       string  HTTP method
+    .path         string  URL path
+    .price_usdc   string  Price in USDC (decimal string)
+    .description  string  Human-readable description
+
+---
+
+### GET /v1/metrics
+
+Operational metrics. Uptime, request counts, latency percentiles, error rates.
+
+Free.
+
+Response (200):
+  service     string  "track.prim.sh"
+  uptime_s    number  Seconds since last restart
+  requests    object  Request counts and latencies by endpoint
+  payments    object  Payment counts by endpoint
+  errors      object  Error counts by status code
+
+---
+
+### POST /v1/track
+
+Track a package by tracking number and carrier. Returns status, ETA, and full event history.
+
+Price: $0.05
+
+Request:
+  tracking_number  string  required  Shipment tracking number.
+  carrier          string  optional  Carrier slug (e.g. "usps", "ups", "fedex"). Omit to auto-detect.
+
+Response (200):
+  tracking_number  string         Tracking number echoed back.
+  carrier          string         Detected or specified carrier slug.
+  status           string         Current status summary (e.g. "Delivered").
+  status_detail    string         Detailed current status description.
+  eta              string         Estimated delivery date (ISO 8601). Only present if available.
+  location         TrackLocation  Current package location. Only present if available.
+  events           TrackEvent[]   Chronological list of tracking events (newest first).
+
+Errors:
+  400  invalid_request   Missing tracking_number or invalid carrier
+  402  payment_required  x402 payment needed
+  429  rate_limited      Too many requests
+  502  provider_error    TrackingMore API error
+
+---
+
+## Ownership
+
+Stateless. No package data is stored per wallet. Each request is an independent lookup.
+
+---
+
+# ring.sh
+
+> Phone for agents. Provision numbers and place calls via API.
+
+Base URL: https://ring.prim.sh  
+Auth: x402 (USDC on Base, chain `eip155:8453`)
+Status: Phantom. This primitive is not yet available.
+
+## Endpoints
+
+- `GET /v1/numbers/available` — list available phone numbers.
+- `POST /v1/numbers` — provision a number.
+- `POST /v1/calls` — place a call.
+- `POST /v1/messages` — send an SMS.
+
+## Pricing
+
+- Number provisioning: monthly fee per number.  
+- Calls and SMS: per-minute / per-message rates.
+
+See human docs at `https://prim.sh/ring` for carrier coverage and pricing.
+
+## Examples
+
+```bash
+# Provision a US number
+curl -X POST https://ring.prim.sh/v1/numbers \
+  -H "X-402-Payment: $TOKEN" \
+  -d '{"country": "US"}'
+```
+
+---
+
+# pipe.sh
+
+> Messaging for agents. Lightweight pub/sub channels over HTTP.
+
+Base URL: https://pipe.prim.sh  
+Auth: x402 (USDC on Base, chain `eip155:8453`)
+Status: Phantom. This primitive is not yet available.
+
+## Endpoints
+
+- `POST /v1/channels` — create a channel.
+- `GET /v1/channels` — list channels.
+- `POST /v1/channels/:id/publish` — publish a message.
+- `GET /v1/channels/:id/subscribe` — stream messages (SSE or long-poll).
+
+## Pricing
+
+- Channels: small monthly fee per active channel.  
+- Messages: per-message fee.
+
+See human docs at `https://prim.sh/pipe` for limits and reliability guarantees.
+
+## Examples
+
+```bash
+# Publish a message
+curl -X POST https://pipe.prim.sh/v1/channels/$CHAN_ID/publish \
+  -H "X-402-Payment: $TOKEN" \
+  -d '{"data": {"event": "order_created", "id": "ord_123"}}'
+```
+
+---
+
+# vault.sh
+
+> Secrets for agents. Store API keys and sensitive config behind x402 auth.
+
+Base URL: https://vault.prim.sh  
+Auth: x402 (USDC on Base, chain `eip155:8453`)
+Status: Phantom. This primitive is not yet available.
+
+## Endpoints
+
+- `POST /v1/secrets` — create or update a secret.
+- `GET /v1/secrets/:name` — retrieve a secret value.
+- `DELETE /v1/secrets/:name` — delete a secret.
+- `GET /v1/secrets` — list secret names.
+- `POST /v1/secrets/:name/rotate` — trigger key rotation (implementation-specific).
+
+## Pricing
+
+- Secret storage: per-secret per month.  
+- Reads/writes: per 1k operations.  
+- Rotation: small per-rotation fee.
+
+See human docs at `https://prim.sh/vault` for concrete pricing.
+
+## Examples
+
+```bash
+# Store a secret
+curl -X POST https://vault.prim.sh/v1/secrets \
+  -H "X-402-Payment: $TOKEN" \
+  -d '{"name": "smtp_password", "value": "..." }'
+
+# Read a secret
+curl https://vault.prim.sh/v1/secrets/smtp_password \
+  -H "X-402-Payment: $TOKEN"
+```
+
+---
+
+# cron.sh
+
+> Schedules for agents. Run HTTP callbacks on a schedule.
+
+Base URL: https://cron.prim.sh  
+Auth: x402 (USDC on Base, chain `eip155:8453`)
+Status: Phantom. This primitive is not yet available.
+
+## Endpoints
+
+- `POST /v1/schedules` — create a new schedule.
+- `GET /v1/schedules` — list schedules.
+- `GET /v1/schedules/:id` — fetch schedule details.
+- `DELETE /v1/schedules/:id` — delete a schedule.
+
+## Pricing
+
+- Billed per execution and per active schedule per day.
+
+See human docs at `https://prim.sh/cron` for full details.
+
+## Examples
+
+```bash
+# Run a health check every 5 minutes
+curl -X POST https://cron.prim.sh/v1/schedules \
+  -H "X-402-Payment: $TOKEN" \
+  -d '{"cron": "*/5 * * * *", "callback_url": "https://spawn.prim.sh/v1/health"}'
+```
+
+---
+
+# code.sh
+
+> Sandboxed code execution for agents. Run short-lived jobs instead of managing servers.
+
+Base URL: https://code.prim.sh  
+Auth: x402 (USDC on Base, chain `eip155:8453`)
+Status: Phantom. This primitive is not yet available.
+
+## Endpoints
+
+- `POST /v1/jobs` — submit a new job.
+- `GET /v1/jobs/:id` — get job status and results.
+- `GET /v1/jobs` — list recent jobs.
+- `POST /v1/jobs/:id/cancel` — cancel a running job (best-effort).
+
+## Pricing
+
+- Billed per second of execution time and memory.  
+- Minimum charge per job; additional fees for high-CPU profiles.
+
+See human docs at `https://prim.sh/code` for runtime support and pricing.
+
+## Examples
+
+```bash
+# Run a Python job
+curl -X POST https://code.prim.sh/v1/jobs \
+  -H "X-402-Payment: $TOKEN" \
+  -d '{"language": "python", "source": "print(1+1)"}'
+```
+
+---
+
+# browse.sh
+
+> Headless browser for agents. Run scripted browsing sessions via API.
+
+Base URL: https://browse.prim.sh  
+Auth: x402 (USDC on Base, chain `eip155:8453`)
+Status: Phantom. This primitive is not yet available.
+
+## Endpoints
+
+- `POST /v1/sessions` — start a new browser session.
+- `POST /v1/sessions/:id/navigate` — navigate to a URL.
+- `POST /v1/sessions/:id/click` — click an element.
+- `POST /v1/sessions/:id/type` — type into an input.
+- `GET /v1/sessions/:id/screenshot` — capture a screenshot.
+- `DELETE /v1/sessions/:id` — close a session.
+
+## Pricing
+
+- Session start: flat fee per session.  
+- Actions (navigate/click/type): per-action fee.  
+- Screenshots: per image generated.
+
+See human docs at `https://prim.sh/browse` for quotas and limits.
+
+## Examples
+
+```bash
+# Start a session
+curl -X POST https://browse.prim.sh/v1/sessions \
+  -H "X-402-Payment: $TOKEN" \
+  -d '{"viewport": {"width": 1280, "height": 720}}'
+```
+
+---
+
+# watch.sh
+
+> Observability for agents. Logs, metrics, and alerts across your primitives.
+
+Base URL: https://watch.prim.sh  
+Auth: x402 (USDC on Base, chain `eip155:8453`)
+Status: Phantom. This primitive is not yet available.
+
+## Endpoints
+
+- `POST /v1/logs` — ingest log events.
+- `POST /v1/metrics` — ingest metrics.
+- `GET /v1/query` — query logs and metrics.
+- `POST /v1/alerts` — create or update alert rules.
+- `GET /v1/alerts/history` — list alert history.
+
+## Pricing
+
+- Log ingest: per GB.  
+- Metric ingest: per million points.  
+- Alerts: per active rule per day.
+
+See human docs at `https://prim.sh/watch` for full pricing and retention.
+
+## Examples
+
+```bash
+# Ingest a log
+curl -X POST https://watch.prim.sh/v1/logs \
+  -H "X-402-Payment: $TOKEN" \
+  -d '{"level": "error", "message": "Rate limit exceeded", "service": "scraper"}'
+```
+
+---
+
+# trace.sh
+
+> Traces for agents. Distributed tracing across primitives and workflows.
+
+Base URL: https://trace.prim.sh  
+Auth: x402 (USDC on Base, chain `eip155:8453`)
+Status: Phantom. This primitive is not yet available.
+
+## Endpoints
+
+- `POST /v1/spans` — ingest spans.
+- `GET /v1/traces/:id` — fetch a full trace.
+- `GET /v1/traces` — search traces by attributes.
+
+## Pricing
+
+- Ingest: per GB of spans.  
+- Trace queries: per query, with fair-use read limits.
+
+See human docs at `https://prim.sh/trace` for storage and retention policies.
+
+## Examples
+
+```bash
+# Send a span
+curl -X POST https://trace.prim.sh/v1/spans \
+  -H "X-402-Payment: $TOKEN" \
+  -d '{"trace_id": "tr_123", "span_id": "sp_1", "name": "spawn_create"}'
+```
+
+---
+
+# auth.sh
+
+> Managed OAuth for agents. Broker access to third-party APIs without sharing passwords.
+
+Base URL: https://auth.prim.sh  
+Auth: x402 (USDC on Base, chain `eip155:8453`)
+Status: Phantom. This primitive is not yet available.
+
+## Endpoints
+
+- `POST /v1/connections` — create a new OAuth connection (provider + scopes).
+- `GET /v1/connections` — list connections.
+- `GET /v1/connections/:id` — get connection status.
+- `DELETE /v1/connections/:id` — revoke a connection.
+- `POST /v1/tokens/:connection_id/refresh` — refresh an access token.
+
+## Pricing
+
+- Connection creation: one-time fee per connection.  
+- Token refresh: per-call fee.  
+- Read-only token lookups: usually free.
+
+See human docs at `https://prim.sh/auth` for provider matrix and pricing.
+
+## Examples
+
+```bash
+# Create a GitHub OAuth connection
+curl -X POST https://auth.prim.sh/v1/connections \
+  -H "X-402-Payment: $TOKEN" \
+  -d '{"provider": "github", "scopes": ["repo", "user:email"]}'
+```
+
+---
+
+# hive.sh
+
+> Social graph for agents. Discover, rate, and coordinate with other agents.
+
+Base URL: https://hive.prim.sh  
+Auth: x402 (USDC on Base, chain `eip155:8453`)
+Status: Phantom. This primitive is not yet available.
+
+## Endpoints
+
+- `POST /v1/agents` — register an agent profile.
+- `GET /v1/agents/:id` — fetch an agent profile.
+- `POST /v1/agents/:id/reviews` — submit a review.
+- `GET /v1/agents/:id/reviews` — list reviews.
+
+## Pricing
+
+- Profile registration: small one-time fee.  
+- Reads: typically free.  
+- Writes (reviews, updates): per-call fee.
+
+See human docs at `https://prim.sh/hive` for schemas and pricing.
+
+## Examples
+
+```bash
+# Register an agent
+curl -X POST https://hive.prim.sh/v1/agents \
+  -H "X-402-Payment: $TOKEN" \
+  -d '{"name": "fulfillment-bot", "description": "Handles shipping workflows."}'
+```
+
+---
+
+# id.sh
+
+> Identity and reputation for agents. Track performance and trust over time.
+
+Base URL: https://id.prim.sh  
+Auth: x402 (USDC on Base, chain `eip155:8453`)
+Status: Phantom. This primitive is not yet available.
+
+## Endpoints
+
+- `POST /v1/profiles` — create an identity profile for an agent.
+- `GET /v1/profiles/:id` — fetch profile and scores.
+- `POST /v1/profiles/:id/events` — record an outcome or event.
+
+## Pricing
+
+- Profile creation: one-time fee.  
+- Event writes: per-event fee.  
+- Reads: generally free.
+
+See human docs at `https://prim.sh/id` for scoring details.
+
+## Examples
+
+```bash
+# Record a successful delivery
+curl -X POST https://id.prim.sh/v1/profiles/$PROFILE_ID/events \
+  -H "X-402-Payment: $TOKEN" \
+  -d '{"type": "delivery_success", "metadata": {"order_id": "ord_123"}}'
+```
+
+---
+
+# mart.sh
+
+> Commerce for agents. Buy physical goods and trigger fulfillment via API.
+
+Base URL: https://mart.prim.sh  
+Auth: x402 (USDC on Base, chain `eip155:8453`)
+Status: Phantom. This primitive is not yet available.
+
+## Endpoints
+
+- `POST /v1/carts` — create a cart.
+- `POST /v1/carts/:id/items` — add an item to a cart.
+- `POST /v1/carts/:id/checkout` — checkout and pay.
+- `GET /v1/orders/:id` — fetch order status.
+
+## Pricing
+
+- Takes a percentage fee on successful orders.  
+- Network fees may apply via shipping/payment partners.
+
+See human docs at `https://prim.sh/mart` for marketplace and compliance details.
+
+## Examples
+
+```bash
+# Add item and checkout
+curl -X POST https://mart.prim.sh/v1/carts \
+  -H "X-402-Payment: $TOKEN" \
+  -d '{"currency": "USD"}'
+```
+
+---
+
+# corp.sh
+
+> Legal entities for agents. Form and manage companies programmatically.
+
+Base URL: https://corp.prim.sh  
+Auth: x402 (USDC on Base, chain `eip155:8453`)
+Status: Phantom. This primitive is not yet available.
+
+## Endpoints
+
+- `POST /v1/entities` — create a new legal entity.
+- `GET /v1/entities/:id` — fetch entity details.
+- `GET /v1/entities` — list entities.
+- `POST /v1/entities/:id/documents` — upload required documents.
+
+## Pricing
+
+- Formation: one-time fee per entity (jurisdiction-specific).  
+- Ongoing filings: per-filing fee.
+
+See human docs at `https://prim.sh/corp` for jurisdiction coverage and pricing.
+
+## Examples
+
+```bash
+# Create a Delaware LLC
+curl -X POST https://corp.prim.sh/v1/entities \
+  -H "X-402-Payment: $TOKEN" \
+  -d '{"jurisdiction": "US-DE", "type": "llc", "name": "Agent Services LLC"}'
+```
+
+---
+
+# hands.sh
+
+> Labor for agents. Hire humans to perform real-world tasks.
+
+Base URL: https://hands.prim.sh  
+Auth: x402 (USDC on Base, chain `eip155:8453`)
+Status: Phantom. This primitive is not yet available.
+
+## Endpoints
+
+- `POST /v1/jobs` — create a job posting.
+- `GET /v1/jobs/:id` — fetch job status.
+- `POST /v1/jobs/:id/accept` — accept a worker.
+- `POST /v1/jobs/:id/complete` — mark a job complete and release funds.
+
+## Pricing
+
+- Agents fund an escrow amount per job.  
+- Platform fee: percentage of job value.
+
+See human docs at `https://prim.sh/hands` for region rules and pricing.
+
+## Examples
+
+```bash
+# Create a job
+curl -X POST https://hands.prim.sh/v1/jobs \
+  -H "X-402-Payment: $TOKEN" \
+  -d '{"title": "Pick up package", "budget_usd": 25, "location": "NYC"}'
+```
+
+---
+
+# pins.sh
+
+> Places for agents. Geolocation and points-of-interest search.
+
+Base URL: https://pins.prim.sh  
+Auth: x402 (USDC on Base, chain `eip155:8453`)
+Status: Phantom. This primitive is not yet available.
+
+## Endpoints
+
+- `GET /v1/places/search` — search for places by text.
+- `GET /v1/places/nearby` — search by coordinates and radius.
+- `GET /v1/places/:id` — fetch place details.
+
+## Pricing
+
+- Search calls: per-call fee.  
+- Details lookups: lower-cost per call.
+
+See human docs at `https://prim.sh/pins` for quotas and pricing.
+
+## Examples
+
+```bash
+# Search nearby coffee shops
+curl "https://pins.prim.sh/v1/places/nearby?lat=40.7128&lng=-74.0060&radius_m=1000" \
+  -H "X-402-Payment: $TOKEN"
+```
+
+---
+
+# infer.prim.sh
+
+LLM inference for agents. Any model, any provider, one API. Per-token pricing. No API keys.
+
+Base URL: https://infer.prim.sh
+Auth: x402 (USDC on Base Sepolia). GET /, GET /pricing, GET /v1/metrics are free.
+Chain: Base Sepolia (eip155:84532) during beta.
+
+Install:
+  curl -fsSL https://infer.prim.sh/install.sh | sh
+
+---
+
+## x402 Payment
+
+  1. Make request. Server returns 402 with Payment-Required header.
+  2. Sign EIP-3009 transferWithAuthorization.
+  3. Retry with Payment-Signature header (base64-encoded signed authorization).
+
+Error envelope:
+  {"error": {"code": "<code>", "message": "<msg>"}}
+
+Error codes:
+  invalid_request
+  not_found
+  rate_limited
+  provider_error
+
+---
+
+## Endpoints
+
+### GET /
+
+Health check.
+
+Free.
+
+Response (200):
+  service  string  "infer.sh"
+  status   string  "ok"
+
+---
+
+### GET /pricing
+
+Machine-readable pricing for all endpoints.
+
+Free.
+
+Response (200):
+  service   string  "infer.prim.sh"
+  currency  string  "USDC"
+  network   string  "eip155:8453"
+  routes    array   Route pricing list
+    .method       string  HTTP method
+    .path         string  URL path
+    .price_usdc   string  Price in USDC (decimal string)
+    .description  string  Human-readable description
+
+---
+
+### GET /v1/metrics
+
+Operational metrics. Uptime, request counts, latency percentiles, error rates.
+
+Free.
+
+Response (200):
+  service     string  "infer.prim.sh"
+  uptime_s    number  Seconds since last restart
+  requests    object  Request counts and latencies by endpoint
+  payments    object  Payment counts by endpoint
+  errors      object  Error counts by status code
+
+---
+
+### POST /v1/chat
+
+Chat completion. Supports streaming, tool use, structured output.
+
+Price: $0.01
+
+Request:
+  model              string                                                                           required
+  messages           Message[]                                                                        required
+  temperature        number                                                                           optional
+  max_tokens         number                                                                           optional
+  top_p              number                                                                           optional
+  frequency_penalty  number                                                                           optional
+  presence_penalty   number                                                                           optional
+  stop               string | string[]                                                                optional
+  stream             boolean                                                                          optional
+  tools              Tool[]                                                                           optional
+  tool_choice        "none" | "auto" | "required" | { type: "function"; function: { name: string } }  optional
+  response_format    object                                                                           optional
+
+Response (200):
+  id       string
+  object   "chat.completion"
+  created  number
+  model    string
+  choices  Choice[]
+  usage    Usage
+
+Errors:
+  400  invalid_request   Missing or invalid model/messages
+  402  payment_required  x402 payment needed
+  429  rate_limited      Too many requests
+  502  provider_error    Upstream model provider error
+
+---
+
+### POST /v1/embed
+
+Generate embeddings for text input. Returns vector array.
+
+Price: $0.001
+
+Request:
+  model  string             required
+  input  string | string[]  required
+
+Response (200):
+  object  "list"
+  data    EmbeddingData[]
+  model   string
+  usage   object
+
+Errors:
+  400  invalid_request   Missing or invalid input
+  402  payment_required  x402 payment needed
+  429  rate_limited      Too many requests
+  502  provider_error    Upstream provider error
+
+---
+
+### GET /v1/models
+
+List available models with pricing and capabilities.
+
+Price: $0.01
+
+Response (200):
+  data  ModelInfo[]
+
+Errors:
+  502  provider_error  Unable to fetch model list
+
+---
+
+---
+
+# seek.sh
+
+> Search for agents. Web and knowledge search behind a simple API.
+
+Base URL: https://seek.prim.sh  
+Auth: x402 (USDC on Base, chain `eip155:8453`)
+Status: Phantom. This primitive is not yet available.
+
+## Endpoints
+
+- `GET /v1/search` — perform a web search.
+- `GET /v1/news` — search news-focused sources.
+
+## Pricing
+
+- Billed per search call, with different rates per index.
+
+See human docs at `https://prim.sh/seek` for index coverage and pricing.
+
+## Examples
+
+```bash
+# Web search
+curl "https://seek.prim.sh/v1/search?q=agent-native+cloud" \
+  -H "X-402-Payment: $TOKEN"
+```
+
+---
+
+# docs.sh
+
+> API documentation for agents. Turn OpenAPI specs into LLM-friendly docs and tools.
+
+Base URL: https://prim.sh/prim  
+Auth: x402 (USDC on Base, chain `eip155:8453`)
+Status: Phantom. This primitive is not yet available.
+
+## Endpoints
+
+- `POST /v1/projects` — register a new API project with an OpenAPI spec.
+- `GET /v1/projects/:id/context` — fetch LLM-ready context for a specific question.
+- `GET /v1/projects/:id/tools` — fetch MCP / tool definitions.
+
+## Pricing
+
+- Project registration: small monthly fee per project.  
+- Context queries: per query.  
+- Tool fetch: low-cost and cacheable.
+
+See human docs at `https://docs.sh` for details.
+
+## Examples
+
+```bash
+# Register a project
+curl -X POST https://prim.sh/prim/v1/projects \
+  -H "X-402-Payment: $TOKEN" \
+  -d '{"name": "spawn.sh", "openapi_url": "https://spawn.prim.sh/openapi.json"}'
+```
+
+---
+
+# ads.sh
+
+> Contextual ads for agents. Buy and sell attention in agent-native surfaces.
+
+Base URL: https://ads.prim.sh  
+Auth: x402 (USDC on Base, chain `eip155:8453`)
+Status: Phantom. This primitive is not yet available.
+
+## Endpoints
+
+- `POST /v1/campaigns` — create an ad campaign.
+- `GET /v1/campaigns` — list campaigns.
+- `POST /v1/campaigns/:id/pause` — pause a campaign.
+- `POST /v1/campaigns/:id/resume` — resume a campaign.
+- `GET /v1/impressions` — fetch impression metrics.
+
+## Pricing
+
+- Billed per impression and click.  
+- Budgets and bids are configurable per campaign.
+
+See human docs at `https://prim.sh/ads` for full pricing and metrics definitions.
+
+## Examples
+
+```bash
+# Create a campaign
+curl -X POST https://ads.prim.sh/v1/campaigns \
+  -H "X-402-Payment: $TOKEN" \
+  -d '{"name": "agent-launch", "daily_budget_usd": 10, "bid_cpm_usd": 0.50}'
+```
+
+---
+
+# pay.sh
+
+> Money for agents. Wallet-like interface for fiat bridges and multi-rail payments.
+
+Base URL: https://pay.prim.sh  
+Auth: x402 (USDC on Base, chain `eip155:8453`)
+Status: Phantom. This primitive is not yet available.
+
+## Endpoints
+
+- `POST /v1/wallets` — create a pay.sh wallet.
+- `GET /v1/wallets/:id` — fetch balances and funding information.
+- `POST /v1/wallets/:id/send` — send funds to another wallet or address.
+- `POST /v1/wallets/:id/withdraw` — withdraw to external rails.
+- `POST /v1/charges` — create a charge for another agent or human.
+
+## Pricing
+
+- Wallets: free to create.  
+- Sends/withdrawals/charges: percentage of transaction value.
+
+See human docs at `https://prim.sh/pay` for supported rails and pricing.
+
+## Examples
+
+```bash
+# Create a wallet
+curl -X POST https://pay.prim.sh/v1/wallets \
+  -H "X-402-Payment: $TOKEN"
+```
+
+---
+
+# ship.sh
+
+> Shipping for agents. Create labels and track packages via API.
+
+Base URL: https://ship.prim.sh  
+Auth: x402 (USDC on Base, chain `eip155:8453`)
+Status: Phantom. This primitive is not yet available.
+
+## Endpoints
+
+- `POST /v1/shipments` — create a shipment.
+- `GET /v1/shipments/:id` — fetch shipment status and tracking.
+- `POST /v1/shipments/:id/label` — generate a shipping label (PDF/PNG).
+
+## Pricing
+
+- Pass-through carrier rates plus a small per-shipment fee.
+
+See human docs at `https://prim.sh/ship` for carrier support and pricing.
+
+## Examples
+
+```bash
+# Create a shipment
+curl -X POST https://ship.prim.sh/v1/shipments \
+  -H "X-402-Payment: $TOKEN" \
+  -d '{"from": {...}, "to": {...}, "parcel": {"weight_kg": 0.5}}'
+```
