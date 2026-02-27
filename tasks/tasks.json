@@ -311,6 +311,92 @@
               ]
             }
           ]
+        },
+        {
+          "id": "HRD-W3",
+          "title": "Pre-Public Audit Fixes",
+          "parallelism": "PARA",
+          "phases": [
+            {
+              "id": "HRD-W3-PA",
+              "title": "Repo Scrub",
+              "tasks": [
+                {
+                  "id": "HRD-23",
+                  "description": "Final repo scrub: .gitignore (generated/, timestamps), delete orig assets, remove ops docs, scrub residual VPS IPs, exclude internal scripts",
+                  "owner": ["Claude"],
+                  "depends": [],
+                  "status": "done",
+                  "release": "v1.0.0",
+                  "plan": "tasks/completed/hrd-23-repo-scrub.md"
+                }
+              ]
+            },
+            {
+              "id": "HRD-W3-PB",
+              "title": "Test Coverage Gaps",
+              "parallelism": "PARA",
+              "tasks": [
+                {
+                  "id": "HRD-26",
+                  "description": "Add packages/mcp/test/smoke.test.ts — zero tests on 14-source-file MCP server package",
+                  "owner": ["Claude"],
+                  "depends": [],
+                  "status": "pending",
+                  "release": null,
+                  "plan": "tasks/active/hrd-26-mcp-smoke-tests.md"
+                },
+                {
+                  "id": "HRD-27",
+                  "description": "Backfill search/test/smoke.test.ts to 5-check contract (currently 12 lines)",
+                  "owner": ["Claude"],
+                  "depends": [],
+                  "status": "pending",
+                  "release": null
+                },
+                {
+                  "id": "HRD-28",
+                  "description": "Backfill domain/test/smoke.test.ts to 5-check contract (currently 37 lines)",
+                  "owner": ["Claude"],
+                  "depends": [],
+                  "status": "pending",
+                  "release": null
+                },
+                {
+                  "id": "HRD-29",
+                  "description": "Backfill store/test/smoke.test.ts to 5-check contract (currently 49 lines)",
+                  "owner": ["Claude"],
+                  "depends": [],
+                  "status": "pending",
+                  "release": null
+                }
+              ]
+            },
+            {
+              "id": "HRD-W3-PC",
+              "title": "Code Cleanup",
+              "parallelism": "PARA",
+              "tasks": [
+                {
+                  "id": "HRD-30",
+                  "description": "Replace residual console.warn() → structured logger in wallet/src/service.ts + email/src/service.ts (HRD-11 residual)",
+                  "owner": ["Claude"],
+                  "depends": [],
+                  "status": "pending",
+                  "release": null,
+                  "plan": "tasks/active/hrd-30-console-warn-to-logger.md"
+                },
+                {
+                  "id": "HRD-31",
+                  "description": "Extract shared CLI error handler in keystore/src/cli.ts (11 identical try-catch blocks)",
+                  "owner": ["Claude"],
+                  "depends": [],
+                  "status": "done",
+                  "release": null
+                }
+              ]
+            }
+          ]
         }
       ],
       "description": "Code quality, security, and reliability fixes from open-source readiness review."
