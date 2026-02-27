@@ -130,3 +130,28 @@ Append-only log. When a task is marked done, move its row here and remove from T
 | BIZ-2 | Expense dashboard: `bun scripts/expenses.ts` | 2026-02-26 |
 | BIZ-3 | Cost transparency doc: `docs/costs.md` | 2026-02-26 |
 | COM-2 | Add CODE_OF_CONDUCT.md (Contributor Covenant) | 2026-02-26 |
+| HRD-2 | Fix `allowlist-db.ts` DB handle leak: use singleton pattern | 2026-02-26 |
+| HRD-3 | Expand wallet smoke test to 5-check contract | 2026-02-26 |
+| HRD-4 | Add try-catch around `JSON.parse` calls in service layers | 2026-02-26 |
+| HRD-5 | Fix `setUTCHours(24)` in `wallet/src/db.ts` | 2026-02-26 |
+| HRD-6 | Create `SECURITY.md` | 2026-02-26 |
+| HRD-7 | Add `pnpm -r lint` + `pnpm -r typecheck` to CI | 2026-02-26 |
+| HRD-8 | Standardize pagination via shared PaginatedList<T> | 2026-02-26 |
+| HRD-9 | Add per-package `README.md` | 2026-02-26 |
+| HRD-10 | Per-wallet rate limiting in x402-middleware | 2026-02-26 |
+| HRD-11 | Replace silent catch blocks with logger.warn() | 2026-02-26 |
+| HRD-12 | Fail-fast on missing PRIM_PAY_TO | 2026-02-26 |
+| HRD-13 | Extract shared error helpers into x402-middleware | 2026-02-26 |
+| HRD-14 | Normalize API response fields to snake_case | 2026-02-26 |
+| HRD-17 | Backfill spawn smoke test to 5-check contract | 2026-02-26 |
+| HRD-18 | Add email smoke test with 5-check contract | 2026-02-26 |
+| HRD-19 | Fix token test mock typing | 2026-02-26 |
+| HRD-21 | Add package.json metadata to all packages | 2026-02-26 |
+| COM-1 | Add CHANGELOG.md | 2026-02-26 |
+| I-2 | Migrate TASKS.md → tasks.json | 2026-02-26 |
+| SITE-3 | Fix site bugs: mobile breakpoints, dead CSS | 2026-02-26 |
+| SITE-4 | OG + Twitter Card meta tags | 2026-02-26 |
+| SITE-5 | SEO baseline meta tags | 2026-02-26 |
+| SITE-6 | Custom 404 page | 2026-02-26 |
+| SITE-7 | Smooth scroll + scroll-hint anchors | 2026-02-26 |
+| SITE-8 | Fix `.hero` flexbox structure on sub-pages | 2026-02-26 |

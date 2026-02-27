@@ -21,7 +21,7 @@ export interface GateResult {
   warnings: string[];
 }
 
-const VPS_IP = "157.230.187.207";
+const VPS_IP = process.env.VPS_IP ?? "<VPS_IP>";
 
 function grep(dir: string, pattern: string): boolean {
   try {

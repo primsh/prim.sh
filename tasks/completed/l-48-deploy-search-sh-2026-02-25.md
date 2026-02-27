@@ -7,7 +7,7 @@
 
 ## Context
 
-search.sh is the 5th launch primitive. It's stateless (no DB, no persistent storage) — a Tavily API proxy gated by x402. Code is complete (SE-1, 30 tests, SE-2 live smoke test passed). The other 4 primitives are already deployed on VPS `157.230.187.207` using the identical pattern: systemd unit + Caddy reverse proxy + env file.
+search.sh is the 5th launch primitive. It's stateless (no DB, no persistent storage) — a Tavily API proxy gated by x402. Code is complete (SE-1, 30 tests, SE-2 live smoke test passed). The other 4 primitives are already deployed on VPS `<VPS_IP>` using the identical pattern: systemd unit + Caddy reverse proxy + env file.
 
 ## Goal
 
@@ -81,7 +81,7 @@ Add a health check step for `https://search.prim.sh/` alongside the existing 4 s
 
 These are the steps to run on the VPS after the code changes are pushed:
 
-1. **DNS A record** — Add `search.prim.sh` → `157.230.187.207` in Cloudflare DNS (same as wallet/store/faucet/spawn). Proxy status: DNS only (gray cloud) — Caddy handles TLS.
+1. **DNS A record** — Add `search.prim.sh` → `<VPS_IP>` in Cloudflare DNS (same as wallet/store/faucet/spawn). Proxy status: DNS only (gray cloud) — Caddy handles TLS.
 
 2. **Create env file** on VPS:
    ```bash

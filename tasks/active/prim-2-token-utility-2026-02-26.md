@@ -108,7 +108,7 @@ Total supply: 1,000,000,000 (1B) — large enough to feel accessible at low per-
 ## Decisions — LOCKED (2026-02-26)
 
 1. **Total supply**: 1,000,000,000 (1B) ✓
-2. **Treasury wallet**: `0x5599F74f951439E144F9d9118Be41F949e4406Ab` — generated via `cast wallet new` 2026-02-26. Stored in password manager as "prim.sh treasury wallet". Metadata in `/etc/prim/treasury.env` on VPS.
+2. **Treasury wallet**: `<TREASURY_WALLET>` — generated via `cast wallet new` 2026-02-26. Stored in password manager as "prim.sh treasury wallet". Metadata in `/etc/prim/treasury.env` on VPS.
 3. **Token symbol**: `$PRIM` ✓
 4. **Decimals**: 18 ✓
 5. **Phase 1 utility**: Option E — hold supply silently. Docs say "$PRIM is the community token. Utility announced when the community has opinions."

@@ -48,7 +48,7 @@ Note: These requests will get 402 from x402 middleware unless we either:
 - Run against localhost (bypass x402)
 - Use a test facilitator key in the x402 header
 
-Recommendation: run against localhost on the VPS via SSH tunnel (`ssh -L 3002:localhost:3002 root@157.230.187.207`), avoiding x402 overhead. This isolates service performance from payment protocol latency.
+Recommendation: run against localhost on the VPS via SSH tunnel (`ssh -L 3002:localhost:3002 root@<VPS_IP>`), avoiding x402 overhead. This isolates service performance from payment protocol latency.
 
 ### Scenario 3: Spike test
 
@@ -71,7 +71,7 @@ Instant jump to 200 VUs for 30s. Measures recovery behavior and whether Bun's ev
 brew install k6
 
 # SSH tunnel to VPS (store runs on port 3002)
-ssh -L 3002:localhost:3002 -L 3001:localhost:3001 root@157.230.187.207
+ssh -L 3002:localhost:3002 -L 3001:localhost:3001 root@<VPS_IP>
 
 # Run from repo root
 k6 run tests/load/health.k6.js

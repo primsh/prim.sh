@@ -49,7 +49,7 @@ Response adds `container_id` field when Docker. All other fields (id, ip, status
 
 ### Shared host setup
 
-Docker daemon runs on the same VPS (`157.230.187.207`). spawn.sh service talks to it via unix socket. No new infra needed.
+Docker daemon runs on the same VPS (`<VPS_IP>`). spawn.sh service talks to it via unix socket. No new infra needed.
 
 Add to `setup.sh`: install Docker if not present, add `prim` user to `docker` group.
 

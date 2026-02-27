@@ -7,7 +7,7 @@
 
 ## Context
 
-Prim runs 11 services on a single DigitalOcean VPS (157.230.187.207). There is no runbook — restart procedures, log locations, and failure modes live scattered across `deploy/`, CLAUDE.md memory, and tribal knowledge. When something breaks at 2am, the operator needs a single document to consult.
+Prim runs 11 services on a single DigitalOcean VPS (<VPS_IP>). There is no runbook — restart procedures, log locations, and failure modes live scattered across `deploy/`, CLAUDE.md memory, and tribal knowledge. When something breaks at 2am, the operator needs a single document to consult.
 
 ## Goal
 
@@ -17,7 +17,7 @@ Create `docs/ops/runbook.md` — a single-file incident reference covering every
 
 ### 1. Access & Connection
 
-- SSH: `root@157.230.187.207` (key-only, password disabled)
+- SSH: `root@<VPS_IP>` (key-only, password disabled)
 - Repo: `/opt/prim` (owned by `prim` user)
 - Env files: `/etc/prim/<service>.env` (root:prim 640)
 - Runtime: Bun at `/home/prim/.bun/bin/bun`, pnpm via corepack
@@ -140,7 +140,7 @@ Wallet is the highest-priority service because x402 payment depends on it.
 A condensed cheat sheet at the top of the runbook (commands only, no explanation) for copy-paste during incidents:
 
 ```
-ssh root@157.230.187.207
+ssh root@<VPS_IP>
 systemctl status prim-{wallet,store,faucet,spawn,email,search,token,mem,domain,track}
 journalctl -u prim-wallet -n 50 --no-pager
 systemctl restart prim-<name>

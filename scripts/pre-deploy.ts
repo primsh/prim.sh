@@ -9,7 +9,7 @@
  *   4. x402 config valid — PRIM_NETWORK and PRIM_PAY_TO well-formed
  *   5. Port not allocated — localhost:<port> not already in use
  *   6. External deps reachable — Qdrant / Stalwart / Base RPC health checks
- *   7. DNS resolves to VPS — <primitive>.prim.sh → 157.230.187.207
+ *   7. DNS resolves to VPS — <primitive>.prim.sh → <VPS_IP>
  *
  * Usage:
  *   bun scripts/pre-deploy.ts <primitive>
@@ -26,7 +26,7 @@ import { loadPrimitives } from "./lib/primitives.js";
 
 // ─── Config ──────────────────────────────────────────────────────────────────
 
-const VPS_IP = "157.230.187.207";
+const VPS_IP = process.env.VPS_IP ?? "<VPS_IP>";
 
 const _prims = loadPrimitives();
 const PRIMITIVES = _prims.filter((p) => p.port).map((p) => p.id);

@@ -3,7 +3,7 @@
 ## Quick Reference Card
 
 ```bash
-ssh root@157.230.187.207
+ssh root@<VPS_IP>
 
 # Status — all services
 systemctl status prim-{wallet,store,faucet,spawn,search,email,token,mem,domain,track,site}
@@ -42,7 +42,7 @@ cd /opt/prim/deploy/email && docker compose restart
 
 | Item | Value |
 |------|-------|
-| SSH | `root@157.230.187.207` (key-only, password disabled) |
+| SSH | `root@<VPS_IP>` (key-only, password disabled) |
 | OS | Ubuntu 24.04 |
 | Repo | `/opt/prim` (owned by `prim` user) |
 | Env files | `/etc/prim/<service>.env` (root:prim 640) |

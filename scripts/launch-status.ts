@@ -24,7 +24,7 @@ import { loadTasks, flatTasks, filterByRelease } from "./lib/tasks.js";
 // ─── Config ──────────────────────────────────────────────────────────────
 
 const TARGET_RELEASE = process.argv[2] ?? "v1.0.0";
-const VPS_IP = "157.230.187.207";
+const VPS_IP = process.env.VPS_IP ?? "<VPS_IP>";
 const FETCH_TIMEOUT = 10_000;
 
 // Derived from prim.yaml status=deployed|live — no hardcoded list

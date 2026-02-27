@@ -139,7 +139,7 @@ If `AGENT_PRIVATE_KEY` is also set, the script could fund the fresh wallet direc
 
 ```bash
 # From VPS (local DNS can't resolve *.prim.sh)
-ssh root@157.230.187.207
+ssh root@<VPS_IP>
 export PRIM_NETWORK=eip155:84532 \
   PRIM_ADMIN_KEY=<admin-key> \
   PRIM_INTERNAL_KEY=<internal-key>

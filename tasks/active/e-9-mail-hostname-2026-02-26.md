@@ -2,13 +2,13 @@
 
 ## Context
 
-Stalwart's `server.hostname` is currently `mail.email.prim.sh` (set during E-8 migration from `relay.prim.sh`). The extra subdomain level is unnecessary — `mail.prim.sh` is cleaner for SMTP banners, reverse DNS, MX records, and TLS certs. The main prim VPS is `157.230.187.207`; Stalwart runs there as a Docker container alongside all other primitives.
+Stalwart's `server.hostname` is currently `mail.email.prim.sh` (set during E-8 migration from `relay.prim.sh`). The extra subdomain level is unnecessary — `mail.prim.sh` is cleaner for SMTP banners, reverse DNS, MX records, and TLS certs. The main prim VPS is `<VPS_IP>`; Stalwart runs there as a Docker container alongside all other primitives.
 
-E-8 migrated from a separate DigitalOcean droplet (`142.93.203.3`) to the main VPS. DNS A records for `mail.email.prim.sh` may still point at the old IP — this task consolidates everything under `mail.prim.sh → 157.230.187.207`.
+E-8 migrated from a separate DigitalOcean droplet (`142.93.203.3`) to the main VPS. DNS A records for `mail.email.prim.sh` may still point at the old IP — this task consolidates everything under `mail.prim.sh → <VPS_IP>`.
 
 ## Goals
 
-- `mail.prim.sh` resolves to `157.230.187.207`
+- `mail.prim.sh` resolves to `<VPS_IP>`
 - Stalwart `server.hostname` is `mail.prim.sh`
 - SMTP banner shows `mail.prim.sh`
 - MX for `email.prim.sh` points to `mail.prim.sh`
@@ -26,17 +26,17 @@ Add/update in Cloudflare (zone for `prim.sh`):
 
 | Action | Type | Name | Content | TTL | Proxy |
 |--------|------|------|---------|-----|-------|
-| Add | A | `mail.prim.sh` | `157.230.187.207` | 300 | DNS only (gray cloud) |
+| Add | A | `mail.prim.sh` | `<VPS_IP>` | 300 | DNS only (gray cloud) |
 | Update | MX | `email.prim.sh` | `mail.prim.sh` (priority 10) | 300 | — |
 | Update | TXT (SPF) | `email.prim.sh` | `v=spf1 a:mail.prim.sh -all` | 300 | — |
 
 Do NOT delete `mail.email.prim.sh` A record — leave it as an alias for backward compatibility.
 
-Wait for DNS propagation before proceeding (`dig +short A mail.prim.sh` should return `157.230.187.207`).
+Wait for DNS propagation before proceeding (`dig +short A mail.prim.sh` should return `<VPS_IP>`).
 
 ## Phase 2: Stalwart config
 
-Via SSH tunnel (`ssh -L 8080:localhost:8080 root@157.230.187.207`) + admin API:
+Via SSH tunnel (`ssh -L 8080:localhost:8080 root@<VPS_IP>`) + admin API:
 
 1. Update `server.hostname` to `mail.prim.sh` via `POST /api/settings`
 2. Reload config via `GET /api/reload`
@@ -82,12 +82,12 @@ Test files (`service.test.ts`, `context.test.ts`, `domain.test.ts`) hardcode `ma
 
 ## Phase 6: Restart + verify
 
-On VPS (`root@157.230.187.207`):
+On VPS (`root@<VPS_IP>`):
 
 1. Deploy updated Caddyfile, reload Caddy
 2. Restart Stalwart container: `cd /root/deploy/email && docker compose restart`
 3. Verify SMTP banner: `nc -C mail.prim.sh 25` — expect `220 mail.prim.sh ESMTP Stalwart`
-4. Verify TLS cert: `openssl s_client -connect 157.230.187.207:465 -servername mail.prim.sh < /dev/null 2>/dev/null | openssl x509 -noout -subject` — expect `CN=mail.prim.sh`
+4. Verify TLS cert: `openssl s_client -connect <VPS_IP>:465 -servername mail.prim.sh < /dev/null 2>/dev/null | openssl x509 -noout -subject` — expect `CN=mail.prim.sh`
 5. Verify MX: `dig +short MX email.prim.sh` — expect `10 mail.prim.sh.`
 6. Verify SPF: `dig +short TXT email.prim.sh` — should include `a:mail.prim.sh`
 7. Send test email from `*@email.prim.sh` to external address, check headers for `mail.prim.sh` in Received chain
@@ -110,7 +110,7 @@ On VPS (`root@157.230.187.207`):
 
 ## Before closing
 
-- [ ] `dig +short A mail.prim.sh` returns `157.230.187.207`
+- [ ] `dig +short A mail.prim.sh` returns `<VPS_IP>`
 - [ ] `dig +short MX email.prim.sh` returns `10 mail.prim.sh.`
 - [ ] SMTP banner shows `mail.prim.sh` (`nc -C mail.prim.sh 25`)
 - [ ] TLS cert CN is `mail.prim.sh`

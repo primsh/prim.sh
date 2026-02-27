@@ -121,7 +121,7 @@ For bash scripts: add codegen markers, extend `gen-prims.ts` to inject them. `pn
 1. All building→testing gates still pass
 2. systemd unit exists at `deploy/prim/services/prim-<id>.service`
 3. Caddy block exists for `<endpoint>` in Caddyfile
-4. DNS A record for `<endpoint>` resolves to VPS IP (157.230.187.207)
+4. DNS A record for `<endpoint>` resolves to VPS IP (<VPS_IP>)
 5. External deps reachable (reuse from pre-deploy.ts: Qdrant, Stalwart, Base RPC checks)
 6. Env vars from prim.yaml `env[]` are set in current environment
 

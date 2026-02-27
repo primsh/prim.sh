@@ -62,14 +62,14 @@ This ensures deploy only runs after CI passes. If CI fails, deploy is skipped.
 
 | Secret | Value | Notes |
 |--------|-------|-------|
-| `VPS_HOST` | `root@157.230.187.207` | SSH user@ip |
+| `VPS_HOST` | `root@<VPS_IP>` | SSH user@ip |
 | `VPS_SSH_KEY` | Ed25519 private key | Generate new keypair specifically for GHA |
-| `VPS_KNOWN_HOSTS` | Output of `ssh-keyscan 157.230.187.207` | Prevents MITM prompt |
+| `VPS_KNOWN_HOSTS` | Output of `ssh-keyscan <VPS_IP>` | Prevents MITM prompt |
 
 ### SSH key setup (manual, Garric)
 
 1. Generate deploy-specific key: `ssh-keygen -t ed25519 -f gha-deploy -C "gha-deploy@prim"`
-2. Add public key to VPS: `ssh root@157.230.187.207 'cat >> ~/.ssh/authorized_keys'`
+2. Add public key to VPS: `ssh root@<VPS_IP> 'cat >> ~/.ssh/authorized_keys'`
 3. Optionally restrict key in `authorized_keys`: `command="/opt/prim/deploy/prim/deploy.sh",no-port-forwarding,no-x11-forwarding`
 4. Add private key as GitHub secret `VPS_SSH_KEY`
 5. Add `ssh-keyscan` output as `VPS_KNOWN_HOSTS`

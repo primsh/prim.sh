@@ -144,7 +144,7 @@ dig +short -x 142.93.203.3           # mail.email.prim.sh.
 ```
 
 ### Send test email
-Create a mailbox with custom username on `email.prim.sh`, send to `garricn@icloud.com` and `gnahapet@gmail.com`. Verify:
+Create a mailbox with custom username on `email.prim.sh`, send to `<PERSONAL_EMAIL>` and `<PERSONAL_EMAIL>`. Verify:
 - `mailed-by: email.prim.sh`
 - `signed-by: email.prim.sh`
 - Lands in inbox (or at least spam, not blocked)

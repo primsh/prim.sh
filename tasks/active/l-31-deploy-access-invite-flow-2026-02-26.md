@@ -57,12 +57,12 @@ zone_name = "prim.sh"
 
 ### Phase 3: Redeploy VPS wallet service
 
-**SSH target:** `root@157.230.187.207`
+**SSH target:** `root@<VPS_IP>`
 
 | Step | What | How |
 |------|------|-----|
-| 1 | rsync code | `rsync -avz --exclude node_modules --exclude .git ./ root@157.230.187.207:/opt/prim/` |
-| 2 | Install deps | `ssh root@157.230.187.207 'cd /opt/prim && pnpm install'` |
+| 1 | rsync code | `rsync -avz --exclude node_modules --exclude .git ./ root@<VPS_IP>:/opt/prim/` |
+| 2 | Install deps | `ssh root@<VPS_IP> 'cd /opt/prim && pnpm install'` |
 | 3 | Rebuild x402-middleware | `ssh ... 'cd /opt/prim && pnpm --filter @primsh/x402-middleware build'` |
 | 4 | Add env vars to wallet | Append to `/etc/prim/wallet.env`: `PRIM_INTERNAL_KEY=<key>` and `PRIM_ALLOWLIST_DB=/var/lib/prim/allowlist.db` |
 | 5 | Create data dir | `ssh ... 'mkdir -p /var/lib/prim'` |
