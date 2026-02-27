@@ -1069,7 +1069,7 @@
                   "depends": [
                     "SEC-1b"
                   ],
-                  "status": "pending",
+                  "status": "done",
                   "release": "v1.0.0",
                   "plan": "tasks/active/sec-1-git-secrets-audit-2026-02-26.md"
                 }
