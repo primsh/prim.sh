@@ -200,3 +200,4 @@ Five weeks from today to public launch with a working key economy.
 - Fundraising
 - Legal entity setup
 - Mainnet provider cost optimization
+- Whitepaper publication (publish after DeKeys is live, not before)
