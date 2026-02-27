@@ -68,6 +68,7 @@ export async function refillTreasury(batchSize?: number): Promise<RefillResult> 
 
   const account = privateKeyToAccount(treasuryKey as Hex);
   const size = Math.min(batchSize ?? 100, 200);
+  const CHUNK_SIZE = 1;
 
   const { CdpClient } = await import("@coinbase/cdp-sdk");
   const cdp = new CdpClient({
@@ -75,19 +76,25 @@ export async function refillTreasury(batchSize?: number): Promise<RefillResult> 
     apiKeySecret: cdpKeySecret,
   });
 
-  const claims = Array.from({ length: size }, () =>
-    cdp.evm.requestFaucet({ address: account.address, network: "base-sepolia", token: "eth" }),
-  );
-
-  const results = await Promise.allSettled(claims);
   const txHashes: string[] = [];
   let failed = 0;
 
-  for (const r of results) {
-    if (r.status === "fulfilled") {
-      txHashes.push(r.value.transactionHash);
-    } else {
-      failed++;
+  for (let i = 0; i < size; i += CHUNK_SIZE) {
+    const chunk = Math.min(CHUNK_SIZE, size - i);
+    const claims = Array.from({ length: chunk }, () =>
+      cdp.evm.requestFaucet({ address: account.address, network: "base-sepolia", token: "eth" }),
+    );
+    const results = await Promise.allSettled(claims);
+    for (const r of results) {
+      if (r.status === "fulfilled") {
+        txHashes.push(r.value.transactionHash);
+      } else {
+        failed++;
+      }
+    }
+    // Brief pause between chunks to avoid CDP rate limits
+    if (i + CHUNK_SIZE < size) {
+      await new Promise((resolve) => setTimeout(resolve, 1000));
     }
   }
 

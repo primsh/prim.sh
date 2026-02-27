@@ -450,12 +450,12 @@ describe("GET /v1/faucet/treasury", () => {
 describe("POST /v1/faucet/refill", () => {
   it("returns 200 with refill result on success", async () => {
     mockRequestFaucet.mockResolvedValue({ transactionHash: "0xCdpTx1" });
-    const res = await postJson("/v1/faucet/refill", {});
+    const res = await postJson("/v1/faucet/refill", { batch_size: 3 });
     expect(res.status).toBe(200);
     const body = (await res.json()) as Record<string, unknown>;
-    expect(body.claimed).toBe(100);
+    expect(body.claimed).toBe(3);
     expect(body.failed).toBe(0);
-    expect(body.estimated_eth).toBe("0.0100");
+    expect(body.estimated_eth).toBe("0.0003");
     expect(Array.isArray(body.tx_hashes)).toBe(true);
   });
 
@@ -469,11 +469,11 @@ describe("POST /v1/faucet/refill", () => {
       return Promise.resolve({ transactionHash: `0xCdpTx${callCount}` });
     });
 
-    const res = await postJson("/v1/faucet/refill", { batch_size: 9 });
+    const res = await postJson("/v1/faucet/refill", { batch_size: 3 });
     expect(res.status).toBe(200);
     const body = (await res.json()) as Record<string, unknown>;
-    expect(body.claimed).toBe(6);
-    expect(body.failed).toBe(3);
+    expect(body.claimed).toBe(2);
+    expect(body.failed).toBe(1);
   });
 
   it("rate limited — returns 429 on second call within 10 minutes", async () => {
