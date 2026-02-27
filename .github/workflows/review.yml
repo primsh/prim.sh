@@ -1,0 +1,46 @@
+name: Code Review
+
+on:
+  pull_request:
+    types: [opened, synchronize]
+  issue_comment:
+    types: [created]
+
+concurrency:
+  group: review-${{ github.event.pull_request.number || github.event.issue.number }}
+  cancel-in-progress: true
+
+jobs:
+  review:
+    name: Claude review
+    runs-on: ubuntu-latest
+    if: |
+      (github.event_name == 'pull_request' && github.actor != 'claude-code[bot]')
+      || (github.event_name == 'issue_comment' && github.event.issue.pull_request && contains(github.event.comment.body, '@claude'))
+    timeout-minutes: 10
+
+    permissions:
+      contents: write
+      pull-requests: write
+      issues: read
+      id-token: write
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.head_ref }}
+          fetch-depth: 0
+
+      - uses: anthropics/claude-code-action@v1
+        with:
+          claude_code_oauth_token: ${{ secrets.ANTHROPIC_API_KEY }}
+          prompt: |
+            Review this PR for bugs, security issues, and style violations.
+            Follow the conventions in CLAUDE.md.
+            If you find fixable issues (lint, types, obvious bugs), fix them and push.
+            Do not change test expectations or weaken assertions.
+            Do not add comments, docstrings, or formatting changes beyond what's needed.
+            Keep fixes minimal — only fix what's broken.
+          allowed_tools: "Bash,Read,Edit,Write,Glob,Grep"
+          claude_args: "--max-turns 10 --model claude-sonnet-4-6"
+          trigger_phrase: "@claude"

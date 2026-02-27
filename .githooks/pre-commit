@@ -1,41 +1,7 @@
 #!/bin/sh
-# Pre-commit hook: gitleaks + v0 critical path lock
+# Pre-commit hook: run gitleaks on staged changes
 # Install: git config core.hooksPath .githooks
 
-# --- v0 critical path lock ---
-# Blocks commits to v0 launch-critical files unless PRIM_V0_UNLOCK=1
-# This prevents Claude sessions working on other tasks from accidentally
-# modifying the mainnet switchover path.
-#
-# To unlock (only during v0 gate work):
-#   export PRIM_V0_UNLOCK=1
-
-V0_LOCKED_PATHS="
-packages/wallet/
-packages/store/
-packages/search/
-packages/x402-middleware/
-deploy/
-"
-
-if [ "${PRIM_V0_UNLOCK:-0}" != "1" ]; then
-  STAGED=$(git diff --cached --name-only)
-  for locked in $V0_LOCKED_PATHS; do
-    if echo "$STAGED" | grep -q "^${locked}"; then
-      echo ""
-      echo "BLOCKED: v0 critical path is locked"
-      echo "  Staged file(s) match locked path: ${locked}"
-      echo ""
-      echo "  These paths are frozen during v0 launch prep."
-      echo "  If you are working on a v0 gate (G1-G7), unlock with:"
-      echo "    export PRIM_V0_UNLOCK=1"
-      echo ""
-      exit 1
-    fi
-  done
-fi
-
-# --- gitleaks ---
 # Skip if gitleaks is not installed (non-blocking for devs without it)
 if ! command -v gitleaks >/dev/null 2>&1; then
   echo "warning: gitleaks not installed -- skipping secret scan"

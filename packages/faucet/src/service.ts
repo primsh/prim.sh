@@ -23,7 +23,7 @@ class NonceQueue {
   async next(publicClient: { getTransactionCount: (args: { address: Address }) => Promise<number> }, address: Address): Promise<number> {
     // Serialize nonce assignment — each caller waits for the previous one
     const prev = this.pending;
-    let resolve: () => void;
+    let resolve: (() => void) | undefined;
     this.pending = new Promise((r) => { resolve = r; });
 
     await prev;
@@ -35,7 +35,7 @@ class NonceQueue {
     }
 
     const nonce = this.current;
-    resolve!();
+    resolve?.();
     return nonce;
   }
 
