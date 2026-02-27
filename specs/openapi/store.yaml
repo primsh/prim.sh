@@ -24,6 +24,9 @@ info:
 servers:
   - url: https://store.prim.sh
 
+security:
+  - x402: []
+
 components:
   securitySchemes:
     x402:
@@ -143,6 +146,7 @@ paths:
       operationId: healthCheck
       summary: Health check
       description: Returns service status. Free — no x402 payment required.
+      security: []
       responses:
         "200":
           description: Service is running.
