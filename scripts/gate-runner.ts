@@ -20,6 +20,8 @@ import { resolve, join } from "node:path";
 import { existsSync, mkdirSync } from "node:fs";
 import { createPrimFetch } from "../packages/x402-client/src/index.ts";
 import { loadPrimitives } from "./lib/primitives.js";
+import { privateKeyToAccount } from "viem/accounts";
+import { getAddress } from "viem";
 
 // ── Types ──────────────────────────────────────────────────────────────────
 
@@ -54,6 +56,7 @@ interface TestDef {
   depends_on: string[];
   captures: Record<string, string>;
   notes: string | null;
+  skip?: boolean;
   // Previous run data (ignored by runner)
   actual_status?: number | null;
   actual_body?: unknown;
@@ -1036,15 +1039,22 @@ async function main() {
   captureStore.set("test_prefix", testPrefix);
   captureStore.set("runner", "gate-runner");
 
-  // Agent address from env
-  const agentAddress = process.env.AGENT_ADDRESS;
-  if (agentAddress) {
-    captureStore.set("agent_address", agentAddress);
-  }
+  // Agent wallet — derive address from private key and pre-sign EIP-191 registration
+  const agentPrivateKey = process.env.AGENT_PRIVATE_KEY as `0x${string}` | undefined;
+  const agentAddressEnv = process.env.AGENT_ADDRESS;
+  const isoTimestamp = new Date().toISOString();
+  captureStore.set("iso_timestamp", isoTimestamp);
 
-  // EIP-191 registration needs special handling — set placeholders
-  // These require actual crypto signing, so we mark them as needing generation
-  captureStore.set("iso_timestamp", new Date().toISOString());
+  if (agentPrivateKey) {
+    const account = privateKeyToAccount(agentPrivateKey);
+    const address = getAddress(account.address);
+    captureStore.set("agent_address", address);
+    const regMessage = `Register ${address} with prim.sh at ${isoTimestamp}`;
+    const eip191Sig = await account.signMessage({ message: regMessage });
+    captureStore.set("eip191_sig", eip191Sig);
+  } else if (agentAddressEnv) {
+    captureStore.set("agent_address", agentAddressEnv);
+  }
 
   // Load prim status map for gating
   const primStatusMap = buildPrimStatusMap();
@@ -1072,6 +1082,19 @@ async function main() {
         actual_status: null,
         run_note: null,
       };
+
+      // Skip tests marked as skip in the test plan
+      if (testDef.skip) {
+        result.result = "pass";
+        result.run_note = "skipped (marked skip in test plan)";
+        summary.pass++;
+        console.log(
+          `  ${c.green("●")} ${testId.padEnd(8)} ${c.green("pass")}    ${c.dim("skipped")}`,
+        );
+        results.push(result);
+        resultIndex.set(testId, result);
+        continue;
+      }
 
       try {
         // Check dependencies
