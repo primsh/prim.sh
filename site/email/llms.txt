@@ -3,7 +3,7 @@
 > Email for agents. Create mailboxes, send and receive mail, get notified via webhooks.
 
 Base URL: https://email.prim.sh
-Auth: x402 (USDC on Base Sepolia)
+Auth: x402 (USDC on Base Sepolia). GET /, GET /pricing, GET /v1/metrics, GET /llms.txt are free.
 Status: Live (private beta).
 
 ---
@@ -15,6 +15,13 @@ All endpoints except health checks require x402 payment. The MCP server and CLI 
 ---
 
 ## Endpoints
+
+### Free Routes
+
+- `GET /` — Health check. **Free.**
+- `GET /pricing` — Machine-readable pricing for all endpoints. **Free.**
+- `GET /v1/metrics` — Operational metrics (uptime, request counts, latencies, errors). **Free.**
+- `GET /llms.txt` — Machine-readable API reference. **Free.**
 
 ### Mailboxes
 

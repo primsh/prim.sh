@@ -6,8 +6,11 @@ to pay for any prim primitive via x402 (USDC on Base Sepolia).
 No keys stored server-side.
 
 Base URL: https://wallet.prim.sh
-Auth: Free for registration. All other endpoints require x402 payment.
+Auth: Free for registration. GET /, GET /pricing, GET /v1/metrics are free. All other endpoints require x402 payment.
 Chain: Base Sepolia (eip155:84532) during beta.
+
+Install:
+  curl -fsSL https://wallet.prim.sh/install.sh | sh
 
 ---
 
@@ -52,6 +55,39 @@ Free.
 Response (200):
   service  string  "wallet.sh"
   status   string  "ok"
+
+---
+
+### GET /pricing
+
+Machine-readable pricing for all endpoints.
+
+Free.
+
+Response (200):
+  service   string  "wallet.prim.sh"
+  currency  string  "USDC"
+  network   string  "eip155:8453"
+  routes    array   Route pricing list
+    .method       string  HTTP method
+    .path         string  URL path
+    .price_usdc   string  Price in USDC (decimal string)
+    .description  string  Human-readable description
+
+---
+
+### GET /v1/metrics
+
+Operational metrics. Uptime, request counts, latency percentiles, error rates.
+
+Free.
+
+Response (200):
+  service     string  "wallet.prim.sh"
+  uptime_s    number  Seconds since last restart
+  requests    object  Request counts and latencies by endpoint
+  payments    object  Payment counts by endpoint
+  errors      object  Error counts by status code
 
 ---
 

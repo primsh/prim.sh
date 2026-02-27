@@ -5,8 +5,11 @@ addresses for testing prim primitives. No auth or payment required.
 Rate-limited by wallet address.
 
 Base URL: https://faucet.prim.sh
-Auth: None (free, rate-limited by address)
+Auth: None (free, rate-limited by address). Wallet must be on allowlist during beta.
 Network: Base Sepolia (eip155:84532) only. Returns 403 on mainnet.
+
+Install:
+  curl -fsSL https://faucet.prim.sh/install.sh | sh
 
 Drip amounts:
   USDC: 10 USDC per drip. Cooldown: 2 hours.
@@ -41,6 +44,39 @@ Response (200):
 
 ---
 
+### GET /pricing
+
+Machine-readable pricing for all endpoints.
+
+Free.
+
+Response (200):
+  service   string  "faucet.prim.sh"
+  currency  string  "USDC"
+  network   string  "eip155:8453"
+  routes    array   Route pricing list (all $0.00 — faucet is free)
+    .method       string  HTTP method
+    .path         string  URL path
+    .price_usdc   string  Price in USDC (always "0")
+    .description  string  Human-readable description
+
+---
+
+### GET /v1/metrics
+
+Operational metrics. Uptime, request counts, latency percentiles, error rates.
+
+Free.
+
+Response (200):
+  service     string  "faucet.prim.sh"
+  uptime_s    number  Seconds since last restart
+  requests    object  Request counts and latencies by endpoint
+  payments    object  Payment counts by endpoint
+  errors      object  Error counts by status code
+
+---
+
 ### POST /v1/faucet/usdc
 
 Dispense 10 test USDC on Base Sepolia.
@@ -59,10 +95,11 @@ Response (200):
   source    string  "circle" | "treasury" — which backend dispensed the USDC
 
 Errors:
-  400  invalid_request  Missing or invalid address
-  403  mainnet_rejected  Faucet only operates on testnet
-  429  rate_limited      Address already dripped within 2 hours. retryAfter: seconds to wait.
-  502  faucet_error      Both Circle and treasury fallback failed
+  400  invalid_request     Missing or invalid address
+  403  wallet_not_allowed  Wallet not on allowlist (private beta)
+  403  mainnet_rejected    Faucet only operates on testnet
+  429  rate_limited        Address already dripped within 2 hours. retryAfter: seconds to wait.
+  502  faucet_error        Both Circle and treasury fallback failed
 
 ---
 
@@ -82,10 +119,11 @@ Response (200):
   chain     string  CAIP-2 chain identifier (e.g. "eip155:84532")
 
 Errors:
-  400  invalid_request  Missing or invalid address
-  403  mainnet_rejected  Faucet only operates on testnet
-  429  rate_limited      Address already dripped within 1 hour. retryAfter: seconds to wait.
-  502  faucet_error      Treasury wallet failed to send ETH
+  400  invalid_request     Missing or invalid address
+  403  wallet_not_allowed  Wallet not on allowlist (private beta)
+  403  mainnet_rejected    Faucet only operates on testnet
+  429  rate_limited        Address already dripped within 1 hour. retryAfter: seconds to wait.
+  502  faucet_error        Treasury wallet failed to send ETH
 
 ---
 

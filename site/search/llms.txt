@@ -4,8 +4,11 @@ Web search for agents. Search the web, get news, and extract content from URLs.
 All POST routes require x402 payment (USDC on Base Sepolia).
 
 Base URL: https://search.prim.sh
-Auth: x402 (USDC on Base Sepolia). GET / is free.
+Auth: x402 (USDC on Base Sepolia). GET /, GET /pricing, GET /v1/metrics are free.
 Chain: Base Sepolia (eip155:84532) during beta.
+
+Install:
+  curl -fsSL https://search.prim.sh/install.sh | sh
 
 ---
 
@@ -36,6 +39,39 @@ Free.
 Response (200):
   service  string  "search.sh"
   status   string  "ok"
+
+---
+
+### GET /pricing
+
+Machine-readable pricing for all endpoints.
+
+Free.
+
+Response (200):
+  service   string  "search.prim.sh"
+  currency  string  "USDC"
+  network   string  "eip155:8453"
+  routes    array   Route pricing list
+    .method       string  HTTP method
+    .path         string  URL path
+    .price_usdc   string  Price in USDC (decimal string)
+    .description  string  Human-readable description
+
+---
+
+### GET /v1/metrics
+
+Operational metrics. Uptime, request counts, latency percentiles, error rates.
+
+Free.
+
+Response (200):
+  service     string  "search.prim.sh"
+  uptime_s    number  Seconds since last restart
+  requests    object  Request counts and latencies by endpoint
+  payments    object  Payment counts by endpoint
+  errors      object  Error counts by status code
 
 ---
 

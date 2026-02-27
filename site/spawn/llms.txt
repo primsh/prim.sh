@@ -1,16 +1,25 @@
 # spawn.prim.sh
 
 VPS for agents. Provision, manage, and destroy virtual machines via API.
-Backed by Hetzner Cloud. Caller identity is derived from the x402 payment
-signature — register your wallet, pay, get a server.
+Caller identity is derived from the x402 payment signature — register
+your wallet, pay, get a server.
 
 Base URL: https://spawn.prim.sh
-Auth: x402 (USDC on Base Sepolia). GET / is free.
+Auth: x402 (USDC on Base Sepolia). GET /, GET /pricing, GET /v1/metrics are free.
 Chain: Base Sepolia (eip155:84532) during beta.
+
+Providers:
+  digitalocean  Default. DigitalOcean droplets.
 
 Limits (beta):
   3 concurrent servers per wallet
-  Only "small" type available (1 vCPU, 1 GB RAM)
+  Only "small" type available (2 vCPU, 4 GB RAM)
+
+Locations (DigitalOcean):
+  nyc3, sfo3, ams3, lon1, fra1, sgp1, tor1, blr1, syd1
+
+Images:
+  ubuntu-24.04, ubuntu-22.04, debian-12, fedora-41
 
 Server lifecycle:
   initializing → running → (stop) → off → (start) → running → (delete) → destroying → deleted
@@ -31,7 +40,7 @@ Error codes:
   forbidden              Resource belongs to a different wallet
   invalid_request        Missing or invalid fields
   insufficient_deposit   Insufficient USDC deposit for server
-  provider_error         Hetzner API error
+  provider_error         Cloud provider API error
   rate_limited           Too many requests
   not_implemented        Feature not yet available
   server_limit_exceeded  Wallet has reached 3 concurrent server limit
@@ -44,7 +53,7 @@ Error codes:
 Returned by most server endpoints:
 
   id             string  Prim server ID (e.g. "srv_abc123")
-  provider       string  Cloud provider (e.g. "hetzner")
+  provider       string  Cloud provider (e.g. "digitalocean")
   provider_id    string  Provider-assigned server ID
   name           string  Server name (label)
   type           string  Server type slug (e.g. "small")
@@ -85,6 +94,39 @@ Response (200):
 
 ---
 
+### GET /pricing
+
+Machine-readable pricing for all endpoints.
+
+Free.
+
+Response (200):
+  service   string  "spawn.prim.sh"
+  currency  string  "USDC"
+  network   string  "eip155:8453"
+  routes    array   Route pricing list
+    .method       string  HTTP method
+    .path         string  URL path
+    .price_usdc   string  Price in USDC (decimal string)
+    .description  string  Human-readable description
+
+---
+
+### GET /v1/metrics
+
+Operational metrics. Uptime, request counts, latency percentiles, error rates.
+
+Free.
+
+Response (200):
+  service     string  "spawn.prim.sh"
+  uptime_s    number  Seconds since last restart
+  requests    object  Request counts and latencies by endpoint
+  payments    object  Payment counts by endpoint
+  errors      object  Error counts by status code
+
+---
+
 ### POST /v1/servers
 
 Provision a new VPS. Returns immediately with status "initializing".
@@ -96,8 +138,8 @@ Request:
   name       string  required  Server name (provider-level label)
   type       string  required  Server type slug. Only "small" available in beta.
   image      string  required  OS image slug (e.g. "ubuntu-24.04", "debian-12")
-  location   string  required  Data center slug (e.g. "nyc3", "fra1")
-  provider   string  optional  Cloud provider, default "hetzner"
+  location   string  required  Data center slug (e.g. "nyc3", "sfo3", "lon1")
+  provider   string  optional  Cloud provider, default "digitalocean"
   ssh_keys   array   optional  SSH key IDs from POST /v1/ssh-keys to install
   user_data  string  optional  Cloud-init script to run on first boot
 
@@ -111,7 +153,7 @@ Errors:
   400  invalid_request       Missing required fields
   402  payment_required      x402 payment needed
   403  server_limit_exceeded  Wallet has reached 3 concurrent server limit
-  502  provider_error        Hetzner API error
+  502  provider_error        Cloud provider API error
 
 ---
 
@@ -175,7 +217,7 @@ Errors:
   402  payment_required  x402 payment needed
   403  forbidden         Server belongs to a different wallet
   404  not_found         Server not found
-  502  provider_error    Hetzner API error
+  502  provider_error    Cloud provider API error
 
 ---
 
@@ -195,7 +237,7 @@ Errors:
   402  payment_required  x402 payment needed
   403  forbidden         Server belongs to a different wallet
   404  not_found         Server not found
-  502  provider_error    Hetzner API error
+  502  provider_error    Cloud provider API error
 
 ---
 
@@ -215,7 +257,7 @@ Errors:
   402  payment_required  x402 payment needed
   403  forbidden         Server belongs to a different wallet
   404  not_found         Server not found
-  502  provider_error    Hetzner API error
+  502  provider_error    Cloud provider API error
 
 ---
 
@@ -235,7 +277,7 @@ Errors:
   402  payment_required  x402 payment needed
   403  forbidden         Server belongs to a different wallet
   404  not_found         Server not found
-  502  provider_error    Hetzner API error
+  502  provider_error    Cloud provider API error
 
 ---
 
@@ -263,7 +305,7 @@ Errors:
   402  payment_required  x402 payment needed
   403  forbidden         Server belongs to a different wallet
   404  not_found         Server not found
-  502  provider_error    Hetzner API error
+  502  provider_error    Cloud provider API error
 
 ---
 
@@ -288,7 +330,7 @@ Errors:
   402  payment_required  x402 payment needed
   403  forbidden         Server belongs to a different wallet
   404  not_found         Server not found
-  502  provider_error    Hetzner API error
+  502  provider_error    Cloud provider API error
 
 ---
 
@@ -314,7 +356,7 @@ Response (201):
 Errors:
   400  invalid_request  Missing name or public_key
   402  payment_required  x402 payment needed
-  502  provider_error   Hetzner API error
+  502  provider_error   Cloud provider API error
 
 ---
 
@@ -355,4 +397,4 @@ Errors:
   402  payment_required  x402 payment needed
   403  forbidden         Key belongs to a different wallet
   404  not_found         SSH key not found
-  502  provider_error    Hetzner API error
+  502  provider_error    Cloud provider API error

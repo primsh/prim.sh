@@ -60,6 +60,11 @@ Libraries that handle this automatically:
 Chain: eip155:84532 (Base Sepolia) during beta.
 Token: USDC (6 decimals).
 
+Free routes available on every primitive:
+  GET /          Health check
+  GET /pricing   Machine-readable pricing for all endpoints (JSON)
+  GET /v1/metrics  Operational metrics (uptime, request counts, latencies)
+
 Common payment errors:
   402  payment_required   No payment sent. Check Payment-Required header.
   403  wallet_not_allowed  Wallet not on allowlist. Request access first.
