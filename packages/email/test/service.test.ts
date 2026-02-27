@@ -1079,7 +1079,11 @@ describe("email service", () => {
         created_at: Date.now(),
       });
 
-      const warnSpy = vi.spyOn(console, "warn").mockImplementation(() => {});
+      const writtenLines: string[] = [];
+      const stdoutSpy = vi.spyOn(process.stdout, "write").mockImplementation((chunk) => {
+        writtenLines.push(String(chunk));
+        return true;
+      });
 
       const result = listWebhooks("mbx_test", WALLET_A);
 
@@ -1087,11 +1091,9 @@ describe("email service", () => {
       if (!result.ok) return;
       expect(result.data.data).toHaveLength(1);
       expect(result.data.data[0].events).toEqual([]);
-      expect(warnSpy).toHaveBeenCalledWith(
-        expect.stringContaining("corrupted events JSON"),
-      );
+      expect(writtenLines.some((line) => line.includes("corrupted events JSON"))).toBe(true);
 
-      warnSpy.mockRestore();
+      stdoutSpy.mockRestore();
     });
   });
 

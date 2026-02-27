@@ -1,6 +1,8 @@
 import { randomBytes } from "node:crypto";
 import { isAddress, getAddress, verifyMessage } from "viem";
-import { getNetworkConfig } from "@primsh/x402-middleware";
+import { createLogger, getNetworkConfig } from "@primsh/x402-middleware";
+
+const log = createLogger("wallet.sh", { module: "service" });
 import {
   insertWallet,
   getWalletByAddress,
@@ -364,7 +366,7 @@ function parsePrimitivesList(walletAddress: string, raw: string): string[] | nul
   try {
     return JSON.parse(raw) as string[];
   } catch {
-    console.warn(`wallet ${walletAddress}: corrupted allowed_primitives JSON: ${raw}`);
+    log.warn(`wallet ${walletAddress}: corrupted allowed_primitives JSON: ${raw}`);
     return null;
   }
 }

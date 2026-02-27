@@ -404,7 +404,7 @@
                     "Claude"
                   ],
                   "depends": [],
-                  "status": "pending",
+                  "status": "done",
                   "release": null,
                   "plan": "tasks/active/hrd-30-console-warn-to-logger.md"
                 },
@@ -832,6 +832,156 @@
               "release": "v1.0.0"
             }
           ]
+        },
+        {
+          "id": "INFRA-W4",
+          "title": "Prim Factory",
+          "parallelism": "SRL",
+          "phases": [
+            {
+              "id": "INFRA-W4-PA",
+              "title": "App Factory",
+              "parallelism": "SRL",
+              "tasks": [
+                {
+                  "id": "I-5",
+                  "description": "createPrimApp() factory in x402-middleware: env validation, middleware wiring, health, llms.txt, pricing, error mapping. Migrate track + search as proof.",
+                  "owner": ["Claude"],
+                  "depends": [],
+                  "status": "pending",
+                  "release": null,
+                  "plan": "tasks/active/i-5-create-prim-app-factory.md"
+                },
+                {
+                  "id": "I-6",
+                  "description": "Migrate remaining 8 prims to createPrimApp() (wallet, store, spawn, faucet, email, mem, domain, token). Factory supports opt-out for special middleware.",
+                  "owner": ["Claude"],
+                  "depends": ["I-5"],
+                  "status": "pending",
+                  "release": null
+                },
+                {
+                  "id": "I-7",
+                  "description": "Conformance runner: `pnpm test:conformance` verifies every deployed prim passes 5-check contract + generated files up-to-date. Add to CI.",
+                  "owner": ["Claude"],
+                  "depends": ["I-6"],
+                  "status": "pending",
+                  "release": null,
+                  "plan": "tasks/active/i-7-conformance-runner.md"
+                }
+              ]
+            },
+            {
+              "id": "INFRA-W4-PB",
+              "title": "Scaffolder",
+              "parallelism": "SRL",
+              "tasks": [
+                {
+                  "id": "I-8",
+                  "description": "Extend prim.yaml schema: add `providers` section (name, env, status, default), `interface` flags, strengthen routes_map typing. Update Primitive type.",
+                  "owner": ["Claude"],
+                  "depends": ["I-5"],
+                  "status": "pending",
+                  "release": null,
+                  "plan": "tasks/active/i-8-prim-yaml-schema-v2.md"
+                },
+                {
+                  "id": "I-9",
+                  "description": "`pnpm create-prim <id>` scaffolder: reads prim.yaml, generates package.json, tsconfig, vitest.config, install.sh, src/{index,api,service,provider}.ts, smoke.test.ts, README.",
+                  "owner": ["Claude"],
+                  "depends": ["I-8"],
+                  "status": "pending",
+                  "release": null,
+                  "plan": "tasks/active/i-9-prim-scaffolder.md"
+                },
+                {
+                  "id": "I-10",
+                  "description": "Smoke test generator: `pnpm gen:tests` reads routes_map + api.ts types, generates conformant smoke.test.ts with all 5 checks. Wire into `pnpm gen`.",
+                  "owner": ["Claude"],
+                  "depends": ["I-9"],
+                  "status": "pending",
+                  "release": null,
+                  "plan": "tasks/active/i-10-smoke-test-generator.md"
+                },
+                {
+                  "id": "I-11",
+                  "description": "Interactive prim.yaml creator: `pnpm create-prim --interactive` CLI wizard (id, name, routes, pricing, providers, accent). Also usable as LLM skill.",
+                  "owner": ["Claude"],
+                  "depends": ["I-9"],
+                  "status": "pending",
+                  "release": null,
+                  "plan": "tasks/active/i-11-interactive-prim-creator.md"
+                }
+              ]
+            },
+            {
+              "id": "INFRA-W4-PC",
+              "title": "Interface Generators",
+              "parallelism": "PARA",
+              "tasks": [
+                {
+                  "id": "I-12",
+                  "description": "MCP tool generator: `pnpm gen:mcp` reads OpenAPI specs \u2192 generates packages/mcp/src/tools/*.ts. Replaces manually maintained tool files.",
+                  "owner": ["Claude"],
+                  "depends": [],
+                  "status": "pending",
+                  "release": null,
+                  "plan": "tasks/active/i-12-mcp-generator.md"
+                },
+                {
+                  "id": "I-13",
+                  "description": "CLI command generator: `pnpm gen:cli` reads OpenAPI specs \u2192 generates packages/keystore/src/*-commands.ts. Replaces manually maintained CLI files.",
+                  "owner": ["Claude"],
+                  "depends": [],
+                  "status": "pending",
+                  "release": null,
+                  "plan": "tasks/active/i-13-cli-generator.md"
+                },
+                {
+                  "id": "I-14",
+                  "description": "OpenAI function schema generator: `pnpm gen:openai` reads OpenAPI specs \u2192 outputs JSON with OpenAI-compatible tool definitions for Responses API.",
+                  "owner": ["Claude"],
+                  "depends": [],
+                  "status": "pending",
+                  "release": null,
+                  "plan": "tasks/active/i-14-openai-schema-generator.md"
+                },
+                {
+                  "id": "I-15",
+                  "description": "Unified gen pipeline: single `pnpm gen` runs gen:prims + gen:tests + gen:mcp + gen:cli + gen:openai. `pnpm gen:check` validates all. CI blocks if stale.",
+                  "owner": ["Claude"],
+                  "depends": ["I-10", "I-12", "I-13", "I-14"],
+                  "status": "pending",
+                  "release": null
+                }
+              ]
+            },
+            {
+              "id": "INFRA-W4-PD",
+              "title": "Provider Framework",
+              "parallelism": "SRL",
+              "tasks": [
+                {
+                  "id": "I-16",
+                  "description": "PrimProvider base interface in x402-middleware: name, init(config), healthCheck(). Each prim extends with domain methods. Document the contract.",
+                  "owner": ["Claude"],
+                  "depends": ["I-8"],
+                  "status": "pending",
+                  "release": null,
+                  "plan": "tasks/active/i-16-provider-interface.md"
+                },
+                {
+                  "id": "I-17",
+                  "description": "Provider registry + selection utility: config-driven vendor selection (env-based), fallback chains, health-check-on-startup. Migrate search.sh (Tavily) as proof.",
+                  "owner": ["Claude"],
+                  "depends": ["I-16"],
+                  "status": "pending",
+                  "release": null,
+                  "plan": "tasks/active/i-17-provider-registry.md"
+                }
+              ]
+            }
+          ]
         }
       ],
       "description": "CI, tooling, observability, pricing, cross-cutting platform work."
@@ -1184,7 +1334,7 @@
                 "Claude"
               ],
               "depends": [],
-              "status": "pending",
+              "status": "done",
               "release": null,
               "plan": "tasks/active/site-10-pages-gha-2026-02-27.md"
             },

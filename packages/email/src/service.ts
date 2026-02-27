@@ -1,4 +1,7 @@
 import { randomBytes, createHash } from "node:crypto";
+import { createLogger } from "@primsh/x402-middleware";
+
+const log = createLogger("email.sh", { module: "service" });
 import {
   insertMailbox,
   getMailboxById,
@@ -610,7 +613,7 @@ function webhookToResponse(row: import("./db.ts").WebhookRow): WebhookResponse {
   try {
     events = JSON.parse(row.events) as string[];
   } catch {
-    console.warn(`webhook ${row.id}: corrupted events JSON: ${row.events}`);
+    log.warn(`webhook ${row.id}: corrupted events JSON: ${row.events}`);
     events = [];
   }
   return {

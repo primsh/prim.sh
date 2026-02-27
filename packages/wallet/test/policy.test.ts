@@ -259,18 +259,20 @@ describe("policyRowToResponse — corrupted allowed_primitives JSON", () => {
     const { address } = registerTestWallet(CALLER);
     upsertPolicy(address, { allowed_primitives: "not-json{" });
 
-    const warnSpy = vi.spyOn(console, "warn").mockImplementation(() => {});
+    const writtenLines: string[] = [];
+    const stdoutSpy = vi.spyOn(process.stdout, "write").mockImplementation((chunk) => {
+      writtenLines.push(String(chunk));
+      return true;
+    });
 
     const result = getSpendingPolicy(address, CALLER);
     expect(result.ok).toBe(true);
     if (result.ok) {
       expect(result.data.allowed_primitives).toBeNull();
     }
-    expect(warnSpy).toHaveBeenCalledWith(
-      expect.stringContaining("corrupted allowed_primitives JSON"),
-    );
+    expect(writtenLines.some((line) => line.includes("corrupted allowed_primitives JSON"))).toBe(true);
 
-    warnSpy.mockRestore();
+    stdoutSpy.mockRestore();
   });
 
   it("returns valid allowedPrimitives when JSON is well-formed", () => {
