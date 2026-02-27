@@ -1,200 +1,13 @@
 import { Hono } from "hono";
 import { bodyLimit } from "hono/body-limit";
+import { readFileSync } from "node:fs";
+import { resolve } from "node:path";
 import { createAgentStackMiddleware, createWalletAllowlistChecker, createLogger, getNetworkConfig, requestIdMiddleware, forbidden, notFound, invalidRequest } from "@primsh/x402-middleware";
 import type { ApiError } from "@primsh/x402-middleware";
 
-const LLMS_TXT = `# domain.prim.sh — API Reference
-
-> DNS and domain registration for AI agents. Register domains, manage Cloudflare zones, configure DNS records.
-
-Base URL: https://domain.prim.sh
-Auth: x402 payment protocol (USDC on Base)
-Payment: Every non-free request returns 402 with payment requirements. Sign the payment and resend.
-
-## Quick Start
-
-1. GET /v1/domains/search?query=myagent&tlds=com,xyz → check availability + pricing
-2. POST /v1/domains/quote {"domain": "myagent.com"} → get quote_id (valid 15 min)
-3. POST /v1/domains/register {"quote_id": "..."} → register + pay quoted amount
-4. POST /v1/zones {"domain": "myagent.com"} → create zone (if not auto-created)
-5. POST /v1/zones/{id}/records → add DNS records
-
-## Authentication
-
-All paid endpoints use x402. Free endpoints: GET /, GET /llms.txt, POST /v1/domains/recover, POST /v1/domains/{domain}/configure-ns
-
-## Endpoints
-
-### GET /v1/domains/search — Search availability ($0.001)
-
-Query params:
-  query  string  Domain name without TLD (required, e.g. "myagent")
-  tlds   string  Comma-separated TLDs to check (e.g. "com,xyz,io")
-
-Response 200:
-  results  DomainSearchResult[]
-    domain     string
-    available  boolean
-    price      {register: number, renew?: number, currency: string} | undefined
-    premium    boolean | undefined
-
-### POST /v1/domains/quote — Get price quote ($0.001)
-
-Request body:
-  domain  string  Fully qualified domain (required)
-  years   number  Registration period, default 1
-
-Response 200:
-  quote_id          string   Pass to /v1/domains/register
-  domain            string
-  available         true
-  years             number
-  registrar_cost_usd  number
-  total_cost_usd    number   x402 payment amount for register
-  currency          string
-  expires_at        string   ISO 8601 — quote expires in 15 minutes
-
-### POST /v1/domains/register — Register domain (dynamic pricing from quote)
-
-Payment amount is taken from the quote's total_cost_usd, not a fixed price.
-
-Request body:
-  quote_id  string  From POST /v1/domains/quote (required)
-
-Response 201:
-  domain           string
-  registered       true
-  zone_id          string|null
-  nameservers      string[]|null
-  order_amount_usd number
-  ns_configured    boolean
-  recovery_token   string|null   Store this — use with /recover if setup partially fails
-
-### POST /v1/domains/recover — Recover partial registration (free)
-
-Request body:
-  recovery_token  string  From RegisterResponse (required)
-
-Response 200: RecoverResponse {domain, zone_id, nameservers, ns_configured}
-
-### GET /v1/domains/{domain}/status — Registration status ($0.001)
-
-Response 200:
-  domain                    string
-  purchased                 true
-  zone_id                   string|null
-  zone_status               "pending"|"active"|"moved"|null
-  ns_configured_at_registrar  boolean
-  ns_propagated             boolean
-  ns_expected               string[]
-  ns_actual                 string[]
-  zone_active               boolean
-  all_ready                 boolean   true when fully live
-  next_action               string|null
-
-### POST /v1/domains/{domain}/configure-ns — Retry NS config at registrar (free)
-
-Response 200: ConfigureNsResponse {domain, nameservers, ns_configured}
-
-### POST /v1/zones — Create zone ($0.05)
-
-Request body:
-  domain  string  Domain for the zone (required)
-
-Response 201:
-  zone  ZoneResponse {id, domain, status, name_servers[], owner_wallet, created_at}
-
-### GET /v1/zones — List zones ($0.001)
-
-Query params: limit (default 20, max 100), page (default 1)
-Response 200: {zones: ZoneResponse[], meta: {page, per_page, total}}
-
-### GET /v1/zones/{id} — Get zone ($0.001)
-
-Response 200: ZoneResponse
-
-### DELETE /v1/zones/{id} — Delete zone ($0.01)
-
-Response 200: {}
-
-### PUT /v1/zones/{zone_id}/activate — Activate zone ($0.001)
-
-Requests Cloudflare to immediately re-check NS for activation.
-Response 200: ActivateResponse {zone_id, status, activation_requested}
-
-### GET /v1/zones/{zone_id}/verify — Verify propagation ($0.001)
-
-Response 200:
-  domain         string
-  nameservers    NsVerifyResult {expected[], actual[], propagated}
-  records        RecordVerifyResult[] {type, name, expected, actual, propagated}
-  all_propagated boolean
-  zone_status    string|null
-
-### POST /v1/zones/{zone_id}/mail-setup — Setup mail DNS ($0.005)
-
-Creates A, MX, SPF TXT, DMARC TXT, and optionally DKIM TXT records.
-
-Request body:
-  mail_server     string  Mail server hostname (required)
-  mail_server_ip  string  Mail server IP for A record (required)
-  dkim            {rsa?: {selector, public_key}, ed25519?: {selector, public_key}} (optional)
-
-Response 200:
-  records  {type, name, action: "created"|"updated"}[]
-
-### POST /v1/zones/{zone_id}/records/batch — Batch record ops ($0.005)
-
-Request body:
-  create  BatchCreateEntry[]  {type, name, content, ttl?, proxied?, priority?}
-  update  BatchUpdateEntry[]  {id, content?, ttl?, proxied?, priority?, type?, name?}
-  delete  BatchDeleteEntry[]  {id}
-
-Response 200: {created: RecordResponse[], updated: RecordResponse[], deleted: {id}[]}
-
-### POST /v1/zones/{zone_id}/records — Create record ($0.001)
-
-Request body:
-  type     string  A|AAAA|CNAME|MX|TXT|SRV|CAA|NS (required)
-  name     string  "@" for root (required)
-  content  string  IP for A/AAAA, hostname for CNAME/MX, text for TXT (required)
-  ttl      number  Seconds, 1=automatic (optional)
-  proxied  boolean Only for A/AAAA/CNAME (optional)
-  priority number  For MX/SRV (optional)
-
-Response 201: RecordResponse
-
-RecordResponse shape:
-  id, zone_id, type, name, content, ttl, proxied, priority (number|null), created_at, updated_at
-
-### GET /v1/zones/{zone_id}/records — List records ($0.001)
-
-Response 200: {records: RecordResponse[]}
-
-### GET /v1/zones/{zone_id}/records/{id} — Get record ($0.001)
-
-Response 200: RecordResponse
-
-### PUT /v1/zones/{zone_id}/records/{id} — Update record ($0.001)
-
-Request body: all fields optional (type?, name?, content?, ttl?, proxied?, priority?)
-Response 200: RecordResponse
-
-### DELETE /v1/zones/{zone_id}/records/{id} — Delete record ($0.001)
-
-Response 200: {}
-
-## Error Format
-
-All errors return:
-  {"error": {"code": "error_code", "message": "Human-readable message"}}
-
-Error codes: not_found, forbidden, invalid_request, cloudflare_error, rate_limited, domain_taken, quote_expired, registrar_error, registration_failed
-
-## Ownership
-
-All zones are scoped to the wallet address that paid to create them. Registration ownership is determined by the payer wallet from the x402 payment.
-`;
+const LLMS_TXT = readFileSync(
+  resolve(import.meta.dir, "../../../site/domain/llms.txt"), "utf-8"
+);
 import { HTTPFacilitatorClient, encodePaymentRequiredHeader, decodePaymentSignatureHeader } from "@x402/core/http";
 import type {
   CreateZoneRequest,
@@ -314,7 +127,8 @@ app.get("/", (c) => {
 
 // GET /llms.txt — machine-readable API reference (free)
 app.get("/llms.txt", (c) => {
-  return c.text(LLMS_TXT);
+  c.header("Content-Type", "text/plain; charset=utf-8");
+  return c.body(LLMS_TXT);
 });
 
 // POST /v1/domains/quote — Get a time-limited price quote for domain registration

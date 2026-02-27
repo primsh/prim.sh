@@ -1,134 +1,504 @@
 # domain.prim.sh
 
-> Domains for agents. Register domains via NameSilo, manage Cloudflare DNS zones, configure records.
+Register domains, manage DNS, auto-TLS. Full domain lifecycle via API.
 
 Base URL: https://domain.prim.sh
-Auth: x402 (USDC on Base Sepolia)
-Status: Built, not yet deployed to prim.sh network.
+Auth: x402 (USDC on Base Sepolia). GET /, GET /pricing, GET /v1/metrics are free.
+Chain: Base Sepolia (eip155:84532) during beta.
+
+Install:
+  curl -fsSL https://domain.prim.sh/install.sh | sh
+
+Limits:
+  Domain price quotes valid for 15 minutes (quote_expired error after)
+  Rate limit on PUT /v1/zones/:zoneId/activate — back off before retrying
+
+---
+
+## Quick Start
+
+  1. GET /v1/domains/search?query=myagent&tlds=com,xyz → check availability
+  2. POST /v1/domains/quote with {domain, years} → get price quote (15-min validity)
+  3. POST /v1/zones with {domain} → create Cloudflare DNS zone ($0.05)
+  4. POST /v1/zones/:zoneId/records → add DNS records
+
+## Tips
+
+  - Domain registration is async: save the recovery_token in case zone setup fails.
+  - Use POST /v1/domains/recover with recovery_token to retry Cloudflare zone setup after partial failure.
+  - POST /v1/zones/:zoneId/mail-setup configures MX, SPF, DMARC, DKIM in a single idempotent call.
+  - POST /v1/zones/:zoneId/records/batch for bulk record changes in one atomic request.
+  - GET /v1/zones/:zoneId/verify checks DNS propagation for all zone records.
 
 ---
 
 ## x402 Payment
 
-All endpoints require x402 payment. The MCP server and CLI handle this automatically. For raw HTTP, follow the standard x402 flow (see https://prim.sh/llms.txt for full protocol details).
+  1. Make request. Server returns 402 with Payment-Required header.
+  2. Sign EIP-3009 transferWithAuthorization.
+  3. Retry with Payment-Signature header (base64-encoded signed authorization).
 
-Free endpoints (no payment required):
-- `POST /v1/domains/recover` — Retry zone setup after partial registration failure.
-- `POST /v1/domains/:domain/configure-ns` — Retry NS configuration at registrar.
+Error envelope:
+  {"error": {"code": "<code>", "message": "<msg>"}}
+
+Error codes:
+  not_found
+  forbidden
+  invalid_request
+  cloudflare_error
+  rate_limited
+  domain_taken
+  quote_expired
+  registrar_error
+  registration_failed
 
 ---
 
 ## Endpoints
 
-### Domain registration
+### GET /
 
-- `GET /v1/domains/search` — Check availability and pricing for a domain query. Params: query, tlds. **$0.001**
-- `POST /v1/domains/quote` — Get a 15-minute price quote. Fields: domain, years. **$0.001**
-- `POST /v1/domains/register` — Register domain using a quote_id. Returns zone_id, nameservers, recovery_token. **dynamic (from quote)**
-- `POST /v1/domains/recover` — Retry Cloudflare zone setup after partial failure. Fields: recovery_token. **free**
-- `GET /v1/domains/:domain/status` — Full post-registration pipeline status (ns_propagated, zone_active, all_ready). **$0.001**
-- `POST /v1/domains/:domain/configure-ns` — Retry NS configuration at NameSilo. **free**
+Health check.
 
-### DNS zones
+Free.
 
-- `POST /v1/zones` — Create a Cloudflare DNS zone. Fields: domain. Returns nameservers. **$0.05**
-- `GET /v1/zones` — List zones (paginated). **$0.001**
-- `GET /v1/zones/:zoneId` — Get zone details. **$0.001**
-- `DELETE /v1/zones/:zoneId` — Delete zone and all records. Irreversible. **$0.01**
-- `PUT /v1/zones/:zoneId/activate` — Request Cloudflare NS re-check for faster activation. **$0.001**
-- `GET /v1/zones/:zoneId/verify` — Check DNS propagation for all zone records. **$0.001**
-- `POST /v1/zones/:zoneId/mail-setup` — Configure MX, SPF, DMARC, DKIM in one call. Idempotent. **$0.01**
-
-### DNS records
-
-- `POST /v1/zones/:zoneId/records` — Create a DNS record (A, AAAA, CNAME, MX, TXT, SRV, CAA, NS). **$0.001**
-- `GET /v1/zones/:zoneId/records` — List all records in a zone. **$0.001**
-- `GET /v1/zones/:zoneId/records/:recordId` — Get a single record. **$0.001**
-- `PUT /v1/zones/:zoneId/records/:recordId` — Update a record. **$0.001**
-- `DELETE /v1/zones/:zoneId/records/:recordId` — Delete a record. **$0.001**
-- `POST /v1/zones/:zoneId/records/batch` — Create, update, and delete records in one request. **$0.01**
+Response (200):
+  service  string  "domain.sh"
+  status   string  "ok"
 
 ---
 
-## Common patterns
+### GET /pricing
 
-### Search → Quote → Register
+Machine-readable pricing for all endpoints.
 
-```bash
-# Search availability
-prim domain search myagent --tlds com,xyz,io
-# → DOMAIN                              PRICE        PREMIUM
-# → myagent.xyz                         $1.50
+Free.
 
-# Quote (valid 15 minutes)
-prim domain quote myagent.xyz
-# → {"quote_id": "q_...", "domain": "myagent.xyz", "total_cost_usd": 1.50, "expires_at": "..."}
-
-# Register (pays from quote)
-prim domain register myagent.xyz
-# → {"domain": "myagent.xyz", "zone_id": "z_...", "nameservers": [...], "recovery_token": "..."}
-# IMPORTANT: save the recovery_token
-```
-
-### Create zone and add records
-
-```bash
-prim domain zone create --zone example.com
-# → {"zone": {"id": "z_...", "name_servers": ["ns1.cloudflare.com", ...]}}
-
-prim domain record add ZONE_ID --type A --name @ --content 203.0.113.42
-prim domain record add ZONE_ID --type CNAME --name www --content example.com
-
-prim domain zone verify ZONE_ID
-# → {"all_propagated": true, "records": [...]}
-```
-
-### Mail DNS setup
-
-```bash
-prim domain zone mail-setup ZONE_ID \
-  --mail-server mail.prim.sh \
-  --mail-server-ip 1.2.3.4 \
-  --dkim-rsa-selector mail \
-  --dkim-rsa-key "MIIBIjAN..."
-# → Creates A, MX, SPF TXT, DMARC TXT, DKIM TXT records in one call
-```
-
-### Batch record changes
-
-```json
-POST /v1/zones/ZONE_ID/records/batch
-{
-  "create": [{"type": "CNAME", "name": "api", "content": "example.com"}],
-  "update": [{"id": "rec_abc", "content": "new-ip"}],
-  "delete": [{"id": "rec_xyz"}]
-}
-```
+Response (200):
+  service   string  "domain.prim.sh"
+  currency  string  "USDC"
+  network   string  "eip155:8453"
+  routes    array   Route pricing list
+    .method       string  HTTP method
+    .path         string  URL path
+    .price_usdc   string  Price in USDC (decimal string)
+    .description  string  Human-readable description
 
 ---
 
-## Error codes
+### GET /v1/metrics
 
-- `invalid_request` — Missing fields or invalid domain name.
-- `domain_taken` (400) — Zone already exists for this domain.
-- `not_found` (404) — Zone, record, or quote not found.
-- `forbidden` (403) — Resource belongs to a different wallet.
-- `quote_expired` (410) — Quote older than 15 minutes. Call domain_quote again.
-- `registrar_error` (502) — NameSilo error. Check domain_status — domain may still be registered.
-- `cloudflare_error` (502) — Cloudflare API error. Use domain_recover with recovery_token if during registration.
-- `rate_limited` (429) — Too many zone_activate calls. Wait before retrying.
+Operational metrics. Uptime, request counts, latency percentiles, error rates.
+
+Free.
+
+Response (200):
+  service     string  "domain.prim.sh"
+  uptime_s    number  Seconds since last restart
+  requests    object  Request counts and latencies by endpoint
+  payments    object  Payment counts by endpoint
+  errors      object  Error counts by status code
 
 ---
 
-## MCP tools
+### GET /v1/domains/search
 
-Install with: `prim install domain`
+Check availability and pricing for a domain query
 
-Tools: domain_search, domain_quote, domain_register, domain_recover, domain_status,
-domain_configure_ns, domain_zone_create, domain_zone_list, domain_zone_get,
-domain_zone_delete, domain_zone_activate, domain_zone_verify, domain_zone_mail_setup,
-domain_record_create, domain_record_list, domain_record_get, domain_record_update,
-domain_record_delete, domain_record_batch
+Price: $0.001
 
-Skill: https://prim.sh/domain/llms.txt
-OpenAPI: https://prim.sh/specs/openapi/domain.yaml
+Query params:
+  query  string  optional  Domain name or keyword to search
+  tlds   string  optional  Comma-separated TLDs (e.g. com,xyz,io)
+
+Response (200):
+  results  DomainSearchResult[]  Search results for each queried domain.
+
+Errors:
+  402  payment_required  x402 payment needed
+  502  registrar_error   NameSilo API error
+
+---
+
+### POST /v1/domains/quote
+
+Get a 15-minute price quote for a domain
+
+Price: $0.001
+
+Request:
+  domain  string  required  Domain name to quote (e.g. "example.com").
+  years   number  optional  Number of years to register. Default 1.
+
+Response (200):
+  quote_id            string  Quote ID to use when calling POST /v1/domains/register.
+  domain              string  Domain name quoted.
+  available           true    Always true — quote is only returned for available domains.
+  years               number  Number of years in the quote.
+  registrar_cost_usd  number  Registrar cost in USD (internal cost).
+  total_cost_usd      number  Total cost in USD charged to the caller.
+  currency            string  Currency code (e.g. "USD").
+  expires_at          string  ISO 8601 timestamp when the quote expires. Use within the window to avoid quote_expired.
+
+Errors:
+  400  invalid_request   Missing domain or invalid years
+  402  payment_required  x402 payment needed
+  502  registrar_error   NameSilo API error
+
+---
+
+### GET /v1/domains/:domain/status
+
+Full post-registration pipeline status (ns_propagated, zone_active, all_ready)
+
+Price: $0.001
+
+Path params:
+  domain  string  required  domain parameter
+
+Response (200):
+  domain                      string             Domain name.
+  purchased                   true               Always true — only returned for registered domains.
+  zone_id                     string | null      Cloudflare zone ID. Null if zone not yet created.
+  zone_status                 ZoneStatus | null  Current zone status. Null if zone not yet created.
+  ns_configured_at_registrar  boolean            Whether nameservers are configured at the registrar.
+  ns_propagated               boolean            Whether nameservers have propagated in DNS.
+  ns_expected                 string[]           Expected Cloudflare nameservers.
+  ns_actual                   string[]           Nameservers currently found in DNS.
+  zone_active                 boolean            Whether the Cloudflare zone is active.
+  all_ready                   boolean            Whether the domain is fully set up and ready.
+  next_action                 string | null      Human-readable next action required. Null if all_ready is true.
+
+Errors:
+  402  payment_required  x402 payment needed
+  404  not_found         Domain not found
+
+---
+
+### POST /v1/zones
+
+Create a Cloudflare DNS zone. Returns nameservers to set at your registrar.
+
+Price: $0.05
+
+Request:
+  domain  string  required  Domain name to create a zone for (e.g. "example.com").
+
+Response (201):
+  zone  ZoneResponse  The created zone.
+
+Errors:
+  400  invalid_request   Missing domain or invalid domain name
+  402  payment_required  x402 payment needed
+  409  domain_taken      Zone already exists for this domain
+  502  cloudflare_error  Cloudflare API error
+
+---
+
+### GET /v1/zones
+
+List DNS zones owned by the calling wallet (paginated)
+
+Price: $0.001
+
+Query params:
+  limit  integer  optional  1-100, default 20
+  after  string   optional  Cursor from previous response
+
+Response (200): ZoneListResponse
+
+Errors:
+  402  payment_required  x402 payment needed
+  403  forbidden         Resource belongs to a different wallet
+
+---
+
+### GET /v1/zones/:id
+
+Get zone details
+
+Price: $0.001
+
+Path params:
+  id  string  required  id parameter
+
+Response (200):
+  id            string      Cloudflare zone ID.
+  domain        string      Domain name (e.g. "example.com").
+  status        ZoneStatus  Zone status: "pending" | "active" | "moved".
+  name_servers  string[]    Cloudflare nameservers to delegate to.
+  owner_wallet  string      Ethereum address of the zone owner.
+  created_at    string      ISO 8601 timestamp when the zone was created.
+
+Errors:
+  402  payment_required  x402 payment needed
+  403  forbidden         Resource belongs to a different wallet
+  404  not_found         Zone not found
+
+---
+
+### DELETE /v1/zones/:id
+
+Delete zone and all records. Irreversible.
+
+Price: $0.01
+
+Path params:
+  id  string  required  id parameter
+
+Response (200): {} (empty object)
+
+Errors:
+  402  payment_required  x402 payment needed
+  403  forbidden         Resource belongs to a different wallet
+  404  not_found         Zone not found
+  502  cloudflare_error  Cloudflare API error
+
+---
+
+### PUT /v1/zones/:zone_id/activate
+
+Request Cloudflare NS re-check for faster activation
+
+Price: $0.001
+
+Path params:
+  zone_id  string  required  zone_id parameter
+
+Response (200):
+  zone_id               string      Cloudflare zone ID.
+  status                ZoneStatus  Updated zone status.
+  activation_requested  true        Always true — activation was requested from Cloudflare.
+
+Errors:
+  402  payment_required  x402 payment needed
+  403  forbidden         Resource belongs to a different wallet
+  404  not_found         Zone not found
+  429  rate_limited      Too many zone_activate calls
+
+---
+
+### GET /v1/zones/:zone_id/verify
+
+Check DNS propagation for all zone records
+
+Price: $0.001
+
+Path params:
+  zone_id  string  required  zone_id parameter
+
+Response (200):
+  domain          string                Domain name.
+  nameservers     NsVerifyResult        Nameserver propagation result.
+  records         RecordVerifyResult[]  Per-record propagation results.
+  all_propagated  boolean               Whether all records and nameservers have propagated.
+  zone_status     ZoneStatus | null     Current Cloudflare zone status. Null if zone not found.
+
+Errors:
+  402  payment_required  x402 payment needed
+  403  forbidden         Resource belongs to a different wallet
+  404  not_found         Zone not found
+
+---
+
+### POST /v1/zones/:zone_id/mail-setup
+
+Configure MX, SPF, DMARC, DKIM in one call. Idempotent.
+
+Price: $0.005
+
+Path params:
+  zone_id  string  required  zone_id parameter
+
+Request:
+  mail_server     string  required  Mail server hostname (e.g. "mail.prim.sh").
+  mail_server_ip  string  required  Mail server IPv4 address (used for SPF record).
+  dkim            object  optional  DKIM keys to configure. Provide rsa and/or ed25519.
+
+Response (200):
+  records  MailSetupRecordResult[]  DNS records created or updated by the mail setup.
+
+Errors:
+  400  invalid_request   Missing required mail server fields
+  402  payment_required  x402 payment needed
+  403  forbidden         Resource belongs to a different wallet
+  404  not_found         Zone not found
+  502  cloudflare_error  Cloudflare API error
+
+---
+
+### POST /v1/zones/:zone_id/records/batch
+
+Create, update, and delete DNS records in one atomic request
+
+Price: $0.005
+
+Path params:
+  zone_id  string  required  zone_id parameter
+
+Request:
+  create  BatchCreateEntry[]  optional  Records to create.
+  update  BatchUpdateEntry[]  optional  Records to update.
+  delete  BatchDeleteEntry[]  optional  Records to delete.
+
+Response (200):
+  created  RecordResponse[]  Successfully created records.
+  updated  RecordResponse[]  Successfully updated records.
+  deleted  object            IDs of deleted records.
+
+Errors:
+  400  invalid_request   Invalid record fields or values
+  402  payment_required  x402 payment needed
+  403  forbidden         Resource belongs to a different wallet
+  404  not_found         Zone or record not found
+  502  cloudflare_error  Cloudflare API error
+
+---
+
+### POST /v1/zones/:zone_id/records
+
+Create a DNS record (A, AAAA, CNAME, MX, TXT, SRV, CAA, NS)
+
+Price: $0.001
+
+Path params:
+  zone_id  string  required  zone_id parameter
+
+Request:
+  type      RecordType  required  DNS record type.
+  name      string      required  DNS record name (hostname).
+  content   string      required  DNS record value.
+  ttl       number      optional  TTL in seconds. Default 1 (auto).
+  proxied   boolean     optional  Enable Cloudflare proxying. Default false.
+  priority  number      optional  Priority for MX and SRV records.
+
+Response (201):
+  id          string         DNS record ID.
+  zone_id     string         Zone ID this record belongs to.
+  type        RecordType     DNS record type.
+  name        string         DNS record name (hostname, relative to zone).
+  content     string         DNS record value.
+  ttl         number         TTL in seconds.
+  proxied     boolean        Whether Cloudflare proxying is enabled.
+  priority    number | null  Priority for MX and SRV records. Null for other types.
+  created_at  string         ISO 8601 timestamp when the record was created.
+  updated_at  string         ISO 8601 timestamp when the record was last updated.
+
+Errors:
+  400  invalid_request   Missing or invalid record fields
+  402  payment_required  x402 payment needed
+  403  forbidden         Resource belongs to a different wallet
+  404  not_found         Zone not found
+  502  cloudflare_error  Cloudflare API error
+
+---
+
+### GET /v1/zones/:zone_id/records
+
+List all records in a DNS zone
+
+Price: $0.001
+
+Path params:
+  zone_id  string  required  zone_id parameter
+
+Response (200): RecordListResponse
+
+Errors:
+  402  payment_required  x402 payment needed
+  403  forbidden         Resource belongs to a different wallet
+  404  not_found         Zone not found
+
+---
+
+### GET /v1/zones/:zone_id/records/:id
+
+Get a single DNS record
+
+Price: $0.001
+
+Path params:
+  zone_id  string  required  zone_id parameter
+  id       string  required  id parameter
+
+Response (200):
+  id          string         DNS record ID.
+  zone_id     string         Zone ID this record belongs to.
+  type        RecordType     DNS record type.
+  name        string         DNS record name (hostname, relative to zone).
+  content     string         DNS record value.
+  ttl         number         TTL in seconds.
+  proxied     boolean        Whether Cloudflare proxying is enabled.
+  priority    number | null  Priority for MX and SRV records. Null for other types.
+  created_at  string         ISO 8601 timestamp when the record was created.
+  updated_at  string         ISO 8601 timestamp when the record was last updated.
+
+Errors:
+  402  payment_required  x402 payment needed
+  403  forbidden         Resource belongs to a different wallet
+  404  not_found         Zone or record not found
+
+---
+
+### PUT /v1/zones/:zone_id/records/:id
+
+Update a DNS record
+
+Price: $0.001
+
+Path params:
+  zone_id  string  required  zone_id parameter
+  id       string  required  id parameter
+
+Request:
+  type      RecordType  optional  DNS record type.
+  name      string      optional  DNS record name.
+  content   string      optional  DNS record value.
+  ttl       number      optional  TTL in seconds.
+  proxied   boolean     optional  Enable Cloudflare proxying.
+  priority  number      optional  Priority for MX and SRV records.
+
+Response (200):
+  id          string         DNS record ID.
+  zone_id     string         Zone ID this record belongs to.
+  type        RecordType     DNS record type.
+  name        string         DNS record name (hostname, relative to zone).
+  content     string         DNS record value.
+  ttl         number         TTL in seconds.
+  proxied     boolean        Whether Cloudflare proxying is enabled.
+  priority    number | null  Priority for MX and SRV records. Null for other types.
+  created_at  string         ISO 8601 timestamp when the record was created.
+  updated_at  string         ISO 8601 timestamp when the record was last updated.
+
+Errors:
+  400  invalid_request   Invalid record fields
+  402  payment_required  x402 payment needed
+  403  forbidden         Resource belongs to a different wallet
+  404  not_found         Zone or record not found
+  502  cloudflare_error  Cloudflare API error
+
+---
+
+### DELETE /v1/zones/:zone_id/records/:id
+
+Delete a DNS record
+
+Price: $0.001
+
+Path params:
+  zone_id  string  required  zone_id parameter
+  id       string  required  id parameter
+
+Response (200): {} (empty object)
+
+Errors:
+  402  payment_required  x402 payment needed
+  403  forbidden         Resource belongs to a different wallet
+  404  not_found         Zone or record not found
+  502  cloudflare_error  Cloudflare API error
+
+---
+
+## Ownership
+
+All DNS zones and records are scoped to the wallet address extracted from the x402 payment.

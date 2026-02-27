@@ -13,6 +13,8 @@
 import { readFileSync, writeFileSync, existsSync } from "node:fs";
 import { join, resolve } from "node:path";
 import { loadPrimitives, deployed, type Primitive } from "./lib/primitives.js";
+import { parseApiFile } from "./lib/parse-api.js";
+import { parseRoutePrices, renderLlmsTxt } from "./lib/render-llms-txt.js";
 
 const ROOT = resolve(import.meta.dir, "..");
 const CHECK_MODE = process.argv.includes("--check");
@@ -74,6 +76,22 @@ function applyOrCheck(filePath: string, section: string, content: string, style:
 }
 
 let anyFailed = false;
+
+function applyFullFile(filePath: string, content: string): void {
+  const existing = existsSync(filePath) ? readFileSync(filePath, "utf8") : null;
+  const changed = existing !== content;
+  if (CHECK_MODE) {
+    if (changed) {
+      console.error(`  ✗ ${filePath} is out of date — run pnpm gen:prims`);
+      anyFailed = true;
+    } else {
+      console.log(`  ✓ ${filePath}`);
+    }
+  } else {
+    writeFileSync(filePath, content);
+    console.log(`  ${changed ? "↺" : "✓"} ${filePath}`);
+  }
+}
 
 // ── Generators ─────────────────────────────────────────────────────────────
 
@@ -225,6 +243,27 @@ for (const p of prims) {
   if (p.pricing && p.pricing.length > 0) {
     applyOrCheck(pagePath, "PRICING", genPricingRows(p), "html", false);
   }
+}
+
+// 9. Per-prim llms.txt — generated from routes_map + api.ts
+const primsWithRoutes = prims.filter((p) => p.routes_map && p.routes_map.length > 0);
+for (const p of primsWithRoutes) {
+  const apiPath = join(ROOT, "packages", p.id, "src/api.ts");
+  const indexPath = join(ROOT, "packages", p.id, "src/index.ts");
+  const llmsPath = join(ROOT, "site", p.id, "llms.txt");
+  if (!existsSync(apiPath)) {
+    console.log(`  – site/${p.id}/llms.txt (no api.ts, skipped)`);
+    continue;
+  }
+  const sitePrimDir = join(ROOT, "site", p.id);
+  if (!existsSync(sitePrimDir)) {
+    console.log(`  – site/${p.id}/llms.txt (no site dir, skipped)`);
+    continue;
+  }
+  const parsedApi = parseApiFile(apiPath);
+  const routePrices = parseRoutePrices(indexPath);
+  const content = renderLlmsTxt(p, parsedApi, routePrices);
+  applyFullFile(llmsPath, content);
 }
 
 if (CHECK_MODE && anyFailed) {

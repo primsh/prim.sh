@@ -59,6 +59,150 @@ hero_example: |
     "ready_at": "~45s"
   }
 
+quick_start:
+  - "POST /v1/ssh-keys with name + public_key → register SSH key"
+  - "POST /v1/servers with name, type, image, location → create server ($0.01)"
+  - "Poll GET /v1/servers/:id until status is \"running\" → get IP address"
+  - "DELETE /v1/servers/:id when done → release resources and get deposit refund"
+
+tips:
+  - "Server returns immediately with status 'initializing' — poll until 'running' for the IP."
+  - "Register SSH keys first via POST /v1/ssh-keys to enable passwordless SSH access."
+  - "Unused deposit is refunded on DELETE. Budget for the expected runtime."
+  - "Only 'small' type (2 vCPU, 4 GB RAM) is available during beta."
+  - "user_data field accepts cloud-init scripts to automate first-boot setup."
+  - "Server must be stopped before resize. stop → resize → start."
+
+limits:
+  - "Max concurrent servers per wallet: 3"
+  - "Available types: small (2 vCPU, 4 GB RAM) only during beta"
+  - "Locations: nyc3, sfo3, ams3, lon1, fra1, sgp1, tor1, blr1, syd1 (DigitalOcean)"
+  - "Images: ubuntu-24.04, ubuntu-22.04, debian-12, fedora-41"
+
+ownership: "All servers and SSH keys are scoped to the wallet address extracted from the x402 payment."
+
+routes_map:
+  - route: "POST /v1/servers"
+    request: CreateServerRequest
+    response: CreateServerResponse
+    status: 201
+    description: "Provision a new VPS. Returns immediately with status 'initializing'."
+    notes: "Poll GET /v1/servers/:id until status is 'running' to get IP address."
+    errors:
+      - { status: 400, code: invalid_request, description: "Missing required fields" }
+      - { status: 402, code: payment_required, description: "x402 payment needed" }
+      - { status: 403, code: server_limit_exceeded, description: "Wallet has reached 3 concurrent server limit" }
+      - { status: 502, code: provider_error, description: "Cloud provider API error" }
+  - route: "GET /v1/servers"
+    request: null
+    response: ServerListResponse
+    status: 200
+    description: "List all servers owned by the calling wallet"
+    query_params:
+      - { name: limit, type: integer, description: "1-100, default 20" }
+      - { name: page, type: integer, description: "1-based page number, default 1" }
+    errors:
+      - { status: 402, code: payment_required, description: "x402 payment needed" }
+      - { status: 403, code: forbidden, description: "Missing wallet in payment" }
+  - route: "GET /v1/servers/:id"
+    request: null
+    response: ServerResponse
+    status: 200
+    description: "Get full details for a single server. Poll this until status='running'."
+    errors:
+      - { status: 402, code: payment_required, description: "x402 payment needed" }
+      - { status: 403, code: forbidden, description: "Server belongs to a different wallet" }
+      - { status: 404, code: not_found, description: "Server not found" }
+  - route: "DELETE /v1/servers/:id"
+    request: null
+    response: DeleteServerResponse
+    status: 200
+    description: "Destroy a server and release its resources. Unused deposit is refunded."
+    errors:
+      - { status: 402, code: payment_required, description: "x402 payment needed" }
+      - { status: 403, code: forbidden, description: "Server belongs to a different wallet" }
+      - { status: 404, code: not_found, description: "Server not found" }
+      - { status: 502, code: provider_error, description: "Cloud provider API error" }
+  - route: "POST /v1/servers/:id/start"
+    request: null
+    response: ActionOnlyResponse
+    status: 200
+    description: "Start a stopped server"
+    errors:
+      - { status: 402, code: payment_required, description: "x402 payment needed" }
+      - { status: 403, code: forbidden, description: "Server belongs to a different wallet" }
+      - { status: 404, code: not_found, description: "Server not found" }
+      - { status: 502, code: provider_error, description: "Cloud provider API error" }
+  - route: "POST /v1/servers/:id/stop"
+    request: null
+    response: ActionOnlyResponse
+    status: 200
+    description: "Stop a running server (graceful shutdown)"
+    errors:
+      - { status: 402, code: payment_required, description: "x402 payment needed" }
+      - { status: 403, code: forbidden, description: "Server belongs to a different wallet" }
+      - { status: 404, code: not_found, description: "Server not found" }
+      - { status: 502, code: provider_error, description: "Cloud provider API error" }
+  - route: "POST /v1/servers/:id/reboot"
+    request: null
+    response: ActionOnlyResponse
+    status: 200
+    description: "Reboot a running server"
+    errors:
+      - { status: 402, code: payment_required, description: "x402 payment needed" }
+      - { status: 403, code: forbidden, description: "Server belongs to a different wallet" }
+      - { status: 404, code: not_found, description: "Server not found" }
+      - { status: 502, code: provider_error, description: "Cloud provider API error" }
+  - route: "POST /v1/servers/:id/resize"
+    request: ResizeRequest
+    response: ResizeResponse
+    status: 200
+    description: "Change server type (CPU/RAM). Server must be stopped first. Deposit adjusted."
+    errors:
+      - { status: 400, code: invalid_request, description: "Missing type field or invalid value" }
+      - { status: 402, code: payment_required, description: "x402 payment needed" }
+      - { status: 403, code: forbidden, description: "Server belongs to a different wallet" }
+      - { status: 404, code: not_found, description: "Server not found" }
+      - { status: 502, code: provider_error, description: "Cloud provider API error" }
+  - route: "POST /v1/servers/:id/rebuild"
+    request: RebuildRequest
+    response: RebuildResponse
+    status: 200
+    description: "Reinstall from a fresh OS image. All data on server is destroyed."
+    errors:
+      - { status: 400, code: invalid_request, description: "Missing image field" }
+      - { status: 402, code: payment_required, description: "x402 payment needed" }
+      - { status: 403, code: forbidden, description: "Server belongs to a different wallet" }
+      - { status: 404, code: not_found, description: "Server not found" }
+      - { status: 502, code: provider_error, description: "Cloud provider API error" }
+  - route: "POST /v1/ssh-keys"
+    request: CreateSshKeyRequest
+    response: SshKeyResponse
+    status: 201
+    description: "Register a public SSH key. Returned ID can be used in ssh_keys when creating a server."
+    errors:
+      - { status: 400, code: invalid_request, description: "Missing name or public_key" }
+      - { status: 402, code: payment_required, description: "x402 payment needed" }
+      - { status: 502, code: provider_error, description: "Cloud provider API error" }
+  - route: "GET /v1/ssh-keys"
+    request: null
+    response: SshKeyListResponse
+    status: 200
+    description: "List all SSH keys registered by the calling wallet"
+    errors:
+      - { status: 402, code: payment_required, description: "x402 payment needed" }
+      - { status: 403, code: forbidden, description: "Missing wallet in payment" }
+  - route: "DELETE /v1/ssh-keys/:id"
+    request: null
+    response: null
+    status: 200
+    description: "Remove an SSH key. Keys in use by active servers remain until server is rebuilt."
+    errors:
+      - { status: 402, code: payment_required, description: "x402 payment needed" }
+      - { status: 403, code: forbidden, description: "Key belongs to a different wallet" }
+      - { status: 404, code: not_found, description: "SSH key not found" }
+      - { status: 502, code: provider_error, description: "Cloud provider API error" }
+
 cta:
   headline: "Compute should be an **HTTP request**."
   sub: "No sign-up page because there's nothing to sign up for. Just point your agent at the API and pay."
@@ -106,19 +250,23 @@ sections:
     title: "API"
     highlight: "reference"
     lines:
-      - "# All endpoints."
+      - "# Server lifecycle"
+      - "POST   /v1/servers              # Provision VPS"
+      - "GET    /v1/servers              # List servers"
+      - "GET    /v1/servers/:id          # Server details"
+      - "DELETE /v1/servers/:id          # Destroy server"
       - ""
-      - "POST   /v1/instances          # Create instance"
-      - "GET    /v1/instances          # List instances (by payment identity)"
-      - "GET    /v1/instances/:id      # Get instance details"
-      - "POST   /v1/instances/:id/exec # Execute command via SSH"
-      - "PUT    /v1/instances/:id      # Resize / modify"
-      - "DELETE /v1/instances/:id      # Destroy instance"
-      - "POST   /v1/instances/:id/snap # Create snapshot"
-      - "GET    /v1/snapshots          # List snapshots"
-      - "GET    /v1/plans              # Available plans + pricing"
-      - "GET    /v1/images             # Available OS images"
-      - "GET    /v1/regions            # Available regions"
+      - "# Server actions"
+      - "POST   /v1/servers/:id/start    # Start stopped server"
+      - "POST   /v1/servers/:id/stop     # Graceful shutdown"
+      - "POST   /v1/servers/:id/reboot   # Reboot server"
+      - "POST   /v1/servers/:id/resize   # Resize (must be stopped first)"
+      - "POST   /v1/servers/:id/rebuild  # Reinstall OS image"
+      - ""
+      - "# SSH keys"
+      - "POST   /v1/ssh-keys             # Register public key"
+      - "GET    /v1/ssh-keys             # List keys"
+      - "DELETE /v1/ssh-keys/:id         # Remove key"
 
   - type: manifesto
     title: "Why"
@@ -126,7 +274,7 @@ sections:
     paragraphs:
       - "The internet has a status code for payments. It's been reserved since 1997. **HTTP 402: Payment Required.**"
       - "Every other cloud provider requires: an email, a password, a credit card, KYC verification, an API key, a dashboard, a billing page, a support ticket system. **Agents don't have emails.**"
-      - "x402 is the missing piece. Agent sends request → server returns 402 with payment details → agent pays (Lightning/L2/Stripe) → server returns the resource. **The payment IS the authentication.**"
+      - "x402 is the missing piece. Agent sends request → server returns 402 with payment details → agent pays (USDC on Base) → server returns the resource. **The payment IS the authentication.**"
       - "No account. No API key. No session. No cookies. Every request is self-contained. The payment receipt proves you paid, identifies your resources, and authorizes access. **Stateless compute for stateless agents.**"
 
   - type: cli
@@ -134,10 +282,10 @@ sections:
     highlight: "CLI"
     note: "For operators running spawn.sh nodes. Not for end users (agents are the end users)."
     commands:
-      - "spawn node add --region nyc1 --provider hetzner"
+      - "spawn node add --region nyc1 --provider digitalocean"
       - "spawn node list"
       - "spawn node drain nyc1-04"
       - "spawn capacity --region all"
       - "spawn audit --last 24h"
       - "spawn pricing set s-1vcpu-1gb --hourly 0.012"
-      - "spawn payments reconcile --network lightning"
+      - "spawn payments reconcile --network base"

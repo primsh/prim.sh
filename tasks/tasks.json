@@ -223,6 +223,18 @@
                   ],
                   "status": "pending",
                   "release": "v1.0.0"
+                },
+                {
+                  "id": "HRD-22",
+                  "description": "Consistent verb-position convention in api.ts interface names: standardize Create*/Register*/Set* prefix ordering across all 10 prims (e.g. CreateServerRequest not ServerCreateRequest)",
+                  "owner": [
+                    "Claude"
+                  ],
+                  "depends": [
+                    "HRD-14"
+                  ],
+                  "status": "pending",
+                  "release": null
                 }
               ]
             },

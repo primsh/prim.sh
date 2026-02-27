@@ -50,6 +50,57 @@ hero_example: |
       -H "X-402-Payment: $TOKEN" \
       -d '{"url": "https://example.com/article"}'
 
+quick_start:
+  - "POST /v1/search with {\"query\": \"...\", \"max_results\": 5} → web search results"
+  - "POST /v1/search/news with {\"query\": \"...\"} → recent news articles"
+  - "POST /v1/extract with {\"urls\": [\"https://...\"]} → clean markdown content"
+
+tips:
+  - "Set include_answer: true to get an AI-generated summary alongside search results."
+  - "Use exclude_domains to remove noise sources (e.g. reddit.com, quora.com)."
+  - "POST /v1/extract accepts a single URL string or an array of URLs."
+  - "Failed extractions (paywalls, 404s) are reported in the failed array — the request still succeeds."
+  - "Check Retry-After header on 429 responses before retrying."
+
+limits:
+  - "Max results per search: 20"
+  - "Rate limit applies per wallet — check Retry-After header on 429"
+
+ownership: "Stateless. No resources stored per wallet. Each request is independent."
+
+routes_map:
+  - route: "POST /v1/search"
+    request: SearchRequest
+    response: SearchResponse
+    status: 200
+    description: "Search the web and return ranked results with optional AI-generated answer"
+    errors:
+      - { status: 400, code: invalid_request, description: "Missing or invalid query" }
+      - { status: 402, code: payment_required, description: "x402 payment needed" }
+      - { status: 429, code: rate_limited, description: "Too many requests. Check Retry-After header." }
+      - { status: 502, code: provider_error, description: "Upstream search provider unavailable" }
+  - route: "POST /v1/search/news"
+    request: SearchRequest
+    response: SearchResponse
+    status: 200
+    description: "Search for recent news articles, ordered by recency"
+    errors:
+      - { status: 400, code: invalid_request, description: "Missing or invalid query" }
+      - { status: 402, code: payment_required, description: "x402 payment needed" }
+      - { status: 429, code: rate_limited, description: "Too many requests" }
+      - { status: 502, code: provider_error, description: "Upstream search provider unavailable" }
+  - route: "POST /v1/extract"
+    request: ExtractRequest
+    response: ExtractResponse
+    status: 200
+    description: "Extract readable content from one or more URLs as markdown or plain text"
+    notes: "Failed extractions are in the failed array. Request succeeds if at least one URL was attempted."
+    errors:
+      - { status: 400, code: invalid_request, description: "Missing urls field or invalid URL format" }
+      - { status: 402, code: payment_required, description: "x402 payment needed" }
+      - { status: 429, code: rate_limited, description: "Too many requests" }
+      - { status: 502, code: provider_error, description: "Upstream extraction provider unavailable" }
+
 cta:
   headline: "The web is an **API call**."
   sub: "Agents don't use browsers. They use search.sh."

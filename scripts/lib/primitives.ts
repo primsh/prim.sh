@@ -32,6 +32,29 @@ export interface DeployConfig {
   extra_caddy?: string[];        // additional Caddy blocks
 }
 
+export interface RouteQueryParam {
+  name: string;
+  type: string;
+  description: string;
+}
+
+export interface RouteError {
+  status: number;
+  code: string;
+  description: string;
+}
+
+export interface RouteMapping {
+  route: string;
+  request: string | null;
+  response: string;
+  status: number;
+  description: string;
+  notes?: string;
+  query_params?: RouteQueryParam[];
+  errors?: RouteError[];
+}
+
 export interface Primitive {
   id: string;
   name: string;
@@ -48,6 +71,11 @@ export interface Primitive {
   pricing?: PricingRow[];
   gates?: GateConfig;
   deploy?: DeployConfig;
+  quick_start?: string[];
+  tips?: string[];
+  limits?: string[];
+  ownership?: string;
+  routes_map?: RouteMapping[];
 }
 
 // ── Loader ─────────────────────────────────────────────────────────────────

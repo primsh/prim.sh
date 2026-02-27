@@ -1,110 +1,311 @@
 # mem.prim.sh
 
-> Memory for agents. Vector search for long-term knowledge, KV cache for short-term state.
+Vector store and cache for agents. Persist long-term knowledge and session state.
 
 Base URL: https://mem.prim.sh
-Auth: x402 (USDC on Base Sepolia)
-Status: Built, not yet deployed to prim.sh network.
+Auth: x402 (USDC on Base Sepolia). GET /, GET /pricing, GET /v1/metrics are free.
+Chain: Base Sepolia (eip155:84532) during beta.
+
+Install:
+  curl -fsSL https://mem.prim.sh/install.sh | sh
+
+Limits:
+  Max document text size: governed by 1 MB body limit
+  KV cache entries: no hard limit documented
+  Vector dimension: 1536 (Google text-embedding-004)
+
+---
+
+## Quick Start
+
+  1. POST /v1/collections with {"name": "my-brain"} → create vector collection ($0.01)
+  2. POST /v1/collections/:id/upsert with documents array → embed and store text
+  3. POST /v1/collections/:id/query with {"text": "..."} → semantic search
+  4. PUT /v1/cache/:namespace/:key with {"value": ..., "ttl": 3600} → store in KV cache
+
+## Tips
+
+  - Upsert replaces existing documents with the same ID — safe to call repeatedly.
+  - GET /v1/collections list response has null document_count — use GET :id for live count.
+  - KV cache ttl is in seconds. Omit ttl for permanent storage.
+  - Use filter (Qdrant native format) in query for metadata-filtered vector search.
+  - Embedding is included — just pass text strings, no need to pre-compute vectors.
 
 ---
 
 ## x402 Payment
 
-All endpoints require x402 payment. The MCP server and CLI handle this automatically. For raw HTTP, follow the standard x402 flow (see https://prim.sh/llms.txt for full protocol details).
+  1. Make request. Server returns 402 with Payment-Required header.
+  2. Sign EIP-3009 transferWithAuthorization.
+  3. Retry with Payment-Signature header (base64-encoded signed authorization).
+
+Error envelope:
+  {"error": {"code": "<code>", "message": "<msg>"}}
+
+Error codes:
+  not_found
+  forbidden
+  invalid_request
+  qdrant_error
+  embedding_error
+  rate_limited
+  collection_name_taken
 
 ---
 
 ## Endpoints
 
-### Vector collections
+### GET /
 
-- `POST /v1/collections` — Create a vector collection. Fields: name (required), distance (Cosine|Euclid|Dot), dimension. **$0.01**
-- `GET /v1/collections` — List collections (paginated). document_count is null in list — use GET for live count. **$0.001**
-- `GET /v1/collections/:id` — Get collection with live document_count from Qdrant. **$0.001**
-- `DELETE /v1/collections/:id` — Delete collection and all documents. Irreversible. **$0.01**
-- `POST /v1/collections/:id/upsert` — Embed and store documents. Each document: {id?, text, metadata?}. Existing IDs are replaced. **$0.001**
-- `POST /v1/collections/:id/query` — Semantic search. Fields: text (required), top_k, filter (Qdrant native). **$0.001**
+Health check.
 
-### KV cache
+Free.
 
-- `PUT /v1/cache/:namespace/:key` — Store a value. Fields: value (required), ttl (seconds, optional). **$0.0001**
-- `GET /v1/cache/:namespace/:key` — Retrieve value. Returns 404 if missing or expired. **$0.0001**
-- `DELETE /v1/cache/:namespace/:key` — Delete a cache entry. **$0.0001**
+Response (200):
+  service  string  "mem.sh"
+  status   string  "ok"
 
 ---
 
-## Common patterns
+### GET /pricing
 
-### Create a semantic memory collection
+Machine-readable pricing for all endpoints.
 
-```bash
-# Create collection
-curl -X POST https://mem.prim.sh/v1/collections \
-  -H "Content-Type: application/json" \
-  -d '{"name": "research-notes"}'
-# → {"id": "col_...", "name": "research-notes", "distance": "Cosine", "dimension": 1536}
+Free.
 
-# Upsert documents
-curl -X POST https://mem.prim.sh/v1/collections/COL_ID/upsert \
-  -H "Content-Type: application/json" \
-  -d '{"documents": [{"text": "Transformers use self-attention.", "metadata": {"source": "paper"}}]}'
-# → {"upserted": 1, "ids": ["uuid..."]}
-
-# Query semantically
-curl -X POST https://mem.prim.sh/v1/collections/COL_ID/query \
-  -H "Content-Type: application/json" \
-  -d '{"text": "how does attention work?", "top_k": 5}'
-# → {"matches": [{"id": "...", "score": 0.92, "text": "...", "metadata": {...}}]}
-```
-
-### KV cache
-
-```bash
-# Store a value (permanent)
-curl -X PUT https://mem.prim.sh/v1/cache/agent-state/current-task \
-  -H "Content-Type: application/json" \
-  -d '{"value": {"task": "research", "step": 3}}'
-
-# Store with TTL (expires in 1 hour)
-curl -X PUT https://mem.prim.sh/v1/cache/session/token \
-  -H "Content-Type: application/json" \
-  -d '{"value": "abc123", "ttl": 3600}'
-
-# Retrieve
-curl https://mem.prim.sh/v1/cache/agent-state/current-task
-# → {"namespace": "...", "key": "...", "value": {...}, "expires_at": null}
-```
-
-### Metadata filtering
-
-```json
-{
-  "text": "attention mechanisms",
-  "top_k": 5,
-  "filter": {"must": [{"key": "source", "match": {"value": "paper"}}]}
-}
-```
+Response (200):
+  service   string  "mem.prim.sh"
+  currency  string  "USDC"
+  network   string  "eip155:8453"
+  routes    array   Route pricing list
+    .method       string  HTTP method
+    .path         string  URL path
+    .price_usdc   string  Price in USDC (decimal string)
+    .description  string  Human-readable description
 
 ---
 
-## Error codes
+### GET /v1/metrics
 
-- `collection_name_taken` (409) — Name already exists for this wallet. Use a different name or list existing collections.
-- `invalid_request` (400) — Missing required fields or malformed body.
-- `not_found` (404) — Collection or cache entry does not exist.
-- `forbidden` (403) — Resource belongs to a different wallet.
-- `qdrant_error` (502) — Upstream Qdrant error. Retry after a short wait.
-- `embedding_error` (502) — Embedding model error. Check text is non-empty and not too long.
-- `rate_limited` (429) — Too many requests. Back off and retry.
+Operational metrics. Uptime, request counts, latency percentiles, error rates.
+
+Free.
+
+Response (200):
+  service     string  "mem.prim.sh"
+  uptime_s    number  Seconds since last restart
+  requests    object  Request counts and latencies by endpoint
+  payments    object  Payment counts by endpoint
+  errors      object  Error counts by status code
 
 ---
 
-## MCP tools
+### POST /v1/collections
 
-Install with: `prim install mem`
+Create a vector collection
 
-Tools: mem_collection_create, mem_collection_list, mem_collection_get, mem_collection_delete,
-mem_upsert, mem_query, mem_cache_put, mem_cache_get, mem_cache_delete
+Price: $0.01
 
-Skill: https://prim.sh/mem/llms.txt
-OpenAPI: https://prim.sh/specs/openapi/mem.yaml
+Request:
+  name       string                       required  Collection name. Unique per wallet.
+  distance   "Cosine" | "Euclid" | "Dot"  optional  Distance metric for similarity search. Default "Cosine".
+  dimension  number                       optional  Vector dimension. Must match the embedding model used. Default 1536.
+
+Response (201):
+  id              string         Collection ID (UUID).
+  name            string         Collection name. Unique per wallet.
+  owner_wallet    string         Ethereum address of the collection owner.
+  dimension       number         Embedding vector dimension (e.g. 1536 for text-embedding-3-small).
+  distance        string         Distance metric: "Cosine" | "Euclid" | "Dot".
+  document_count  number | null  Live Qdrant points_count — null in list responses to avoid N+1 calls.
+  created_at      string         ISO 8601 timestamp when the collection was created.
+
+Errors:
+  400  invalid_request        Missing name or invalid fields
+  402  payment_required       x402 payment needed
+  409  collection_name_taken  Name already exists for this wallet
+  502  qdrant_error           Upstream Qdrant error
+
+---
+
+### GET /v1/collections
+
+List collections owned by the calling wallet (paginated). document_count is null — use GET :id.
+
+Price: $0.001
+
+Query params:
+  limit  integer  optional  1-100, default 20
+  after  string   optional  Cursor from previous response
+
+Response (200): CollectionListResponse
+
+Errors:
+  402  payment_required  x402 payment needed
+  403  forbidden         Resource belongs to a different wallet
+
+---
+
+### GET /v1/collections/:id
+
+Get collection with live document_count from Qdrant
+
+Price: $0.001
+
+Path params:
+  id  string  required  id parameter
+
+Response (200):
+  id              string         Collection ID (UUID).
+  name            string         Collection name. Unique per wallet.
+  owner_wallet    string         Ethereum address of the collection owner.
+  dimension       number         Embedding vector dimension (e.g. 1536 for text-embedding-3-small).
+  distance        string         Distance metric: "Cosine" | "Euclid" | "Dot".
+  document_count  number | null  Live Qdrant points_count — null in list responses to avoid N+1 calls.
+  created_at      string         ISO 8601 timestamp when the collection was created.
+
+Errors:
+  402  payment_required  x402 payment needed
+  403  forbidden         Resource belongs to a different wallet
+  404  not_found         Collection not found
+  502  qdrant_error      Upstream Qdrant error
+
+---
+
+### DELETE /v1/collections/:id
+
+Delete collection and all documents. Irreversible.
+
+Price: $0.01
+
+Path params:
+  id  string  required  id parameter
+
+Response (200): {} (empty object)
+
+Errors:
+  402  payment_required  x402 payment needed
+  403  forbidden         Resource belongs to a different wallet
+  404  not_found         Collection not found
+  502  qdrant_error      Upstream Qdrant error
+
+---
+
+### POST /v1/collections/:id/upsert
+
+Embed and store documents. Each document: {id?, text, metadata?}. Existing IDs are replaced.
+
+Price: $0.001
+
+Path params:
+  id  string  required  id parameter
+
+Request:
+  documents  UpsertDocument[]  required  Documents to upsert. Existing IDs are overwritten.
+
+Response (200):
+  upserted  number    Number of documents upserted.
+  ids       string[]  IDs of upserted documents (auto-generated UUIDs if not provided).
+
+Errors:
+  400  invalid_request   Missing documents or invalid fields
+  402  payment_required  x402 payment needed
+  403  forbidden         Resource belongs to a different wallet
+  404  not_found         Collection not found
+  502  qdrant_error      Upstream Qdrant error
+  502  embedding_error   Embedding model error
+
+---
+
+### POST /v1/collections/:id/query
+
+Semantic search. Fields: text (required), top_k, filter (Qdrant native format).
+
+Price: $0.001
+
+Path params:
+  id  string  required  id parameter
+
+Request:
+  text    string   required  Query text to embed and search against.
+  top_k   number   optional  Number of nearest neighbors to return. Default 10.
+  filter  unknown  optional  Qdrant-native filter passthrough.
+
+Response (200):
+  matches  QueryMatch[]  Nearest neighbor matches, ordered by descending score.
+
+Errors:
+  400  invalid_request   Missing text or invalid filter
+  402  payment_required  x402 payment needed
+  403  forbidden         Resource belongs to a different wallet
+  404  not_found         Collection not found
+  502  qdrant_error      Upstream Qdrant error
+  502  embedding_error   Embedding model error
+
+---
+
+### PUT /v1/cache/:namespace/:key
+
+Store a value in the KV cache. Optional ttl in seconds for expiry.
+
+Price: $0.0001
+
+Path params:
+  namespace  string  required  namespace parameter
+  key        string  required  key parameter
+
+Request:
+  value  unknown        required  Value to store. Any JSON-serializable value.
+  ttl    number | null  optional  TTL in seconds. Omit or null for permanent.
+
+Response (200): {} (empty object)
+
+Errors:
+  400  invalid_request   Missing value
+  402  payment_required  x402 payment needed
+
+---
+
+### GET /v1/cache/:namespace/:key
+
+Retrieve a cache value. Returns 404 if missing or expired.
+
+Price: $0.0001
+
+Path params:
+  namespace  string  required  namespace parameter
+  key        string  required  key parameter
+
+Response (200):
+  namespace   string         Cache namespace (collection name).
+  key         string         Cache key.
+  value       unknown        Stored value.
+  expires_at  string | null  ISO string expiry time, or null if permanent.
+
+Errors:
+  402  payment_required  x402 payment needed
+  404  not_found         Cache entry missing or expired
+
+---
+
+### DELETE /v1/cache/:namespace/:key
+
+Delete a cache entry
+
+Price: $0.0001
+
+Path params:
+  namespace  string  required  namespace parameter
+  key        string  required  key parameter
+
+Response (200): {} (empty object)
+
+Errors:
+  402  payment_required  x402 payment needed
+  404  not_found         Cache entry not found
+
+---
+
+## Ownership
+
+All collections and cache entries are scoped to the wallet address extracted from the x402 payment.

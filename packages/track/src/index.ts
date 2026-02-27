@@ -1,5 +1,11 @@
 import { Hono } from "hono";
 import { bodyLimit } from "hono/body-limit";
+import { readFileSync } from "node:fs";
+import { resolve } from "node:path";
+
+const LLMS_TXT = readFileSync(
+  resolve(import.meta.dir, "../../../site/track/llms.txt"), "utf-8"
+);
 import {
   createAgentStackMiddleware,
   createWalletAllowlistChecker,
@@ -55,7 +61,7 @@ app.use(
     {
       payTo: PAY_TO_ADDRESS,
       network: NETWORK,
-      freeRoutes: ["GET /"],
+      freeRoutes: ["GET /", "GET /llms.txt"],
       checkAllowlist,
     },
     { ...TRACK_ROUTES },
@@ -65,6 +71,12 @@ app.use(
 // GET / — health check (free)
 app.get("/", (c) => {
   return c.json({ service: "track.sh", status: "ok" });
+});
+
+// GET /llms.txt — machine-readable API reference (free)
+app.get("/llms.txt", (c) => {
+  c.header("Content-Type", "text/plain; charset=utf-8");
+  return c.body(LLMS_TXT);
 });
 
 // POST /v1/track — look up a tracking number

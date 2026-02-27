@@ -1,7 +1,6 @@
 # search.prim.sh
 
-Web search for agents. Search the web, get news, and extract content from URLs.
-All POST routes require x402 payment (USDC on Base Sepolia).
+Search for agents. No ads, no SEO spam. Just facts and clean markdown.
 
 Base URL: https://search.prim.sh
 Auth: x402 (USDC on Base Sepolia). GET /, GET /pricing, GET /v1/metrics are free.
@@ -9,6 +8,26 @@ Chain: Base Sepolia (eip155:84532) during beta.
 
 Install:
   curl -fsSL https://search.prim.sh/install.sh | sh
+
+Limits:
+  Max results per search: 20
+  Rate limit applies per wallet — check Retry-After header on 429
+
+---
+
+## Quick Start
+
+  1. POST /v1/search with {"query": "...", "max_results": 5} → web search results
+  2. POST /v1/search/news with {"query": "..."} → recent news articles
+  3. POST /v1/extract with {"urls": ["https://..."]} → clean markdown content
+
+## Tips
+
+  - Set include_answer: true to get an AI-generated summary alongside search results.
+  - Use exclude_domains to remove noise sources (e.g. reddit.com, quora.com).
+  - POST /v1/extract accepts a single URL string or an array of URLs.
+  - Failed extractions (paywalls, 404s) are reported in the failed array — the request still succeeds.
+  - Check Retry-After header on 429 responses before retrying.
 
 ---
 
@@ -22,9 +41,9 @@ Error envelope:
   {"error": {"code": "<code>", "message": "<msg>"}}
 
 Error codes:
-  invalid_request  Missing or invalid fields
-  rate_limited     Too many requests (check Retry-After header)
-  provider_error   Upstream search provider unavailable
+  invalid_request
+  rate_limited
+  provider_error
 
 ---
 
@@ -77,53 +96,58 @@ Response (200):
 
 ### POST /v1/search
 
-Search the web and return ranked results. Optionally include an AI-generated
-answer summarizing the top results.
+Search the web and return ranked results with optional AI-generated answer
 
 Price: $0.01
 
 Request:
-  query           string   required  Search query string
-  max_results     integer  optional  1-20, default 10
-  search_depth    string   optional  "basic" | "advanced", default "basic"
-  country         string   optional  Two-letter ISO 3166-1 country code to bias results (e.g. "US")
-  time_range      string   optional  "day" | "week" | "month" | "year"
-  include_answer  boolean  optional  Include AI-generated answer. Default false.
-  include_domains  array   optional  Restrict results to these domains only (e.g. ["docs.base.org"])
-  exclude_domains  array   optional  Exclude results from these domains (e.g. ["reddit.com"])
+  query            string                             required  Search query string.
+  max_results      number                             optional  Maximum number of results to return. 1-20, default 10.
+  search_depth     "basic" | "advanced"               optional  Search depth. "basic" | "advanced", default "basic".
+  country          string                             optional  Two-letter ISO 3166-1 country code to bias results (e.g. "US").
+  time_range       "day" | "week" | "month" | "year"  optional  Restrict results by recency. "day" | "week" | "month" | "year".
+  include_answer   boolean                            optional  Include AI-generated answer summarizing top results. Default false.
+  include_domains  string[]                           optional  Restrict results to these domains only (e.g. ["docs.base.org"]).
+  exclude_domains  string[]                           optional  Exclude results from these domains (e.g. ["reddit.com"]).
 
 Response (200):
-  query          string  Search query echoed back
-  answer         string?  AI-generated answer. Only present if include_answer was true.
-  results        array   Search results
-    .title     string   Page title
-    .url       string   Page URL
-    .content   string   Snippet text extracted from the page
-    .score     number   Relevance score (0-1)
-    .published  string?  Publication date (ISO 8601), if available
-  response_time  number  Time taken in milliseconds
+  query          string          Search query echoed back.
+  answer         string          AI-generated answer summarizing top results. Only present if include_answer was true.
+  results        SearchResult[]  Ranked search results.
+  response_time  number          Time taken to complete the search in milliseconds.
 
 Errors:
-  400  invalid_request  Missing or invalid query
+  400  invalid_request   Missing or invalid query
   402  payment_required  x402 payment needed
-  429  rate_limited      Too many requests. Check Retry-After response header.
+  429  rate_limited      Too many requests. Check Retry-After header.
   502  provider_error    Upstream search provider unavailable
 
 ---
 
 ### POST /v1/search/news
 
-Search for recent news articles. Results biased toward news sources and ordered
-by recency. Use time_range to restrict to recent coverage.
+Search for recent news articles, ordered by recency
 
 Price: $0.01
 
-Request: Same fields as POST /v1/search (see above)
+Request:
+  query            string                             required  Search query string.
+  max_results      number                             optional  Maximum number of results to return. 1-20, default 10.
+  search_depth     "basic" | "advanced"               optional  Search depth. "basic" | "advanced", default "basic".
+  country          string                             optional  Two-letter ISO 3166-1 country code to bias results (e.g. "US").
+  time_range       "day" | "week" | "month" | "year"  optional  Restrict results by recency. "day" | "week" | "month" | "year".
+  include_answer   boolean                            optional  Include AI-generated answer summarizing top results. Default false.
+  include_domains  string[]                           optional  Restrict results to these domains only (e.g. ["docs.base.org"]).
+  exclude_domains  string[]                           optional  Exclude results from these domains (e.g. ["reddit.com"]).
 
-Response (200): Same structure as POST /v1/search (see above)
+Response (200):
+  query          string          Search query echoed back.
+  answer         string          AI-generated answer summarizing top results. Only present if include_answer was true.
+  results        SearchResult[]  Ranked search results.
+  response_time  number          Time taken to complete the search in milliseconds.
 
 Errors:
-  400  invalid_request  Missing or invalid query
+  400  invalid_request   Missing or invalid query
   402  payment_required  x402 payment needed
   429  rate_limited      Too many requests
   502  provider_error    Upstream search provider unavailable
@@ -132,28 +156,29 @@ Errors:
 
 ### POST /v1/extract
 
-Extract readable content from one or more URLs. Returns cleaned text or markdown.
-Failed extractions (404, paywalled pages) are reported in the failed array —
-the request itself succeeds as long as at least one URL was attempted.
+Extract readable content from one or more URLs as markdown or plain text
+
+Failed extractions are in the failed array. Request succeeds if at least one URL was attempted.
 
 Price: $0.005
 
 Request:
-  urls    string|array  required  URL (string) or array of URLs to extract content from
-  format  string        optional  "markdown" | "text", default "markdown"
+  urls    string | string[]    required  URL string or array of URLs to extract content from.
+  format  "markdown" | "text"  optional  Output format. "markdown" | "text", default "markdown".
 
 Response (200):
-  results        array  Successfully extracted pages
-    .url      string   The URL extracted
-    .content  string   Extracted content in requested format
-    .images   array    Image URLs found on the page (may be empty)
-  failed         array  Pages that could not be extracted
-    .url    string  The URL that failed
-    .error  string  Human-readable reason (e.g. "HTTP 404: page not found")
-  response_time  number  Time taken in milliseconds
+  results        ExtractResult[]     Successfully extracted pages.
+  failed         FailedExtraction[]  Pages that could not be extracted.
+  response_time  number              Time taken to complete the extraction in milliseconds.
 
 Errors:
-  400  invalid_request  Missing urls field or invalid URL format
+  400  invalid_request   Missing urls field or invalid URL format
   402  payment_required  x402 payment needed
   429  rate_limited      Too many requests
   502  provider_error    Upstream extraction provider unavailable
+
+---
+
+## Ownership
+
+Stateless. No resources stored per wallet. Each request is independent.

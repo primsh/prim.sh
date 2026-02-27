@@ -1,5 +1,11 @@
 import { Hono } from "hono";
 import { bodyLimit } from "hono/body-limit";
+import { readFileSync } from "node:fs";
+import { resolve } from "node:path";
+
+const LLMS_TXT = readFileSync(
+  resolve(import.meta.dir, "../../../site/search/llms.txt"), "utf-8"
+);
 import { createAgentStackMiddleware, createWalletAllowlistChecker, createLogger, getNetworkConfig, metricsMiddleware, metricsHandler, requestIdMiddleware, invalidRequest } from "@primsh/x402-middleware";
 import type { ApiError } from "@primsh/x402-middleware";
 import type { SearchRequest, ExtractRequest } from "./api.ts";
@@ -48,7 +54,7 @@ app.use(
     {
       payTo: PAY_TO_ADDRESS,
       network: NETWORK,
-      freeRoutes: ["GET /", "GET /pricing", "GET /v1/metrics"],
+      freeRoutes: ["GET /", "GET /pricing", "GET /llms.txt", "GET /v1/metrics"],
       checkAllowlist,
     },
     { ...SEARCH_ROUTES },
@@ -58,6 +64,12 @@ app.use(
 // GET / — health check (free)
 app.get("/", (c) => {
   return c.json({ service: "search.sh", status: "ok" });
+});
+
+// GET /llms.txt — machine-readable API reference (free)
+app.get("/llms.txt", (c) => {
+  c.header("Content-Type", "text/plain; charset=utf-8");
+  return c.body(LLMS_TXT);
 });
 
 // GET /v1/metrics — operational metrics (free)

@@ -1,108 +1,333 @@
 # token.prim.sh
 
-> Token deployment for agents. Deploy ERC-20 contracts on Base, mint supply, create Uniswap V3 pools.
+Deploy ERC-20 tokens and Uniswap V3 pools. No wallet setup required.
 
 Base URL: https://token.prim.sh
-Auth: x402 (USDC on Base Sepolia)
-Status: Built, not yet deployed to prim.sh network.
+Auth: x402 (USDC on Base Sepolia). GET /, GET /pricing, GET /v1/metrics are free.
+Chain: Base Sepolia (eip155:84532) during beta.
+
+Install:
+  curl -fsSL https://token.prim.sh/install.sh | sh
+
+Limits:
+  One Uniswap V3 pool per token (pool_exists error on second attempt)
+  Mint requires mintable=true at deploy time — immutable after deployment
+
+---
+
+## Quick Start
+
+  1. POST /v1/tokens with name, symbol, initialSupply → deploy ERC-20 ($1.00)
+  2. Poll GET /v1/tokens/:id until deployStatus is 'confirmed' → get contractAddress
+  3. POST /v1/tokens/:id/mint → mint additional supply (mintable=true required)
+  4. POST /v1/tokens/:id/pool with pricePerToken → create Uniswap V3 pool ($0.50)
+
+## Tips
+
+  - Deploy is asynchronous — poll GET /v1/tokens/:id until deployStatus is 'confirmed' before minting or creating a pool.
+  - All supply values are strings representing raw integers (e.g. '1000000000000000000' for 1 token with 18 decimals).
+  - USDC has 6 decimals — $1 USDC = '1000000' in raw units.
+  - One pool per token. POST /v1/tokens/:id/pool returns 409 pool_exists if already created.
+  - liquidity-params response includes approvals[] — submit each on-chain before calling addLiquidity.
 
 ---
 
 ## x402 Payment
 
-All endpoints require x402 payment. The MCP server and CLI handle this automatically. For raw HTTP, follow the standard x402 flow (see https://prim.sh/llms.txt for full protocol details).
+  1. Make request. Server returns 402 with Payment-Required header.
+  2. Sign EIP-3009 transferWithAuthorization.
+  3. Retry with Payment-Signature header (base64-encoded signed authorization).
+
+Error envelope:
+  {"error": {"code": "<code>", "message": "<msg>"}}
+
+Error codes:
+  not_found
+  forbidden
+  invalid_request
+  not_mintable
+  exceeds_max_supply
+  pool_exists
+  rpc_error
 
 ---
 
 ## Endpoints
 
-### Token management
+### GET /
 
-- `POST /v1/tokens` — Deploy a new ERC-20. Fields: name, symbol, initialSupply (required); decimals (default 18), mintable (default false), maxSupply. Returns token with deployStatus: "pending". **$1.00**
-- `GET /v1/tokens` — List tokens deployed by the authenticated wallet. **$0.001**
-- `GET /v1/tokens/:id` — Get token details: deployStatus, contractAddress, supply, pool. **$0.001**
-- `POST /v1/tokens/:id/mint` — Mint additional tokens. Requires mintable=true. Fields: to (address), amount (raw units). **$0.10**
-- `GET /v1/tokens/:id/supply` — Live on-chain total supply from contract. **$0.001**
+Health check.
 
-### Uniswap V3 pool
+Free.
 
-- `POST /v1/tokens/:id/pool` — Create and initialize a Uniswap V3 pool paired with USDC. Fields: pricePerToken, feeTier (500|3000|10000, default 3000). One pool per token. **$0.50**
-- `GET /v1/tokens/:id/pool` — Get pool details: poolAddress, token0, token1, fee, sqrtPriceX96, tick. **$0.001**
-- `GET /v1/tokens/:id/pool/liquidity-params` — Get calldata for adding liquidity. Params: tokenAmount, usdcAmount. Returns approvals[] and position manager params. **$0.001**
+Response (200):
+  service  string  "token.sh"
+  status   string  "ok"
 
 ---
 
-## Common patterns
+### GET /pricing
 
-### Deploy a token
+Machine-readable pricing for all endpoints.
 
-```bash
-prim token deploy \
-  --name "AgentCoin" \
-  --symbol "AGT" \
-  --supply "1000000000000000000000000" \
-  --mintable
-# → {"id": "tok_...", "deployStatus": "pending", "contractAddress": null}
+Free.
 
-# Poll until confirmed
-prim token get TOKEN_ID
-# → {"deployStatus": "confirmed", "contractAddress": "0x..."}
-```
-
-### Mint additional supply
-
-```bash
-prim token mint TOKEN_ID \
-  --amount "500000000000000000000" \
-  --to 0xRecipientAddress
-# → {"txHash": "0x...", "status": "pending"}
-```
-
-### Create a Uniswap V3 pool
-
-```bash
-# IMPORTANT: poll token_get until deployStatus is "confirmed" first
-
-prim token pool create TOKEN_ID --price 0.001
-# → {"poolAddress": "0x...", "txHash": "0x...", "fee": 3000}
-
-# Get liquidity params for adding liquidity
-prim token pool params TOKEN_ID \
-  --token-amount 1000000000000000000000 \
-  --usdc-amount 1000000
-# → {"approvals": [...], "positionManagerAddress": "0x...", "tickLower": ..., ...}
-```
+Response (200):
+  service   string  "token.prim.sh"
+  currency  string  "USDC"
+  network   string  "eip155:8453"
+  routes    array   Route pricing list
+    .method       string  HTTP method
+    .path         string  URL path
+    .price_usdc   string  Price in USDC (decimal string)
+    .description  string  Human-readable description
 
 ---
 
-## Important notes
+### GET /v1/metrics
 
-- **Deploy is asynchronous.** Poll `GET /v1/tokens/:id` until `deployStatus: "confirmed"` before minting or creating a pool. This typically takes 2-10 seconds on Base.
-- **All supply values are strings.** Pass raw integer values as strings (e.g. `"1000000000000000000"` for 1 token with 18 decimals). Never pass numbers — precision loss.
-- **USDC has 6 decimals.** $1 USDC = `"1000000"` in raw units.
-- **One pool per token.** `POST /v1/tokens/:id/pool` returns 409 `pool_exists` if already created.
-- **Approvals required.** The `liquidity-params` response includes `approvals[]` — submit each on-chain before calling addLiquidity.
+Operational metrics. Uptime, request counts, latency percentiles, error rates.
 
----
+Free.
 
-## Error codes
-
-- `invalid_request` — Missing required field or invalid value.
-- `not_mintable` (400) — Token deployed with mintable=false. Cannot mint.
-- `exceeds_max_supply` (422) — Mint would exceed maxSupply.
-- `pool_exists` (409) — Pool already exists for this token. Use GET to retrieve it.
-- `not_found` (404) — Token ID does not exist.
-- `forbidden` (403) — Token belongs to a different wallet.
-- `rpc_error` (502) — Base RPC error. Retry after a short wait.
+Response (200):
+  service     string  "token.prim.sh"
+  uptime_s    number  Seconds since last restart
+  requests    object  Request counts and latencies by endpoint
+  payments    object  Payment counts by endpoint
+  errors      object  Error counts by status code
 
 ---
 
-## MCP tools
+### POST /v1/tokens
 
-Install with: `prim install token`
+Deploy a new ERC-20 token. Returns immediately with deployStatus: 'pending'.
 
-Tools: token_deploy, token_list, token_get, token_mint, token_supply,
-token_pool_create, token_pool_get, token_pool_liquidity_params
+Poll GET /v1/tokens/:id until deployStatus is 'confirmed' before minting or pooling.
 
-Skill: https://prim.sh/token/llms.txt
-OpenAPI: https://prim.sh/specs/openapi/token.yaml
+Price: $1.00
+
+Request:
+  name           string         required  Token name (e.g. "AgentCoin").
+  symbol         string         required  Token symbol (e.g. "AGT").
+  decimals       number         optional  Decimal places. Default 18.
+  initialSupply  string         required  Initial supply as a raw integer string (e.g. "1000000000000000000" = 1 token at 18 decimals).
+  mintable       boolean        optional  Whether additional tokens can be minted after deployment. Default false.
+  maxSupply      string | null  optional  Maximum mintable supply as a raw integer string. Null = unlimited. Only applies if mintable is true.
+
+Response (201):
+  id               string                              Token ID (e.g. "tok_abc123").
+  contractAddress  string | null                       Deployed contract address. Null while deployStatus is "pending".
+  ownerWallet      string                              Ethereum address of the wallet that deployed the token.
+  name             string                              Token name.
+  symbol           string                              Token symbol.
+  decimals         number                              Decimal places.
+  initialSupply    string                              Initial supply as a raw integer string.
+  totalMinted      string                              Total minted supply as a raw integer string.
+  mintable         boolean                             Whether additional tokens can be minted.
+  maxSupply        string | null                       Maximum mintable supply as a raw integer string. Null = unlimited.
+  txHash           string                              Deployment transaction hash.
+  deployStatus     "pending" | "confirmed" | "failed"  Deployment status. Poll until "confirmed" before minting or creating a pool.
+  createdAt        string                              ISO 8601 timestamp when the token was created.
+
+Errors:
+  400  invalid_request   Missing required fields or invalid values
+  402  payment_required  x402 payment needed
+  502  rpc_error         Base RPC error
+
+---
+
+### GET /v1/tokens
+
+List tokens deployed by the authenticated wallet
+
+Price: $0.001
+
+Response (200): TokenListResponse
+
+Errors:
+  402  payment_required  x402 payment needed
+  403  forbidden         Missing wallet in payment
+
+---
+
+### GET /v1/tokens/:id
+
+Get token details: deployStatus, contractAddress, supply, pool
+
+Price: $0.001
+
+Path params:
+  id  string  required  id parameter
+
+Response (200):
+  id               string                              Token ID (e.g. "tok_abc123").
+  contractAddress  string | null                       Deployed contract address. Null while deployStatus is "pending".
+  ownerWallet      string                              Ethereum address of the wallet that deployed the token.
+  name             string                              Token name.
+  symbol           string                              Token symbol.
+  decimals         number                              Decimal places.
+  initialSupply    string                              Initial supply as a raw integer string.
+  totalMinted      string                              Total minted supply as a raw integer string.
+  mintable         boolean                             Whether additional tokens can be minted.
+  maxSupply        string | null                       Maximum mintable supply as a raw integer string. Null = unlimited.
+  txHash           string                              Deployment transaction hash.
+  deployStatus     "pending" | "confirmed" | "failed"  Deployment status. Poll until "confirmed" before minting or creating a pool.
+  createdAt        string                              ISO 8601 timestamp when the token was created.
+
+Errors:
+  402  payment_required  x402 payment needed
+  403  forbidden         Token belongs to a different wallet
+  404  not_found         Token ID does not exist
+
+---
+
+### POST /v1/tokens/:id/mint
+
+Mint additional tokens to an address. Requires mintable=true at deploy time.
+
+Price: $0.10
+
+Path params:
+  id  string  required  id parameter
+
+Request:
+  to      string  required  Recipient address to mint tokens to.
+  amount  string  required  Amount to mint as a raw integer string.
+
+Response (200):
+  txHash  string     Mint transaction hash.
+  to      string     Recipient address.
+  amount  string     Amount minted as a raw integer string.
+  status  "pending"  Always "pending" — mint is submitted on-chain asynchronously.
+
+Errors:
+  400  not_mintable        Token deployed with mintable=false
+  402  payment_required    x402 payment needed
+  403  forbidden           Token belongs to a different wallet
+  404  not_found           Token ID does not exist
+  422  exceeds_max_supply  Mint would exceed maxSupply
+  502  rpc_error           Base RPC error
+
+---
+
+### GET /v1/tokens/:id/supply
+
+Live on-chain total supply from contract
+
+Price: $0.001
+
+Path params:
+  id  string  required  id parameter
+
+Response (200):
+  tokenId          string  Token ID.
+  contractAddress  string  Deployed contract address.
+  totalSupply      string  Live on-chain total supply as a raw integer string.
+
+Errors:
+  402  payment_required  x402 payment needed
+  403  forbidden         Token belongs to a different wallet
+  404  not_found         Token ID does not exist
+  502  rpc_error         Base RPC error
+
+---
+
+### POST /v1/tokens/:id/pool
+
+Create and initialize a Uniswap V3 pool paired with USDC. One pool per token.
+
+Price: $0.50
+
+Path params:
+  id  string  required  id parameter
+
+Request:
+  pricePerToken  string  required  Initial price per token in USDC as a decimal string (e.g. "0.001").
+  feeTier        number  optional  Uniswap V3 fee tier. 500 | 3000 | 10000, default 3000.
+
+Response (201):
+  poolAddress   string  Uniswap V3 pool contract address.
+  token0        string  First token address in the pool pair.
+  token1        string  Second token address in the pool pair.
+  fee           number  Fee tier (e.g. 3000 = 0.3%).
+  sqrtPriceX96  string  Initial sqrtPriceX96 as a string.
+  tick          number  Initial tick.
+  txHash        string  Pool creation transaction hash.
+
+Errors:
+  400  invalid_request   Missing pricePerToken or invalid feeTier
+  402  payment_required  x402 payment needed
+  403  forbidden         Token belongs to a different wallet
+  404  not_found         Token ID does not exist
+  409  pool_exists       Pool already exists for this token
+  502  rpc_error         Base RPC error
+
+---
+
+### GET /v1/tokens/:id/pool
+
+Get pool details: poolAddress, token0, token1, fee, sqrtPriceX96, tick
+
+Price: $0.001
+
+Path params:
+  id  string  required  id parameter
+
+Response (200):
+  poolAddress   string  Uniswap V3 pool contract address.
+  token0        string  First token address in the pool pair.
+  token1        string  Second token address in the pool pair.
+  fee           number  Fee tier (e.g. 3000 = 0.3%).
+  sqrtPriceX96  string  Initial sqrtPriceX96 as a string.
+  tick          number  Initial tick.
+  txHash        string  Pool creation transaction hash.
+
+Errors:
+  402  payment_required  x402 payment needed
+  403  forbidden         Token belongs to a different wallet
+  404  not_found         Token or pool not found
+  502  rpc_error         Base RPC error
+
+---
+
+### GET /v1/tokens/:id/pool/liquidity-params
+
+Get calldata for adding liquidity. Returns approvals[] and position manager params.
+
+Price: $0.001
+
+Path params:
+  id  string  required  id parameter
+
+Query params:
+  tokenAmount  string  optional  Raw token amount to add as liquidity
+  usdcAmount   string  optional  Raw USDC amount to pair (6 decimals)
+
+Response (200):
+  positionManagerAddress  string               Uniswap V3 NonfungiblePositionManager contract address.
+  token0                  string               First token address.
+  token1                  string               Second token address.
+  fee                     number               Fee tier.
+  tickLower               number               Lower tick bound for the liquidity range.
+  tickUpper               number               Upper tick bound for the liquidity range.
+  amount0Desired          string               Desired amount of token0 to add as a raw integer string.
+  amount1Desired          string               Desired amount of token1 to add as a raw integer string.
+  amount0Min              string               Minimum amount of token0 (slippage protection) as a raw integer string.
+  amount1Min              string               Minimum amount of token1 (slippage protection) as a raw integer string.
+  recipient               string               Address to receive the liquidity position NFT.
+  deadline                number               Transaction deadline as a Unix timestamp.
+  approvals               LiquidityApproval[]  ERC-20 approvals to submit on-chain before calling addLiquidity.
+
+Errors:
+  400  invalid_request   Missing tokenAmount or usdcAmount
+  402  payment_required  x402 payment needed
+  403  forbidden         Token belongs to a different wallet
+  404  not_found         Token or pool not found
+  502  rpc_error         Base RPC error
+
+---
+
+## Ownership
+
+Tokens are scoped to the wallet address extracted from the x402 payment. Only the deploying wallet can mint or create pools.

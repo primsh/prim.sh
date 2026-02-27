@@ -1,30 +1,47 @@
 # faucet.prim.sh
 
-Testnet faucet for Base Sepolia. Dispenses free USDC and ETH to wallet
-addresses for testing prim primitives. No auth or payment required.
-Rate-limited by wallet address.
+Free testnet USDC and ETH on demand. Fund your agent wallet and start building.
 
 Base URL: https://faucet.prim.sh
 Auth: None (free, rate-limited by address). Wallet must be on allowlist during beta.
-Network: Base Sepolia (eip155:84532) only. Returns 403 on mainnet.
+Chain: Base Sepolia (eip155:84532) during beta.
 
 Install:
   curl -fsSL https://faucet.prim.sh/install.sh | sh
 
-Drip amounts:
-  USDC: 10 USDC per drip. Cooldown: 2 hours.
-  ETH:  0.01 ETH per drip. Cooldown: 1 hour.
+Limits:
+  USDC: 10 USDC per drip, 2-hour cooldown per address
+  ETH: 0.01 ETH per drip, 1-hour cooldown per address
+  Network: Base Sepolia (eip155:84532) only
 
-USDC source: Circle Faucet API, with treasury wallet ERC-20 transfer fallback.
-ETH source:  Treasury wallet.
+---
+
+## Quick Start
+
+  1. POST /v1/faucet/usdc with {"address": "0x..."} → receive 10 test USDC (free)
+  2. POST /v1/faucet/eth with {"address": "0x..."} → receive 0.01 test ETH (free)
+  3. GET /v1/faucet/status?address=0x... → check cooldown before dripping
+
+## Tips
+
+  - No x402 payment required — faucet is entirely free.
+  - Check GET /v1/faucet/status before dripping to avoid wasted 429 responses.
+  - ETH cooldown is 1 hour; USDC cooldown is 2 hours per address.
+  - USDC uses Circle Faucet API with treasury wallet ERC-20 transfer as fallback.
+  - faucet.sh only operates on Base Sepolia — mainnet addresses return 403.
 
 ---
 
 ## Error envelope
 
-  {"error": {"code": "<code>", "message": "<msg>", "retryAfter": <seconds>}}
+  {"error": {"code": "<code>", "message": "<msg>"}}
 
-retryAfter is present only on 429 responses.
+Error codes:
+  invalid_request
+  wallet_not_allowed
+  mainnet_rejected
+  rate_limited
+  faucet_error
 
 ---
 
@@ -32,15 +49,13 @@ retryAfter is present only on 429 responses.
 
 ### GET /
 
-Health check. Returns network info. Always responds (no testnet guard).
+Health check.
 
 Free.
 
 Response (200):
-  service  string   "faucet.sh"
-  status   string   "ok"
-  network  string   CAIP-2 chain identifier (e.g. "eip155:84532")
-  testnet  boolean  Whether configured for testnet
+  service  string  "faucet.sh"
+  status   string  "ok"
 
 ---
 
@@ -54,10 +69,10 @@ Response (200):
   service   string  "faucet.prim.sh"
   currency  string  "USDC"
   network   string  "eip155:8453"
-  routes    array   Route pricing list (all $0.00 — faucet is free)
+  routes    array   Route pricing list
     .method       string  HTTP method
     .path         string  URL path
-    .price_usdc   string  Price in USDC (always "0")
+    .price_usdc   string  Price in USDC (decimal string)
     .description  string  Human-readable description
 
 ---
@@ -79,50 +94,50 @@ Response (200):
 
 ### POST /v1/faucet/usdc
 
-Dispense 10 test USDC on Base Sepolia.
+Dispense 10 test USDC on Base Sepolia. Rate limit: once per 2 hours per address.
 
-Free. Rate limit: once per 2 hours per address.
+Free. No x402 payment required.
 
 Request:
-  address  string  required  EVM wallet address (0x... 42 chars)
+  address  string  required  EVM wallet address to drip to (0x... 42 chars).
 
 Response (200):
-  txHash    string  Transaction hash on Base Sepolia. May be "pending" if Circle
-                    returns 204 with no tx hash.
-  amount    string  Amount dispensed (e.g. "10.00")
-  currency  string  "USDC"
-  chain     string  CAIP-2 chain identifier (e.g. "eip155:84532")
-  source    string  "circle" | "treasury" — which backend dispensed the USDC
+  txHash    string  Transaction hash on Base Sepolia. May be "pending" if Circle returns 204.
+  amount    string  Amount dispensed as a decimal string (e.g. "10.00" for USDC, "0.01" for ETH).
+  currency  string  Currency dispensed: "USDC" or "ETH".
+  chain     string  CAIP-2 chain identifier (e.g. "eip155:84532").
+  source    string  Backend that dispensed the tokens. "circle" | "treasury". Only present on USDC drips.
 
 Errors:
   400  invalid_request     Missing or invalid address
   403  wallet_not_allowed  Wallet not on allowlist (private beta)
   403  mainnet_rejected    Faucet only operates on testnet
-  429  rate_limited        Address already dripped within 2 hours. retryAfter: seconds to wait.
+  429  rate_limited        Address already dripped within 2 hours. retryAfter in response.
   502  faucet_error        Both Circle and treasury fallback failed
 
 ---
 
 ### POST /v1/faucet/eth
 
-Dispense 0.01 test ETH on Base Sepolia.
+Dispense 0.01 test ETH on Base Sepolia. Rate limit: once per 1 hour per address.
 
-Free. Rate limit: once per 1 hour per address.
+Free. No x402 payment required.
 
 Request:
-  address  string  required  EVM wallet address (0x... 42 chars)
+  address  string  required  EVM wallet address to drip to (0x... 42 chars).
 
 Response (200):
-  txHash    string  Transaction hash on Base Sepolia
-  amount    string  Amount dispensed (e.g. "0.01")
-  currency  string  "ETH"
-  chain     string  CAIP-2 chain identifier (e.g. "eip155:84532")
+  txHash    string  Transaction hash on Base Sepolia. May be "pending" if Circle returns 204.
+  amount    string  Amount dispensed as a decimal string (e.g. "10.00" for USDC, "0.01" for ETH).
+  currency  string  Currency dispensed: "USDC" or "ETH".
+  chain     string  CAIP-2 chain identifier (e.g. "eip155:84532").
+  source    string  Backend that dispensed the tokens. "circle" | "treasury". Only present on USDC drips.
 
 Errors:
   400  invalid_request     Missing or invalid address
   403  wallet_not_allowed  Wallet not on allowlist (private beta)
   403  mainnet_rejected    Faucet only operates on testnet
-  429  rate_limited        Address already dripped within 1 hour. retryAfter: seconds to wait.
+  429  rate_limited        Address already dripped within 1 hour. retryAfter in response.
   502  faucet_error        Treasury wallet failed to send ETH
 
 ---
@@ -130,21 +145,22 @@ Errors:
 ### GET /v1/faucet/status
 
 Check rate limit status for a wallet address across both faucets.
-Call this before dripping to avoid 429s.
 
-Free.
+Free. Call this before dripping to avoid 429s.
 
 Query params:
-  address  string  required  EVM wallet address
+  address  string  optional  EVM wallet address (required)
 
 Response (200):
-  address  string  The queried address
-  usdc     object  USDC faucet availability
-    .available     boolean  Whether USDC faucet can be called right now
-    .retryAfterMs  integer  Milliseconds until rate limit resets. 0 if available.
-  eth      object  ETH faucet availability
-    .available     boolean  Whether ETH faucet can be called right now
-    .retryAfterMs  integer  Milliseconds until rate limit resets. 0 if available.
+  address  string              The queried wallet address (checksummed).
+  usdc     FaucetAvailability  USDC faucet availability (2-hour cooldown).
+  eth      FaucetAvailability  ETH faucet availability (1-hour cooldown).
 
 Errors:
   400  invalid_request  Missing or invalid address query param
+
+---
+
+## Ownership
+
+Rate-limited by wallet address. No wallet registration required — anyone can drip to any address.

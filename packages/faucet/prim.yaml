@@ -45,6 +45,61 @@ hero_example: |
       -H "Content-Type: application/json" \
       -d '{"address": "0xYourWalletAddress"}'
 
+quick_start:
+  - "POST /v1/faucet/usdc with {\"address\": \"0x...\"} → receive 10 test USDC (free)"
+  - "POST /v1/faucet/eth with {\"address\": \"0x...\"} → receive 0.01 test ETH (free)"
+  - "GET /v1/faucet/status?address=0x... → check cooldown before dripping"
+
+tips:
+  - "No x402 payment required — faucet is entirely free."
+  - "Check GET /v1/faucet/status before dripping to avoid wasted 429 responses."
+  - "ETH cooldown is 1 hour; USDC cooldown is 2 hours per address."
+  - "USDC uses Circle Faucet API with treasury wallet ERC-20 transfer as fallback."
+  - "faucet.sh only operates on Base Sepolia — mainnet addresses return 403."
+
+limits:
+  - "USDC: 10 USDC per drip, 2-hour cooldown per address"
+  - "ETH: 0.01 ETH per drip, 1-hour cooldown per address"
+  - "Network: Base Sepolia (eip155:84532) only"
+
+ownership: "Rate-limited by wallet address. No wallet registration required — anyone can drip to any address."
+
+routes_map:
+  - route: "POST /v1/faucet/usdc"
+    request: DripRequest
+    response: DripResponse
+    status: 200
+    description: "Dispense 10 test USDC on Base Sepolia. Rate limit: once per 2 hours per address."
+    notes: "Free. No x402 payment required."
+    errors:
+      - { status: 400, code: invalid_request, description: "Missing or invalid address" }
+      - { status: 403, code: wallet_not_allowed, description: "Wallet not on allowlist (private beta)" }
+      - { status: 403, code: mainnet_rejected, description: "Faucet only operates on testnet" }
+      - { status: 429, code: rate_limited, description: "Address already dripped within 2 hours. retryAfter in response." }
+      - { status: 502, code: faucet_error, description: "Both Circle and treasury fallback failed" }
+  - route: "POST /v1/faucet/eth"
+    request: DripRequest
+    response: DripResponse
+    status: 200
+    description: "Dispense 0.01 test ETH on Base Sepolia. Rate limit: once per 1 hour per address."
+    notes: "Free. No x402 payment required."
+    errors:
+      - { status: 400, code: invalid_request, description: "Missing or invalid address" }
+      - { status: 403, code: wallet_not_allowed, description: "Wallet not on allowlist (private beta)" }
+      - { status: 403, code: mainnet_rejected, description: "Faucet only operates on testnet" }
+      - { status: 429, code: rate_limited, description: "Address already dripped within 1 hour. retryAfter in response." }
+      - { status: 502, code: faucet_error, description: "Treasury wallet failed to send ETH" }
+  - route: "GET /v1/faucet/status"
+    request: null
+    response: FaucetStatusResponse
+    status: 200
+    description: "Check rate limit status for a wallet address across both faucets."
+    notes: "Free. Call this before dripping to avoid 429s."
+    query_params:
+      - { name: address, type: string, description: "EVM wallet address (required)" }
+    errors:
+      - { status: 400, code: invalid_request, description: "Missing or invalid address query param" }
+
 cta:
   headline: "Testnet funds are a **POST request**."
   sub: "No captcha. No browser. Just an address."

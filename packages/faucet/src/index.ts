@@ -1,5 +1,11 @@
 import { Hono } from "hono";
 import { isAddress, getAddress } from "viem";
+import { readFileSync } from "node:fs";
+import { resolve } from "node:path";
+
+const LLMS_TXT = readFileSync(
+  resolve(import.meta.dir, "../../../site/faucet/llms.txt"), "utf-8"
+);
 import { getNetworkConfig, createWalletAllowlistChecker, createLogger, metricsMiddleware, metricsHandler, requestIdMiddleware } from "@primsh/x402-middleware";
 import { RateLimiter } from "./rate-limit.ts";
 import { dripUsdc, dripEth } from "./service.ts";
@@ -24,7 +30,7 @@ const ethLimiter = new RateLimiter("eth", 60 * 60 * 1000); // 1 hour
 // Testnet guard — refuse to serve on mainnet
 app.use("*", async (c, next) => {
   // Allow health check and pricing on any network
-  if (c.req.method === "GET" && (c.req.path === "/" || c.req.path === "/pricing" || c.req.path === "/v1/metrics")) {
+  if (c.req.method === "GET" && (c.req.path === "/" || c.req.path === "/pricing" || c.req.path === "/llms.txt" || c.req.path === "/v1/metrics")) {
     return next();
   }
 
@@ -36,6 +42,12 @@ app.use("*", async (c, next) => {
     );
   }
   return next();
+});
+
+// GET /llms.txt — machine-readable API reference (free)
+app.get("/llms.txt", (c) => {
+  c.header("Content-Type", "text/plain; charset=utf-8");
+  return c.body(LLMS_TXT);
 });
 
 // GET / — Health check

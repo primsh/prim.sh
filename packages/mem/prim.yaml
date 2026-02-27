@@ -52,6 +52,117 @@ hero_example: |
       -H "X-402-Payment: $TOKEN" \
       --data-urlencode "text=what does the user like?"
 
+quick_start:
+  - "POST /v1/collections with {\"name\": \"my-brain\"} → create vector collection ($0.01)"
+  - "POST /v1/collections/:id/upsert with documents array → embed and store text"
+  - "POST /v1/collections/:id/query with {\"text\": \"...\"} → semantic search"
+  - "PUT /v1/cache/:namespace/:key with {\"value\": ..., \"ttl\": 3600} → store in KV cache"
+
+tips:
+  - "Upsert replaces existing documents with the same ID — safe to call repeatedly."
+  - "GET /v1/collections list response has null document_count — use GET :id for live count."
+  - "KV cache ttl is in seconds. Omit ttl for permanent storage."
+  - "Use filter (Qdrant native format) in query for metadata-filtered vector search."
+  - "Embedding is included — just pass text strings, no need to pre-compute vectors."
+
+limits:
+  - "Max document text size: governed by 1 MB body limit"
+  - "KV cache entries: no hard limit documented"
+  - "Vector dimension: 1536 (Google text-embedding-004)"
+
+ownership: "All collections and cache entries are scoped to the wallet address extracted from the x402 payment."
+
+routes_map:
+  - route: "POST /v1/collections"
+    request: CreateCollectionRequest
+    response: CollectionResponse
+    status: 201
+    description: "Create a vector collection"
+    errors:
+      - { status: 400, code: invalid_request, description: "Missing name or invalid fields" }
+      - { status: 402, code: payment_required, description: "x402 payment needed" }
+      - { status: 409, code: collection_name_taken, description: "Name already exists for this wallet" }
+      - { status: 502, code: qdrant_error, description: "Upstream Qdrant error" }
+  - route: "GET /v1/collections"
+    request: null
+    response: CollectionListResponse
+    status: 200
+    description: "List collections owned by the calling wallet (paginated). document_count is null — use GET :id."
+    query_params:
+      - { name: limit, type: integer, description: "1-100, default 20" }
+      - { name: after, type: string, description: "Cursor from previous response" }
+    errors:
+      - { status: 402, code: payment_required, description: "x402 payment needed" }
+      - { status: 403, code: forbidden, description: "Resource belongs to a different wallet" }
+  - route: "GET /v1/collections/:id"
+    request: null
+    response: CollectionResponse
+    status: 200
+    description: "Get collection with live document_count from Qdrant"
+    errors:
+      - { status: 402, code: payment_required, description: "x402 payment needed" }
+      - { status: 403, code: forbidden, description: "Resource belongs to a different wallet" }
+      - { status: 404, code: not_found, description: "Collection not found" }
+      - { status: 502, code: qdrant_error, description: "Upstream Qdrant error" }
+  - route: "DELETE /v1/collections/:id"
+    request: null
+    response: null
+    status: 200
+    description: "Delete collection and all documents. Irreversible."
+    errors:
+      - { status: 402, code: payment_required, description: "x402 payment needed" }
+      - { status: 403, code: forbidden, description: "Resource belongs to a different wallet" }
+      - { status: 404, code: not_found, description: "Collection not found" }
+      - { status: 502, code: qdrant_error, description: "Upstream Qdrant error" }
+  - route: "POST /v1/collections/:id/upsert"
+    request: UpsertRequest
+    response: UpsertResponse
+    status: 200
+    description: "Embed and store documents. Each document: {id?, text, metadata?}. Existing IDs are replaced."
+    errors:
+      - { status: 400, code: invalid_request, description: "Missing documents or invalid fields" }
+      - { status: 402, code: payment_required, description: "x402 payment needed" }
+      - { status: 403, code: forbidden, description: "Resource belongs to a different wallet" }
+      - { status: 404, code: not_found, description: "Collection not found" }
+      - { status: 502, code: qdrant_error, description: "Upstream Qdrant error" }
+      - { status: 502, code: embedding_error, description: "Embedding model error" }
+  - route: "POST /v1/collections/:id/query"
+    request: QueryRequest
+    response: QueryResponse
+    status: 200
+    description: "Semantic search. Fields: text (required), top_k, filter (Qdrant native format)."
+    errors:
+      - { status: 400, code: invalid_request, description: "Missing text or invalid filter" }
+      - { status: 402, code: payment_required, description: "x402 payment needed" }
+      - { status: 403, code: forbidden, description: "Resource belongs to a different wallet" }
+      - { status: 404, code: not_found, description: "Collection not found" }
+      - { status: 502, code: qdrant_error, description: "Upstream Qdrant error" }
+      - { status: 502, code: embedding_error, description: "Embedding model error" }
+  - route: "PUT /v1/cache/:namespace/:key"
+    request: CacheSetRequest
+    response: null
+    status: 200
+    description: "Store a value in the KV cache. Optional ttl in seconds for expiry."
+    errors:
+      - { status: 400, code: invalid_request, description: "Missing value" }
+      - { status: 402, code: payment_required, description: "x402 payment needed" }
+  - route: "GET /v1/cache/:namespace/:key"
+    request: null
+    response: CacheGetResponse
+    status: 200
+    description: "Retrieve a cache value. Returns 404 if missing or expired."
+    errors:
+      - { status: 402, code: payment_required, description: "x402 payment needed" }
+      - { status: 404, code: not_found, description: "Cache entry missing or expired" }
+  - route: "DELETE /v1/cache/:namespace/:key"
+    request: null
+    response: null
+    status: 200
+    description: "Delete a cache entry"
+    errors:
+      - { status: 402, code: payment_required, description: "x402 payment needed" }
+      - { status: 404, code: not_found, description: "Cache entry not found" }
+
 cta:
   headline: "Memory is an **API call**."
   sub: "Agents don't have a hippocampus. They have vectors."

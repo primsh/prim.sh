@@ -3,6 +3,8 @@ import { bodyLimit } from "hono/body-limit";
 import { createAgentStackMiddleware, createLogger, getNetworkConfig, metricsMiddleware, metricsHandler, requestIdMiddleware, forbidden, notFound } from "@primsh/x402-middleware";
 import { addToAllowlist, removeFromAllowlist, isAllowed, createAllowlistChecker } from "@primsh/x402-middleware/allowlist-db";
 import { join } from "node:path";
+import { readFileSync } from "node:fs";
+import { resolve } from "node:path";
 import type {
   WalletRegisterRequest,
   WalletListResponse,
@@ -33,6 +35,10 @@ import {
 } from "./service.ts";
 import type { FundRequestCreateRequest, FundRequestDenyRequest, PolicyUpdateRequest, PauseRequest, ResumeRequest } from "./api.ts";
 import { pause, resume, getState } from "./circuit-breaker.ts";
+
+const LLMS_TXT = readFileSync(
+  resolve(import.meta.dir, "../../../site/wallet/llms.txt"), "utf-8"
+);
 
 const logger = createLogger("wallet.sh");
 
@@ -84,6 +90,7 @@ app.use(
       freeRoutes: [
         "GET /",
         "GET /pricing",
+        "GET /llms.txt",
         "GET /v1/metrics",
         "POST /v1/wallets",
         "POST /v1/admin/circuit-breaker/pause",
@@ -100,6 +107,12 @@ app.use(
 
 app.get("/", (c) => {
   return c.json({ service: "wallet.sh", status: "ok" });
+});
+
+// GET /llms.txt — machine-readable API reference (free)
+app.get("/llms.txt", (c) => {
+  c.header("Content-Type", "text/plain; charset=utf-8");
+  return c.body(LLMS_TXT);
 });
 
 // GET /pricing — machine-readable pricing (free)

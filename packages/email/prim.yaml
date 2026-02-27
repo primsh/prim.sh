@@ -77,6 +77,185 @@ hero_example: |
       -d '{"from": "a7x9m2@email.sh", "to": "human@gmail.com",
            "subject": "Task complete", "body": "Your report is ready."}'
 
+quick_start:
+  - "POST /v1/mailboxes with {\"domain\": \"mail.prim.sh\"} → create mailbox ($0.05)"
+  - "POST /v1/mailboxes/:id/send with to, subject, body → send email ($0.01)"
+  - "GET /v1/mailboxes/:id/messages → poll for inbound messages"
+  - "POST /v1/mailboxes/:id/webhooks → register webhook for real-time delivery"
+
+tips:
+  - "Mailboxes have a 24-hour TTL by default — extend with POST /v1/mailboxes/:id/renew."
+  - "Webhook fires on message.received with X-Prim-Signature for HMAC verification."
+  - "DELETE /v1/mailboxes/:id permanently deletes the mailbox and all messages."
+  - "Custom domains require DNS verification — check POST /v1/domains/:id/verify."
+  - "GET /v1/mailboxes/:id/messages returns newest-first with position-based pagination."
+
+limits:
+  - "Max message size: 25 MB"
+  - "Mailbox default TTL: 24 hours (86400 seconds)"
+  - "Webhooks per mailbox: no hard limit documented"
+
+ownership: "All mailboxes and domains are scoped to the wallet address extracted from the x402 payment."
+
+routes_map:
+  - route: "POST /v1/mailboxes"
+    request: CreateMailboxRequest
+    response: MailboxResponse
+    status: 201
+    description: "Create a mailbox. Optional: username, domain, ttl_ms."
+    errors:
+      - { status: 400, code: invalid_request, description: "Missing fields or invalid characters" }
+      - { status: 402, code: payment_required, description: "x402 payment needed" }
+      - { status: 409, code: username_taken, description: "Username already in use on that domain" }
+  - route: "GET /v1/mailboxes"
+    request: null
+    response: MailboxListResponse
+    status: 200
+    description: "List mailboxes owned by the calling wallet (paginated)"
+    query_params:
+      - { name: limit, type: integer, description: "1-100, default 20" }
+      - { name: after, type: string, description: "Cursor from previous response" }
+    errors:
+      - { status: 402, code: payment_required, description: "x402 payment needed" }
+      - { status: 403, code: forbidden, description: "Resource owned by a different wallet" }
+  - route: "GET /v1/mailboxes/:id"
+    request: null
+    response: MailboxResponse
+    status: 200
+    description: "Get mailbox metadata including expires_at"
+    errors:
+      - { status: 402, code: payment_required, description: "x402 payment needed" }
+      - { status: 403, code: forbidden, description: "Resource owned by a different wallet" }
+      - { status: 404, code: not_found, description: "Mailbox not found" }
+  - route: "DELETE /v1/mailboxes/:id"
+    request: null
+    response: DeleteMailboxResponse
+    status: 200
+    description: "Permanently delete a mailbox and all messages"
+    errors:
+      - { status: 402, code: payment_required, description: "x402 payment needed" }
+      - { status: 403, code: forbidden, description: "Resource owned by a different wallet" }
+      - { status: 404, code: not_found, description: "Mailbox not found" }
+  - route: "POST /v1/mailboxes/:id/renew"
+    request: RenewMailboxRequest
+    response: MailboxResponse
+    status: 200
+    description: "Extend mailbox TTL by ttl_ms milliseconds"
+    errors:
+      - { status: 402, code: payment_required, description: "x402 payment needed" }
+      - { status: 403, code: forbidden, description: "Resource owned by a different wallet" }
+      - { status: 404, code: not_found, description: "Mailbox not found" }
+      - { status: 410, code: expired, description: "Mailbox already expired" }
+  - route: "GET /v1/mailboxes/:id/messages"
+    request: null
+    response: EmailListResponse
+    status: 200
+    description: "List messages in a mailbox, newest first"
+    query_params:
+      - { name: limit, type: integer, description: "1-100, default 20" }
+      - { name: after, type: integer, description: "Position-based cursor for pagination" }
+    errors:
+      - { status: 402, code: payment_required, description: "x402 payment needed" }
+      - { status: 403, code: forbidden, description: "Resource owned by a different wallet" }
+      - { status: 404, code: not_found, description: "Mailbox not found" }
+  - route: "GET /v1/mailboxes/:id/messages/:msgId"
+    request: null
+    response: EmailDetail
+    status: 200
+    description: "Get full message including textBody and htmlBody"
+    errors:
+      - { status: 402, code: payment_required, description: "x402 payment needed" }
+      - { status: 403, code: forbidden, description: "Resource owned by a different wallet" }
+      - { status: 404, code: not_found, description: "Mailbox or message not found" }
+  - route: "POST /v1/mailboxes/:id/send"
+    request: SendMessageRequest
+    response: SendMessageResponse
+    status: 200
+    description: "Send email from a mailbox. Requires to, subject, and body or html."
+    errors:
+      - { status: 400, code: invalid_request, description: "Missing required fields" }
+      - { status: 402, code: payment_required, description: "x402 payment needed" }
+      - { status: 403, code: forbidden, description: "Resource owned by a different wallet" }
+      - { status: 404, code: not_found, description: "Mailbox not found" }
+      - { status: 502, code: stalwart_error, description: "Upstream Stalwart mail server error" }
+  - route: "POST /v1/mailboxes/:id/webhooks"
+    request: RegisterWebhookRequest
+    response: WebhookResponse
+    status: 201
+    description: "Register a webhook URL for message.received events. Optional secret for HMAC signing."
+    errors:
+      - { status: 400, code: invalid_request, description: "Missing or invalid webhook URL" }
+      - { status: 402, code: payment_required, description: "x402 payment needed" }
+      - { status: 403, code: forbidden, description: "Resource owned by a different wallet" }
+      - { status: 404, code: not_found, description: "Mailbox not found" }
+      - { status: 409, code: conflict, description: "Duplicate webhook URL" }
+  - route: "GET /v1/mailboxes/:id/webhooks"
+    request: null
+    response: WebhookListResponse
+    status: 200
+    description: "List webhooks for a mailbox"
+    errors:
+      - { status: 402, code: payment_required, description: "x402 payment needed" }
+      - { status: 403, code: forbidden, description: "Resource owned by a different wallet" }
+      - { status: 404, code: not_found, description: "Mailbox not found" }
+  - route: "DELETE /v1/mailboxes/:id/webhooks/:whId"
+    request: null
+    response: DeleteWebhookResponse
+    status: 200
+    description: "Delete a webhook"
+    errors:
+      - { status: 402, code: payment_required, description: "x402 payment needed" }
+      - { status: 403, code: forbidden, description: "Resource owned by a different wallet" }
+      - { status: 404, code: not_found, description: "Mailbox or webhook not found" }
+  - route: "POST /v1/domains"
+    request: RegisterDomainRequest
+    response: DomainResponse
+    status: 201
+    description: "Register a custom domain. Returns required_records for DNS."
+    errors:
+      - { status: 400, code: invalid_request, description: "Invalid domain name" }
+      - { status: 402, code: payment_required, description: "x402 payment needed" }
+      - { status: 409, code: conflict, description: "Domain already registered" }
+  - route: "GET /v1/domains"
+    request: null
+    response: DomainListResponse
+    status: 200
+    description: "List registered custom domains (paginated)"
+    query_params:
+      - { name: limit, type: integer, description: "1-100, default 20" }
+      - { name: after, type: string, description: "Cursor from previous response" }
+    errors:
+      - { status: 402, code: payment_required, description: "x402 payment needed" }
+      - { status: 403, code: forbidden, description: "Resource owned by a different wallet" }
+  - route: "GET /v1/domains/:id"
+    request: null
+    response: DomainResponse
+    status: 200
+    description: "Get domain details and verification status"
+    errors:
+      - { status: 402, code: payment_required, description: "x402 payment needed" }
+      - { status: 403, code: forbidden, description: "Resource owned by a different wallet" }
+      - { status: 404, code: not_found, description: "Domain not found" }
+  - route: "POST /v1/domains/:id/verify"
+    request: null
+    response: VerifyDomainResponse
+    status: 200
+    description: "Verify DNS records. On success: status → verified, dkim_records returned."
+    errors:
+      - { status: 402, code: payment_required, description: "x402 payment needed" }
+      - { status: 403, code: forbidden, description: "Resource owned by a different wallet" }
+      - { status: 404, code: not_found, description: "Domain not found" }
+      - { status: 502, code: stalwart_error, description: "DNS verification failed" }
+  - route: "DELETE /v1/domains/:id"
+    request: null
+    response: DeleteDomainResponse
+    status: 200
+    description: "Remove a custom domain registration"
+    errors:
+      - { status: 402, code: payment_required, description: "x402 payment needed" }
+      - { status: 403, code: forbidden, description: "Resource owned by a different wallet" }
+      - { status: 404, code: not_found, description: "Domain not found" }
+
 cta:
   headline: "Email is an **API call**."
   sub: "Agents don't check inboxes. They poll endpoints and parse JSON."
@@ -114,21 +293,27 @@ sections:
     highlight: "reference"
     lines:
       - "# Mailbox management"
-      - "POST   /v1/mailboxes              # Create mailbox"
-      - "GET    /v1/mailboxes              # List your mailboxes"
-      - "GET    /v1/mailboxes/:id          # Mailbox details"
-      - "PUT    /v1/mailboxes/:id          # Update TTL, webhook, forwarding"
-      - "DELETE /v1/mailboxes/:id          # Destroy mailbox"
+      - "POST   /v1/mailboxes                         # Create mailbox"
+      - "GET    /v1/mailboxes                         # List mailboxes"
+      - "GET    /v1/mailboxes/:id                     # Mailbox details"
+      - "DELETE /v1/mailboxes/:id                     # Delete mailbox + messages"
+      - "POST   /v1/mailboxes/:id/renew               # Extend TTL"
+      - ""
+      - "# Messages"
+      - "GET    /v1/mailboxes/:id/messages            # List messages (newest first)"
+      - "GET    /v1/mailboxes/:id/messages/:msgId     # Full message content"
       - ""
       - "# Sending"
-      - "POST   /v1/send                   # Send email (text or HTML)"
-      - "POST   /v1/send/raw               # Send raw MIME"
+      - "POST   /v1/mailboxes/:id/send               # Send email from mailbox"
       - ""
-      - "# Receiving"
-      - "GET    /v1/mailboxes/:id/messages  # Poll for messages"
-      - "GET    /v1/messages/:id            # Get message"
-      - "DELETE /v1/messages/:id            # Delete message"
+      - "# Webhooks"
+      - "POST   /v1/mailboxes/:id/webhooks           # Register webhook"
+      - "GET    /v1/mailboxes/:id/webhooks           # List webhooks"
+      - "DELETE /v1/mailboxes/:id/webhooks/:whId     # Remove webhook"
       - ""
-      - "# Custom domains (optional)"
-      - "POST   /v1/domains                 # Add custom domain"
-      - "GET    /v1/domains/:id/verify      # Check DNS verification"
+      - "# Custom domains"
+      - "POST   /v1/domains                          # Register domain"
+      - "GET    /v1/domains                          # List domains"
+      - "GET    /v1/domains/:id                      # Domain details"
+      - "POST   /v1/domains/:id/verify               # Verify DNS records"
+      - "DELETE /v1/domains/:id                      # Remove domain"

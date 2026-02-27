@@ -64,6 +64,146 @@ hero_example: |
       -H "X-402-Payment: $TOKEN" \
       -d '{"expires": 3600}'
 
+quick_start:
+  - "POST /v1/buckets → create a bucket ($0.05)"
+  - "PUT /v1/buckets/:id/objects/:key with raw bytes body → upload object"
+  - "GET /v1/buckets/:id/objects/:key → download object"
+
+tips:
+  - "Wallet address from x402 payment is the bucket owner. No separate auth needed."
+  - "Content-Length header is required on PUT — missing it returns 411."
+  - "Key may include slashes (e.g. notes/2026/feb.txt) for path-like organization."
+  - "Call POST /v1/buckets/:id/quota/reconcile if usage_bytes seems incorrect after bulk deletes."
+  - "Delete all objects before deleting a bucket — non-empty bucket delete is rejected."
+
+limits:
+  - "Max buckets per wallet: 10"
+  - "Default per-bucket quota: 100 MB"
+  - "Max total storage per wallet: 1 GB"
+  - "Max object size: 5 GB (limited by max_body_size: 128MB for API)"
+
+ownership: "All buckets and objects are scoped to the wallet address extracted from the x402 payment. Callers can only access their own buckets."
+
+routes_map:
+  - route: "POST /v1/buckets"
+    request: CreateBucketRequest
+    response: CreateBucketResponse
+    status: 201
+    description: "Create a new storage bucket"
+    errors:
+      - { status: 400, code: invalid_request, description: "Invalid bucket name or name already taken" }
+      - { status: 402, code: payment_required, description: "x402 payment needed" }
+      - { status: 403, code: bucket_limit_exceeded, description: "Wallet has reached 10 bucket limit" }
+      - { status: 502, code: r2_error, description: "Upstream R2 error" }
+  - route: "GET /v1/buckets"
+    request: null
+    response: BucketListResponse
+    status: 200
+    description: "List all buckets owned by the calling wallet"
+    query_params:
+      - { name: limit, type: integer, description: "1-100, default 20" }
+      - { name: page, type: integer, description: "1-based page number, default 1" }
+    errors:
+      - { status: 402, code: payment_required, description: "x402 payment needed" }
+      - { status: 403, code: forbidden, description: "Missing wallet address in payment" }
+  - route: "GET /v1/buckets/:id"
+    request: null
+    response: BucketResponse
+    status: 200
+    description: "Get details for a single bucket. Caller must own the bucket."
+    errors:
+      - { status: 402, code: payment_required, description: "x402 payment needed" }
+      - { status: 403, code: forbidden, description: "Bucket belongs to a different wallet" }
+      - { status: 404, code: not_found, description: "Bucket not found" }
+  - route: "DELETE /v1/buckets/:id"
+    request: null
+    response: null
+    status: 200
+    description: "Delete a bucket. Bucket must be empty first."
+    errors:
+      - { status: 402, code: payment_required, description: "x402 payment needed" }
+      - { status: 403, code: forbidden, description: "Bucket belongs to a different wallet" }
+      - { status: 404, code: not_found, description: "Bucket not found" }
+      - { status: 502, code: r2_error, description: "Upstream R2 error" }
+  - route: "PUT /v1/buckets/:id/objects/:key"
+    request: null
+    response: PutObjectResponse
+    status: 200
+    description: "Upload an object. Key may include slashes. Content-Length header required."
+    notes: "Request body is raw bytes. Fails with 413 if upload exceeds quota."
+    errors:
+      - { status: 400, code: invalid_request, description: "Missing or invalid body" }
+      - { status: 402, code: payment_required, description: "x402 payment needed" }
+      - { status: 403, code: forbidden, description: "Bucket belongs to a different wallet" }
+      - { status: 404, code: not_found, description: "Bucket not found" }
+      - { status: 413, code: quota_exceeded, description: "Upload would exceed bucket quota" }
+      - { status: 413, code: storage_limit_exceeded, description: "Upload would exceed wallet 1 GB limit" }
+      - { status: 502, code: r2_error, description: "Upstream R2 error" }
+  - route: "GET /v1/buckets/:id/objects"
+    request: null
+    response: ObjectListResponse
+    status: 200
+    description: "List objects in a bucket. Cursor-based pagination."
+    query_params:
+      - { name: prefix, type: string, description: "Filter by key prefix (e.g. notes/)" }
+      - { name: limit, type: integer, description: "1-1000, default 100" }
+      - { name: cursor, type: string, description: "Cursor from previous response's next_cursor" }
+    errors:
+      - { status: 402, code: payment_required, description: "x402 payment needed" }
+      - { status: 403, code: forbidden, description: "Bucket belongs to a different wallet" }
+      - { status: 404, code: not_found, description: "Bucket not found" }
+      - { status: 502, code: r2_error, description: "Upstream R2 error" }
+  - route: "GET /v1/buckets/:id/objects/:key"
+    request: null
+    response: "Raw bytes (application/octet-stream)"
+    status: 200
+    description: "Download an object. Response body is streamed directly."
+    errors:
+      - { status: 402, code: payment_required, description: "x402 payment needed" }
+      - { status: 403, code: forbidden, description: "Bucket belongs to a different wallet" }
+      - { status: 404, code: not_found, description: "Bucket or object not found" }
+      - { status: 502, code: r2_error, description: "Upstream R2 error" }
+  - route: "DELETE /v1/buckets/:id/objects/:key"
+    request: null
+    response: DeleteObjectResponse
+    status: 200
+    description: "Delete an object from a bucket"
+    errors:
+      - { status: 402, code: payment_required, description: "x402 payment needed" }
+      - { status: 403, code: forbidden, description: "Bucket belongs to a different wallet" }
+      - { status: 404, code: not_found, description: "Bucket or object not found" }
+      - { status: 502, code: r2_error, description: "Upstream R2 error" }
+  - route: "GET /v1/buckets/:id/quota"
+    request: null
+    response: QuotaResponse
+    status: 200
+    description: "Get quota and usage for a bucket"
+    errors:
+      - { status: 402, code: payment_required, description: "x402 payment needed" }
+      - { status: 403, code: forbidden, description: "Bucket belongs to a different wallet" }
+      - { status: 404, code: not_found, description: "Bucket not found" }
+  - route: "PUT /v1/buckets/:id/quota"
+    request: SetQuotaRequest
+    response: QuotaResponse
+    status: 200
+    description: "Set the storage quota for a bucket. Pass null to reset to default (100 MB)."
+    errors:
+      - { status: 400, code: invalid_request, description: "Invalid quota value" }
+      - { status: 402, code: payment_required, description: "x402 payment needed" }
+      - { status: 403, code: forbidden, description: "Bucket belongs to a different wallet" }
+      - { status: 404, code: not_found, description: "Bucket not found" }
+      - { status: 502, code: r2_error, description: "Upstream R2 error" }
+  - route: "POST /v1/buckets/:id/quota/reconcile"
+    request: null
+    response: ReconcileResponse
+    status: 200
+    description: "Recompute bucket usage by scanning actual R2 storage. Use when usage_bytes appears incorrect."
+    errors:
+      - { status: 402, code: payment_required, description: "x402 payment needed" }
+      - { status: 403, code: forbidden, description: "Bucket belongs to a different wallet" }
+      - { status: 404, code: not_found, description: "Bucket not found" }
+      - { status: 502, code: r2_error, description: "Upstream R2 error" }
+
 cta:
   headline: "Storage is an **API call**."
   sub: "Agents don't have hard drives. They have store.sh."
@@ -86,12 +226,19 @@ sections:
     title: "API"
     highlight: "reference"
     lines:
-      - "POST   /v1/buckets              # Create bucket"
-      - "GET    /v1/buckets              # List buckets"
-      - "DELETE /v1/buckets/:id          # Delete bucket + contents"
-      - "PUT    /v1/objects/:path        # Upload object"
-      - "GET    /v1/objects/:path        # Download object"
-      - "DELETE /v1/objects/:path        # Delete object"
-      - "GET    /v1/buckets/:id/objects  # List objects in bucket"
-      - "POST   /v1/objects/:path/share  # Generate signed URL"
-      - "PUT    /v1/s3/*                 # S3-compatible endpoint"
+      - "# Buckets"
+      - "POST   /v1/buckets                          # Create bucket"
+      - "GET    /v1/buckets                          # List buckets"
+      - "GET    /v1/buckets/:id                      # Bucket details"
+      - "DELETE /v1/buckets/:id                      # Delete bucket (must be empty)"
+      - ""
+      - "# Objects"
+      - "PUT    /v1/buckets/:id/objects/:key         # Upload object"
+      - "GET    /v1/buckets/:id/objects              # List objects"
+      - "GET    /v1/buckets/:id/objects/:key         # Download object"
+      - "DELETE /v1/buckets/:id/objects/:key         # Delete object"
+      - ""
+      - "# Quota"
+      - "GET    /v1/buckets/:id/quota                # Get quota + usage"
+      - "PUT    /v1/buckets/:id/quota                # Set quota"
+      - "POST   /v1/buckets/:id/quota/reconcile      # Recompute usage from R2"

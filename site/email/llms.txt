@@ -1,123 +1,492 @@
 # email.prim.sh
 
-> Email for agents. Create mailboxes, send and receive mail, get notified via webhooks.
+Mailboxes on demand. Send, receive, webhook. Disposable or permanent.
 
 Base URL: https://email.prim.sh
-Auth: x402 (USDC on Base Sepolia). GET /, GET /pricing, GET /v1/metrics, GET /llms.txt are free.
-Status: Live (private beta).
+Auth: x402 (USDC on Base Sepolia). GET /, GET /pricing, GET /v1/metrics are free.
+Chain: Base Sepolia (eip155:84532) during beta.
+
+Install:
+  curl -fsSL https://email.prim.sh/install.sh | sh
+
+Limits:
+  Max message size: 25 MB
+  Mailbox default TTL: 24 hours (86400 seconds)
+  Webhooks per mailbox: no hard limit documented
+
+---
+
+## Quick Start
+
+  1. POST /v1/mailboxes with {"domain": "mail.prim.sh"} → create mailbox ($0.05)
+  2. POST /v1/mailboxes/:id/send with to, subject, body → send email ($0.01)
+  3. GET /v1/mailboxes/:id/messages → poll for inbound messages
+  4. POST /v1/mailboxes/:id/webhooks → register webhook for real-time delivery
+
+## Tips
+
+  - Mailboxes have a 24-hour TTL by default — extend with POST /v1/mailboxes/:id/renew.
+  - Webhook fires on message.received with X-Prim-Signature for HMAC verification.
+  - DELETE /v1/mailboxes/:id permanently deletes the mailbox and all messages.
+  - Custom domains require DNS verification — check POST /v1/domains/:id/verify.
+  - GET /v1/mailboxes/:id/messages returns newest-first with position-based pagination.
 
 ---
 
 ## x402 Payment
 
-All endpoints except health checks require x402 payment. The MCP server and CLI handle this automatically. For raw HTTP, follow the standard x402 flow (see https://prim.sh/llms.txt for full protocol details).
+  1. Make request. Server returns 402 with Payment-Required header.
+  2. Sign EIP-3009 transferWithAuthorization.
+  3. Retry with Payment-Signature header (base64-encoded signed authorization).
+
+Error envelope:
+  {"error": {"code": "<code>", "message": "<msg>"}}
+
+Error codes:
+  not_found
+  forbidden
+  invalid_request
+  stalwart_error
+  conflict
+  username_taken
+  jmap_error
+  expired
 
 ---
 
 ## Endpoints
 
-### Free Routes
+### GET /
 
-- `GET /` — Health check. **Free.**
-- `GET /pricing` — Machine-readable pricing for all endpoints. **Free.**
-- `GET /v1/metrics` — Operational metrics (uptime, request counts, latencies, errors). **Free.**
-- `GET /llms.txt` — Machine-readable API reference. **Free.**
+Health check.
 
-### Mailboxes
+Free.
 
-- `POST /v1/mailboxes` — Create a mailbox. Optional: username, domain, ttl_ms. **$0.05**
-- `GET /v1/mailboxes` — List mailboxes (paginated). **$0.001**
-- `GET /v1/mailboxes/:id` — Get mailbox metadata including expires_at. **$0.001**
-- `DELETE /v1/mailboxes/:id` — Permanently delete a mailbox and all messages. **$0.001**
-- `POST /v1/mailboxes/:id/renew` — Extend mailbox TTL by ttl_ms. **$0.001**
-
-### Messages
-
-- `GET /v1/mailboxes/:id/messages` — List messages (newest first, position-based pagination). **$0.001**
-- `GET /v1/mailboxes/:id/messages/:msgId` — Get full message including textBody and htmlBody. **$0.001**
-- `POST /v1/mailboxes/:id/send` — Send email. Requires to, subject, and body or html. **$0.01**
-
-### Webhooks
-
-- `POST /v1/mailboxes/:id/webhooks` — Register webhook URL for message.received events. Optional secret for HMAC signing. **$0.001**
-- `GET /v1/mailboxes/:id/webhooks` — List webhooks for a mailbox. **$0.001**
-- `DELETE /v1/mailboxes/:id/webhooks/:whId` — Delete a webhook. **$0.001**
-
-### Custom Domains
-
-- `POST /v1/domains` — Register a custom domain. Returns required_records for DNS. **$0.05**
-- `GET /v1/domains` — List registered domains (paginated). **$0.001**
-- `GET /v1/domains/:id` — Get domain details and verification status. **$0.001**
-- `POST /v1/domains/:id/verify` — Verify DNS records. On success: status → verified, dkim_records returned. **$0.001**
-- `DELETE /v1/domains/:id` — Remove domain registration. **$0.001**
+Response (200):
+  service  string  "email.sh"
+  status   string  "ok"
 
 ---
 
-## Common patterns
+### GET /pricing
 
-### Create temporary inbox and poll for messages
+Machine-readable pricing for all endpoints.
 
-```bash
-# Create mailbox (x402 payment handled by CLI)
-prim email mailbox create
-# → {"id": "mbx_...", "address": "abc123@mail.prim.sh", "expires_at": "..."}
+Free.
 
-# List messages
-prim email messages MBX_ID
-# → {"messages": [...], "total": N}
-
-# Get specific message
-prim email message MBX_ID MSG_ID
-# → {"from": "...", "subject": "...", "textBody": "...", "htmlBody": "..."}
-```
-
-### Send email
-
-```bash
-prim email send MBX_ID --to user@example.com --subject "Hello" --body "Message text"
-# → {"message_id": "...", "status": "sent"}
-```
-
-### Register webhook for real-time delivery
-
-```bash
-prim email webhook add MBX_ID --url https://myagent.example.com/hooks/email --secret whsec_abc
-# Webhook fires on message.received with X-Prim-Signature header for verification
-```
-
-### Custom domain setup
-
-```bash
-prim email domain add myproject.com
-# → required_records: [{type: "MX", ...}, {type: "TXT", ...}]
-# Add records to your DNS, then:
-prim email domain verify DOMAIN_ID
-# → dkim_records returned; add those to DNS too
-```
+Response (200):
+  service   string  "email.prim.sh"
+  currency  string  "USDC"
+  network   string  "eip155:8453"
+  routes    array   Route pricing list
+    .method       string  HTTP method
+    .path         string  URL path
+    .price_usdc   string  Price in USDC (decimal string)
+    .description  string  Human-readable description
 
 ---
 
-## Error codes
+### GET /v1/metrics
 
-- `invalid_request` (400) — Missing fields, invalid characters, or malformed request.
-- `username_taken` (409) — Username already in use on that domain. Omit for random generation.
-- `conflict` (409) — Domain already registered, or duplicate webhook URL.
-- `not_found` (404) — Mailbox, message, webhook, or domain not found.
-- `forbidden` (403) — Resource owned by a different wallet.
-- `expired` (410) — Mailbox expired. Renew with `POST /v1/mailboxes/:id/renew`.
-- `stalwart_error` (502) — Upstream Stalwart mail server error. Retry.
-- `jmap_error` (502) — JMAP submission error. Retry.
+Operational metrics. Uptime, request counts, latency percentiles, error rates.
+
+Free.
+
+Response (200):
+  service     string  "email.prim.sh"
+  uptime_s    number  Seconds since last restart
+  requests    object  Request counts and latencies by endpoint
+  payments    object  Payment counts by endpoint
+  errors      object  Error counts by status code
 
 ---
 
-## MCP tools
+### POST /v1/mailboxes
 
-Install with: `prim install email`
+Create a mailbox. Optional: username, domain, ttl_ms.
 
-Tools: email_mailbox_create, email_mailbox_list, email_mailbox_get, email_mailbox_delete,
-email_mailbox_renew, email_messages_list, email_message_get, email_send,
-email_webhook_create, email_webhook_list, email_webhook_delete,
-email_domain_register, email_domain_list, email_domain_get, email_domain_verify, email_domain_delete
+Price: $0.05
 
-Skill: https://prim.sh/email/llms.txt
-OpenAPI: https://prim.sh/specs/openapi/email.yaml
+Request:
+  username  string  optional  Desired username. Omit for random generation.
+  domain    string  optional  Domain for the mailbox (must be registered). Omit for default domain.
+  ttl_ms    number  optional  TTL in milliseconds. Omit for permanent mailbox.
+
+Response (201):
+  id          string         Mailbox ID (e.g. "mbx_abc123").
+  address     string         Full email address (e.g. "abc123@mail.prim.sh").
+  username    string         Username portion of the email address.
+  domain      string         Domain portion of the email address.
+  status      MailboxStatus  Current status: "active" | "expired" | "deleted".
+  created_at  string         ISO 8601 timestamp when the mailbox was created.
+  expires_at  string | null  ISO 8601 timestamp when the mailbox expires. Null if permanent.
+
+Errors:
+  400  invalid_request   Missing fields or invalid characters
+  402  payment_required  x402 payment needed
+  409  username_taken    Username already in use on that domain
+
+---
+
+### GET /v1/mailboxes
+
+List mailboxes owned by the calling wallet (paginated)
+
+Price: $0.001
+
+Query params:
+  limit  integer  optional  1-100, default 20
+  after  string   optional  Cursor from previous response
+
+Response (200): MailboxListResponse
+
+Errors:
+  402  payment_required  x402 payment needed
+  403  forbidden         Resource owned by a different wallet
+
+---
+
+### GET /v1/mailboxes/:id
+
+Get mailbox metadata including expires_at
+
+Price: $0.001
+
+Path params:
+  id  string  required  id parameter
+
+Response (200):
+  id          string         Mailbox ID (e.g. "mbx_abc123").
+  address     string         Full email address (e.g. "abc123@mail.prim.sh").
+  username    string         Username portion of the email address.
+  domain      string         Domain portion of the email address.
+  status      MailboxStatus  Current status: "active" | "expired" | "deleted".
+  created_at  string         ISO 8601 timestamp when the mailbox was created.
+  expires_at  string | null  ISO 8601 timestamp when the mailbox expires. Null if permanent.
+
+Errors:
+  402  payment_required  x402 payment needed
+  403  forbidden         Resource owned by a different wallet
+  404  not_found         Mailbox not found
+
+---
+
+### DELETE /v1/mailboxes/:id
+
+Permanently delete a mailbox and all messages
+
+Price: $0.01
+
+Path params:
+  id  string  required  id parameter
+
+Response (200):
+  id       string  Mailbox ID that was deleted.
+  deleted  true    Always true on success.
+
+Errors:
+  402  payment_required  x402 payment needed
+  403  forbidden         Resource owned by a different wallet
+  404  not_found         Mailbox not found
+
+---
+
+### POST /v1/mailboxes/:id/renew
+
+Extend mailbox TTL by ttl_ms milliseconds
+
+Price: $0.01
+
+Path params:
+  id  string  required  id parameter
+
+Request:
+  ttl_ms  number  optional  Extension duration in milliseconds. Omit to apply default TTL.
+
+Response (200):
+  id          string         Mailbox ID (e.g. "mbx_abc123").
+  address     string         Full email address (e.g. "abc123@mail.prim.sh").
+  username    string         Username portion of the email address.
+  domain      string         Domain portion of the email address.
+  status      MailboxStatus  Current status: "active" | "expired" | "deleted".
+  created_at  string         ISO 8601 timestamp when the mailbox was created.
+  expires_at  string | null  ISO 8601 timestamp when the mailbox expires. Null if permanent.
+
+Errors:
+  402  payment_required  x402 payment needed
+  403  forbidden         Resource owned by a different wallet
+  404  not_found         Mailbox not found
+  410  expired           Mailbox already expired
+
+---
+
+### GET /v1/mailboxes/:id/messages
+
+List messages in a mailbox, newest first
+
+Price: $0.001
+
+Path params:
+  id  string  required  id parameter
+
+Query params:
+  limit  integer  optional  1-100, default 20
+  after  integer  optional  Position-based cursor for pagination
+
+Response (200): EmailListResponse
+
+Errors:
+  402  payment_required  x402 payment needed
+  403  forbidden         Resource owned by a different wallet
+  404  not_found         Mailbox not found
+
+---
+
+### GET /v1/mailboxes/:id/messages/:msgId
+
+Get full message including textBody and htmlBody
+
+Price: $0.001
+
+Path params:
+  id     string  required  id parameter
+  msgId  string  required  msgId parameter
+
+Response (200):
+  id             string          Message ID.
+  from           EmailAddress    Sender address.
+  to             EmailAddress[]  Recipient addresses.
+  subject        string          Email subject line.
+  receivedAt     string          ISO 8601 timestamp when the message was received.
+  size           number          Message size in bytes.
+  hasAttachment  boolean         Whether the message has attachments.
+  preview        string          Short preview text (first ~100 chars of body).
+  cc             EmailAddress[]  CC recipient addresses.
+  textBody       string | null   Plain-text body. Null if not present.
+  htmlBody       string | null   HTML body. Null if not present.
+
+Errors:
+  402  payment_required  x402 payment needed
+  403  forbidden         Resource owned by a different wallet
+  404  not_found         Mailbox or message not found
+
+---
+
+### POST /v1/mailboxes/:id/send
+
+Send email from a mailbox. Requires to, subject, and body or html.
+
+Price: $0.01
+
+Path params:
+  id  string  required  id parameter
+
+Request:
+  to       string  required  Recipient email address.
+  subject  string  required  Email subject line.
+  body     string  optional  Plain-text body. Either body or html is required.
+  html     string  optional  HTML body. Either body or html is required.
+  cc       string  optional  CC recipient email address.
+  bcc      string  optional  BCC recipient email address.
+
+Response (200):
+  message_id  string  Message ID assigned by the mail server.
+  status      "sent"  Always "sent" on success.
+
+Errors:
+  400  invalid_request   Missing required fields
+  402  payment_required  x402 payment needed
+  403  forbidden         Resource owned by a different wallet
+  404  not_found         Mailbox not found
+  502  stalwart_error    Upstream Stalwart mail server error
+
+---
+
+### POST /v1/mailboxes/:id/webhooks
+
+Register a webhook URL for message.received events. Optional secret for HMAC signing.
+
+Price: $0.01
+
+Path params:
+  id  string  required  id parameter
+
+Request:
+  url     string    required  HTTPS URL to receive webhook POST requests.
+  secret  string    optional  HMAC secret for X-Prim-Signature verification.
+  events  string[]  optional  Events to subscribe to. Defaults to ["message.received"].
+
+Response (201):
+  id          string    Webhook ID (e.g. "wh_abc123").
+  url         string    Webhook endpoint URL.
+  events      string[]  Subscribed events.
+  status      string    Webhook status.
+  created_at  string    ISO 8601 timestamp when the webhook was created.
+
+Errors:
+  400  invalid_request   Missing or invalid webhook URL
+  402  payment_required  x402 payment needed
+  403  forbidden         Resource owned by a different wallet
+  404  not_found         Mailbox not found
+  409  conflict          Duplicate webhook URL
+
+---
+
+### GET /v1/mailboxes/:id/webhooks
+
+List webhooks for a mailbox
+
+Price: $0.001
+
+Path params:
+  id  string  required  id parameter
+
+Response (200): WebhookListResponse
+
+Errors:
+  402  payment_required  x402 payment needed
+  403  forbidden         Resource owned by a different wallet
+  404  not_found         Mailbox not found
+
+---
+
+### DELETE /v1/mailboxes/:id/webhooks/:whId
+
+Delete a webhook
+
+Price: $0.001
+
+Path params:
+  id    string  required  id parameter
+  whId  string  required  whId parameter
+
+Response (200):
+  id       string  Webhook ID that was deleted.
+  deleted  true    Always true on success.
+
+Errors:
+  402  payment_required  x402 payment needed
+  403  forbidden         Resource owned by a different wallet
+  404  not_found         Mailbox or webhook not found
+
+---
+
+### POST /v1/domains
+
+Register a custom domain. Returns required_records for DNS.
+
+Price: $0.05
+
+Request:
+  domain  string  required  Domain name to register (e.g. "myproject.com").
+
+Response (201):
+  id                string         Domain registration ID.
+  domain            string         Registered domain name.
+  status            string         Verification status ("pending" | "verified").
+  owner_wallet      string         Ethereum address of the domain owner.
+  created_at        string         ISO 8601 timestamp when the domain was registered.
+  verified_at       string | null  ISO 8601 timestamp when the domain was verified. Null if unverified.
+  required_records  DnsRecord[]    DNS records that must be added to verify the domain.
+  dkim_records      DnsRecord[]    DKIM DNS records. Only present after successful verification.
+
+Errors:
+  400  invalid_request   Invalid domain name
+  402  payment_required  x402 payment needed
+  409  conflict          Domain already registered
+
+---
+
+### GET /v1/domains
+
+List registered custom domains (paginated)
+
+Price: $0.001
+
+Query params:
+  limit  integer  optional  1-100, default 20
+  after  string   optional  Cursor from previous response
+
+Response (200): DomainListResponse
+
+Errors:
+  402  payment_required  x402 payment needed
+  403  forbidden         Resource owned by a different wallet
+
+---
+
+### GET /v1/domains/:id
+
+Get domain details and verification status
+
+Price: $0.001
+
+Path params:
+  id  string  required  id parameter
+
+Response (200):
+  id                string         Domain registration ID.
+  domain            string         Registered domain name.
+  status            string         Verification status ("pending" | "verified").
+  owner_wallet      string         Ethereum address of the domain owner.
+  created_at        string         ISO 8601 timestamp when the domain was registered.
+  verified_at       string | null  ISO 8601 timestamp when the domain was verified. Null if unverified.
+  required_records  DnsRecord[]    DNS records that must be added to verify the domain.
+  dkim_records      DnsRecord[]    DKIM DNS records. Only present after successful verification.
+
+Errors:
+  402  payment_required  x402 payment needed
+  403  forbidden         Resource owned by a different wallet
+  404  not_found         Domain not found
+
+---
+
+### POST /v1/domains/:id/verify
+
+Verify DNS records. On success: status → verified, dkim_records returned.
+
+Price: $0.01
+
+Path params:
+  id  string  required  id parameter
+
+Response (200):
+  id                    string                Domain registration ID.
+  domain                string                Domain name.
+  status                string                Updated verification status.
+  verified_at           string | null         ISO 8601 timestamp when the domain was verified. Null if not yet verified.
+  verification_results  VerificationResult[]  Per-record verification results.
+  dkim_records          DnsRecord[]           DKIM records to add to DNS. Only present on successful verification.
+
+Errors:
+  402  payment_required  x402 payment needed
+  403  forbidden         Resource owned by a different wallet
+  404  not_found         Domain not found
+  502  stalwart_error    DNS verification failed
+
+---
+
+### DELETE /v1/domains/:id
+
+Remove a custom domain registration
+
+Price: $0.01
+
+Path params:
+  id  string  required  id parameter
+
+Response (200):
+  id       string  Domain registration ID that was deleted.
+  deleted  true    Always true on success.
+  warning  string  Warning message if domain had active mailboxes.
+
+Errors:
+  402  payment_required  x402 payment needed
+  403  forbidden         Resource owned by a different wallet
+  404  not_found         Domain not found
+
+---
+
+## Ownership
+
+All mailboxes and domains are scoped to the wallet address extracted from the x402 payment.

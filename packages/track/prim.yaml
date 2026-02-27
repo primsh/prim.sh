@@ -44,6 +44,33 @@ hero_example: |
     "events": [{ "timestamp": "...", "description": "Departed facility" }]
   }
 
+quick_start:
+  - "POST /v1/track with {tracking_number, carrier} → get package status, ETA, events ($0.05)"
+
+tips:
+  - "Pass carrier slug (e.g. 'ups', 'fedex', 'usps', 'dhl') for accurate routing."
+  - "Omit carrier if unknown — the service will attempt auto-detection."
+  - "Poll periodically until status is 'delivered' for delivery confirmation workflows."
+  - "events array contains full tracking history ordered newest-first."
+
+limits:
+  - "1000+ carriers supported via TrackingMore API"
+  - "Rate limit applies per wallet"
+
+ownership: "Stateless. No package data is stored per wallet. Each request is an independent lookup."
+
+routes_map:
+  - route: "POST /v1/track"
+    request: TrackRequest
+    response: TrackResponse
+    status: 200
+    description: "Track a package by tracking number and carrier. Returns status, ETA, and full event history."
+    errors:
+      - { status: 400, code: invalid_request, description: "Missing tracking_number or invalid carrier" }
+      - { status: 402, code: payment_required, description: "x402 payment needed" }
+      - { status: 429, code: rate_limited, description: "Too many requests" }
+      - { status: 502, code: provider_error, description: "TrackingMore API error" }
+
 cta:
   headline: "Package tracking is an **API call**."
   sub: "Agents don't check tracking pages. They poll endpoints."

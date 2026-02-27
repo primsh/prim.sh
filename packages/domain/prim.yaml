@@ -56,6 +56,186 @@ hero_example: |
       -H "X-402-Payment: $TOKEN" \
       -d '{"type": "A", "name": "@", "value": "198.51.100.1"}'
 
+quick_start:
+  - "GET /v1/domains/search?query=myagent&tlds=com,xyz → check availability"
+  - "POST /v1/domains/quote with {domain, years} → get price quote (15-min validity)"
+  - "POST /v1/zones with {domain} → create Cloudflare DNS zone ($0.05)"
+  - "POST /v1/zones/:zoneId/records → add DNS records"
+
+tips:
+  - "Domain registration is async: save the recovery_token in case zone setup fails."
+  - "Use POST /v1/domains/recover with recovery_token to retry Cloudflare zone setup after partial failure."
+  - "POST /v1/zones/:zoneId/mail-setup configures MX, SPF, DMARC, DKIM in a single idempotent call."
+  - "POST /v1/zones/:zoneId/records/batch for bulk record changes in one atomic request."
+  - "GET /v1/zones/:zoneId/verify checks DNS propagation for all zone records."
+
+limits:
+  - "Domain price quotes valid for 15 minutes (quote_expired error after)"
+  - "Rate limit on PUT /v1/zones/:zoneId/activate — back off before retrying"
+
+ownership: "All DNS zones and records are scoped to the wallet address extracted from the x402 payment."
+
+routes_map:
+  - route: "GET /v1/domains/search"
+    request: null
+    response: DomainSearchResponse
+    status: 200
+    description: "Check availability and pricing for a domain query"
+    query_params:
+      - { name: query, type: string, description: "Domain name or keyword to search" }
+      - { name: tlds, type: string, description: "Comma-separated TLDs (e.g. com,xyz,io)" }
+    errors:
+      - { status: 402, code: payment_required, description: "x402 payment needed" }
+      - { status: 502, code: registrar_error, description: "NameSilo API error" }
+  - route: "POST /v1/domains/quote"
+    request: QuoteRequest
+    response: QuoteResponse
+    status: 200
+    description: "Get a 15-minute price quote for a domain"
+    errors:
+      - { status: 400, code: invalid_request, description: "Missing domain or invalid years" }
+      - { status: 402, code: payment_required, description: "x402 payment needed" }
+      - { status: 502, code: registrar_error, description: "NameSilo API error" }
+  - route: "GET /v1/domains/:domain/status"
+    request: null
+    response: RegistrationStatusResponse
+    status: 200
+    description: "Full post-registration pipeline status (ns_propagated, zone_active, all_ready)"
+    errors:
+      - { status: 402, code: payment_required, description: "x402 payment needed" }
+      - { status: 404, code: not_found, description: "Domain not found" }
+  - route: "POST /v1/zones"
+    request: CreateZoneRequest
+    response: CreateZoneResponse
+    status: 201
+    description: "Create a Cloudflare DNS zone. Returns nameservers to set at your registrar."
+    errors:
+      - { status: 400, code: invalid_request, description: "Missing domain or invalid domain name" }
+      - { status: 402, code: payment_required, description: "x402 payment needed" }
+      - { status: 409, code: domain_taken, description: "Zone already exists for this domain" }
+      - { status: 502, code: cloudflare_error, description: "Cloudflare API error" }
+  - route: "GET /v1/zones"
+    request: null
+    response: ZoneListResponse
+    status: 200
+    description: "List DNS zones owned by the calling wallet (paginated)"
+    query_params:
+      - { name: limit, type: integer, description: "1-100, default 20" }
+      - { name: after, type: string, description: "Cursor from previous response" }
+    errors:
+      - { status: 402, code: payment_required, description: "x402 payment needed" }
+      - { status: 403, code: forbidden, description: "Resource belongs to a different wallet" }
+  - route: "GET /v1/zones/:id"
+    request: null
+    response: ZoneResponse
+    status: 200
+    description: "Get zone details"
+    errors:
+      - { status: 402, code: payment_required, description: "x402 payment needed" }
+      - { status: 403, code: forbidden, description: "Resource belongs to a different wallet" }
+      - { status: 404, code: not_found, description: "Zone not found" }
+  - route: "DELETE /v1/zones/:id"
+    request: null
+    response: null
+    status: 200
+    description: "Delete zone and all records. Irreversible."
+    errors:
+      - { status: 402, code: payment_required, description: "x402 payment needed" }
+      - { status: 403, code: forbidden, description: "Resource belongs to a different wallet" }
+      - { status: 404, code: not_found, description: "Zone not found" }
+      - { status: 502, code: cloudflare_error, description: "Cloudflare API error" }
+  - route: "PUT /v1/zones/:zone_id/activate"
+    request: null
+    response: ActivateResponse
+    status: 200
+    description: "Request Cloudflare NS re-check for faster activation"
+    errors:
+      - { status: 402, code: payment_required, description: "x402 payment needed" }
+      - { status: 403, code: forbidden, description: "Resource belongs to a different wallet" }
+      - { status: 404, code: not_found, description: "Zone not found" }
+      - { status: 429, code: rate_limited, description: "Too many zone_activate calls" }
+  - route: "GET /v1/zones/:zone_id/verify"
+    request: null
+    response: VerifyResponse
+    status: 200
+    description: "Check DNS propagation for all zone records"
+    errors:
+      - { status: 402, code: payment_required, description: "x402 payment needed" }
+      - { status: 403, code: forbidden, description: "Resource belongs to a different wallet" }
+      - { status: 404, code: not_found, description: "Zone not found" }
+  - route: "POST /v1/zones/:zone_id/mail-setup"
+    request: MailSetupRequest
+    response: MailSetupResponse
+    status: 200
+    description: "Configure MX, SPF, DMARC, DKIM in one call. Idempotent."
+    errors:
+      - { status: 400, code: invalid_request, description: "Missing required mail server fields" }
+      - { status: 402, code: payment_required, description: "x402 payment needed" }
+      - { status: 403, code: forbidden, description: "Resource belongs to a different wallet" }
+      - { status: 404, code: not_found, description: "Zone not found" }
+      - { status: 502, code: cloudflare_error, description: "Cloudflare API error" }
+  - route: "POST /v1/zones/:zone_id/records/batch"
+    request: BatchRecordsRequest
+    response: BatchRecordsResponse
+    status: 200
+    description: "Create, update, and delete DNS records in one atomic request"
+    errors:
+      - { status: 400, code: invalid_request, description: "Invalid record fields or values" }
+      - { status: 402, code: payment_required, description: "x402 payment needed" }
+      - { status: 403, code: forbidden, description: "Resource belongs to a different wallet" }
+      - { status: 404, code: not_found, description: "Zone or record not found" }
+      - { status: 502, code: cloudflare_error, description: "Cloudflare API error" }
+  - route: "POST /v1/zones/:zone_id/records"
+    request: CreateRecordRequest
+    response: RecordResponse
+    status: 201
+    description: "Create a DNS record (A, AAAA, CNAME, MX, TXT, SRV, CAA, NS)"
+    errors:
+      - { status: 400, code: invalid_request, description: "Missing or invalid record fields" }
+      - { status: 402, code: payment_required, description: "x402 payment needed" }
+      - { status: 403, code: forbidden, description: "Resource belongs to a different wallet" }
+      - { status: 404, code: not_found, description: "Zone not found" }
+      - { status: 502, code: cloudflare_error, description: "Cloudflare API error" }
+  - route: "GET /v1/zones/:zone_id/records"
+    request: null
+    response: RecordListResponse
+    status: 200
+    description: "List all records in a DNS zone"
+    errors:
+      - { status: 402, code: payment_required, description: "x402 payment needed" }
+      - { status: 403, code: forbidden, description: "Resource belongs to a different wallet" }
+      - { status: 404, code: not_found, description: "Zone not found" }
+  - route: "GET /v1/zones/:zone_id/records/:id"
+    request: null
+    response: RecordResponse
+    status: 200
+    description: "Get a single DNS record"
+    errors:
+      - { status: 402, code: payment_required, description: "x402 payment needed" }
+      - { status: 403, code: forbidden, description: "Resource belongs to a different wallet" }
+      - { status: 404, code: not_found, description: "Zone or record not found" }
+  - route: "PUT /v1/zones/:zone_id/records/:id"
+    request: UpdateRecordRequest
+    response: RecordResponse
+    status: 200
+    description: "Update a DNS record"
+    errors:
+      - { status: 400, code: invalid_request, description: "Invalid record fields" }
+      - { status: 402, code: payment_required, description: "x402 payment needed" }
+      - { status: 403, code: forbidden, description: "Resource belongs to a different wallet" }
+      - { status: 404, code: not_found, description: "Zone or record not found" }
+      - { status: 502, code: cloudflare_error, description: "Cloudflare API error" }
+  - route: "DELETE /v1/zones/:zone_id/records/:id"
+    request: null
+    response: null
+    status: 200
+    description: "Delete a DNS record"
+    errors:
+      - { status: 402, code: payment_required, description: "x402 payment needed" }
+      - { status: 403, code: forbidden, description: "Resource belongs to a different wallet" }
+      - { status: 404, code: not_found, description: "Zone or record not found" }
+      - { status: 502, code: cloudflare_error, description: "Cloudflare API error" }
+
 cta:
   headline: "A domain is an **API call**."
   sub: "Agents don't register domains. They provision endpoints."

@@ -53,6 +53,146 @@ hero_example: |
       -H "X-402-Payment: $TOKEN" \
       -d '{"url": "https://spawn.prim.sh/v1/instances", "max": "0.05"}'
 
+quick_start:
+  - "POST /v1/wallets with EIP-191 signature → register wallet (free)"
+  - "POST faucet.prim.sh/v1/faucet/usdc → get 10 test USDC"
+  - "Call any paid endpoint → receive 402 → sign payment → resend"
+
+tips:
+  - "Wallet registration is free — no x402 payment required."
+  - "The signed message must be: Register <address> with prim.sh at <timestamp>"
+  - "Timestamp must be within 5 minutes of server time (ISO 8601 UTC)."
+  - "Use @x402/fetch or any x402-compatible client to handle payments automatically."
+  - "Pause a wallet to temporarily block spending without deactivating it."
+
+limits:
+  - "Max wallets per owner: 100"
+
+ownership: "All resources scoped to the wallet address extracted from the x402 payment signature. Wallet registration uses EIP-191 signature for ownership proof."
+
+routes_map:
+  - route: "POST /v1/wallets"
+    request: WalletRegisterRequest
+    response: WalletRegisterResponse
+    status: 201
+    description: "Register a wallet via EIP-191 signature"
+    notes: "Free. No x402 required. Sign message: Register <address> with prim.sh at <timestamp>"
+    errors:
+      - { status: 400, code: invalid_request, description: "Missing fields or invalid signature format" }
+      - { status: 403, code: forbidden, description: "Signature does not match address" }
+      - { status: 409, code: duplicate_request, description: "Wallet already registered" }
+  - route: "GET /v1/wallets"
+    request: null
+    response: WalletListResponse
+    status: 200
+    description: "List registered wallets owned by the calling wallet"
+    query_params:
+      - { name: limit, type: integer, description: "1-100, default 20" }
+      - { name: after, type: string, description: "Cursor from previous response" }
+    errors:
+      - { status: 402, code: payment_required, description: "x402 payment needed" }
+      - { status: 403, code: forbidden, description: "No wallet address in payment" }
+      - { status: 429, code: rate_limited, description: "Too many requests" }
+  - route: "GET /v1/wallets/:address"
+    request: null
+    response: WalletDetailResponse
+    status: 200
+    description: "Get full wallet details including balance, policy, and status"
+    errors:
+      - { status: 402, code: payment_required, description: "x402 payment needed" }
+      - { status: 403, code: forbidden, description: "Caller does not own this wallet" }
+      - { status: 404, code: not_found, description: "Wallet not found" }
+  - route: "DELETE /v1/wallets/:address"
+    request: null
+    response: WalletDeactivateResponse
+    status: 200
+    description: "Permanently deactivate a wallet. Irreversible. Pending fund requests cancelled."
+    errors:
+      - { status: 402, code: payment_required, description: "x402 payment needed" }
+      - { status: 403, code: forbidden, description: "Caller does not own this wallet" }
+      - { status: 404, code: not_found, description: "Wallet not found" }
+  - route: "POST /v1/wallets/:address/fund-request"
+    request: FundRequestCreateRequest
+    response: FundRequestResponse
+    status: 200
+    description: "Request USDC funding for a wallet. A human operator can approve or deny."
+    errors:
+      - { status: 400, code: invalid_request, description: "Missing amount or reason" }
+      - { status: 402, code: payment_required, description: "x402 payment needed" }
+      - { status: 403, code: forbidden, description: "Caller does not own this wallet" }
+      - { status: 404, code: not_found, description: "Wallet not found" }
+  - route: "GET /v1/wallets/:address/fund-requests"
+    request: null
+    response: FundRequestListResponse
+    status: 200
+    description: "List all fund requests for a wallet"
+    query_params:
+      - { name: limit, type: integer, description: "1-100, default 20" }
+      - { name: after, type: string, description: "Cursor from previous response" }
+    errors:
+      - { status: 402, code: payment_required, description: "x402 payment needed" }
+      - { status: 403, code: forbidden, description: "Caller does not own this wallet" }
+      - { status: 404, code: not_found, description: "Wallet not found" }
+  - route: "POST /v1/fund-requests/:id/approve"
+    request: null
+    response: FundRequestApproveResponse
+    status: 200
+    description: "Approve a pending fund request. Returns the address to send USDC to."
+    errors:
+      - { status: 402, code: payment_required, description: "x402 payment needed" }
+      - { status: 403, code: forbidden, description: "Caller not authorized to approve" }
+      - { status: 404, code: not_found, description: "Fund request not found" }
+      - { status: 409, code: duplicate_request, description: "Already approved or denied" }
+  - route: "POST /v1/fund-requests/:id/deny"
+    request: FundRequestDenyRequest
+    response: FundRequestDenyResponse
+    status: 200
+    description: "Deny a pending fund request"
+    errors:
+      - { status: 402, code: payment_required, description: "x402 payment needed" }
+      - { status: 403, code: forbidden, description: "Caller not authorized to deny" }
+      - { status: 404, code: not_found, description: "Fund request not found" }
+      - { status: 409, code: duplicate_request, description: "Already approved or denied" }
+  - route: "GET /v1/wallets/:address/policy"
+    request: null
+    response: PolicyResponse
+    status: 200
+    description: "Get the spending policy for a wallet"
+    errors:
+      - { status: 402, code: payment_required, description: "x402 payment needed" }
+      - { status: 403, code: forbidden, description: "Caller does not own this wallet" }
+      - { status: 404, code: not_found, description: "Wallet not found" }
+  - route: "PUT /v1/wallets/:address/policy"
+    request: PolicyUpdateRequest
+    response: PolicyResponse
+    status: 200
+    description: "Update spending policy for a wallet. All fields optional. Pass null to remove a limit."
+    errors:
+      - { status: 400, code: invalid_request, description: "Invalid JSON body or field values" }
+      - { status: 402, code: payment_required, description: "x402 payment needed" }
+      - { status: 403, code: forbidden, description: "Caller does not own this wallet" }
+      - { status: 404, code: not_found, description: "Wallet not found" }
+  - route: "POST /v1/wallets/:address/pause"
+    request: PauseRequest
+    response: PauseResponse
+    status: 200
+    description: "Pause operations for a wallet. Temporarily halts spending without deactivating."
+    errors:
+      - { status: 400, code: invalid_request, description: "Invalid scope value" }
+      - { status: 402, code: payment_required, description: "x402 payment needed" }
+      - { status: 403, code: forbidden, description: "Caller does not own this wallet" }
+      - { status: 404, code: not_found, description: "Wallet not found" }
+  - route: "POST /v1/wallets/:address/resume"
+    request: ResumeRequest
+    response: ResumeResponse
+    status: 200
+    description: "Resume operations for a paused wallet"
+    errors:
+      - { status: 400, code: invalid_request, description: "Invalid scope value" }
+      - { status: 402, code: payment_required, description: "x402 payment needed" }
+      - { status: 403, code: forbidden, description: "Caller does not own this wallet" }
+      - { status: 404, code: not_found, description: "Wallet not found" }
+
 cta:
   headline: "Wallets are an **API call**."
   sub: "Agents don't KYC. They generate keys."
@@ -75,8 +215,20 @@ sections:
     title: "API"
     highlight: "reference"
     lines:
-      - "POST   /v1/wallets                 # Create wallet"
-      - "GET    /v1/wallets                 # List wallets"
-      - "GET    /v1/wallets/:address        # Wallet details"
-      - "POST   /v1/wallets/:address/send   # Send USDC"
-      - "POST   /v1/x402/pay               # Pay x402 invoice"
+      - "# Wallet management"
+      - "POST   /v1/wallets                    # Register wallet (free, EIP-191 sig)"
+      - "GET    /v1/wallets                    # List wallets"
+      - "GET    /v1/wallets/:address           # Wallet details + balance"
+      - "DELETE /v1/wallets/:address           # Deactivate wallet (irreversible)"
+      - ""
+      - "# Funding"
+      - "POST   /v1/wallets/:address/fund-request   # Request USDC funding"
+      - "GET    /v1/wallets/:address/fund-requests  # List fund requests"
+      - "POST   /v1/fund-requests/:id/approve       # Approve request"
+      - "POST   /v1/fund-requests/:id/deny          # Deny request"
+      - ""
+      - "# Policy + control"
+      - "GET    /v1/wallets/:address/policy    # Get spending policy"
+      - "PUT    /v1/wallets/:address/policy    # Update spending policy"
+      - "POST   /v1/wallets/:address/pause     # Pause wallet"
+      - "POST   /v1/wallets/:address/resume    # Resume wallet"

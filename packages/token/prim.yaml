@@ -55,6 +55,112 @@ hero_example: |
       -H "X-402-Payment: $TOKEN" \
       -d '{"price_usdc": "0.001"}'
 
+quick_start:
+  - "POST /v1/tokens with name, symbol, initialSupply → deploy ERC-20 ($1.00)"
+  - "Poll GET /v1/tokens/:id until deployStatus is 'confirmed' → get contractAddress"
+  - "POST /v1/tokens/:id/mint → mint additional supply (mintable=true required)"
+  - "POST /v1/tokens/:id/pool with pricePerToken → create Uniswap V3 pool ($0.50)"
+
+tips:
+  - "Deploy is asynchronous — poll GET /v1/tokens/:id until deployStatus is 'confirmed' before minting or creating a pool."
+  - "All supply values are strings representing raw integers (e.g. '1000000000000000000' for 1 token with 18 decimals)."
+  - "USDC has 6 decimals — $1 USDC = '1000000' in raw units."
+  - "One pool per token. POST /v1/tokens/:id/pool returns 409 pool_exists if already created."
+  - "liquidity-params response includes approvals[] — submit each on-chain before calling addLiquidity."
+
+limits:
+  - "One Uniswap V3 pool per token (pool_exists error on second attempt)"
+  - "Mint requires mintable=true at deploy time — immutable after deployment"
+
+ownership: "Tokens are scoped to the wallet address extracted from the x402 payment. Only the deploying wallet can mint or create pools."
+
+routes_map:
+  - route: "POST /v1/tokens"
+    request: CreateTokenRequest
+    response: TokenResponse
+    status: 201
+    description: "Deploy a new ERC-20 token. Returns immediately with deployStatus: 'pending'."
+    notes: "Poll GET /v1/tokens/:id until deployStatus is 'confirmed' before minting or pooling."
+    errors:
+      - { status: 400, code: invalid_request, description: "Missing required fields or invalid values" }
+      - { status: 402, code: payment_required, description: "x402 payment needed" }
+      - { status: 502, code: rpc_error, description: "Base RPC error" }
+  - route: "GET /v1/tokens"
+    request: null
+    response: TokenListResponse
+    status: 200
+    description: "List tokens deployed by the authenticated wallet"
+    errors:
+      - { status: 402, code: payment_required, description: "x402 payment needed" }
+      - { status: 403, code: forbidden, description: "Missing wallet in payment" }
+  - route: "GET /v1/tokens/:id"
+    request: null
+    response: TokenResponse
+    status: 200
+    description: "Get token details: deployStatus, contractAddress, supply, pool"
+    errors:
+      - { status: 402, code: payment_required, description: "x402 payment needed" }
+      - { status: 403, code: forbidden, description: "Token belongs to a different wallet" }
+      - { status: 404, code: not_found, description: "Token ID does not exist" }
+  - route: "POST /v1/tokens/:id/mint"
+    request: MintRequest
+    response: MintResponse
+    status: 200
+    description: "Mint additional tokens to an address. Requires mintable=true at deploy time."
+    errors:
+      - { status: 400, code: not_mintable, description: "Token deployed with mintable=false" }
+      - { status: 402, code: payment_required, description: "x402 payment needed" }
+      - { status: 403, code: forbidden, description: "Token belongs to a different wallet" }
+      - { status: 404, code: not_found, description: "Token ID does not exist" }
+      - { status: 422, code: exceeds_max_supply, description: "Mint would exceed maxSupply" }
+      - { status: 502, code: rpc_error, description: "Base RPC error" }
+  - route: "GET /v1/tokens/:id/supply"
+    request: null
+    response: SupplyResponse
+    status: 200
+    description: "Live on-chain total supply from contract"
+    errors:
+      - { status: 402, code: payment_required, description: "x402 payment needed" }
+      - { status: 403, code: forbidden, description: "Token belongs to a different wallet" }
+      - { status: 404, code: not_found, description: "Token ID does not exist" }
+      - { status: 502, code: rpc_error, description: "Base RPC error" }
+  - route: "POST /v1/tokens/:id/pool"
+    request: CreatePoolRequest
+    response: PoolResponse
+    status: 201
+    description: "Create and initialize a Uniswap V3 pool paired with USDC. One pool per token."
+    errors:
+      - { status: 400, code: invalid_request, description: "Missing pricePerToken or invalid feeTier" }
+      - { status: 402, code: payment_required, description: "x402 payment needed" }
+      - { status: 403, code: forbidden, description: "Token belongs to a different wallet" }
+      - { status: 404, code: not_found, description: "Token ID does not exist" }
+      - { status: 409, code: pool_exists, description: "Pool already exists for this token" }
+      - { status: 502, code: rpc_error, description: "Base RPC error" }
+  - route: "GET /v1/tokens/:id/pool"
+    request: null
+    response: PoolResponse
+    status: 200
+    description: "Get pool details: poolAddress, token0, token1, fee, sqrtPriceX96, tick"
+    errors:
+      - { status: 402, code: payment_required, description: "x402 payment needed" }
+      - { status: 403, code: forbidden, description: "Token belongs to a different wallet" }
+      - { status: 404, code: not_found, description: "Token or pool not found" }
+      - { status: 502, code: rpc_error, description: "Base RPC error" }
+  - route: "GET /v1/tokens/:id/pool/liquidity-params"
+    request: null
+    response: LiquidityParamsResponse
+    status: 200
+    description: "Get calldata for adding liquidity. Returns approvals[] and position manager params."
+    query_params:
+      - { name: tokenAmount, type: string, description: "Raw token amount to add as liquidity" }
+      - { name: usdcAmount, type: string, description: "Raw USDC amount to pair (6 decimals)" }
+    errors:
+      - { status: 400, code: invalid_request, description: "Missing tokenAmount or usdcAmount" }
+      - { status: 402, code: payment_required, description: "x402 payment needed" }
+      - { status: 403, code: forbidden, description: "Token belongs to a different wallet" }
+      - { status: 404, code: not_found, description: "Token or pool not found" }
+      - { status: 502, code: rpc_error, description: "Base RPC error" }
+
 cta:
   headline: "Tokens are an **API call**."
   sub: "Agents don't need MetaMask. They deploy contracts."

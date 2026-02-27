@@ -1,28 +1,37 @@
 # spawn.prim.sh
 
-VPS for agents. Provision, manage, and destroy virtual machines via API.
-Caller identity is derived from the x402 payment signature — register
-your wallet, pay, get a server.
+VPS in one API call. Deploy, scale, destroy. Per-second billing.
 
 Base URL: https://spawn.prim.sh
 Auth: x402 (USDC on Base Sepolia). GET /, GET /pricing, GET /v1/metrics are free.
 Chain: Base Sepolia (eip155:84532) during beta.
 
-Providers:
-  digitalocean  Default. DigitalOcean droplets.
+Install:
+  curl -fsSL https://spawn.prim.sh/install.sh | sh
 
-Limits (beta):
-  3 concurrent servers per wallet
-  Only "small" type available (2 vCPU, 4 GB RAM)
+Limits:
+  Max concurrent servers per wallet: 3
+  Available types: small (2 vCPU, 4 GB RAM) only during beta
+  Locations: nyc3, sfo3, ams3, lon1, fra1, sgp1, tor1, blr1, syd1 (DigitalOcean)
+  Images: ubuntu-24.04, ubuntu-22.04, debian-12, fedora-41
 
-Locations (DigitalOcean):
-  nyc3, sfo3, ams3, lon1, fra1, sgp1, tor1, blr1, syd1
+---
 
-Images:
-  ubuntu-24.04, ubuntu-22.04, debian-12, fedora-41
+## Quick Start
 
-Server lifecycle:
-  initializing → running → (stop) → off → (start) → running → (delete) → destroying → deleted
+  1. POST /v1/ssh-keys with name + public_key → register SSH key
+  2. POST /v1/servers with name, type, image, location → create server ($0.01)
+  3. Poll GET /v1/servers/:id until status is "running" → get IP address
+  4. DELETE /v1/servers/:id when done → release resources and get deposit refund
+
+## Tips
+
+  - Server returns immediately with status 'initializing' — poll until 'running' for the IP.
+  - Register SSH keys first via POST /v1/ssh-keys to enable passwordless SSH access.
+  - Unused deposit is refunded on DELETE. Budget for the expected runtime.
+  - Only 'small' type (2 vCPU, 4 GB RAM) is available during beta.
+  - user_data field accepts cloud-init scripts to automate first-boot setup.
+  - Server must be stopped before resize. stop → resize → start.
 
 ---
 
@@ -36,47 +45,15 @@ Error envelope:
   {"error": {"code": "<code>", "message": "<msg>"}}
 
 Error codes:
-  not_found              Resource does not exist
-  forbidden              Resource belongs to a different wallet
-  invalid_request        Missing or invalid fields
-  insufficient_deposit   Insufficient USDC deposit for server
-  provider_error         Cloud provider API error
-  rate_limited           Too many requests
-  not_implemented        Feature not yet available
-  server_limit_exceeded  Wallet has reached 3 concurrent server limit
-  type_not_allowed       Server type not available (only "small" in beta)
-
----
-
-## Server object
-
-Returned by most server endpoints:
-
-  id             string  Prim server ID (e.g. "srv_abc123")
-  provider       string  Cloud provider (e.g. "digitalocean")
-  provider_id    string  Provider-assigned server ID
-  name           string  Server name (label)
-  type           string  Server type slug (e.g. "small")
-  status         string  See lifecycle above
-  image          string  OS image slug (e.g. "ubuntu-24.04")
-  location       string  Data center slug (e.g. "nyc3")
-  public_net     object  IP addresses
-    .ipv4        object?  IPv4 info
-      .ip        string?  IPv4 address, null until assigned
-    .ipv6        object?  IPv6 info
-      .ip        string?  IPv6 address, null until assigned
-  owner_wallet   string  Ethereum address of owner
-  created_at     string  ISO 8601 timestamp
-
-## Action object
-
-Returned by create/start/stop/reboot/resize/rebuild:
-
-  id           string   Action ID
-  command      string   Action name (e.g. "create", "start", "stop")
-  status       string   "running" | "success" | "error"
-  started_at   string   ISO 8601 timestamp
-  finished_at  string?  ISO 8601 timestamp, null if still running
+  not_found
+  forbidden
+  invalid_request
+  insufficient_deposit
+  provider_error
+  rate_limited
+  not_implemented
+  server_limit_exceeded
+  type_not_allowed
 
 ---
 
@@ -129,37 +106,38 @@ Response (200):
 
 ### POST /v1/servers
 
-Provision a new VPS. Returns immediately with status "initializing".
-Poll GET /v1/servers/:id until status is "running" to get the IP address.
+Provision a new VPS. Returns immediately with status 'initializing'.
 
-Price: $0.01 (plus USDC deposit charged for server runtime)
+Poll GET /v1/servers/:id until status is 'running' to get IP address.
+
+Price: $0.01
 
 Request:
-  name       string  required  Server name (provider-level label)
-  type       string  required  Server type slug. Only "small" available in beta.
-  image      string  required  OS image slug (e.g. "ubuntu-24.04", "debian-12")
-  location   string  required  Data center slug (e.g. "nyc3", "sfo3", "lon1")
-  provider   string  optional  Cloud provider, default "digitalocean"
-  ssh_keys   array   optional  SSH key IDs from POST /v1/ssh-keys to install
-  user_data  string  optional  Cloud-init script to run on first boot
+  name       string    required  Server name (provider-level label).
+  type       string    required  Server type slug. Only "small" (2 vCPU, 4 GB RAM) available in beta.
+  image      string    required  OS image slug (e.g. "ubuntu-24.04", "debian-12").
+  location   string    required  Data center slug (e.g. "nyc3", "sfo3", "lon1").
+  provider   string    optional  Cloud provider. Default "digitalocean".
+  ssh_keys   string[]  optional  SSH key IDs from POST /v1/ssh-keys to install on the server.
+  user_data  string    optional  Cloud-init script to run on first boot.
 
 Response (201):
-  server             object  Server object (status: "initializing")
-  action             object  Action object tracking provisioning
-  deposit_charged    string  USDC charged for this server (decimal string)
-  deposit_remaining  string  Remaining USDC deposit balance (decimal string)
+  server             ServerResponse  Created server object (initial status: "initializing").
+  action             ActionResponse  Action object tracking the provisioning progress.
+  deposit_charged    string          USDC charged for this server as a decimal string.
+  deposit_remaining  string          Remaining USDC deposit balance as a decimal string.
 
 Errors:
-  400  invalid_request       Missing required fields
-  402  payment_required      x402 payment needed
+  400  invalid_request        Missing required fields
+  402  payment_required       x402 payment needed
   403  server_limit_exceeded  Wallet has reached 3 concurrent server limit
-  502  provider_error        Cloud provider API error
+  502  provider_error         Cloud provider API error
 
 ---
 
 ### GET /v1/servers
 
-List all servers owned by the calling wallet.
+List all servers owned by the calling wallet
 
 Price: $0.001
 
@@ -167,12 +145,7 @@ Query params:
   limit  integer  optional  1-100, default 20
   page   integer  optional  1-based page number, default 1
 
-Response (200):
-  servers  array   Server list (see Server object above)
-  meta     object  Pagination metadata
-    .page      integer  Current page
-    .per_page  integer  Servers per page
-    .total     integer  Total server count
+Response (200): ServerListResponse
 
 Errors:
   402  payment_required  x402 payment needed
@@ -182,15 +155,25 @@ Errors:
 
 ### GET /v1/servers/:id
 
-Get full details for a single server.
-Poll this after createServer until status="running" and public_net.ipv4.ip is non-null.
+Get full details for a single server. Poll this until status='running'.
 
 Price: $0.001
 
 Path params:
-  id  string  required  Prim server ID
+  id  string  required  id parameter
 
-Response (200): Server object (see above)
+Response (200):
+  id            string        Prim server ID (e.g. "srv_abc123").
+  provider      string        Cloud provider (e.g. "digitalocean").
+  provider_id   string        Provider-assigned server ID.
+  name          string        Server name (label).
+  type          string        Server type slug (e.g. "small").
+  status        ServerStatus  Current server lifecycle status.
+  image         string        OS image slug (e.g. "ubuntu-24.04").
+  location      string        Data center slug (e.g. "nyc3").
+  public_net    PublicNet     Public IP addresses.
+  owner_wallet  string        Ethereum address of the server owner.
+  created_at    string        ISO 8601 timestamp when the server was created.
 
 Errors:
   402  payment_required  x402 payment needed
@@ -201,17 +184,16 @@ Errors:
 
 ### DELETE /v1/servers/:id
 
-Destroy a server and release its resources.
-Unused deposit is refunded. Server transitions to "destroying" then "deleted".
+Destroy a server and release its resources. Unused deposit is refunded.
 
 Price: $0.005
 
 Path params:
-  id  string  required  Prim server ID
+  id  string  required  id parameter
 
 Response (200):
-  status           string  "deleted"
-  deposit_refunded  string  USDC refunded to wallet (decimal string)
+  status            "deleted"  Always "deleted" on success.
+  deposit_refunded  string     USDC refunded to wallet as a decimal string.
 
 Errors:
   402  payment_required  x402 payment needed
@@ -223,15 +205,15 @@ Errors:
 
 ### POST /v1/servers/:id/start
 
-Start a stopped server.
+Start a stopped server
 
 Price: $0.002
 
 Path params:
-  id  string  required  Prim server ID
+  id  string  required  id parameter
 
 Response (200):
-  action  object  Action object (command: "start")
+  action  ActionResponse  Action object for the requested operation.
 
 Errors:
   402  payment_required  x402 payment needed
@@ -243,15 +225,15 @@ Errors:
 
 ### POST /v1/servers/:id/stop
 
-Stop a running server (graceful shutdown).
+Stop a running server (graceful shutdown)
 
 Price: $0.002
 
 Path params:
-  id  string  required  Prim server ID
+  id  string  required  id parameter
 
 Response (200):
-  action  object  Action object (command: "stop")
+  action  ActionResponse  Action object for the requested operation.
 
 Errors:
   402  payment_required  x402 payment needed
@@ -263,15 +245,15 @@ Errors:
 
 ### POST /v1/servers/:id/reboot
 
-Reboot a running server.
+Reboot a running server
 
 Price: $0.002
 
 Path params:
-  id  string  required  Prim server ID
+  id  string  required  id parameter
 
 Response (200):
-  action  object  Action object (command: "reboot")
+  action  ActionResponse  Action object for the requested operation.
 
 Errors:
   402  payment_required  x402 payment needed
@@ -283,25 +265,24 @@ Errors:
 
 ### POST /v1/servers/:id/resize
 
-Change the server type (CPU/RAM). Server must be stopped first.
-Deposit is adjusted for the new type.
+Change server type (CPU/RAM). Server must be stopped first. Deposit adjusted.
 
 Price: $0.01
 
 Path params:
-  id  string  required  Prim server ID
+  id  string  required  id parameter
 
 Request:
-  type          string   required  Target server type slug
-  upgrade_disk  boolean  optional  Upgrade disk with CPU/RAM. Irreversible if true. Default false.
+  type          string   required  Target server type slug.
+  upgrade_disk  boolean  optional  Upgrade disk along with CPU/RAM. Irreversible if true. Default false.
 
 Response (200):
-  action         object  Action object (command: "resize")
-  new_type       string  Target server type
-  deposit_delta  string  USDC deposit change (positive = charged, negative = refunded)
+  action         ActionResponse  Action object (command: "resize").
+  new_type       string          Target server type after resize.
+  deposit_delta  string          USDC deposit change as a decimal string. Positive = charged, negative = refunded.
 
 Errors:
-  400  invalid_request  Missing type field or invalid value
+  400  invalid_request   Missing type field or invalid value
   402  payment_required  x402 payment needed
   403  forbidden         Server belongs to a different wallet
   404  not_found         Server not found
@@ -316,17 +297,17 @@ Reinstall from a fresh OS image. All data on server is destroyed.
 Price: $0.005
 
 Path params:
-  id  string  required  Prim server ID
+  id  string  required  id parameter
 
 Request:
-  image  string  required  OS image slug to rebuild with (e.g. "debian-12")
+  image  string  required  OS image slug to rebuild with (e.g. "debian-12").
 
 Response (200):
-  action         object   Action object (command: "rebuild")
-  root_password  string?  New root password if no SSH keys configured, null otherwise
+  action         ActionResponse  Action object (command: "rebuild").
+  root_password  string | null   New root password if no SSH keys configured. Null if SSH keys are installed.
 
 Errors:
-  400  invalid_request  Missing image field
+  400  invalid_request   Missing image field
   402  payment_required  x402 payment needed
   403  forbidden         Server belongs to a different wallet
   404  not_found         Server not found
@@ -336,45 +317,37 @@ Errors:
 
 ### POST /v1/ssh-keys
 
-Register a public SSH key. The returned ID can be passed in ssh_keys when creating a server.
+Register a public SSH key. Returned ID can be used in ssh_keys when creating a server.
 
 Price: $0.001
 
 Request:
-  name        string  required  Human-readable label for this key
-  public_key  string  required  Public key string (e.g. "ssh-ed25519 AAAA...")
+  name        string  required  Human-readable label for this SSH key.
+  public_key  string  required  Public key string (e.g. "ssh-ed25519 AAAA...").
 
 Response (201):
-  id             string  Prim SSH key ID (e.g. "key_abc123")
-  provider       string  Cloud provider
-  provider_id    string  Provider-assigned key ID
-  name           string  Key label
-  fingerprint    string  SSH key fingerprint
-  owner_wallet   string  Owner address
-  created_at     string  ISO 8601 timestamp
+  id            string  Prim SSH key ID (e.g. "key_abc123").
+  provider      string  Cloud provider.
+  provider_id   string  Provider-assigned key ID.
+  name          string  Key label.
+  fingerprint   string  SSH key fingerprint.
+  owner_wallet  string  Ethereum address of the key owner.
+  created_at    string  ISO 8601 timestamp when the key was registered.
 
 Errors:
-  400  invalid_request  Missing name or public_key
+  400  invalid_request   Missing name or public_key
   402  payment_required  x402 payment needed
-  502  provider_error   Cloud provider API error
+  502  provider_error    Cloud provider API error
 
 ---
 
 ### GET /v1/ssh-keys
 
-List all SSH keys registered by the calling wallet.
+List all SSH keys registered by the calling wallet
 
 Price: $0.001
 
-Response (200):
-  ssh_keys  array  SSH key list
-    .id            string  Prim SSH key ID
-    .provider      string  Cloud provider
-    .provider_id   string  Provider-assigned key ID
-    .name          string  Key label
-    .fingerprint   string  SSH key fingerprint
-    .owner_wallet  string  Owner address
-    .created_at    string  ISO 8601 timestamp
+Response (200): SshKeyListResponse
 
 Errors:
   402  payment_required  x402 payment needed
@@ -389,7 +362,7 @@ Remove an SSH key. Keys in use by active servers remain until server is rebuilt.
 Price: $0.001
 
 Path params:
-  id  string  required  Prim SSH key ID
+  id  string  required  id parameter
 
 Response (200): {} (empty object)
 
@@ -398,3 +371,9 @@ Errors:
   403  forbidden         Key belongs to a different wallet
   404  not_found         SSH key not found
   502  provider_error    Cloud provider API error
+
+---
+
+## Ownership
+
+All servers and SSH keys are scoped to the wallet address extracted from the x402 payment.
