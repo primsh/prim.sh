@@ -992,9 +992,9 @@
                   "depends": [
                     "I-18"
                   ],
-                  "status": "pending",
+                  "status": "done",
                   "release": null,
-                  "plan": "tasks/active/i-13-cli-generator.md"
+                  "plan": "tasks/completed/i-13-cli-generator.md"
                 },
                 {
                   "id": "I-14",
