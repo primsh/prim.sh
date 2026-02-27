@@ -874,7 +874,7 @@
                     "Claude"
                   ],
                   "depends": [],
-                  "status": "pending",
+                  "status": "done",
                   "release": null,
                   "plan": "tasks/active/i-5-create-prim-app-factory.md"
                 },
