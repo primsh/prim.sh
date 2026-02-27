@@ -2,6 +2,9 @@ name = "prim-platform"
 main = "src/index.ts"
 compatibility_date = "2024-12-01"
 
+# Route: api.prim.sh/* → set manually in CF dashboard (token lacks zone permissions)
+# routes = [{ pattern = "api.prim.sh/*", zone_name = "prim.sh" }]
+
 [vars]
 VPS_WALLET_URL = "https://wallet.prim.sh"
 

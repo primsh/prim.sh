@@ -10,11 +10,6 @@ import { createPrimApp } from "@primsh/x402-middleware/create-prim-app";
 import { RateLimiter } from "./rate-limit.ts";
 import { dripUsdc, dripEth, getTreasuryBalance, refillTreasury } from "./service.ts";
 
-// faucet.sh is a free service: no x402 middleware, no PRIM_PAY_TO required.
-// It uses createWalletAllowlistChecker for allowlist checks in route handlers.
-const WALLET_INTERNAL_URL = process.env.WALLET_INTERNAL_URL ?? "http://127.0.0.1:3001";
-const checkAllowlist = createWalletAllowlistChecker(WALLET_INTERNAL_URL);
-
 const app = createPrimApp(
   {
     serviceName: "faucet.sh",
@@ -88,10 +83,6 @@ app.post("/v1/faucet/usdc", async (c) => {
     return c.json({ error: { code: "invalid_request", message: "Invalid JSON body" } }, 400);
   }
 
-  if (!(await checkAllowlist(address.toLowerCase()))) {
-    return c.json({ error: { code: "wallet_not_allowed", message: "This service is in private beta" } }, 403);
-  }
-
   const rateCheck = usdcLimiter.check(address);
   if (!rateCheck.allowed) {
     const retryAfter = Math.ceil(rateCheck.retryAfterMs / 1000);
@@ -138,10 +129,6 @@ app.post("/v1/faucet/eth", async (c) => {
   } catch (err) {
     logger.warn("JSON parse failed on POST /v1/faucet/eth", { error: String(err) });
     return c.json({ error: { code: "invalid_request", message: "Invalid JSON body" } }, 400);
-  }
-
-  if (!(await checkAllowlist(address.toLowerCase()))) {
-    return c.json({ error: { code: "wallet_not_allowed", message: "This service is in private beta" } }, 403);
   }
 
   const rateCheck = ethLimiter.check(address);
