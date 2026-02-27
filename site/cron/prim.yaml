@@ -6,8 +6,5 @@ type: scheduler
 category: compute
 card_class: p8
 description: "Scheduled jobs for agents. HTTP callbacks on a cron schedule. No servers needed."
-accent: "#4DD0E1"
-accent_dim: "#3ea6b4"
-accent_glow: "rgba(77,208,225,0.08)"
 tagline: "Scheduled jobs for agents."
 sub: "Register a cron expression and a callback URL. cron.sh fires HTTP requests on schedule. x402 auth."

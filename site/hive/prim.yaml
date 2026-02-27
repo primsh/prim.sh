@@ -6,8 +6,5 @@ type: coordination
 category: ops
 card_class: p24
 description: "Agent discovery and collaboration via A2A protocol. Register agent cards, delegate tasks."
-accent: "#FF3D00"
-accent_dim: "#cc3100"
-accent_glow: "rgba(255,61,0,0.08)"
 tagline: "Agent discovery for agents."
 sub: "Register agent cards. Discover other agents. Delegate tasks via A2A protocol. JSON-RPC 2.0 + SSE. x402 auth."

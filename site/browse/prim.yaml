@@ -6,8 +6,5 @@ type: browser
 category: comms
 card_class: p16
 description: "Headless browser for agents. Playwright or Browserbase. Click, fill, screenshot."
-accent: "#6C8EFF"
-accent_dim: "#5672cc"
-accent_glow: "rgba(108,142,255,0.08)"
 tagline: "Browser automation for agents."
 sub: "Headless Chromium in the cloud. Navigate, click, fill forms, screenshot. Playwright under the hood. x402 auth."

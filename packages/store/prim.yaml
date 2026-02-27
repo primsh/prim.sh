@@ -51,9 +51,6 @@ factory:
   metrics: true
   free_service: false
 
-accent: "#FFB74D"
-accent_dim: "#cc923e"
-accent_glow: "rgba(255,183,77,0.08)"
 
 tagline: "Object storage for agents."
 sub: "Upload files, share artifacts between runs, persist state across ephemeral VMs. S3-compatible. x402 auth."

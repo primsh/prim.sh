@@ -5,9 +5,6 @@ status: building
 type: logistics
 category: ops
 card_class: p13
-accent: "#FF3D00"
-accent_dim: "#cc3100"
-accent_glow: "rgba(255,61,0,0.08)"
 wraps: TrackingMore API
 description: "Package tracking for agents. USPS, FedEx, UPS, DHL and 1000+ carriers. Status, ETA, full event history."
 port: 3010

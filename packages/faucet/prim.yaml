@@ -35,9 +35,6 @@ factory:
   metrics: true
   free_service: true
 
-accent: "#00ff88"
-accent_dim: "#00cc6d"
-accent_glow: "rgba(0,255,136,0.08)"
 
 tagline: "Testnet funds for agents."
 sub: "Free USDC and ETH on Base Sepolia. No signup, no captcha. Rate-limited per address. Get funded and start building."

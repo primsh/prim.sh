@@ -43,9 +43,6 @@ factory:
   metrics: true
   free_service: false
 
-accent: "#B39DDB"
-accent_dim: "#8f7eaf"
-accent_glow: "rgba(179,157,219,0.08)"
 
 tagline: "Search for agents."
 sub: "Web search, news, and URL extraction. No ads, no SEO spam. Clean structured results and markdown. x402 auth."

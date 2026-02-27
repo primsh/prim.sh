@@ -6,8 +6,5 @@ type: search
 category: intelligence
 card_class: p15
 description: "Deep search for agents. Brave Search API or SearXNG. Privacy-first results."
-accent: "#B39DDB"
-accent_dim: "#8f7eaf"
-accent_glow: "rgba(179,157,219,0.08)"
 tagline: "Deep search for agents."
 sub: "Privacy-first web search. Brave Search API. No tracking, no ads, no personalization. x402 auth."

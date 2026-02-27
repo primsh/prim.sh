@@ -6,8 +6,5 @@ type: messaging
 category: comms
 card_class: p10
 description: "Message queues for agents. Pub/sub channels. Fan-out, fan-in, and pipelines."
-accent: "#6C8EFF"
-accent_dim: "#5672cc"
-accent_glow: "rgba(108,142,255,0.08)"
 tagline: "Message queues for agents."
 sub: "Pub/sub channels. Fan-out, fan-in, and pipelines. NATS or Redis Streams under the hood. x402 auth."

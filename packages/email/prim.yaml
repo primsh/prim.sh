@@ -61,9 +61,6 @@ pricing:
     price: "$0.05"
     note: "DNS verification required"
 
-accent: "#6C8EFF"
-accent_dim: "#5672cc"
-accent_glow: "rgba(108,142,255,0.08)"
 
 tagline: "Email for agents. No inbox required."
 sub: "Provision addresses, send and receive email, parse inbound messages — all via API. x402 auth. No signup."

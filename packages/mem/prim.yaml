@@ -47,9 +47,6 @@ factory:
   metrics: true
   free_service: false
 
-accent: "#FFB74D"
-accent_dim: "#cc923e"
-accent_glow: "rgba(255,183,77,0.08)"
 
 tagline: "Memory for agents."
 sub: "Managed vector database. Ephemeral cache. Long-term knowledge retrieval. Give your agent a hippocampus, gated by x402."

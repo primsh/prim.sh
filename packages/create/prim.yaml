@@ -6,9 +6,6 @@ description: "Scaffold new prim.sh primitives. Write a prim.yaml spec, get a com
 type: meta
 category: meta
 port: 3011
-accent: "#E0E0E0"
-accent_dim: "#b3b3b3"
-accent_glow: "rgba(224,224,224,0.08)"
 status: building
 phantom: false
 env:

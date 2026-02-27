@@ -6,8 +6,5 @@ type: tracing
 category: ops
 card_class: p19
 description: "Distributed tracing for agents. OpenTelemetry + Jaeger. Track multi-agent workflows."
-accent: "#FF3D00"
-accent_dim: "#cc3100"
-accent_glow: "rgba(255,61,0,0.08)"
 tagline: "Distributed tracing for agents."
 sub: "Track multi-step agent workflows end to end. OpenTelemetry + Jaeger. See where your agent spent time. x402 auth."

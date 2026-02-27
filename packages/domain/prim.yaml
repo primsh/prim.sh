@@ -53,9 +53,6 @@ factory:
   metrics: true
   free_service: false
 
-accent: "#FFC107"
-accent_dim: "#cc9a06"
-accent_glow: "rgba(255,193,7,0.08)"
 
 tagline: "Domains for agents."
 sub: "Instant subdomains with auto-TLS. Or bring your own domain. DNS records via API. No registrar account needed."

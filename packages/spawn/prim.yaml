@@ -54,9 +54,6 @@ pricing:
     price: "$0.01/GB"
     note: ""
 
-accent: "#4DD0E1"
-accent_dim: "#3ea6b4"
-accent_glow: "rgba(77,208,225,0.08)"
 
 tagline: "VPS for agents. By agents."
 sub: "No signup. No GUI. No KYC. Pay with x402. Deploy from code."

@@ -6,8 +6,5 @@ type: location
 category: physical
 card_class: p25
 description: "Location data for agents. Places, geocoding, routing via Google Maps or Overture."
-accent: "#F48FB1"
-accent_dim: "#c3728e"
-accent_glow: "rgba(244,143,177,0.08)"
 tagline: "Location data for agents."
 sub: "Search places, geocode addresses, get routing directions. Google Places API under the hood. x402 auth."

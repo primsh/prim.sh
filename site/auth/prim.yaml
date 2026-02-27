@@ -6,8 +6,5 @@ type: auth
 category: identity
 card_class: p17
 description: "OAuth broker for agents. Get access tokens for external services without managing flows."
-accent: "#FFC107"
-accent_dim: "#cc9a06"
-accent_glow: "rgba(255,193,7,0.08)"
 tagline: "OAuth for agents."
 sub: "Get access tokens for GitHub, Google, Slack, and more. Agent-initiated OAuth flows without a browser. x402 auth."

@@ -6,9 +6,6 @@ type: intelligence
 category: intelligence
 description: "Media generation for agents. Images, video, audio. Any model, one API. No API keys."
 port: 3013
-accent: "#B39DDB"
-accent_dim: "#8f7eaf"
-accent_glow: "rgba(179,157,219,0.08)"
 wraps: Google Gemini Imagen API
 env:
   - PRIM_PAY_TO

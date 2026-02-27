@@ -6,8 +6,5 @@ type: labor
 category: physical
 card_class: p28
 description: "Human labor on demand for agents. Delegate tasks requiring physical action."
-accent: "#F48FB1"
-accent_dim: "#c3728e"
-accent_glow: "rgba(244,143,177,0.08)"
 tagline: "Human hands for agents."
 sub: "Delegate tasks that require physical action. Gig platform under the hood. Agents post tasks, humans complete them. x402 auth."

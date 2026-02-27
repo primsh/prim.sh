@@ -81,10 +81,11 @@ export interface PrimConfig {
   env?: string[];
   pricing?: PricingRow[];
 
-  // SITE-1 fields
-  accent: string;
-  accent_dim: string;
-  accent_glow: string;
+  // SITE-1 fields — accent derived from category if not set
+  accent?: string;
+  accent_dim?: string;
+  accent_glow?: string;
+  category?: string;
   tagline: string;
   sub: string;
   hero_badges?: string[];
@@ -531,7 +532,7 @@ function renderComingSoon(cfg: PrimConfig): string {
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>${esc(cfg.name)} — ${esc(cfg.tagline)}</title>
 ${headMeta(cfg)}
-${inlineCSS(cfg.accent, cfg.accent_dim, cfg.accent_glow)}
+${inlineCSS(cfg)}
 </head>
 <body>
 <div class="hero">
@@ -559,9 +560,16 @@ export function setBuildHash(hash: string): void {
   _buildHash = hash;
 }
 
-function inlineCSS(accent: string, accentDim: string, accentGlow: string): string {
+function inlineCSS(cfg: PrimConfig): string {
+  const category = cfg.category ?? "meta";
+  // Derive accent from category — single source of truth in prim.css --cat-* vars
+  // Allow explicit accent override in prim.yaml for special cases
+  const accent = cfg.accent ?? `var(--cat-${category})`;
+  const isVar = accent.startsWith("var(");
+  const dim = cfg.accent_dim ?? (isVar ? `color-mix(in srgb, ${accent} 80%, black)` : accent);
+  const glow = cfg.accent_glow ?? (isVar ? `color-mix(in srgb, ${accent} 8%, transparent)` : accent);
   return `<link rel="stylesheet" href="/assets/prim.css?v=${_buildHash}">
-<style>:root{--accent:${accent};--accent-dim:${accentDim};--accent-glow:${accentGlow}}</style>`;
+<style>:root{--accent:${accent};--accent-dim:${dim};--accent-glow:${glow}}</style>`;
 }
 
 function headMeta(cfg: PrimConfig): string {
@@ -644,7 +652,7 @@ export function render(cfg: PrimConfig): string {
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>${esc(cfg.name)} — ${esc(cfg.tagline)}</title>
 ${headMeta(cfg)}
-${inlineCSS(cfg.accent, cfg.accent_dim, cfg.accent_glow)}
+${inlineCSS(cfg)}
 </head>
 <body>
 <div class="hero">

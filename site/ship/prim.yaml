@@ -6,8 +6,5 @@ type: logistics
 category: ops
 card_class: p27
 description: "Shipping labels for agents. EasyPost or Shippo. USPS, FedEx, UPS, DHL."
-accent: "#FF3D00"
-accent_dim: "#cc3100"
-accent_glow: "rgba(255,61,0,0.08)"
 tagline: "Shipping labels for agents."
 sub: "Create shipping labels for USPS, FedEx, UPS, DHL. Get rates, print labels, track packages. x402 auth."
