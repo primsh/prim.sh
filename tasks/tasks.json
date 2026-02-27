@@ -786,6 +786,67 @@
               "release": null
             }
           ]
+        },
+        {
+          "id": "PRIMS-W7",
+          "title": "infer.sh — Agent Test Loop",
+          "parallelism": "SRL",
+          "tasks": [
+            {
+              "id": "INF-1",
+              "description": "Fill api.ts types: OpenAI-compatible ChatRequest/Response, EmbedRequest/Response, ModelsResponse. Include Message, Tool, ToolCall, ContentPart, Choice, Usage.",
+              "owner": ["Claude"],
+              "depends": [],
+              "status": "done",
+              "release": null,
+              "plan": "tasks/active/inf-infer-sh-pipeline.md"
+            },
+            {
+              "id": "INF-2",
+              "description": "Implement openrouter.ts: chat/embed/models methods wrapping OpenRouter API. Fix env var INFER_API_KEY → OPENROUTER_API_KEY. Add prim.sh referer headers.",
+              "owner": ["Claude"],
+              "depends": ["INF-1"],
+              "status": "done",
+              "release": null,
+              "plan": "tasks/active/inf-infer-sh-pipeline.md"
+            },
+            {
+              "id": "INF-3",
+              "description": "Implement service.ts: validation + provider delegation for chat (model+messages required), embed (model+input required), models (no input). handleProviderError helper.",
+              "owner": ["Claude"],
+              "depends": ["INF-2"],
+              "status": "done",
+              "release": null,
+              "plan": "tasks/active/inf-infer-sh-pipeline.md"
+            },
+            {
+              "id": "INF-4",
+              "description": "Fix scaffolder bugs in index.ts: GET /v1/models tries to parse JSON body from GET request; models() service signature takes unnecessary body param.",
+              "owner": ["Claude"],
+              "depends": ["INF-1"],
+              "status": "done",
+              "release": null,
+              "plan": "tasks/active/inf-infer-sh-pipeline.md"
+            },
+            {
+              "id": "INF-5",
+              "description": "Update smoke test with realistic ChatResponse mock, verify 5/5 checks pass after implementation.",
+              "owner": ["Claude"],
+              "depends": ["INF-3", "INF-4"],
+              "status": "done",
+              "release": null,
+              "plan": "tasks/active/inf-infer-sh-pipeline.md"
+            },
+            {
+              "id": "INF-6",
+              "description": "Deploy infer.sh to VPS: systemd unit, /etc/prim/infer.env, Caddy route (port 3012), prim.yaml status → deployed, pnpm gen:prims.",
+              "owner": ["Garric"],
+              "depends": ["INF-5"],
+              "status": "pending",
+              "release": null,
+              "plan": "tasks/active/inf-infer-sh-pipeline.md"
+            }
+          ]
         }
       ],
       "description": "Feature work on specific services."
@@ -1330,6 +1391,31 @@
               "plan": "tasks/completed/i-17-provider-registry.md"
             }
           ]
+        },
+        {
+          "id": "INFRA-W8",
+          "title": "Smoke Runner — Agent Test Loop",
+          "parallelism": "SRL",
+          "tasks": [
+            {
+              "id": "I-30",
+              "description": "Build tests/smoke-runner.ts: orchestrates agent-driven smoke tests against live endpoints. Reads smoke-test-plan.json, runs groups, collects pass/fail + UX notes.",
+              "owner": ["Claude"],
+              "depends": ["INF-6"],
+              "status": "pending",
+              "release": null,
+              "plan": "tasks/active/inf-infer-sh-pipeline.md"
+            },
+            {
+              "id": "I-31",
+              "description": "Add infer.sh test group to smoke-test-plan.json: health check, chat completion, embeddings, list models.",
+              "owner": ["Claude"],
+              "depends": ["INF-6"],
+              "status": "pending",
+              "release": null,
+              "plan": "tasks/active/inf-infer-sh-pipeline.md"
+            }
+          ]
         }
       ],
       "description": "CI, tooling, observability, pricing, cross-cutting platform work."
@@ -1390,6 +1476,36 @@
             {
               "id": "L-57",
               "description": "Upload `final-social-preview.jpg` as GitHub repo social preview",
+              "owner": [
+                "Garric"
+              ],
+              "depends": [],
+              "status": "pending",
+              "release": null
+            },
+            {
+              "id": "L-73",
+              "description": "Compress favicon.png (1.2 MB → <50 KB) or regenerate optimized PNG from source artwork",
+              "owner": [
+                "Claude"
+              ],
+              "depends": [],
+              "status": "pending",
+              "release": null
+            },
+            {
+              "id": "L-74",
+              "description": "Create SVG of >| logo mark for scalable use in badges, third-party integrations, and favicons",
+              "owner": [
+                "Garric"
+              ],
+              "depends": [],
+              "status": "pending",
+              "release": null
+            },
+            {
+              "id": "L-75",
+              "description": "Document GitHub repo URL convention (`primsh/prim` vs `primsh/prim.sh`) in BRAND.md handles section",
               "owner": [
                 "Garric"
               ],
@@ -1474,7 +1590,7 @@
                 "Claude"
               ],
               "depends": [],
-              "status": "pending",
+              "status": "done",
               "release": null
             },
             {
@@ -1710,6 +1826,33 @@
               "plan": "tasks/active/site-11-prim-site-removal-2026-02-27.md"
             }
           ]
+        },
+        {
+          "id": "COMM-W6",
+          "title": "OSS Package Polish",
+          "parallelism": "PARA",
+          "tasks": [
+            {
+              "id": "COM-10",
+              "description": "Add metadata to root package.json: `description`, `homepage` (https://prim.sh), `keywords`, `author`",
+              "owner": [
+                "Claude"
+              ],
+              "depends": [],
+              "status": "pending",
+              "release": null
+            },
+            {
+              "id": "COM-14",
+              "description": "Decide initial semver and bump all packages from 0.0.0 (recommend v0.1.0 for pre-stable OSS launch)",
+              "owner": [
+                "Garric"
+              ],
+              "depends": [],
+              "status": "pending",
+              "release": null
+            }
+          ]
         }
       ],
       "description": "Docs, Discord, brand assets, marketing."
@@ -1734,7 +1877,7 @@
             },
             {
               "id": "I-22",
-              "description": "Research: forge.sh \u2014 runtime adapter registry. Agents register external APIs as prims (upstream URL + routes + API key). Prim wraps in x402/MCP/CLI automatically. No code gen, no deploy. Key questions: where does adapter config live (DB? prim.yaml?), auth scoping (who can call?), key custody, abuse prevention, discovery via search.sh. Write spec in tasks/research/.",
+              "description": "Research: tap.sh \u2014 runtime adapter registry. Agents register external APIs as prims (upstream URL + routes + API key). Prim wraps in x402/MCP/CLI automatically. No code gen, no deploy. Key questions: where does adapter config live (DB? prim.yaml?), auth scoping (who can call?), key custody, abuse prevention, discovery via search.sh. Write spec in tasks/research/.",
               "owner": [
                 "Claude"
               ],
@@ -1796,6 +1939,26 @@
               "depends": [
                 "I-22"
               ],
+              "status": "backlog",
+              "release": null
+            },
+            {
+              "id": "I-28",
+              "description": "Provider scaffolder: `pnpm create-provider <prim> <vendor>` generates src/<vendor>.ts implementing the prim provider interface, registers in index.ts. Reads existing src/provider.ts for the interface shape.",
+              "owner": [
+                "Claude"
+              ],
+              "depends": [],
+              "status": "backlog",
+              "release": null
+            },
+            {
+              "id": "I-29",
+              "description": "gen:docs — generates CLAUDE.md factory section, README prim table, per-package READMEs, homepage fields in package.json, shields.io badges in root README, brand copy from brand.ts SOT. Code is canonical source.",
+              "owner": [
+                "Claude"
+              ],
+              "depends": [],
               "status": "backlog",
               "release": null
             }

@@ -1,0 +1,76 @@
+id: infer
+name: infer.sh
+endpoint: infer.prim.sh
+status: building
+type: intelligence
+description: "LLM inference for agents. Any model, any provider, one API. Per-token pricing. No API keys."
+port: 3012
+accent: "#B39DDB"
+accent_dim: "#9575cd"
+accent_glow: "rgba(179,157,219,0.08)"
+wraps: OpenRouter API
+env:
+  - PRIM_PAY_TO
+  - PRIM_NETWORK
+  - OPENROUTER_API_KEY
+  - WALLET_INTERNAL_URL
+
+pricing:
+  - op: "Chat completion"
+    price: "pass-through + 10%"
+    note: "Per-token, varies by model"
+  - op: "Embeddings"
+    price: "$0.001"
+    note: "Per 1K tokens"
+  - op: "List models"
+    price: "free"
+
+providers:
+  - name: openrouter
+    env: [OPENROUTER_API_KEY]
+    status: active
+    default: true
+    url: https://openrouter.ai/
+
+interfaces:
+  mcp: true
+  cli: true
+  openai: true
+  rest: true
+
+factory:
+  max_body_size: "1MB"
+  metrics: true
+  free_service: false
+
+routes_map:
+  - route: "POST /v1/chat"
+    request: ChatRequest
+    response: ChatResponse
+    status: 200
+    description: "Chat completion. Supports streaming, tool use, structured output."
+    operation_id: chat
+    errors:
+      - { status: 400, code: invalid_request, description: "Missing or invalid model/messages" }
+      - { status: 402, code: payment_required, description: "x402 payment needed" }
+      - { status: 429, code: rate_limited, description: "Too many requests" }
+      - { status: 502, code: provider_error, description: "Upstream model provider error" }
+  - route: "POST /v1/embed"
+    request: EmbedRequest
+    response: EmbedResponse
+    status: 200
+    description: "Generate embeddings for text input. Returns vector array."
+    operation_id: embed
+    errors:
+      - { status: 400, code: invalid_request, description: "Missing or invalid input" }
+      - { status: 402, code: payment_required, description: "x402 payment needed" }
+      - { status: 429, code: rate_limited, description: "Too many requests" }
+      - { status: 502, code: provider_error, description: "Upstream provider error" }
+  - route: "GET /v1/models"
+    request: null
+    response: ModelsResponse
+    status: 200
+    description: "List available models with pricing and capabilities."
+    operation_id: list_models
+    errors:
+      - { status: 502, code: provider_error, description: "Unable to fetch model list" }
