@@ -76,6 +76,11 @@ jobs:
             --exclude='bun.lock' \
             ./ "$VPS_HOST":/opt/prim/
 
+      - name: Fix ownership
+        env:
+          VPS_HOST: ${{ secrets.VPS_HOST }}
+        run: ssh "$VPS_HOST" "chown -R prim:prim /opt/prim"
+
       - name: Install, build, restart
         env:
           VPS_HOST: ${{ secrets.VPS_HOST }}
