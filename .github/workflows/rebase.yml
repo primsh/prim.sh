@@ -81,6 +81,7 @@ jobs:
     if: needs.find-conflicts.outputs.conflicted != '[]'
     runs-on: ubuntu-latest
     strategy:
+      fail-fast: false
       matrix:
         pr: ${{ fromJson(needs.find-conflicts.outputs.conflicted) }}
       max-parallel: 3
@@ -117,11 +118,15 @@ jobs:
             This branch has merge conflicts with main. The merge is in progress —
             conflict markers (<<<<<<< / ======= / >>>>>>>) are in the working tree.
 
+            IMPORTANT: main is the source of truth. It contains already-merged
+            bug fixes, lint fixes, and CI changes that are correct.
+
             Resolve every conflict:
-            1. Read each file listed by `git diff --name-only --diff-filter=U`
-            2. Remove all conflict markers and choose the correct resolution:
-               - Feature code: prefer HEAD (the PR branch)
-               - Infrastructure, config, CI: prefer main
+            1. Run `git diff --name-only --diff-filter=U` to list conflicted files
+            2. Read each conflicted file and remove all conflict markers:
+               - Default: prefer main's version (it has landed fixes)
+               - Only prefer HEAD when it adds new code that doesn't exist in main
+                 (new functions, new files, new features)
                - List additions (imports, array entries, YAML lists): keep both
             3. Run `git add <file>` for each resolved file
             4. Verify no markers remain: `grep -rn '<<<<<<< ' . --include='*.ts' --include='*.json' --include='*.yaml' --include='*.yml' --include='*.md'` should return nothing

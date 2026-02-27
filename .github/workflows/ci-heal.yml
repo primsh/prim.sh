@@ -61,4 +61,5 @@ jobs:
 
             Do NOT weaken tests, disable lint rules, or add suppressions.
             Push the fix. Keep changes minimal.
-          claude_args: "--max-turns 5 --model claude-sonnet-4-6"
+          allowed_tools: "Bash,Read,Edit,Write,Glob,Grep"
+          claude_args: "--max-turns 10 --model claude-sonnet-4-6"
