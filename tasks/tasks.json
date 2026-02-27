@@ -82,7 +82,7 @@
                 },
                 {
                   "id": "HRD-5",
-                  "description": "Fix `setUTCHours(24)` in `wallet/src/db.ts` \u2014 use explicit date arithmetic",
+                  "description": "Fix `setUTCHours(24)` in `wallet/src/db.ts` — use explicit date arithmetic",
                   "owner": [
                     "Claude"
                   ],
@@ -183,7 +183,7 @@
                 },
                 {
                   "id": "HRD-12",
-                  "description": "Fail-fast on missing PRIM_PAY_TO \u2014 zero-address fallback \u2192 startup crash with clear error message",
+                  "description": "Fail-fast on missing PRIM_PAY_TO — zero-address fallback → startup crash with clear error message",
                   "owner": [
                     "Claude"
                   ],
@@ -269,7 +269,7 @@
                 },
                 {
                   "id": "HRD-19",
-                  "description": "Fix token test mock typing \u2014 replace vi.fn<any[], any>() biome-ignore with properly typed mocks",
+                  "description": "Fix token test mock typing — replace vi.fn<any[], any>() biome-ignore with properly typed mocks",
                   "owner": [
                     "Claude"
                   ],
@@ -281,7 +281,7 @@
                 },
                 {
                   "id": "HRD-26",
-                  "description": "Add packages/mcp/test/smoke.test.ts \u2014 zero tests on 14-source-file MCP server package",
+                  "description": "Add packages/mcp/test/smoke.test.ts — zero tests on 14-source-file MCP server package",
                   "owner": [
                     "Claude"
                   ],
@@ -298,7 +298,7 @@
               "tasks": [
                 {
                   "id": "HRD-15",
-                  "description": "Fix pagination cursor/page inconsistency \u2014 email treats cursor as numeric offset, wallet as string",
+                  "description": "Fix pagination cursor/page inconsistency — email treats cursor as numeric offset, wallet as string",
                   "owner": [
                     "Claude"
                   ],
@@ -308,7 +308,7 @@
                 },
                 {
                   "id": "HRD-16",
-                  "description": "Add Zod schemas for request body validation \u2014 replace bare c.req.json<T>() with z.parse()",
+                  "description": "Add Zod schemas for request body validation — replace bare c.req.json<T>() with z.parse()",
                   "owner": [
                     "Claude"
                   ],
@@ -351,7 +351,7 @@
               "tasks": [
                 {
                   "id": "HRD-26",
-                  "description": "Add packages/mcp/test/smoke.test.ts \u2014 zero tests on 14-source-file MCP server package",
+                  "description": "Add packages/mcp/test/smoke.test.ts — zero tests on 14-source-file MCP server package",
                   "owner": [
                     "Claude"
                   ],
@@ -399,7 +399,7 @@
               "tasks": [
                 {
                   "id": "HRD-30",
-                  "description": "Replace residual console.warn() \u2192 structured logger in wallet/src/service.ts + email/src/service.ts (HRD-11 residual)",
+                  "description": "Replace residual console.warn() → structured logger in wallet/src/service.ts + email/src/service.ts (HRD-11 residual)",
                   "owner": [
                     "Claude"
                   ],
@@ -454,7 +454,7 @@
                 },
                 {
                   "id": "HRD-34",
-                  "description": "`--ssh-keys` flag parses single string char-by-char \u2014 `sk_abc` becomes error \"key not found: s\"",
+                  "description": "`--ssh-keys` flag parses single string char-by-char — `sk_abc` becomes error \"key not found: s\"",
                   "owner": [
                     "Claude"
                   ],
@@ -464,7 +464,7 @@
                 },
                 {
                   "id": "HRD-35",
-                  "description": "Email CLI errors double-print \u2014 both `handleError` and `wrapCommand` catch block write to stderr",
+                  "description": "Email CLI errors double-print — both `handleError` and `wrapCommand` catch block write to stderr",
                   "owner": [
                     "Claude"
                   ],
@@ -687,7 +687,7 @@
           "tasks": [
             {
               "id": "SP-7",
-              "description": "DockerProvider: Docker container tier as default (10\u201350x cheaper than VMs).",
+              "description": "DockerProvider: Docker container tier as default (10–50x cheaper than VMs).",
               "owner": [
                 "Claude"
               ],
@@ -700,7 +700,9 @@
               "id": "SP-8",
               "description": "Nested spawn: POST /v1/servers/{id}/containers — create/list/destroy containers on an existing spawn via SSH+Docker. Enables spawn-inside-spawn for agent replication.",
               "owner": [],
-              "depends": ["SP-7"],
+              "depends": [
+                "SP-7"
+              ],
               "status": "pending",
               "release": null
             }
@@ -775,7 +777,7 @@
           "tasks": [
             {
               "id": "FB-1",
-              "description": "issue.sh MVP: POST /v1/issues \u2014 agents file structured bug reports + feature requests via x402. Bug reports free.",
+              "description": "issue.sh MVP: POST /v1/issues — agents file structured bug reports + feature requests via x402. Bug reports free.",
               "owner": [
                 "Claude"
               ],
@@ -797,7 +799,7 @@
             },
             {
               "id": "FB-3",
-              "description": "issue.sh \u2192 GitHub sync: auto-create GitHub issues from agent reports. Label by primitive + severity.",
+              "description": "issue.sh → GitHub sync: auto-create GitHub issues from agent reports. Label by primitive + severity.",
               "owner": [
                 "Claude"
               ],
@@ -810,8 +812,12 @@
             {
               "id": "FB-4",
               "description": "x402-middleware: add `report` URL (https://issue.prim.sh/v1/issues) to every error envelope automatically. One change, all prims get it for free.",
-              "owner": ["Claude"],
-              "depends": ["FB-1"],
+              "owner": [
+                "Claude"
+              ],
+              "depends": [
+                "FB-1"
+              ],
               "status": "pending",
               "release": null
             }
@@ -825,7 +831,9 @@
             {
               "id": "INF-1",
               "description": "Fill api.ts types: OpenAI-compatible ChatRequest/Response, EmbedRequest/Response, ModelsResponse. Include Message, Tool, ToolCall, ContentPart, Choice, Usage.",
-              "owner": ["Claude"],
+              "owner": [
+                "Claude"
+              ],
               "depends": [],
               "status": "done",
               "release": null,
@@ -834,8 +842,12 @@
             {
               "id": "INF-2",
               "description": "Implement openrouter.ts: chat/embed/models methods wrapping OpenRouter API. Fix env var INFER_API_KEY → OPENROUTER_API_KEY. Add prim.sh referer headers.",
-              "owner": ["Claude"],
-              "depends": ["INF-1"],
+              "owner": [
+                "Claude"
+              ],
+              "depends": [
+                "INF-1"
+              ],
               "status": "done",
               "release": null,
               "plan": "tasks/active/inf-infer-sh-pipeline.md"
@@ -843,8 +855,12 @@
             {
               "id": "INF-3",
               "description": "Implement service.ts: validation + provider delegation for chat (model+messages required), embed (model+input required), models (no input). handleProviderError helper.",
-              "owner": ["Claude"],
-              "depends": ["INF-2"],
+              "owner": [
+                "Claude"
+              ],
+              "depends": [
+                "INF-2"
+              ],
               "status": "done",
               "release": null,
               "plan": "tasks/active/inf-infer-sh-pipeline.md"
@@ -852,8 +868,12 @@
             {
               "id": "INF-4",
               "description": "Fix scaffolder bugs in index.ts: GET /v1/models tries to parse JSON body from GET request; models() service signature takes unnecessary body param.",
-              "owner": ["Claude"],
-              "depends": ["INF-1"],
+              "owner": [
+                "Claude"
+              ],
+              "depends": [
+                "INF-1"
+              ],
               "status": "done",
               "release": null,
               "plan": "tasks/active/inf-infer-sh-pipeline.md"
@@ -861,8 +881,13 @@
             {
               "id": "INF-5",
               "description": "Update smoke test with realistic ChatResponse mock, verify 5/5 checks pass after implementation.",
-              "owner": ["Claude"],
-              "depends": ["INF-3", "INF-4"],
+              "owner": [
+                "Claude"
+              ],
+              "depends": [
+                "INF-3",
+                "INF-4"
+              ],
               "status": "done",
               "release": null,
               "plan": "tasks/active/inf-infer-sh-pipeline.md"
@@ -870,8 +895,12 @@
             {
               "id": "INF-6",
               "description": "Deploy infer.sh to VPS: systemd unit, /etc/prim/infer.env, Caddy route (port 3012), prim.yaml status → live, pnpm gen:prims.",
-              "owner": ["Garric"],
-              "depends": ["INF-5"],
+              "owner": [
+                "Garric"
+              ],
+              "depends": [
+                "INF-5"
+              ],
               "status": "done",
               "release": null,
               "plan": "tasks/active/inf-infer-sh-pipeline.md"
@@ -897,7 +926,7 @@
               "tasks": [
                 {
                   "id": "I-4",
-                  "description": "Parallelize CI: split into concurrent jobs (setup \u2192 lint|typecheck|test|gen-check PARA), add concurrency + bun cache",
+                  "description": "Parallelize CI: split into concurrent jobs (setup → lint|typecheck|test|gen-check PARA), add concurrency + bun cache",
                   "owner": [
                     "Claude"
                   ],
@@ -908,7 +937,7 @@
                 },
                 {
                   "id": "I-3",
-                  "description": "CI OpenAPI spec validation \u2014 check that spec response shapes match PaginatedList<T> and error envelopes at build time",
+                  "description": "CI OpenAPI spec validation — check that spec response shapes match PaginatedList<T> and error envelopes at build time",
                   "owner": [
                     "Claude"
                   ],
@@ -918,6 +947,41 @@
                   "status": "pending",
                   "release": null,
                   "plan": "tasks/active/i-3-coverage-gate-2026-02-26.md"
+                },
+                {
+                  "id": "I-38",
+                  "description": "Hyperscaling superagent flywheel factory — agent-driven create → PR → CI → merge → deploy pipeline",
+                  "owner": [
+                    "Claude"
+                  ],
+                  "depends": [],
+                  "status": "pending",
+                  "release": null,
+                  "plan": "tasks/active/i-38-hyperscaling-factory.md"
+                },
+                {
+                  "id": "I-39",
+                  "description": "CI gate: biome format check (pnpm -r format:check) — ensure consistent formatting beyond lint",
+                  "owner": [],
+                  "depends": [],
+                  "status": "backlog",
+                  "release": null
+                },
+                {
+                  "id": "I-40",
+                  "description": "CI gate: dead link validation — check markdown/HTML for broken internal links and anchors",
+                  "owner": [],
+                  "depends": [],
+                  "status": "backlog",
+                  "release": null
+                },
+                {
+                  "id": "I-41",
+                  "description": "CI gate: sensitive data patterns — regex scan for API keys, tokens, credentials beyond gitleaks (custom patterns for x402/Base/USDC)",
+                  "owner": [],
+                  "depends": [],
+                  "status": "backlog",
+                  "release": null
                 }
               ]
             },
@@ -939,7 +1003,7 @@
                 },
                 {
                   "id": "OPS-5",
-                  "description": "GHA deploy pipeline: SSH deploy key (restricted to deploy.sh) + .github/workflows/deploy.yml (check \u2192 rsync \u2192 restart). Replaces manual sync:vps for prod.",
+                  "description": "GHA deploy pipeline: SSH deploy key (restricted to deploy.sh) + .github/workflows/deploy.yml (check → rsync → restart). Replaces manual sync:vps for prod.",
                   "owner": [
                     "Claude"
                   ],
@@ -1010,7 +1074,7 @@
               "tasks": [
                 {
                   "id": "I-2",
-                  "description": "Migrate TASKS.md \u2192 tasks.json: define schema, convert data, update launch-status.ts + docs, optional TASKS.md codegen.",
+                  "description": "Migrate TASKS.md → tasks.json: define schema, convert data, update launch-status.ts + docs, optional TASKS.md codegen.",
                   "owner": [
                     "Claude"
                   ],
@@ -1043,7 +1107,7 @@
             },
             {
               "id": "L-14",
-              "description": "Full token launch: create Uniswap pool, fund liquidity, make repo public, announce. Seed pool conservatively ($2\u20133K USDC)",
+              "description": "Full token launch: create Uniswap pool, fund liquidity, make repo public, announce. Seed pool conservatively ($2–3K USDC)",
               "owner": [
                 "Garric",
                 "Claude"
@@ -1065,7 +1129,7 @@
           "tasks": [
             {
               "id": "L-22",
-              "description": "Mainnet switchover: VPS env files `eip155:84532` \u2192 `eip155:8453`, set prod `PRIM_PAY_TO`, fund facilitator with mainnet USDC",
+              "description": "Mainnet switchover: VPS env files `eip155:84532` → `eip155:8453`, set prod `PRIM_PAY_TO`, fund facilitator with mainnet USDC",
               "owner": [
                 "Garric"
               ],
@@ -1110,7 +1174,7 @@
             },
             {
               "id": "OPS-6",
-              "description": "Fund treasury wallet 0x09D896... with testnet ETH on Base Sepolia \u2014 faucet ETH drip returns 502",
+              "description": "Fund treasury wallet 0x09D896... with testnet ETH on Base Sepolia — faucet ETH drip returns 502",
               "owner": [
                 "Garric"
               ],
@@ -1122,7 +1186,7 @@
         },
         {
           "id": "INFRA-W4",
-          "title": "Prim Factory \u2014 Foundation",
+          "title": "Prim Factory — Foundation",
           "parallelism": "SRL",
           "phases": [
             {
@@ -1192,7 +1256,7 @@
         },
         {
           "id": "INFRA-W5",
-          "title": "Prim Factory \u2014 OpenAPI & Generation",
+          "title": "Prim Factory — OpenAPI & Generation",
           "parallelism": "SRL",
           "phases": [
             {
@@ -1235,7 +1299,7 @@
               "tasks": [
                 {
                   "id": "I-12",
-                  "description": "MCP tool generator: `pnpm gen:mcp` reads OpenAPI specs \u2192 generates packages/mcp/src/tools/*.ts. Replaces manually maintained tool files.",
+                  "description": "MCP tool generator: `pnpm gen:mcp` reads OpenAPI specs → generates packages/mcp/src/tools/*.ts. Replaces manually maintained tool files.",
                   "owner": [
                     "Claude"
                   ],
@@ -1248,7 +1312,7 @@
                 },
                 {
                   "id": "I-13",
-                  "description": "CLI command generator: `pnpm gen:cli` reads OpenAPI specs \u2192 generates packages/keystore/src/*-commands.ts. Replaces manually maintained CLI files.",
+                  "description": "CLI command generator: `pnpm gen:cli` reads OpenAPI specs → generates packages/keystore/src/*-commands.ts. Replaces manually maintained CLI files.",
                   "owner": [
                     "Claude"
                   ],
@@ -1261,7 +1325,7 @@
                 },
                 {
                   "id": "I-14",
-                  "description": "OpenAI function schema generator: `pnpm gen:openai` reads OpenAPI specs \u2192 outputs JSON with OpenAI-compatible tool definitions for Responses API.",
+                  "description": "OpenAI function schema generator: `pnpm gen:openai` reads OpenAPI specs → outputs JSON with OpenAI-compatible tool definitions for Responses API.",
                   "owner": [
                     "Claude"
                   ],
@@ -1299,7 +1363,7 @@
         },
         {
           "id": "INFRA-W6",
-          "title": "Prim Factory \u2014 Scaffolder & Agent Interfaces",
+          "title": "Prim Factory — Scaffolder & Agent Interfaces",
           "parallelism": "PARA",
           "phases": [
             {
@@ -1391,7 +1455,7 @@
         },
         {
           "id": "INFRA-W7",
-          "title": "Prim Factory \u2014 Provider Framework",
+          "title": "Prim Factory — Provider Framework",
           "parallelism": "SRL",
           "tasks": [
             {
@@ -1430,8 +1494,12 @@
             {
               "id": "I-30",
               "description": "Gate runner script: spawns isolated VPS via spawn.sh, installs prim CLI + wallet, configures infer.sh for agent reasoning, runs smoke-test-plan.json groups against live endpoints, collects pass/fail, tears down VPS. Runs locally and in CI.",
-              "owner": ["Claude"],
-              "depends": ["INF-6"],
+              "owner": [
+                "Claude"
+              ],
+              "depends": [
+                "INF-6"
+              ],
               "status": "done",
               "release": null,
               "plan": "tasks/active/i-30-gate-runner.md"
@@ -1439,8 +1507,12 @@
             {
               "id": "I-31",
               "description": "Add infer.sh test group to smoke-test-plan.json: health check, chat completion, embeddings, list models.",
-              "owner": ["Claude"],
-              "depends": ["INF-6"],
+              "owner": [
+                "Claude"
+              ],
+              "depends": [
+                "INF-6"
+              ],
               "status": "done",
               "release": null,
               "plan": "tasks/active/i-30-gate-runner.md"
@@ -1448,8 +1520,12 @@
             {
               "id": "I-32",
               "description": "CI gate workflow: on push, detect prim status changes. New prim → run gate, soft-fail (warn but don't block merge). Already-live prim → run gate, hard-fail (CI blocks). Quality gate for going live.",
-              "owner": ["Claude"],
-              "depends": ["I-30"],
+              "owner": [
+                "Claude"
+              ],
+              "depends": [
+                "I-30"
+              ],
               "status": "pending",
               "release": null,
               "plan": "tasks/active/i-30-gate-runner.md"
@@ -1457,16 +1533,24 @@
             {
               "id": "I-33",
               "description": "gen:gate — codegen smoke-test-plan.json entries from prim.yaml routes_map. For each live prim: emit health check + one test per route (method, endpoint, expected status/shape). Manual overrides (captures, special-case notes, group prompts) stay hand-written.",
-              "owner": ["Claude"],
-              "depends": ["I-30"],
+              "owner": [
+                "Claude"
+              ],
+              "depends": [
+                "I-30"
+              ],
               "status": "done",
               "release": null
             },
             {
               "id": "I-34",
               "description": "Agent canary: --canary flag on gate-runner.ts. For each group, sends prompt + prim's llms.txt to infer.sh, agent reasons about API and makes real x402 calls, reports structured results + UX observations. Catches issues deterministic tests miss (confusing errors, missing docs, broken workflows).",
-              "owner": ["Claude"],
-              "depends": ["I-30"],
+              "owner": [
+                "Claude"
+              ],
+              "depends": [
+                "I-30"
+              ],
               "status": "done",
               "release": null,
               "plan": "tasks/active/i-30-gate-runner.md"
@@ -1481,7 +1565,9 @@
             {
               "id": "OPS-7",
               "description": "gen:deploy generator: read prim.yaml → generate systemd unit, Caddy block, env template for each live prim. All three are boilerplate that only varies by package name, port, subdomain, and env list.",
-              "owner": ["Claude"],
+              "owner": [
+                "Claude"
+              ],
               "depends": [],
               "status": "pending",
               "release": null
@@ -1489,7 +1575,9 @@
             {
               "id": "OPS-8",
               "description": "Pre-deploy pricing validation: gen:prims --check should verify all route prices are parseable by x402 (numeric `$X.XX` format). Catch `$pass-through + 10%` style placeholders before they hit production.",
-              "owner": ["Claude"],
+              "owner": [
+                "Claude"
+              ],
               "depends": [],
               "status": "pending",
               "release": null
@@ -1497,16 +1585,25 @@
             {
               "id": "OPS-9",
               "description": "deploy-prim.sh script: given a prim ID, handles full deploy lifecycle — create DNS A record (Cloudflare API), install systemd unit, create env file from template + secrets, reload Caddy, start service, run healthcheck.",
-              "owner": ["Claude"],
-              "depends": ["OPS-7"],
+              "owner": [
+                "Claude"
+              ],
+              "depends": [
+                "OPS-7"
+              ],
               "status": "pending",
               "release": null
             },
             {
               "id": "OPS-10",
               "description": "CI auto-deploy: on push to main, diff prim.yaml status changes (building→live), run deploy-prim.sh for each newly live prim. Extends OPS-5 GHA pipeline.",
-              "owner": ["Claude"],
-              "depends": ["OPS-5", "OPS-9"],
+              "owner": [
+                "Claude"
+              ],
+              "depends": [
+                "OPS-5",
+                "OPS-9"
+              ],
               "status": "pending",
               "release": null
             }
@@ -1525,7 +1622,9 @@
                 {
                   "id": "I-36",
                   "description": "gen:openapi — generate OpenAPI 3.1 specs from api.ts types + prim.yaml routes_map. Closes YAML→everything loop. track/infer/imagine currently invisible to MCP/CLI/OpenAI gen.",
-                  "owner": ["Claude"],
+                  "owner": [
+                    "Claude"
+                  ],
                   "depends": [],
                   "status": "pending",
                   "release": null
@@ -1533,7 +1632,9 @@
                 {
                   "id": "I-37",
                   "description": "Dynamic deploy.sh SERVICES — read prim.yaml status:live instead of hardcoded array. 4 prims (token, mem, domain, track) missing from auto-restart.",
-                  "owner": ["Claude"],
+                  "owner": [
+                    "Claude"
+                  ],
                   "depends": [],
                   "status": "pending",
                   "release": null
@@ -1548,7 +1649,9 @@
                 {
                   "id": "OPS-11",
                   "description": "Backup all DBs — add email.db, mem.db, token.db, domain.db to backup.sh rotation. Currently only wallet, store, spawn, faucet are backed up.",
-                  "owner": ["Claude"],
+                  "owner": [
+                    "Claude"
+                  ],
                   "depends": [],
                   "status": "pending",
                   "release": null
@@ -1556,7 +1659,9 @@
                 {
                   "id": "OPS-12",
                   "description": "CI strict mode — remove `continue-on-error: true` from OpenAPI validation and dependency audit jobs. Failures currently invisible.",
-                  "owner": ["Claude"],
+                  "owner": [
+                    "Claude"
+                  ],
                   "depends": [],
                   "status": "pending",
                   "release": null
@@ -1564,7 +1669,9 @@
                 {
                   "id": "OPS-13",
                   "description": "Configure health alerting — set ALERT_WEBHOOK_URL in healthcheck.sh cron (Discord webhook or email). Currently monitoring runs but alerts go nowhere.",
-                  "owner": ["Claude"],
+                  "owner": [
+                    "Claude"
+                  ],
                   "depends": [],
                   "status": "pending",
                   "release": null
@@ -1579,8 +1686,12 @@
                 {
                   "id": "I-35",
                   "description": "Post-deploy health gate in CI — after deploy-vps job, poll all live service health endpoints. Fail the pipeline if any service is down. Catches bad deploys before they stick.",
-                  "owner": ["Claude"],
-                  "depends": ["OPS-5"],
+                  "owner": [
+                    "Claude"
+                  ],
+                  "depends": [
+                    "OPS-5"
+                  ],
                   "status": "pending",
                   "release": null
                 }
@@ -1908,7 +2019,7 @@
               "tasks": [
                 {
                   "id": "COM-5",
-                  "description": "Build scripts/lib/parse-api.ts \u2014 regex parser extracting interfaces, fields, JSDoc, ERROR_CODES from api.ts files",
+                  "description": "Build scripts/lib/parse-api.ts — regex parser extracting interfaces, fields, JSDoc, ERROR_CODES from api.ts files",
                   "owner": [
                     "Claude"
                   ],
@@ -1920,7 +2031,7 @@
                 },
                 {
                   "id": "COM-6",
-                  "description": "Build scripts/lib/render-llms-txt.ts + wire into gen-prims.ts \u2014 render full llms.txt from Primitive + ParsedApi + route prices",
+                  "description": "Build scripts/lib/render-llms-txt.ts + wire into gen-prims.ts — render full llms.txt from Primitive + ParsedApi + route prices",
                   "owner": [
                     "Claude"
                   ],
@@ -1974,7 +2085,7 @@
           "tasks": [
             {
               "id": "SITE-10",
-              "description": "Wire GHA \u2192 Cloudflare Pages: add deploy-site job (wrangler pages deploy), rename deploy\u2192deploy-vps, add verify smoke check, GitHub Environments (production). Plan: tasks/active/site-10-pages-gha-2026-02-27.md",
+              "description": "Wire GHA → Cloudflare Pages: add deploy-site job (wrangler pages deploy), rename deploy→deploy-vps, add verify smoke check, GitHub Environments (production). Plan: tasks/active/site-10-pages-gha-2026-02-27.md",
               "owner": [
                 "Claude"
               ],
@@ -2038,7 +2149,7 @@
           "tasks": [
             {
               "id": "L-50",
-              "description": "deploy.sh: PaaS above spawn.sh \u2014 push container or repo URL, get live endpoint. Wraps Dokku/Coolify",
+              "description": "deploy.sh: PaaS above spawn.sh — push container or repo URL, get live endpoint. Wraps Dokku/Coolify",
               "owner": [
                 "Claude"
               ],
@@ -2048,7 +2159,7 @@
             },
             {
               "id": "I-22",
-              "description": "Research: tap.sh \u2014 runtime adapter registry. Agents register external APIs as prims (upstream URL + routes + API key). Prim wraps in x402/MCP/CLI automatically. No code gen, no deploy. Key questions: where does adapter config live (DB? prim.yaml?), auth scoping (who can call?), key custody, abuse prevention, discovery via search.sh. Write spec in tasks/research/.",
+              "description": "Research: tap.sh — runtime adapter registry. Agents register external APIs as prims (upstream URL + routes + API key). Prim wraps in x402/MCP/CLI automatically. No code gen, no deploy. Key questions: where does adapter config live (DB? prim.yaml?), auth scoping (who can call?), key custody, abuse prevention, discovery via search.sh. Write spec in tasks/research/.",
               "owner": [
                 "Claude"
               ],
