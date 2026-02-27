@@ -712,7 +712,7 @@
           "tasks": [
             {
               "id": "FC-3",
-              "description": "Treasury wallet pool: faucet creates N ephemeral wallets via wallet.sh, pre-funds each, round-robins drip requests across pool. Eliminates single-wallet nonce bottleneck under concurrent load.",
+              "description": "Nonce queue: serialize treasury wallet transactions with explicit nonce assignment. Concurrent drip requests get sequential nonces and submit in parallel. Eliminates nonce contention without extra wallets.",
               "owner": [],
               "depends": [],
               "status": "pending",
