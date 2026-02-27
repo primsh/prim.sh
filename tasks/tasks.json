@@ -352,7 +352,7 @@
                   "description": "Add packages/mcp/test/smoke.test.ts — zero tests on 14-source-file MCP server package",
                   "owner": ["Claude"],
                   "depends": [],
-                  "status": "pending",
+                  "status": "done",
                   "release": null,
                   "plan": "tasks/active/hrd-26-mcp-smoke-tests.md"
                 },
@@ -361,7 +361,7 @@
                   "description": "Backfill search/test/smoke.test.ts to 5-check contract (currently 12 lines)",
                   "owner": ["Claude"],
                   "depends": [],
-                  "status": "pending",
+                  "status": "done",
                   "release": null
                 },
                 {
