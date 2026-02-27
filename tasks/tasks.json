@@ -1118,7 +1118,7 @@
                     "I-12",
                     "I-20"
                   ],
-                  "status": "pending",
+                  "status": "done",
                   "release": null,
                   "plan": "tasks/active/i-21-plugin-install-system.md"
                 }

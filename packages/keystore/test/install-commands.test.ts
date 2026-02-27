@@ -29,6 +29,7 @@ import {
   runInstallCommand,
   runUninstallCommand,
   runSkillCommand,
+  runListCommand,
 } from "../src/install-commands.ts";
 
 const mockExistsSync = existsSync as ReturnType<typeof vi.fn>;
@@ -288,6 +289,98 @@ describe("runInstallCommand", () => {
     console.log = origLog;
     const output = JSON.parse(logs.join("\n"));
     expect(output.mcpServers.prim).toBeDefined();
+  });
+});
+
+// ---------------------------------------------------------------------------
+// runListCommand
+// ---------------------------------------------------------------------------
+
+describe("runListCommand", () => {
+  it("prints message for generic agent", async () => {
+    mockExistsSync.mockReturnValue(false);
+    const logs: string[] = [];
+    const origLog = console.log;
+    console.log = (...args: unknown[]) => logs.push(args.join(" "));
+
+    await runListCommand(["install", "--list", "--agent", "generic"]);
+
+    console.log = origLog;
+    expect(logs.some((l) => l.includes("Specify --agent"))).toBe(true);
+  });
+
+  it("prints no config when file does not exist for claude agent", async () => {
+    mockExistsSync.mockImplementation((p: string) => {
+      if (p === "/home/testuser/.claude") return true;
+      return false; // mcp.json does not exist
+    });
+    const logs: string[] = [];
+    const origLog = console.log;
+    console.log = (...args: unknown[]) => logs.push(args.join(" "));
+
+    await runListCommand(["install", "--list"]);
+
+    console.log = origLog;
+    expect(logs.some((l) => l.includes("No MCP config found"))).toBe(true);
+  });
+
+  it("lists installed prim servers", async () => {
+    mockExistsSync.mockImplementation((p: string) => {
+      if (p === "/home/testuser/.claude") return true;
+      if (p === "/home/testuser/.claude/mcp.json") return true;
+      return false;
+    });
+    mockReadFileSync.mockReturnValue(JSON.stringify({
+      mcpServers: {
+        "other-tool": { command: "x" },
+        prim: { command: "prim", args: ["mcp"] },
+        "prim-store": { command: "prim", args: ["mcp", "--primitives", "store"] },
+      },
+    }));
+
+    const logs: string[] = [];
+    const origLog = console.log;
+    console.log = (...args: unknown[]) => logs.push(args.join(" "));
+
+    await runListCommand(["install", "--list"]);
+
+    console.log = origLog;
+    const output = logs.join("\n");
+    expect(output).toContain("prim ");
+    expect(output).toContain("prim-store");
+    expect(output).not.toContain("other-tool");
+  });
+
+  it("shows no prim primitives message when none installed", async () => {
+    mockExistsSync.mockImplementation((p: string) => {
+      if (p === "/home/testuser/.claude") return true;
+      if (p === "/home/testuser/.claude/mcp.json") return true;
+      return false;
+    });
+    mockReadFileSync.mockReturnValue(JSON.stringify({
+      mcpServers: { "other-tool": { command: "x" } },
+    }));
+
+    const logs: string[] = [];
+    const origLog = console.log;
+    console.log = (...args: unknown[]) => logs.push(args.join(" "));
+
+    await runListCommand(["install", "--list"]);
+
+    console.log = origLog;
+    expect(logs.some((l) => l.includes("No prim primitives installed"))).toBe(true);
+  });
+
+  it("runInstallCommand dispatches to list when subcommand is --list", async () => {
+    mockExistsSync.mockReturnValue(false);
+    const logs: string[] = [];
+    const origLog = console.log;
+    console.log = (...args: unknown[]) => logs.push(args.join(" "));
+
+    await runInstallCommand("--list", ["install", "--list", "--agent", "generic"]);
+
+    console.log = origLog;
+    expect(logs.some((l) => l.includes("Specify --agent"))).toBe(true);
   });
 });
 

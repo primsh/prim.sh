@@ -185,7 +185,56 @@ function parsePrimitives(name: string | undefined): string[] {
 // Install command
 // ---------------------------------------------------------------------------
 
+// ---------------------------------------------------------------------------
+// List command — show installed primitives from MCP config
+// ---------------------------------------------------------------------------
+
+export async function runListCommand(argv: string[]): Promise<void> {
+  const agent = detectAgent(argv);
+
+  if (agent === "generic") {
+    console.log("Specify --agent claude|cursor to list installed primitives.");
+    return;
+  }
+
+  const configPath = getConfigPath(agent);
+  if (!configPath || !existsSync(configPath)) {
+    console.log("No MCP config found. Run `prim install <primitive|all>` to get started.");
+    return;
+  }
+
+  let config: Record<string, unknown>;
+  try {
+    config = JSON.parse(readFileSync(configPath, "utf-8")) as Record<string, unknown>;
+  } catch {
+    console.log(`Cannot parse ${configPath} as JSON.`);
+    return;
+  }
+
+  const servers = (config.mcpServers ?? {}) as Record<string, unknown>;
+  const primKeys = Object.keys(servers).filter((k) => k === "prim" || k.startsWith("prim-"));
+
+  if (primKeys.length === 0) {
+    console.log("No prim primitives installed.");
+    return;
+  }
+
+  const agentLabel = agent === "claude" ? "Claude Code" : "Cursor";
+  console.log(`Installed prim MCP servers (${agentLabel}):\n`);
+  for (const key of primKeys) {
+    const entry = servers[key] as { command?: string; args?: string[] };
+    const args = (entry.args ?? []).join(" ");
+    console.log(`  ${key}  →  ${entry.command ?? "prim"} ${args}`.trimEnd());
+  }
+}
+
 export async function runInstallCommand(subcommand: string | undefined, argv: string[]): Promise<void> {
+  // Handle `prim install --list`
+  if (subcommand === "--list" || subcommand === undefined && argv.includes("--list")) {
+    await runListCommand(argv);
+    return;
+  }
+
   const primitives = parsePrimitives(subcommand);
   const isAll = primitives.length === PRIMITIVES.length;
   const agent = detectAgent(argv);
