@@ -257,6 +257,7 @@ Checklist (all must pass):
 - [ ] Wallet allowlist reviewed — only your test wallets, no stale entries
 - [ ] All VPS env files reviewed — no testnet-only values leaking into mainnet config
 - [ ] Caddy access logs enabled: add `log { output file /var/log/caddy/access.log }` to each server block in Caddyfile, `systemctl reload caddy`
+- [ ] Daily metrics snapshot cron: `scripts/metrics-snapshot.sh` curls each prim's `/v1/metrics`, appends timestamped JSON to `/var/log/prim-metrics.log`. Add to VPS crontab (`0 */6 * * *` — every 6 hours). Mitigates metrics-reset-on-restart gap.
 
 ### G3: Dogfood (you, end-to-end on mainnet)
 **Owner**: you
