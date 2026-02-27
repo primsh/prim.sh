@@ -58,6 +58,9 @@ site/assets/og/
 # Original image assets (pre-optimization)
 site/assets/*_orig.*
 
+# Git worktrees (created by /prim_git_wt_b_c_p workflow)
+.worktrees/
+
 # Legal (receipts, contracts — sensitive)
 legal/
 
