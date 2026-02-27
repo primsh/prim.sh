@@ -632,36 +632,6 @@
           "description": "List available models with pricing and capabilities."
         }
       ]
-    },
-    {
-      "service": "imagine.prim.sh",
-      "description": "Media generation for agents. Images, video, audio. Any model, one API. No API keys.",
-      "routes": [
-        {
-          "method": "POST",
-          "path": "/v1/generate",
-          "price_usdc": "0.001",
-          "description": "Generate an image from a text prompt. Returns base64 or URL."
-        },
-        {
-          "method": "POST",
-          "path": "/v1/describe",
-          "price_usdc": "0.001",
-          "description": "Describe an image. Accepts base64 or URL. Returns text description."
-        },
-        {
-          "method": "POST",
-          "path": "/v1/upscale",
-          "price_usdc": "0.001",
-          "description": "Upscale an image to higher resolution. Accepts base64 or URL."
-        },
-        {
-          "method": "GET",
-          "path": "/v1/models",
-          "price_usdc": "0.001",
-          "description": "List available image models with capabilities and pricing."
-        }
-      ]
     }
   ]
 }

@@ -1,6 +1,6 @@
 {
   "version": "1.0.0",
-  "generated": "2026-02-27T09:09:20.899Z",
+  "generated": "2026-02-27T09:17:32.261Z",
   "primitives": [
     {
       "id": "auth",
@@ -60,46 +60,6 @@
         "rest": true
       },
       "operations": [],
-      "providers": []
-    },
-    {
-      "id": "create",
-      "name": "create.sh",
-      "endpoint": "create.prim.sh",
-      "description": "Scaffold new prim.sh primitives. Write a prim.yaml spec, get a complete package with passing tests.",
-      "status": "built",
-      "interfaces": {
-        "mcp": true,
-        "cli": true,
-        "openai": true,
-        "rest": true
-      },
-      "operations": [
-        {
-          "id": "scaffold",
-          "route": "POST /v1/scaffold",
-          "description": "Generate a complete prim package from a prim.yaml spec. Returns file manifest with contents.",
-          "price": "$0.00"
-        },
-        {
-          "id": "validate",
-          "route": "POST /v1/validate",
-          "description": "Validate a prim.yaml spec against the schema without generating files.",
-          "price": "$0.00"
-        },
-        {
-          "id": "get_schema",
-          "route": "GET /v1/schema",
-          "description": "Return the prim.yaml JSON schema for agents to reference when writing specs.",
-          "price": "$0.00"
-        },
-        {
-          "id": "get_ports",
-          "route": "GET /v1/ports",
-          "description": "Return allocated ports and next available port number.",
-          "price": "$0.00"
-        }
-      ],
       "providers": []
     },
     {
@@ -448,55 +408,6 @@
       },
       "operations": [],
       "providers": []
-    },
-    {
-      "id": "imagine",
-      "name": "imagine.sh",
-      "endpoint": "imagine.prim.sh",
-      "description": "Media generation for agents. Images, video, audio. Any model, one API. No API keys.",
-      "status": "built",
-      "interfaces": {
-        "mcp": true,
-        "cli": true,
-        "openai": false,
-        "rest": true
-      },
-      "operations": [
-        {
-          "id": "generate",
-          "route": "POST /v1/generate",
-          "description": "Generate an image from a text prompt. Returns base64 or URL.",
-          "price": "$0.02"
-        },
-        {
-          "id": "describe",
-          "route": "POST /v1/describe",
-          "description": "Describe an image. Accepts base64 or URL. Returns text description.",
-          "price": "$0.005"
-        },
-        {
-          "id": "upscale",
-          "route": "POST /v1/upscale",
-          "description": "Upscale an image to higher resolution. Accepts base64 or URL.",
-          "price": "$0.01"
-        },
-        {
-          "id": "list_models",
-          "route": "GET /v1/models",
-          "description": "List available image models with capabilities and pricing.",
-          "price": "free"
-        }
-      ],
-      "providers": [
-        {
-          "name": "google-gemini",
-          "status": "active"
-        },
-        {
-          "name": "replicate",
-          "status": "planned"
-        }
-      ]
     },
     {
       "id": "mart",

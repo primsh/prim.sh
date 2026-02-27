@@ -355,6 +355,9 @@ function deriveLeafName(opId: string, method: string, path: string): string {
     getDomain: "get",
     verifyDomain: "verify",
     deleteDomain: "rm",
+    // create
+    getSchema: "schema",
+    getPorts: "ports",
   };
 
   if (directMap[opId]) return directMap[opId];

@@ -46,12 +46,12 @@ export async function runCreateCommand(sub: string, argv: string[]): Promise<voi
   });
 
   if (!sub || sub === "--help" || sub === "-h") {
-    console.log("Usage: prim create <scaffold|validate|get|get> [args] [flags]");
+    console.log("Usage: prim create <scaffold|validate|schema|ports> [args] [flags]");
     console.log("");
     console.log("  Usage: prim create scaffold");
     console.log("  Usage: prim create validate");
-    console.log("  Usage: prim create get");
-    console.log("  Usage: prim create get");
+    console.log("  Usage: prim create schema");
+    console.log("  Usage: prim create ports");
     process.exit(1);
   }
 
@@ -80,7 +80,7 @@ export async function runCreateCommand(sub: string, argv: string[]): Promise<voi
       break;
     }
 
-    case "get": {
+    case "schema": {
       const res = await primFetch(`${baseUrl}/v1/schema`);
       if (!res.ok) return handleError(res);
       const data = await res.json();
@@ -92,7 +92,7 @@ export async function runCreateCommand(sub: string, argv: string[]): Promise<voi
       break;
     }
 
-    case "get": {
+    case "ports": {
       const res = await primFetch(`${baseUrl}/v1/ports`);
       if (!res.ok) return handleError(res);
       const data = await res.json();
