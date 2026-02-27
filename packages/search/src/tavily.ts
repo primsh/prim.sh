@@ -2,10 +2,12 @@ import { ProviderError } from "./provider.ts";
 import type {
   SearchProvider,
   ExtractProvider,
+  SearchProviderConfig,
   SearchProviderParams,
   SearchProviderResult,
   ExtractProviderResult,
 } from "./provider.ts";
+import type { ProviderHealth } from "@primsh/x402-middleware";
 
 const TAVILY_BASE_URL = "https://api.tavily.com";
 
@@ -37,10 +39,29 @@ interface TavilyExtractResponse {
 }
 
 export class TavilyClient implements SearchProvider, ExtractProvider {
+  readonly name = "tavily";
   private apiKey: string;
 
   constructor(apiKey: string) {
     this.apiKey = apiKey;
+  }
+
+  async init(config: SearchProviderConfig): Promise<void> {
+    if (!config.apiKey?.trim()) {
+      throw new ProviderError("TAVILY_API_KEY is not configured", "provider_error");
+    }
+    this.apiKey = config.apiKey;
+  }
+
+  async healthCheck(): Promise<ProviderHealth> {
+    const start = Date.now();
+    try {
+      await this._search({ query: "ping", max_results: 1 });
+      return { ok: true, latency_ms: Date.now() - start };
+    } catch (err) {
+      const message = err instanceof Error ? err.message : String(err);
+      return { ok: false, latency_ms: Date.now() - start, message };
+    }
   }
 
   private async post<T>(path: string, body: Record<string, unknown>): Promise<T> {

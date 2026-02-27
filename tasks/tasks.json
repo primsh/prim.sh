@@ -1140,9 +1140,9 @@
               "depends": [
                 "I-8"
               ],
-              "status": "pending",
+              "status": "done",
               "release": null,
-              "plan": "tasks/active/i-16-provider-interface.md"
+              "plan": "tasks/completed/i-16-provider-interface.md"
             },
             {
               "id": "I-17",

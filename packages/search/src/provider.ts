@@ -1,3 +1,11 @@
+import type { PrimProvider } from "@primsh/x402-middleware";
+
+// ─── Config ───────────────────────────────────────────────────────────────────
+
+export interface SearchProviderConfig {
+  apiKey: string;
+}
+
 // ─── Provider param/result types ─────────────────────────────────────────────
 
 export interface SearchProviderParams {
@@ -39,12 +47,12 @@ export interface ExtractProviderResult {
 
 // ─── Provider interfaces ──────────────────────────────────────────────────────
 
-export interface SearchProvider {
+export interface SearchProvider extends PrimProvider<SearchProviderConfig> {
   search(params: SearchProviderParams): Promise<SearchProviderResult>;
   searchNews(params: SearchProviderParams): Promise<SearchProviderResult>;
 }
 
-export interface ExtractProvider {
+export interface ExtractProvider extends PrimProvider<SearchProviderConfig> {
   extract(urls: string[], format: "markdown" | "text"): Promise<ExtractProviderResult>;
 }
 

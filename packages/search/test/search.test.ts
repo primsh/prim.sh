@@ -32,8 +32,12 @@ function makeSearchResponse(query: string, overrides: Partial<SearchProviderResu
 }
 
 class MockSearchProvider implements SearchProvider {
+  readonly name = "mock-search";
   capturedParams: SearchProviderParams[] = [];
   capturedTopics: ("news" | undefined)[] = [];
+
+  async init(_config: { apiKey: string }): Promise<void> {}
+  async healthCheck() { return { ok: true, latency_ms: 0 }; }
 
   async search(params: SearchProviderParams): Promise<SearchProviderResult> {
     this.capturedParams.push(params);
@@ -51,6 +55,9 @@ class MockSearchProvider implements SearchProvider {
 }
 
 class RateLimitedSearchProvider implements SearchProvider {
+  readonly name = "rate-limited-search";
+  async init(_config: { apiKey: string }): Promise<void> {}
+  async healthCheck() { return { ok: false, latency_ms: 0, message: "rate limited" }; }
   async search(_params: SearchProviderParams): Promise<SearchProviderResult> {
     throw new ProviderError("Rate limit exceeded", "rate_limited", 30);
   }
@@ -60,6 +67,9 @@ class RateLimitedSearchProvider implements SearchProvider {
 }
 
 class ErrorSearchProvider implements SearchProvider {
+  readonly name = "error-search";
+  async init(_config: { apiKey: string }): Promise<void> {}
+  async healthCheck() { return { ok: false, latency_ms: 0, message: "provider error" }; }
   async search(_params: SearchProviderParams): Promise<SearchProviderResult> {
     throw new ProviderError("Upstream error", "provider_error");
   }
@@ -69,7 +79,11 @@ class ErrorSearchProvider implements SearchProvider {
 }
 
 class MockExtractProvider implements ExtractProvider {
+  readonly name = "mock-extract";
   capturedUrls: string[][] = [];
+
+  async init(_config: { apiKey: string }): Promise<void> {}
+  async healthCheck() { return { ok: true, latency_ms: 0 }; }
 
   async extract(urls: string[], _format: "markdown" | "text"): Promise<ExtractProviderResult> {
     this.capturedUrls.push(urls);
@@ -82,6 +96,9 @@ class MockExtractProvider implements ExtractProvider {
 }
 
 class FailedExtractProvider implements ExtractProvider {
+  readonly name = "failed-extract";
+  async init(_config: { apiKey: string }): Promise<void> {}
+  async healthCheck() { return { ok: false, latency_ms: 0, message: "failed" }; }
   async extract(urls: string[], _format: "markdown" | "text"): Promise<ExtractProviderResult> {
     return {
       results: [],
@@ -92,12 +109,18 @@ class FailedExtractProvider implements ExtractProvider {
 }
 
 class RateLimitedExtractProvider implements ExtractProvider {
+  readonly name = "rate-limited-extract";
+  async init(_config: { apiKey: string }): Promise<void> {}
+  async healthCheck() { return { ok: false, latency_ms: 0, message: "rate limited" }; }
   async extract(_urls: string[], _format: "markdown" | "text"): Promise<ExtractProviderResult> {
     throw new ProviderError("Rate limit exceeded", "rate_limited", 45);
   }
 }
 
 class ErrorExtractProvider implements ExtractProvider {
+  readonly name = "error-extract";
+  async init(_config: { apiKey: string }): Promise<void> {}
+  async healthCheck() { return { ok: false, latency_ms: 0, message: "provider error" }; }
   async extract(_urls: string[], _format: "markdown" | "text"): Promise<ExtractProviderResult> {
     throw new ProviderError("Upstream error", "provider_error");
   }
