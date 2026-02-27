@@ -4,9 +4,9 @@ version: 1.0.0
 primitive: faucet.prim.sh
 requires: []
 tools:
-  - faucet_usdc
-  - faucet_eth
-  - faucet_status
+  - faucet_drip_usdc
+  - faucet_drip_eth
+  - faucet_get_faucet_status
 ---
 
 # faucet.prim.sh
@@ -33,27 +33,27 @@ None. Faucet is free and open — no wallet registration, no payment, no allowli
 ### 1. Get test USDC (standard first step)
 
 ```
-1. faucet_status
+1. faucet_get_faucet_status
    - address: "0xYourAddress"
    → check usdc.available is true before dripping
 
 2. If usdc.available is true:
-   faucet_usdc
+   faucet_drip_usdc
    - address: "0xYourAddress"
    → returns {txHash, amount: "10.00", currency: "USDC", chain: "eip155:84532"}
 
-3. Wait for the tx to confirm (~2 seconds on Base Sepolia), then call wallet_get to see updated balance
+3. Wait for the tx to confirm (~2 seconds on Base Sepolia), then call wallet_get_wallet to see updated balance
 ```
 
 ### 2. Get test ETH (for gas, rarely needed)
 
 ```
-1. faucet_status
+1. faucet_get_faucet_status
    - address: "0xYourAddress"
    → check eth.available is true
 
 2. If eth.available is true:
-   faucet_eth
+   faucet_drip_eth
    - address: "0xYourAddress"
    → returns {txHash, amount: "0.01", currency: "ETH", chain: "eip155:84532"}
 ```
@@ -61,7 +61,7 @@ None. Faucet is free and open — no wallet registration, no payment, no allowli
 ### 3. Check status before dripping (avoid 429s)
 
 ```
-1. faucet_status
+1. faucet_get_faucet_status
    - address: "0xYourAddress"
    → returns:
      {
@@ -84,7 +84,7 @@ None. Faucet is free and open — no wallet registration, no payment, no allowli
 
 ## Gotchas
 
-- **Always call `faucet_status` before dripping.** It costs nothing and prevents unnecessary 429s. Check `usdc.available` and `eth.available` before calling `faucet_usdc` or `faucet_eth`.
+- **Always call `faucet_get_faucet_status` before dripping.** It costs nothing and prevents unnecessary 429s. Check `usdc.available` and `eth.available` before calling `faucet_drip_usdc` or `faucet_drip_eth`.
 - **Rate limits are per-address, per-token:**
   - USDC: 10 USDC per drip, once per 2 hours per address
   - ETH: 0.01 ETH per drip, once per 1 hour per address

@@ -27,6 +27,7 @@
   "devDependencies": {
     "@biomejs/biome": "^1.9.0",
     "@coinbase/cdp-sdk": "^1.44.1",
+    "@types/node": "^25.3.0",
     "@vitest/coverage-v8": "^1.6.1",
     "ajv": "^8.18.0",
     "ajv-formats": "^3.0.1",

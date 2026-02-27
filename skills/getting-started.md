@@ -4,9 +4,9 @@ version: 1.0.0
 primitive: prim.sh
 requires: []
 tools:
-  - wallet_register
-  - faucet_usdc
-  - faucet_status
+  - wallet_register_wallet
+  - faucet_drip_usdc
+  - faucet_get_faucet_status
 ---
 
 # Getting Started with Prim
@@ -56,7 +56,7 @@ This generates a keypair, stores it encrypted at `~/.prim/keys/`, and registers 
 ```
 1. Generate an Ethereum keypair locally (any EVM-compatible tool)
 
-2. wallet_register
+2. wallet_register_wallet
    - address: "0xYourAddress"
    - timestamp: <current ISO 8601 UTC timestamp>
    - signature: <EIP-191 signature over the message below>
@@ -67,7 +67,7 @@ This generates a keypair, stores it encrypted at `~/.prim/keys/`, and registers 
    (Use lowercase address, exact timestamp from step 2)
 ```
 
-Registration is free. If you get 409 `duplicate_request`, the wallet is already registered — proceed to step 3.
+Registration is free. If you get `409 duplicate_request`, the wallet is already registered — proceed to step 3.
 
 ---
 
@@ -84,11 +84,11 @@ prim faucet usdc
 ### Via MCP tool
 
 ```
-1. faucet_status
+1. faucet_get_faucet_status
    - address: "0xYourAddress"
    → verify usdc.available is true
 
-2. faucet_usdc
+2. faucet_drip_usdc
    - address: "0xYourAddress"
    → returns {txHash, amount: "10.00", currency: "USDC"}
 ```
@@ -159,7 +159,7 @@ Use `@x402/fetch` (TypeScript/Node) or any x402-compatible client library to han
 - **403 on paid endpoint (first time):** Your wallet is not yet on the allowlist. Submit an access request (step 4).
 - **402 on any paid endpoint:** x402 payment required. The MCP server handles this automatically. If calling raw HTTP, you need to sign and retry.
 - **Insufficient balance:** Call `faucet_usdc` to get more test USDC, or wait for the 2-hour rate limit window.
-- **409 on `wallet_register`:** Wallet already registered. This is not an error — proceed to step 3.
+- **409 on `wallet_register_wallet`:** Wallet already registered. This is not an error — proceed to step 3.
 - **Timestamp error on registration:** Generate a fresh timestamp at call time. The signature timestamp must be within 5 minutes of server time.
 
 ---
@@ -177,34 +177,3 @@ Once onboarded:
 - **token.prim.sh** — Deploy ERC-20 tokens, create Uniswap V3 pools. See `skills/token.md`.
 - **Multi-primitive workflows** — See `skills/multi-prim.md`.
 
----
-
-## Reference: Pricing
-
-| Operation | Cost |
-|-----------|------|
-| wallet_register | Free |
-| faucet_usdc / faucet_eth | Free |
-| wallet_list, wallet_get | $0.001 |
-| store_bucket_create | $0.05 |
-| store_object_put, get, list, delete | $0.001 |
-| store_bucket_delete | $0.01 |
-| store_quota_reconcile | $0.05 |
-| spawn_server_create | $0.01 (+ deposit) |
-| spawn_server_get, list | $0.001 |
-| spawn_server_delete | $0.005 (+ deposit refund) |
-| search_web, search_news | $0.01 |
-| search_extract | $0.005 |
-| email_mailbox_create | $0.05 |
-| email_send | $0.01 |
-| email reads/lists | $0.001 |
-| mem_collection_create | $0.01 |
-| mem_upsert, mem_query | $0.001 |
-| mem_cache ops | $0.0001 |
-| domain_zone_create | $0.05 |
-| domain_register | Dynamic (quote-based) |
-| domain DNS reads/writes | $0.001 |
-| token_deploy | $1.00 |
-| token_mint | $0.10 |
-| token_pool_create | $0.50 |
-| token reads | $0.001 |

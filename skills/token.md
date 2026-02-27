@@ -4,14 +4,14 @@ version: 1.0.0
 primitive: token.prim.sh
 requires: [wallet]
 tools:
-  - token_deploy
-  - token_list
-  - token_get
-  - token_mint
-  - token_supply
-  - token_pool_create
-  - token_pool_get
-  - token_pool_liquidity_params
+  - token_deploy_token
+  - token_list_tokens
+  - token_get_token
+  - token_mint_tokens
+  - token_get_token_supply
+  - token_create_pool
+  - token_get_pool
+  - token_get_liquidity_params
 ---
 
 # token.prim.sh
@@ -43,7 +43,7 @@ Do NOT use token for:
 ### 1. Deploy → Mint → Check supply
 
 ```
-1. token_deploy
+1. token_deploy_token
    - name: "MyToken"
    - symbol: "MTK"
    - initialSupply: "1000000000000000000000000"  (1M tokens, 18 decimals)
@@ -51,17 +51,17 @@ Do NOT use token for:
    - maxSupply: "10000000000000000000000000"
    → returns token with id and deployStatus: "pending"
 
-2. token_get
+2. token_get_token
    - id: <id from step 1>
    → poll until deployStatus is "confirmed" and contractAddress is set
 
-3. token_mint
+3. token_mint_tokens
    - id: <id from step 1>
    - to: "0xRecipientAddress..."
    - amount: "500000000000000000000"  (500 tokens)
    → returns {txHash, to, amount, status: "pending"}
 
-4. token_supply
+4. token_get_token_supply
    - id: <id from step 1>
    → returns live on-chain totalSupply
 ```
@@ -69,21 +69,21 @@ Do NOT use token for:
 ### 2. Deploy → Create pool → Get pool info
 
 ```
-1. token_deploy
+1. token_deploy_token
    - name: "MyToken"
    - symbol: "MTK"
    - initialSupply: "1000000000000000000000000"
    → returns token with id
 
-2. token_get (poll until deployStatus: "confirmed")
+2. token_get_token (poll until deployStatus: "confirmed")
 
-3. token_pool_create
+3. token_create_pool
    - id: <token id>
    - pricePerToken: "0.001"  (0.1 cents per token in USDC)
    - feeTier: 3000  (0.3% — default)
    → returns {poolAddress, token0, token1, fee, sqrtPriceX96, tick, txHash}
 
-4. token_pool_get
+4. token_get_pool
    - id: <token id>
    → verify pool details
 ```
@@ -91,20 +91,20 @@ Do NOT use token for:
 ### 3. Full token launch: deploy → mint → create pool → add liquidity
 
 ```
-1. token_deploy (with mintable: true)
+1. token_deploy_token (with mintable: true)
    → get token id
 
-2. token_get — poll until deployStatus: "confirmed"
+2. token_get_token — poll until deployStatus: "confirmed"
 
-3. token_mint (optional — mint additional tokens to your wallet before creating pool)
+3. token_mint_tokens (optional — mint additional tokens to your wallet before creating pool)
    - to: <your wallet address>
    - amount: <amount for liquidity>
 
-4. token_pool_create
+4. token_create_pool
    - pricePerToken: "0.001"
    → pool created
 
-5. token_pool_liquidity_params
+5. token_get_liquidity_params
    - id: <token id>
    - tokenAmount: "1000000000000000000000"  (1000 tokens for liquidity)
    - usdcAmount: "1000000"  ($1 USDC for liquidity)
@@ -122,21 +122,21 @@ Do NOT use token for:
 
 - `invalid_request` → Missing required field or invalid value. Check name, symbol, initialSupply format.
 - `not_mintable` (400) → Token was deployed with `mintable: false`. Cannot mint additional tokens.
-- `exceeds_max_supply` (422) → Mint would exceed `maxSupply`. Check current `totalMinted` with `token_get`.
-- `pool_exists` (409) → A pool already exists for this token. Use `token_pool_get` to retrieve it.
+- `exceeds_max_supply` (422) → Mint would exceed `maxSupply`. Check current `totalMinted` with `token_get_token`.
+- `pool_exists` (409) → A pool already exists for this token. Use `token_get_pool` to retrieve it.
 - `not_found` (404) → Token ID does not exist. Verify the id is correct.
 - `forbidden` (403) → The token belongs to a different wallet. You can only manage tokens your wallet owns.
 - `rpc_error` (502) → Base RPC error. Retry after a short wait.
 
 ## Gotchas
 
-- **Deploy is asynchronous:** `token_deploy` returns `deployStatus: "pending"`. Poll `token_get` until `deployStatus: "confirmed"` before minting or creating a pool. Attempting to mint against a pending deploy will fail.
+- **Deploy is asynchronous:** `token_deploy_token` returns `deployStatus: "pending"`. Poll `token_get_token` until `deployStatus: "confirmed"` before minting or creating a pool. Attempting to mint against a pending deploy will fail.
 - **Token amounts are strings:** All supply values (`initialSupply`, `maxSupply`, `amount`, `totalSupply`) are strings representing raw integer values. For 18 decimal tokens, 1 token = `"1000000000000000000"`. Never pass numbers — use strings.
 - **USDC has 6 decimals:** When specifying USDC amounts for pool creation or liquidity, use 6-decimal units: $1 USDC = `"1000000"`.
-- **One pool per token:** You can only create one Uniswap V3 pool per token. `pool_exists` (409) means it already exists — use `token_pool_get` to find it.
-- **Approvals required before addLiquidity:** The `token_pool_liquidity_params` response includes an `approvals[]` array. Submit each approval transaction on-chain before calling addLiquidity, or the transaction will revert.
+- **One pool per token:** You can only create one Uniswap V3 pool per token. `pool_exists` (409) means it already exists — use `token_get_pool` to find it.
+- **Approvals required before addLiquidity:** The `token_get_liquidity_params` response includes an `approvals[]` array. Submit each approval transaction on-chain before calling addLiquidity, or the transaction will revert.
 - **feeTier options:** Valid fee tiers are 500 (0.05% — stable pairs), 3000 (0.3% — default, general use), 10000 (1% — exotic pairs). An invalid feeTier returns 400.
-- **Mint is also asynchronous:** `token_mint` returns `status: "pending"`. The `token_supply` endpoint queries on-chain, so supply will update once the mint transaction is confirmed (~2 seconds on Base).
+- **Mint is also asynchronous:** `token_mint_tokens` returns `status: "pending"`. The `token_get_token_supply` endpoint queries on-chain, so supply will update once the mint transaction is confirmed (~2 seconds on Base).
 
 ## Related primitives
 

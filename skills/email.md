@@ -4,22 +4,22 @@ version: 1.0.0
 primitive: email.prim.sh
 requires: [wallet]
 tools:
-  - email_mailbox_create
-  - email_mailbox_list
-  - email_mailbox_get
-  - email_mailbox_delete
-  - email_mailbox_renew
-  - email_messages_list
-  - email_message_get
-  - email_send
-  - email_webhook_create
-  - email_webhook_list
-  - email_webhook_delete
-  - email_domain_register
-  - email_domain_list
-  - email_domain_get
-  - email_domain_verify
-  - email_domain_delete
+  - email_create_mailbox
+  - email_list_mailboxes
+  - email_get_mailbox
+  - email_delete_mailbox
+  - email_renew_mailbox
+  - email_list_messages
+  - email_get_message
+  - email_send_message
+  - email_register_webhook
+  - email_list_webhooks
+  - email_delete_webhook
+  - email_register_domain
+  - email_list_domains
+  - email_get_domain
+  - email_verify_domain
+  - email_delete_domain
 ---
 
 # email.prim.sh
@@ -51,17 +51,17 @@ Do NOT use email for:
 ### 1. Create a temporary inbox and read a verification code
 
 ```
-1. email_mailbox_create
+1. email_create_mailbox
    - username: "tmpagent"  (optional — omit for random)
    → returns mailbox with id and address (e.g. "tmpagent@mail.prim.sh")
 
 2. [trigger the external service to send to that address]
 
-3. email_messages_list
+3. email_list_messages
    - id: <mailbox id from step 1>
    → wait for a message to appear; check total > 0
 
-4. email_message_get
+4. email_get_message
    - id: <mailbox id>
    - msgId: <message id from step 3>
    → read textBody or htmlBody for the verification code
@@ -70,10 +70,10 @@ Do NOT use email for:
 ### 2. Send an email from an agent-owned address
 
 ```
-1. email_mailbox_create
+1. email_create_mailbox
    → get mailbox id and address
 
-2. email_send
+2. email_send_message
    - id: <mailbox id>
    - to: "user@example.com"
    - subject: "Report ready"
@@ -84,17 +84,17 @@ Do NOT use email for:
 ### 3. Register a webhook for real-time inbound mail
 
 ```
-1. email_mailbox_create
+1. email_create_mailbox
    → get mailbox id
 
-2. email_webhook_create
+2. email_register_webhook
    - id: <mailbox id>
    - url: "https://myagent.example.com/hooks/email"
    - secret: "whsec_abc123"
    - events: ["message.received"]
    → webhook fires when mail arrives; verify X-Prim-Signature with your secret
 
-3. email_webhook_list
+3. email_list_webhooks
    - id: <mailbox id>
    → confirm webhook is registered and active
 ```
@@ -102,19 +102,19 @@ Do NOT use email for:
 ### 4. Use a custom domain for outbound mail
 
 ```
-1. email_domain_register
+1. email_register_domain
    - domain: "myproject.com"
    → returns required_records (MX, TXT/SPF)
 
 2. [Add required_records to your DNS registrar]
 
-3. email_domain_verify
+3. email_verify_domain
    - id: <domain id>
    → on success: status becomes "verified", dkim_records returned
 
 4. [Add dkim_records to your DNS]
 
-5. email_mailbox_create
+5. email_create_mailbox
    - domain: "myproject.com"
    - username: "agent"
    → creates "agent@myproject.com"
@@ -123,11 +123,11 @@ Do NOT use email for:
 ### 5. Renew a mailbox before it expires
 
 ```
-1. email_mailbox_get
+1. email_get_mailbox
    - id: <mailbox id>
    → check expires_at
 
-2. email_mailbox_renew
+2. email_renew_mailbox
    - id: <mailbox id>
    - ttl_ms: 604800000  (7 more days)
    → returns updated expires_at
@@ -140,13 +140,13 @@ Do NOT use email for:
 - `conflict` (409) → Domain already registered, or duplicate webhook URL. List existing resources first.
 - `not_found` (404) → Mailbox, message, webhook, or domain does not exist. Verify IDs are correct.
 - `forbidden` (403) → Resource belongs to a different wallet. You can only access resources your wallet owns.
-- `expired` (410) → Mailbox has expired and can no longer receive messages. Renew with `email_mailbox_renew` or create a new one.
+- `expired` (410) → Mailbox has expired and can no longer receive messages. Renew with `email_renew_mailbox` or create a new one.
 - `stalwart_error` (502) → Upstream Stalwart mail server error. Retry after a short wait.
 - `jmap_error` (502) → JMAP message submission failed. Retry after a short wait.
 
 ## Gotchas
 
-- **Mailboxes expire by default:** The default TTL is 7 days. If you need a permanent inbox, create with a very large `ttl_ms` or `null`. Renew with `email_mailbox_renew` before expiry.
+- **Mailboxes expire by default:** The default TTL is 24 hours. If you need a permanent inbox, create with a very large `ttl_ms` or `null`. Renew with `email_renew_mailbox` before expiry.
 - **Either body or html required for send:** `email_send` requires at least one of `body` (plain text) or `html`. Providing both creates a multipart message.
 - **Custom domain verification is two-step:** Register → add DNS records → verify. After verification, add the returned `dkim_records` too for DKIM signing. DNS propagation can take minutes to hours.
 - **Webhook URLs must be HTTPS:** HTTP webhook URLs are rejected with `invalid_request`.

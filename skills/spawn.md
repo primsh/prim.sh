@@ -4,18 +4,18 @@ version: 1.0.0
 primitive: spawn.prim.sh
 requires: [wallet]
 tools:
-  - spawn_server_create
-  - spawn_server_list
-  - spawn_server_get
-  - spawn_server_delete
-  - spawn_server_start
-  - spawn_server_stop
-  - spawn_server_reboot
-  - spawn_server_resize
-  - spawn_server_rebuild
-  - spawn_ssh_key_create
-  - spawn_ssh_key_list
-  - spawn_ssh_key_delete
+  - spawn_create_server
+  - spawn_list_servers
+  - spawn_get_server
+  - spawn_delete_server
+  - spawn_start_server
+  - spawn_stop_server
+  - spawn_reboot_server
+  - spawn_resize_server
+  - spawn_rebuild_server
+  - spawn_create_ssh_key
+  - spawn_list_ssh_keys
+  - spawn_delete_ssh_key
 ---
 
 # spawn.prim.sh
@@ -46,12 +46,12 @@ Do NOT use spawn for:
 ### 1. Register an SSH key and create a server
 
 ```
-1. spawn_ssh_key_create
+1. spawn_create_ssh_key
    - name: "agent-key"
    - public_key: "ssh-ed25519 AAAA..."
    → returns ssh_key with id (e.g. "key_abc123")
 
-2. spawn_server_create
+2. spawn_create_server
    - name: "my-server"
    - type: "small"
    - image: "ubuntu-24.04"
@@ -60,7 +60,7 @@ Do NOT use spawn for:
    - user_data: "#!/bin/bash\napt-get update -y"  (optional cloud-init)
    → returns {server: {id, status: "initializing", ...}, action, deposit_charged}
 
-3. Poll spawn_server_get with server id every 5–10 seconds
+3. Poll spawn_get_server with server id every 5–10 seconds
    → wait until status = "running" AND public_net.ipv4.ip is non-null
 
 4. SSH into server using the IP from step 3
@@ -69,25 +69,25 @@ Do NOT use spawn for:
 ### 2. Stop and resize a server
 
 ```
-1. spawn_server_stop with server id
+1. spawn_stop_server with server id
    → returns {action: {status: "running", ...}}
-   → poll spawn_server_get until status = "off"
+   → poll spawn_get_server until status = "off"
 
-2. spawn_server_resize
+2. spawn_resize_server
    - id: <server id>
    - type: "medium"
    - upgrade_disk: false   (true = irreversible disk upgrade)
    → returns {action, new_type, deposit_delta}
    → if deposit_delta is positive, additional USDC is charged
 
-3. spawn_server_start with server id
+3. spawn_start_server with server id
    → poll until status = "running"
 ```
 
 ### 3. Rebuild a server (clean OS reinstall)
 
 ```
-1. spawn_server_rebuild
+1. spawn_rebuild_server
    - id: <server id>
    - image: "debian-12"
    → returns {action, root_password}
@@ -99,7 +99,7 @@ WARNING: All data on the server is destroyed. Back up to store.prim.sh first.
 ### 4. Delete a server
 
 ```
-1. spawn_server_delete with server id
+1. spawn_delete_server with server id
    → returns {status: "deleted", deposit_refunded: "3.50"}
    → unused deposit is refunded to your wallet balance
 ```
@@ -107,7 +107,7 @@ WARNING: All data on the server is destroyed. Back up to store.prim.sh first.
 ### 5. List all servers
 
 ```
-1. spawn_server_list
+1. spawn_list_servers
    - limit: 20  (default)
    - page: 1
    → returns {servers: [...], meta: {page, per_page, total}}
@@ -122,7 +122,7 @@ initializing → running → off → running (after start)
                        → migrating (provider maintenance, wait)
 ```
 
-Poll `spawn_server_get` and check `status` until you reach your target state. All operations return an `action` object — the action `status` field ("running", "success", "error") tracks the in-progress operation, while the server `status` field tracks the server's lifecycle.
+Poll `spawn_get_server` and check `status` until you reach your target state. All operations return an `action` object — the action `status` field ("running", "success", "error") tracks the in-progress operation, while the server `status` field tracks the server's lifecycle.
 
 ## Error handling
 
@@ -132,16 +132,16 @@ Poll `spawn_server_get` and check `status` until you reach your target state. Al
 - `insufficient_deposit` → Not enough USDC in wallet to cover the deposit. Fund wallet and retry.
 - `not_found` (404) → Server or SSH key ID does not exist. Verify the ID.
 - `forbidden` (403) → Server or key belongs to a different wallet.
-- `provider_error` (502) → Hetzner API error. Retry after a short wait. If persistent, check `spawn_server_list` — the server may have been created despite the error.
+- `provider_error` (502) → DigitalOcean/Hetzner API error. Retry after a short wait. If persistent, check `spawn_list_servers` — the server may have been created despite the error.
 - `not_implemented` → Feature not yet available.
 
 ## Gotchas
 
-- **Register SSH keys before creating servers.** There is no endpoint to add SSH keys to a running server without rebuilding it. Always call `spawn_ssh_key_create` first and pass the ID in `ssh_keys` during `spawn_server_create`.
-- **Poll for running status.** `spawn_server_create` returns immediately with `status: "initializing"`. The IP address is null until the server is running. Always poll `spawn_server_get` before trying to connect.
-- **Stop before resize.** `spawn_server_resize` fails if the server is not stopped. Call `spawn_server_stop` and wait for `status: "off"` before resizing.
-- **Disk upgrades are irreversible.** If you pass `upgrade_disk: true` in `spawn_server_resize`, the disk cannot be downsized later. Default is false.
-- **Rebuild destroys all data.** `spawn_server_rebuild` wipes the server. Store critical data in store.prim.sh before rebuilding.
+- **Register SSH keys before creating servers.** There is no endpoint to add SSH keys to a running server without rebuilding it. Always call `spawn_create_ssh_key` first and pass the ID in `ssh_keys` during `spawn_create_server`.
+- **Poll for running status.** `spawn_create_server` returns immediately with `status: "initializing"`. The IP address is null until the server is running. Always poll `spawn_get_server` before trying to connect.
+- **Stop before resize.** `spawn_resize_server` fails if the server is not stopped. Call `spawn_stop_server` and wait for `status: "off"` before resizing.
+- **Disk upgrades are irreversible.** If you pass `upgrade_disk: true` in `spawn_resize_server`, the disk cannot be downsized later. Default is false.
+- **Rebuild destroys all data.** `spawn_rebuild_server` wipes the server. Store critical data in store.prim.sh before rebuilding.
 - **Deposit model:** `spawn_server_create` charges a deposit (e.g. "$5.00") upfront. When you delete the server, unused deposit is refunded as `deposit_refunded`.
 - **3 server limit (beta).** You cannot have more than 3 concurrent servers. Delete servers you're done with.
 - **Small type only (beta).** 1 vCPU, 1 GB RAM. No other types available yet.

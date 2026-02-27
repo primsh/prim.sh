@@ -1066,7 +1066,7 @@
                   "depends": [
                     "I-9"
                   ],
-                  "status": "pending",
+                  "status": "done",
                   "release": null,
                   "plan": "tasks/active/i-10-smoke-test-generator.md"
                 },
@@ -1098,9 +1098,9 @@
                   "depends": [
                     "I-18"
                   ],
-                  "status": "pending",
+                  "status": "done",
                   "release": null,
-                  "plan": "tasks/active/i-20-skills.md"
+                  "plan": "tasks/completed/i-20-skills.md"
                 }
               ]
             },

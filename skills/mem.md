@@ -4,15 +4,15 @@ version: 1.0.0
 primitive: mem.prim.sh
 requires: [wallet]
 tools:
-  - mem_collection_create
-  - mem_collection_list
-  - mem_collection_get
-  - mem_collection_delete
-  - mem_upsert
-  - mem_query
-  - mem_cache_put
-  - mem_cache_get
-  - mem_cache_delete
+  - mem_create_collection
+  - mem_list_collections
+  - mem_get_collection
+  - mem_delete_collection
+  - mem_upsert_documents
+  - mem_query_collection
+  - mem_set_cache
+  - mem_get_cache
+  - mem_delete_cache
 ---
 
 # mem.prim.sh
@@ -42,11 +42,11 @@ Do NOT use mem for:
 ### 1. Create collection, upsert documents, query
 
 ```
-1. mem_collection_create
+1. mem_create_collection
    - name: "research-notes"
    → returns collection with id
 
-2. mem_upsert
+2. mem_upsert_documents
    - collection_id: <id from step 1>
    - documents: [
        {text: "Transformer models use self-attention mechanisms.", metadata: {source: "paper-A"}},
@@ -54,7 +54,7 @@ Do NOT use mem for:
      ]
    → returns {upserted: 2, ids: [...]}
 
-3. mem_query
+3. mem_query_collection
    - collection_id: <id from step 1>
    - text: "How does self-attention work?"
    - top_k: 3
@@ -64,14 +64,14 @@ Do NOT use mem for:
 ### 2. Cache put and get
 
 ```
-1. mem_cache_put
+1. mem_set_cache
    - namespace: "agent-state"
    - key: "last-search"
    - value: {"query": "attention mechanisms", "result_ids": ["..."]}
    - ttl: 3600  (1 hour, or omit for permanent)
    → returns {namespace, key, value, expires_at}
 
-2. mem_cache_get
+2. mem_get_cache
    - namespace: "agent-state"
    - key: "last-search"
    → returns the stored value
@@ -80,20 +80,20 @@ Do NOT use mem for:
 ### 3. List and manage collections
 
 ```
-1. mem_collection_list
+1. mem_list_collections
    → find collection by name; note: document_count is null in list
 
-2. mem_collection_get with id
+2. mem_get_collection with id
    → get live document_count from Qdrant
 
-3. mem_collection_delete with id
+3. mem_delete_collection with id
    → permanently removes collection and all documents
 ```
 
 ### 4. Metadata filtering in queries
 
 ```
-mem_query
+mem_query_collection
   - collection_id: <id>
   - text: "attention mechanisms"
   - top_k: 5
@@ -103,7 +103,7 @@ mem_query
 
 ## Error handling
 
-- `collection_name_taken` (409) → A collection with that name already exists for your wallet. List collections to find the existing one or choose a different name.
+- `collection_name_taken` (409) → A collection with that name already exists for your wallet. Call `mem_list_collections` to find the existing one or choose a different name.
 - `invalid_request` (400) → Missing required fields or malformed JSON body.
 - `not_found` (404) → Collection or cache entry does not exist. Verify the ID/namespace/key.
 - `forbidden` (403) → The collection or namespace belongs to a different wallet.
@@ -113,7 +113,7 @@ mem_query
 
 ## Gotchas
 
-- **document_count is null in list responses:** `mem_collection_list` omits live counts to avoid N+1 Qdrant calls. Use `mem_collection_get` to get the live count for a specific collection.
+- **document_count is null in list responses:** `mem_list_collections` omits live counts to avoid N+1 Qdrant calls. Use `mem_get_collection` to get the live count for a specific collection.
 - **Upsert by ID is replace, not merge:** If you provide a document ID that already exists, the entire document (text + metadata + vector) is replaced.
 - **Auto-generated IDs:** If you omit `id` in a document, the returned `ids` array contains the auto-generated UUIDs in input order — save these if you need to reference the documents later.
 - **Cache namespaces are wallet-scoped:** Two different wallets can use the same namespace+key without conflict. Your cache is private to your wallet.

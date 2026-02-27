@@ -4,17 +4,18 @@ version: 1.0.0
 primitive: wallet.prim.sh
 requires: []
 tools:
-  - wallet_register
-  - wallet_list
-  - wallet_get
-  - wallet_deactivate
-  - wallet_fund_request_create
-  - wallet_fund_request_approve
-  - wallet_fund_request_deny
-  - wallet_policy_get
-  - wallet_policy_update
-  - wallet_pause
-  - wallet_resume
+  - wallet_register_wallet
+  - wallet_list_wallets
+  - wallet_get_wallet
+  - wallet_deactivate_wallet
+  - wallet_create_fund_request
+  - wallet_list_fund_requests
+  - wallet_approve_fund_request
+  - wallet_deny_fund_request
+  - wallet_get_policy
+  - wallet_update_policy
+  - wallet_pause_wallet
+  - wallet_resume_wallet
 ---
 
 # wallet.prim.sh
@@ -56,7 +57,7 @@ This generates a keypair, encrypts it locally, and calls `wallet_register`. Hand
 ### 2. Register a wallet (MCP tool)
 
 ```
-1. wallet_register
+1. wallet_register_wallet
    - address: "0xYourAddress"
    - signature: <EIP-191 sig over "Register <address> with prim.sh at <timestamp>">
    - timestamp: <ISO 8601 UTC, must be within 5 min of server time>
@@ -71,7 +72,7 @@ Register <address> with prim.sh at <timestamp>
 ### 3. Check wallet status
 
 ```
-1. wallet_get with address "0xYourAddress"
+1. wallet_get_wallet with address "0xYourAddress"
    → returns balance, paused status, spending policy, funded flag
 ```
 
@@ -80,14 +81,14 @@ Register <address> with prim.sh at <timestamp>
 When your wallet is empty and you need USDC to proceed:
 
 ```
-1. wallet_fund_request_create
+1. wallet_create_fund_request
    - walletAddress: "0xYourAddress"
    - amount: "10.00"
    - reason: "Need USDC to run research queries for task #42"
    → returns fundRequest with id and status: "pending"
 
 2. Notify the human operator with the fund request ID
-3. Poll wallet_get until balance > 0, or wallet_fund_request_get until status = "approved"
+3. Poll wallet_get_wallet until balance > 0, or wallet_list_fund_requests until status = "approved"
 ```
 
 On testnet, skip this and use `faucet_usdc` instead.
@@ -95,7 +96,7 @@ On testnet, skip this and use `faucet_usdc` instead.
 ### 5. Set a spending policy on a sub-agent wallet
 
 ```
-1. wallet_policy_update
+1. wallet_update_policy
    - walletAddress: "0xSubAgentAddress"
    - maxPerTx: "1.00"       (cap per transaction)
    - maxPerDay: "10.00"     (daily cap)
@@ -105,9 +106,9 @@ On testnet, skip this and use `faucet_usdc` instead.
 ### 6. Pause a wallet (emergency stop)
 
 ```
-1. wallet_pause with address "0xTargetAddress"
+1. wallet_pause_wallet with address "0xTargetAddress"
    → wallet cannot sign x402 payments until resumed
-2. wallet_resume with address "0xTargetAddress"
+2. wallet_resume_wallet with address "0xTargetAddress"
    → restores normal operation
 ```
 
@@ -116,9 +117,9 @@ On testnet, skip this and use `faucet_usdc` instead.
 - `invalid_request` → Missing or malformed fields. Check address format (0x + 40 hex chars), timestamp format (ISO 8601 UTC), and that all required fields are present.
 - `forbidden` → Signature does not match the address, or timestamp is more than 5 minutes old. Re-sign with a fresh timestamp.
 - `duplicate_request` (409) → Wallet is already registered. Proceed — registration is idempotent from the wallet's perspective; you can use the address immediately.
-- `not_found` → Wallet address is not registered. Run `wallet_register` first.
-- `wallet_paused` → Wallet is paused. Call `wallet_resume` to restore it.
-- `policy_violation` → A spending policy blocked the payment (maxPerTx or maxPerDay exceeded). Check policy with `wallet_policy_get`, then either increase limits or wait for daily reset (`dailyResetAt`).
+- `not_found` → Wallet address is not registered. Run `wallet_register_wallet` first.
+- `wallet_paused` → Wallet is paused. Call `wallet_resume_wallet` to restore it.
+- `policy_violation` → A spending policy blocked the payment (maxPerTx or maxPerDay exceeded). Check policy with `wallet_get_policy`, then either increase limits or wait for daily reset (`dailyResetAt`).
 - `insufficient_balance` → Not enough USDC. Fund the wallet via `faucet_usdc` (testnet) or `wallet_fund_request_create` (production).
 - `rate_limited` (429) → Too many requests. Wait before retrying.
 - `payment_required` (402) → x402 payment not received. The MCP server handles this automatically; if calling raw HTTP, sign and retry.
@@ -127,7 +128,7 @@ On testnet, skip this and use `faucet_usdc` instead.
 
 - **Timestamp window:** The `timestamp` in registration must be within 5 minutes of server time. Generate it fresh at call time, not cached.
 - **409 is not an error:** If `wallet_register` returns 409 `duplicate_request`, the wallet is registered and usable. Treat this as success.
-- **Cursor pagination:** `wallet_list` uses cursor-based pagination. Pass the `cursor` field from the previous response as the `after` param. Null cursor means you've seen all wallets.
+- **Cursor pagination:** `wallet_list_wallets` uses cursor-based pagination. Pass the `cursor` field from the previous response as the `after` param. Null cursor means you've seen all wallets.
 - **Balance is prim ledger, not on-chain:** `balance` in `wallet_get` is the prim-tracked balance, not the raw on-chain ERC-20 balance. They converge via payment settlement.
 - **Non-custodial:** prim never holds private keys. If you lose your local keystore (`~/.prim/keys/`), you lose access to that wallet. Back up keys with `prim wallet export`.
 - **Spending policy scope:** `allowedPrimitives` is a hostname allowlist. Use full subdomain format: `"store.prim.sh"`, not `"store"`.
