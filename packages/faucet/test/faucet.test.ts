@@ -34,6 +34,7 @@ vi.mock("viem", async (importOriginal) => {
     })),
     createPublicClient: vi.fn(() => ({
       getBalance: mockGetBalance,
+      getTransactionCount: vi.fn().mockResolvedValue(0),
     })),
   };
 });

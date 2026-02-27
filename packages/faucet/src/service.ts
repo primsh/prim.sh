@@ -13,6 +13,40 @@ export interface DripResult {
   source?: "circle" | "treasury";
 }
 
+// ─── Nonce queue ──────────────────────────────────────────────────────────
+// Assigns explicit sequential nonces so concurrent treasury txs don't collide.
+
+class NonceQueue {
+  private current: number | null = null;
+  private pending: Promise<void> = Promise.resolve();
+
+  async next(publicClient: { getTransactionCount: (args: { address: Address }) => Promise<number> }, address: Address): Promise<number> {
+    // Serialize nonce assignment — each caller waits for the previous one
+    const prev = this.pending;
+    let resolve: () => void;
+    this.pending = new Promise((r) => { resolve = r; });
+
+    await prev;
+
+    if (this.current === null) {
+      this.current = await publicClient.getTransactionCount({ address });
+    } else {
+      this.current++;
+    }
+
+    const nonce = this.current;
+    resolve!();
+    return nonce;
+  }
+
+  /** Reset after errors so next call re-fetches from chain. */
+  reset(): void {
+    this.current = null;
+  }
+}
+
+const nonceQueue = new NonceQueue();
+
 // Minimal ERC-20 transfer ABI
 const ERC20_TRANSFER_ABI = [
   {
@@ -178,17 +212,23 @@ export async function dripUsdc(address: string): Promise<DripResult> {
     const USDC_DRIP_AMOUNT = 10_000_000n; // 10.00 USDC
 
     const account = privateKeyToAccount(treasuryKey as Hex);
+    const publicClient = createPublicClient({
+      chain: baseSepolia,
+      transport: http(rpcUrl),
+    });
     const client = createWalletClient({
       account,
       chain: baseSepolia,
       transport: http(rpcUrl),
     });
 
+    const nonce = await nonceQueue.next(publicClient, account.address);
     const txHash = await client.writeContract({
       address: netConfig.usdcAddress as Address,
       abi: ERC20_TRANSFER_ABI,
       functionName: "transfer",
       args: [address as Address, USDC_DRIP_AMOUNT],
+      nonce,
     });
 
     return {
@@ -199,6 +239,7 @@ export async function dripUsdc(address: string): Promise<DripResult> {
       source: "treasury",
     };
   } catch (treasuryErr) {
+    nonceQueue.reset();
     const treasuryMsg = treasuryErr instanceof Error ? treasuryErr.message : String(treasuryErr);
     throw new Error(
       `Circle failed (${circleError}); treasury also failed: ${treasuryMsg}`,
@@ -238,15 +279,22 @@ export async function dripEth(address: string): Promise<DripResult> {
     transport: http(rpcUrl),
   });
 
-  const txHash = await client.sendTransaction({
-    to: address as Address,
-    value: parseEther(dripAmount),
-  });
+  try {
+    const nonce = await nonceQueue.next(publicClient, account.address);
+    const txHash = await client.sendTransaction({
+      to: address as Address,
+      value: parseEther(dripAmount),
+      nonce,
+    });
 
-  return {
-    tx_hash: txHash,
-    amount: dripAmount,
-    currency: "ETH",
-    chain: netConfig.network,
-  };
+    return {
+      tx_hash: txHash,
+      amount: dripAmount,
+      currency: "ETH",
+      chain: netConfig.network,
+    };
+  } catch (err) {
+    nonceQueue.reset();
+    throw err;
+  }
 }
