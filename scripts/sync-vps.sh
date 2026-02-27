@@ -1,6 +1,9 @@
 #!/usr/bin/env bash
 # sync-vps.sh — Push local source to VPS, then restart services.
 #
+# Scope: API services only. Site deploys via GHA → Cloudflare Pages (SITE-10).
+# To deploy site changes: push to main and let GHA handle it.
+#
 # Runs LOCALLY. Rsyncs all files the VPS needs, then SSHes in to
 # reinstall deps and restart services.
 #
@@ -43,6 +46,7 @@ rsync -avz --delete $DRY_RUN \
   --exclude='specs/' \
   --exclude='.claude/' \
   --exclude='bun.lock' \
+  --exclude='site/' \
   "$ROOT/" "$VPS:$REMOTE/"
 
 if [[ -n "$DRY_RUN" ]]; then

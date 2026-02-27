@@ -74,6 +74,7 @@ jobs:
             --exclude='specs/' \
             --exclude='.claude/' \
             --exclude='bun.lock' \
+            --exclude='site/' \
             ./ "$VPS_HOST":/opt/prim/
 
       - name: Fix ownership
