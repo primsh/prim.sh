@@ -46,7 +46,6 @@ jobs:
   deploy-vps:
     name: Deploy to VPS
     runs-on: ubuntu-latest
-    environment: production
 
     if: >
       github.event_name == 'workflow_dispatch' ||
