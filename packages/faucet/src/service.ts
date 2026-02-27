@@ -35,7 +35,7 @@ class NonceQueue {
     }
 
     const nonce = this.current;
-    resolve!();
+    resolve?.();
     return nonce;
   }
 
