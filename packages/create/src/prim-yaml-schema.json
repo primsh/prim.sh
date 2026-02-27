@@ -1,0 +1,157 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://prim.sh/schemas/prim-yaml.json",
+  "title": "prim.yaml",
+  "description": "Schema for prim.yaml — the spec file for a prim.sh primitive.",
+  "type": "object",
+  "required": ["id", "name", "description", "port"],
+  "properties": {
+    "id": {
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9-]*$",
+      "description": "Unique primitive identifier (lowercase letters, digits, hyphens)"
+    },
+    "name": {
+      "type": "string",
+      "description": "Display name (e.g. 'wallet.sh')"
+    },
+    "endpoint": {
+      "type": "string",
+      "description": "Public endpoint hostname (e.g. 'wallet.prim.sh')"
+    },
+    "description": {
+      "type": "string",
+      "maxLength": 200,
+      "description": "Short description of the primitive"
+    },
+    "port": {
+      "type": "integer",
+      "minimum": 1024,
+      "maximum": 65535,
+      "description": "Local development port"
+    },
+    "type": {
+      "type": "string",
+      "description": "Category (e.g. 'crypto', 'storage', 'compute')"
+    },
+    "status": {
+      "type": "string",
+      "enum": ["idea", "planning", "building", "testing", "deployed", "live"],
+      "description": "Development status"
+    },
+    "accent": {
+      "type": "string",
+      "pattern": "^#[0-9a-fA-F]{6}$",
+      "description": "Accent color hex (e.g. '#8BC34A')"
+    },
+    "accent_dim": {
+      "type": "string",
+      "pattern": "^#[0-9a-fA-F]{6}$",
+      "description": "Dimmed accent color hex"
+    },
+    "accent_glow": {
+      "type": "string",
+      "description": "Glow color (rgba string)"
+    },
+    "env": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "Required environment variables"
+    },
+    "pricing": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["op", "price"],
+        "properties": {
+          "op": { "type": "string", "description": "Operation name" },
+          "price": { "type": "string", "description": "Price (e.g. '$0.01' or 'free')" },
+          "note": { "type": "string", "description": "Additional pricing note" }
+        },
+        "additionalProperties": false
+      },
+      "description": "Pricing rows"
+    },
+    "routes_map": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["route", "response", "status", "description"],
+        "properties": {
+          "route": {
+            "type": "string",
+            "pattern": "^(GET|POST|PUT|DELETE|PATCH) /",
+            "description": "HTTP method + path (e.g. 'POST /v1/scaffold')"
+          },
+          "request": {
+            "type": ["string", "null"],
+            "description": "Request type name (null for no body)"
+          },
+          "response": {
+            "type": "string",
+            "description": "Response type name"
+          },
+          "request_type": {
+            "type": ["string", "null"],
+            "description": "Alias for request"
+          },
+          "response_type": {
+            "type": "string",
+            "description": "Alias for response"
+          },
+          "status": {
+            "type": "integer",
+            "description": "HTTP success status code"
+          },
+          "description": {
+            "type": "string",
+            "description": "Route description"
+          },
+          "operation_id": {
+            "type": "string",
+            "description": "Operation identifier"
+          },
+          "notes": {
+            "type": "string",
+            "description": "Additional notes"
+          },
+          "errors": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": ["status", "code", "description"],
+              "properties": {
+                "status": { "type": "integer" },
+                "code": { "type": "string" },
+                "description": { "type": "string" }
+              },
+              "additionalProperties": false
+            },
+            "description": "Possible error responses"
+          }
+        },
+        "additionalProperties": false
+      },
+      "description": "Route definitions"
+    },
+    "providers": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["name"],
+        "properties": {
+          "name": { "type": "string", "description": "Provider/vendor name" },
+          "env_key": { "type": "string", "description": "Environment variable for API key" },
+          "description": { "type": "string", "description": "Provider description or URL" }
+        },
+        "additionalProperties": false
+      },
+      "description": "Upstream API providers"
+    },
+    "wraps": {
+      "type": "string",
+      "description": "Name of the service this primitive wraps"
+    }
+  },
+  "additionalProperties": true
+}
