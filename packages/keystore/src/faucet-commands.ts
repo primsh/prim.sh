@@ -46,9 +46,9 @@ export async function runFaucetCommand(sub: string, argv: string[]): Promise<voi
         body: JSON.stringify({ address }),
       });
       if (!res.ok) return handleError(res);
-      const data = (await res.json()) as { txHash: string; amount: string; currency: string; chain: string };
+      const data = (await res.json()) as { tx_hash: string; amount: string; currency: string; chain: string };
       if (quiet) {
-        console.log(data.txHash);
+        console.log(data.tx_hash);
       } else {
         console.log(JSON.stringify(data, null, 2));
       }
@@ -63,9 +63,9 @@ export async function runFaucetCommand(sub: string, argv: string[]): Promise<voi
         body: JSON.stringify({ address }),
       });
       if (!res.ok) return handleError(res);
-      const data = (await res.json()) as { txHash: string; amount: string; currency: string; chain: string };
+      const data = (await res.json()) as { tx_hash: string; amount: string; currency: string; chain: string };
       if (quiet) {
-        console.log(data.txHash);
+        console.log(data.tx_hash);
       } else {
         console.log(JSON.stringify(data, null, 2));
       }
@@ -80,8 +80,8 @@ export async function runFaucetCommand(sub: string, argv: string[]): Promise<voi
       if (!res.ok) return handleError(res);
       const data = (await res.json()) as {
         address: string;
-        usdc: { available: boolean; retryAfterMs: number };
-        eth: { available: boolean; retryAfterMs: number };
+        usdc: { available: boolean; retry_after_ms: number };
+        eth: { available: boolean; retry_after_ms: number };
       };
       if (quiet) {
         console.log(`usdc:${data.usdc.available} eth:${data.eth.available}`);

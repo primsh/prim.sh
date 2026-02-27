@@ -34,7 +34,7 @@ export interface DripRequest {
 
 export interface DripResponse {
   /** Transaction hash on Base Sepolia. May be "pending" if Circle returns 204. */
-  txHash: string;
+  tx_hash: string;
   /** Amount dispensed as a decimal string (e.g. "10.00" for USDC, "0.01" for ETH). */
   amount: string;
   /** Currency dispensed: "USDC" or "ETH". */
@@ -51,7 +51,7 @@ export interface FaucetAvailability {
   /** Whether the faucet can be called right now for this address. */
   available: boolean;
   /** Milliseconds until rate limit resets. 0 if available. */
-  retryAfterMs: number;
+  retry_after_ms: number;
 }
 
 export interface FaucetStatusResponse {

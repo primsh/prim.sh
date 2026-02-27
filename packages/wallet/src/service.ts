@@ -97,8 +97,8 @@ export async function registerWallet(request: WalletRegisterRequest): Promise<Re
       address: normalizedAddress,
       chain: effectiveChain,
       label: label ?? null,
-      registeredAt: new Date().toISOString(),
-      createdAt: new Date().toISOString(),
+      registered_at: new Date().toISOString(),
+      created_at: new Date().toISOString(),
     },
   };
 }
@@ -118,7 +118,7 @@ export async function listWallets(owner: string, limit: number, after?: string):
         balance,
         funded,
         paused,
-        createdAt: new Date(r.created_at).toISOString(),
+        created_at: new Date(r.created_at).toISOString(),
       };
     }),
   );
@@ -180,10 +180,10 @@ export async function getWallet(
     resetDailySpentIfNeeded(row.address);
     const refreshed = getPolicy(row.address) ?? policyRow;
     spendingPolicy = {
-      maxPerTx: refreshed.max_per_tx,
-      maxPerDay: refreshed.max_per_day,
-      dailySpent: refreshed.daily_spent,
-      dailyResetAt: refreshed.daily_reset_at,
+      max_per_tx: refreshed.max_per_tx,
+      max_per_day: refreshed.max_per_day,
+      daily_spent: refreshed.daily_spent,
+      daily_reset_at: refreshed.daily_reset_at,
     };
   }
 
@@ -195,9 +195,9 @@ export async function getWallet(
       balance,
       funded,
       paused,
-      createdBy: row.created_by,
+      created_by: row.created_by,
       policy: spendingPolicy,
-      createdAt: new Date(row.created_at).toISOString(),
+      created_at: new Date(row.created_at).toISOString(),
     },
   };
 }
@@ -217,7 +217,7 @@ export function deactivateWallet(
     data: {
       address,
       deactivated: true,
-      deactivatedAt,
+      deactivated_at: deactivatedAt,
     },
   };
 }
@@ -231,11 +231,11 @@ type FundRequestResult<T> =
 function fundRequestToResponse(row: import("./db.ts").FundRequestRow): FundRequestResponse {
   return {
     id: row.id,
-    walletAddress: row.wallet_address,
+    wallet_address: row.wallet_address,
     amount: row.amount,
     reason: row.reason,
     status: row.status,
-    createdAt: new Date(row.created_at).toISOString(),
+    created_at: new Date(row.created_at).toISOString(),
   };
 }
 
@@ -320,10 +320,10 @@ export function approveFundRequest(
     data: {
       id: requestId,
       status: "approved",
-      fundingAddress: req.wallet_address,
+      funding_address: req.wallet_address,
       amount: req.amount,
       chain: netConfig.network,
-      approvedAt,
+      approved_at: approvedAt,
     },
   };
 }
@@ -350,7 +350,7 @@ export function denyFundRequest(
   const deniedAt = new Date().toISOString();
   return {
     ok: true,
-    data: { id: requestId, status: "denied", reason: reason ?? null, deniedAt },
+    data: { id: requestId, status: "denied", reason: reason ?? null, denied_at: deniedAt },
   };
 }
 
@@ -371,12 +371,12 @@ function parsePrimitivesList(walletAddress: string, raw: string): string[] | nul
 
 function policyRowToResponse(walletAddress: string, row: ReturnType<typeof getPolicy>): PolicyResponse {
   return {
-    walletAddress,
-    maxPerTx: row?.max_per_tx ?? null,
-    maxPerDay: row?.max_per_day ?? null,
-    allowedPrimitives: row?.allowed_primitives ? parsePrimitivesList(walletAddress, row.allowed_primitives) : null,
-    dailySpent: row?.daily_spent ?? "0.00",
-    dailyResetAt: row?.daily_reset_at ?? new Date(Date.now() + 86400000).toISOString(),
+    wallet_address: walletAddress,
+    max_per_tx: row?.max_per_tx ?? null,
+    max_per_day: row?.max_per_day ?? null,
+    allowed_primitives: row?.allowed_primitives ? parsePrimitivesList(walletAddress, row.allowed_primitives) : null,
+    daily_spent: row?.daily_spent ?? "0.00",
+    daily_reset_at: row?.daily_reset_at ?? new Date(Date.now() + 86400000).toISOString(),
   };
 }
 
@@ -438,7 +438,7 @@ export function pauseWallet(
 
   return {
     ok: true,
-    data: { walletAddress: address, paused: true, scope, pausedAt },
+    data: { wallet_address: address, paused: true, scope, paused_at: pausedAt },
   };
 }
 
@@ -454,6 +454,6 @@ export function resumeWallet(
 
   return {
     ok: true,
-    data: { walletAddress: address, paused: false, scope, resumedAt: new Date().toISOString() },
+    data: { wallet_address: address, paused: false, scope, resumed_at: new Date().toISOString() },
   };
 }

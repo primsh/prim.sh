@@ -5,7 +5,7 @@ import type { Address, Hex } from "viem";
 import { getNetworkConfig } from "@primsh/x402-middleware";
 
 export interface DripResult {
-  txHash: string;
+  tx_hash: string;
   amount: string;
   currency: "USDC" | "ETH";
   chain: string;
@@ -68,7 +68,7 @@ export async function dripUsdc(address: string): Promise<DripResult> {
         }
 
         return {
-          txHash,
+          tx_hash: txHash,
           amount: "10.00",
           currency: "USDC",
           chain: netConfig.network,
@@ -112,7 +112,7 @@ export async function dripUsdc(address: string): Promise<DripResult> {
     });
 
     return {
-      txHash,
+      tx_hash: txHash,
       amount: "10.00",
       currency: "USDC",
       chain: netConfig.network,
@@ -150,7 +150,7 @@ export async function dripEth(address: string): Promise<DripResult> {
   });
 
   return {
-    txHash,
+    tx_hash: txHash,
     amount: dripAmount,
     currency: "ETH",
     chain: netConfig.network,

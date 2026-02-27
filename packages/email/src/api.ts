@@ -98,11 +98,11 @@ export interface EmailMessage {
   /** Email subject line. */
   subject: string;
   /** ISO 8601 timestamp when the message was received. */
-  receivedAt: string;
+  received_at: string;
   /** Message size in bytes. */
   size: number;
   /** Whether the message has attachments. */
-  hasAttachment: boolean;
+  has_attachment: boolean;
   /** Short preview text (first ~100 chars of body). */
   preview: string;
 }
@@ -111,9 +111,9 @@ export interface EmailDetail extends EmailMessage {
   /** CC recipient addresses. */
   cc: EmailAddress[];
   /** Plain-text body. Null if not present. */
-  textBody: string | null;
+  text_body: string | null;
   /** HTML body. Null if not present. */
-  htmlBody: string | null;
+  html_body: string | null;
 }
 
 /** @deprecated Use PaginatedList<EmailMessage> */

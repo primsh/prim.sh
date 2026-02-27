@@ -50,10 +50,10 @@ describe("createFundRequest — valid", () => {
     if (result.ok) {
       expect(result.data.id).toMatch(/^fr_[0-9a-f]{8}$/);
       expect(result.data.status).toBe("pending");
-      expect(result.data.walletAddress).toBe(address);
+      expect(result.data.wallet_address).toBe(address);
       expect(result.data.amount).toBe("5.00");
       expect(result.data.reason).toBe("Need funds");
-      expect(typeof result.data.createdAt).toBe("string");
+      expect(typeof result.data.created_at).toBe("string");
     }
   });
 });
@@ -146,11 +146,11 @@ describe("approveFundRequest — success (non-custodial)", () => {
     expect(result.ok).toBe(true);
     if (result.ok) {
       expect(result.data.status).toBe("approved");
-      expect(result.data.fundingAddress).toBe(address);
+      expect(result.data.funding_address).toBe(address);
       expect(result.data.amount).toBe("5.00");
       expect(typeof result.data.chain).toBe("string");
       expect(result.data.id).toBe(requestId);
-      expect(typeof result.data.approvedAt).toBe("string");
+      expect(typeof result.data.approved_at).toBe("string");
     }
   });
 });
@@ -193,7 +193,7 @@ describe("denyFundRequest — success", () => {
       expect(result.data.status).toBe("denied");
       expect(result.data.reason).toBeNull();
       expect(result.data.id).toBe(createResult.data.id);
-      expect(typeof result.data.deniedAt).toBe("string");
+      expect(typeof result.data.denied_at).toBe("string");
     }
   });
 

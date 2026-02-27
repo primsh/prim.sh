@@ -51,10 +51,10 @@ export interface CreateTokenRequest {
 export interface TokenResponse {
   /** Token ID (e.g. "tok_abc123"). */
   id: string;
-  /** Deployed contract address. Null while deployStatus is "pending". */
-  contractAddress: string | null;
+  /** Deployed contract address. Null while deploy_status is "pending". */
+  contract_address: string | null;
   /** Ethereum address of the wallet that deployed the token. */
-  ownerWallet: string;
+  owner_wallet: string;
   /** Token name. */
   name: string;
   /** Token symbol. */
@@ -62,19 +62,19 @@ export interface TokenResponse {
   /** Decimal places. */
   decimals: number;
   /** Initial supply as a raw integer string. */
-  initialSupply: string;
+  initial_supply: string;
   /** Total minted supply as a raw integer string. */
-  totalMinted: string;
+  total_minted: string;
   /** Whether additional tokens can be minted. */
   mintable: boolean;
   /** Maximum mintable supply as a raw integer string. Null = unlimited. */
-  maxSupply: string | null;
+  max_supply: string | null;
   /** Deployment transaction hash. */
-  txHash: string;
+  tx_hash: string;
   /** Deployment status. Poll until "confirmed" before minting or creating a pool. */
-  deployStatus: "pending" | "confirmed" | "failed";
+  deploy_status: "pending" | "confirmed" | "failed";
   /** ISO 8601 timestamp when the token was created. */
-  createdAt: string;
+  created_at: string;
 }
 
 import type { PaginatedList } from "@primsh/x402-middleware";
@@ -91,7 +91,7 @@ export interface MintRequest {
 
 export interface MintResponse {
   /** Mint transaction hash. */
-  txHash: string;
+  tx_hash: string;
   /** Recipient address. */
   to: string;
   /** Amount minted as a raw integer string. */
@@ -102,11 +102,11 @@ export interface MintResponse {
 
 export interface SupplyResponse {
   /** Token ID. */
-  tokenId: string;
+  token_id: string;
   /** Deployed contract address. */
-  contractAddress: string;
+  contract_address: string;
   /** Live on-chain total supply as a raw integer string. */
-  totalSupply: string;
+  total_supply: string;
 }
 
 // ─── Pool types ───────────────────────────────────────────────────────────
@@ -120,7 +120,7 @@ export interface CreatePoolRequest {
 
 export interface PoolResponse {
   /** Uniswap V3 pool contract address. */
-  poolAddress: string;
+  pool_address: string;
   /** First token address in the pool pair. */
   token0: string;
   /** Second token address in the pool pair. */
@@ -128,11 +128,11 @@ export interface PoolResponse {
   /** Fee tier (e.g. 3000 = 0.3%). */
   fee: number;
   /** Initial sqrtPriceX96 as a string. */
-  sqrtPriceX96: string;
+  sqrt_price_x96: string;
   /** Initial tick. */
   tick: number;
   /** Pool creation transaction hash. */
-  txHash: string;
+  tx_hash: string;
 }
 
 export interface LiquidityApproval {
@@ -146,7 +146,7 @@ export interface LiquidityApproval {
 
 export interface LiquidityParamsResponse {
   /** Uniswap V3 NonfungiblePositionManager contract address. */
-  positionManagerAddress: string;
+  position_manager_address: string;
   /** First token address. */
   token0: string;
   /** Second token address. */
@@ -154,17 +154,17 @@ export interface LiquidityParamsResponse {
   /** Fee tier. */
   fee: number;
   /** Lower tick bound for the liquidity range. */
-  tickLower: number;
+  tick_lower: number;
   /** Upper tick bound for the liquidity range. */
-  tickUpper: number;
+  tick_upper: number;
   /** Desired amount of token0 to add as a raw integer string. */
-  amount0Desired: string;
+  amount0_desired: string;
   /** Desired amount of token1 to add as a raw integer string. */
-  amount1Desired: string;
+  amount1_desired: string;
   /** Minimum amount of token0 (slippage protection) as a raw integer string. */
-  amount0Min: string;
+  amount0_min: string;
   /** Minimum amount of token1 (slippage protection) as a raw integer string. */
-  amount1Min: string;
+  amount1_min: string;
   /** Address to receive the liquidity position NFT. */
   recipient: string;
   /** Transaction deadline as a Unix timestamp. */

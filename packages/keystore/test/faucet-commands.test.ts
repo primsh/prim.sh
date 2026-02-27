@@ -25,7 +25,7 @@ function jsonResponse(status: number, body: unknown): Response {
 
 function okDrip(currency: string) {
   return jsonResponse(200, {
-    txHash: "0xabc123",
+    tx_hash: "0xabc123",
     amount: currency === "usdc" ? "1.0" : "0.01",
     currency: currency.toUpperCase(),
     chain: "base-sepolia",
@@ -35,8 +35,8 @@ function okDrip(currency: string) {
 function okStatus(usdcAvailable = true, ethAvailable = true) {
   return jsonResponse(200, {
     address: "0xTEST",
-    usdc: { available: usdcAvailable, retryAfterMs: usdcAvailable ? 0 : 3600000 },
-    eth: { available: ethAvailable, retryAfterMs: ethAvailable ? 0 : 1800000 },
+    usdc: { available: usdcAvailable, retry_after_ms: usdcAvailable ? 0 : 3600000 },
+    eth: { available: ethAvailable, retry_after_ms: ethAvailable ? 0 : 1800000 },
   });
 }
 

@@ -81,7 +81,7 @@ describe("wallet.sh API", () => {
       address,
       chain: "eip155:8453",
     });
-    expect(body.registeredAt).toBeDefined();
+    expect(body.registered_at).toBeDefined();
   });
 
   it("GET /v1/wallets without payment returns 402", async () => {

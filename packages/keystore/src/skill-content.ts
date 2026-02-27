@@ -490,7 +490,7 @@ None. Faucet is free and open — no wallet registration, no payment, no allowli
 2. If usdc.available is true:
    faucet_usdc
    - address: "0xYourAddress"
-   → returns {txHash, amount: "10.00", currency: "USDC", chain: "eip155:84532"}
+   → returns {tx_hash, amount: "10.00", currency: "USDC", chain: "eip155:84532"}
 
 3. Wait for the tx to confirm (~2 seconds on Base Sepolia), then call wallet_get to see updated balance
 \`\`\`
@@ -505,7 +505,7 @@ None. Faucet is free and open — no wallet registration, no payment, no allowli
 2. If eth.available is true:
    faucet_eth
    - address: "0xYourAddress"
-   → returns {txHash, amount: "0.01", currency: "ETH", chain: "eip155:84532"}
+   → returns {tx_hash, amount: "0.01", currency: "ETH", chain: "eip155:84532"}
 \`\`\`
 
 ### 3. Check status before dripping (avoid 429s)
@@ -516,12 +516,12 @@ None. Faucet is free and open — no wallet registration, no payment, no allowli
    → returns:
      {
        address: "0x...",
-       usdc: {available: false, retryAfterMs: 4823000},
-       eth: {available: true, retryAfterMs: 0}
+       usdc: {available: false, retry_after_ms: 4823000},
+       eth: {available: true, retry_after_ms: 0}
      }
 
 2. If available is false, compute wait time:
-   retryAfterMs / 1000 = seconds to wait
+   retry_after_ms / 1000 = seconds to wait
    Only retry after that window expires.
 \`\`\`
 
@@ -538,8 +538,8 @@ None. Faucet is free and open — no wallet registration, no payment, no allowli
 - **Rate limits are per-address, per-token:**
   - USDC: 10 USDC per drip, once per 2 hours per address
   - ETH: 0.01 ETH per drip, once per 1 hour per address
-- **\`retryAfterMs\` is milliseconds.** Convert to seconds by dividing by 1000.
-- **\`txHash\` may be "pending".** The Circle API sometimes returns 204 with no transaction hash. If \`txHash\` is "pending", the transfer was queued but you can't track it on-chain. Wait ~30 seconds and check your balance.
+- **\`retry_after_ms\` is milliseconds.** Convert to seconds by dividing by 1000.
+- **\`tx_hash\` may be "pending".** The Circle API sometimes returns 204 with no transaction hash. If \`tx_hash\` is "pending", the transfer was queued but you can't track it on-chain. Wait ~30 seconds and check your balance.
 - **USDC source is either Circle or treasury.** The \`source\` field in the response tells you which backend was used. Both result in the same 10 USDC for you — the difference is only visible in the tx hash origin.
 - **No wallet registration needed.** Faucet works for any valid address, even unregistered ones. You still need to register the wallet before using paid primitives.
 - **Testnet only.** All tokens are worthless testnet tokens on Base Sepolia (\`eip155:84532\`). Do not confuse with mainnet.
@@ -1218,21 +1218,21 @@ Do NOT use token for:
    - initialSupply: "1000000000000000000000000"  (1M tokens, 18 decimals)
    - mintable: true
    - maxSupply: "10000000000000000000000000"
-   → returns token with id and deployStatus: "pending"
+   → returns token with id and deploy_status: "pending"
 
 2. token_get
    - id: <id from step 1>
-   → poll until deployStatus is "confirmed" and contractAddress is set
+   → poll until deploy_status is "confirmed" and contract_address is set
 
 3. token_mint
    - id: <id from step 1>
    - to: "0xRecipientAddress..."
    - amount: "500000000000000000000"  (500 tokens)
-   → returns {txHash, to, amount, status: "pending"}
+   → returns {tx_hash, to, amount, status: "pending"}
 
 4. token_supply
    - id: <id from step 1>
-   → returns live on-chain totalSupply
+   → returns live on-chain total_supply
 \`\`\`
 
 ### 2. Deploy → Create pool → Get pool info
@@ -1244,13 +1244,13 @@ Do NOT use token for:
    - initialSupply: "1000000000000000000000000"
    → returns token with id
 
-2. token_get (poll until deployStatus: "confirmed")
+2. token_get (poll until deploy_status: "confirmed")
 
 3. token_pool_create
    - id: <token id>
    - pricePerToken: "0.001"  (0.1 cents per token in USDC)
    - feeTier: 3000  (0.3% — default)
-   → returns {poolAddress, token0, token1, fee, sqrtPriceX96, tick, txHash}
+   → returns {pool_address, token0, token1, fee, sqrt_price_x96, tick, tx_hash}
 
 4. token_pool_get
    - id: <token id>
@@ -1263,7 +1263,7 @@ Do NOT use token for:
 1. token_deploy (with mintable: true)
    → get token id
 
-2. token_get — poll until deployStatus: "confirmed"
+2. token_get — poll until deploy_status: "confirmed"
 
 3. token_mint (optional — mint additional tokens to your wallet before creating pool)
    - to: <your wallet address>
@@ -1278,12 +1278,12 @@ Do NOT use token for:
    - tokenAmount: "1000000000000000000000"  (1000 tokens for liquidity)
    - usdcAmount: "1000000"  ($1 USDC for liquidity)
    → returns:
-     - approvals[]: submit each approval first (approve token + USDC to positionManagerAddress)
-     - positionManagerAddress, tickLower, tickUpper, amount0Desired, amount1Desired, etc.
+     - approvals[]: submit each approval first (approve token + USDC to position_manager_address)
+     - position_manager_address, tick_lower, tick_upper, amount0_desired, amount1_desired, etc.
 
 6. Submit token approvals on-chain (from the approvals[] array)
 
-7. Call addLiquidity on the positionManagerAddress with the returned params
+7. Call addLiquidity on the position_manager_address with the returned params
    → liquidity position minted as an NFT to your wallet
 \`\`\`
 
@@ -1291,7 +1291,7 @@ Do NOT use token for:
 
 - \`invalid_request\` → Missing required field or invalid value. Check name, symbol, initialSupply format.
 - \`not_mintable\` (400) → Token was deployed with \`mintable: false\`. Cannot mint additional tokens.
-- \`exceeds_max_supply\` (422) → Mint would exceed \`maxSupply\`. Check current \`totalMinted\` with \`token_get\`.
+- \`exceeds_max_supply\` (422) → Mint would exceed \`max_supply\`. Check current \`total_minted\` with \`token_get\`.
 - \`pool_exists\` (409) → A pool already exists for this token. Use \`token_pool_get\` to retrieve it.
 - \`not_found\` (404) → Token ID does not exist. Verify the id is correct.
 - \`forbidden\` (403) → The token belongs to a different wallet. You can only manage tokens your wallet owns.
@@ -1299,8 +1299,8 @@ Do NOT use token for:
 
 ## Gotchas
 
-- **Deploy is asynchronous:** \`token_deploy\` returns \`deployStatus: "pending"\`. Poll \`token_get\` until \`deployStatus: "confirmed"\` before minting or creating a pool. Attempting to mint against a pending deploy will fail.
-- **Token amounts are strings:** All supply values (\`initialSupply\`, \`maxSupply\`, \`amount\`, \`totalSupply\`) are strings representing raw integer values. For 18 decimal tokens, 1 token = \`"1000000000000000000"\`. Never pass numbers — use strings.
+- **Deploy is asynchronous:** \`token_deploy\` returns \`deploy_status: "pending"\`. Poll \`token_get\` until \`deploy_status: "confirmed"\` before minting or creating a pool. Attempting to mint against a pending deploy will fail.
+- **Token amounts are strings:** All supply values (\`initial_supply\`, \`max_supply\`, \`amount\`, \`total_supply\`) are strings representing raw integer values. For 18 decimal tokens, 1 token = \`"1000000000000000000"\`. Never pass numbers — use strings.
 - **USDC has 6 decimals:** When specifying USDC amounts for pool creation or liquidity, use 6-decimal units: $1 USDC = \`"1000000"\`.
 - **One pool per token:** You can only create one Uniswap V3 pool per token. \`pool_exists\` (409) means it already exists — use \`token_pool_get\` to find it.
 - **Approvals required before addLiquidity:** The \`token_pool_liquidity_params\` response includes an \`approvals[]\` array. Submit each approval transaction on-chain before calling addLiquidity, or the transaction will revert.

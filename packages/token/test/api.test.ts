@@ -33,14 +33,10 @@ process.env.TOKEN_DEPLOYER_ENCRYPTED_KEY = makeEncryptedKey();
 
 // ─── Mock viem (intercept deployContract / writeContract / readContract) ──────────────────
 
-// biome-ignore lint/suspicious/noExplicitAny: mock needs flexible return types
-const deployContractMock = vi.fn<any[], any>(async (_args?: unknown) => "0xTXHASH_DEPLOY_000000000000000000000000000000000000000000000000000000" as `0x${string}`);
-// biome-ignore lint/suspicious/noExplicitAny: mock needs flexible return types
-const writeContractMock = vi.fn<any[], any>(async (_args?: unknown) => "0xTXHASH_MINT_000000000000000000000000000000000000000000000000000000" as `0x${string}`);
-// biome-ignore lint/suspicious/noExplicitAny: mock needs flexible return types
-const readContractMock = vi.fn<any[], any>(async (_args?: unknown) => 100000000000000000000000000n); // 100M with 18 decimals
-// biome-ignore lint/suspicious/noExplicitAny: mock needs flexible return types
-const waitForTransactionReceiptMock = vi.fn<any[], any>(async (_args?: unknown) => ({
+const deployContractMock = vi.fn(async (_args?: unknown): Promise<`0x${string}`> => "0xTXHASH_DEPLOY_000000000000000000000000000000000000000000000000000000");
+const writeContractMock = vi.fn(async (_args?: unknown): Promise<`0x${string}`> => "0xTXHASH_MINT_000000000000000000000000000000000000000000000000000000");
+const readContractMock = vi.fn(async (_args?: unknown): Promise<unknown> => 100000000000000000000000000n); // 100M with 18 decimals
+const waitForTransactionReceiptMock = vi.fn(async (_args?: unknown): Promise<{ status: "success" | "reverted"; contractAddress: `0x${string}` | null }> => ({
   status: "success" as const,
   contractAddress: "0xTOKEN_DEPLOYED_CONTRACT0000000000000001" as `0x${string}`,
 }));
@@ -276,13 +272,13 @@ describe("token.sh", () => {
       expect(result.data.token.id).toMatch(/^tk_/);
       expect(result.data.token.name).toBe("Kelly Claude Token");
       expect(result.data.token.symbol).toBe("KELLYCLAUDE");
-      expect(result.data.token.ownerWallet).toBe(CALLER);
-      expect(result.data.token.deployStatus).toBe("confirmed");
-      expect(result.data.token.contractAddress).toBe("0xTOKEN_DEPLOYED_CONTRACT0000000000000001");
+      expect(result.data.token.owner_wallet).toBe(CALLER);
+      expect(result.data.token.deploy_status).toBe("confirmed");
+      expect(result.data.token.contract_address).toBe("0xTOKEN_DEPLOYED_CONTRACT0000000000000001");
       expect(result.data.token.decimals).toBe(18);
       expect(result.data.token.mintable).toBe(false);
-      expect(result.data.token.maxSupply).toBeNull();
-      expect(result.data.token.totalMinted).toBe("0");
+      expect(result.data.token.max_supply).toBeNull();
+      expect(result.data.token.total_minted).toBe("0");
     });
 
     it("deploy — returns pending when receipt times out", async () => {
@@ -290,8 +286,8 @@ describe("token.sh", () => {
       const result = await deployToken(VALID_REQUEST, CALLER);
       expect(result.ok).toBe(true);
       if (!result.ok) return;
-      expect(result.data.token.deployStatus).toBe("pending");
-      expect(result.data.token.contractAddress).toBeNull();
+      expect(result.data.token.deploy_status).toBe("pending");
+      expect(result.data.token.contract_address).toBeNull();
     });
 
     it("deploy — status becomes failed when receipt is reverted", async () => {
@@ -299,7 +295,7 @@ describe("token.sh", () => {
       const result = await deployToken(VALID_REQUEST, CALLER);
       expect(result.ok).toBe(true);
       if (!result.ok) return;
-      expect(result.data.token.deployStatus).toBe("failed");
+      expect(result.data.token.deploy_status).toBe("failed");
     });
 
     it("deploy — persists to DB", async () => {
@@ -328,7 +324,7 @@ describe("token.sh", () => {
       expect(result.ok).toBe(true);
       if (!result.ok) return;
       expect(result.data.token.mintable).toBe(true);
-      expect(result.data.token.maxSupply).toBe("10000000");
+      expect(result.data.token.max_supply).toBe("10000000");
     });
 
     it("deploy — invalid name returns 400", async () => {
@@ -386,7 +382,7 @@ describe("token.sh", () => {
       const result = await deployToken({ ...VALID_REQUEST, initialSupply: largeSupply }, CALLER);
       expect(result.ok).toBe(true);
       if (!result.ok) return;
-      expect(result.data.token.initialSupply).toBe(largeSupply);
+      expect(result.data.token.initial_supply).toBe(largeSupply);
     });
   });
 
@@ -668,8 +664,8 @@ describe("token.sh", () => {
       const result = await getSupply(tokenId, CALLER);
       expect(result.ok).toBe(true);
       if (!result.ok) return;
-      expect(result.data.contractAddress).toBe("0xTOKEN00000000000000000000000000000000003");
-      expect(result.data.totalSupply).toBeDefined();
+      expect(result.data.contract_address).toBe("0xTOKEN00000000000000000000000000000000003");
+      expect(result.data.total_supply).toBeDefined();
     });
 
     it("non-owner gets 403", async () => {
@@ -906,10 +902,10 @@ describe("token.sh", () => {
       const result = await createPool(tokenId, { pricePerToken: "0.01" }, CALLER);
       expect(result.ok).toBe(true);
       if (!result.ok) return;
-      expect(result.data.poolAddress).toBe(POOL_ADDRESS);
+      expect(result.data.pool_address).toBe(POOL_ADDRESS);
       expect(result.data.fee).toBe(10000);
       expect(result.data.tick).toBe(MOCK_TICK);
-      expect(result.data.txHash).toBe(INIT_TX);
+      expect(result.data.tx_hash).toBe(INIT_TX);
       expect(result.data.token0).toBeDefined();
       expect(result.data.token1).toBeDefined();
     });
@@ -1009,7 +1005,7 @@ describe("token.sh", () => {
       const result = await createPool(tokenId, { pricePerToken: "0.01" }, CALLER);
       expect(result.ok).toBe(true);
       if (!result.ok) return;
-      expect(result.data.poolAddress).toBe(POOL_ADDRESS);
+      expect(result.data.pool_address).toBe(POOL_ADDRESS);
       expect(result.data.tick).toBe(MOCK_TICK);
       // No createPool or initialize tx was submitted
       expect(writeContractMock).not.toHaveBeenCalled();
@@ -1021,7 +1017,7 @@ describe("token.sh", () => {
       const result = await createPool(tokenId, { pricePerToken: "0.01" }, CALLER);
       expect(result.ok).toBe(true);
       if (!result.ok) return;
-      expect(result.data.poolAddress).toBe(POOL_ADDRESS);
+      expect(result.data.pool_address).toBe(POOL_ADDRESS);
       // Only initialize was called (not createPool)
       expect(writeContractMock).toHaveBeenCalledTimes(1);
       const args = writeContractMock.mock.calls[0][0] as Record<string, unknown>;
@@ -1037,7 +1033,7 @@ describe("token.sh", () => {
       const result = getPool(tokenId, CALLER);
       expect(result.ok).toBe(true);
       if (!result.ok) return;
-      expect(result.data.poolAddress).toBe(POOL_ADDRESS);
+      expect(result.data.pool_address).toBe(POOL_ADDRESS);
     });
 
     it("getPool: non-owner → 403", async () => {
@@ -1077,19 +1073,19 @@ describe("token.sh", () => {
       expect(result.ok).toBe(true);
       if (!result.ok) return;
       const d = result.data;
-      expect(d.positionManagerAddress).toBeDefined();
+      expect(d.position_manager_address).toBeDefined();
       expect(d.token0).toBeDefined();
       expect(d.token1).toBeDefined();
       expect(d.fee).toBe(10000);
-      expect(d.tickLower).toBe(-887200);
-      expect(d.tickUpper).toBe(887200);
-      expect(d.amount0Min).toBe("0");
-      expect(d.amount1Min).toBe("0");
+      expect(d.tick_lower).toBe(-887200);
+      expect(d.tick_upper).toBe(887200);
+      expect(d.amount0_min).toBe("0");
+      expect(d.amount1_min).toBe("0");
       expect(d.recipient).toBe(CALLER);
       expect(d.deadline).toBeGreaterThan(Math.floor(Date.now() / 1000));
       expect(d.approvals).toHaveLength(2);
-      expect(d.approvals[0].spender).toBe(d.positionManagerAddress);
-      expect(d.approvals[1].spender).toBe(d.positionManagerAddress);
+      expect(d.approvals[0].spender).toBe(d.position_manager_address);
+      expect(d.approvals[1].spender).toBe(d.position_manager_address);
     });
 
     it("getLiquidityParams: amounts are in atomic units", async () => {
@@ -1102,7 +1098,7 @@ describe("token.sh", () => {
       if (!result.ok) return;
       // One of amount0Desired/amount1Desired should be 1 USDC in atomic = 1000000
       // Other should be 1 token in atomic = 1000000000000000000
-      const amounts = [result.data.amount0Desired, result.data.amount1Desired];
+      const amounts = [result.data.amount0_desired, result.data.amount1_desired];
       expect(amounts).toContain("1000000"); // 1 USDC (6 dec)
       expect(amounts).toContain("1000000000000000000"); // 1 token (18 dec)
     });
@@ -1121,8 +1117,8 @@ describe("token.sh", () => {
       // token > USDC: token is token1, USDC is token0
       // token1 address contains "token", token0 address = USDC
       // amount0 = USDC = 2 * 10^6, amount1 = token = 5 * 10^18
-      expect(pool.amount0Desired).toBe("2000000"); // 2 USDC
-      expect(pool.amount1Desired).toBe("5000000000000000000"); // 5 tokens
+      expect(pool.amount0_desired).toBe("2000000"); // 2 USDC
+      expect(pool.amount1_desired).toBe("5000000000000000000"); // 5 tokens
     });
 
     it("getLiquidityParams: non-owner → 403", async () => {

@@ -9,6 +9,7 @@ import { describe, expect, it, beforeEach, afterEach, vi } from "vitest";
 // Set testnet env before any imports
 process.env.PRIM_NETWORK = "eip155:84532";
 process.env.CIRCLE_API_KEY = "test-api-key";
+// Hardhat/Anvil account #0 — well-known public test key, not a real secret
 process.env.FAUCET_TREASURY_KEY =
   "0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80";
 process.env.FAUCET_DRIP_ETH = "0.01";
@@ -153,14 +154,14 @@ describe("testnet guard", () => {
 // ─── USDC drip ────────────────────────────────────────────────────────────
 
 describe("POST /v1/faucet/usdc", () => {
-  it("valid address — returns 200 with txHash/amount/currency/chain (Circle)", async () => {
+  it("valid address — returns 200 with tx_hash/amount/currency/chain (Circle)", async () => {
     setupCircleSuccess();
     // Use a unique address to avoid rate limit from other tests
     const addr = "0x70997970C51812dc3A010C7d01b50e0d17dc79C8";
     const res = await postJson("/v1/faucet/usdc", { address: addr });
     expect(res.status).toBe(200);
     const body = (await res.json()) as Record<string, unknown>;
-    expect(body.txHash).toBe("0xCircleTxHash123");
+    expect(body.tx_hash).toBe("0xCircleTxHash123");
     expect(body.amount).toBe("10.00");
     expect(body.currency).toBe("USDC");
     expect(body.chain).toBe("eip155:84532");
@@ -219,7 +220,7 @@ describe("POST /v1/faucet/usdc", () => {
     const res = await postJson("/v1/faucet/usdc", { address: addr });
     expect(res.status).toBe(200);
     const body = (await res.json()) as Record<string, unknown>;
-    expect(body.txHash).toBe("0xTreasuryUsdcTx");
+    expect(body.tx_hash).toBe("0xTreasuryUsdcTx");
     expect(body.amount).toBe("10.00");
     expect(body.currency).toBe("USDC");
     expect(body.chain).toBe("eip155:84532");
@@ -234,7 +235,7 @@ describe("POST /v1/faucet/usdc", () => {
     expect(res.status).toBe(200);
     const body = (await res.json()) as Record<string, unknown>;
     expect(body.source).toBe("treasury");
-    expect(body.txHash).toBe("0xTreasuryUsdcTx2");
+    expect(body.tx_hash).toBe("0xTreasuryUsdcTx2");
   });
 
   it("no CIRCLE_API_KEY + no FAUCET_TREASURY_KEY — returns 502", async () => {
@@ -266,7 +267,7 @@ describe("POST /v1/faucet/usdc", () => {
     expect(res.status).toBe(200);
     const body = (await res.json()) as Record<string, unknown>;
     expect(body.source).toBe("treasury");
-    expect(body.txHash).toBe("0xTreasuryFallbackNoCircleKey");
+    expect(body.tx_hash).toBe("0xTreasuryFallbackNoCircleKey");
 
     process.env.CIRCLE_API_KEY = origCircle;
   });
@@ -275,13 +276,13 @@ describe("POST /v1/faucet/usdc", () => {
 // ─── ETH drip ─────────────────────────────────────────────────────────────
 
 describe("POST /v1/faucet/eth", () => {
-  it("valid address — returns 200 with txHash", async () => {
+  it("valid address — returns 200 with tx_hash", async () => {
     mockSendTransaction.mockResolvedValue("0xEthTxHash456");
     const addr = "0x15d34AAf54267DB7D7c367839AAf71A00a2C6A65";
     const res = await postJson("/v1/faucet/eth", { address: addr });
     expect(res.status).toBe(200);
     const body = (await res.json()) as Record<string, unknown>;
-    expect(body.txHash).toBe("0xEthTxHash456");
+    expect(body.tx_hash).toBe("0xEthTxHash456");
     expect(body.amount).toBe("0.01");
     expect(body.currency).toBe("ETH");
     expect(body.chain).toBe("eip155:84532");
@@ -344,12 +345,12 @@ describe("GET /v1/faucet/status", () => {
     expect(res.status).toBe(200);
     const body = (await res.json()) as Record<string, unknown>;
     expect(body.address).toBe(addr);
-    const usdc = body.usdc as { available: boolean; retryAfterMs: number };
-    const eth = body.eth as { available: boolean; retryAfterMs: number };
+    const usdc = body.usdc as { available: boolean; retry_after_ms: number };
+    const eth = body.eth as { available: boolean; retry_after_ms: number };
     expect(usdc.available).toBe(true);
-    expect(usdc.retryAfterMs).toBe(0);
+    expect(usdc.retry_after_ms).toBe(0);
     expect(eth.available).toBe(true);
-    expect(eth.retryAfterMs).toBe(0);
+    expect(eth.retry_after_ms).toBe(0);
   });
 
   it("shows unavailable after recent drip", async () => {
@@ -366,12 +367,12 @@ describe("GET /v1/faucet/status", () => {
     const res = await app.request(`/v1/faucet/status?address=${addr}`);
     expect(res.status).toBe(200);
     const body = (await res.json()) as Record<string, unknown>;
-    const usdc = body.usdc as { available: boolean; retryAfterMs: number };
-    const eth = body.eth as { available: boolean; retryAfterMs: number };
+    const usdc = body.usdc as { available: boolean; retry_after_ms: number };
+    const eth = body.eth as { available: boolean; retry_after_ms: number };
     expect(usdc.available).toBe(false);
-    expect(usdc.retryAfterMs).toBeGreaterThan(0);
+    expect(usdc.retry_after_ms).toBeGreaterThan(0);
     expect(eth.available).toBe(false);
-    expect(eth.retryAfterMs).toBeGreaterThan(0);
+    expect(eth.retry_after_ms).toBeGreaterThan(0);
   });
 
   it("invalid address — returns 400", async () => {

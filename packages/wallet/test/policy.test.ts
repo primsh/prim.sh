@@ -79,10 +79,10 @@ describe("getSpendingPolicy — no policy set", () => {
     const result = getSpendingPolicy(address, CALLER);
     expect(result.ok).toBe(true);
     if (result.ok) {
-      expect(result.data.maxPerTx).toBeNull();
-      expect(result.data.maxPerDay).toBeNull();
-      expect(result.data.dailySpent).toBe("0.00");
-      expect(result.data.allowedPrimitives).toBeNull();
+      expect(result.data.max_per_tx).toBeNull();
+      expect(result.data.max_per_day).toBeNull();
+      expect(result.data.daily_spent).toBe("0.00");
+      expect(result.data.allowed_primitives).toBeNull();
     }
   });
 });
@@ -93,8 +93,8 @@ describe("updateSpendingPolicy — set maxPerTx", () => {
     const result = updateSpendingPolicy(address, CALLER, { maxPerTx: "50.00" });
     expect(result.ok).toBe(true);
     if (result.ok) {
-      expect(result.data.maxPerTx).toBe("50.00");
-      expect(result.data.maxPerDay).toBeNull();
+      expect(result.data.max_per_tx).toBe("50.00");
+      expect(result.data.max_per_day).toBeNull();
     }
   });
 
@@ -115,7 +115,7 @@ describe("updateSpendingPolicy — set maxPerDay", () => {
     const result = updateSpendingPolicy(address, CALLER, { maxPerDay: "200.00" });
     expect(result.ok).toBe(true);
     if (result.ok) {
-      expect(result.data.maxPerDay).toBe("200.00");
+      expect(result.data.max_per_day).toBe("200.00");
     }
   });
 });
@@ -174,7 +174,7 @@ describe("pauseWallet + resumeWallet", () => {
     if (result.ok) {
       expect(result.data.paused).toBe(true);
       expect(result.data.scope).toBe("all");
-      expect(typeof result.data.pausedAt).toBe("string");
+      expect(typeof result.data.paused_at).toBe("string");
     }
   });
 
@@ -246,8 +246,8 @@ describe("wallet detail and list reflect paused state", () => {
     expect(result.ok).toBe(true);
     if (result.ok) {
       expect(result.data.policy).not.toBeNull();
-      expect(result.data.policy?.maxPerTx).toBe("100.00");
-      expect(result.data.policy?.maxPerDay).toBe("500.00");
+      expect(result.data.policy?.max_per_tx).toBe("100.00");
+      expect(result.data.policy?.max_per_day).toBe("500.00");
     }
   });
 });
@@ -255,7 +255,7 @@ describe("wallet detail and list reflect paused state", () => {
 // ─── HRD-4: corrupted JSON safety ──────────────────────────────────────
 
 describe("policyRowToResponse — corrupted allowed_primitives JSON", () => {
-  it("returns allowedPrimitives: null and warns on invalid JSON", () => {
+  it("returns allowed_primitives: null and warns on invalid JSON", () => {
     const { address } = registerTestWallet(CALLER);
     upsertPolicy(address, { allowed_primitives: "not-json{" });
 
@@ -264,7 +264,7 @@ describe("policyRowToResponse — corrupted allowed_primitives JSON", () => {
     const result = getSpendingPolicy(address, CALLER);
     expect(result.ok).toBe(true);
     if (result.ok) {
-      expect(result.data.allowedPrimitives).toBeNull();
+      expect(result.data.allowed_primitives).toBeNull();
     }
     expect(warnSpy).toHaveBeenCalledWith(
       expect.stringContaining("corrupted allowed_primitives JSON"),
@@ -280,7 +280,7 @@ describe("policyRowToResponse — corrupted allowed_primitives JSON", () => {
     const result = getSpendingPolicy(address, CALLER);
     expect(result.ok).toBe(true);
     if (result.ok) {
-      expect(result.data.allowedPrimitives).toEqual(["email.sh", "spawn.sh"]);
+      expect(result.data.allowed_primitives).toEqual(["email.sh", "spawn.sh"]);
     }
   });
 });

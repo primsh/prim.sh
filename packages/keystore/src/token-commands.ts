@@ -71,8 +71,8 @@ export async function runTokenCommand(sub: string, argv: string[]): Promise<void
         if (!res.ok) return handleError(res);
         const data = await res.json();
         if (quiet) {
-          const d = data as { poolAddress?: string };
-          console.log(d.poolAddress ?? "");
+          const d = data as { pool_address?: string };
+          console.log(d.pool_address ?? "");
         } else {
           console.log(JSON.stringify(data, null, 2));
         }
@@ -168,8 +168,8 @@ export async function runTokenCommand(sub: string, argv: string[]): Promise<void
           id: string;
           name: string;
           symbol: string;
-          deployStatus: string;
-          contractAddress: string | null;
+          deploy_status: string;
+          contract_address: string | null;
         }>;
       };
       if (quiet) {
@@ -185,8 +185,8 @@ export async function runTokenCommand(sub: string, argv: string[]): Promise<void
             const id = t.id.padEnd(38);
             const symbol = (t.symbol ?? "").padEnd(8);
             const name = (t.name ?? "").slice(0, 18).padEnd(20);
-            const status = (t.deployStatus ?? "").padEnd(10);
-            const contract = t.contractAddress ?? "(pending)";
+            const status = (t.deploy_status ?? "").padEnd(10);
+            const contract = t.contract_address ?? "(pending)";
             console.log(`${id} ${symbol} ${name} ${status} ${contract}`);
           }
         }
@@ -229,9 +229,9 @@ export async function runTokenCommand(sub: string, argv: string[]): Promise<void
         body: JSON.stringify({ to, amount }),
       });
       if (!res.ok) return handleError(res);
-      const data = (await res.json()) as { txHash?: string };
+      const data = (await res.json()) as { tx_hash?: string };
       if (quiet) {
-        console.log(data.txHash ?? "");
+        console.log(data.tx_hash ?? "");
       } else {
         console.log(JSON.stringify(data, null, 2));
       }

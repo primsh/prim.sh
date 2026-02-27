@@ -39,9 +39,9 @@ describe("token.sh smoke test (Base Sepolia)", () => {
     );
     expect(result.ok).toBe(true);
     if (!result.ok) return;
-    expect(result.data.token.deployStatus).toBe("confirmed");
-    expect(result.data.token.contractAddress).toBeTruthy();
-    console.log("Non-mintable token:", result.data.token.contractAddress);
+    expect(result.data.token.deploy_status).toBe("confirmed");
+    expect(result.data.token.contract_address).toBeTruthy();
+    console.log("Non-mintable token:", result.data.token.contract_address);
     nonMintableId = result.data.token.id;
   });
 
@@ -58,7 +58,7 @@ describe("token.sh smoke test (Base Sepolia)", () => {
     const result = await getSupply(nonMintableId, OWNER);
     expect(result.ok).toBe(true);
     if (!result.ok) return;
-    expect(result.data.totalSupply).toBe("1000");
+    expect(result.data.total_supply).toBe("1000");
   });
 
   liveIt("deploys a mintable token with decimals:6", async () => {
@@ -75,8 +75,8 @@ describe("token.sh smoke test (Base Sepolia)", () => {
     );
     expect(result.ok).toBe(true);
     if (!result.ok) return;
-    expect(result.data.token.deployStatus).toBe("confirmed");
-    console.log("Mintable token:", result.data.token.contractAddress);
+    expect(result.data.token.deploy_status).toBe("confirmed");
+    console.log("Mintable token:", result.data.token.contract_address);
     mintableId = result.data.token.id;
   });
 
@@ -91,7 +91,7 @@ describe("token.sh smoke test (Base Sepolia)", () => {
     const result = await getSupply(mintableId, OWNER);
     expect(result.ok).toBe(true);
     if (!result.ok) return;
-    expect(result.data.totalSupply).toBe("1500000");
+    expect(result.data.total_supply).toBe("1500000");
   });
 
   liveIt("mint exceeding maxSupply returns 422", async () => {
@@ -118,10 +118,10 @@ describe("token.sh smoke test (Base Sepolia)", () => {
     );
     expect(result.ok).toBe(true);
     if (!result.ok) return;
-    expect(result.data.token.deployStatus).toBe("confirmed");
+    expect(result.data.token.deploy_status).toBe("confirmed");
     const supply = await getSupply(result.data.token.id, OWNER);
     expect(supply.ok).toBe(true);
     if (!supply.ok) return;
-    expect(supply.data.totalSupply).toBe("100");
+    expect(supply.data.total_supply).toBe("100");
   });
 });

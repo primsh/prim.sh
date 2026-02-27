@@ -74,7 +74,7 @@ describe("registerWallet — valid signature", () => {
     if (result.ok) {
       expect(result.data.address).toBe(getAddress(account.address));
       expect(result.data.chain).toBe("eip155:8453");
-      expect(typeof result.data.registeredAt).toBe("string");
+      expect(typeof result.data.registered_at).toBe("string");
     }
   });
 
@@ -239,14 +239,14 @@ describe("Wallet ownership logic (via service)", () => {
 // ─── Deactivation ──────────────────────────────────────────────────────────
 
 describe("Wallet deactivation", () => {
-  it("deactivateWallet returns 200 with deactivatedAt timestamp", () => {
+  it("deactivateWallet returns 200 with deactivated_at timestamp", () => {
     const { address } = registerTestWallet(CALLER);
 
     const result = deactivateWallet(address, CALLER);
     expect(result.ok).toBe(true);
     if (result.ok) {
       expect(result.data.deactivated).toBe(true);
-      expect(typeof result.data.deactivatedAt).toBe("string");
+      expect(typeof result.data.deactivated_at).toBe("string");
       expect(result.data.address).toBe(address);
     }
   });

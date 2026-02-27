@@ -434,9 +434,9 @@ export async function listMessages(
       from: flattenAddress(m.from),
       to: flattenAddresses(m.to),
       subject: m.subject,
-      receivedAt: m.receivedAt,
+      received_at: m.receivedAt,
       size: m.size,
-      hasAttachment: m.hasAttachment,
+      has_attachment: m.hasAttachment,
       preview: m.preview,
     }));
     return {
@@ -498,12 +498,12 @@ export async function getMessage(
       to: flattenAddresses(email.to),
       cc: flattenAddresses(email.cc ?? []),
       subject: email.subject ?? "",
-      receivedAt: email.receivedAt ?? "",
+      received_at: email.receivedAt ?? "",
       size: email.size ?? 0,
-      hasAttachment: email.hasAttachment ?? false,
+      has_attachment: email.hasAttachment ?? false,
       preview: email.preview ?? "",
-      textBody,
-      htmlBody,
+      text_body: textBody,
+      html_body: htmlBody,
     };
     return { ok: true, data: detail };
   } catch (err) {

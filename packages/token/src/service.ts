@@ -42,18 +42,18 @@ function generateTokenId(): string {
 function rowToTokenResponse(row: DeploymentRow): TokenResponse {
   return {
     id: row.id,
-    contractAddress: row.contract_address,
-    ownerWallet: row.owner_wallet,
+    contract_address: row.contract_address,
+    owner_wallet: row.owner_wallet,
     name: row.name,
     symbol: row.symbol,
     decimals: row.decimals,
-    initialSupply: row.initial_supply,
-    totalMinted: row.total_minted,
+    initial_supply: row.initial_supply,
+    total_minted: row.total_minted,
     mintable: row.mintable === 1,
-    maxSupply: row.max_supply,
-    txHash: row.tx_hash,
-    deployStatus: row.deploy_status as "pending" | "confirmed" | "failed",
-    createdAt: new Date(row.created_at).toISOString(),
+    max_supply: row.max_supply,
+    tx_hash: row.tx_hash,
+    deploy_status: row.deploy_status as "pending" | "confirmed" | "failed",
+    created_at: new Date(row.created_at).toISOString(),
   };
 }
 
@@ -354,7 +354,7 @@ export async function mintTokens(
 
   return {
     ok: true,
-    data: { txHash, to: request.to, amount: request.amount, status: "pending" },
+    data: { tx_hash: txHash, to: request.to, amount: request.amount, status: "pending" },
   };
 }
 
@@ -391,9 +391,9 @@ export async function getSupply(
     return {
       ok: true,
       data: {
-        tokenId: row.id,
-        contractAddress: row.contract_address,
-        totalSupply: formatUnits(totalSupply as bigint, row.decimals),
+        token_id: row.id,
+        contract_address: row.contract_address,
+        total_supply: formatUnits(totalSupply as bigint, row.decimals),
       },
     };
   } catch (err) {
@@ -406,13 +406,13 @@ export async function getSupply(
 
 function poolRowToResponse(pool: PoolRow): PoolResponse {
   return {
-    poolAddress: pool.pool_address,
+    pool_address: pool.pool_address,
     token0: pool.token0,
     token1: pool.token1,
     fee: pool.fee,
-    sqrtPriceX96: pool.sqrt_price_x96,
+    sqrt_price_x96: pool.sqrt_price_x96,
     tick: pool.tick,
-    txHash: pool.tx_hash,
+    tx_hash: pool.tx_hash,
   };
 }
 
@@ -647,16 +647,16 @@ export function getLiquidityParams(
   return {
     ok: true,
     data: {
-      positionManagerAddress: positionManager,
+      position_manager_address: positionManager,
       token0: pool.token0,
       token1: pool.token1,
       fee: pool.fee,
-      tickLower,
-      tickUpper,
-      amount0Desired,
-      amount1Desired,
-      amount0Min: "0",
-      amount1Min: "0",
+      tick_lower: tickLower,
+      tick_upper: tickUpper,
+      amount0_desired: amount0Desired,
+      amount1_desired: amount1Desired,
+      amount0_min: "0",
+      amount1_min: "0",
       recipient: callerWallet,
       deadline,
       approvals: [

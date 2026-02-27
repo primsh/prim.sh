@@ -654,8 +654,8 @@ describe("email service", () => {
       expect(result.ok).toBe(true);
       if (!result.ok) return;
       expect(result.data.id).toBe("e1");
-      expect(result.data.textBody).toBe("Hey there");
-      expect(result.data.htmlBody).toBe("<p>Hey there</p>");
+      expect(result.data.text_body).toBe("Hey there");
+      expect(result.data.html_body).toBe("<p>Hey there</p>");
       expect(result.data.from.email).toBe("[email protected]");
       expect(result.data.cc).toEqual([]);
     });
