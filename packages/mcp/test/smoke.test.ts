@@ -31,7 +31,7 @@ describe("MCP package smoke tests", () => {
     expect(walletTools[0]).toHaveProperty("name");
     expect(walletTools[0]).toHaveProperty("description");
     expect(walletTools[0]).toHaveProperty("inputSchema");
-    expect(walletTools.some((t) => t.name === "wallet_list")).toBe(true);
+    expect(walletTools.some((t) => t.name === "wallet_list_wallets")).toBe(true);
   });
 
   it("faucetTools array contains tools with required MCP properties", () => {
@@ -39,9 +39,9 @@ describe("MCP package smoke tests", () => {
     expect(faucetTools[0]).toHaveProperty("name");
     expect(faucetTools[0]).toHaveProperty("description");
     expect(faucetTools[0]).toHaveProperty("inputSchema");
-    expect(faucetTools.some((t) => t.name === "faucet_usdc")).toBe(true);
-    expect(faucetTools.some((t) => t.name === "faucet_eth")).toBe(true);
-    expect(faucetTools.some((t) => t.name === "faucet_status")).toBe(true);
+    expect(faucetTools.some((t) => t.name === "faucet_drip_usdc")).toBe(true);
+    expect(faucetTools.some((t) => t.name === "faucet_drip_eth")).toBe(true);
+    expect(faucetTools.some((t) => t.name === "faucet_get_faucet_status")).toBe(true);
   });
 
   // Check 4: Happy path — handler returns valid CallToolResult shape
@@ -51,7 +51,7 @@ describe("MCP package smoke tests", () => {
     );
 
     const result = await handleWalletTool(
-      "wallet_list",
+      "wallet_list_wallets",
       {},
       mockFetch as unknown as typeof fetch,
       "https://wallet.prim.sh",
@@ -70,7 +70,7 @@ describe("MCP package smoke tests", () => {
     vi.stubGlobal("fetch", mockFetchGlobal);
 
     const result = await handleFaucetTool(
-      "faucet_usdc",
+      "faucet_drip_usdc",
       { address: "0x0000000000000000000000000000000000000001" },
       "https://faucet.prim.sh",
     );
@@ -90,7 +90,7 @@ describe("MCP package smoke tests", () => {
     );
 
     const result = await handleWalletTool(
-      "wallet_list",
+      "wallet_list_wallets",
       {},
       mockFetch as unknown as typeof fetch,
       "https://wallet.prim.sh",
@@ -106,7 +106,7 @@ describe("MCP package smoke tests", () => {
     vi.stubGlobal("fetch", mockFetchGlobal);
 
     const result = await handleFaucetTool(
-      "faucet_usdc",
+      "faucet_drip_usdc",
       { address: "0x0000000000000000000000000000000000000001" },
       "https://faucet.prim.sh",
     );

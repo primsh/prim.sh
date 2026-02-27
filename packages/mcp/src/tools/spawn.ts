@@ -1,232 +1,226 @@
 import type { Tool } from "@modelcontextprotocol/sdk/types.js";
 import type { CallToolResult } from "@modelcontextprotocol/sdk/types.js";
 
+// BEGIN:GENERATED:TOOLS
 export const spawnTools: Tool[] = [
   {
-    name: "spawn_server_create",
-    description:
-      "Provision a new VPS. Returns the server record and an action tracking provisioning. Poll spawn_server_get until status is 'running' to get the assigned IP. Limit: 3 concurrent servers per wallet. Only 'small' type available in beta.",
+    name: "spawn_list_servers",
+    description: "List servers | Price: $0.001",
     inputSchema: {
-      type: "object",
-      required: ["name", "type", "image", "location"],
-      properties: {
-        name: {
-          type: "string",
-          description: "Server name (provider-level label).",
-        },
-        type: {
-          type: "string",
-          description: "Server type slug. Only 'small' is available in beta.",
-          example: "small",
-        },
-        image: {
-          type: "string",
-          description: "OS image slug (e.g. 'ubuntu-24.04').",
-        },
-        location: {
-          type: "string",
-          description: "Data center location slug (e.g. 'nyc3').",
-        },
-        provider: {
-          type: "string",
-          description: "Cloud provider. Defaults to Hetzner.",
-        },
-        ssh_keys: {
-          type: "array",
-          items: { type: "string" },
-          description: "Array of SSH key IDs (from spawn_ssh_key_create) to install.",
-        },
-        user_data: {
-          type: "string",
-          description: "Cloud-init user data script to run on first boot.",
+        type: "object",
+        properties: {
+          "limit": {
+            type: "integer",
+            minimum: 1,
+            maximum: 100,
+            default: 20,
+            description: "Number of servers to return. Max 100.",
+          },
+          "page": {
+            type: "integer",
+            minimum: 1,
+            default: 1,
+            description: "Page number (1-indexed).",
+          },
         },
       },
-    },
   },
   {
-    name: "spawn_server_list",
-    description:
-      "List all servers owned by the authenticated wallet, paginated.",
+    name: "spawn_create_server",
+    description: "Create a server | Price: $0.01",
     inputSchema: {
-      type: "object",
-      properties: {
-        limit: {
-          type: "integer",
-          minimum: 1,
-          maximum: 100,
-          default: 20,
-          description: "Number of servers to return (max 100).",
+        type: "object",
+        properties: {
+          "name": {
+            type: "string",
+            description: "Server name (provider-level label).",
+          },
+          "type": {
+            type: "string",
+            description: "Server type slug. Only `small` is available in beta.",
+          },
+          "image": {
+            type: "string",
+            description: "OS image slug.",
+          },
+          "location": {
+            type: "string",
+            description: "Data center location slug.",
+          },
+          "provider": {
+            type: "string",
+            description: "Cloud provider. Defaults to Hetzner.",
+          },
+          "ssh_keys": {
+            type: "array",
+            items: {
+              type: "string",
+            },
+            description: "Array of SSH key IDs (from `POST /v1/ssh-keys`) to install.",
+          },
+          "user_data": {
+            type: "string",
+            description: "Cloud-init user data script to run on first boot.",
+          },
         },
-        page: {
-          type: "integer",
-          minimum: 1,
-          default: 1,
-          description: "Page number (1-indexed).",
-        },
+        required: ["name","type","image","location"],
       },
-    },
   },
   {
-    name: "spawn_server_get",
-    description:
-      "Get full details for a single server. Poll this after spawn_server_create until status is 'running' and public_net.ipv4.ip is non-null.",
+    name: "spawn_get_server",
+    description: "Get server | Price: $0.001",
     inputSchema: {
-      type: "object",
-      required: ["id"],
-      properties: {
-        id: {
-          type: "string",
-          description: "Prim server ID (e.g. 'srv_abc123').",
+        type: "object",
+        properties: {
+          "id": {
+            type: "string",
+            description: "Prim server ID.",
+          },
         },
+        required: ["id"],
       },
-    },
   },
   {
-    name: "spawn_server_delete",
-    description:
-      "Destroy the server and release its resources. Unused deposit is refunded. Server transitions to 'destroying' then 'deleted' status.",
+    name: "spawn_delete_server",
+    description: "Delete server | Price: $0.005",
     inputSchema: {
-      type: "object",
-      required: ["id"],
-      properties: {
-        id: {
-          type: "string",
-          description: "Prim server ID.",
+        type: "object",
+        properties: {
+          "id": {
+            type: "string",
+            description: "Prim server ID.",
+          },
         },
+        required: ["id"],
       },
-    },
   },
   {
-    name: "spawn_server_start",
-    description: "Start a stopped server. Returns an action tracking the operation.",
+    name: "spawn_start_server",
+    description: "Start server | Price: $0.002",
     inputSchema: {
-      type: "object",
-      required: ["id"],
-      properties: {
-        id: {
-          type: "string",
-          description: "Prim server ID.",
+        type: "object",
+        properties: {
+          "id": {
+            type: "string",
+            description: "Prim server ID.",
+          },
         },
+        required: ["id"],
       },
-    },
   },
   {
-    name: "spawn_server_stop",
-    description:
-      "Stop a running server (graceful shutdown). Returns an action tracking the operation.",
+    name: "spawn_stop_server",
+    description: "Stop server | Price: $0.002",
     inputSchema: {
-      type: "object",
-      required: ["id"],
-      properties: {
-        id: {
-          type: "string",
-          description: "Prim server ID.",
+        type: "object",
+        properties: {
+          "id": {
+            type: "string",
+            description: "Prim server ID.",
+          },
         },
+        required: ["id"],
       },
-    },
   },
   {
-    name: "spawn_server_reboot",
-    description: "Reboot a running server. Returns an action tracking the operation.",
+    name: "spawn_reboot_server",
+    description: "Reboot server | Price: $0.002",
     inputSchema: {
-      type: "object",
-      required: ["id"],
-      properties: {
-        id: {
-          type: "string",
-          description: "Prim server ID.",
+        type: "object",
+        properties: {
+          "id": {
+            type: "string",
+            description: "Prim server ID.",
+          },
         },
+        required: ["id"],
       },
-    },
   },
   {
-    name: "spawn_server_resize",
-    description:
-      "Change the server type (CPU/RAM). The server must be stopped first. Deposit delta is charged or refunded.",
+    name: "spawn_resize_server",
+    description: "Resize server | Price: $0.01",
     inputSchema: {
-      type: "object",
-      required: ["id", "type"],
-      properties: {
-        id: {
-          type: "string",
-          description: "Prim server ID.",
+        type: "object",
+        properties: {
+          "id": {
+            type: "string",
+            description: "Prim server ID.",
+          },
+          "type": {
+            type: "string",
+            description: "Target server type slug.",
+          },
+          "upgrade_disk": {
+            type: "boolean",
+            description: "Whether to upgrade the disk alongside the CPU/RAM. Irreversible if true.",
+            default: false,
+          },
         },
-        type: {
-          type: "string",
-          description: "Target server type slug.",
-        },
-        upgrade_disk: {
-          type: "boolean",
-          default: false,
-          description: "Whether to upgrade the disk. Irreversible if true.",
-        },
+        required: ["id","type"],
       },
-    },
   },
   {
-    name: "spawn_server_rebuild",
-    description:
-      "Reinstall the server from a fresh OS image. All data on the server is destroyed. Returns an action and optionally a new root password.",
+    name: "spawn_rebuild_server",
+    description: "Rebuild server | Price: $0.005",
     inputSchema: {
-      type: "object",
-      required: ["id", "image"],
-      properties: {
-        id: {
-          type: "string",
-          description: "Prim server ID.",
+        type: "object",
+        properties: {
+          "id": {
+            type: "string",
+            description: "Prim server ID.",
+          },
+          "image": {
+            type: "string",
+            description: "OS image slug to rebuild with.",
+          },
         },
-        image: {
-          type: "string",
-          description: "OS image slug to rebuild with (e.g. 'debian-12').",
-        },
+        required: ["id","image"],
       },
-    },
   },
   {
-    name: "spawn_ssh_key_create",
-    description:
-      "Register a public SSH key. The returned id can be passed in ssh_keys when creating a server.",
+    name: "spawn_list_ssh_keys",
+    description: "List SSH keys | Price: $0.001",
     inputSchema: {
-      type: "object",
-      required: ["name", "public_key"],
-      properties: {
-        name: {
-          type: "string",
-          description: "Human-readable label for this key.",
-        },
-        public_key: {
-          type: "string",
-          description: "The public key string (e.g. 'ssh-ed25519 AAAA...').",
-        },
+        type: "object",
+        properties: {},
       },
-    },
   },
   {
-    name: "spawn_ssh_key_list",
-    description:
-      "List all SSH keys registered by the authenticated wallet.",
+    name: "spawn_create_ssh_key",
+    description: "Register SSH key | Price: $0.001",
     inputSchema: {
-      type: "object",
-      properties: {},
-    },
-  },
-  {
-    name: "spawn_ssh_key_delete",
-    description:
-      "Remove an SSH key. Keys in use by active servers remain on those servers until rebuilt or manually removed.",
-    inputSchema: {
-      type: "object",
-      required: ["id"],
-      properties: {
-        id: {
-          type: "string",
-          description: "Prim SSH key ID.",
+        type: "object",
+        properties: {
+          "name": {
+            type: "string",
+            description: "Human-readable label for this key.",
+          },
+          "public_key": {
+            type: "string",
+            description: "The public key string (e.g. `ssh-ed25519 AAAA...`).",
+          },
         },
+        required: ["name","public_key"],
       },
-    },
+  },
+  {
+    name: "spawn_delete_ssh_key",
+    description: "Delete SSH key | Price: $0.001",
+    inputSchema: {
+        type: "object",
+        properties: {
+          "id": {
+            type: "string",
+            description: "Prim SSH key ID.",
+          },
+        },
+        required: ["id"],
+      },
   },
 ];
+// END:GENERATED:TOOLS
 
+// BEGIN:GENERATED:HANDLER
 export async function handleSpawnTool(
   name: string,
   args: Record<string, unknown>,
@@ -235,7 +229,17 @@ export async function handleSpawnTool(
 ): Promise<CallToolResult> {
   try {
     switch (name) {
-      case "spawn_server_create": {
+      case "spawn_list_servers": {
+        const url = new URL(`${baseUrl}/v1/servers`);
+        if (args.limit !== undefined) url.searchParams.set("limit", String(args.limit));
+        if (args.page !== undefined) url.searchParams.set("page", String(args.page));
+        const res = await primFetch(url.toString());
+        const data = await res.json();
+        if (!res.ok) return errorResult(data);
+        return { content: [{ type: "text", text: JSON.stringify(data, null, 2) }] };
+      }
+
+      case "spawn_create_server": {
         const res = await primFetch(`${baseUrl}/v1/servers`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -246,62 +250,44 @@ export async function handleSpawnTool(
         return { content: [{ type: "text", text: JSON.stringify(data, null, 2) }] };
       }
 
-      case "spawn_server_list": {
-        const url = new URL(`${baseUrl}/v1/servers`);
-        if (args.limit) url.searchParams.set("limit", String(args.limit));
-        if (args.page) url.searchParams.set("page", String(args.page));
-        const res = await primFetch(url.toString());
-        const data = await res.json();
-        if (!res.ok) return errorResult(data);
-        return { content: [{ type: "text", text: JSON.stringify(data, null, 2) }] };
-      }
-
-      case "spawn_server_get": {
+      case "spawn_get_server": {
         const res = await primFetch(`${baseUrl}/v1/servers/${args.id}`);
         const data = await res.json();
         if (!res.ok) return errorResult(data);
         return { content: [{ type: "text", text: JSON.stringify(data, null, 2) }] };
       }
 
-      case "spawn_server_delete": {
-        const res = await primFetch(`${baseUrl}/v1/servers/${args.id}`, {
-          method: "DELETE",
-        });
+      case "spawn_delete_server": {
+        const res = await primFetch(`${baseUrl}/v1/servers/${args.id}`, { method: "DELETE" });
         const data = await res.json();
         if (!res.ok) return errorResult(data);
         return { content: [{ type: "text", text: JSON.stringify(data, null, 2) }] };
       }
 
-      case "spawn_server_start": {
-        const res = await primFetch(`${baseUrl}/v1/servers/${args.id}/start`, {
-          method: "POST",
-        });
+      case "spawn_start_server": {
+        const res = await primFetch(`${baseUrl}/v1/servers/${args.id}/start`, { method: "POST" });
         const data = await res.json();
         if (!res.ok) return errorResult(data);
         return { content: [{ type: "text", text: JSON.stringify(data, null, 2) }] };
       }
 
-      case "spawn_server_stop": {
-        const res = await primFetch(`${baseUrl}/v1/servers/${args.id}/stop`, {
-          method: "POST",
-        });
+      case "spawn_stop_server": {
+        const res = await primFetch(`${baseUrl}/v1/servers/${args.id}/stop`, { method: "POST" });
         const data = await res.json();
         if (!res.ok) return errorResult(data);
         return { content: [{ type: "text", text: JSON.stringify(data, null, 2) }] };
       }
 
-      case "spawn_server_reboot": {
-        const res = await primFetch(`${baseUrl}/v1/servers/${args.id}/reboot`, {
-          method: "POST",
-        });
+      case "spawn_reboot_server": {
+        const res = await primFetch(`${baseUrl}/v1/servers/${args.id}/reboot`, { method: "POST" });
         const data = await res.json();
         if (!res.ok) return errorResult(data);
         return { content: [{ type: "text", text: JSON.stringify(data, null, 2) }] };
       }
 
-      case "spawn_server_resize": {
+      case "spawn_resize_server": {
         const { id, ...body } = args;
-        const res = await primFetch(`${baseUrl}/v1/servers/${id}/resize`, {
+        const res = await primFetch(`${baseUrl}/v1/servers/${args.id}/resize`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(body),
@@ -311,19 +297,26 @@ export async function handleSpawnTool(
         return { content: [{ type: "text", text: JSON.stringify(data, null, 2) }] };
       }
 
-      case "spawn_server_rebuild": {
-        const { id, image } = args;
-        const res = await primFetch(`${baseUrl}/v1/servers/${id}/rebuild`, {
+      case "spawn_rebuild_server": {
+        const { id, ...body } = args;
+        const res = await primFetch(`${baseUrl}/v1/servers/${args.id}/rebuild`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ image }),
+          body: JSON.stringify(body),
         });
         const data = await res.json();
         if (!res.ok) return errorResult(data);
         return { content: [{ type: "text", text: JSON.stringify(data, null, 2) }] };
       }
 
-      case "spawn_ssh_key_create": {
+      case "spawn_list_ssh_keys": {
+        const res = await primFetch(`${baseUrl}/v1/ssh-keys`);
+        const data = await res.json();
+        if (!res.ok) return errorResult(data);
+        return { content: [{ type: "text", text: JSON.stringify(data, null, 2) }] };
+      }
+
+      case "spawn_create_ssh_key": {
         const res = await primFetch(`${baseUrl}/v1/ssh-keys`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -334,17 +327,8 @@ export async function handleSpawnTool(
         return { content: [{ type: "text", text: JSON.stringify(data, null, 2) }] };
       }
 
-      case "spawn_ssh_key_list": {
-        const res = await primFetch(`${baseUrl}/v1/ssh-keys`);
-        const data = await res.json();
-        if (!res.ok) return errorResult(data);
-        return { content: [{ type: "text", text: JSON.stringify(data, null, 2) }] };
-      }
-
-      case "spawn_ssh_key_delete": {
-        const res = await primFetch(`${baseUrl}/v1/ssh-keys/${args.id}`, {
-          method: "DELETE",
-        });
+      case "spawn_delete_ssh_key": {
+        const res = await primFetch(`${baseUrl}/v1/ssh-keys/${args.id}`, { method: "DELETE" });
         const data = await res.json();
         if (!res.ok) return errorResult(data);
         return { content: [{ type: "text", text: JSON.stringify(data, null, 2) }] };
@@ -372,3 +356,4 @@ function errorResult(data: unknown): CallToolResult {
     isError: true,
   };
 }
+// END:GENERATED:HANDLER

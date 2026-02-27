@@ -1,264 +1,244 @@
 import type { Tool } from "@modelcontextprotocol/sdk/types.js";
 import type { CallToolResult } from "@modelcontextprotocol/sdk/types.js";
 
+// BEGIN:GENERATED:TOOLS
 export const walletTools: Tool[] = [
   {
-    name: "wallet_register",
-    description:
-      "Register an Ethereum wallet address with wallet.prim.sh via EIP-191 signature. No payment required. The wallet must be registered before it can pay for prim primitives.",
+    name: "wallet_list_wallets",
+    description: "List registered wallets | Price: $0.001",
     inputSchema: {
-      type: "object",
-      required: ["address", "signature", "timestamp"],
-      properties: {
-        address: {
-          type: "string",
-          pattern: "^0x[a-fA-F0-9]{40}$",
-          description: "Ethereum wallet address to register.",
-        },
-        signature: {
-          type: "string",
-          description:
-            "EIP-191 signature of 'Register {address} with prim.sh at {timestamp}'.",
-        },
-        timestamp: {
-          type: "string",
-          format: "date-time",
-          description: "ISO 8601 timestamp used in the signed message.",
+        type: "object",
+        properties: {
+          "limit": {
+            type: "integer",
+            minimum: 1,
+            maximum: 100,
+            default: 20,
+            description: "Number of wallets to return (1–100, default 20)",
+          },
+          "after": {
+            type: "string",
+            description: "Cursor from a previous response for pagination",
+          },
         },
       },
-    },
   },
   {
-    name: "wallet_list",
-    description:
-      "List all wallets registered by the authenticated wallet. Returns paginated wallet records.",
+    name: "wallet_register_wallet",
+    description: "Register a wallet",
     inputSchema: {
-      type: "object",
-      properties: {
-        limit: {
-          type: "integer",
-          minimum: 1,
-          maximum: 100,
-          default: 20,
-          description: "Number of wallets per page (1-100, default 20).",
+        type: "object",
+        properties: {
+          "address": {
+            type: "string",
+            pattern: "^0x[a-fA-F0-9]{40}$",
+            description: "Ethereum wallet address to register",
+          },
+          "signature": {
+            type: "string",
+            description: "EIP-191 signature over the registration message",
+          },
+          "timestamp": {
+            type: "string",
+            format: "date-time",
+            description: "ISO 8601 UTC timestamp used in the signed message (must be within 5 min of now)",
+          },
+          "chain": {
+            type: "string",
+            description: "Chain identifier. Defaults to \"base\".",
+          },
+          "label": {
+            type: "string",
+            description: "Optional human-readable label for this wallet",
+          },
         },
-        page: {
-          type: "integer",
-          minimum: 1,
-          default: 1,
-          description: "Page number (1-based, default 1).",
-        },
+        required: ["address","signature","timestamp"],
       },
-    },
   },
   {
-    name: "wallet_get",
-    description:
-      "Get details for a single wallet including balance, policy, and status.",
+    name: "wallet_get_wallet",
+    description: "Get wallet details | Price: $0.001",
     inputSchema: {
-      type: "object",
-      required: ["address"],
-      properties: {
-        address: {
-          type: "string",
-          pattern: "^0x[a-fA-F0-9]{40}$",
-          description: "Ethereum wallet address to look up.",
+        type: "object",
+        properties: {
+          "address": {
+            type: "string",
+          },
         },
+        required: ["address"],
       },
-    },
   },
   {
-    name: "wallet_deactivate",
-    description:
-      "Deactivate a wallet permanently. This cannot be undone. The wallet will no longer be able to pay for prim services.",
+    name: "wallet_deactivate_wallet",
+    description: "Deactivate a wallet | Price: $0.01",
     inputSchema: {
-      type: "object",
-      required: ["address"],
-      properties: {
-        address: {
-          type: "string",
-          pattern: "^0x[a-fA-F0-9]{40}$",
-          description: "Ethereum wallet address to deactivate.",
+        type: "object",
+        properties: {
+          "address": {
+            type: "string",
+          },
         },
+        required: ["address"],
       },
-    },
   },
   {
-    name: "wallet_fund_request_create",
-    description:
-      "Create a funding request for a wallet. Use when a wallet needs USDC to pay for prim services. An operator reviews and approves or denies the request.",
+    name: "wallet_create_fund_request",
+    description: "Create a fund request | Price: $0.001",
     inputSchema: {
-      type: "object",
-      required: ["address", "amount", "reason"],
-      properties: {
-        address: {
-          type: "string",
-          pattern: "^0x[a-fA-F0-9]{40}$",
-          description: "Wallet address requesting funds.",
+        type: "object",
+        properties: {
+          "address": {
+            type: "string",
+          },
+          "amount": {
+            type: "string",
+            description: "Requested USDC amount as a decimal string (e.g. \"10.00\")",
+          },
+          "reason": {
+            type: "string",
+            description: "Human-readable reason for the funding request",
+          },
         },
-        amount: {
-          type: "string",
-          description: "Requested USDC amount as a decimal string (e.g. '10.00').",
-        },
-        reason: {
-          type: "string",
-          description: "Human-readable reason for the funding request.",
-        },
+        required: ["address","amount","reason"],
       },
-    },
   },
   {
-    name: "wallet_fund_request_list",
-    description:
-      "List funding requests for a wallet. Returns all pending, approved, and denied requests.",
+    name: "wallet_list_fund_requests",
+    description: "List fund requests for a wallet | Price: $0.001",
     inputSchema: {
-      type: "object",
-      required: ["address"],
-      properties: {
-        address: {
-          type: "string",
-          pattern: "^0x[a-fA-F0-9]{40}$",
-          description: "Wallet address to list fund requests for.",
+        type: "object",
+        properties: {
+          "address": {
+            type: "string",
+          },
+          "limit": {
+            type: "integer",
+            minimum: 1,
+            maximum: 100,
+            default: 20,
+            description: "Number of requests to return (1–100, default 20)",
+          },
+          "after": {
+            type: "string",
+            description: "Cursor from a previous response for pagination",
+          },
         },
-        status: {
-          type: "string",
-          enum: ["pending", "approved", "denied"],
-          description: "Filter by status. Omit to return all.",
-        },
-        limit: {
-          type: "integer",
-          minimum: 1,
-          maximum: 100,
-          default: 20,
-          description: "Number of results per page.",
-        },
-        page: {
-          type: "integer",
-          minimum: 1,
-          default: 1,
-          description: "Page number (1-based).",
-        },
+        required: ["address"],
       },
-    },
   },
   {
-    name: "wallet_fund_request_approve",
-    description:
-      "Approve a pending fund request, triggering a USDC transfer to the wallet. Requires operator permissions.",
+    name: "wallet_approve_fund_request",
+    description: "Approve a fund request | Price: $0.01",
     inputSchema: {
-      type: "object",
-      required: ["id"],
-      properties: {
-        id: {
-          type: "string",
-          description: "Fund request ID (e.g. 'fr_abc123').",
+        type: "object",
+        properties: {
+          "id": {
+            type: "string",
+          },
         },
-        note: {
-          type: "string",
-          description: "Optional note for the approval.",
-        },
+        required: ["id"],
       },
-    },
   },
   {
-    name: "wallet_fund_request_deny",
-    description:
-      "Deny a pending fund request. Requires operator permissions.",
+    name: "wallet_deny_fund_request",
+    description: "Deny a fund request | Price: $0.001",
     inputSchema: {
-      type: "object",
-      required: ["id"],
-      properties: {
-        id: {
-          type: "string",
-          description: "Fund request ID (e.g. 'fr_abc123').",
+        type: "object",
+        properties: {
+          "id": {
+            type: "string",
+          },
+          "reason": {
+            type: "string",
+            description: "Optional reason for denying the request",
+          },
         },
-        reason: {
-          type: "string",
-          description: "Optional reason for the denial.",
-        },
+        required: ["id"],
       },
-    },
   },
   {
-    name: "wallet_policy_get",
-    description:
-      "Get the spending policy for a wallet. Returns maxPerTx, maxPerDay, and current daily spend.",
+    name: "wallet_get_policy",
+    description: "Get spending policy | Price: $0.001",
     inputSchema: {
-      type: "object",
-      required: ["address"],
-      properties: {
-        address: {
-          type: "string",
-          pattern: "^0x[a-fA-F0-9]{40}$",
-          description: "Wallet address to get policy for.",
+        type: "object",
+        properties: {
+          "address": {
+            type: "string",
+          },
         },
+        required: ["address"],
       },
-    },
   },
   {
-    name: "wallet_policy_update",
-    description:
-      "Set or update the spending policy for a wallet. Use null to remove a limit.",
+    name: "wallet_update_policy",
+    description: "Update spending policy | Price: $0.005",
     inputSchema: {
-      type: "object",
-      required: ["address"],
-      properties: {
-        address: {
-          type: "string",
-          pattern: "^0x[a-fA-F0-9]{40}$",
-          description: "Wallet address to update policy for.",
+        type: "object",
+        properties: {
+          "address": {
+            type: "string",
+          },
+          "maxPerTx": {
+            type: ["string","null"],
+            description: "Maximum USDC per transaction. Pass null to remove the limit.",
+          },
+          "maxPerDay": {
+            type: ["string","null"],
+            description: "Maximum USDC per day. Pass null to remove the limit.",
+          },
+          "allowedPrimitives": {
+            type: ["array","null"],
+            items: {
+              type: "string",
+            },
+            description: "Allowed primitive hostnames. Pass null to allow all.",
+          },
         },
-        maxPerTx: {
-          type: ["string", "null"],
-          description:
-            "Maximum USDC per transaction (e.g. '1.00'), or null to remove the limit.",
-        },
-        maxPerDay: {
-          type: ["string", "null"],
-          description:
-            "Maximum USDC per day (e.g. '10.00'), or null to remove the limit.",
-        },
+        required: ["address"],
       },
-    },
   },
   {
-    name: "wallet_pause",
-    description:
-      "Pause a wallet, preventing it from making payments. Use to temporarily block spending.",
+    name: "wallet_pause_wallet",
+    description: "Pause a wallet | Price: $0.001",
     inputSchema: {
-      type: "object",
-      required: ["address"],
-      properties: {
-        address: {
-          type: "string",
-          pattern: "^0x[a-fA-F0-9]{40}$",
-          description: "Wallet address to pause.",
+        type: "object",
+        properties: {
+          "address": {
+            type: "string",
+          },
+          "scope": {
+            type: "string",
+            enum: ["all","send","swap"],
+            default: "all",
+            description: "Which operations to pause",
+          },
         },
-        reason: {
-          type: "string",
-          description: "Optional reason for pausing.",
-        },
+        required: ["address"],
       },
-    },
   },
   {
-    name: "wallet_resume",
-    description:
-      "Resume a paused wallet, allowing it to make payments again.",
+    name: "wallet_resume_wallet",
+    description: "Resume a paused wallet | Price: $0.001",
     inputSchema: {
-      type: "object",
-      required: ["address"],
-      properties: {
-        address: {
-          type: "string",
-          pattern: "^0x[a-fA-F0-9]{40}$",
-          description: "Wallet address to resume.",
+        type: "object",
+        properties: {
+          "address": {
+            type: "string",
+          },
+          "scope": {
+            type: "string",
+            enum: ["all","send","swap"],
+            default: "all",
+            description: "Which operations to resume",
+          },
         },
+        required: ["address"],
       },
-    },
   },
 ];
+// END:GENERATED:TOOLS
 
+// BEGIN:GENERATED:HANDLER
 export async function handleWalletTool(
   name: string,
   args: Record<string, unknown>,
@@ -267,8 +247,18 @@ export async function handleWalletTool(
 ): Promise<CallToolResult> {
   try {
     switch (name) {
-      case "wallet_register": {
-        const res = await fetch(`${baseUrl}/v1/wallets`, {
+      case "wallet_list_wallets": {
+        const url = new URL(`${baseUrl}/v1/wallets`);
+        if (args.limit !== undefined) url.searchParams.set("limit", String(args.limit));
+        if (args.after !== undefined) url.searchParams.set("after", String(args.after));
+        const res = await primFetch(url.toString());
+        const data = await res.json();
+        if (!res.ok) return errorResult(data);
+        return { content: [{ type: "text", text: JSON.stringify(data, null, 2) }] };
+      }
+
+      case "wallet_register_wallet": {
+        const res = await primFetch(`${baseUrl}/v1/wallets`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(args),
@@ -278,35 +268,23 @@ export async function handleWalletTool(
         return { content: [{ type: "text", text: JSON.stringify(data, null, 2) }] };
       }
 
-      case "wallet_list": {
-        const url = new URL(`${baseUrl}/v1/wallets`);
-        if (args.limit) url.searchParams.set("limit", String(args.limit));
-        if (args.page) url.searchParams.set("page", String(args.page));
-        const res = await primFetch(url.toString());
-        const data = await res.json();
-        if (!res.ok) return errorResult(data);
-        return { content: [{ type: "text", text: JSON.stringify(data, null, 2) }] };
-      }
-
-      case "wallet_get": {
+      case "wallet_get_wallet": {
         const res = await primFetch(`${baseUrl}/v1/wallets/${args.address}`);
         const data = await res.json();
         if (!res.ok) return errorResult(data);
         return { content: [{ type: "text", text: JSON.stringify(data, null, 2) }] };
       }
 
-      case "wallet_deactivate": {
-        const res = await primFetch(`${baseUrl}/v1/wallets/${args.address}`, {
-          method: "DELETE",
-        });
+      case "wallet_deactivate_wallet": {
+        const res = await primFetch(`${baseUrl}/v1/wallets/${args.address}`, { method: "DELETE" });
         const data = await res.json();
         if (!res.ok) return errorResult(data);
         return { content: [{ type: "text", text: JSON.stringify(data, null, 2) }] };
       }
 
-      case "wallet_fund_request_create": {
+      case "wallet_create_fund_request": {
         const { address, ...body } = args;
-        const res = await primFetch(`${baseUrl}/v1/wallets/${address}/fund-request`, {
+        const res = await primFetch(`${baseUrl}/v1/wallets/${args.address}/fund-request`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(body),
@@ -316,21 +294,26 @@ export async function handleWalletTool(
         return { content: [{ type: "text", text: JSON.stringify(data, null, 2) }] };
       }
 
-      case "wallet_fund_request_list": {
-        const { address, ...params } = args;
-        const url = new URL(`${baseUrl}/v1/wallets/${address}/fund-requests`);
-        if (params.status) url.searchParams.set("status", String(params.status));
-        if (params.limit) url.searchParams.set("limit", String(params.limit));
-        if (params.page) url.searchParams.set("page", String(params.page));
+      case "wallet_list_fund_requests": {
+        const url = new URL(`${baseUrl}/v1/wallets/${args.address}/fund-requests`);
+        if (args.limit !== undefined) url.searchParams.set("limit", String(args.limit));
+        if (args.after !== undefined) url.searchParams.set("after", String(args.after));
         const res = await primFetch(url.toString());
         const data = await res.json();
         if (!res.ok) return errorResult(data);
         return { content: [{ type: "text", text: JSON.stringify(data, null, 2) }] };
       }
 
-      case "wallet_fund_request_approve": {
+      case "wallet_approve_fund_request": {
+        const res = await primFetch(`${baseUrl}/v1/fund-requests/${args.id}/approve`, { method: "POST" });
+        const data = await res.json();
+        if (!res.ok) return errorResult(data);
+        return { content: [{ type: "text", text: JSON.stringify(data, null, 2) }] };
+      }
+
+      case "wallet_deny_fund_request": {
         const { id, ...body } = args;
-        const res = await primFetch(`${baseUrl}/v1/fund-requests/${id}/approve`, {
+        const res = await primFetch(`${baseUrl}/v1/fund-requests/${args.id}/deny`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(body),
@@ -340,28 +323,16 @@ export async function handleWalletTool(
         return { content: [{ type: "text", text: JSON.stringify(data, null, 2) }] };
       }
 
-      case "wallet_fund_request_deny": {
-        const { id, ...body } = args;
-        const res = await primFetch(`${baseUrl}/v1/fund-requests/${id}/deny`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(body),
-        });
-        const data = await res.json();
-        if (!res.ok) return errorResult(data);
-        return { content: [{ type: "text", text: JSON.stringify(data, null, 2) }] };
-      }
-
-      case "wallet_policy_get": {
+      case "wallet_get_policy": {
         const res = await primFetch(`${baseUrl}/v1/wallets/${args.address}/policy`);
         const data = await res.json();
         if (!res.ok) return errorResult(data);
         return { content: [{ type: "text", text: JSON.stringify(data, null, 2) }] };
       }
 
-      case "wallet_policy_update": {
+      case "wallet_update_policy": {
         const { address, ...body } = args;
-        const res = await primFetch(`${baseUrl}/v1/wallets/${address}/policy`, {
+        const res = await primFetch(`${baseUrl}/v1/wallets/${args.address}/policy`, {
           method: "PUT",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(body),
@@ -371,9 +342,9 @@ export async function handleWalletTool(
         return { content: [{ type: "text", text: JSON.stringify(data, null, 2) }] };
       }
 
-      case "wallet_pause": {
+      case "wallet_pause_wallet": {
         const { address, ...body } = args;
-        const res = await primFetch(`${baseUrl}/v1/wallets/${address}/pause`, {
+        const res = await primFetch(`${baseUrl}/v1/wallets/${args.address}/pause`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(body),
@@ -383,11 +354,12 @@ export async function handleWalletTool(
         return { content: [{ type: "text", text: JSON.stringify(data, null, 2) }] };
       }
 
-      case "wallet_resume": {
+      case "wallet_resume_wallet": {
+        const { address, ...body } = args;
         const res = await primFetch(`${baseUrl}/v1/wallets/${args.address}/resume`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({}),
+          body: JSON.stringify(body),
         });
         const data = await res.json();
         if (!res.ok) return errorResult(data);
@@ -395,11 +367,16 @@ export async function handleWalletTool(
       }
 
       default:
-        return { content: [{ type: "text", text: `Unknown wallet tool: ${name}` }], isError: true };
+        return {
+          content: [{ type: "text", text: `Unknown wallet tool: ${name}` }],
+          isError: true,
+        };
     }
   } catch (err) {
     return {
-      content: [{ type: "text", text: `Error: ${err instanceof Error ? err.message : String(err)}` }],
+      content: [
+        { type: "text", text: `Error: ${err instanceof Error ? err.message : String(err)}` },
+      ],
       isError: true,
     };
   }
@@ -411,3 +388,4 @@ function errorResult(data: unknown): CallToolResult {
     isError: true,
   };
 }
+// END:GENERATED:HANDLER

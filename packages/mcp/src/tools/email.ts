@@ -1,338 +1,327 @@
 import type { Tool } from "@modelcontextprotocol/sdk/types.js";
 import type { CallToolResult } from "@modelcontextprotocol/sdk/types.js";
 
+// BEGIN:GENERATED:TOOLS
 export const emailTools: Tool[] = [
   {
-    name: "email_mailbox_create",
-    description:
-      "Create a new email mailbox. If username is omitted, a random one is generated. If domain is omitted, the shared default domain is used. Mailbox expires after ttl_ms milliseconds (default 7 days).",
+    name: "email_list_mailboxes",
+    description: "List mailboxes | Price: $0.001",
     inputSchema: {
-      type: "object",
-      properties: {
-        username: {
-          type: "string",
-          description:
-            "Desired local part of the email address (e.g. 'agent42'). Generated randomly if omitted.",
-        },
-        domain: {
-          type: "string",
-          description:
-            "Email domain to use. Must be a verified custom domain or the shared default domain.",
-        },
-        ttl_ms: {
-          type: "integer",
-          description:
-            "Mailbox lifetime in milliseconds. Defaults to 7 days (604800000).",
+        type: "object",
+        properties: {
+          "limit": {
+            type: "integer",
+            minimum: 1,
+            maximum: 100,
+            default: 20,
+            description: "Number of mailboxes per page (1–100, default 20).",
+          },
+          "page": {
+            type: "integer",
+            minimum: 1,
+            default: 1,
+            description: "Page number (1-based, default 1).",
+          },
         },
       },
-    },
   },
   {
-    name: "email_mailbox_list",
-    description:
-      "List all email mailboxes owned by the authenticated wallet. Returns paginated results.",
+    name: "email_create_mailbox",
+    description: "Create a mailbox | Price: $0.05",
     inputSchema: {
-      type: "object",
-      properties: {
-        per_page: {
-          type: "integer",
-          minimum: 1,
-          maximum: 100,
-          default: 20,
-          description: "Number of mailboxes per page (1-100, default 20).",
-        },
-        page: {
-          type: "integer",
-          minimum: 1,
-          default: 1,
-          description: "Page number (1-based, default 1).",
+        type: "object",
+        properties: {
+          "username": {
+            type: "string",
+            description: "Desired local part of the email address. Generated randomly if omitted.",
+          },
+          "domain": {
+            type: "string",
+            description: "Email domain to use. Must be a verified custom domain or the shared default domain.",
+          },
+          "ttl_ms": {
+            type: "integer",
+            description: "Mailbox lifetime in milliseconds. Defaults to 7 days (604800000). Pass null for no expiry.",
+          },
         },
       },
-    },
   },
   {
-    name: "email_mailbox_get",
-    description:
-      "Get details for a single email mailbox including status and expiry time.",
+    name: "email_get_mailbox",
+    description: "Get mailbox details | Price: $0.001",
     inputSchema: {
-      type: "object",
-      required: ["id"],
-      properties: {
-        id: {
-          type: "string",
-          description: "Mailbox ID (UUID).",
+        type: "object",
+        properties: {
+          "id": {
+            type: "string",
+            description: "Mailbox ID.",
+          },
         },
+        required: ["id"],
       },
-    },
   },
   {
-    name: "email_mailbox_delete",
-    description:
-      "Permanently delete a mailbox and all its messages.",
+    name: "email_delete_mailbox",
+    description: "Delete a mailbox | Price: $0.01",
     inputSchema: {
-      type: "object",
-      required: ["id"],
-      properties: {
-        id: {
-          type: "string",
-          description: "Mailbox ID (UUID).",
+        type: "object",
+        properties: {
+          "id": {
+            type: "string",
+            description: "Mailbox ID.",
+          },
         },
+        required: ["id"],
       },
-    },
   },
   {
-    name: "email_mailbox_renew",
-    description:
-      "Extend the expiry time of a mailbox by ttl_ms milliseconds (default 7 days).",
+    name: "email_renew_mailbox",
+    description: "Renew mailbox TTL | Price: $0.01",
     inputSchema: {
-      type: "object",
-      required: ["id"],
-      properties: {
-        id: {
-          type: "string",
-          description: "Mailbox ID (UUID).",
+        type: "object",
+        properties: {
+          "id": {
+            type: "string",
+            description: "Mailbox ID.",
+          },
+          "ttl_ms": {
+            type: "integer",
+            description: "Additional milliseconds to extend the mailbox TTL. Defaults to 7 days (604800000).",
+          },
         },
-        ttl_ms: {
-          type: "integer",
-          description:
-            "Milliseconds to extend the mailbox TTL. Defaults to 7 days (604800000).",
-        },
+        required: ["id"],
       },
-    },
   },
   {
-    name: "email_messages_list",
-    description:
-      "List messages in a mailbox, newest first. Use position for pagination.",
+    name: "email_list_messages",
+    description: "List messages in a mailbox | Price: $0.001",
     inputSchema: {
-      type: "object",
-      required: ["id"],
-      properties: {
-        id: {
-          type: "string",
-          description: "Mailbox ID (UUID).",
+        type: "object",
+        properties: {
+          "id": {
+            type: "string",
+            description: "Mailbox ID.",
+          },
+          "limit": {
+            type: "integer",
+            minimum: 1,
+            maximum: 100,
+            default: 20,
+            description: "Maximum number of messages to return (1–100, default 20).",
+          },
+          "position": {
+            type: "integer",
+            minimum: 0,
+            default: 0,
+            description: "Zero-based position offset to start from (default 0).",
+          },
         },
-        limit: {
-          type: "integer",
-          minimum: 1,
-          maximum: 100,
-          default: 20,
-          description: "Maximum number of messages to return (1-100, default 20).",
-        },
-        position: {
-          type: "integer",
-          minimum: 0,
-          default: 0,
-          description: "Zero-based position offset to start from (default 0).",
-        },
+        required: ["id"],
       },
-    },
   },
   {
-    name: "email_message_get",
-    description:
-      "Get the full content of a single email message including plain-text and HTML body.",
+    name: "email_get_message",
+    description: "Get message detail | Price: $0.001",
     inputSchema: {
-      type: "object",
-      required: ["id", "msgId"],
-      properties: {
-        id: {
-          type: "string",
-          description: "Mailbox ID (UUID).",
+        type: "object",
+        properties: {
+          "id": {
+            type: "string",
+            description: "Mailbox ID.",
+          },
+          "msgId": {
+            type: "string",
+            description: "Message ID.",
+          },
         },
-        msgId: {
-          type: "string",
-          description: "Message ID.",
-        },
+        required: ["id","msgId"],
       },
-    },
   },
   {
-    name: "email_send",
-    description:
-      "Send an outbound email from a mailbox. Either body (plain text) or html must be provided.",
+    name: "email_send_message",
+    description: "Send email from a mailbox | Price: $0.01",
     inputSchema: {
-      type: "object",
-      required: ["id", "to", "subject"],
-      properties: {
-        id: {
-          type: "string",
-          description: "Mailbox ID (UUID) to send from.",
+        type: "object",
+        properties: {
+          "id": {
+            type: "string",
+            description: "Mailbox ID.",
+          },
+          "to": {
+            type: "string",
+            format: "email",
+            description: "Recipient email address.",
+          },
+          "subject": {
+            type: "string",
+            description: "Email subject line.",
+          },
+          "body": {
+            type: "string",
+            description: "Plain-text message body.",
+          },
+          "html": {
+            type: "string",
+            description: "HTML message body. Can be provided alongside `body` for multipart messages.",
+          },
+          "cc": {
+            type: "string",
+            format: "email",
+            description: "CC recipient email address.",
+          },
+          "bcc": {
+            type: "string",
+            format: "email",
+            description: "BCC recipient email address.",
+          },
         },
-        to: {
-          type: "string",
-          description: "Recipient email address.",
-        },
-        subject: {
-          type: "string",
-          description: "Email subject line.",
-        },
-        body: {
-          type: "string",
-          description: "Plain-text message body.",
-        },
-        html: {
-          type: "string",
-          description: "HTML message body. Can be provided alongside body for multipart messages.",
-        },
-        cc: {
-          type: "string",
-          description: "CC recipient email address.",
-        },
-        bcc: {
-          type: "string",
-          description: "BCC recipient email address.",
-        },
+        required: ["id","to","subject"],
       },
-    },
   },
   {
-    name: "email_webhook_create",
-    description:
-      "Register a webhook URL to receive notifications when messages arrive in a mailbox. Supported events: 'message.received'. If secret is provided, each delivery includes an X-Prim-Signature HMAC-SHA256 header.",
+    name: "email_list_webhooks",
+    description: "List webhooks for a mailbox | Price: $0.001",
     inputSchema: {
-      type: "object",
-      required: ["id", "url"],
-      properties: {
-        id: {
-          type: "string",
-          description: "Mailbox ID (UUID).",
+        type: "object",
+        properties: {
+          "id": {
+            type: "string",
+            description: "Mailbox ID.",
+          },
         },
-        url: {
-          type: "string",
-          description: "HTTPS URL to receive webhook events.",
-        },
-        secret: {
-          type: "string",
-          description: "Optional signing secret for HMAC-SHA256 signature verification.",
-        },
-        events: {
-          type: "array",
-          items: { type: "string" },
-          description: "Event types to subscribe to. Defaults to all events. Example: ['message.received']",
-        },
+        required: ["id"],
       },
-    },
   },
   {
-    name: "email_webhook_list",
-    description:
-      "List all registered webhooks for a mailbox.",
+    name: "email_register_webhook",
+    description: "Register a webhook | Price: $0.01",
     inputSchema: {
-      type: "object",
-      required: ["id"],
-      properties: {
-        id: {
-          type: "string",
-          description: "Mailbox ID (UUID).",
+        type: "object",
+        properties: {
+          "id": {
+            type: "string",
+            description: "Mailbox ID.",
+          },
+          "url": {
+            type: "string",
+            format: "uri",
+            description: "HTTPS URL to receive webhook events.",
+          },
+          "secret": {
+            type: "string",
+            description: "Optional signing secret. Used to generate HMAC-SHA256 signatures.",
+          },
+          "events": {
+            type: "array",
+            items: {
+              type: "string",
+            },
+            description: "Event types to subscribe to. Defaults to all events.",
+          },
         },
+        required: ["id","url"],
       },
-    },
   },
   {
-    name: "email_webhook_delete",
-    description:
-      "Remove a webhook registration from a mailbox.",
+    name: "email_delete_webhook",
+    description: "Delete a webhook | Price: $0.001",
     inputSchema: {
-      type: "object",
-      required: ["id", "whId"],
-      properties: {
-        id: {
-          type: "string",
-          description: "Mailbox ID (UUID).",
+        type: "object",
+        properties: {
+          "id": {
+            type: "string",
+            description: "Mailbox ID.",
+          },
+          "whId": {
+            type: "string",
+            description: "Webhook ID.",
+          },
         },
-        whId: {
-          type: "string",
-          description: "Webhook ID.",
-        },
+        required: ["id","whId"],
       },
-    },
   },
   {
-    name: "email_domain_register",
-    description:
-      "Register a custom domain for use with email.prim.sh mailboxes. After registration, add the returned required_records DNS entries, then call email_domain_verify.",
+    name: "email_list_domains",
+    description: "List registered domains | Price: $0.001",
     inputSchema: {
-      type: "object",
-      required: ["domain"],
-      properties: {
-        domain: {
-          type: "string",
-          description: "Domain name to register (e.g. 'example.com').",
+        type: "object",
+        properties: {
+          "limit": {
+            type: "integer",
+            minimum: 1,
+            maximum: 100,
+            default: 20,
+            description: "Number of domains per page (1–100, default 20).",
+          },
+          "page": {
+            type: "integer",
+            minimum: 1,
+            default: 1,
+            description: "Page number (1-based, default 1).",
+          },
         },
       },
-    },
   },
   {
-    name: "email_domain_list",
-    description:
-      "List all custom domains registered by the authenticated wallet.",
+    name: "email_register_domain",
+    description: "Register an email domain | Price: $0.05",
     inputSchema: {
-      type: "object",
-      properties: {
-        per_page: {
-          type: "integer",
-          minimum: 1,
-          maximum: 100,
-          default: 20,
-          description: "Number of domains per page (1-100, default 20).",
+        type: "object",
+        properties: {
+          "domain": {
+            type: "string",
+            description: "Domain name to register (e.g. \"example.com\").",
+          },
         },
-        page: {
-          type: "integer",
-          minimum: 1,
-          default: 1,
-          description: "Page number (1-based, default 1).",
-        },
+        required: ["domain"],
       },
-    },
   },
   {
-    name: "email_domain_get",
-    description:
-      "Get details for a single registered domain including verification status and required DNS records.",
+    name: "email_get_domain",
+    description: "Get domain details | Price: $0.001",
     inputSchema: {
-      type: "object",
-      required: ["id"],
-      properties: {
-        id: {
-          type: "string",
-          description: "Domain ID.",
+        type: "object",
+        properties: {
+          "id": {
+            type: "string",
+            description: "Domain ID.",
+          },
         },
+        required: ["id"],
       },
-    },
   },
   {
-    name: "email_domain_verify",
-    description:
-      "Check that the required DNS records are present for a domain. On success, status changes to 'verified' and dkim_records are returned for you to add.",
+    name: "email_delete_domain",
+    description: "Delete a domain | Price: $0.01",
     inputSchema: {
-      type: "object",
-      required: ["id"],
-      properties: {
-        id: {
-          type: "string",
-          description: "Domain ID.",
+        type: "object",
+        properties: {
+          "id": {
+            type: "string",
+            description: "Domain ID.",
+          },
         },
+        required: ["id"],
       },
-    },
   },
   {
-    name: "email_domain_delete",
-    description:
-      "Remove a custom domain registration. Mailboxes on this domain will stop receiving mail. Response includes a warning if active mailboxes exist.",
+    name: "email_verify_domain",
+    description: "Verify domain ownership | Price: $0.01",
     inputSchema: {
-      type: "object",
-      required: ["id"],
-      properties: {
-        id: {
-          type: "string",
-          description: "Domain ID.",
+        type: "object",
+        properties: {
+          "id": {
+            type: "string",
+            description: "Domain ID.",
+          },
         },
+        required: ["id"],
       },
-    },
   },
 ];
+// END:GENERATED:TOOLS
 
+// BEGIN:GENERATED:HANDLER
 export async function handleEmailTool(
   name: string,
   args: Record<string, unknown>,
@@ -341,50 +330,43 @@ export async function handleEmailTool(
 ): Promise<CallToolResult> {
   try {
     switch (name) {
-      case "email_mailbox_create": {
-        const body: Record<string, unknown> = {};
-        if (args.username) body.username = args.username;
-        if (args.domain) body.domain = args.domain;
-        if (args.ttl_ms !== undefined) body.ttl_ms = args.ttl_ms;
-        const res = await primFetch(`${baseUrl}/v1/mailboxes`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(body),
-        });
-        const data = await res.json();
-        if (!res.ok) return errorResult(data);
-        return { content: [{ type: "text", text: JSON.stringify(data, null, 2) }] };
-      }
-
-      case "email_mailbox_list": {
+      case "email_list_mailboxes": {
         const url = new URL(`${baseUrl}/v1/mailboxes`);
-        if (args.per_page) url.searchParams.set("per_page", String(args.per_page));
-        if (args.page) url.searchParams.set("page", String(args.page));
+        if (args.limit !== undefined) url.searchParams.set("limit", String(args.limit));
+        if (args.page !== undefined) url.searchParams.set("page", String(args.page));
         const res = await primFetch(url.toString());
         const data = await res.json();
         if (!res.ok) return errorResult(data);
         return { content: [{ type: "text", text: JSON.stringify(data, null, 2) }] };
       }
 
-      case "email_mailbox_get": {
-        const res = await primFetch(`${baseUrl}/v1/mailboxes/${args.id}`);
-        const data = await res.json();
-        if (!res.ok) return errorResult(data);
-        return { content: [{ type: "text", text: JSON.stringify(data, null, 2) }] };
-      }
-
-      case "email_mailbox_delete": {
-        const res = await primFetch(`${baseUrl}/v1/mailboxes/${args.id}`, {
-          method: "DELETE",
+      case "email_create_mailbox": {
+        const res = await primFetch(`${baseUrl}/v1/mailboxes`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(args),
         });
         const data = await res.json();
         if (!res.ok) return errorResult(data);
         return { content: [{ type: "text", text: JSON.stringify(data, null, 2) }] };
       }
 
-      case "email_mailbox_renew": {
-        const body: Record<string, unknown> = {};
-        if (args.ttl_ms !== undefined) body.ttl_ms = args.ttl_ms;
+      case "email_get_mailbox": {
+        const res = await primFetch(`${baseUrl}/v1/mailboxes/${args.id}`);
+        const data = await res.json();
+        if (!res.ok) return errorResult(data);
+        return { content: [{ type: "text", text: JSON.stringify(data, null, 2) }] };
+      }
+
+      case "email_delete_mailbox": {
+        const res = await primFetch(`${baseUrl}/v1/mailboxes/${args.id}`, { method: "DELETE" });
+        const data = await res.json();
+        if (!res.ok) return errorResult(data);
+        return { content: [{ type: "text", text: JSON.stringify(data, null, 2) }] };
+      }
+
+      case "email_renew_mailbox": {
+        const { id, ...body } = args;
         const res = await primFetch(`${baseUrl}/v1/mailboxes/${args.id}/renew`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -395,9 +377,9 @@ export async function handleEmailTool(
         return { content: [{ type: "text", text: JSON.stringify(data, null, 2) }] };
       }
 
-      case "email_messages_list": {
+      case "email_list_messages": {
         const url = new URL(`${baseUrl}/v1/mailboxes/${args.id}/messages`);
-        if (args.limit) url.searchParams.set("limit", String(args.limit));
+        if (args.limit !== undefined) url.searchParams.set("limit", String(args.limit));
         if (args.position !== undefined) url.searchParams.set("position", String(args.position));
         const res = await primFetch(url.toString());
         const data = await res.json();
@@ -405,110 +387,88 @@ export async function handleEmailTool(
         return { content: [{ type: "text", text: JSON.stringify(data, null, 2) }] };
       }
 
-      case "email_message_get": {
-        const res = await primFetch(
-          `${baseUrl}/v1/mailboxes/${args.id}/messages/${args.msgId}`,
-        );
+      case "email_get_message": {
+        const res = await primFetch(`${baseUrl}/v1/mailboxes/${args.id}/messages/${args.msgId}`);
         const data = await res.json();
         if (!res.ok) return errorResult(data);
         return { content: [{ type: "text", text: JSON.stringify(data, null, 2) }] };
       }
 
-      case "email_send": {
-        const { id, ...rest } = args as {
-          id: string;
-          to: string;
-          subject: string;
-          body?: string;
-          html?: string;
-          cc?: string;
-          bcc?: string;
-        };
-        const res = await primFetch(`${baseUrl}/v1/mailboxes/${id}/send`, {
+      case "email_send_message": {
+        const { id, ...body } = args;
+        const res = await primFetch(`${baseUrl}/v1/mailboxes/${args.id}/send`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(rest),
+          body: JSON.stringify(body),
         });
         const data = await res.json();
         if (!res.ok) return errorResult(data);
         return { content: [{ type: "text", text: JSON.stringify(data, null, 2) }] };
       }
 
-      case "email_webhook_create": {
-        const { id, ...rest } = args as {
-          id: string;
-          url: string;
-          secret?: string;
-          events?: string[];
-        };
-        const res = await primFetch(`${baseUrl}/v1/mailboxes/${id}/webhooks`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(rest),
-        });
-        const data = await res.json();
-        if (!res.ok) return errorResult(data);
-        return { content: [{ type: "text", text: JSON.stringify(data, null, 2) }] };
-      }
-
-      case "email_webhook_list": {
+      case "email_list_webhooks": {
         const res = await primFetch(`${baseUrl}/v1/mailboxes/${args.id}/webhooks`);
         const data = await res.json();
         if (!res.ok) return errorResult(data);
         return { content: [{ type: "text", text: JSON.stringify(data, null, 2) }] };
       }
 
-      case "email_webhook_delete": {
-        const res = await primFetch(
-          `${baseUrl}/v1/mailboxes/${args.id}/webhooks/${args.whId}`,
-          { method: "DELETE" },
-        );
-        const data = await res.json();
-        if (!res.ok) return errorResult(data);
-        return { content: [{ type: "text", text: JSON.stringify(data, null, 2) }] };
-      }
-
-      case "email_domain_register": {
-        const res = await primFetch(`${baseUrl}/v1/domains`, {
+      case "email_register_webhook": {
+        const { id, ...body } = args;
+        const res = await primFetch(`${baseUrl}/v1/mailboxes/${args.id}/webhooks`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ domain: args.domain }),
+          body: JSON.stringify(body),
         });
         const data = await res.json();
         if (!res.ok) return errorResult(data);
         return { content: [{ type: "text", text: JSON.stringify(data, null, 2) }] };
       }
 
-      case "email_domain_list": {
+      case "email_delete_webhook": {
+        const res = await primFetch(`${baseUrl}/v1/mailboxes/${args.id}/webhooks/${args.whId}`, { method: "DELETE" });
+        const data = await res.json();
+        if (!res.ok) return errorResult(data);
+        return { content: [{ type: "text", text: JSON.stringify(data, null, 2) }] };
+      }
+
+      case "email_list_domains": {
         const url = new URL(`${baseUrl}/v1/domains`);
-        if (args.per_page) url.searchParams.set("per_page", String(args.per_page));
-        if (args.page) url.searchParams.set("page", String(args.page));
+        if (args.limit !== undefined) url.searchParams.set("limit", String(args.limit));
+        if (args.page !== undefined) url.searchParams.set("page", String(args.page));
         const res = await primFetch(url.toString());
         const data = await res.json();
         if (!res.ok) return errorResult(data);
         return { content: [{ type: "text", text: JSON.stringify(data, null, 2) }] };
       }
 
-      case "email_domain_get": {
+      case "email_register_domain": {
+        const res = await primFetch(`${baseUrl}/v1/domains`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(args),
+        });
+        const data = await res.json();
+        if (!res.ok) return errorResult(data);
+        return { content: [{ type: "text", text: JSON.stringify(data, null, 2) }] };
+      }
+
+      case "email_get_domain": {
         const res = await primFetch(`${baseUrl}/v1/domains/${args.id}`);
         const data = await res.json();
         if (!res.ok) return errorResult(data);
         return { content: [{ type: "text", text: JSON.stringify(data, null, 2) }] };
       }
 
-      case "email_domain_verify": {
-        const res = await primFetch(`${baseUrl}/v1/domains/${args.id}/verify`, {
-          method: "POST",
-        });
+      case "email_delete_domain": {
+        const res = await primFetch(`${baseUrl}/v1/domains/${args.id}`, { method: "DELETE" });
         const data = await res.json();
         if (!res.ok) return errorResult(data);
         return { content: [{ type: "text", text: JSON.stringify(data, null, 2) }] };
       }
 
-      case "email_domain_delete": {
-        const res = await primFetch(`${baseUrl}/v1/domains/${args.id}`, {
-          method: "DELETE",
-        });
+      case "email_verify_domain": {
+        const res = await primFetch(`${baseUrl}/v1/domains/${args.id}/verify`, { method: "POST" });
         const data = await res.json();
         if (!res.ok) return errorResult(data);
         return { content: [{ type: "text", text: JSON.stringify(data, null, 2) }] };
@@ -536,3 +496,4 @@ function errorResult(data: unknown): CallToolResult {
     isError: true,
   };
 }
+// END:GENERATED:HANDLER

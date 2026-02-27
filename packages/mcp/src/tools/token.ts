@@ -1,175 +1,188 @@
 import type { Tool } from "@modelcontextprotocol/sdk/types.js";
 import type { CallToolResult } from "@modelcontextprotocol/sdk/types.js";
 
+// BEGIN:GENERATED:TOOLS
 export const tokenTools: Tool[] = [
   {
-    name: "token_deploy",
-    description:
-      "Deploy a new ERC-20 token contract to Base. Returns immediately with deployStatus: 'pending' — poll token_get until deployStatus is 'confirmed' before minting or creating a pool.",
+    name: "token_list_tokens",
+    description: "List tokens | Price: $0.001",
     inputSchema: {
-      type: "object",
-      required: ["name", "symbol", "initialSupply"],
-      properties: {
-        name: {
-          type: "string",
-          description: "Token name (e.g. 'MyToken').",
-        },
-        symbol: {
-          type: "string",
-          description: "Token ticker symbol, typically 3-5 uppercase characters (e.g. 'MTK').",
-        },
-        initialSupply: {
-          type: "string",
-          description:
-            "Initial supply in raw token units. For 1M tokens with 18 decimals, pass '1000000000000000000000000'.",
-        },
-        decimals: {
-          type: "integer",
-          description: "Number of decimal places (default 18). Most ERC-20 tokens use 18.",
-          default: 18,
-        },
-        mintable: {
-          type: "boolean",
-          description: "Whether additional tokens can be minted after deploy (default false).",
-          default: false,
-        },
-        maxSupply: {
-          type: ["string", "null"],
-          description:
-            "Maximum mintable supply in raw units. null or omit for no cap. Only meaningful if mintable is true.",
+        type: "object",
+        properties: {
+          "limit": {
+            type: "integer",
+            minimum: 1,
+            maximum: 100,
+            default: 20,
+            description: "Number of tokens per page (1–100, default 20).",
+          },
+          "page": {
+            type: "integer",
+            minimum: 1,
+            default: 1,
+            description: "Page number (1-based, default 1).",
+          },
         },
       },
-    },
   },
   {
-    name: "token_list",
-    description: "List all ERC-20 tokens deployed by the authenticated wallet.",
+    name: "token_deploy_token",
+    description: "Deploy ERC-20 token | Price: $1.00",
     inputSchema: {
-      type: "object",
-      properties: {},
-    },
-  },
-  {
-    name: "token_get",
-    description:
-      "Get details for a single token including deployStatus, contractAddress, supply, and pool info. Poll until deployStatus is 'confirmed' before performing token operations.",
-    inputSchema: {
-      type: "object",
-      required: ["id"],
-      properties: {
-        id: {
-          type: "string",
-          description: "Token ID (UUID).",
+        type: "object",
+        properties: {
+          "name": {
+            type: "string",
+            minLength: 1,
+            maxLength: 64,
+            description: "Token name.",
+          },
+          "symbol": {
+            type: "string",
+            minLength: 1,
+            maxLength: 11,
+            pattern: "^[A-Z0-9]+$",
+            description: "Token ticker symbol (uppercase alphanumeric, 1–11 chars).",
+          },
+          "decimals": {
+            type: "integer",
+            minimum: 0,
+            maximum: 18,
+            description: "Decimal places (default 18). Most ERC-20 tokens use 18.",
+            default: 18,
+          },
+          "initialSupply": {
+            type: "string",
+            description: "Initial supply in raw token units. For 1M tokens with 18 decimals, pass \"1000000000000000000000000\".",
+          },
+          "mintable": {
+            type: "boolean",
+            description: "Whether additional tokens can be minted after deploy (default false). Immutable after deployment.",
+            default: false,
+          },
+          "maxSupply": {
+            type: ["string","null"],
+            description: "Maximum mintable supply in raw units. null or omit for no cap. Only meaningful if mintable is true.",
+          },
         },
+        required: ["name","symbol","initialSupply"],
       },
-    },
   },
   {
-    name: "token_mint",
-    description:
-      "Mint additional tokens to a recipient address. The token must be mintable and the mint must not exceed maxSupply. Caller must own the token.",
+    name: "token_get_token",
+    description: "Get token details | Price: $0.001",
     inputSchema: {
-      type: "object",
-      required: ["id", "to", "amount"],
-      properties: {
-        id: {
-          type: "string",
-          description: "Token ID (UUID).",
+        type: "object",
+        properties: {
+          "id": {
+            type: "string",
+            description: "Token ID.",
+          },
         },
-        to: {
-          type: "string",
-          description: "Recipient Ethereum address (0x...).",
-        },
-        amount: {
-          type: "string",
-          description: "Amount to mint in raw token units.",
-        },
+        required: ["id"],
       },
-    },
   },
   {
-    name: "token_supply",
-    description:
-      "Get the live on-chain total supply for a token by querying the contract directly.",
+    name: "token_mint_tokens",
+    description: "Mint additional tokens | Price: $0.10",
     inputSchema: {
-      type: "object",
-      required: ["id"],
-      properties: {
-        id: {
-          type: "string",
-          description: "Token ID (UUID).",
+        type: "object",
+        properties: {
+          "id": {
+            type: "string",
+            description: "Token ID.",
+          },
+          "to": {
+            type: "string",
+            pattern: "^0x[a-fA-F0-9]{40}$",
+            description: "Recipient Ethereum address.",
+          },
+          "amount": {
+            type: "string",
+            description: "Amount to mint in raw token units.",
+          },
         },
+        required: ["id","to","amount"],
       },
-    },
   },
   {
-    name: "token_pool_create",
-    description:
-      "Create and initialize a Uniswap V3 pool for the token paired with USDC. Only one pool can exist per token. After creating, call token_pool_liquidity_params to get calldata for adding liquidity.",
+    name: "token_get_token_supply",
+    description: "Get total supply | Price: $0.001",
     inputSchema: {
-      type: "object",
-      required: ["id", "pricePerToken"],
-      properties: {
-        id: {
-          type: "string",
-          description: "Token ID (UUID).",
+        type: "object",
+        properties: {
+          "id": {
+            type: "string",
+            description: "Token ID.",
+          },
         },
-        pricePerToken: {
-          type: "string",
-          description:
-            "Initial price in USDC per token (e.g. '0.001' for 0.1 cents per token).",
-        },
-        feeTier: {
-          type: "integer",
-          description:
-            "Uniswap V3 fee tier. Valid values: 500 (0.05%), 3000 (0.3%), 10000 (1%). Default 3000.",
-          enum: [500, 3000, 10000],
-          default: 3000,
-        },
+        required: ["id"],
       },
-    },
   },
   {
-    name: "token_pool_get",
-    description:
-      "Get details for the Uniswap V3 pool associated with a token (poolAddress, token0, token1, fee, sqrtPriceX96, tick).",
+    name: "token_get_pool",
+    description: "Get pool details | Price: $0.001",
     inputSchema: {
-      type: "object",
-      required: ["id"],
-      properties: {
-        id: {
-          type: "string",
-          description: "Token ID (UUID).",
+        type: "object",
+        properties: {
+          "id": {
+            type: "string",
+            description: "Token ID.",
+          },
         },
+        required: ["id"],
       },
-    },
   },
   {
-    name: "token_pool_liquidity_params",
-    description:
-      "Get the calldata parameters for adding liquidity to a token's Uniswap V3 pool, including required token approvals to submit before calling addLiquidity.",
+    name: "token_create_pool",
+    description: "Create Uniswap V3 pool | Price: $0.50",
     inputSchema: {
-      type: "object",
-      required: ["id", "tokenAmount", "usdcAmount"],
-      properties: {
-        id: {
-          type: "string",
-          description: "Token ID (UUID).",
+        type: "object",
+        properties: {
+          "id": {
+            type: "string",
+            description: "Token ID.",
+          },
+          "pricePerToken": {
+            type: "string",
+            description: "Initial price in USDC per token as a decimal string (e.g. \"0.001\" for 0.1 cents per token).",
+          },
+          "feeTier": {
+            type: "integer",
+            description: "Uniswap V3 fee tier in hundredths of a basis point. Valid values are 500 (0.05%), 3000 (0.3%), 10000 (1%). Default 3000.",
+            enum: [500,3000,10000],
+            default: 3000,
+          },
         },
-        tokenAmount: {
-          type: "string",
-          description: "Amount of tokens to add as liquidity in raw units.",
-        },
-        usdcAmount: {
-          type: "string",
-          description:
-            "Amount of USDC to add as liquidity in raw units (USDC has 6 decimals, so $1 = '1000000').",
-        },
+        required: ["id","pricePerToken"],
       },
-    },
+  },
+  {
+    name: "token_get_liquidity_params",
+    description: "Get liquidity parameters | Price: $0.001",
+    inputSchema: {
+        type: "object",
+        properties: {
+          "id": {
+            type: "string",
+            description: "Token ID.",
+          },
+          "tokenAmount": {
+            type: "string",
+            description: "Amount of tokens to add as liquidity in raw units.",
+          },
+          "usdcAmount": {
+            type: "string",
+            description: "Amount of USDC to add as liquidity in raw units (USDC has 6 decimals, so $1 = \"1000000\").",
+          },
+        },
+        required: ["id","tokenAmount","usdcAmount"],
+      },
   },
 ];
+// END:GENERATED:TOOLS
 
+// BEGIN:GENERATED:HANDLER
 export async function handleTokenTool(
   name: string,
   args: Record<string, unknown>,
@@ -178,16 +191,37 @@ export async function handleTokenTool(
 ): Promise<CallToolResult> {
   try {
     switch (name) {
-      case "token_deploy": {
-        const body: Record<string, unknown> = {
-          name: args.name,
-          symbol: args.symbol,
-          initialSupply: args.initialSupply,
-        };
-        if (args.decimals !== undefined) body.decimals = args.decimals;
-        if (args.mintable !== undefined) body.mintable = args.mintable;
-        if (args.maxSupply !== undefined) body.maxSupply = args.maxSupply;
+      case "token_list_tokens": {
+        const url = new URL(`${baseUrl}/v1/tokens`);
+        if (args.limit !== undefined) url.searchParams.set("limit", String(args.limit));
+        if (args.page !== undefined) url.searchParams.set("page", String(args.page));
+        const res = await primFetch(url.toString());
+        const data = await res.json();
+        if (!res.ok) return errorResult(data);
+        return { content: [{ type: "text", text: JSON.stringify(data, null, 2) }] };
+      }
+
+      case "token_deploy_token": {
         const res = await primFetch(`${baseUrl}/v1/tokens`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(args),
+        });
+        const data = await res.json();
+        if (!res.ok) return errorResult(data);
+        return { content: [{ type: "text", text: JSON.stringify(data, null, 2) }] };
+      }
+
+      case "token_get_token": {
+        const res = await primFetch(`${baseUrl}/v1/tokens/${args.id}`);
+        const data = await res.json();
+        if (!res.ok) return errorResult(data);
+        return { content: [{ type: "text", text: JSON.stringify(data, null, 2) }] };
+      }
+
+      case "token_mint_tokens": {
+        const { id, ...body } = args;
+        const res = await primFetch(`${baseUrl}/v1/tokens/${args.id}/mint`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(body),
@@ -197,41 +231,22 @@ export async function handleTokenTool(
         return { content: [{ type: "text", text: JSON.stringify(data, null, 2) }] };
       }
 
-      case "token_list": {
-        const res = await primFetch(`${baseUrl}/v1/tokens`);
-        const data = await res.json();
-        if (!res.ok) return errorResult(data);
-        return { content: [{ type: "text", text: JSON.stringify(data, null, 2) }] };
-      }
-
-      case "token_get": {
-        const res = await primFetch(`${baseUrl}/v1/tokens/${args.id}`);
-        const data = await res.json();
-        if (!res.ok) return errorResult(data);
-        return { content: [{ type: "text", text: JSON.stringify(data, null, 2) }] };
-      }
-
-      case "token_mint": {
-        const res = await primFetch(`${baseUrl}/v1/tokens/${args.id}/mint`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ to: args.to, amount: args.amount }),
-        });
-        const data = await res.json();
-        if (!res.ok) return errorResult(data);
-        return { content: [{ type: "text", text: JSON.stringify(data, null, 2) }] };
-      }
-
-      case "token_supply": {
+      case "token_get_token_supply": {
         const res = await primFetch(`${baseUrl}/v1/tokens/${args.id}/supply`);
         const data = await res.json();
         if (!res.ok) return errorResult(data);
         return { content: [{ type: "text", text: JSON.stringify(data, null, 2) }] };
       }
 
-      case "token_pool_create": {
-        const body: Record<string, unknown> = { pricePerToken: args.pricePerToken };
-        if (args.feeTier !== undefined) body.feeTier = args.feeTier;
+      case "token_get_pool": {
+        const res = await primFetch(`${baseUrl}/v1/tokens/${args.id}/pool`);
+        const data = await res.json();
+        if (!res.ok) return errorResult(data);
+        return { content: [{ type: "text", text: JSON.stringify(data, null, 2) }] };
+      }
+
+      case "token_create_pool": {
+        const { id, ...body } = args;
         const res = await primFetch(`${baseUrl}/v1/tokens/${args.id}/pool`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -242,14 +257,7 @@ export async function handleTokenTool(
         return { content: [{ type: "text", text: JSON.stringify(data, null, 2) }] };
       }
 
-      case "token_pool_get": {
-        const res = await primFetch(`${baseUrl}/v1/tokens/${args.id}/pool`);
-        const data = await res.json();
-        if (!res.ok) return errorResult(data);
-        return { content: [{ type: "text", text: JSON.stringify(data, null, 2) }] };
-      }
-
-      case "token_pool_liquidity_params": {
+      case "token_get_liquidity_params": {
         const url = new URL(`${baseUrl}/v1/tokens/${args.id}/pool/liquidity-params`);
         url.searchParams.set("tokenAmount", String(args.tokenAmount));
         url.searchParams.set("usdcAmount", String(args.usdcAmount));
@@ -281,3 +289,4 @@ function errorResult(data: unknown): CallToolResult {
     isError: true,
   };
 }
+// END:GENERATED:HANDLER

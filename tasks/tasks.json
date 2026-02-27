@@ -979,9 +979,9 @@
                   "depends": [
                     "I-18"
                   ],
-                  "status": "pending",
+                  "status": "done",
                   "release": null,
-                  "plan": "tasks/active/i-12-mcp-generator.md"
+                  "plan": "tasks/completed/i-12-mcp-generator.md"
                 },
                 {
                   "id": "I-13",
