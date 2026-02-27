@@ -887,8 +887,9 @@
                   "depends": [
                     "I-5"
                   ],
-                  "status": "pending",
-                  "release": null
+                  "status": "done",
+                  "release": null,
+                  "plan": "tasks/active/i-6-migrate-prims-to-factory.md"
                 },
                 {
                   "id": "I-7",

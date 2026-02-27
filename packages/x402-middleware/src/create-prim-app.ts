@@ -1,207 +1,203 @@
 /**
- * createPrimApp() — shared factory for prim service entry points.
+ * createPrimApp — shared factory for all prim.sh primitives.
  *
- * Handles the ~70-line boilerplate every prim repeats:
- *   - env validation (PRIM_PAY_TO)
- *   - middleware wiring (requestId, bodyLimit, optional metrics, x402)
- *   - health check route (GET /)
- *   - llms.txt route (GET /llms.txt) if the file exists
- *   - optional metrics route (GET /v1/metrics)
- *   - optional pricing route (GET /pricing)
+ * Wires standard middleware (requestId, bodyLimit, metrics, x402) so each
+ * primitive's index.ts only needs to declare its routes config and add its
+ * domain-specific handlers.
  *
- * What stays in each prim's index.ts: domain-specific route handlers only.
- *
- * ## Testability
- *
- * The factory accepts `createAgentStackMiddleware` and `createWalletAllowlistChecker`
- * as injected deps so that vitest mocks applied to `@primsh/x402-middleware` propagate
- * into the factory call. Each prim's index.ts imports them from `@primsh/x402-middleware`
- * and passes them through.
+ * Config flags:
+ *   freeService    — skip PRIM_PAY_TO validation + x402 middleware (faucet.sh)
+ *   skipX402       — skip x402 middleware; caller wires its own (wallet.sh)
+ *   skipBodyLimit  — skip default 1 MB bodyLimit; caller wires conditional limit (store.sh)
+ *   skipHealthCheck — skip the default GET / health check; caller registers custom one (faucet.sh)
  */
 
 import { Hono } from "hono";
 import { bodyLimit } from "hono/body-limit";
-import { existsSync, readFileSync } from "node:fs";
-import { resolve, dirname } from "node:path";
-import { fileURLToPath } from "node:url";
-import { getNetworkConfig } from "./network-config.js";
-import { metricsMiddleware, metricsHandler } from "./metrics.js";
-import { requestIdMiddleware } from "./request-id.js";
-import type { createAgentStackMiddleware as _createAgentStackMiddleware } from "./middleware.js";
-import type { createWalletAllowlistChecker as _createWalletAllowlistChecker } from "./middleware.js";
+import { readFileSync } from "node:fs";
+import { resolve } from "node:path";
+import { createAgentStackMiddleware, createWalletAllowlistChecker } from "./middleware.ts";
+import { createLogger } from "./logger.ts";
+import { getNetworkConfig } from "./network-config.ts";
+import { metricsMiddleware, metricsHandler } from "./metrics.ts";
+import { requestIdMiddleware } from "./request-id.ts";
 import type { AgentStackRouteConfig } from "./types.ts";
-import type { ApiError } from "./errors.ts";
-
-export type { ApiError };
-
-/** A single entry in the /pricing response */
-export interface PricingRoute {
-  method: string;
-  path: string;
-  price_usdc: string;
-  description: string;
-}
-
-export interface PrimAppConfig {
-  /** Prim display name, e.g. "track.sh". Used in health check and logger. */
-  name: string;
-  /**
-   * Paid route map. Keys are "METHOD /path", values are price strings e.g. "$0.05".
-   * Same shape as AgentStackRouteConfig.
-   */
-  routes: AgentStackRouteConfig;
-  /**
-   * Additional free routes beyond the built-in defaults (GET /, GET /llms.txt).
-   * Pass extra routes here if metrics or pricing routes need to be free.
-   * Defaults computed automatically when metrics/pricing are enabled.
-   */
-  freeRoutes?: string[];
-  /** Body size limit in bytes. Default: 1 MB. */
-  maxBodySize?: number;
-  /**
-   * Enable metricsMiddleware + GET /v1/metrics handler.
-   * Default: false.
-   */
-  metrics?: boolean;
-  /**
-   * Pricing data for GET /pricing response.
-   * When provided, the /pricing route is registered (free).
-   */
-  pricing?: PricingRoute[];
-}
-
-/**
- * Injectable middleware deps for testability.
- * Each prim imports these from `@primsh/x402-middleware` so that vitest mocks propagate.
- */
-export interface PrimAppDeps {
-  createAgentStackMiddleware: typeof _createAgentStackMiddleware;
-  createWalletAllowlistChecker: typeof _createWalletAllowlistChecker;
-}
 
 export type AppVariables = { walletAddress: string | undefined };
 
-/** Shared error helpers — identical across all prims. */
-export function providerError(message: string): ApiError {
-  return { error: { code: "provider_error", message } };
+export interface PrimAppDeps {
+  createAgentStackMiddleware?: typeof createAgentStackMiddleware;
+  createWalletAllowlistChecker?: typeof createWalletAllowlistChecker;
 }
 
-export function rateLimited(message: string): ApiError {
-  return { error: { code: "rate_limited", message } };
+export interface PrimAppConfig {
+  /** Service name, e.g. "wallet.sh" */
+  serviceName: string;
+  /**
+   * Absolute path to the prim's llms.txt file.
+   * Optional: if undefined (e.g. import.meta.dir is unavailable under vitest), /llms.txt returns empty body.
+   */
+  llmsTxtPath?: string;
+  /** Paid route map passed to createAgentStackMiddleware */
+  routes: AgentStackRouteConfig;
+  /** Additional free routes beyond the standard set (GET /, GET /llms.txt, GET /pricing, GET /v1/metrics) */
+  extraFreeRoutes?: string[];
+  /** Metrics service hostname, e.g. "wallet.prim.sh" */
+  metricsName: string;
+  /** Pricing data for GET /pricing endpoint */
+  pricing?: {
+    currency?: string;
+    network?: string;
+    routes: Array<{
+      method: string;
+      path: string;
+      price_usdc: string;
+      description: string;
+    }>;
+  };
+  /**
+   * Skip PRIM_PAY_TO validation + x402 middleware entirely.
+   * Use for free-service primitives (faucet.sh).
+   */
+  freeService?: boolean;
+  /**
+   * Skip x402 middleware registration.
+   * Use when the primitive wires its own x402 (wallet.sh).
+   */
+  skipX402?: boolean;
+  /**
+   * Skip the default 1 MB bodyLimit middleware.
+   * Use when the primitive needs a conditional body limit (store.sh).
+   */
+  skipBodyLimit?: boolean;
+  /**
+   * Skip the default GET / health check route.
+   * Use when the primitive registers a custom health check response (faucet.sh).
+   */
+  skipHealthCheck?: boolean;
 }
 
 /**
- * Creates a pre-wired Hono app for a prim service.
+ * Build a pre-wired Hono app with standard prim.sh middleware stack.
  *
- * The returned app has all standard middleware and shared routes registered.
- * Callers add their domain-specific route handlers after calling this function,
- * then `export default app`.
+ * Middleware order (unless skipped):
+ *   1. requestIdMiddleware
+ *   2. bodyLimit (1 MB)
+ *   3. metricsMiddleware
+ *   4. createAgentStackMiddleware (x402 payment gate)
+ *   5. GET /           — health check
+ *   6. GET /llms.txt   — LLM-readable spec
+ *   7. GET /v1/metrics — operational metrics
+ *   8. GET /pricing    — pricing table (if config.pricing provided)
  *
- * @param config - Service config (name, routes, options)
- * @param deps - Injectable middleware functions (import from `@primsh/x402-middleware` in your index.ts)
+ * Returns the Hono app. Callers add their domain-specific routes after.
  */
 export function createPrimApp(
   config: PrimAppConfig,
-  deps: PrimAppDeps,
+  deps: PrimAppDeps = {},
 ): Hono<{ Variables: AppVariables }> {
-  const { createAgentStackMiddleware, createWalletAllowlistChecker } = deps;
+  const {
+    serviceName,
+    llmsTxtPath,
+    routes,
+    extraFreeRoutes = [],
+    metricsName,
+    pricing,
+    freeService = false,
+    skipX402 = false,
+    skipBodyLimit = false,
+    skipHealthCheck = false,
+  } = config;
 
-  // ── env validation ─────────────────────────────────────────────────────────
-  const PAY_TO_ADDRESS = process.env.PRIM_PAY_TO;
-  if (!PAY_TO_ADDRESS) {
-    throw new Error(`[${config.name}] PRIM_PAY_TO environment variable is required`);
+  const _createAgentStackMiddleware = deps.createAgentStackMiddleware ?? createAgentStackMiddleware;
+  const _createWalletAllowlistChecker = deps.createWalletAllowlistChecker ?? createWalletAllowlistChecker;
+
+  const LLMS_TXT = llmsTxtPath ? readFileSync(llmsTxtPath, "utf-8") : "";
+  const logger = createLogger(serviceName);
+
+  // Validate PRIM_PAY_TO unless this is a free service
+  if (!freeService) {
+    const PAY_TO_ADDRESS = process.env.PRIM_PAY_TO;
+    if (!PAY_TO_ADDRESS) {
+      throw new Error(`[${serviceName}] PRIM_PAY_TO environment variable is required`);
+    }
   }
 
-  const networkConfig = getNetworkConfig();
-  const NETWORK = networkConfig.network;
-
-  const WALLET_INTERNAL_URL =
-    process.env.WALLET_INTERNAL_URL ?? "http://127.0.0.1:3001";
-  const checkAllowlist = createWalletAllowlistChecker(WALLET_INTERNAL_URL);
-
-  // ── llms.txt loading (optional — skip if file not found) ───────────────────
-  // Factory file is at packages/x402-middleware/src/create-prim-app.ts.
-  // site/ is at the workspace root: <factory-dir>/../../../site/<id>/llms.txt
-  const _dir = dirname(fileURLToPath(import.meta.url));
-  const id = config.name.replace(/\.sh$/, "");
-  const llmsTxtPath = resolve(_dir, "../../../site", id, "llms.txt");
-  const llmsTxt = existsSync(llmsTxtPath)
-    ? readFileSync(llmsTxtPath, "utf-8")
-    : null;
-
-  // ── computed free routes ───────────────────────────────────────────────────
-  const builtinFreeRoutes = ["GET /", "GET /llms.txt"];
-  if (config.metrics) builtinFreeRoutes.push("GET /v1/metrics");
-  if (config.pricing) builtinFreeRoutes.push("GET /pricing");
-  const allFreeRoutes = [
-    ...builtinFreeRoutes,
-    ...(config.freeRoutes ?? []),
-  ];
-
-  // ── app construction ───────────────────────────────────────────────────────
   const app = new Hono<{ Variables: AppVariables }>();
 
+  // 1. Request ID
   app.use("*", requestIdMiddleware());
 
-  app.use(
-    "*",
-    bodyLimit({
-      maxSize: config.maxBodySize ?? 1024 * 1024,
-      onError: (c) => c.json({ error: "Request too large" }, 413),
-    }),
-  );
-
-  if (config.metrics) {
-    app.use("*", metricsMiddleware());
+  // 2. Body size limit (1 MB) — unless caller wants to wire its own
+  if (!skipBodyLimit) {
+    app.use(
+      "*",
+      bodyLimit({
+        maxSize: 1024 * 1024,
+        onError: (c) => c.json({ error: "Request too large" }, 413),
+      }),
+    );
   }
 
-  app.use(
-    "*",
-    createAgentStackMiddleware(
-      {
-        payTo: PAY_TO_ADDRESS,
-        network: NETWORK,
-        freeRoutes: allFreeRoutes,
-        checkAllowlist,
-      },
-      { ...config.routes },
-    ),
-  );
+  // 3. Metrics collection
+  app.use("*", metricsMiddleware());
 
-  // ── shared routes ──────────────────────────────────────────────────────────
+  // 4. x402 payment gate — unless freeService or skipX402
+  if (!freeService && !skipX402) {
+    const PAY_TO_ADDRESS = process.env.PRIM_PAY_TO as string;
+    const networkConfig = getNetworkConfig();
+    const NETWORK = networkConfig.network;
+    const WALLET_INTERNAL_URL = process.env.WALLET_INTERNAL_URL ?? "http://127.0.0.1:3001";
+    const checkAllowlist = _createWalletAllowlistChecker(WALLET_INTERNAL_URL);
 
-  // GET / — health check (free)
-  app.get("/", (c) => {
-    return c.json({ service: config.name, status: "ok" });
+    const standardFreeRoutes = [
+      "GET /",
+      "GET /llms.txt",
+      "GET /pricing",
+      "GET /v1/metrics",
+      ...extraFreeRoutes,
+    ];
+
+    app.use(
+      "*",
+      _createAgentStackMiddleware(
+        {
+          payTo: PAY_TO_ADDRESS,
+          network: NETWORK,
+          freeRoutes: standardFreeRoutes,
+          checkAllowlist,
+        },
+        { ...routes },
+      ),
+    );
+  }
+
+  // 5. Standard free routes
+  if (!skipHealthCheck) {
+    app.get("/", (c) => {
+      return c.json({ service: serviceName, status: "ok" });
+    });
+  }
+
+  app.get("/llms.txt", (c) => {
+    c.header("Content-Type", "text/plain; charset=utf-8");
+    return c.body(LLMS_TXT);
   });
 
-  // GET /llms.txt — machine-readable API reference (free)
-  if (llmsTxt !== null) {
-    app.get("/llms.txt", (c) => {
-      c.header("Content-Type", "text/plain; charset=utf-8");
-      return c.body(llmsTxt);
-    });
+  app.get("/v1/metrics", metricsHandler(metricsName));
+
+  if (pricing) {
+    const pricingResponse = {
+      service: metricsName,
+      currency: pricing.currency ?? "USDC",
+      network: pricing.network ?? "eip155:8453",
+      routes: pricing.routes,
+    };
+    app.get("/pricing", (c) => c.json(pricingResponse));
   }
 
-  // GET /v1/metrics — operational metrics (free)
-  if (config.metrics) {
-    const serviceDomain = config.name.replace(/\.sh$/, ".prim.sh");
-    app.get("/v1/metrics", metricsHandler(serviceDomain));
-  }
-
-  // GET /pricing — machine-readable pricing (free)
-  if (config.pricing) {
-    const serviceDomain = config.name.replace(/\.sh$/, ".prim.sh");
-    const pricingData = config.pricing;
-    app.get("/pricing", (c) => {
-      return c.json({
-        service: serviceDomain,
-        currency: "USDC",
-        network: "eip155:8453",
-        routes: pricingData,
-      });
-    });
-  }
+  // Expose logger so callers can use the same logger instance
+  (app as Hono<{ Variables: AppVariables }> & { logger: ReturnType<typeof createLogger> }).logger = logger;
 
   return app;
 }

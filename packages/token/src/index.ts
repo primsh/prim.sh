@@ -1,8 +1,14 @@
-import { Hono } from "hono";
-import { bodyLimit } from "hono/body-limit";
+import { resolve } from "node:path";
 import type { ContentfulStatusCode } from "hono/utils/http-status";
-import { createAgentStackMiddleware, createWalletAllowlistChecker, createLogger, getNetworkConfig, requestIdMiddleware, forbidden, notFound, invalidRequest } from "@primsh/x402-middleware";
+import {
+  createAgentStackMiddleware,
+  createWalletAllowlistChecker,
+  forbidden,
+  notFound,
+  invalidRequest,
+} from "@primsh/x402-middleware";
 import type { ApiError } from "@primsh/x402-middleware";
+import { createPrimApp } from "@primsh/x402-middleware/create-prim-app";
 import type {
   CreateTokenRequest,
   MintRequest,
@@ -18,27 +24,6 @@ import {
   getPool,
   getLiquidityParams,
 } from "./service.ts";
-
-import { readFileSync } from "node:fs";
-import { resolve, dirname } from "node:path";
-import { fileURLToPath } from "node:url";
-
-const _dir = import.meta.dir ?? dirname(fileURLToPath(import.meta.url));
-
-const LLMS_TXT = readFileSync(
-  resolve(_dir, "../../../site/token/llms.txt"), "utf-8"
-);
-
-const logger = createLogger("token.sh");
-
-const networkConfig = getNetworkConfig();
-const PAY_TO_ADDRESS = process.env.PRIM_PAY_TO;
-if (!PAY_TO_ADDRESS) {
-  throw new Error("[token.sh] PRIM_PAY_TO environment variable is required");
-}
-const NETWORK = networkConfig.network;
-const WALLET_INTERNAL_URL = process.env.WALLET_INTERNAL_URL ?? "http://127.0.0.1:3001";
-const checkAllowlist = createWalletAllowlistChecker(WALLET_INTERNAL_URL);
 
 const TOKEN_ROUTES = {
   "POST /v1/tokens": "$1.00",
@@ -67,39 +52,17 @@ function poolExists(message: string): ApiError {
   return { error: { code: "pool_exists", message } };
 }
 
-type AppVariables = { walletAddress: string | undefined };
-const app = new Hono<{ Variables: AppVariables }>();
-
-app.use("*", requestIdMiddleware());
-
-app.use("*", bodyLimit({
-  maxSize: 1024 * 1024,
-  onError: (c) => c.json({ error: "Request too large" }, 413),
-}));
-
-app.use(
-  "*",
-  createAgentStackMiddleware(
-    {
-      payTo: PAY_TO_ADDRESS,
-      network: NETWORK,
-      freeRoutes: ["GET /", "GET /llms.txt"],
-      checkAllowlist,
-    },
-    { ...TOKEN_ROUTES },
-  ),
+const app = createPrimApp(
+  {
+    serviceName: "token.sh",
+    llmsTxtPath: import.meta.dir ? resolve(import.meta.dir, "../../../site/token/llms.txt") : undefined,
+    routes: TOKEN_ROUTES,
+    metricsName: "token.prim.sh",
+  },
+  { createAgentStackMiddleware, createWalletAllowlistChecker },
 );
 
-// GET / — health check (free)
-app.get("/", (c) => {
-  return c.json({ service: "token.sh", status: "ok" });
-});
-
-// GET /llms.txt — machine-readable API reference (free)
-app.get("/llms.txt", (c) => {
-  c.header("Content-Type", "text/plain; charset=utf-8");
-  return c.body(LLMS_TXT);
-});
+const logger = (app as typeof app & { logger: { warn: (msg: string, extra?: Record<string, unknown>) => void } }).logger;
 
 // POST /v1/tokens — Deploy new ERC-20
 app.post("/v1/tokens", async (c) => {

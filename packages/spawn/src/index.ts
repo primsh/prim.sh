@@ -1,16 +1,14 @@
-import { Hono } from "hono";
-import { bodyLimit } from "hono/body-limit";
-import { readFileSync } from "node:fs";
-import { resolve, dirname } from "node:path";
-import { fileURLToPath } from "node:url";
-
-const _dir = import.meta.dir ?? dirname(fileURLToPath(import.meta.url));
-
-const LLMS_TXT = readFileSync(
-  resolve(_dir, "../../../site/spawn/llms.txt"), "utf-8"
-);
-import { createAgentStackMiddleware, createLogger, createWalletAllowlistChecker, metricsMiddleware, metricsHandler, requestIdMiddleware, forbidden, notFound, invalidRequest, serviceError } from "@primsh/x402-middleware";
+import { resolve } from "node:path";
+import {
+  createAgentStackMiddleware,
+  createWalletAllowlistChecker,
+  forbidden,
+  notFound,
+  invalidRequest,
+  serviceError,
+} from "@primsh/x402-middleware";
 import type { ApiError } from "@primsh/x402-middleware";
+import { createPrimApp } from "@primsh/x402-middleware/create-prim-app";
 import type {
   CreateServerRequest,
   CreateServerResponse,
@@ -41,19 +39,6 @@ import {
   deleteSshKey,
 } from "./service.ts";
 
-import { getNetworkConfig } from "@primsh/x402-middleware";
-
-const logger = createLogger("spawn.sh");
-
-const networkConfig = getNetworkConfig();
-const PAY_TO_ADDRESS = process.env.PRIM_PAY_TO;
-if (!PAY_TO_ADDRESS) {
-  throw new Error("[spawn.sh] PRIM_PAY_TO environment variable is required");
-}
-const NETWORK = networkConfig.network;
-const WALLET_INTERNAL_URL = process.env.WALLET_INTERNAL_URL ?? "http://127.0.0.1:3001";
-const checkAllowlist = createWalletAllowlistChecker(WALLET_INTERNAL_URL);
-
 const SPAWN_ROUTES = {
   "POST /v1/servers": "$0.01",
   "GET /v1/servers": "$0.001",
@@ -73,67 +58,33 @@ function providerError(message: string): ApiError {
   return { error: { code: "provider_error", message } };
 }
 
-type AppVariables = { walletAddress: string | undefined };
-const app = new Hono<{ Variables: AppVariables }>();
-
-app.use("*", requestIdMiddleware());
-
-app.use("*", bodyLimit({
-  maxSize: 1024 * 1024,
-  onError: (c) => c.json({ error: "Request too large" }, 413),
-}));
-
-app.use("*", metricsMiddleware());
-
-app.use(
-  "*",
-  createAgentStackMiddleware(
-    {
-      payTo: PAY_TO_ADDRESS,
-      network: NETWORK,
-      freeRoutes: ["GET /", "GET /pricing", "GET /llms.txt", "GET /v1/metrics"],
-      checkAllowlist,
+const app = createPrimApp(
+  {
+    serviceName: "spawn.sh",
+    llmsTxtPath: import.meta.dir ? resolve(import.meta.dir, "../../../site/spawn/llms.txt") : undefined,
+    routes: SPAWN_ROUTES,
+    metricsName: "spawn.prim.sh",
+    pricing: {
+      routes: [
+        { method: "POST", path: "/v1/servers", price_usdc: "0.01", description: "Create server" },
+        { method: "GET", path: "/v1/servers", price_usdc: "0.001", description: "List servers" },
+        { method: "GET", path: "/v1/servers/{id}", price_usdc: "0.001", description: "Get server" },
+        { method: "DELETE", path: "/v1/servers/{id}", price_usdc: "0.005", description: "Delete server" },
+        { method: "POST", path: "/v1/servers/{id}/start", price_usdc: "0.002", description: "Start server" },
+        { method: "POST", path: "/v1/servers/{id}/stop", price_usdc: "0.002", description: "Stop server" },
+        { method: "POST", path: "/v1/servers/{id}/reboot", price_usdc: "0.002", description: "Reboot server" },
+        { method: "POST", path: "/v1/servers/{id}/resize", price_usdc: "0.01", description: "Resize server" },
+        { method: "POST", path: "/v1/servers/{id}/rebuild", price_usdc: "0.005", description: "Rebuild server" },
+        { method: "POST", path: "/v1/ssh-keys", price_usdc: "0.001", description: "Register SSH key" },
+        { method: "GET", path: "/v1/ssh-keys", price_usdc: "0.001", description: "List SSH keys" },
+        { method: "DELETE", path: "/v1/ssh-keys/{id}", price_usdc: "0.001", description: "Delete SSH key" },
+      ],
     },
-    { ...SPAWN_ROUTES },
-  ),
+  },
+  { createAgentStackMiddleware, createWalletAllowlistChecker },
 );
 
-// GET / — health check (free)
-app.get("/", (c) => {
-  return c.json({ service: "spawn.sh", status: "ok" });
-});
-
-// GET /llms.txt — machine-readable API reference (free)
-app.get("/llms.txt", (c) => {
-  c.header("Content-Type", "text/plain; charset=utf-8");
-  return c.body(LLMS_TXT);
-});
-
-// GET /v1/metrics — operational metrics (free)
-app.get("/v1/metrics", metricsHandler("spawn.prim.sh"));
-
-// GET /pricing — machine-readable pricing (free)
-app.get("/pricing", (c) => {
-  return c.json({
-    service: "spawn.prim.sh",
-    currency: "USDC",
-    network: "eip155:8453",
-    routes: [
-      { method: "POST", path: "/v1/servers", price_usdc: "0.01", description: "Create server" },
-      { method: "GET", path: "/v1/servers", price_usdc: "0.001", description: "List servers" },
-      { method: "GET", path: "/v1/servers/{id}", price_usdc: "0.001", description: "Get server" },
-      { method: "DELETE", path: "/v1/servers/{id}", price_usdc: "0.005", description: "Delete server" },
-      { method: "POST", path: "/v1/servers/{id}/start", price_usdc: "0.002", description: "Start server" },
-      { method: "POST", path: "/v1/servers/{id}/stop", price_usdc: "0.002", description: "Stop server" },
-      { method: "POST", path: "/v1/servers/{id}/reboot", price_usdc: "0.002", description: "Reboot server" },
-      { method: "POST", path: "/v1/servers/{id}/resize", price_usdc: "0.01", description: "Resize server" },
-      { method: "POST", path: "/v1/servers/{id}/rebuild", price_usdc: "0.005", description: "Rebuild server" },
-      { method: "POST", path: "/v1/ssh-keys", price_usdc: "0.001", description: "Register SSH key" },
-      { method: "GET", path: "/v1/ssh-keys", price_usdc: "0.001", description: "List SSH keys" },
-      { method: "DELETE", path: "/v1/ssh-keys/{id}", price_usdc: "0.001", description: "Delete SSH key" },
-    ],
-  });
-});
+const logger = (app as typeof app & { logger: { warn: (msg: string, extra?: Record<string, unknown>) => void } }).logger;
 
 // POST /v1/servers — Create server
 app.post("/v1/servers", async (c) => {

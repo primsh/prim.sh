@@ -3,8 +3,8 @@
   "version": "0.0.0",
   "private": false,
   "type": "module",
-  "main": "dist/index.js",
-  "types": "dist/index.d.ts",
+  "main": "src/index.ts",
+  "types": "src/index.ts",
   "description": "Shared x402 payment middleware for Hono",
   "repository": {
     "type": "git",
@@ -21,12 +21,16 @@
   },
   "exports": {
     ".": {
-      "import": "./dist/index.js",
-      "types": "./dist/index.d.ts"
+      "import": "./src/index.ts",
+      "types": "./src/index.ts"
     },
     "./allowlist-db": {
       "import": "./src/allowlist-db.ts",
       "types": "./src/allowlist-db.ts"
+    },
+    "./create-prim-app": {
+      "import": "./src/create-prim-app.ts",
+      "types": "./src/create-prim-app.ts"
     }
   },
   "scripts": {

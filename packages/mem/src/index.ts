@@ -1,10 +1,13 @@
-import { Hono } from "hono";
-import { bodyLimit } from "hono/body-limit";
-import { readFileSync } from "node:fs";
-import { resolve, dirname } from "node:path";
-import { fileURLToPath } from "node:url";
-import { createAgentStackMiddleware, createWalletAllowlistChecker, createLogger, getNetworkConfig, requestIdMiddleware, forbidden, notFound, invalidRequest } from "@primsh/x402-middleware";
+import { resolve } from "node:path";
+import {
+  createAgentStackMiddleware,
+  createWalletAllowlistChecker,
+  forbidden,
+  notFound,
+  invalidRequest,
+} from "@primsh/x402-middleware";
 import type { ApiError } from "@primsh/x402-middleware";
+import { createPrimApp } from "@primsh/x402-middleware/create-prim-app";
 import type {
   CreateCollectionRequest,
   CollectionResponse,
@@ -28,23 +31,6 @@ import {
   cacheDelete,
 } from "./service.ts";
 
-const _dir = import.meta.dir ?? dirname(fileURLToPath(import.meta.url));
-
-const LLMS_TXT = readFileSync(
-  resolve(_dir, "../../../site/mem/llms.txt"), "utf-8"
-);
-
-const logger = createLogger("mem.sh");
-
-const networkConfig = getNetworkConfig();
-const PAY_TO_ADDRESS = process.env.PRIM_PAY_TO;
-if (!PAY_TO_ADDRESS) {
-  throw new Error("[mem.sh] PRIM_PAY_TO environment variable is required");
-}
-const NETWORK = networkConfig.network;
-const WALLET_INTERNAL_URL = process.env.WALLET_INTERNAL_URL ?? "http://127.0.0.1:3001";
-const checkAllowlist = createWalletAllowlistChecker(WALLET_INTERNAL_URL);
-
 const MEM_ROUTES = {
   "POST /v1/collections": "$0.01",
   "GET /v1/collections": "$0.001",
@@ -65,40 +51,17 @@ function backendError(code: string, message: string): ApiError {
 
 // ─── App ──────────────────────────────────────────────────────────────────
 
-type AppVariables = { walletAddress: string | undefined };
-const app = new Hono<{ Variables: AppVariables }>();
-
-app.use("*", requestIdMiddleware());
-
-app.use("*", bodyLimit({
-  maxSize: 1024 * 1024,
-  onError: (c) => c.json({ error: "Request too large" }, 413),
-}));
-
-app.use(
-  "*",
-  createAgentStackMiddleware(
-    {
-      payTo: PAY_TO_ADDRESS,
-      network: NETWORK,
-      freeRoutes: ["GET /", "GET /llms.txt"],
-      checkAllowlist,
-    },
-    { ...MEM_ROUTES },
-  ),
+const app = createPrimApp(
+  {
+    serviceName: "mem.sh",
+    llmsTxtPath: import.meta.dir ? resolve(import.meta.dir, "../../../site/mem/llms.txt") : undefined,
+    routes: MEM_ROUTES,
+    metricsName: "mem.prim.sh",
+  },
+  { createAgentStackMiddleware, createWalletAllowlistChecker },
 );
 
-// GET / — llms.txt (free)
-app.get("/", (c) => {
-  c.header("Content-Type", "text/plain; charset=utf-8");
-  return c.body(LLMS_TXT);
-});
-
-// GET /llms.txt — machine-readable API reference (free)
-app.get("/llms.txt", (c) => {
-  c.header("Content-Type", "text/plain; charset=utf-8");
-  return c.body(LLMS_TXT);
-});
+const logger = (app as typeof app & { logger: { warn: (msg: string, extra?: Record<string, unknown>) => void } }).logger;
 
 // ─── Collection routes ────────────────────────────────────────────────────
 

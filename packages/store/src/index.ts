@@ -1,16 +1,14 @@
-import { Hono } from "hono";
+import { resolve } from "node:path";
 import { bodyLimit } from "hono/body-limit";
-import { readFileSync } from "node:fs";
-import { resolve, dirname } from "node:path";
-import { fileURLToPath } from "node:url";
-
-const _dir = import.meta.dir ?? dirname(fileURLToPath(import.meta.url));
-
-const LLMS_TXT = readFileSync(
-  resolve(_dir, "../../../site/store/llms.txt"), "utf-8"
-);
-import { createAgentStackMiddleware, createLogger, createWalletAllowlistChecker, getNetworkConfig, metricsMiddleware, metricsHandler, requestIdMiddleware, forbidden, notFound, invalidRequest } from "@primsh/x402-middleware";
+import {
+  createAgentStackMiddleware,
+  createWalletAllowlistChecker,
+  forbidden,
+  notFound,
+  invalidRequest,
+} from "@primsh/x402-middleware";
 import type { ApiError } from "@primsh/x402-middleware";
+import { createPrimApp } from "@primsh/x402-middleware/create-prim-app";
 import type {
   CreateBucketRequest,
   CreateBucketResponse,
@@ -36,17 +34,6 @@ import {
   setQuotaForBucket,
   reconcileUsage,
 } from "./service.ts";
-
-const logger = createLogger("store.sh");
-
-const networkConfig = getNetworkConfig();
-const PAY_TO_ADDRESS = process.env.PRIM_PAY_TO;
-if (!PAY_TO_ADDRESS) {
-  throw new Error("[store.sh] PRIM_PAY_TO environment variable is required");
-}
-const NETWORK = networkConfig.network;
-const WALLET_INTERNAL_URL = process.env.WALLET_INTERNAL_URL ?? "http://127.0.0.1:3001";
-const checkAllowlist = createWalletAllowlistChecker(WALLET_INTERNAL_URL);
 
 const STORE_ROUTES = {
   "POST /v1/buckets": "$0.05",
@@ -84,10 +71,35 @@ function extractObjectKey(c: { req: { path: string } }): string {
   return match ? decodeURIComponent(match[1]) : "";
 }
 
-type AppVariables = { walletAddress: string | undefined };
-const app = new Hono<{ Variables: AppVariables }>();
+// store.sh uses skipBodyLimit: true because it needs a conditional body limit
+// (object PUT routes must bypass the 1MB limit for streaming uploads to R2).
+const app = createPrimApp(
+  {
+    serviceName: "store.sh",
+    llmsTxtPath: import.meta.dir ? resolve(import.meta.dir, "../../../site/store/llms.txt") : undefined,
+    routes: STORE_ROUTES,
+    skipBodyLimit: true,
+    metricsName: "store.prim.sh",
+    pricing: {
+      routes: [
+        { method: "POST", path: "/v1/buckets", price_usdc: "0.05", description: "Create a bucket" },
+        { method: "GET", path: "/v1/buckets", price_usdc: "0.001", description: "List buckets" },
+        { method: "GET", path: "/v1/buckets/{id}", price_usdc: "0.001", description: "Get bucket" },
+        { method: "DELETE", path: "/v1/buckets/{id}", price_usdc: "0.01", description: "Delete bucket" },
+        { method: "PUT", path: "/v1/buckets/{id}/objects/*", price_usdc: "0.001", description: "Upload object" },
+        { method: "GET", path: "/v1/buckets/{id}/objects", price_usdc: "0.001", description: "List objects" },
+        { method: "GET", path: "/v1/buckets/{id}/objects/*", price_usdc: "0.001", description: "Download object" },
+        { method: "DELETE", path: "/v1/buckets/{id}/objects/*", price_usdc: "0.001", description: "Delete object" },
+        { method: "GET", path: "/v1/buckets/{id}/quota", price_usdc: "0.001", description: "Get quota and usage" },
+        { method: "PUT", path: "/v1/buckets/{id}/quota", price_usdc: "0.01", description: "Set quota" },
+        { method: "POST", path: "/v1/buckets/{id}/quota/reconcile", price_usdc: "0.05", description: "Reconcile usage" },
+      ],
+    },
+  },
+  { createAgentStackMiddleware, createWalletAllowlistChecker },
+);
 
-app.use("*", requestIdMiddleware());
+const logger = (app as typeof app & { logger: { warn: (msg: string, extra?: Record<string, unknown>) => void } }).logger;
 
 // Body size limit — skip for object PUT (streaming uploads to R2 can exceed 1MB)
 app.use("*", async (c, next) => {
@@ -98,57 +110,6 @@ app.use("*", async (c, next) => {
     maxSize: 1024 * 1024,
     onError: (c) => c.json({ error: "Request too large" }, 413),
   })(c, next);
-});
-
-app.use("*", metricsMiddleware());
-
-app.use(
-  "*",
-  createAgentStackMiddleware(
-    {
-      payTo: PAY_TO_ADDRESS,
-      network: NETWORK,
-      freeRoutes: ["GET /", "GET /pricing", "GET /llms.txt", "GET /v1/metrics"],
-      checkAllowlist,
-    },
-    { ...STORE_ROUTES },
-  ),
-);
-
-// GET / — health check (free)
-app.get("/", (c) => {
-  return c.json({ service: "store.sh", status: "ok" });
-});
-
-// GET /llms.txt — machine-readable API reference (free)
-app.get("/llms.txt", (c) => {
-  c.header("Content-Type", "text/plain; charset=utf-8");
-  return c.body(LLMS_TXT);
-});
-
-// GET /v1/metrics — operational metrics (free)
-app.get("/v1/metrics", metricsHandler("store.prim.sh"));
-
-// GET /pricing — machine-readable pricing (free)
-app.get("/pricing", (c) => {
-  return c.json({
-    service: "store.prim.sh",
-    currency: "USDC",
-    network: "eip155:8453",
-    routes: [
-      { method: "POST", path: "/v1/buckets", price_usdc: "0.05", description: "Create a bucket" },
-      { method: "GET", path: "/v1/buckets", price_usdc: "0.001", description: "List buckets" },
-      { method: "GET", path: "/v1/buckets/{id}", price_usdc: "0.001", description: "Get bucket" },
-      { method: "DELETE", path: "/v1/buckets/{id}", price_usdc: "0.01", description: "Delete bucket" },
-      { method: "PUT", path: "/v1/buckets/{id}/objects/*", price_usdc: "0.001", description: "Upload object" },
-      { method: "GET", path: "/v1/buckets/{id}/objects", price_usdc: "0.001", description: "List objects" },
-      { method: "GET", path: "/v1/buckets/{id}/objects/*", price_usdc: "0.001", description: "Download object" },
-      { method: "DELETE", path: "/v1/buckets/{id}/objects/*", price_usdc: "0.001", description: "Delete object" },
-      { method: "GET", path: "/v1/buckets/{id}/quota", price_usdc: "0.001", description: "Get quota and usage" },
-      { method: "PUT", path: "/v1/buckets/{id}/quota", price_usdc: "0.01", description: "Set quota" },
-      { method: "POST", path: "/v1/buckets/{id}/quota/reconcile", price_usdc: "0.05", description: "Reconcile usage" },
-    ],
-  });
 });
 
 // POST /v1/buckets — Create bucket

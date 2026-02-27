@@ -1,7 +1,14 @@
-import { Hono } from "hono";
-import { bodyLimit } from "hono/body-limit";
-import { createAgentStackMiddleware, createLogger, createWalletAllowlistChecker, getNetworkConfig, metricsMiddleware, metricsHandler, requestIdMiddleware, forbidden, notFound, invalidRequest, serviceError } from "@primsh/x402-middleware";
+import { resolve } from "node:path";
+import {
+  createAgentStackMiddleware,
+  createWalletAllowlistChecker,
+  forbidden,
+  notFound,
+  invalidRequest,
+  serviceError,
+} from "@primsh/x402-middleware";
 import type { ApiError } from "@primsh/x402-middleware";
+import { createPrimApp } from "@primsh/x402-middleware/create-prim-app";
 import type {
   CreateMailboxRequest,
   RenewMailboxRequest,
@@ -42,27 +49,6 @@ import {
   deleteDomain,
 } from "./service.ts";
 
-import { readFileSync } from "node:fs";
-import { resolve, dirname } from "node:path";
-import { fileURLToPath } from "node:url";
-
-const _dir = import.meta.dir ?? dirname(fileURLToPath(import.meta.url));
-
-const LLMS_TXT = readFileSync(
-  resolve(_dir, "../../../site/email/llms.txt"), "utf-8"
-);
-
-const logger = createLogger("email.sh");
-
-const networkConfig = getNetworkConfig();
-const PAY_TO_ADDRESS = process.env.PRIM_PAY_TO;
-if (!PAY_TO_ADDRESS) {
-  throw new Error("[email.sh] PRIM_PAY_TO environment variable is required");
-}
-const NETWORK = networkConfig.network;
-const WALLET_INTERNAL_URL = process.env.WALLET_INTERNAL_URL ?? "http://127.0.0.1:3001";
-const checkAllowlist = createWalletAllowlistChecker(WALLET_INTERNAL_URL);
-
 const EMAIL_ROUTES = {
   "POST /v1/mailboxes": "$0.05",
   "GET /v1/mailboxes": "$0.001",
@@ -86,71 +72,38 @@ function stalwartError(message: string): ApiError {
   return { error: { code: "stalwart_error", message } };
 }
 
-type AppVariables = { walletAddress: string | undefined };
-const app = new Hono<{ Variables: AppVariables }>();
-
-app.use("*", requestIdMiddleware());
-
-app.use("*", bodyLimit({
-  maxSize: 1024 * 1024,
-  onError: (c) => c.json({ error: "Request too large" }, 413),
-}));
-
-app.use("*", metricsMiddleware());
-
-app.use(
-  "*",
-  createAgentStackMiddleware(
-    {
-      payTo: PAY_TO_ADDRESS,
-      network: NETWORK,
-      freeRoutes: ["GET /", "GET /pricing", "GET /llms.txt", "POST /internal/hooks/ingest", "GET /v1/metrics"],
-      checkAllowlist,
+const app = createPrimApp(
+  {
+    serviceName: "email.sh",
+    llmsTxtPath: import.meta.dir ? resolve(import.meta.dir, "../../../site/email/llms.txt") : undefined,
+    routes: EMAIL_ROUTES,
+    extraFreeRoutes: ["POST /internal/hooks/ingest"],
+    metricsName: "email.prim.sh",
+    pricing: {
+      routes: [
+        { method: "POST", path: "/v1/mailboxes", price_usdc: "0.05", description: "Create mailbox" },
+        { method: "GET", path: "/v1/mailboxes", price_usdc: "0.001", description: "List mailboxes" },
+        { method: "GET", path: "/v1/mailboxes/{id}", price_usdc: "0.001", description: "Get mailbox" },
+        { method: "DELETE", path: "/v1/mailboxes/{id}", price_usdc: "0.01", description: "Delete mailbox" },
+        { method: "POST", path: "/v1/mailboxes/{id}/renew", price_usdc: "0.01", description: "Renew mailbox" },
+        { method: "GET", path: "/v1/mailboxes/{id}/messages", price_usdc: "0.001", description: "List messages" },
+        { method: "GET", path: "/v1/mailboxes/{id}/messages/{msgId}", price_usdc: "0.001", description: "Get message" },
+        { method: "POST", path: "/v1/mailboxes/{id}/send", price_usdc: "0.01", description: "Send email" },
+        { method: "POST", path: "/v1/mailboxes/{id}/webhooks", price_usdc: "0.01", description: "Register webhook" },
+        { method: "GET", path: "/v1/mailboxes/{id}/webhooks", price_usdc: "0.001", description: "List webhooks" },
+        { method: "DELETE", path: "/v1/mailboxes/{id}/webhooks/{whId}", price_usdc: "0.001", description: "Delete webhook" },
+        { method: "POST", path: "/v1/domains", price_usdc: "0.05", description: "Register custom domain" },
+        { method: "GET", path: "/v1/domains", price_usdc: "0.001", description: "List domains" },
+        { method: "GET", path: "/v1/domains/{id}", price_usdc: "0.001", description: "Get domain" },
+        { method: "POST", path: "/v1/domains/{id}/verify", price_usdc: "0.01", description: "Verify domain DNS" },
+        { method: "DELETE", path: "/v1/domains/{id}", price_usdc: "0.01", description: "Delete domain" },
+      ],
     },
-    { ...EMAIL_ROUTES },
-  ),
+  },
+  { createAgentStackMiddleware, createWalletAllowlistChecker },
 );
 
-// GET / — health check (free)
-app.get("/", (c) => {
-  return c.json({ service: "email.sh", status: "ok" });
-});
-
-// GET /pricing — machine-readable pricing (free)
-app.get("/pricing", (c) => {
-  return c.json({
-    service: "email.prim.sh",
-    currency: "USDC",
-    network: "eip155:8453",
-    routes: [
-      { method: "POST", path: "/v1/mailboxes", price_usdc: "0.05", description: "Create mailbox" },
-      { method: "GET", path: "/v1/mailboxes", price_usdc: "0.001", description: "List mailboxes" },
-      { method: "GET", path: "/v1/mailboxes/{id}", price_usdc: "0.001", description: "Get mailbox" },
-      { method: "DELETE", path: "/v1/mailboxes/{id}", price_usdc: "0.01", description: "Delete mailbox" },
-      { method: "POST", path: "/v1/mailboxes/{id}/renew", price_usdc: "0.01", description: "Renew mailbox" },
-      { method: "GET", path: "/v1/mailboxes/{id}/messages", price_usdc: "0.001", description: "List messages" },
-      { method: "GET", path: "/v1/mailboxes/{id}/messages/{msgId}", price_usdc: "0.001", description: "Get message" },
-      { method: "POST", path: "/v1/mailboxes/{id}/send", price_usdc: "0.01", description: "Send email" },
-      { method: "POST", path: "/v1/mailboxes/{id}/webhooks", price_usdc: "0.01", description: "Register webhook" },
-      { method: "GET", path: "/v1/mailboxes/{id}/webhooks", price_usdc: "0.001", description: "List webhooks" },
-      { method: "DELETE", path: "/v1/mailboxes/{id}/webhooks/{whId}", price_usdc: "0.001", description: "Delete webhook" },
-      { method: "POST", path: "/v1/domains", price_usdc: "0.05", description: "Register custom domain" },
-      { method: "GET", path: "/v1/domains", price_usdc: "0.001", description: "List domains" },
-      { method: "GET", path: "/v1/domains/{id}", price_usdc: "0.001", description: "Get domain" },
-      { method: "POST", path: "/v1/domains/{id}/verify", price_usdc: "0.01", description: "Verify domain DNS" },
-      { method: "DELETE", path: "/v1/domains/{id}", price_usdc: "0.01", description: "Delete domain" },
-    ],
-  });
-});
-
-// GET /llms.txt — machine-readable API reference (free)
-app.get("/llms.txt", (c) => {
-  c.header("Content-Type", "text/plain; charset=utf-8");
-  return c.body(LLMS_TXT);
-});
-
-// GET /v1/metrics — operational metrics (free)
-app.get("/v1/metrics", metricsHandler("email.prim.sh"));
+const logger = (app as typeof app & { logger: { warn: (msg: string, extra?: Record<string, unknown>) => void } }).logger;
 
 // POST /v1/mailboxes — Create mailbox
 app.post("/v1/mailboxes", async (c) => {
