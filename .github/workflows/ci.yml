@@ -62,7 +62,6 @@ jobs:
 
       - name: Validate OpenAPI
         run: pnpm check:openapi
-        continue-on-error: true
 
   gen-check:
     name: Gen check
@@ -125,7 +124,6 @@ jobs:
   audit:
     name: Audit
     runs-on: ubuntu-latest
-    continue-on-error: true
 
     steps:
       - uses: actions/checkout@v4

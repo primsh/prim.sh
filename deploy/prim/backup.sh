@@ -21,6 +21,10 @@ DBS=(
   "store:/opt/prim/store.db"
   "spawn:/opt/prim/spawn.db"
   "faucet:/opt/prim/faucet.db"
+  "email:/opt/prim/email.db"
+  "mem:/opt/prim/mem.db"
+  "token:/opt/prim/token.db"
+  "domain:/opt/prim/domain.db"
 )
 
 # --- Load R2 credentials ---
