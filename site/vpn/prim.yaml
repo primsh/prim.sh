@@ -1,0 +1,10 @@
+id: vpn
+name: vpn.sh
+endpoint: vpn.prim.sh
+status: phantom
+type: networking
+category: comms
+card_class: p0
+description: "Private network tunnels for agents. Encrypted egress from any IP region on demand."
+tagline: "Private tunnels for agents."
+sub: "Spin up WireGuard tunnels with geo-selectable exit nodes. Encrypted traffic, no logs. x402 auth."
