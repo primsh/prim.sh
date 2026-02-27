@@ -900,7 +900,7 @@
                   "depends": [
                     "I-6"
                   ],
-                  "status": "pending",
+                  "status": "done",
                   "release": null,
                   "plan": "tasks/active/i-7-conformance-runner.md"
                 }

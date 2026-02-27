@@ -146,6 +146,28 @@ jobs:
 
       - run: pnpm gen:check
 
+  conformance:
+    name: Conformance
+    needs: [setup, test, gen-check]
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: workspace
+
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - uses: pnpm/action-setup@v4
+
+      - run: pnpm test:conformance
+
   validate-openapi:
     name: Validate OpenAPI
     needs: [setup]
