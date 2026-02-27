@@ -468,6 +468,45 @@ After the 1-week beta window:
 
 ---
 
+## Sequencing: v0 → Factory
+
+v0 is "prove it." The Hyperscaling Factory (I-38) is "scale it." Each stage relaxes one control after the previous stage proves it's safe.
+
+```
+v0 beta (1 week) ─── manual everything
+  │
+  ├── learn: does the product work?
+  ├── in parallel: start I-38 Phase 1 (provider template library)
+  │   (no conflict — codegen tooling, doesn't touch live prims)
+  │
+  ▼
+v0.1 ─── manual merge, automated deploy
+  │
+  ├── add spawn.sh (with spend caps), email.sh
+  ├── in parallel: I-38 Phase 2 + 3 (create.sh upgrade, pr.sh)
+  │
+  ▼
+v0.2 / v1.0 ─── Factory V1 beta
+  │
+  ├── invite 3-5 agents to create prims via create.sh + pr.sh
+  ├── manual merge review (human curator)
+  │
+  ▼
+Factory GA ─── auto-merge, auto-deploy
+```
+
+**What v0 proves that the factory depends on:**
+
+| v0 proves | Factory needs it because |
+|---|---|
+| x402 payment settles on mainnet | create.sh, pr.sh, providers.sh are all x402-priced |
+| wallet.sh is reliable | Every factory agent needs a wallet |
+| Agents navigate llms.txt → usage | Factory-generated llms.txt must be usable (canary tests this) |
+| feedback.sh captures quality signal | Factory agents report issues with generated prims through it |
+| Golden path works for non-authors | Factory outputs (new prims) must pass the same bar |
+
+---
+
 ## Timeline
 
 Not calendar dates — sequential gates. Each gate blocks the next.
