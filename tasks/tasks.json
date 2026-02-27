@@ -1061,6 +1061,37 @@
             }
           ],
           "plan": "tasks/active/comm-w4-llms-txt-codegen-2026-02-26.md"
+        },
+        {
+          "id": "COMM-W5",
+          "title": "Pages Production Pipeline",
+          "parallelism": "SRL",
+          "tasks": [
+            {
+              "id": "SITE-10",
+              "description": "Wire GHA \u2192 Cloudflare Pages: add deploy-site job (wrangler pages deploy), rename deploy\u2192deploy-vps, add verify smoke check, GitHub Environments (production). Plan: tasks/active/site-10-pages-gha-2026-02-27.md",
+              "owner": [
+                "Claude"
+              ],
+              "depends": [],
+              "status": "done",
+              "release": null,
+              "plan": "tasks/active/site-10-pages-gha-2026-02-27.md"
+            },
+            {
+              "id": "SITE-11",
+              "description": "Remove prim-site from VPS: stop/disable systemd unit, remove Caddy prim.sh block, remove restart from deploy.sh, exclude site/ from rsync in deploy.yml + sync-vps.sh. Plan: tasks/active/site-11-prim-site-removal-2026-02-27.md",
+              "owner": [
+                "Claude"
+              ],
+              "depends": [
+                "SITE-10"
+              ],
+              "status": "done",
+              "release": null,
+              "plan": "tasks/active/site-11-prim-site-removal-2026-02-27.md"
+            }
+          ]
         }
       ],
       "description": "Docs, Discord, brand assets, marketing."
