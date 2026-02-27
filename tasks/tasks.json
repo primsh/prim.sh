@@ -1146,6 +1146,18 @@
               "depends": [],
               "status": "pending",
               "release": null
+            },
+            {
+              "id": "L-81",
+              "description": "Cut release/v0 branch when I-38 factory starts and tracks diverge. Until then, tag v0.0.0 on main. Branch only when v0 hotfixes would conflict with factory work in-flight on main.",
+              "owner": [
+                "Garric"
+              ],
+              "depends": [
+                "L-80"
+              ],
+              "status": "backlog",
+              "release": null
             }
           ]
         },
