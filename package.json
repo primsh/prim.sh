@@ -2,6 +2,22 @@
   "name": "prim",
   "version": "0.0.0",
   "private": true,
+  "description": "The agent-native stack. Infrastructure primitives for AI agents. Zero signup, x402 payment, pay-per-call.",
+  "homepage": "https://prim.sh",
+  "author": "Primitive Shell (https://primitiveshell.com)",
+  "license": "Apache-2.0",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/primsh/prim"
+  },
+  "keywords": [
+    "prim",
+    "x402",
+    "agents",
+    "infrastructure",
+    "primitives",
+    "ai"
+  ],
   "scripts": {
     "lint": "biome lint .",
     "format": "biome format .",
