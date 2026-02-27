@@ -60,7 +60,7 @@ pre{background:var(--code-bg);border:1px solid var(--border);border-radius:8px;p
 .copy-btn:hover{color:var(--text);border-color:#444}.copy-btn.copied{color:var(--accent);border-color:var(--accent)}
 .cmd-block .copy-btn{position:absolute;top:0.75rem;right:0.75rem}
 .cmd-block .prompt{color:var(--accent);user-select:none}.cmd-block .comment{color:#444}
-.cmd-block code{font-size:0.95rem;line-height:1.8}
+.cmd-block code{font-size:0.95rem;line-height:1.8;white-space:pre;display:block;overflow-x:auto}
 .manifesto{background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:2rem;margin:2rem 0;box-shadow:0 0 30px color-mix(in srgb,var(--accent) 25%,transparent)}
 .manifesto p{color:var(--muted);font-size:0.95rem;margin-bottom:1rem}.manifesto p:last-child{margin-bottom:0}
 .manifesto strong{color:var(--text)}
@@ -87,7 +87,7 @@ footer .links a{color:var(--muted)}
 .g{color:var(--green)}.b{color:var(--blue)}.r{color:var(--red)}.p{color:var(--purple)}.o{color:var(--orange)}.cy{color:var(--cyan)}.y{color:var(--yellow)}.pk{color:var(--pink)}.gl{color:var(--gold)}.t{color:var(--teal)}.m{color:var(--magenta)}.l{color:var(--lime)}.c{color:var(--coral)}.i{color:var(--indigo)}.v{color:var(--violet)}.z{color:var(--azure)}.br{color:var(--brown)}.e{color:var(--emerald)}.s{color:var(--slate)}.w{color:var(--text)}
 
 /* ── Code colorizer classes ──────────────────────────────────────────────── */
-.a{color:var(--accent)}.cc{color:#444}.mc{color:var(--muted)}.cm{color:#444}.prompt{color:var(--accent);user-select:none}
+.a{color:var(--accent)}.cc{color:#444}.mc{color:var(--muted)}.cm{color:#444}.prompt{color:var(--accent);user-select:none}.flag{color:#555}.str{color:#888}.cont{color:#2d2d2d}
 
 /* ── Multi-color glow (prim.sh branded elements) ────────────────────────── */
 @keyframes glow-cycle{

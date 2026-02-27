@@ -153,14 +153,106 @@ function colorizeLine(line: string): string {
   return esc(line);
 }
 
+/** Colorize a quoted string token "..." or '...' with $VAR highlighting */
+function colorizeStr(tok: string): string {
+  const q = tok[0];
+  const inner = tok.slice(1, -1);
+  const segs = inner.split(/(\$[A-Za-z_]\w*)/);
+  const innerHtml = segs
+    .map((seg, i) => (i % 2 === 1 ? `<span class="a">${esc(seg)}</span>` : esc(seg)))
+    .join("");
+  return `<span class="str">${esc(q)}${innerHtml}${esc(q)}</span>`;
+}
+
+/** Colorize a `$ ...` shell command line */
+function colorizeShellCmd(line: string): string {
+  const trimmed = line.trimEnd();
+  const hasCont = trimmed.endsWith("\\");
+  const body = hasCont ? trimmed.slice(0, -1).trimEnd() : trimmed;
+
+  let out = `<span class="prompt">$</span>`;
+  const rest = body.slice(1); // drop leading $
+
+  const re = /( +|https?:\/\/\S+|"[^"]*"|'[^']*'|-[\w-]+|\S+)/g;
+  let m: RegExpExecArray | null;
+  while ((m = re.exec(rest)) !== null) {
+    const tok = m[0];
+    if (/^ +$/.test(tok)) { out += tok; }
+    else if (tok === "curl") { out += `<span class="a">curl</span>`; }
+    else if (/^(POST|GET|PUT|DELETE|PATCH|HEAD)$/.test(tok)) { out += `<span class="a">${tok}</span>`; }
+    else if (/^https?:\/\//.test(tok)) { out += `<span class="w">${esc(tok)}</span>`; }
+    else if (/^-/.test(tok)) { out += `<span class="flag">${esc(tok)}</span>`; }
+    else if (/^["']/.test(tok)) { out += colorizeStr(tok); }
+    else { out += esc(tok); }
+  }
+
+  if (hasCont) out += ` <span class="cont">\\</span>`;
+  return out;
+}
+
+/** Colorize a curl continuation flag line: `    -H "..." \` */
+function colorizeFlagArg(line: string): string {
+  const trimmed = line.trimEnd();
+  const hasCont = trimmed.endsWith("\\");
+  const body = hasCont ? trimmed.slice(0, -1).trimEnd() : trimmed;
+
+  const m = body.match(/^( +)(-[\w-]+)(.*)?$/);
+  if (!m) return esc(line);
+  const [, indent, flag, rest] = m;
+
+  let out = `${indent}<span class="flag">${esc(flag)}</span>`;
+  if (rest) {
+    const re = /( +|"[^"]*"|'[^']*'|\S+)/g;
+    let tm: RegExpExecArray | null;
+    while ((tm = re.exec(rest)) !== null) {
+      const tok = tm[0];
+      if (/^ +$/.test(tok)) { out += tok; }
+      else if (/^["']/.test(tok)) { out += colorizeStr(tok); }
+      else { out += esc(tok); }
+    }
+  }
+
+  if (hasCont) out += ` <span class="cont">\\</span>`;
+  return out;
+}
+
+/** Colorize JSON value segments (non-key parts) */
+function colorizeJsonValues(s: string): string {
+  let out = "";
+  const re = /("(?:[^"\\]|\\.)*"|\btrue\b|\bfalse\b|\bnull\b|\b\d+\.?\d*\b|[\s\S])/g;
+  let m: RegExpExecArray | null;
+  while ((m = re.exec(s)) !== null) {
+    const tok = m[0];
+    if (/^"/.test(tok)) { out += `<span class="w">${esc(tok)}</span>`; }
+    else if (/^(true|false|null)$/.test(tok)) { out += `<span class="a">${tok}</span>`; }
+    else if (/^\d/.test(tok)) { out += `<span class="a">${tok}</span>`; }
+    else { out += esc(tok); }
+  }
+  return out;
+}
+
+/** Colorize a JSON line: keys as muted, string values as text, numbers/bools as accent */
+function colorizeJsonLine(line: string): string {
+  const parts = line.split(/("(?:[^"\\]|\\.)*"\s*:)/);
+  return parts
+    .map((part, i) =>
+      i % 2 === 1
+        ? `<span class="mc">${esc(part)}</span>`
+        : colorizeJsonValues(part)
+    )
+    .join("");
+}
+
 /** Colorize a raw hero_example block */
 function colorizeHeroBlock(raw: string): string {
   return raw
     .split("\n")
     .map((line) => {
-      if (line.startsWith("#")) return `<span class="comment">${esc(line)}</span>`;
-      if (line.startsWith("$")) return `<span class="prompt">$</span>${esc(line.slice(1))}`;
-      return esc(line);
+      if (line === "") return "";
+      if (line.startsWith("#")) return `<span class="cc">${esc(line)}</span>`;
+      if (line.startsWith("$")) return colorizeShellCmd(line);
+      if (/^ +-/.test(line)) return colorizeFlagArg(line);
+      return colorizeJsonLine(line);
     })
     .join("\n");
 }
