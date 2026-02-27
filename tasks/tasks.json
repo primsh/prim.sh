@@ -401,7 +401,7 @@
                   "description": "Extract shared CLI error handler in keystore/src/cli.ts (11 identical try-catch blocks)",
                   "owner": ["Claude"],
                   "depends": [],
-                  "status": "pending",
+                  "status": "done",
                   "release": null
                 }
               ]

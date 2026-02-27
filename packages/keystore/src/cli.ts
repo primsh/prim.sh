@@ -10,6 +10,15 @@ import pkg from "../package.json";
 
 const argv = process.argv.slice(2);
 
+async function wrapCommand(fn: () => Promise<void>): Promise<void> {
+  try {
+    await fn();
+  } catch (err) {
+    console.error(`Error: ${err instanceof Error ? err.message : String(err)}`);
+    process.exit(1);
+  }
+}
+
 async function main() {
   if (argv[0] === "--version" || argv[0] === "-v") {
     console.log(pkg.version);
@@ -20,90 +29,66 @@ async function main() {
   const subcommand = argv[1];
 
   if (group === "store") {
-    try {
+    await wrapCommand(async () => {
       const { runStoreCommand } = await import("./store-commands.ts");
       await runStoreCommand(subcommand, argv);
-    } catch (err) {
-      console.error(`Error: ${err instanceof Error ? err.message : String(err)}`);
-      process.exit(1);
-    }
+    });
     return;
   }
 
   if (group === "spawn") {
-    try {
+    await wrapCommand(async () => {
       const { runSpawnCommand } = await import("./spawn-commands.ts");
       await runSpawnCommand(subcommand, argv);
-    } catch (err) {
-      console.error(`Error: ${err instanceof Error ? err.message : String(err)}`);
-      process.exit(1);
-    }
+    });
     return;
   }
 
   if (group === "email") {
-    try {
+    await wrapCommand(async () => {
       const { runEmailCommand } = await import("./email-commands.ts");
       await runEmailCommand(subcommand, argv);
-    } catch (err) {
-      console.error(`Error: ${err instanceof Error ? err.message : String(err)}`);
-      process.exit(1);
-    }
+    });
     return;
   }
 
   if (group === "mem") {
-    try {
+    await wrapCommand(async () => {
       const { runMemCommand } = await import("./mem-commands.ts");
       await runMemCommand(subcommand, argv);
-    } catch (err) {
-      console.error(`Error: ${err instanceof Error ? err.message : String(err)}`);
-      process.exit(1);
-    }
+    });
     return;
   }
 
   if (group === "domain") {
-    try {
+    await wrapCommand(async () => {
       const { runDomainCommand } = await import("./domain-commands.ts");
       await runDomainCommand(subcommand, argv);
-    } catch (err) {
-      console.error(`Error: ${err instanceof Error ? err.message : String(err)}`);
-      process.exit(1);
-    }
+    });
     return;
   }
 
   if (group === "token") {
-    try {
+    await wrapCommand(async () => {
       const { runTokenCommand } = await import("./token-commands.ts");
       await runTokenCommand(subcommand, argv);
-    } catch (err) {
-      console.error(`Error: ${err instanceof Error ? err.message : String(err)}`);
-      process.exit(1);
-    }
+    });
     return;
   }
 
   if (group === "faucet") {
-    try {
+    await wrapCommand(async () => {
       const { runFaucetCommand } = await import("./faucet-commands.ts");
       await runFaucetCommand(subcommand, argv);
-    } catch (err) {
-      console.error(`Error: ${err instanceof Error ? err.message : String(err)}`);
-      process.exit(1);
-    }
+    });
     return;
   }
 
   if (group === "search") {
-    try {
+    await wrapCommand(async () => {
       const { runSearchCommand } = await import("./search-commands.ts");
       await runSearchCommand(subcommand, argv);
-    } catch (err) {
-      console.error(`Error: ${err instanceof Error ? err.message : String(err)}`);
-      process.exit(1);
-    }
+    });
     return;
   }
 
@@ -111,7 +96,7 @@ async function main() {
     // Dispatch to @primsh/mcp package. Import path is resolved at runtime by Bun.
     // Using a variable import path to avoid tsc rootDir restrictions on cross-package imports.
     const mcpPath = new URL("../../mcp/src/server.ts", import.meta.url).href;
-    try {
+    await wrapCommand(async () => {
       // biome-ignore lint/suspicious/noExplicitAny: cross-package dynamic import
       const mcpModule = await import(mcpPath) as any;
       const { startMcpServer, isPrimitive } = mcpModule;
@@ -134,54 +119,39 @@ async function main() {
         primitives = parsed;
       }
       await startMcpServer({ primitives, walletAddress: walletFlag ?? undefined });
-    } catch (err) {
-      console.error(`Error: ${err instanceof Error ? err.message : String(err)}`);
-      process.exit(1);
-    }
+    });
     return;
   }
 
   if (group === "install") {
-    try {
+    await wrapCommand(async () => {
       const { runInstallCommand } = await import("./install-commands.ts");
       await runInstallCommand(subcommand, argv);
-    } catch (err) {
-      console.error(`Error: ${err instanceof Error ? err.message : String(err)}`);
-      process.exit(1);
-    }
+    });
     return;
   }
 
   if (group === "uninstall") {
-    try {
+    await wrapCommand(async () => {
       const { runUninstallCommand } = await import("./install-commands.ts");
       await runUninstallCommand(subcommand, argv);
-    } catch (err) {
-      console.error(`Error: ${err instanceof Error ? err.message : String(err)}`);
-      process.exit(1);
-    }
+    });
     return;
   }
 
   if (group === "skill") {
-    try {
+    await wrapCommand(async () => {
       const { runSkillCommand } = await import("./install-commands.ts");
       await runSkillCommand(subcommand, argv);
-    } catch (err) {
-      console.error(`Error: ${err instanceof Error ? err.message : String(err)}`);
-      process.exit(1);
-    }
+    });
     return;
   }
 
   if (group === "admin") {
-    try {
+    await wrapCommand(async () => {
       const { runAdminCommand } = await import("./admin-commands.ts");
       await runAdminCommand(subcommand, argv);
-    } catch (err) {
-      console.error(`Error: ${err instanceof Error ? err.message : String(err)}`);
-      process.exit(1);
-    }
+    });
     return;
   }
 
@@ -206,7 +176,7 @@ async function main() {
     process.exit(1);
   }
 
-  try {
+  await wrapCommand(async () => {
     switch (subcommand) {
       case "create": {
         const label = getFlag("label", argv);
@@ -346,10 +316,7 @@ async function main() {
         console.log("Usage: prim wallet <create|register|list|balance|import|export|default|remove>");
         process.exit(1);
     }
-  } catch (err) {
-    console.error(`Error: ${err instanceof Error ? err.message : String(err)}`);
-    process.exit(1);
-  }
+  });
 }
 
 main();
