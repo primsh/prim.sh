@@ -383,13 +383,14 @@ export function cacheSet(
     expires_at: expiresAt,
   });
 
+  const row = getCacheEntry(callerWallet, namespace, key);
+  if (!row) throw new Error("Failed to retrieve cache entry after insert");
+
   // Opportunistic expired-entry cleanup (~10% of writes)
+  // Runs after read-back to avoid deleting the entry we just inserted (ttl=0 edge case)
   if (Math.random() < 0.1) {
     deleteExpiredEntries(Date.now());
   }
-
-  const row = getCacheEntry(callerWallet, namespace, key);
-  if (!row) throw new Error("Failed to retrieve cache entry after insert");
 
   return { ok: true, data: rowToCacheGetResponse(row) };
 }
