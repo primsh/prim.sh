@@ -512,10 +512,16 @@ export function render(cfg: PrimConfig): string {
     `<span class="badge ${cls}">${label}</span>`,
   ].join("\n    ");
 
-  // Hero example
-  const heroBlock = cfg.hero_example
-    ? `  <div class="cmd-block"><code>\n${colorizeHeroBlock(cfg.hero_example.replace(/\n$/, ""))}\n  </code><button class="copy-btn" onclick="const b=this,c=this.closest('.cmd-block').querySelector('code');navigator.clipboard.writeText(c.textContent.trim()).then(()=>{b.textContent='copied';b.classList.add('copied');setTimeout(()=>{b.textContent='copy';b.classList.remove('copied')},2000)})">copy</button></div>`
-    : "";
+  // Hero install command
+  const installUrl = `https://${cfg.endpoint}/install.sh`;
+  const heroBlock =
+    `  <div class="cmd-block"><code>` +
+    `<span class="prompt">$</span> ` +
+    `<span class="a">curl</span> ` +
+    `<span class="flag">-fsSL</span> ` +
+    `<span class="w">${esc(installUrl)}</span> ` +
+    `<span class="flag">|</span> sh` +
+    `</code><button class="copy-btn" onclick="const b=this,c=this.closest('.cmd-block').querySelector('code');navigator.clipboard.writeText(c.textContent.trim()).then(()=>{b.textContent='copied';b.classList.add('copied');setTimeout(()=>{b.textContent='copy';b.classList.remove('copied')},2000)})">copy</button></div>`;
 
   // Sections
   const hasPricingSection = (cfg.sections ?? []).some((s) => s.type === "pricing");

@@ -174,6 +174,15 @@ const server = Bun.serve({
       return serveFile(join(ROOT, `site/${id}/llms.txt`));
     }
 
+    // /<prim-id>/install.sh
+    const installMatch = pathname.match(/^\/([^/]+)\/install\.sh$/);
+    if (installMatch) {
+      const [, id] = installMatch;
+      const pkgPath = join(ROOT, `packages/${id}/install.sh`);
+      const sitePath = join(ROOT, `site/${id}/install.sh`);
+      return serveFile(existsSync(pkgPath) ? pkgPath : sitePath);
+    }
+
     // /<prim-id> → render from YAML
     const primMatch = pathname.match(/^\/([^/]+)\/?$/);
     if (primMatch) {
