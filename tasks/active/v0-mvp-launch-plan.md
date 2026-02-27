@@ -257,6 +257,7 @@ Checklist (all must pass):
 - [ ] Wallet allowlist reviewed — only your test wallets, no stale entries
 - [ ] All VPS env files reviewed — no testnet-only values leaking into mainnet config
 - [ ] Caddy access logs enabled: add `log { output file /var/log/caddy/access.log }` to each server block in Caddyfile, `systemctl reload caddy`
+- [ ] Daily metrics snapshot cron: `scripts/metrics-snapshot.sh` curls each prim's `/v1/metrics`, appends timestamped JSON to `/var/log/prim-metrics.log`. Add to VPS crontab (`0 */6 * * *` — every 6 hours). Mitigates metrics-reset-on-restart gap.
 
 ### G3: Dogfood (you, end-to-end on mainnet)
 **Owner**: you
@@ -285,9 +286,23 @@ prim feedback submit --primitive store.sh --type suggestion --message "dogfood t
 
 ### G4: Automated smoke test (L-36)
 **Owner**: you (or CI)
-**Time**: 30 min to run, assumes L-36 is already implemented
+**Time**: 1-2 hours (includes writing mainnet test)
 
-`scripts/smoke-cli.sh` passes end-to-end on mainnet. This is the scripted version of G3 — if it passes, the golden path is mechanically verified.
+**Blocker**: All existing smoke scripts hard-refuse mainnet (`process.exit(1)` if network isn't Base Sepolia). G4 is unrunnable without a mainnet test path.
+
+**Must build first**: `scripts/smoke-mainnet.ts` — minimal golden path on `eip155:8453`:
+1. Health checks (GET / on wallet, store, search, feedback)
+2. Wallet register (EIP-191 signature)
+3. Store CRUD (create-bucket, put, get, delete)
+4. Search query
+5. Feedback submit
+6. **x402 settlement timing assertion** — measure wall time from Payment-Signature send to 200 response. Flag if >5s. Catches mainnet timing drift before testers hit it.
+
+Uses a pre-funded, pre-allowlisted wallet (not fresh — faucet is testnet-only).
+
+**Additional tests to include in G4**:
+- **Spend limit enforcement**: Set `max_per_tx: $0.001` on test wallet, attempt a store op, assert `403 policy_violation`. Reset policy after. Validates the guardrail before testers rely on it.
+- **Error response shape**: After G5, trigger a known error on each prim (e.g., store PUT with missing body → 400), assert response includes `feedback_url`. Validates the feedback discovery path.
 
 ### G5: Build feedback.sh
 **Owner**: you
@@ -434,8 +449,19 @@ Share in beta group chat.
 - `feedback_url` in all error responses + llms.txt
 - Manual access approval with per-wallet spend limits
 - Caddy access logs + in-memory metrics (GET /v1/metrics)
+- Mainnet smoke test with x402 settlement timing + spend limit enforcement
 - One-pager for beta testers
 - CLI install script
+
+## Development Workflow
+
+Branch protection is enforced on `main`:
+- **No direct pushes** — all changes via feature branches + PRs
+- **CI must pass** before merge (lint, typecheck, test, gen-check, audit, secret scan)
+- **CODEOWNERS** — changes to v0 critical paths (wallet, store, search, x402-middleware, deploy) require @garricn approval
+- **Feature branch convention**: `<scope>/<description>` (e.g., `infra/branch-protection`, `g5/feedback-sh`)
+
+This applies to all Claude sessions. A session working on I-38 can't accidentally modify wallet.sh — GitHub blocks the merge.
 
 ## What's NOT in V0
 
@@ -516,7 +542,7 @@ Not calendar dates — sequential gates. Each gate blocks the next.
 | G1: Secret scan | 2-4 hrs | Nothing |
 | G2: Mainnet switchover | 1-2 hrs | G1 |
 | G3: Dogfood | 1-2 hrs | G2 |
-| G4: Automated smoke | 30 min | G3, L-36 implemented |
+| G4: Mainnet smoke test | 1-2 hrs | G3 (must write smoke-mainnet.ts, existing tests refuse mainnet) |
 | G5: Build feedback.sh | 2-3 hrs | G2 (needs deployed services for error response change) |
 | G6: One-pager | 1-2 hrs | G3, G5 (need golden path + feedback URL) |
 | G7: Private beta | 1 week | G4, G6 |
