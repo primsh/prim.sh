@@ -99,18 +99,17 @@ function genCards(prims: Primitive[]): string {
   const cards = prims.filter((p) => p.show_on_index !== false);
   return cards
     .map((p) => {
-      const isDeployed = p.status === "deployed" || p.status === "live";
-      const hasCode = p.status === "building" || p.status === "testing";
+      const isLive = p.status === "deployed" || p.status === "live" || p.status === "testing";
       const cls = [
         "product",
         p.card_class,
-        !isDeployed && !hasCode && !p.phantom ? "soon" : "",
+        !isLive && !p.phantom ? "soon" : "",
         p.phantom ? "phantom" : "",
       ]
         .filter(Boolean)
         .join(" ");
 
-      const link = isDeployed
+      const link = isLive
         ? `      <a href="/${p.id}" class="product-link">→ ${p.name}</a>`
         : `      <span class="soon-label">soon</span>`;
 
@@ -213,6 +212,25 @@ function genBashEndpoints(prims: Primitive[]): string {
 const prims = loadPrimitives();
 console.log(`Loaded ${prims.length} primitives`);
 console.log(CHECK_MODE ? "Mode: check\n" : "Mode: generate\n");
+
+// ── Port uniqueness check ─────────────────────────────────────────────────
+{
+  const portMap = new Map<number, string[]>();
+  for (const p of prims) {
+    if (!p.port) continue;
+    const owners = portMap.get(p.port) ?? [];
+    owners.push(p.id);
+    portMap.set(p.port, owners);
+  }
+  const conflicts = [...portMap.entries()].filter(([, ids]) => ids.length > 1);
+  if (conflicts.length > 0) {
+    for (const [port, ids] of conflicts) {
+      console.error(`  ✗ Port ${port} claimed by: ${ids.join(", ")}`);
+    }
+    console.error("\nPort conflict detected. Each primitive must have a unique port.");
+    process.exit(1);
+  }
+}
 
 // 1. site/index.html — cards grid
 applyOrCheck(join(ROOT, "site/index.html"), "CARDS", genCards(prims));

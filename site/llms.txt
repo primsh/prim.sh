@@ -121,6 +121,9 @@ Run prim <command> --help for options.
 - mem.sh — Vector store and cache for agents. Persist long-term knowledge and session state.
 - domain.sh — Register domains, manage DNS, auto-TLS. Full domain lifecycle via API.
 - track.sh — Package tracking for agents. USPS, FedEx, UPS, DHL and 1000+ carriers. Status, ETA, full event history.
+- infer.sh — LLM inference for agents. Any model, any provider, one API. Per-token pricing. No API keys.
+- create.sh — Scaffold new prim.sh primitives. Write a prim.yaml spec, get a complete package with passing tests.
+- imagine.sh — Media generation for agents. Images, video, audio. Any model, one API. No API keys.
 
 ## Planned Primitives
 
@@ -140,7 +143,6 @@ Run prim <command> --help for options.
 - corp.sh — Incorporation, tax, insurance. Legal entities for agents. The fiat bridge.
 - hands.sh — On-demand human labor. Physical tasks, verification, errands. Gig economy API.
 - pins.sh — Coordinates, places, and routing. No maps UI, just structured spatial data.
-- infer.sh — LLM inference via OpenRouter. Any model, any provider, one API.
 - seek.sh — Deep research agent. Multi-step search + synthesis.
 - docs.sh — OpenAPI → MCP converter. Turn any API spec into agent tools.
 - ads.sh — Programmatic advertising for agents. Buy and sell attention.

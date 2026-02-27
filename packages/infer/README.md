@@ -20,6 +20,58 @@ Part of the [prim.sh](https://prim.sh) agent-native stack. x402 payment (USDC on
 | Embeddings | $0.001 | Per 1K tokens |
 | List models | free |  |
 
+## Request / Response Types
+
+### `ChatRequest`
+
+| Field | Type | Required |
+|-------|------|----------|
+| `model` | `string` | required |
+| `messages` | `Message[]` | required |
+| `temperature` | `number` | optional |
+| `max_tokens` | `number` | optional |
+| `top_p` | `number` | optional |
+| `frequency_penalty` | `number` | optional |
+| `presence_penalty` | `number` | optional |
+| `stop` | `string | string[]` | optional |
+| `stream` | `boolean` | optional |
+| `tools` | `Tool[]` | optional |
+| `tool_choice` | `"none" | "auto" | "required" | { type: "function"; function: { name: string } }` | optional |
+| `response_format` | `object` | optional |
+
+### `ChatResponse`
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `id` | `string` |  |
+| `object` | `"chat.completion"` |  |
+| `created` | `number` |  |
+| `model` | `string` |  |
+| `choices` | `Choice[]` |  |
+| `usage` | `Usage` |  |
+
+### `EmbedRequest`
+
+| Field | Type | Required |
+|-------|------|----------|
+| `model` | `string` | required |
+| `input` | `string | string[]` | required |
+
+### `EmbedResponse`
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `object` | `"list"` |  |
+| `data` | `EmbeddingData[]` |  |
+| `model` | `string` |  |
+| `usage` | `object` |  |
+
+### `ModelsResponse`
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `data` | `ModelInfo[]` |  |
+
 ## Providers
 
 | Provider | Status | Default |
