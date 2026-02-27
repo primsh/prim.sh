@@ -104,7 +104,7 @@
                     "Garric"
                   ],
                   "depends": [],
-                  "status": "pending",
+                  "status": "done",
                   "release": "v1.0.0"
                 },
                 {
@@ -951,6 +951,83 @@
               ]
             }
           ]
+        },
+        {
+          "id": "COMM-W4",
+          "title": "llms.txt Code Generation",
+          "parallelism": "SRL",
+          "phases": [
+            {
+              "id": "COMM-W4-PA",
+              "title": "Data Annotation",
+              "parallelism": "PARA",
+              "tasks": [
+                {
+                  "id": "COM-3",
+                  "description": "Add JSDoc field annotations to all api.ts interfaces (10 prims), create faucet api.ts, add missing ERROR_CODES to search + track",
+                  "owner": ["Claude"],
+                  "depends": [],
+                  "status": "pending",
+                  "release": null
+                },
+                {
+                  "id": "COM-4",
+                  "description": "Add llms.txt fields to prim.yaml (quick_start, tips, limits, ownership, routes_map) + update Primitive type in primitives.ts",
+                  "owner": ["Claude"],
+                  "depends": [],
+                  "status": "pending",
+                  "release": null
+                }
+              ]
+            },
+            {
+              "id": "COMM-W4-PB",
+              "title": "Generator",
+              "parallelism": "SRL",
+              "tasks": [
+                {
+                  "id": "COM-5",
+                  "description": "Build scripts/lib/parse-api.ts — regex parser extracting interfaces, fields, JSDoc, ERROR_CODES from api.ts files",
+                  "owner": ["Claude"],
+                  "depends": ["COM-3"],
+                  "status": "pending",
+                  "release": null
+                },
+                {
+                  "id": "COM-6",
+                  "description": "Build scripts/lib/render-llms-txt.ts + wire into gen-prims.ts — render full llms.txt from Primitive + ParsedApi + route prices",
+                  "owner": ["Claude"],
+                  "depends": ["COM-4", "COM-5"],
+                  "status": "pending",
+                  "release": null
+                }
+              ]
+            },
+            {
+              "id": "COMM-W4-PC",
+              "title": "Integration",
+              "parallelism": "PARA",
+              "tasks": [
+                {
+                  "id": "COM-7",
+                  "description": "Add GET /llms.txt handler + freeRoutes to all prims; remove embedded LLMS_TXT consts from email/domain/token/mem index.ts",
+                  "owner": ["Claude"],
+                  "depends": ["COM-6"],
+                  "status": "pending",
+                  "release": null
+                },
+                {
+                  "id": "COM-8",
+                  "description": "Add llms.txt to gen-prims.ts --check mode; verify CI workflow runs gen:check",
+                  "owner": ["Claude"],
+                  "depends": ["COM-6"],
+                  "status": "pending",
+                  "release": null
+                }
+              ]
+            }
+          ],
+          "plan": "tasks/active/comm-w3-llms-txt-codegen-2026-02-26.md"
         }
       ],
       "description": "Docs, Discord, brand assets, marketing."
