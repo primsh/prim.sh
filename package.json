@@ -17,7 +17,8 @@
     "check:openapi": "bun scripts/check-openapi.ts",
     "sync:vps": "bash scripts/sync-vps.sh",
     "sync:vps:dry": "bash scripts/sync-vps.sh --dry-run",
-    "test:conformance": "bun scripts/conformance.ts"
+    "test:conformance": "bun scripts/conformance.ts",
+    "create-prim": "bun scripts/create-prim.ts"
   },
   "devDependencies": {
     "@biomejs/biome": "^1.9.0",
