@@ -76,6 +76,8 @@ jobs:
         with:
           node-version: 22
 
+      - uses: pnpm/action-setup@v4
+
       - run: pnpm -r lint
 
   typecheck:
@@ -95,6 +97,8 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 22
+
+      - uses: pnpm/action-setup@v4
 
       - run: pnpm -r typecheck
 
@@ -116,6 +120,8 @@ jobs:
         with:
           node-version: 22
 
+      - uses: pnpm/action-setup@v4
+
       - run: pnpm -r test
 
   gen-check:
@@ -135,6 +141,8 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 22
+
+      - uses: pnpm/action-setup@v4
 
       - run: pnpm gen:check
 
@@ -156,6 +164,8 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 22
+
+      - uses: pnpm/action-setup@v4
 
       - run: pnpm check:openapi
 
