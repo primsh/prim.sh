@@ -1,0 +1,41 @@
+{
+  "name": "@primsh/cli",
+  "version": "0.1.0",
+  "private": false,
+  "type": "module",
+  "description": "CLI binary for Prim infrastructure primitives",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/primsh/prim",
+    "directory": "packages/cli"
+  },
+  "license": "Apache-2.0",
+  "author": "Prim (https://prim.sh)",
+  "keywords": ["prim", "x402", "cli", "wallet", "agents"],
+  "bin": {
+    "prim": "src/cli.ts"
+  },
+  "scripts": {
+    "lint": "biome lint .",
+    "format": "biome format .",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "test": "vitest --run",
+    "check": "pnpm lint && pnpm typecheck && pnpm test",
+    "build:binary:linux-x64": "bun build --compile --target=bun-linux-x64 src/cli.ts --outfile ../../dist/prim-linux-x64",
+    "build:binary:linux-arm64": "bun build --compile --target=bun-linux-arm64 src/cli.ts --outfile ../../dist/prim-linux-arm64",
+    "build:binary:darwin-x64": "bun build --compile --target=bun-darwin-x64 src/cli.ts --outfile ../../dist/prim-darwin-x64",
+    "build:binary:darwin-arm64": "bun build --compile --target=bun-darwin-arm64 src/cli.ts --outfile ../../dist/prim-darwin-arm64",
+    "build:binaries": "pnpm build:binary:linux-x64 && pnpm build:binary:linux-arm64 && pnpm build:binary:darwin-x64 && pnpm build:binary:darwin-arm64"
+  },
+  "dependencies": {
+    "@primsh/keystore": "workspace:*",
+    "@primsh/x402-client": "workspace:*",
+    "@primsh/x402-middleware": "workspace:*",
+    "viem": "^2.21.0"
+  },
+  "devDependencies": {
+    "@types/node": "^25.3.0",
+    "typescript": "^5.6.3",
+    "vitest": "^1.6.1"
+  }
+}

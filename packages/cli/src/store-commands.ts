@@ -2,7 +2,7 @@ import { readFileSync, statSync } from "node:fs";
 import { writeFile } from "node:fs/promises";
 import { extname } from "node:path";
 import { createPrimFetch } from "@primsh/x402-client";
-import { getConfig } from "./config.ts";
+import { getConfig } from "@primsh/keystore";
 import { getFlag, hasFlag, resolvePassphrase } from "./flags.ts";
 
 async function readStdin(): Promise<Buffer> {

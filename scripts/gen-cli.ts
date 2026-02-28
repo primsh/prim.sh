@@ -3,7 +3,7 @@
  * gen-cli.ts — CLI command generator
  *
  * Reads packages/<id>/openapi.yaml and generates
- * packages/keystore/src/<id>-commands.ts for each primitive.
+ * packages/cli/src/<id>-commands.ts for each primitive.
  *
  * Files without the "// BEGIN:PRIM:CLI" marker are treated as manually
  * maintained and are skipped. Add the marker to opt a file into generation.
@@ -847,11 +847,11 @@ function generateCommandFile(spec: OpenAPISpec, id: string): string {
 
   // Imports
   if (prim.isFaucetLike) {
-    lines.push(`import { getDefaultAddress } from "./config.ts";`);
+    lines.push(`import { getDefaultAddress } from "@primsh/keystore";`);
     lines.push(`import { getFlag, hasFlag } from "./flags.ts";`);
   } else {
     lines.push(`import { createPrimFetch } from "@primsh/x402-client";`);
-    lines.push(`import { getConfig } from "./config.ts";`);
+    lines.push(`import { getConfig } from "@primsh/keystore";`);
     lines.push(`import { getFlag, hasFlag, resolvePassphrase } from "./flags.ts";`);
   }
   lines.push("");
@@ -983,7 +983,7 @@ function generateCommandFile(spec: OpenAPISpec, id: string): string {
 // ── Main ──────────────────────────────────────────────────────────────────────
 
 let anyFailed = false;
-const keystoreSrcDir = join(ROOT, "packages/keystore/src");
+const cliSrcDir = join(ROOT, "packages/cli/src");
 
 // Prims with OpenAPI specs that have CLI commands
 // (wallet is excluded — its CLI is part of cli.ts directly)
@@ -1003,7 +1003,7 @@ for (const id of primsToProcess) {
     continue;
   }
 
-  const outPath = join(keystoreSrcDir, `${id}-commands.ts`);
+  const outPath = join(cliSrcDir, `${id}-commands.ts`);
 
   let spec: OpenAPISpec;
   try {
@@ -1032,24 +1032,24 @@ for (const id of primsToProcess) {
   if (CHECK_MODE) {
     if (isNew) {
       // New file doesn't exist yet — not a check failure
-      console.log(`  – packages/keystore/src/${id}-commands.ts (new — run pnpm gen:cli)`);
+      console.log(`  – packages/cli/src/${id}-commands.ts (new — run pnpm gen:cli)`);
     } else if (!isGenerated) {
-      console.log(`  – packages/keystore/src/${id}-commands.ts (manually maintained, skipped)`);
+      console.log(`  – packages/cli/src/${id}-commands.ts (manually maintained, skipped)`);
     } else if (changed) {
       console.error(
-        `  ✗ packages/keystore/src/${id}-commands.ts is out of date — run pnpm gen:cli`,
+        `  ✗ packages/cli/src/${id}-commands.ts is out of date — run pnpm gen:cli`,
       );
       anyFailed = true;
     } else {
-      console.log(`  ✓ packages/keystore/src/${id}-commands.ts`);
+      console.log(`  ✓ packages/cli/src/${id}-commands.ts`);
     }
   } else {
     if (!isNew && !isGenerated) {
-      console.log(`  – packages/keystore/src/${id}-commands.ts (manually maintained — skipping)`);
+      console.log(`  – packages/cli/src/${id}-commands.ts (manually maintained — skipping)`);
       console.log(`    Tip: add "// BEGIN:PRIM:CLI" as first line to opt in to generation`);
     } else {
       writeFileSync(outPath, generated);
-      console.log(`  ${changed ? "↺" : "✓"} packages/keystore/src/${id}-commands.ts`);
+      console.log(`  ${changed ? "↺" : "✓"} packages/cli/src/${id}-commands.ts`);
     }
   }
 }

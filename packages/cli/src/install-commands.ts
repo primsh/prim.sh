@@ -1,7 +1,7 @@
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { homedir } from "node:os";
 import { dirname, join } from "node:path";
-import { getDefaultAddress } from "./config.ts";
+import { getDefaultAddress } from "@primsh/keystore";
 import { getFlag } from "./flags.ts";
 import { SKILL_CONTENT } from "./skill-content.ts";
 

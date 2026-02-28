@@ -1,5 +1,5 @@
 import { createPrimFetch } from "@primsh/x402-client";
-import { getConfig } from "./config.ts";
+import { getConfig } from "@primsh/keystore";
 import { getFlag, hasFlag, resolvePassphrase } from "./flags.ts";
 
 export function resolveSearchUrl(argv: string[]): string {

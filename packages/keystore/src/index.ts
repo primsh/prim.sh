@@ -9,4 +9,5 @@ export {
 } from "./keystore.ts";
 export { getDefaultAddress, setDefaultAddress, getConfig } from "./config.ts";
 export { getUsdcBalance } from "./balance.ts";
+export { decryptFromV3 } from "./crypto.ts";
 export type { KeystoreFile, PrimConfig, KeyInfo } from "./types.ts";

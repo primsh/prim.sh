@@ -7,11 +7,11 @@
 
 import { type MockInstance, afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-vi.mock("../src/config.ts", () => ({
+vi.mock("@primsh/keystore", () => ({
   getDefaultAddress: vi.fn(),
 }));
 
-import { getDefaultAddress } from "../src/config.ts";
+import { getDefaultAddress } from "@primsh/keystore";
 import { resolveFaucetUrl, runFaucetCommand } from "../src/faucet-commands.ts";
 
 // --- Helpers ----------------------------------------------------------------

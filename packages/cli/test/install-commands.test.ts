@@ -15,12 +15,12 @@ vi.mock("node:os", () => ({
   homedir: vi.fn(() => "/home/testuser"),
 }));
 
-vi.mock("../src/config.ts", () => ({
+vi.mock("@primsh/keystore", () => ({
   getDefaultAddress: vi.fn(),
 }));
 
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
-import { getDefaultAddress } from "../src/config.ts";
+import { getDefaultAddress } from "@primsh/keystore";
 import {
   detectAgent,
   generateMcpConfig,
