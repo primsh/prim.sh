@@ -556,9 +556,7 @@
                 {
                   "id": "HRD-42",
                   "description": "Decide: keep, strip, or hybrid visibility for tasks/ and research/ dirs before public release",
-                  "owner": [
-                    "Garric"
-                  ],
+                  "owner": ["Garric"],
                   "depends": [],
                   "status": "done",
                   "release": null
@@ -566,36 +564,24 @@
                 {
                   "id": "HRD-43",
                   "description": "Scrub VPS IP from 5 tracked task docs — replace with <VPS_IP> placeholder",
-                  "owner": [
-                    "Claude"
-                  ],
-                  "depends": [
-                    "HRD-42"
-                  ],
+                  "owner": ["Claude"],
+                  "depends": ["HRD-42"],
                   "status": "done",
                   "release": null
                 },
                 {
                   "id": "HRD-44",
                   "description": "Audit 19 files with personal info — scrub personal emails, keep intentional attribution (LICENSE, author)",
-                  "owner": [
-                    "Claude"
-                  ],
-                  "depends": [
-                    "HRD-43"
-                  ],
+                  "owner": ["Claude"],
+                  "depends": ["HRD-43"],
                   "status": "done",
                   "release": null
                 },
                 {
                   "id": "HRD-45",
                   "description": "Remove research/ dir from git tracking (xlsx, png, md — competitive research, no contributor value)",
-                  "owner": [
-                    "Claude"
-                  ],
-                  "depends": [
-                    "HRD-42"
-                  ],
+                  "owner": ["Claude"],
+                  "depends": ["HRD-42"],
                   "status": "done",
                   "release": null
                 }
@@ -609,9 +595,7 @@
                 {
                   "id": "HRD-46",
                   "description": "Add docs/ci-setup.md — GitHub Actions secrets, App setup, workflow overview for forks",
-                  "owner": [
-                    "Claude"
-                  ],
+                  "owner": ["Claude"],
                   "depends": [],
                   "status": "done",
                   "release": null
@@ -619,9 +603,7 @@
                 {
                   "id": "HRD-47",
                   "description": "Create CHANGELOG.md — curated milestones from v0.1 through v1.0 (Keep a Changelog format)",
-                  "owner": [
-                    "Claude"
-                  ],
+                  "owner": ["Claude"],
                   "depends": [],
                   "status": "done",
                   "release": null
@@ -635,18 +617,119 @@
               "tasks": [
                 {
                   "id": "HRD-48",
-                  "description": "Verify scrub, run gitleaks on HEAD, close as accepted-risk (no history rewrite — see plan doc)",
-                  "owner": [
-                    "Garric",
-                    "Claude"
-                  ],
-                  "depends": [
-                    "HRD-44",
-                    "HRD-45"
-                  ],
+                  "description": "Verify scrub, run gitleaks on HEAD, close as accepted-risk (no history rewrite)",
+                  "owner": ["Garric", "Claude"],
+                  "depends": ["HRD-44", "HRD-45"],
                   "status": "done",
-                  "release": null,
-                  "plan": "tasks/active/hrd-w5-open-source-scrub.md"
+                  "release": null
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "HRD-W6",
+          "title": "OSS Code Quality Audit",
+          "parallelism": "SRL",
+          "phases": [
+            {
+              "id": "HRD-W6-PA",
+              "title": "Deduplication Infrastructure",
+              "parallelism": "SRL",
+              "tasks": [
+                {
+                  "id": "HRD-49",
+                  "description": "Extract shared bun-sqlite mock to x402-middleware/testing (682 lines across 10 packages)",
+                  "owner": ["Claude"],
+                  "depends": [],
+                  "status": "pending",
+                  "release": null
+                },
+                {
+                  "id": "HRD-50",
+                  "description": "Extract shared smoke test helpers (mockX402Middleware, mockBunSqlite) to x402-middleware/testing",
+                  "owner": ["Claude"],
+                  "depends": ["HRD-49"],
+                  "status": "pending",
+                  "release": null
+                },
+                {
+                  "id": "HRD-51",
+                  "description": "Extract ServiceResult<T> type + createInternalAuthGuard() to x402-middleware (6+ packages)",
+                  "owner": ["Claude"],
+                  "depends": [],
+                  "status": "pending",
+                  "release": null
+                },
+                {
+                  "id": "HRD-52",
+                  "description": "Extract parseJsonBody + requireCaller helpers to x402-middleware (35+ duplicate blocks)",
+                  "owner": ["Claude"],
+                  "depends": ["HRD-51"],
+                  "status": "pending",
+                  "release": null
+                },
+                {
+                  "id": "HRD-53",
+                  "description": "Update gen-cli.ts to emit shared handleError import instead of inline function (14 files)",
+                  "owner": ["Claude"],
+                  "depends": [],
+                  "status": "pending",
+                  "release": null
+                }
+              ]
+            },
+            {
+              "id": "HRD-W6-PB",
+              "title": "Inline Documentation",
+              "parallelism": "SRL",
+              "tasks": [
+                {
+                  "id": "HRD-54",
+                  "description": "Add JSDoc to x402-middleware public API (~40 exports, currently 40% documented)",
+                  "owner": ["Claude"],
+                  "depends": ["HRD-51"],
+                  "status": "pending",
+                  "release": null
+                },
+                {
+                  "id": "HRD-55",
+                  "description": "Add JSDoc to wallet.sh service layer (18 exported functions, 0 documented — reference impl)",
+                  "owner": ["Claude"],
+                  "depends": [],
+                  "status": "pending",
+                  "release": null
+                },
+                {
+                  "id": "HRD-56",
+                  "description": "Add JSDoc to remaining service layers: store, domain, search, token, email, spawn, track, mem, faucet",
+                  "owner": ["Claude"],
+                  "depends": ["HRD-55"],
+                  "status": "pending",
+                  "release": null
+                },
+                {
+                  "id": "HRD-57",
+                  "description": "Add SPDX-License-Identifier: Apache-2.0 header to all .ts source files (scriptable)",
+                  "owner": ["Claude"],
+                  "depends": [],
+                  "status": "pending",
+                  "release": null
+                }
+              ]
+            },
+            {
+              "id": "HRD-W6-PC",
+              "title": "Scaffold Cleanup",
+              "parallelism": "PARA",
+              "tasks": [
+                {
+                  "id": "HRD-58",
+                  "description": "Set imagine.sh to status:hold + allow_todo in prim.yaml, or remove package entirely (owner decides)",
+                  "owner": ["Garric", "Claude"],
+                  "depends": [],
+                  "status": "pending",
+                  "release": null
                 }
               ]
             }
