@@ -58,7 +58,6 @@
   ],
   "discovery": {
     "llms_txt": "https://prim.sh/llms.txt",
-    "llms_full": "https://prim.sh/llms-full.txt",
     "pricing": "https://prim.sh/pricing.json",
     "openai_plugin": "https://prim.sh/.well-known/ai-plugin.json",
     "mcp": "https://prim.sh/.well-known/mcp.json",

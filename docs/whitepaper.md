@@ -116,7 +116,7 @@ prim.yaml
   ├→ gen:openapi      → OpenAPI 3.1 spec (intermediate SOT)
   │   ├→ gen:mcp      → MCP tool definitions
   │   ├→ gen:cli      → CLI command handlers
-  │   ├→ gen:openai   → OpenAI function schemas
+  │   ├→ gen:tools    → Function-calling tool definitions
   │   └→ gen:docs     → README, llms.txt entries
   ├→ gen:tests        → smoke tests (5-check contract)
   └→ gen:prims        → landing page cards, pricing, status badges

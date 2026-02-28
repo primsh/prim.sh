@@ -51,7 +51,7 @@ providers:
 interfaces:
   mcp: true
   cli: true
-  openai: true
+  tools: true
   rest: true
 factory:
   max_body_size: "1MB"
@@ -195,7 +195,7 @@ providers:
 interfaces:
   mcp: true
   cli: true
-  openai: true
+  tools: true
   rest: true
 factory:
   max_body_size: "1MB"

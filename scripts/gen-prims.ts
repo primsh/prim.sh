@@ -339,22 +339,7 @@ for (const p of primsWithRoutes) {
   }
 }
 
-// 11. site/llms-full.txt — concatenation of root llms.txt + all per-prim llms.txt
-{
-  const llmsFullHeader = `# THIS FILE IS GENERATED — DO NOT EDIT\n# Source: packages/<id>/prim.yaml (all prims)\n# Regenerate: pnpm gen:prims`;
-  const rootLlms = readFileSync(join(ROOT, "site/llms.txt"), "utf8");
-  const sections = [llmsFullHeader, rootLlms.trimEnd()];
-  for (const p of prims) {
-    const primLlmsPath = join(ROOT, "site", p.id, "llms.txt");
-    if (!existsSync(primLlmsPath)) continue;
-    const content = readFileSync(primLlmsPath, "utf8").trimEnd();
-    if (content) sections.push(content);
-  }
-  const fullContent = `${sections.join("\n\n---\n\n")}\n`;
-  applyFullFile(join(ROOT, "site/llms-full.txt"), fullContent);
-}
-
-// 12. site/sitemap.xml
+// 11. site/sitemap.xml
 {
   const BASE_URL = "https://prim.sh";
   const staticPages = [
@@ -363,7 +348,6 @@ for (const p of primsWithRoutes) {
     "/terms",
     "/privacy",
     "/llms.txt",
-    "/llms-full.txt",
     "/pricing.json",
     "/discovery.json",
   ];
@@ -539,7 +523,6 @@ ${urls.join("\n")}
       primitives,
       discovery: {
         llms_txt: "https://prim.sh/llms.txt",
-        llms_full: "https://prim.sh/llms-full.txt",
         pricing: "https://prim.sh/pricing.json",
         openai_plugin: "https://prim.sh/.well-known/ai-plugin.json",
         mcp: "https://prim.sh/.well-known/mcp.json",

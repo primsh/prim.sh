@@ -94,7 +94,7 @@ export interface PrimConfig {
   sections?: Section[];
 
   // Enrichment fields
-  interfaces?: { mcp?: boolean; cli?: boolean; openai?: boolean; rest?: boolean };
+  interfaces?: { mcp?: boolean; cli?: boolean; tools?: boolean; rest?: boolean };
   quick_start?: string[];
   tips?: string[];
   limits?: string[];
@@ -112,13 +112,13 @@ function bold(s: string): string {
   return s.replace(/\*\*([^*]+)\*\*/g, "<strong>$1</strong>");
 }
 
-/** Render interface badges row (REST · CLI · MCP · OpenAI) */
+/** Render interface badges row (REST · CLI · MCP · Tools) */
 function renderInterfaces(ifaces: NonNullable<PrimConfig["interfaces"]>): string {
   const items: string[] = [];
   if (ifaces.rest) items.push("REST");
   if (ifaces.cli) items.push("CLI");
   if (ifaces.mcp) items.push("MCP");
-  if (ifaces.openai) items.push("OpenAI");
+  if (ifaces.tools) items.push("Tools");
   if (items.length === 0) return "";
   return `<div class="ifaces">${items.map((i) => `<span class="iface">${i}</span>`).join("")}</div>`;
 }
@@ -612,7 +612,7 @@ export function render(cfg: PrimConfig): string {
     `<span class="badge ${cls}">${label}</span>`,
   ].join("\n    ");
 
-  // Interface badges (REST · CLI · MCP · OpenAI)
+  // Interface badges (REST · CLI · MCP · Tools)
   const ifacesHtml = cfg.interfaces ? renderInterfaces(cfg.interfaces) : "";
 
   // Hero install command

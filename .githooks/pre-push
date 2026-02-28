@@ -1,6 +1,6 @@
 #!/bin/sh
 # Pre-push hook: verify generated files are up to date
-# Catches cascading staleness (e.g., OpenAPI → OpenAI → SDK) before CI does.
+# Catches cascading staleness (e.g., OpenAPI → Tools → SDK) before CI does.
 # Install: git config core.hooksPath .githooks
 
 # Skip if explicitly bypassed

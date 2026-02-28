@@ -26,7 +26,7 @@ pricing:
 interfaces:
   mcp: false
   cli: true
-  openai: false
+  tools: false
   rest: true
 
 factory:

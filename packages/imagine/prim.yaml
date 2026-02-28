@@ -40,7 +40,7 @@ providers:
 interfaces:
   mcp: true
   cli: true
-  openai: false
+  tools: false
   rest: true
 
 factory:

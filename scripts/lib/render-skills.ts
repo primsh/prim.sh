@@ -21,7 +21,7 @@ interface SkillPrimitive {
   interfaces: {
     mcp: boolean;
     cli: boolean;
-    openai: boolean;
+    tools: boolean;
     rest: boolean;
   };
   operations: SkillOperation[];
@@ -61,7 +61,7 @@ export function renderSkillsJson(prims: Primitive[]): string {
         interfaces: {
           mcp: p.interfaces?.mcp ?? true,
           cli: p.interfaces?.cli ?? true,
-          openai: p.interfaces?.openai ?? true,
+          tools: p.interfaces?.tools ?? true,
           rest: p.interfaces?.rest ?? true,
         },
         operations,

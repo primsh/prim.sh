@@ -105,12 +105,12 @@ function genFactorySection(): string {
 
 | Command | What it does |
 |---------|-------------|
-| \`pnpm gen\` | Run all generators (prims, mcp, cli, openai, tests, docs) |
+| \`pnpm gen\` | Run all generators (prims, mcp, cli, tools, tests, docs) |
 | \`pnpm gen:check\` | Check all generated files are up to date (CI) |
 | \`pnpm gen:prims\` | Regenerate site cards, llms.txt, status badges, pricing rows |
 | \`pnpm gen:mcp\` | Regenerate MCP server configs |
 | \`pnpm gen:cli\` | Regenerate CLI tool definitions |
-| \`pnpm gen:openai\` | Regenerate OpenAI plugin manifests |
+| \`pnpm gen:tools\` | Regenerate function-calling tool definitions |
 | \`pnpm gen:tests\` | Regenerate smoke test scaffolds |
 | \`pnpm gen:docs\` | Regenerate per-package READMEs + this section |
 
