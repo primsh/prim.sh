@@ -8,7 +8,7 @@ category: compute
 card_class: p1
 description: "VPS in one API call. Deploy, scale, destroy. Per-second billing."
 port: 3004
-order: 3
+order: 5
 phantom: false
 env:
   - PRIM_PAY_TO

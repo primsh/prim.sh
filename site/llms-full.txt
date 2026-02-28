@@ -764,6 +764,549 @@ Rate-limited by wallet address. No wallet registration required — anyone can d
 
 ---
 
+# store.prim.sh
+
+Object storage. Persist artifacts across ephemeral VMs. S3-compatible.
+
+Base URL: https://store.prim.sh
+Auth: x402 (USDC on Base Sepolia). GET /, GET /pricing, GET /v1/metrics are free.
+Chain: Base Sepolia (eip155:84532) during beta.
+
+Install:
+  curl -fsSL https://store.prim.sh/install.sh | sh
+
+Limits:
+  Max buckets per wallet: 10
+  Default per-bucket quota: 100 MB
+  Max total storage per wallet: 1 GB
+  Max object size: 5 GB (limited by max_body_size: 128MB for API)
+
+---
+
+## Quick Start
+
+  1. POST /v1/buckets → create a bucket ($0.05)
+  2. PUT /v1/buckets/:id/objects/:key with raw bytes body → upload object
+  3. GET /v1/buckets/:id/objects/:key → download object
+
+## Tips
+
+  - Wallet address from x402 payment is the bucket owner. No separate auth needed.
+  - Content-Length header is required on PUT — missing it returns 411.
+  - Key may include slashes (e.g. notes/2026/feb.txt) for path-like organization.
+  - Call POST /v1/buckets/:id/quota/reconcile if usage_bytes seems incorrect after bulk deletes.
+  - Delete all objects before deleting a bucket — non-empty bucket delete is rejected.
+
+---
+
+## x402 Payment
+
+  1. Make request. Server returns 402 with Payment-Required header.
+  2. Sign EIP-3009 transferWithAuthorization.
+  3. Retry with Payment-Signature header (base64-encoded signed authorization).
+
+Error envelope:
+  {"error": {"code": "<code>", "message": "<msg>"}}
+
+Error codes:
+  not_found
+  forbidden
+  invalid_request
+  r2_error
+  rate_limited
+  bucket_name_taken
+  quota_exceeded
+
+---
+
+## Endpoints
+
+### GET /
+
+Health check.
+
+Free.
+
+Response (200):
+  service  string  "store.sh"
+  status   string  "ok"
+
+---
+
+### GET /pricing
+
+Machine-readable pricing for all endpoints.
+
+Free.
+
+Response (200):
+  service   string  "store.prim.sh"
+  currency  string  "USDC"
+  network   string  "eip155:8453"
+  routes    array   Route pricing list
+    .method       string  HTTP method
+    .path         string  URL path
+    .price_usdc   string  Price in USDC (decimal string)
+    .description  string  Human-readable description
+
+---
+
+### GET /v1/metrics
+
+Operational metrics. Uptime, request counts, latency percentiles, error rates.
+
+Free.
+
+Response (200):
+  service     string  "store.prim.sh"
+  uptime_s    number  Seconds since last restart
+  requests    object  Request counts and latencies by endpoint
+  payments    object  Payment counts by endpoint
+  errors      object  Error counts by status code
+
+---
+
+### POST /v1/buckets
+
+Create a new storage bucket
+
+Price: $0.05
+
+Request:
+  name      string  required  Bucket name. Unique per wallet. 3-63 chars, alphanumeric + hyphens.
+  location  string  optional  Storage region (e.g. "us-east-1"). Defaults to primary region.
+
+Response (201):
+  bucket  BucketResponse  The created bucket.
+
+Errors:
+  400  invalid_request        Invalid bucket name or name already taken
+  402  payment_required       x402 payment needed
+  403  bucket_limit_exceeded  Wallet has reached 10 bucket limit
+  502  r2_error               Upstream R2 error
+
+---
+
+### GET /v1/buckets
+
+List all buckets owned by the calling wallet
+
+Price: $0.001
+
+Query params:
+  limit  integer  optional  1-100, default 20
+  page   integer  optional  1-based page number, default 1
+
+Response (200): BucketListResponse
+
+Errors:
+  402  payment_required  x402 payment needed
+  403  forbidden         Missing wallet address in payment
+
+---
+
+### GET /v1/buckets/:id
+
+Get details for a single bucket. Caller must own the bucket.
+
+Price: $0.001
+
+Path params:
+  id  string  required  id parameter
+
+Response (200):
+  id            string         Bucket ID (UUID).
+  name          string         Bucket name. Unique per wallet. Alphanumeric, hyphens, underscores.
+  location      string | null  Storage region (e.g. "us-east-1"). Null = default region.
+  owner_wallet  string         Ethereum address of the bucket owner.
+  quota_bytes   number | null  Per-bucket quota in bytes. Null = default (100 MB).
+  usage_bytes   number         Current storage usage in bytes.
+  created_at    string         ISO 8601 timestamp when the bucket was created.
+
+Errors:
+  402  payment_required  x402 payment needed
+  403  forbidden         Bucket belongs to a different wallet
+  404  not_found         Bucket not found
+
+---
+
+### DELETE /v1/buckets/:id
+
+Delete a bucket. Bucket must be empty first.
+
+Price: $0.01
+
+Path params:
+  id  string  required  id parameter
+
+Response (200): {} (empty object)
+
+Errors:
+  402  payment_required  x402 payment needed
+  403  forbidden         Bucket belongs to a different wallet
+  404  not_found         Bucket not found
+  502  r2_error          Upstream R2 error
+
+---
+
+### PUT /v1/buckets/:id/objects/:key
+
+Upload an object. Key may include slashes. Content-Length header required.
+
+Request body is raw bytes. Fails with 413 if upload exceeds quota.
+
+Price: $0.001
+
+Path params:
+  id   string  required  id parameter
+  key  string  required  key parameter
+
+Response (200):
+  key   string  Object key as stored.
+  size  number  Object size in bytes.
+  etag  string  ETag (MD5 hash).
+
+Errors:
+  400  invalid_request         Missing or invalid body
+  402  payment_required        x402 payment needed
+  403  forbidden               Bucket belongs to a different wallet
+  404  not_found               Bucket not found
+  413  quota_exceeded          Upload would exceed bucket quota
+  413  storage_limit_exceeded  Upload would exceed wallet 1 GB limit
+  502  r2_error                Upstream R2 error
+
+---
+
+### GET /v1/buckets/:id/objects
+
+List objects in a bucket. Cursor-based pagination.
+
+Price: $0.001
+
+Path params:
+  id  string  required  id parameter
+
+Query params:
+  prefix  string   optional  Filter by key prefix (e.g. notes/)
+  limit   integer  optional  1-1000, default 100
+  cursor  string   optional  Cursor from previous response's next_cursor
+
+Response (200): ObjectListResponse
+
+Errors:
+  402  payment_required  x402 payment needed
+  403  forbidden         Bucket belongs to a different wallet
+  404  not_found         Bucket not found
+  502  r2_error          Upstream R2 error
+
+---
+
+### GET /v1/buckets/:id/objects/:key
+
+Download an object. Response body is streamed directly.
+
+Price: $0.001
+
+Path params:
+  id   string  required  id parameter
+  key  string  required  key parameter
+
+Response (200): Raw bytes (application/octet-stream)
+
+Errors:
+  402  payment_required  x402 payment needed
+  403  forbidden         Bucket belongs to a different wallet
+  404  not_found         Bucket or object not found
+  502  r2_error          Upstream R2 error
+
+---
+
+### DELETE /v1/buckets/:id/objects/:key
+
+Delete an object from a bucket
+
+Price: $0.001
+
+Path params:
+  id   string  required  id parameter
+  key  string  required  key parameter
+
+Response (200):
+  status  "deleted"  Always "deleted" on success.
+
+Errors:
+  402  payment_required  x402 payment needed
+  403  forbidden         Bucket belongs to a different wallet
+  404  not_found         Bucket or object not found
+  502  r2_error          Upstream R2 error
+
+---
+
+### GET /v1/buckets/:id/quota
+
+Get quota and usage for a bucket
+
+Price: $0.001
+
+Path params:
+  id  string  required  id parameter
+
+Response (200):
+  bucket_id    string         Bucket ID.
+  quota_bytes  number | null  Per-bucket quota in bytes. Null = default (100 MB).
+  usage_bytes  number         Current storage usage in bytes.
+  usage_pct    number | null  Usage as a percentage (0-100). Null if quota_bytes is null.
+
+Errors:
+  402  payment_required  x402 payment needed
+  403  forbidden         Bucket belongs to a different wallet
+  404  not_found         Bucket not found
+
+---
+
+### PUT /v1/buckets/:id/quota
+
+Set the storage quota for a bucket. Pass null to reset to default (100 MB).
+
+Price: $0.01
+
+Path params:
+  id  string  required  id parameter
+
+Request:
+  quota_bytes  number | null  required  New quota in bytes. Pass null to reset to default (100 MB).
+
+Response (200):
+  bucket_id    string         Bucket ID.
+  quota_bytes  number | null  Per-bucket quota in bytes. Null = default (100 MB).
+  usage_bytes  number         Current storage usage in bytes.
+  usage_pct    number | null  Usage as a percentage (0-100). Null if quota_bytes is null.
+
+Errors:
+  400  invalid_request   Invalid quota value
+  402  payment_required  x402 payment needed
+  403  forbidden         Bucket belongs to a different wallet
+  404  not_found         Bucket not found
+  502  r2_error          Upstream R2 error
+
+---
+
+### POST /v1/buckets/:id/quota/reconcile
+
+Recompute bucket usage by scanning actual R2 storage. Use when usage_bytes appears incorrect.
+
+Price: $0.05
+
+Path params:
+  id  string  required  id parameter
+
+Response (200):
+  bucket_id       string  Bucket ID.
+  previous_bytes  number  Storage usage recorded before reconciliation, in bytes.
+  actual_bytes    number  Actual storage usage recomputed from R2, in bytes.
+  delta_bytes     number  Difference (actual - previous). Negative means recorded was overstated.
+
+Errors:
+  402  payment_required  x402 payment needed
+  403  forbidden         Bucket belongs to a different wallet
+  404  not_found         Bucket not found
+  502  r2_error          Upstream R2 error
+
+---
+
+## Ownership
+
+All buckets and objects are scoped to the wallet address extracted from the x402 payment. Callers can only access their own buckets.
+
+---
+
+# search.prim.sh
+
+Search for agents. No ads, no SEO spam. Just facts and clean markdown.
+
+Base URL: https://search.prim.sh
+Auth: x402 (USDC on Base Sepolia). GET /, GET /pricing, GET /v1/metrics are free.
+Chain: Base Sepolia (eip155:84532) during beta.
+
+Install:
+  curl -fsSL https://search.prim.sh/install.sh | sh
+
+Limits:
+  Max results per search: 20
+  Rate limit applies per wallet — check Retry-After header on 429
+
+---
+
+## Quick Start
+
+  1. POST /v1/search with {"query": "...", "max_results": 5} → web search results
+  2. POST /v1/search/news with {"query": "..."} → recent news articles
+  3. POST /v1/extract with {"urls": ["https://..."]} → clean markdown content
+
+## Tips
+
+  - Set include_answer: true to get an AI-generated summary alongside search results.
+  - Use exclude_domains to remove noise sources (e.g. reddit.com, quora.com).
+  - POST /v1/extract accepts a single URL string or an array of URLs.
+  - Failed extractions (paywalls, 404s) are reported in the failed array — the request still succeeds.
+  - Check Retry-After header on 429 responses before retrying.
+
+---
+
+## x402 Payment
+
+  1. Make request. Server returns 402 with Payment-Required header.
+  2. Sign EIP-3009 transferWithAuthorization.
+  3. Retry with Payment-Signature header (base64-encoded signed authorization).
+
+Error envelope:
+  {"error": {"code": "<code>", "message": "<msg>"}}
+
+Error codes:
+  invalid_request
+  rate_limited
+  provider_error
+
+---
+
+## Endpoints
+
+### GET /
+
+Health check.
+
+Free.
+
+Response (200):
+  service  string  "search.sh"
+  status   string  "ok"
+
+---
+
+### GET /pricing
+
+Machine-readable pricing for all endpoints.
+
+Free.
+
+Response (200):
+  service   string  "search.prim.sh"
+  currency  string  "USDC"
+  network   string  "eip155:8453"
+  routes    array   Route pricing list
+    .method       string  HTTP method
+    .path         string  URL path
+    .price_usdc   string  Price in USDC (decimal string)
+    .description  string  Human-readable description
+
+---
+
+### GET /v1/metrics
+
+Operational metrics. Uptime, request counts, latency percentiles, error rates.
+
+Free.
+
+Response (200):
+  service     string  "search.prim.sh"
+  uptime_s    number  Seconds since last restart
+  requests    object  Request counts and latencies by endpoint
+  payments    object  Payment counts by endpoint
+  errors      object  Error counts by status code
+
+---
+
+### POST /v1/search
+
+Search the web and return ranked results with optional AI-generated answer
+
+Price: $0.01
+
+Request:
+  query            string                             required  Search query string.
+  max_results      number                             optional  Maximum number of results to return. 1-20, default 10.
+  search_depth     "basic" | "advanced"               optional  Search depth. "basic" | "advanced", default "basic".
+  country          string                             optional  Two-letter ISO 3166-1 country code to bias results (e.g. "US").
+  time_range       "day" | "week" | "month" | "year"  optional  Restrict results by recency. "day" | "week" | "month" | "year".
+  include_answer   boolean                            optional  Include AI-generated answer summarizing top results. Default false.
+  include_domains  string[]                           optional  Restrict results to these domains only (e.g. ["docs.base.org"]).
+  exclude_domains  string[]                           optional  Exclude results from these domains (e.g. ["reddit.com"]).
+
+Response (200):
+  query          string          Search query echoed back.
+  answer         string          AI-generated answer summarizing top results. Only present if include_answer was true.
+  results        SearchResult[]  Ranked search results.
+  response_time  number          Time taken to complete the search in milliseconds.
+
+Errors:
+  400  invalid_request   Missing or invalid query
+  402  payment_required  x402 payment needed
+  429  rate_limited      Too many requests. Check Retry-After header.
+  502  provider_error    Upstream search provider unavailable
+
+---
+
+### POST /v1/search/news
+
+Search for recent news articles, ordered by recency
+
+Price: $0.01
+
+Request:
+  query            string                             required  Search query string.
+  max_results      number                             optional  Maximum number of results to return. 1-20, default 10.
+  search_depth     "basic" | "advanced"               optional  Search depth. "basic" | "advanced", default "basic".
+  country          string                             optional  Two-letter ISO 3166-1 country code to bias results (e.g. "US").
+  time_range       "day" | "week" | "month" | "year"  optional  Restrict results by recency. "day" | "week" | "month" | "year".
+  include_answer   boolean                            optional  Include AI-generated answer summarizing top results. Default false.
+  include_domains  string[]                           optional  Restrict results to these domains only (e.g. ["docs.base.org"]).
+  exclude_domains  string[]                           optional  Exclude results from these domains (e.g. ["reddit.com"]).
+
+Response (200):
+  query          string          Search query echoed back.
+  answer         string          AI-generated answer summarizing top results. Only present if include_answer was true.
+  results        SearchResult[]  Ranked search results.
+  response_time  number          Time taken to complete the search in milliseconds.
+
+Errors:
+  400  invalid_request   Missing or invalid query
+  402  payment_required  x402 payment needed
+  429  rate_limited      Too many requests
+  502  provider_error    Upstream search provider unavailable
+
+---
+
+### POST /v1/extract
+
+Extract readable content from one or more URLs as markdown or plain text
+
+Failed extractions are in the failed array. Request succeeds if at least one URL was attempted.
+
+Price: $0.005
+
+Request:
+  urls    string | string[]    required  URL string or array of URLs to extract content from.
+  format  "markdown" | "text"  optional  Output format. "markdown" | "text", default "markdown".
+
+Response (200):
+  results        ExtractResult[]     Successfully extracted pages.
+  failed         FailedExtraction[]  Pages that could not be extracted.
+  response_time  number              Time taken to complete the extraction in milliseconds.
+
+Errors:
+  400  invalid_request   Missing urls field or invalid URL format
+  402  payment_required  x402 payment needed
+  429  rate_limited      Too many requests
+  502  provider_error    Upstream extraction provider unavailable
+
+---
+
+## Ownership
+
+Stateless. No resources stored per wallet. Each request is independent.
+
+---
+
 # spawn.prim.sh
 
 VPS in one API call. Deploy, scale, destroy. Per-second billing.
@@ -1143,362 +1686,6 @@ Errors:
 ## Ownership
 
 All servers and SSH keys are scoped to the wallet address extracted from the x402 payment.
-
----
-
-# store.prim.sh
-
-Object storage. Persist artifacts across ephemeral VMs. S3-compatible.
-
-Base URL: https://store.prim.sh
-Auth: x402 (USDC on Base Sepolia). GET /, GET /pricing, GET /v1/metrics are free.
-Chain: Base Sepolia (eip155:84532) during beta.
-
-Install:
-  curl -fsSL https://store.prim.sh/install.sh | sh
-
-Limits:
-  Max buckets per wallet: 10
-  Default per-bucket quota: 100 MB
-  Max total storage per wallet: 1 GB
-  Max object size: 5 GB (limited by max_body_size: 128MB for API)
-
----
-
-## Quick Start
-
-  1. POST /v1/buckets → create a bucket ($0.05)
-  2. PUT /v1/buckets/:id/objects/:key with raw bytes body → upload object
-  3. GET /v1/buckets/:id/objects/:key → download object
-
-## Tips
-
-  - Wallet address from x402 payment is the bucket owner. No separate auth needed.
-  - Content-Length header is required on PUT — missing it returns 411.
-  - Key may include slashes (e.g. notes/2026/feb.txt) for path-like organization.
-  - Call POST /v1/buckets/:id/quota/reconcile if usage_bytes seems incorrect after bulk deletes.
-  - Delete all objects before deleting a bucket — non-empty bucket delete is rejected.
-
----
-
-## x402 Payment
-
-  1. Make request. Server returns 402 with Payment-Required header.
-  2. Sign EIP-3009 transferWithAuthorization.
-  3. Retry with Payment-Signature header (base64-encoded signed authorization).
-
-Error envelope:
-  {"error": {"code": "<code>", "message": "<msg>"}}
-
-Error codes:
-  not_found
-  forbidden
-  invalid_request
-  r2_error
-  rate_limited
-  bucket_name_taken
-  quota_exceeded
-
----
-
-## Endpoints
-
-### GET /
-
-Health check.
-
-Free.
-
-Response (200):
-  service  string  "store.sh"
-  status   string  "ok"
-
----
-
-### GET /pricing
-
-Machine-readable pricing for all endpoints.
-
-Free.
-
-Response (200):
-  service   string  "store.prim.sh"
-  currency  string  "USDC"
-  network   string  "eip155:8453"
-  routes    array   Route pricing list
-    .method       string  HTTP method
-    .path         string  URL path
-    .price_usdc   string  Price in USDC (decimal string)
-    .description  string  Human-readable description
-
----
-
-### GET /v1/metrics
-
-Operational metrics. Uptime, request counts, latency percentiles, error rates.
-
-Free.
-
-Response (200):
-  service     string  "store.prim.sh"
-  uptime_s    number  Seconds since last restart
-  requests    object  Request counts and latencies by endpoint
-  payments    object  Payment counts by endpoint
-  errors      object  Error counts by status code
-
----
-
-### POST /v1/buckets
-
-Create a new storage bucket
-
-Price: $0.05
-
-Request:
-  name      string  required  Bucket name. Unique per wallet. 3-63 chars, alphanumeric + hyphens.
-  location  string  optional  Storage region (e.g. "us-east-1"). Defaults to primary region.
-
-Response (201):
-  bucket  BucketResponse  The created bucket.
-
-Errors:
-  400  invalid_request        Invalid bucket name or name already taken
-  402  payment_required       x402 payment needed
-  403  bucket_limit_exceeded  Wallet has reached 10 bucket limit
-  502  r2_error               Upstream R2 error
-
----
-
-### GET /v1/buckets
-
-List all buckets owned by the calling wallet
-
-Price: $0.001
-
-Query params:
-  limit  integer  optional  1-100, default 20
-  page   integer  optional  1-based page number, default 1
-
-Response (200): BucketListResponse
-
-Errors:
-  402  payment_required  x402 payment needed
-  403  forbidden         Missing wallet address in payment
-
----
-
-### GET /v1/buckets/:id
-
-Get details for a single bucket. Caller must own the bucket.
-
-Price: $0.001
-
-Path params:
-  id  string  required  id parameter
-
-Response (200):
-  id            string         Bucket ID (UUID).
-  name          string         Bucket name. Unique per wallet. Alphanumeric, hyphens, underscores.
-  location      string | null  Storage region (e.g. "us-east-1"). Null = default region.
-  owner_wallet  string         Ethereum address of the bucket owner.
-  quota_bytes   number | null  Per-bucket quota in bytes. Null = default (100 MB).
-  usage_bytes   number         Current storage usage in bytes.
-  created_at    string         ISO 8601 timestamp when the bucket was created.
-
-Errors:
-  402  payment_required  x402 payment needed
-  403  forbidden         Bucket belongs to a different wallet
-  404  not_found         Bucket not found
-
----
-
-### DELETE /v1/buckets/:id
-
-Delete a bucket. Bucket must be empty first.
-
-Price: $0.01
-
-Path params:
-  id  string  required  id parameter
-
-Response (200): {} (empty object)
-
-Errors:
-  402  payment_required  x402 payment needed
-  403  forbidden         Bucket belongs to a different wallet
-  404  not_found         Bucket not found
-  502  r2_error          Upstream R2 error
-
----
-
-### PUT /v1/buckets/:id/objects/:key
-
-Upload an object. Key may include slashes. Content-Length header required.
-
-Request body is raw bytes. Fails with 413 if upload exceeds quota.
-
-Price: $0.001
-
-Path params:
-  id   string  required  id parameter
-  key  string  required  key parameter
-
-Response (200):
-  key   string  Object key as stored.
-  size  number  Object size in bytes.
-  etag  string  ETag (MD5 hash).
-
-Errors:
-  400  invalid_request         Missing or invalid body
-  402  payment_required        x402 payment needed
-  403  forbidden               Bucket belongs to a different wallet
-  404  not_found               Bucket not found
-  413  quota_exceeded          Upload would exceed bucket quota
-  413  storage_limit_exceeded  Upload would exceed wallet 1 GB limit
-  502  r2_error                Upstream R2 error
-
----
-
-### GET /v1/buckets/:id/objects
-
-List objects in a bucket. Cursor-based pagination.
-
-Price: $0.001
-
-Path params:
-  id  string  required  id parameter
-
-Query params:
-  prefix  string   optional  Filter by key prefix (e.g. notes/)
-  limit   integer  optional  1-1000, default 100
-  cursor  string   optional  Cursor from previous response's next_cursor
-
-Response (200): ObjectListResponse
-
-Errors:
-  402  payment_required  x402 payment needed
-  403  forbidden         Bucket belongs to a different wallet
-  404  not_found         Bucket not found
-  502  r2_error          Upstream R2 error
-
----
-
-### GET /v1/buckets/:id/objects/:key
-
-Download an object. Response body is streamed directly.
-
-Price: $0.001
-
-Path params:
-  id   string  required  id parameter
-  key  string  required  key parameter
-
-Response (200): Raw bytes (application/octet-stream)
-
-Errors:
-  402  payment_required  x402 payment needed
-  403  forbidden         Bucket belongs to a different wallet
-  404  not_found         Bucket or object not found
-  502  r2_error          Upstream R2 error
-
----
-
-### DELETE /v1/buckets/:id/objects/:key
-
-Delete an object from a bucket
-
-Price: $0.001
-
-Path params:
-  id   string  required  id parameter
-  key  string  required  key parameter
-
-Response (200):
-  status  "deleted"  Always "deleted" on success.
-
-Errors:
-  402  payment_required  x402 payment needed
-  403  forbidden         Bucket belongs to a different wallet
-  404  not_found         Bucket or object not found
-  502  r2_error          Upstream R2 error
-
----
-
-### GET /v1/buckets/:id/quota
-
-Get quota and usage for a bucket
-
-Price: $0.001
-
-Path params:
-  id  string  required  id parameter
-
-Response (200):
-  bucket_id    string         Bucket ID.
-  quota_bytes  number | null  Per-bucket quota in bytes. Null = default (100 MB).
-  usage_bytes  number         Current storage usage in bytes.
-  usage_pct    number | null  Usage as a percentage (0-100). Null if quota_bytes is null.
-
-Errors:
-  402  payment_required  x402 payment needed
-  403  forbidden         Bucket belongs to a different wallet
-  404  not_found         Bucket not found
-
----
-
-### PUT /v1/buckets/:id/quota
-
-Set the storage quota for a bucket. Pass null to reset to default (100 MB).
-
-Price: $0.01
-
-Path params:
-  id  string  required  id parameter
-
-Request:
-  quota_bytes  number | null  required  New quota in bytes. Pass null to reset to default (100 MB).
-
-Response (200):
-  bucket_id    string         Bucket ID.
-  quota_bytes  number | null  Per-bucket quota in bytes. Null = default (100 MB).
-  usage_bytes  number         Current storage usage in bytes.
-  usage_pct    number | null  Usage as a percentage (0-100). Null if quota_bytes is null.
-
-Errors:
-  400  invalid_request   Invalid quota value
-  402  payment_required  x402 payment needed
-  403  forbidden         Bucket belongs to a different wallet
-  404  not_found         Bucket not found
-  502  r2_error          Upstream R2 error
-
----
-
-### POST /v1/buckets/:id/quota/reconcile
-
-Recompute bucket usage by scanning actual R2 storage. Use when usage_bytes appears incorrect.
-
-Price: $0.05
-
-Path params:
-  id  string  required  id parameter
-
-Response (200):
-  bucket_id       string  Bucket ID.
-  previous_bytes  number  Storage usage recorded before reconciliation, in bytes.
-  actual_bytes    number  Actual storage usage recomputed from R2, in bytes.
-  delta_bytes     number  Difference (actual - previous). Negative means recorded was overstated.
-
-Errors:
-  402  payment_required  x402 payment needed
-  403  forbidden         Bucket belongs to a different wallet
-  404  not_found         Bucket not found
-  502  r2_error          Upstream R2 error
-
----
-
-## Ownership
-
-All buckets and objects are scoped to the wallet address extracted from the x402 payment. Callers can only access their own buckets.
 
 ---
 
@@ -1994,193 +2181,6 @@ Errors:
 ## Ownership
 
 All mailboxes and domains are scoped to the wallet address extracted from the x402 payment.
-
----
-
-# search.prim.sh
-
-Search for agents. No ads, no SEO spam. Just facts and clean markdown.
-
-Base URL: https://search.prim.sh
-Auth: x402 (USDC on Base Sepolia). GET /, GET /pricing, GET /v1/metrics are free.
-Chain: Base Sepolia (eip155:84532) during beta.
-
-Install:
-  curl -fsSL https://search.prim.sh/install.sh | sh
-
-Limits:
-  Max results per search: 20
-  Rate limit applies per wallet — check Retry-After header on 429
-
----
-
-## Quick Start
-
-  1. POST /v1/search with {"query": "...", "max_results": 5} → web search results
-  2. POST /v1/search/news with {"query": "..."} → recent news articles
-  3. POST /v1/extract with {"urls": ["https://..."]} → clean markdown content
-
-## Tips
-
-  - Set include_answer: true to get an AI-generated summary alongside search results.
-  - Use exclude_domains to remove noise sources (e.g. reddit.com, quora.com).
-  - POST /v1/extract accepts a single URL string or an array of URLs.
-  - Failed extractions (paywalls, 404s) are reported in the failed array — the request still succeeds.
-  - Check Retry-After header on 429 responses before retrying.
-
----
-
-## x402 Payment
-
-  1. Make request. Server returns 402 with Payment-Required header.
-  2. Sign EIP-3009 transferWithAuthorization.
-  3. Retry with Payment-Signature header (base64-encoded signed authorization).
-
-Error envelope:
-  {"error": {"code": "<code>", "message": "<msg>"}}
-
-Error codes:
-  invalid_request
-  rate_limited
-  provider_error
-
----
-
-## Endpoints
-
-### GET /
-
-Health check.
-
-Free.
-
-Response (200):
-  service  string  "search.sh"
-  status   string  "ok"
-
----
-
-### GET /pricing
-
-Machine-readable pricing for all endpoints.
-
-Free.
-
-Response (200):
-  service   string  "search.prim.sh"
-  currency  string  "USDC"
-  network   string  "eip155:8453"
-  routes    array   Route pricing list
-    .method       string  HTTP method
-    .path         string  URL path
-    .price_usdc   string  Price in USDC (decimal string)
-    .description  string  Human-readable description
-
----
-
-### GET /v1/metrics
-
-Operational metrics. Uptime, request counts, latency percentiles, error rates.
-
-Free.
-
-Response (200):
-  service     string  "search.prim.sh"
-  uptime_s    number  Seconds since last restart
-  requests    object  Request counts and latencies by endpoint
-  payments    object  Payment counts by endpoint
-  errors      object  Error counts by status code
-
----
-
-### POST /v1/search
-
-Search the web and return ranked results with optional AI-generated answer
-
-Price: $0.01
-
-Request:
-  query            string                             required  Search query string.
-  max_results      number                             optional  Maximum number of results to return. 1-20, default 10.
-  search_depth     "basic" | "advanced"               optional  Search depth. "basic" | "advanced", default "basic".
-  country          string                             optional  Two-letter ISO 3166-1 country code to bias results (e.g. "US").
-  time_range       "day" | "week" | "month" | "year"  optional  Restrict results by recency. "day" | "week" | "month" | "year".
-  include_answer   boolean                            optional  Include AI-generated answer summarizing top results. Default false.
-  include_domains  string[]                           optional  Restrict results to these domains only (e.g. ["docs.base.org"]).
-  exclude_domains  string[]                           optional  Exclude results from these domains (e.g. ["reddit.com"]).
-
-Response (200):
-  query          string          Search query echoed back.
-  answer         string          AI-generated answer summarizing top results. Only present if include_answer was true.
-  results        SearchResult[]  Ranked search results.
-  response_time  number          Time taken to complete the search in milliseconds.
-
-Errors:
-  400  invalid_request   Missing or invalid query
-  402  payment_required  x402 payment needed
-  429  rate_limited      Too many requests. Check Retry-After header.
-  502  provider_error    Upstream search provider unavailable
-
----
-
-### POST /v1/search/news
-
-Search for recent news articles, ordered by recency
-
-Price: $0.01
-
-Request:
-  query            string                             required  Search query string.
-  max_results      number                             optional  Maximum number of results to return. 1-20, default 10.
-  search_depth     "basic" | "advanced"               optional  Search depth. "basic" | "advanced", default "basic".
-  country          string                             optional  Two-letter ISO 3166-1 country code to bias results (e.g. "US").
-  time_range       "day" | "week" | "month" | "year"  optional  Restrict results by recency. "day" | "week" | "month" | "year".
-  include_answer   boolean                            optional  Include AI-generated answer summarizing top results. Default false.
-  include_domains  string[]                           optional  Restrict results to these domains only (e.g. ["docs.base.org"]).
-  exclude_domains  string[]                           optional  Exclude results from these domains (e.g. ["reddit.com"]).
-
-Response (200):
-  query          string          Search query echoed back.
-  answer         string          AI-generated answer summarizing top results. Only present if include_answer was true.
-  results        SearchResult[]  Ranked search results.
-  response_time  number          Time taken to complete the search in milliseconds.
-
-Errors:
-  400  invalid_request   Missing or invalid query
-  402  payment_required  x402 payment needed
-  429  rate_limited      Too many requests
-  502  provider_error    Upstream search provider unavailable
-
----
-
-### POST /v1/extract
-
-Extract readable content from one or more URLs as markdown or plain text
-
-Failed extractions are in the failed array. Request succeeds if at least one URL was attempted.
-
-Price: $0.005
-
-Request:
-  urls    string | string[]    required  URL string or array of URLs to extract content from.
-  format  "markdown" | "text"  optional  Output format. "markdown" | "text", default "markdown".
-
-Response (200):
-  results        ExtractResult[]     Successfully extracted pages.
-  failed         FailedExtraction[]  Pages that could not be extracted.
-  response_time  number              Time taken to complete the extraction in milliseconds.
-
-Errors:
-  400  invalid_request   Missing urls field or invalid URL format
-  402  payment_required  x402 payment needed
-  429  rate_limited      Too many requests
-  502  provider_error    Upstream extraction provider unavailable
-
----
-
-## Ownership
-
-Stateless. No resources stored per wallet. Each request is independent.
 
 ---
 

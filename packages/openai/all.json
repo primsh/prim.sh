@@ -298,6 +298,418 @@
   {
     "type": "function",
     "function": {
+      "name": "store_bucket_create",
+      "description": "Create a bucket. Creates a new storage bucket owned by the paying wallet address. Price: $0.05 via x402 (USDC on Base).",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "Bucket name. Must be unique per wallet. Alphanumeric, hyphens, underscores."
+          },
+          "location": {
+            "type": "string",
+            "description": "Storage region (optional). Defaults to primary region."
+          }
+        },
+        "required": [
+          "name"
+        ]
+      }
+    }
+  },
+  {
+    "type": "function",
+    "function": {
+      "name": "store_bucket_list",
+      "description": "List buckets. Returns all buckets owned by the paying wallet address. Price: $0.001 via x402 (USDC on Base).",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "limit": {
+            "type": "integer",
+            "description": "Number of buckets per page (1–100, default 20).",
+            "minimum": 1,
+            "maximum": 100
+          },
+          "page": {
+            "type": "integer",
+            "description": "Page number (1-based, default 1).",
+            "minimum": 1
+          }
+        }
+      }
+    }
+  },
+  {
+    "type": "function",
+    "function": {
+      "name": "store_bucket_get",
+      "description": "Get bucket details. Returns details for a single bucket. Price: $0.001 via x402 (USDC on Base).",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "Bucket ID."
+          }
+        },
+        "required": [
+          "id"
+        ]
+      }
+    }
+  },
+  {
+    "type": "function",
+    "function": {
+      "name": "store_bucket_delete",
+      "description": "Delete a bucket. Deletes a bucket. Price: $0.01 via x402 (USDC on Base).",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "Bucket ID."
+          }
+        },
+        "required": [
+          "id"
+        ]
+      }
+    }
+  },
+  {
+    "type": "function",
+    "function": {
+      "name": "store_object_list",
+      "description": "List objects in a bucket. Lists objects in a bucket with optional prefix filtering. Price: $0.001 via x402 (USDC on Base).",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "Bucket ID."
+          },
+          "prefix": {
+            "type": "string",
+            "description": "Filter objects by key prefix (e.g. \"notes/\" to list only keys starting with \"notes/\")."
+          },
+          "limit": {
+            "type": "integer",
+            "description": "Maximum number of objects to return (1–1000, default 100).",
+            "minimum": 1,
+            "maximum": 1000
+          },
+          "cursor": {
+            "type": "string",
+            "description": "Pagination cursor from the previous response's `next_cursor`."
+          }
+        },
+        "required": [
+          "id"
+        ]
+      }
+    }
+  },
+  {
+    "type": "function",
+    "function": {
+      "name": "store_object_put",
+      "description": "Upload an object. Uploads an object to a bucket. Price: $0.001 via x402 (USDC on Base).",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "Bucket ID."
+          },
+          "key": {
+            "type": "string",
+            "description": "Object key (path). May include slashes (e.g. \"notes/2026/feb.txt\")."
+          }
+        },
+        "required": [
+          "id",
+          "key"
+        ]
+      }
+    }
+  },
+  {
+    "type": "function",
+    "function": {
+      "name": "store_object_get",
+      "description": "Download an object. Downloads an object from a bucket. Price: $0.001 via x402 (USDC on Base).",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "Bucket ID."
+          },
+          "key": {
+            "type": "string",
+            "description": "Object key (path). May include slashes."
+          }
+        },
+        "required": [
+          "id",
+          "key"
+        ]
+      }
+    }
+  },
+  {
+    "type": "function",
+    "function": {
+      "name": "store_object_delete",
+      "description": "Delete an object. Deletes an object from a bucket. Price: $0.001 via x402 (USDC on Base).",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "Bucket ID."
+          },
+          "key": {
+            "type": "string",
+            "description": "Object key (path). May include slashes."
+          }
+        },
+        "required": [
+          "id",
+          "key"
+        ]
+      }
+    }
+  },
+  {
+    "type": "function",
+    "function": {
+      "name": "store_quota_get",
+      "description": "Get bucket quota and usage. Returns the current quota limit and storage usage for a bucket. Price: $0.001 via x402 (USDC on Base).",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "Bucket ID."
+          }
+        },
+        "required": [
+          "id"
+        ]
+      }
+    }
+  },
+  {
+    "type": "function",
+    "function": {
+      "name": "store_quota_set",
+      "description": "Set bucket quota. Sets the storage quota for a bucket. Price: $0.01 via x402 (USDC on Base).",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "Bucket ID."
+          },
+          "quota_bytes": {
+            "type": "integer",
+            "description": "New quota in bytes, or null to reset to default (100 MB)."
+          }
+        },
+        "required": [
+          "id",
+          "quota_bytes"
+        ]
+      }
+    }
+  },
+  {
+    "type": "function",
+    "function": {
+      "name": "store_quota_reconcile",
+      "description": "Reconcile bucket usage. Recomputes the bucket's usage_bytes by scanning actual R2 storage. Price: $0.05 via x402 (USDC on Base).",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "Bucket ID."
+          }
+        },
+        "required": [
+          "id"
+        ]
+      }
+    }
+  },
+  {
+    "type": "function",
+    "function": {
+      "name": "search_web",
+      "description": "Web search. Search the web and return ranked results. Price: $0.01 via x402 (USDC on Base).",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "query": {
+            "type": "string",
+            "description": "Search query string."
+          },
+          "max_results": {
+            "type": "integer",
+            "description": "Maximum number of results to return. Range 1–20. (default: 10)",
+            "minimum": 1,
+            "maximum": 20
+          },
+          "search_depth": {
+            "type": "string",
+            "description": "Search depth. \"advanced\" uses more sources and costs more upstream compute. (default: \"basic\")",
+            "enum": [
+              "basic",
+              "advanced"
+            ]
+          },
+          "country": {
+            "type": "string",
+            "description": "Two-letter ISO 3166-1 alpha-2 country code to bias results."
+          },
+          "time_range": {
+            "type": "string",
+            "description": "Restrict results to the given time range.",
+            "enum": [
+              "day",
+              "week",
+              "month",
+              "year"
+            ]
+          },
+          "include_answer": {
+            "type": "boolean",
+            "description": "If true, the response includes an AI-generated answer summarizing the results. (default: false)"
+          },
+          "include_domains": {
+            "type": "array",
+            "description": "Restrict results to these domains only.",
+            "items": {
+              "type": "string"
+            }
+          },
+          "exclude_domains": {
+            "type": "array",
+            "description": "Exclude results from these domains.",
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        "required": [
+          "query"
+        ]
+      }
+    }
+  },
+  {
+    "type": "function",
+    "function": {
+      "name": "search_news",
+      "description": "News search. Search for recent news articles. Price: $0.01 via x402 (USDC on Base).",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "query": {
+            "type": "string",
+            "description": "Search query string."
+          },
+          "max_results": {
+            "type": "integer",
+            "description": "Maximum number of results to return. Range 1–20. (default: 10)",
+            "minimum": 1,
+            "maximum": 20
+          },
+          "search_depth": {
+            "type": "string",
+            "description": "Search depth. \"advanced\" uses more sources and costs more upstream compute. (default: \"basic\")",
+            "enum": [
+              "basic",
+              "advanced"
+            ]
+          },
+          "country": {
+            "type": "string",
+            "description": "Two-letter ISO 3166-1 alpha-2 country code to bias results."
+          },
+          "time_range": {
+            "type": "string",
+            "description": "Restrict results to the given time range.",
+            "enum": [
+              "day",
+              "week",
+              "month",
+              "year"
+            ]
+          },
+          "include_answer": {
+            "type": "boolean",
+            "description": "If true, the response includes an AI-generated answer summarizing the results. (default: false)"
+          },
+          "include_domains": {
+            "type": "array",
+            "description": "Restrict results to these domains only.",
+            "items": {
+              "type": "string"
+            }
+          },
+          "exclude_domains": {
+            "type": "array",
+            "description": "Exclude results from these domains.",
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        "required": [
+          "query"
+        ]
+      }
+    }
+  },
+  {
+    "type": "function",
+    "function": {
+      "name": "search_extract",
+      "description": "Extract URL content. Extract readable content from one or more URLs. Price: $0.005 via x402 (USDC on Base).",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "urls": {
+            "type": "array",
+            "description": "URL or array of URLs to extract content from.",
+            "items": {
+              "type": "string",
+              "format": "uri"
+            }
+          },
+          "format": {
+            "type": "string",
+            "description": "Output format for extracted content. (default: \"markdown\")",
+            "enum": [
+              "markdown",
+              "text"
+            ]
+          }
+        },
+        "required": [
+          "urls"
+        ]
+      }
+    }
+  },
+  {
+    "type": "function",
+    "function": {
       "name": "spawn_server_create",
       "description": "Create a server. Provisions a new VPS. Price: $0.01 via x402 (USDC on Base).",
       "parameters": {
@@ -560,257 +972,6 @@
           "id": {
             "type": "string",
             "description": "Prim SSH key ID."
-          }
-        },
-        "required": [
-          "id"
-        ]
-      }
-    }
-  },
-  {
-    "type": "function",
-    "function": {
-      "name": "store_bucket_create",
-      "description": "Create a bucket. Creates a new storage bucket owned by the paying wallet address. Price: $0.05 via x402 (USDC on Base).",
-      "parameters": {
-        "type": "object",
-        "properties": {
-          "name": {
-            "type": "string",
-            "description": "Bucket name. Must be unique per wallet. Alphanumeric, hyphens, underscores."
-          },
-          "location": {
-            "type": "string",
-            "description": "Storage region (optional). Defaults to primary region."
-          }
-        },
-        "required": [
-          "name"
-        ]
-      }
-    }
-  },
-  {
-    "type": "function",
-    "function": {
-      "name": "store_bucket_list",
-      "description": "List buckets. Returns all buckets owned by the paying wallet address. Price: $0.001 via x402 (USDC on Base).",
-      "parameters": {
-        "type": "object",
-        "properties": {
-          "limit": {
-            "type": "integer",
-            "description": "Number of buckets per page (1–100, default 20).",
-            "minimum": 1,
-            "maximum": 100
-          },
-          "page": {
-            "type": "integer",
-            "description": "Page number (1-based, default 1).",
-            "minimum": 1
-          }
-        }
-      }
-    }
-  },
-  {
-    "type": "function",
-    "function": {
-      "name": "store_bucket_get",
-      "description": "Get bucket details. Returns details for a single bucket. Price: $0.001 via x402 (USDC on Base).",
-      "parameters": {
-        "type": "object",
-        "properties": {
-          "id": {
-            "type": "string",
-            "description": "Bucket ID."
-          }
-        },
-        "required": [
-          "id"
-        ]
-      }
-    }
-  },
-  {
-    "type": "function",
-    "function": {
-      "name": "store_bucket_delete",
-      "description": "Delete a bucket. Deletes a bucket. Price: $0.01 via x402 (USDC on Base).",
-      "parameters": {
-        "type": "object",
-        "properties": {
-          "id": {
-            "type": "string",
-            "description": "Bucket ID."
-          }
-        },
-        "required": [
-          "id"
-        ]
-      }
-    }
-  },
-  {
-    "type": "function",
-    "function": {
-      "name": "store_object_list",
-      "description": "List objects in a bucket. Lists objects in a bucket with optional prefix filtering. Price: $0.001 via x402 (USDC on Base).",
-      "parameters": {
-        "type": "object",
-        "properties": {
-          "id": {
-            "type": "string",
-            "description": "Bucket ID."
-          },
-          "prefix": {
-            "type": "string",
-            "description": "Filter objects by key prefix (e.g. \"notes/\" to list only keys starting with \"notes/\")."
-          },
-          "limit": {
-            "type": "integer",
-            "description": "Maximum number of objects to return (1–1000, default 100).",
-            "minimum": 1,
-            "maximum": 1000
-          },
-          "cursor": {
-            "type": "string",
-            "description": "Pagination cursor from the previous response's `next_cursor`."
-          }
-        },
-        "required": [
-          "id"
-        ]
-      }
-    }
-  },
-  {
-    "type": "function",
-    "function": {
-      "name": "store_object_put",
-      "description": "Upload an object. Uploads an object to a bucket. Price: $0.001 via x402 (USDC on Base).",
-      "parameters": {
-        "type": "object",
-        "properties": {
-          "id": {
-            "type": "string",
-            "description": "Bucket ID."
-          },
-          "key": {
-            "type": "string",
-            "description": "Object key (path). May include slashes (e.g. \"notes/2026/feb.txt\")."
-          }
-        },
-        "required": [
-          "id",
-          "key"
-        ]
-      }
-    }
-  },
-  {
-    "type": "function",
-    "function": {
-      "name": "store_object_get",
-      "description": "Download an object. Downloads an object from a bucket. Price: $0.001 via x402 (USDC on Base).",
-      "parameters": {
-        "type": "object",
-        "properties": {
-          "id": {
-            "type": "string",
-            "description": "Bucket ID."
-          },
-          "key": {
-            "type": "string",
-            "description": "Object key (path). May include slashes."
-          }
-        },
-        "required": [
-          "id",
-          "key"
-        ]
-      }
-    }
-  },
-  {
-    "type": "function",
-    "function": {
-      "name": "store_object_delete",
-      "description": "Delete an object. Deletes an object from a bucket. Price: $0.001 via x402 (USDC on Base).",
-      "parameters": {
-        "type": "object",
-        "properties": {
-          "id": {
-            "type": "string",
-            "description": "Bucket ID."
-          },
-          "key": {
-            "type": "string",
-            "description": "Object key (path). May include slashes."
-          }
-        },
-        "required": [
-          "id",
-          "key"
-        ]
-      }
-    }
-  },
-  {
-    "type": "function",
-    "function": {
-      "name": "store_quota_get",
-      "description": "Get bucket quota and usage. Returns the current quota limit and storage usage for a bucket. Price: $0.001 via x402 (USDC on Base).",
-      "parameters": {
-        "type": "object",
-        "properties": {
-          "id": {
-            "type": "string",
-            "description": "Bucket ID."
-          }
-        },
-        "required": [
-          "id"
-        ]
-      }
-    }
-  },
-  {
-    "type": "function",
-    "function": {
-      "name": "store_quota_set",
-      "description": "Set bucket quota. Sets the storage quota for a bucket. Price: $0.01 via x402 (USDC on Base).",
-      "parameters": {
-        "type": "object",
-        "properties": {
-          "id": {
-            "type": "string",
-            "description": "Bucket ID."
-          },
-          "quota_bytes": {
-            "type": "integer",
-            "description": "New quota in bytes, or null to reset to default (100 MB)."
-          }
-        },
-        "required": [
-          "id",
-          "quota_bytes"
-        ]
-      }
-    }
-  },
-  {
-    "type": "function",
-    "function": {
-      "name": "store_quota_reconcile",
-      "description": "Reconcile bucket usage. Recomputes the bucket's usage_bytes by scanning actual R2 storage. Price: $0.05 via x402 (USDC on Base).",
-      "parameters": {
-        "type": "object",
-        "properties": {
-          "id": {
-            "type": "string",
-            "description": "Bucket ID."
           }
         },
         "required": [
@@ -1203,167 +1364,6 @@
         },
         "required": [
           "id"
-        ]
-      }
-    }
-  },
-  {
-    "type": "function",
-    "function": {
-      "name": "search_web",
-      "description": "Web search. Search the web and return ranked results. Price: $0.01 via x402 (USDC on Base).",
-      "parameters": {
-        "type": "object",
-        "properties": {
-          "query": {
-            "type": "string",
-            "description": "Search query string."
-          },
-          "max_results": {
-            "type": "integer",
-            "description": "Maximum number of results to return. Range 1–20. (default: 10)",
-            "minimum": 1,
-            "maximum": 20
-          },
-          "search_depth": {
-            "type": "string",
-            "description": "Search depth. \"advanced\" uses more sources and costs more upstream compute. (default: \"basic\")",
-            "enum": [
-              "basic",
-              "advanced"
-            ]
-          },
-          "country": {
-            "type": "string",
-            "description": "Two-letter ISO 3166-1 alpha-2 country code to bias results."
-          },
-          "time_range": {
-            "type": "string",
-            "description": "Restrict results to the given time range.",
-            "enum": [
-              "day",
-              "week",
-              "month",
-              "year"
-            ]
-          },
-          "include_answer": {
-            "type": "boolean",
-            "description": "If true, the response includes an AI-generated answer summarizing the results. (default: false)"
-          },
-          "include_domains": {
-            "type": "array",
-            "description": "Restrict results to these domains only.",
-            "items": {
-              "type": "string"
-            }
-          },
-          "exclude_domains": {
-            "type": "array",
-            "description": "Exclude results from these domains.",
-            "items": {
-              "type": "string"
-            }
-          }
-        },
-        "required": [
-          "query"
-        ]
-      }
-    }
-  },
-  {
-    "type": "function",
-    "function": {
-      "name": "search_news",
-      "description": "News search. Search for recent news articles. Price: $0.01 via x402 (USDC on Base).",
-      "parameters": {
-        "type": "object",
-        "properties": {
-          "query": {
-            "type": "string",
-            "description": "Search query string."
-          },
-          "max_results": {
-            "type": "integer",
-            "description": "Maximum number of results to return. Range 1–20. (default: 10)",
-            "minimum": 1,
-            "maximum": 20
-          },
-          "search_depth": {
-            "type": "string",
-            "description": "Search depth. \"advanced\" uses more sources and costs more upstream compute. (default: \"basic\")",
-            "enum": [
-              "basic",
-              "advanced"
-            ]
-          },
-          "country": {
-            "type": "string",
-            "description": "Two-letter ISO 3166-1 alpha-2 country code to bias results."
-          },
-          "time_range": {
-            "type": "string",
-            "description": "Restrict results to the given time range.",
-            "enum": [
-              "day",
-              "week",
-              "month",
-              "year"
-            ]
-          },
-          "include_answer": {
-            "type": "boolean",
-            "description": "If true, the response includes an AI-generated answer summarizing the results. (default: false)"
-          },
-          "include_domains": {
-            "type": "array",
-            "description": "Restrict results to these domains only.",
-            "items": {
-              "type": "string"
-            }
-          },
-          "exclude_domains": {
-            "type": "array",
-            "description": "Exclude results from these domains.",
-            "items": {
-              "type": "string"
-            }
-          }
-        },
-        "required": [
-          "query"
-        ]
-      }
-    }
-  },
-  {
-    "type": "function",
-    "function": {
-      "name": "search_extract",
-      "description": "Extract URL content. Extract readable content from one or more URLs. Price: $0.005 via x402 (USDC on Base).",
-      "parameters": {
-        "type": "object",
-        "properties": {
-          "urls": {
-            "type": "array",
-            "description": "URL or array of URLs to extract content from.",
-            "items": {
-              "type": "string",
-              "format": "uri"
-            }
-          },
-          "format": {
-            "type": "string",
-            "description": "Output format for extracted content. (default: \"markdown\")",
-            "enum": [
-              "markdown",
-              "text"
-            ]
-          }
-        },
-        "required": [
-          "urls"
         ]
       }
     }

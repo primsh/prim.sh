@@ -7,7 +7,7 @@ category: storage
 card_class: p4
 description: "Object storage. Persist artifacts across ephemeral VMs. S3-compatible."
 port: 3002
-order: 4
+order: 3
 phantom: false
 env:
   - PRIM_PAY_TO
