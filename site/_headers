@@ -23,3 +23,11 @@
 
 /assets/*
   Cache-Control: public, max-age=3600
+
+/install.sh
+  Cache-Control: public, max-age=300
+  Content-Type: text/plain; charset=utf-8
+
+/install
+  Cache-Control: public, max-age=300
+  Content-Type: text/plain; charset=utf-8

@@ -143,6 +143,8 @@ jobs:
             --include='*.jpg' --include='*.jpeg' --include='*.png' \
             --include='*.ico' --include='*.svg' --include='*.webp' \
             --include='*.txt' --include='*.json' \
+            --include='*.sh' --include='install' \
+            --include='_headers' --include='_redirects' \
             --exclude='*' \
             site/ site-dist/
           # Substitute brand template placeholders in index.html

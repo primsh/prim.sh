@@ -45,7 +45,6 @@ vi.mock("bun:sqlite", () => {
 
 import app from "../src/index.ts";
 
-// BEGIN:GENERATED:SMOKE
 describe("feedback.sh app", () => {
   // Check 1: default export defined
   it("exposes a default export", () => {
@@ -119,4 +118,3 @@ describe("feedback.sh app", () => {
     expect(body).toMatchObject({ items: expect.any(Array), total: expect.any(Number) });
   });
 });
-// END:GENERATED:SMOKE
