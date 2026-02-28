@@ -9,56 +9,51 @@ import type { CallToolResult } from "@modelcontextprotocol/sdk/types.js";
 export const emailTools: Tool[] = [
   {
     name: "email_list_mailboxes",
-    description: "List mailboxes | Price: $0.001",
+    description: "List mailboxes owned by the calling wallet (paginated) | Price: $0.001",
     inputSchema: {
         type: "object",
         properties: {
           "limit": {
             type: "integer",
-            minimum: 1,
-            maximum: 100,
-            default: 20,
-            description: "Number of mailboxes per page (1–100, default 20).",
+            description: "1-100, default 20",
           },
-          "page": {
-            type: "integer",
-            minimum: 1,
-            default: 1,
-            description: "Page number (1-based, default 1).",
+          "after": {
+            type: "string",
+            description: "Cursor from previous response",
           },
         },
       },
   },
   {
     name: "email_create_mailbox",
-    description: "Create a mailbox | Price: $0.05",
+    description: "Create a mailbox. Optional: username, domain, ttl_ms. | Price: $0.05",
     inputSchema: {
         type: "object",
         properties: {
           "username": {
             type: "string",
-            description: "Desired local part of the email address. Generated randomly if omitted.",
+            description: "Desired username. Omit for random generation.",
           },
           "domain": {
             type: "string",
-            description: "Email domain to use. Must be a verified custom domain or the shared default domain.",
+            description: "Domain for the mailbox (must be registered). Omit for default domain.",
           },
           "ttl_ms": {
-            type: "integer",
-            description: "Mailbox lifetime in milliseconds. Defaults to 7 days (604800000). Pass null for no expiry.",
+            type: "number",
+            description: "TTL in milliseconds. Omit for permanent mailbox.",
           },
         },
       },
   },
   {
     name: "email_get_mailbox",
-    description: "Get mailbox details | Price: $0.001",
+    description: "Get mailbox metadata including expires_at | Price: $0.001",
     inputSchema: {
         type: "object",
         properties: {
           "id": {
             type: "string",
-            description: "Mailbox ID.",
+            description: "id parameter",
           },
         },
         required: ["id"],
@@ -66,13 +61,13 @@ export const emailTools: Tool[] = [
   },
   {
     name: "email_delete_mailbox",
-    description: "Delete a mailbox | Price: $0.01",
+    description: "Permanently delete a mailbox and all messages | Price: $0.01",
     inputSchema: {
         type: "object",
         properties: {
           "id": {
             type: "string",
-            description: "Mailbox ID.",
+            description: "id parameter",
           },
         },
         required: ["id"],
@@ -80,17 +75,17 @@ export const emailTools: Tool[] = [
   },
   {
     name: "email_renew_mailbox",
-    description: "Renew mailbox TTL | Price: $0.01",
+    description: "Extend mailbox TTL by ttl_ms milliseconds | Price: $0.01",
     inputSchema: {
         type: "object",
         properties: {
           "id": {
             type: "string",
-            description: "Mailbox ID.",
+            description: "id parameter",
           },
           "ttl_ms": {
-            type: "integer",
-            description: "Additional milliseconds to extend the mailbox TTL. Defaults to 7 days (604800000).",
+            type: "number",
+            description: "Extension duration in milliseconds. Omit to apply default TTL.",
           },
         },
         required: ["id"],
@@ -98,26 +93,21 @@ export const emailTools: Tool[] = [
   },
   {
     name: "email_list_messages",
-    description: "List messages in a mailbox | Price: $0.001",
+    description: "List messages in a mailbox, newest first | Price: $0.001",
     inputSchema: {
         type: "object",
         properties: {
           "id": {
             type: "string",
-            description: "Mailbox ID.",
+            description: "id parameter",
           },
           "limit": {
             type: "integer",
-            minimum: 1,
-            maximum: 100,
-            default: 20,
-            description: "Maximum number of messages to return (1–100, default 20).",
+            description: "1-100, default 20",
           },
-          "position": {
+          "after": {
             type: "integer",
-            minimum: 0,
-            default: 0,
-            description: "Zero-based position offset to start from (default 0).",
+            description: "Position-based cursor for pagination",
           },
         },
         required: ["id"],
@@ -125,17 +115,17 @@ export const emailTools: Tool[] = [
   },
   {
     name: "email_get_message",
-    description: "Get message detail | Price: $0.001",
+    description: "Get full message including textBody and htmlBody | Price: $0.001",
     inputSchema: {
         type: "object",
         properties: {
           "id": {
             type: "string",
-            description: "Mailbox ID.",
+            description: "id parameter",
           },
           "msgId": {
             type: "string",
-            description: "Message ID.",
+            description: "msgId parameter",
           },
         },
         required: ["id","msgId"],
@@ -143,17 +133,16 @@ export const emailTools: Tool[] = [
   },
   {
     name: "email_send_message",
-    description: "Send email from a mailbox | Price: $0.01",
+    description: "Send email from a mailbox. Requires to, subject, and body or html. | Price: $0.01",
     inputSchema: {
         type: "object",
         properties: {
           "id": {
             type: "string",
-            description: "Mailbox ID.",
+            description: "id parameter",
           },
           "to": {
             type: "string",
-            format: "email",
             description: "Recipient email address.",
           },
           "subject": {
@@ -162,20 +151,18 @@ export const emailTools: Tool[] = [
           },
           "body": {
             type: "string",
-            description: "Plain-text message body.",
+            description: "Plain-text body. Either body or html is required.",
           },
           "html": {
             type: "string",
-            description: "HTML message body. Can be provided alongside `body` for multipart messages.",
+            description: "HTML body. Either body or html is required.",
           },
           "cc": {
             type: "string",
-            format: "email",
             description: "CC recipient email address.",
           },
           "bcc": {
             type: "string",
-            format: "email",
             description: "BCC recipient email address.",
           },
         },
@@ -190,7 +177,7 @@ export const emailTools: Tool[] = [
         properties: {
           "id": {
             type: "string",
-            description: "Mailbox ID.",
+            description: "id parameter",
           },
         },
         required: ["id"],
@@ -198,29 +185,28 @@ export const emailTools: Tool[] = [
   },
   {
     name: "email_register_webhook",
-    description: "Register a webhook | Price: $0.01",
+    description: "Register a webhook URL for message.received events. Optional secret for HMAC signing. | Price: $0.01",
     inputSchema: {
         type: "object",
         properties: {
           "id": {
             type: "string",
-            description: "Mailbox ID.",
+            description: "id parameter",
           },
           "url": {
             type: "string",
-            format: "uri",
-            description: "HTTPS URL to receive webhook events.",
+            description: "HTTPS URL to receive webhook POST requests.",
           },
           "secret": {
             type: "string",
-            description: "Optional signing secret. Used to generate HMAC-SHA256 signatures.",
+            description: "HMAC secret for X-Prim-Signature verification.",
           },
           "events": {
             type: "array",
             items: {
               type: "string",
             },
-            description: "Event types to subscribe to. Defaults to all events.",
+            description: "Events to subscribe to. Defaults to [\"message.received\"].",
           },
         },
         required: ["id","url"],
@@ -234,11 +220,11 @@ export const emailTools: Tool[] = [
         properties: {
           "id": {
             type: "string",
-            description: "Mailbox ID.",
+            description: "id parameter",
           },
           "whId": {
             type: "string",
-            description: "Webhook ID.",
+            description: "whId parameter",
           },
         },
         required: ["id","whId"],
@@ -246,35 +232,30 @@ export const emailTools: Tool[] = [
   },
   {
     name: "email_list_domains",
-    description: "List registered domains | Price: $0.001",
+    description: "List registered custom domains (paginated) | Price: $0.001",
     inputSchema: {
         type: "object",
         properties: {
           "limit": {
             type: "integer",
-            minimum: 1,
-            maximum: 100,
-            default: 20,
-            description: "Number of domains per page (1–100, default 20).",
+            description: "1-100, default 20",
           },
-          "page": {
-            type: "integer",
-            minimum: 1,
-            default: 1,
-            description: "Page number (1-based, default 1).",
+          "after": {
+            type: "string",
+            description: "Cursor from previous response",
           },
         },
       },
   },
   {
     name: "email_register_domain",
-    description: "Register an email domain | Price: $0.05",
+    description: "Register a custom domain. Returns required_records for DNS. | Price: $0.05",
     inputSchema: {
         type: "object",
         properties: {
           "domain": {
             type: "string",
-            description: "Domain name to register (e.g. \"example.com\").",
+            description: "Domain name to register (e.g. \"myproject.com\").",
           },
         },
         required: ["domain"],
@@ -282,13 +263,13 @@ export const emailTools: Tool[] = [
   },
   {
     name: "email_get_domain",
-    description: "Get domain details | Price: $0.001",
+    description: "Get domain details and verification status | Price: $0.001",
     inputSchema: {
         type: "object",
         properties: {
           "id": {
             type: "string",
-            description: "Domain ID.",
+            description: "id parameter",
           },
         },
         required: ["id"],
@@ -296,13 +277,13 @@ export const emailTools: Tool[] = [
   },
   {
     name: "email_delete_domain",
-    description: "Delete a domain | Price: $0.01",
+    description: "Remove a custom domain registration | Price: $0.01",
     inputSchema: {
         type: "object",
         properties: {
           "id": {
             type: "string",
-            description: "Domain ID.",
+            description: "id parameter",
           },
         },
         required: ["id"],
@@ -310,13 +291,13 @@ export const emailTools: Tool[] = [
   },
   {
     name: "email_verify_domain",
-    description: "Verify domain ownership | Price: $0.01",
+    description: "Verify DNS records. On success: status → verified, dkim_records returned. | Price: $0.01",
     inputSchema: {
         type: "object",
         properties: {
           "id": {
             type: "string",
-            description: "Domain ID.",
+            description: "id parameter",
           },
         },
         required: ["id"],
@@ -337,7 +318,7 @@ export async function handleEmailTool(
       case "email_list_mailboxes": {
         const url = new URL(`${baseUrl}/v1/mailboxes`);
         if (args.limit !== undefined) url.searchParams.set("limit", String(args.limit));
-        if (args.page !== undefined) url.searchParams.set("page", String(args.page));
+        if (args.after !== undefined) url.searchParams.set("after", String(args.after));
         const res = await primFetch(url.toString());
         const data = await res.json();
         if (!res.ok) return errorResult(data);
@@ -384,7 +365,7 @@ export async function handleEmailTool(
       case "email_list_messages": {
         const url = new URL(`${baseUrl}/v1/mailboxes/${args.id}/messages`);
         if (args.limit !== undefined) url.searchParams.set("limit", String(args.limit));
-        if (args.position !== undefined) url.searchParams.set("position", String(args.position));
+        if (args.after !== undefined) url.searchParams.set("after", String(args.after));
         const res = await primFetch(url.toString());
         const data = await res.json();
         if (!res.ok) return errorResult(data);
@@ -439,7 +420,7 @@ export async function handleEmailTool(
       case "email_list_domains": {
         const url = new URL(`${baseUrl}/v1/domains`);
         if (args.limit !== undefined) url.searchParams.set("limit", String(args.limit));
-        if (args.page !== undefined) url.searchParams.set("page", String(args.page));
+        if (args.after !== undefined) url.searchParams.set("after", String(args.after));
         const res = await primFetch(url.toString());
         const data = await res.json();
         if (!res.ok) return errorResult(data);

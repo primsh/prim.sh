@@ -9,7 +9,7 @@ import type { CallToolResult } from "@modelcontextprotocol/sdk/types.js";
 export const searchTools: Tool[] = [
   {
     name: "search_web",
-    description: "Web search | Price: $0.01",
+    description: "Search the web and return ranked results with optional AI-generated answer | Price: $0.01",
     inputSchema: {
         type: "object",
         properties: {
@@ -18,45 +18,40 @@ export const searchTools: Tool[] = [
             description: "Search query string.",
           },
           "max_results": {
-            type: "integer",
-            description: "Maximum number of results to return. Range 1–20.",
-            minimum: 1,
-            maximum: 20,
-            default: 10,
+            type: "number",
+            description: "Maximum number of results to return. 1-20, default 10.",
           },
           "search_depth": {
             type: "string",
             enum: ["basic","advanced"],
-            description: "Search depth. \"advanced\" uses more sources and costs more upstream compute.",
-            default: "basic",
+            description: "Search depth. \"basic\" | \"advanced\", default \"basic\".",
           },
           "country": {
             type: "string",
-            description: "Two-letter ISO 3166-1 alpha-2 country code to bias results.",
+            description: "Two-letter ISO 3166-1 country code to bias results (e.g. \"US\").",
           },
           "time_range": {
             type: "string",
             enum: ["day","week","month","year"],
-            description: "Restrict results to the given time range.",
+            description: "Restrict results by recency. \"day\" | \"week\" | \"month\" | \"year\".",
           },
           "include_answer": {
             type: "boolean",
-            description: "If true, the response includes an AI-generated answer summarizing the results.",
-            default: false,
+            description: "Include AI-generated answer summarizing top results. Default false.",
           },
           "include_domains": {
             type: "array",
             items: {
               type: "string",
             },
-            description: "Restrict results to these domains only.",
+            description: "Restrict results to these domains only (e.g. [\"docs.base.org\"]).",
           },
           "exclude_domains": {
             type: "array",
             items: {
               type: "string",
             },
-            description: "Exclude results from these domains.",
+            description: "Exclude results from these domains (e.g. [\"reddit.com\"]).",
           },
         },
         required: ["query"],
@@ -64,7 +59,7 @@ export const searchTools: Tool[] = [
   },
   {
     name: "search_news",
-    description: "News search | Price: $0.01",
+    description: "Search for recent news articles, ordered by recency | Price: $0.01",
     inputSchema: {
         type: "object",
         properties: {
@@ -73,53 +68,48 @@ export const searchTools: Tool[] = [
             description: "Search query string.",
           },
           "max_results": {
-            type: "integer",
-            description: "Maximum number of results to return. Range 1–20.",
-            minimum: 1,
-            maximum: 20,
-            default: 10,
+            type: "number",
+            description: "Maximum number of results to return. 1-20, default 10.",
           },
           "search_depth": {
             type: "string",
             enum: ["basic","advanced"],
-            description: "Search depth. \"advanced\" uses more sources and costs more upstream compute.",
-            default: "basic",
+            description: "Search depth. \"basic\" | \"advanced\", default \"basic\".",
           },
           "country": {
             type: "string",
-            description: "Two-letter ISO 3166-1 alpha-2 country code to bias results.",
+            description: "Two-letter ISO 3166-1 country code to bias results (e.g. \"US\").",
           },
           "time_range": {
             type: "string",
             enum: ["day","week","month","year"],
-            description: "Restrict results to the given time range.",
+            description: "Restrict results by recency. \"day\" | \"week\" | \"month\" | \"year\".",
           },
           "include_answer": {
             type: "boolean",
-            description: "If true, the response includes an AI-generated answer summarizing the results.",
-            default: false,
+            description: "Include AI-generated answer summarizing top results. Default false.",
           },
           "include_domains": {
             type: "array",
             items: {
               type: "string",
             },
-            description: "Restrict results to these domains only.",
+            description: "Restrict results to these domains only (e.g. [\"docs.base.org\"]).",
           },
           "exclude_domains": {
             type: "array",
             items: {
               type: "string",
             },
-            description: "Exclude results from these domains.",
+            description: "Exclude results from these domains (e.g. [\"reddit.com\"]).",
           },
         },
         required: ["query"],
       },
   },
   {
-    name: "search_extract_urls",
-    description: "Extract URL content | Price: $0.005",
+    name: "search_extract_url",
+    description: "Extract readable content from one or more URLs as markdown or plain text | Price: $0.005",
     inputSchema: {
         type: "object",
         properties: {
@@ -127,25 +117,20 @@ export const searchTools: Tool[] = [
             oneOf: [
               {
                 type: "string",
-                format: "uri",
-                description: "A single URL to extract content from.",
               },
               {
                 type: "array",
                 items: {
                   type: "string",
-                  format: "uri",
                 },
-                description: "Multiple URLs to extract content from in one request.",
               },
             ],
-            description: "URL or array of URLs to extract content from.",
+            description: "URL string or array of URLs to extract content from.",
           },
           "format": {
             type: "string",
             enum: ["markdown","text"],
-            description: "Output format for extracted content.",
-            default: "markdown",
+            description: "Output format. \"markdown\" | \"text\", default \"markdown\".",
           },
         },
         required: ["urls"],
@@ -185,7 +170,7 @@ export async function handleSearchTool(
         return { content: [{ type: "text", text: JSON.stringify(data, null, 2) }] };
       }
 
-      case "search_extract_urls": {
+      case "search_extract_url": {
         const res = await primFetch(`${baseUrl}/v1/extract`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },

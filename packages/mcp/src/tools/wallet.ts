@@ -9,51 +9,46 @@ import type { CallToolResult } from "@modelcontextprotocol/sdk/types.js";
 export const walletTools: Tool[] = [
   {
     name: "wallet_list_wallets",
-    description: "List registered wallets | Price: $0.001",
+    description: "List registered wallets owned by the calling wallet | Price: $0.001",
     inputSchema: {
         type: "object",
         properties: {
           "limit": {
             type: "integer",
-            minimum: 1,
-            maximum: 100,
-            default: 20,
-            description: "Number of wallets to return (1–100, default 20)",
+            description: "1-100, default 20",
           },
           "after": {
             type: "string",
-            description: "Cursor from a previous response for pagination",
+            description: "Cursor from previous response",
           },
         },
       },
   },
   {
     name: "wallet_register_wallet",
-    description: "Register a wallet",
+    description: "Register a wallet via EIP-191 signature",
     inputSchema: {
         type: "object",
         properties: {
           "address": {
             type: "string",
-            pattern: "^0x[a-fA-F0-9]{40}$",
-            description: "Ethereum wallet address to register",
+            description: "Ethereum address to register (0x... 42 chars, checksummed).",
           },
           "signature": {
             type: "string",
-            description: "EIP-191 signature over the registration message",
+            description: "EIP-191 signature over \"Register <address> with prim.sh at <timestamp>\".",
           },
           "timestamp": {
             type: "string",
-            format: "date-time",
-            description: "ISO 8601 UTC timestamp used in the signed message (must be within 5 min of now)",
+            description: "ISO 8601 UTC timestamp used in the signed message. Must be within 5 minutes of server time.",
           },
           "chain": {
             type: "string",
-            description: "Chain identifier. Defaults to \"base\".",
+            description: "Chain identifier. Default \"base\".",
           },
           "label": {
             type: "string",
-            description: "Optional human-readable label for this wallet",
+            description: "Human-readable label for this wallet.",
           },
         },
         required: ["address","signature","timestamp"],
@@ -61,12 +56,13 @@ export const walletTools: Tool[] = [
   },
   {
     name: "wallet_get_wallet",
-    description: "Get wallet details | Price: $0.001",
+    description: "Get full wallet details including balance, policy, and status | Price: $0.001",
     inputSchema: {
         type: "object",
         properties: {
           "address": {
             type: "string",
+            description: "address parameter",
           },
         },
         required: ["address"],
@@ -74,12 +70,13 @@ export const walletTools: Tool[] = [
   },
   {
     name: "wallet_deactivate_wallet",
-    description: "Deactivate a wallet | Price: $0.01",
+    description: "Permanently deactivate a wallet. Irreversible. Pending fund requests cancelled. | Price: $0.01",
     inputSchema: {
         type: "object",
         properties: {
           "address": {
             type: "string",
+            description: "address parameter",
           },
         },
         required: ["address"],
@@ -87,20 +84,21 @@ export const walletTools: Tool[] = [
   },
   {
     name: "wallet_create_fund_request",
-    description: "Create a fund request | Price: $0.001",
+    description: "Request USDC funding for a wallet. A human operator can approve or deny. | Price: $0.001",
     inputSchema: {
         type: "object",
         properties: {
           "address": {
             type: "string",
+            description: "address parameter",
           },
           "amount": {
             type: "string",
-            description: "Requested USDC amount as a decimal string (e.g. \"10.00\")",
+            description: "Requested USDC amount as a decimal string (e.g. \"10.00\").",
           },
           "reason": {
             type: "string",
-            description: "Human-readable reason for the funding request",
+            description: "Human-readable reason for the funding request.",
           },
         },
         required: ["address","amount","reason"],
@@ -108,23 +106,21 @@ export const walletTools: Tool[] = [
   },
   {
     name: "wallet_list_fund_requests",
-    description: "List fund requests for a wallet | Price: $0.001",
+    description: "List all fund requests for a wallet | Price: $0.001",
     inputSchema: {
         type: "object",
         properties: {
           "address": {
             type: "string",
+            description: "address parameter",
           },
           "limit": {
             type: "integer",
-            minimum: 1,
-            maximum: 100,
-            default: 20,
-            description: "Number of requests to return (1–100, default 20)",
+            description: "1-100, default 20",
           },
           "after": {
             type: "string",
-            description: "Cursor from a previous response for pagination",
+            description: "Cursor from previous response",
           },
         },
         required: ["address"],
@@ -132,12 +128,13 @@ export const walletTools: Tool[] = [
   },
   {
     name: "wallet_approve_fund_request",
-    description: "Approve a fund request | Price: $0.01",
+    description: "Approve a pending fund request. Returns the address to send USDC to. | Price: $0.01",
     inputSchema: {
         type: "object",
         properties: {
           "id": {
             type: "string",
+            description: "id parameter",
           },
         },
         required: ["id"],
@@ -145,16 +142,17 @@ export const walletTools: Tool[] = [
   },
   {
     name: "wallet_deny_fund_request",
-    description: "Deny a fund request | Price: $0.001",
+    description: "Deny a pending fund request | Price: $0.001",
     inputSchema: {
         type: "object",
         properties: {
           "id": {
             type: "string",
+            description: "id parameter",
           },
           "reason": {
             type: "string",
-            description: "Optional reason for denying the request",
+            description: "Reason for denial.",
           },
         },
         required: ["id"],
@@ -162,12 +160,13 @@ export const walletTools: Tool[] = [
   },
   {
     name: "wallet_get_policy",
-    description: "Get spending policy | Price: $0.001",
+    description: "Get the spending policy for a wallet | Price: $0.001",
     inputSchema: {
         type: "object",
         properties: {
           "address": {
             type: "string",
+            description: "address parameter",
           },
         },
         required: ["address"],
@@ -175,26 +174,24 @@ export const walletTools: Tool[] = [
   },
   {
     name: "wallet_update_policy",
-    description: "Update spending policy | Price: $0.005",
+    description: "Update spending policy for a wallet. All fields optional. Pass null to remove a limit. | Price: $0.005",
     inputSchema: {
         type: "object",
         properties: {
           "address": {
             type: "string",
+            description: "address parameter",
           },
           "maxPerTx": {
             type: ["string","null"],
-            description: "Maximum USDC per transaction. Pass null to remove the limit.",
+            description: "Max USDC per transaction. Pass null to remove the limit.",
           },
           "maxPerDay": {
             type: ["string","null"],
-            description: "Maximum USDC per day. Pass null to remove the limit.",
+            description: "Max USDC per day. Pass null to remove the limit.",
           },
           "allowedPrimitives": {
             type: ["array","null"],
-            items: {
-              type: "string",
-            },
             description: "Allowed primitive hostnames. Pass null to allow all.",
           },
         },
@@ -203,18 +200,17 @@ export const walletTools: Tool[] = [
   },
   {
     name: "wallet_pause_wallet",
-    description: "Pause a wallet | Price: $0.001",
+    description: "Pause operations for a wallet. Temporarily halts spending without deactivating. | Price: $0.001",
     inputSchema: {
         type: "object",
         properties: {
           "address": {
             type: "string",
+            description: "address parameter",
           },
           "scope": {
             type: "string",
-            enum: ["all","send","swap"],
-            default: "all",
-            description: "Which operations to pause",
+            description: "Scope to pause. \"all\" | \"send\" | \"swap\". Default \"all\".",
           },
         },
         required: ["address"],
@@ -222,18 +218,17 @@ export const walletTools: Tool[] = [
   },
   {
     name: "wallet_resume_wallet",
-    description: "Resume a paused wallet | Price: $0.001",
+    description: "Resume operations for a paused wallet | Price: $0.001",
     inputSchema: {
         type: "object",
         properties: {
           "address": {
             type: "string",
+            description: "address parameter",
           },
           "scope": {
             type: "string",
-            enum: ["all","send","swap"],
-            default: "all",
-            description: "Which operations to resume",
+            description: "Scope to resume. \"all\" | \"send\" | \"swap\". Default \"all\".",
           },
         },
         required: ["address"],
