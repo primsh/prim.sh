@@ -1,7 +1,6 @@
 id: browse
 name: browse.sh
 endpoint: browse.prim.sh
-status: phantom
 type: browser
 category: comms
 card_class: p16

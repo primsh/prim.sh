@@ -9,11 +9,9 @@ set -euo pipefail
 ENDPOINTS=(
   "https://wallet.prim.sh"
   "https://faucet.prim.sh"
-  "https://spawn.prim.sh"
   "https://store.prim.sh"
-  "https://email.prim.sh"
   "https://search.prim.sh"
-  "https://infer.prim.sh"
+  "https://feedback.prim.sh"
 )
 # END:PRIM:ENDPOINTS
 

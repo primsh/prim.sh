@@ -114,18 +114,13 @@ function genCards(prims: Primitive[]): string {
   const cards = prims.filter((p) => p.show_on_index !== false);
   return cards
     .map((p) => {
-      const isLive = p.status === "live" || p.status === "mainnet" || p.status === "testing";
+      const isDeployed = p.status === "testnet" || p.status === "mainnet";
       const category = p.category ?? TYPE_TO_CATEGORY[p.type] ?? "meta";
-      const cls = [
-        "product",
-        `cat-${category}`,
-        !isLive && !p.phantom ? "phantom" : "",
-        p.phantom ? "phantom" : "",
-      ]
+      const cls = ["product", `cat-${category}`, !isDeployed ? "phantom" : ""]
         .filter(Boolean)
         .join(" ");
 
-      const link = isLive
+      const link = isDeployed
         ? `      <a href="/${p.id}" class="product-link">→ ${p.name}</a>`
         : `      <span class="phantom-label">phantom</span>`;
 
@@ -140,9 +135,8 @@ ${link}
 }
 
 function genLlmsTxtSections(prims: Primitive[]): string {
-  const live = prims.filter((p) => p.status === "live" || p.status === "mainnet");
-  const built = prims.filter((p) => p.status === "building" || p.status === "testing");
-  const planned = prims.filter((p) => p.status === "idea" || p.status === "planning");
+  const live = prims.filter((p) => p.status === "testnet" || p.status === "mainnet");
+  const rest = prims.filter((p) => p.status !== "testnet" && p.status !== "mainnet");
 
   const fmtLive = (p: Primitive) =>
     `- ${p.name} — ${p.endpoint ?? `${p.id}.prim.sh`} — ${p.description}`;
@@ -150,8 +144,7 @@ function genLlmsTxtSections(prims: Primitive[]): string {
 
   return [
     `## Live Primitives\n\n${live.map(fmtLive).join("\n")}`,
-    `## Built (Not Yet Deployed)\n\n${built.length ? built.map(fmtOther).join("\n") : "(none)"}`,
-    `## Planned Primitives\n\n${planned.map(fmtOther).join("\n")}`,
+    `## Planned Primitives\n\n${rest.length ? rest.map(fmtOther).join("\n") : "(none)"}`,
   ].join("\n\n");
 }
 
@@ -162,11 +155,11 @@ function genReadmeTable(prims: Primitive[]): string {
       const statusLabel =
         p.status === "mainnet"
           ? "Live (mainnet)"
-          : p.status === "live"
-            ? "Live"
-            : p.status === "building" || p.status === "testing"
-              ? "Built"
-              : "Phantom";
+          : p.status === "testnet"
+            ? "Live (testnet)"
+            : p.status === "hold"
+              ? "Hold"
+              : "Planned";
       const link = p.endpoint ? `[${p.name}](https://${p.endpoint})` : p.name;
       return `| ${link} | ${p.description} | ${statusLabel} |`;
     });
@@ -184,22 +177,16 @@ function genPreDeployEnvs(prims: Primitive[]): string {
 function genStatusBadge(p: Primitive): string {
   const labels: Record<string, string> = {
     mainnet: "● Live (mainnet)",
-    live: "● Live",
-    testing: "○ Built — testing",
-    building: "○ Built — deploy pending",
-    planning: "◌ In planning",
-    idea: "◌ Phantom",
+    testnet: "● Live (testnet)",
+    hold: "○ Hold",
   };
   const classes: Record<string, string> = {
     mainnet: "status-live",
-    live: "status-live",
-    testing: "status-built",
-    building: "status-built",
-    planning: "status-building",
-    idea: "status-phantom",
+    testnet: "status-live",
+    hold: "status-built",
   };
-  const label = labels[p.status] ?? p.status;
-  const cls = classes[p.status] ?? "status-phantom";
+  const label = labels[p.status ?? ""] ?? "◌ Planned";
+  const cls = classes[p.status ?? ""] ?? "status-phantom";
   return `    <span class="badge ${cls}">${label}</span>`;
 }
 
@@ -415,13 +402,7 @@ ${urls.join("\n")}
 // 13. site/pricing.json — generated from prim.yaml pricing data
 {
   const builtPrims = prims.filter(
-    (p) =>
-      (p.status === "mainnet" ||
-        p.status === "live" ||
-        p.status === "building" ||
-        p.status === "testing") &&
-      p.pricing &&
-      p.pricing.length > 0,
+    (p) => (p.status === "mainnet" || p.status === "testnet") && p.pricing && p.pricing.length > 0,
   );
 
   const services = builtPrims.map((p) => {
@@ -519,11 +500,7 @@ ${urls.join("\n")}
 // 14. site/discovery.json — full primitive registry for agent discovery
 {
   const builtPrims = prims.filter(
-    (p) =>
-      p.status === "mainnet" ||
-      p.status === "live" ||
-      p.status === "building" ||
-      p.status === "testing",
+    (p) => p.status === "mainnet" || p.status === "testnet",
   );
 
   const primitives = builtPrims.map((p) => {
@@ -531,7 +508,7 @@ ${urls.join("\n")}
     const entry: Record<string, string> = {
       id: p.id,
       name: p.name,
-      status: p.status,
+      status: p.status ?? "",
       endpoint: `https://${endpoint}`,
       description: p.description,
     };

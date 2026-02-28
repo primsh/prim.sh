@@ -1,13 +1,13 @@
 {
   "version": "1.0.0",
-  "generated": "2026-02-28T02:07:00.641Z",
+  "generated": "2026-02-28T04:21:32.104Z",
   "primitives": [
     {
       "id": "auth",
       "name": "auth.sh",
       "endpoint": "https://auth.prim.sh",
       "description": "Managed OAuth broker. Connect to third-party APIs without giving agents passwords.",
-      "status": "phantom",
+      "status": "planned",
       "interfaces": {
         "mcp": true,
         "cli": true,
@@ -22,7 +22,7 @@
       "name": "browse.sh",
       "endpoint": "https://browse.prim.sh",
       "description": "Headless Chromium sessions for agents. Click, type, and capture pages via API.",
-      "status": "phantom",
+      "status": "planned",
       "interfaces": {
         "mcp": true,
         "cli": true,
@@ -37,22 +37,7 @@
       "name": "code.sh",
       "endpoint": "https://code.prim.sh",
       "description": "Sandboxed code execution for agents. Short-lived jobs instead of long-lived servers.",
-      "status": "phantom",
-      "interfaces": {
-        "mcp": true,
-        "cli": true,
-        "openai": true,
-        "rest": true
-      },
-      "operations": [],
-      "providers": []
-    },
-    {
-      "id": "corp",
-      "name": "corp.sh",
-      "endpoint": "https://corp.prim.sh",
-      "description": "Incorporation, tax, insurance. Legal entities for agents. The fiat bridge.",
-      "status": "phantom",
+      "status": "planned",
       "interfaces": {
         "mcp": true,
         "cli": true,
@@ -67,39 +52,14 @@
       "name": "create.sh",
       "endpoint": "create.prim.sh",
       "description": "Scaffold new prim.sh primitives. Write a prim.yaml spec, get a complete package with passing tests.",
-      "status": "built",
+      "status": "planned",
       "interfaces": {
         "mcp": true,
         "cli": true,
         "openai": true,
         "rest": true
       },
-      "operations": [
-        {
-          "id": "scaffold",
-          "route": "POST /v1/scaffold",
-          "description": "Generate a complete prim package from a prim.yaml spec. Returns file manifest with contents.",
-          "price": "$0.00"
-        },
-        {
-          "id": "validate",
-          "route": "POST /v1/validate",
-          "description": "Validate a prim.yaml spec against the schema without generating files.",
-          "price": "$0.00"
-        },
-        {
-          "id": "get_schema",
-          "route": "GET /v1/schema",
-          "description": "Return the prim.yaml JSON schema for agents to reference when writing specs.",
-          "price": "$0.00"
-        },
-        {
-          "id": "get_ports",
-          "route": "GET /v1/ports",
-          "description": "Return allocated ports and next available port number.",
-          "price": "$0.00"
-        }
-      ],
+      "operations": [],
       "providers": []
     },
     {
@@ -107,7 +67,7 @@
       "name": "cron.sh",
       "endpoint": "https://cron.prim.sh",
       "description": "Run code on a schedule without a server. Cron, intervals, one-shots.",
-      "status": "phantom",
+      "status": "planned",
       "interfaces": {
         "mcp": true,
         "cli": true,
@@ -122,7 +82,7 @@
       "name": "deploy.sh",
       "endpoint": "https://deploy.prim.sh",
       "description": "Push code, get an endpoint. Container or repo URL to live service. No server config.",
-      "status": "phantom",
+      "status": "planned",
       "interfaces": {
         "mcp": true,
         "cli": true,
@@ -137,111 +97,14 @@
       "name": "domain.sh",
       "endpoint": "domain.prim.sh",
       "description": "Register domains, manage DNS, auto-TLS. Full domain lifecycle via API.",
-      "status": "built",
+      "status": "planned",
       "interfaces": {
         "mcp": true,
         "cli": true,
         "openai": true,
         "rest": true
       },
-      "operations": [
-        {
-          "id": "search_domains",
-          "route": "GET /v1/domains/search",
-          "description": "Check availability and pricing for a domain query",
-          "price": "dynamic"
-        },
-        {
-          "id": "quote_domain",
-          "route": "POST /v1/domains/quote",
-          "description": "Get a 15-minute price quote for a domain",
-          "price": "$0.05"
-        },
-        {
-          "id": "get_domain_status",
-          "route": "GET /v1/domains/:domain/status",
-          "description": "Full post-registration pipeline status (ns_propagated, zone_active, all_ready)",
-          "price": "$0.001"
-        },
-        {
-          "id": "create_zone",
-          "route": "POST /v1/zones",
-          "description": "Create a Cloudflare DNS zone. Returns nameservers to set at your registrar.",
-          "price": "free"
-        },
-        {
-          "id": "list_zones",
-          "route": "GET /v1/zones",
-          "description": "List DNS zones owned by the calling wallet (paginated)",
-          "price": "$0.00"
-        },
-        {
-          "id": "get_zone",
-          "route": "GET /v1/zones/:id",
-          "description": "Get zone details",
-          "price": "$0.00"
-        },
-        {
-          "id": "delete_zone",
-          "route": "DELETE /v1/zones/:id",
-          "description": "Delete zone and all records. Irreversible.",
-          "price": "$0.00"
-        },
-        {
-          "id": "activate_zone",
-          "route": "PUT /v1/zones/:zone_id/activate",
-          "description": "Request Cloudflare NS re-check for faster activation",
-          "price": "$0.00"
-        },
-        {
-          "id": "verify_zone",
-          "route": "GET /v1/zones/:zone_id/verify",
-          "description": "Check DNS propagation for all zone records",
-          "price": "$0.00"
-        },
-        {
-          "id": "setup_mail",
-          "route": "POST /v1/zones/:zone_id/mail-setup",
-          "description": "Configure MX, SPF, DMARC, DKIM in one call. Idempotent.",
-          "price": "$0.00"
-        },
-        {
-          "id": "batch_records",
-          "route": "POST /v1/zones/:zone_id/records/batch",
-          "description": "Create, update, and delete DNS records in one atomic request",
-          "price": "$0.00"
-        },
-        {
-          "id": "create_record",
-          "route": "POST /v1/zones/:zone_id/records",
-          "description": "Create a DNS record (A, AAAA, CNAME, MX, TXT, SRV, CAA, NS)",
-          "price": "$0.00"
-        },
-        {
-          "id": "list_records",
-          "route": "GET /v1/zones/:zone_id/records",
-          "description": "List all records in a DNS zone",
-          "price": "$0.00"
-        },
-        {
-          "id": "get_record",
-          "route": "GET /v1/zones/:zone_id/records/:id",
-          "description": "Get a single DNS record",
-          "price": "$0.00"
-        },
-        {
-          "id": "update_record",
-          "route": "PUT /v1/zones/:zone_id/records/:id",
-          "description": "Update a DNS record",
-          "price": "$0.00"
-        },
-        {
-          "id": "delete_record",
-          "route": "DELETE /v1/zones/:zone_id/records/:id",
-          "description": "Delete a DNS record",
-          "price": "$0.00"
-        }
-      ],
+      "operations": [],
       "providers": [
         {
           "name": "cloudflare",
@@ -258,111 +121,14 @@
       "name": "email.sh",
       "endpoint": "email.prim.sh",
       "description": "Mailboxes on demand. Send, receive, webhook. Disposable or permanent.",
-      "status": "live",
+      "status": "planned",
       "interfaces": {
         "mcp": true,
         "cli": true,
         "openai": true,
         "rest": true
       },
-      "operations": [
-        {
-          "id": "create_mailbox",
-          "route": "POST /v1/mailboxes",
-          "description": "Create a mailbox. Optional: username, domain, ttl_ms.",
-          "price": "$0.05"
-        },
-        {
-          "id": "list_mailboxes",
-          "route": "GET /v1/mailboxes",
-          "description": "List mailboxes owned by the calling wallet (paginated)",
-          "price": "$0.01"
-        },
-        {
-          "id": "get_mailbox",
-          "route": "GET /v1/mailboxes/:id",
-          "description": "Get mailbox metadata including expires_at",
-          "price": "$0.001"
-        },
-        {
-          "id": "delete_mailbox",
-          "route": "DELETE /v1/mailboxes/:id",
-          "description": "Permanently delete a mailbox and all messages",
-          "price": "$0.01"
-        },
-        {
-          "id": "renew_mailbox",
-          "route": "POST /v1/mailboxes/:id/renew",
-          "description": "Extend mailbox TTL by ttl_ms milliseconds",
-          "price": "$0.05"
-        },
-        {
-          "id": "list_messages",
-          "route": "GET /v1/mailboxes/:id/messages",
-          "description": "List messages in a mailbox, newest first",
-          "price": "$0.00"
-        },
-        {
-          "id": "get_message",
-          "route": "GET /v1/mailboxes/:id/messages/:msgId",
-          "description": "Get full message including textBody and htmlBody",
-          "price": "$0.00"
-        },
-        {
-          "id": "send_message",
-          "route": "POST /v1/mailboxes/:id/send",
-          "description": "Send email from a mailbox. Requires to, subject, and body or html.",
-          "price": "$0.00"
-        },
-        {
-          "id": "register_webhook",
-          "route": "POST /v1/mailboxes/:id/webhooks",
-          "description": "Register a webhook URL for message.received events. Optional secret for HMAC signing.",
-          "price": "$0.00"
-        },
-        {
-          "id": "list_webhooks",
-          "route": "GET /v1/mailboxes/:id/webhooks",
-          "description": "List webhooks for a mailbox",
-          "price": "$0.00"
-        },
-        {
-          "id": "delete_webhook",
-          "route": "DELETE /v1/mailboxes/:id/webhooks/:whId",
-          "description": "Delete a webhook",
-          "price": "$0.00"
-        },
-        {
-          "id": "register_domain",
-          "route": "POST /v1/domains",
-          "description": "Register a custom domain. Returns required_records for DNS.",
-          "price": "$0.00"
-        },
-        {
-          "id": "list_domains",
-          "route": "GET /v1/domains",
-          "description": "List registered custom domains (paginated)",
-          "price": "$0.00"
-        },
-        {
-          "id": "get_domain",
-          "route": "GET /v1/domains/:id",
-          "description": "Get domain details and verification status",
-          "price": "$0.00"
-        },
-        {
-          "id": "verify_domain",
-          "route": "POST /v1/domains/:id/verify",
-          "description": "Verify DNS records. On success: status → verified, dkim_records returned.",
-          "price": "$0.00"
-        },
-        {
-          "id": "delete_domain",
-          "route": "DELETE /v1/domains/:id",
-          "description": "Remove a custom domain registration",
-          "price": "$0.00"
-        }
-      ],
+      "operations": [],
       "providers": [
         {
           "name": "stalwart",
@@ -417,88 +183,18 @@
       "providers": []
     },
     {
-      "id": "hands",
-      "name": "hands.sh",
-      "endpoint": "https://hands.prim.sh",
-      "description": "On-demand human labor. Physical tasks, verification, errands. Gig economy API.",
-      "status": "phantom",
-      "interfaces": {
-        "mcp": true,
-        "cli": true,
-        "openai": true,
-        "rest": true
-      },
-      "operations": [],
-      "providers": []
-    },
-    {
-      "id": "hive",
-      "name": "hive.sh",
-      "endpoint": "https://hive.prim.sh",
-      "description": "Discover peers. Share knowledge. Establish reputation. A social graph for software.",
-      "status": "phantom",
-      "interfaces": {
-        "mcp": true,
-        "cli": true,
-        "openai": true,
-        "rest": true
-      },
-      "operations": [],
-      "providers": []
-    },
-    {
-      "id": "id",
-      "name": "id.sh",
-      "endpoint": "https://id.prim.sh",
-      "description": "Reputation scores. Know Your Agent. Verifiable credentials. Trust layer.",
-      "status": "phantom",
-      "interfaces": {
-        "mcp": true,
-        "cli": true,
-        "openai": true,
-        "rest": true
-      },
-      "operations": [],
-      "providers": []
-    },
-    {
       "id": "imagine",
       "name": "imagine.sh",
       "endpoint": "imagine.prim.sh",
       "description": "Media generation for agents. Images, video, audio. Any model, one API. No API keys.",
-      "status": "built",
+      "status": "planned",
       "interfaces": {
         "mcp": true,
         "cli": true,
         "openai": false,
         "rest": true
       },
-      "operations": [
-        {
-          "id": "generate",
-          "route": "POST /v1/generate",
-          "description": "Generate an image from a text prompt. Returns base64 or URL.",
-          "price": "$0.02"
-        },
-        {
-          "id": "describe",
-          "route": "POST /v1/describe",
-          "description": "Describe an image. Accepts base64 or URL. Returns text description.",
-          "price": "$0.005"
-        },
-        {
-          "id": "upscale",
-          "route": "POST /v1/upscale",
-          "description": "Upscale an image to higher resolution. Accepts base64 or URL.",
-          "price": "$0.01"
-        },
-        {
-          "id": "list_models",
-          "route": "GET /v1/models",
-          "description": "List available image models with capabilities and pricing.",
-          "price": "free"
-        }
-      ],
+      "operations": [],
       "providers": [
         {
           "name": "google-gemini",
@@ -511,11 +207,11 @@
       ]
     },
     {
-      "id": "mart",
-      "name": "mart.sh",
-      "endpoint": "https://mart.prim.sh",
-      "description": "Buy physical goods via API. x402 to fiat proxy. Headless checkout.",
-      "status": "phantom",
+      "id": "mem",
+      "name": "mem.sh",
+      "endpoint": "mem.prim.sh",
+      "description": "Vector store and cache for agents. Persist long-term knowledge and session state.",
+      "status": "planned",
       "interfaces": {
         "mcp": true,
         "cli": true,
@@ -523,76 +219,6 @@
         "rest": true
       },
       "operations": [],
-      "providers": []
-    },
-    {
-      "id": "mem",
-      "name": "mem.sh",
-      "endpoint": "mem.prim.sh",
-      "description": "Vector store and cache for agents. Persist long-term knowledge and session state.",
-      "status": "built",
-      "interfaces": {
-        "mcp": true,
-        "cli": true,
-        "openai": true,
-        "rest": true
-      },
-      "operations": [
-        {
-          "id": "create_collection",
-          "route": "POST /v1/collections",
-          "description": "Create a vector collection",
-          "price": "$0.01"
-        },
-        {
-          "id": "list_collections",
-          "route": "GET /v1/collections",
-          "description": "List collections owned by the calling wallet (paginated). document_count is null — use GET :id.",
-          "price": "$0.001"
-        },
-        {
-          "id": "get_collection",
-          "route": "GET /v1/collections/:id",
-          "description": "Get collection with live document_count from Qdrant",
-          "price": "$0.001"
-        },
-        {
-          "id": "delete_collection",
-          "route": "DELETE /v1/collections/:id",
-          "description": "Delete collection and all documents. Irreversible.",
-          "price": "$0.0001"
-        },
-        {
-          "id": "upsert_documents",
-          "route": "POST /v1/collections/:id/upsert",
-          "description": "Embed and store documents. Each document: {id?, text, metadata?}. Existing IDs are replaced.",
-          "price": "$0.00"
-        },
-        {
-          "id": "query_collection",
-          "route": "POST /v1/collections/:id/query",
-          "description": "Semantic search. Fields: text (required), top_k, filter (Qdrant native format).",
-          "price": "$0.00"
-        },
-        {
-          "id": "set_cache",
-          "route": "PUT /v1/cache/:namespace/:key",
-          "description": "Store a value in the KV cache. Optional ttl in seconds for expiry.",
-          "price": "$0.00"
-        },
-        {
-          "id": "get_cache",
-          "route": "GET /v1/cache/:namespace/:key",
-          "description": "Retrieve a cache value. Returns 404 if missing or expired.",
-          "price": "$0.00"
-        },
-        {
-          "id": "delete_cache",
-          "route": "DELETE /v1/cache/:namespace/:key",
-          "description": "Delete a cache entry",
-          "price": "$0.00"
-        }
-      ],
       "providers": [
         {
           "name": "qdrant",
@@ -601,26 +227,11 @@
       ]
     },
     {
-      "id": "pins",
-      "name": "pins.sh",
-      "endpoint": "https://pins.prim.sh",
-      "description": "Coordinates, places, and routing. No maps UI, just structured spatial data.",
-      "status": "phantom",
-      "interfaces": {
-        "mcp": true,
-        "cli": true,
-        "openai": true,
-        "rest": true
-      },
-      "operations": [],
-      "providers": []
-    },
-    {
       "id": "pipe",
       "name": "pipe.sh",
       "endpoint": "https://pipe.prim.sh",
       "description": "Pub/sub channels, webhook relays, event queues. Agent-to-agent glue.",
-      "status": "phantom",
+      "status": "planned",
       "interfaces": {
         "mcp": true,
         "cli": true,
@@ -635,7 +246,7 @@
       "name": "ring.sh",
       "endpoint": "https://ring.prim.sh",
       "description": "Phone numbers via API. SMS, voice, TTS. No Twilio account needed.",
-      "status": "phantom",
+      "status": "planned",
       "interfaces": {
         "mcp": true,
         "cli": true,
@@ -689,87 +300,14 @@
       "name": "spawn.sh",
       "endpoint": "spawn.prim.sh",
       "description": "VPS in one API call. Deploy, scale, destroy. Per-second billing.",
-      "status": "live",
+      "status": "planned",
       "interfaces": {
         "mcp": true,
         "cli": true,
         "openai": true,
         "rest": true
       },
-      "operations": [
-        {
-          "id": "create_server",
-          "route": "POST /v1/servers",
-          "description": "Provision a new VPS. Returns immediately with status 'initializing'.",
-          "price": "$0.01"
-        },
-        {
-          "id": "list_servers",
-          "route": "GET /v1/servers",
-          "description": "List all servers owned by the calling wallet",
-          "price": "$0.012/hr"
-        },
-        {
-          "id": "get_server",
-          "route": "GET /v1/servers/:id",
-          "description": "Get full details for a single server. Poll this until status='running'.",
-          "price": "$0.036/hr"
-        },
-        {
-          "id": "delete_server",
-          "route": "DELETE /v1/servers/:id",
-          "description": "Destroy a server and release its resources. Unused deposit is refunded.",
-          "price": "$0.071/hr"
-        },
-        {
-          "id": "start_server",
-          "route": "POST /v1/servers/:id/start",
-          "description": "Start a stopped server",
-          "price": "$0.01/GB"
-        },
-        {
-          "id": "stop_server",
-          "route": "POST /v1/servers/:id/stop",
-          "description": "Stop a running server (graceful shutdown)",
-          "price": "$0.00"
-        },
-        {
-          "id": "reboot_server",
-          "route": "POST /v1/servers/:id/reboot",
-          "description": "Reboot a running server",
-          "price": "$0.00"
-        },
-        {
-          "id": "resize_server",
-          "route": "POST /v1/servers/:id/resize",
-          "description": "Change server type (CPU/RAM). Server must be stopped first. Deposit adjusted.",
-          "price": "$0.00"
-        },
-        {
-          "id": "rebuild_server",
-          "route": "POST /v1/servers/:id/rebuild",
-          "description": "Reinstall from a fresh OS image. All data on server is destroyed.",
-          "price": "$0.00"
-        },
-        {
-          "id": "create_ssh_key",
-          "route": "POST /v1/ssh-keys",
-          "description": "Register a public SSH key. Returned ID can be used in ssh_keys when creating a server.",
-          "price": "$0.00"
-        },
-        {
-          "id": "list_ssh_keys",
-          "route": "GET /v1/ssh-keys",
-          "description": "List all SSH keys registered by the calling wallet",
-          "price": "$0.00"
-        },
-        {
-          "id": "delete_ssh_key",
-          "route": "DELETE /v1/ssh-keys/:id",
-          "description": "Remove an SSH key. Keys in use by active servers remain until server is rebuilt.",
-          "price": "$0.00"
-        }
-      ],
+      "operations": [],
       "providers": [
         {
           "name": "digitalocean",
@@ -873,63 +411,14 @@
       "name": "token.sh",
       "endpoint": "token.prim.sh",
       "description": "Deploy ERC-20 tokens and Uniswap V3 pools. No wallet setup required.",
-      "status": "built",
+      "status": "planned",
       "interfaces": {
         "mcp": true,
         "cli": true,
         "openai": true,
         "rest": true
       },
-      "operations": [
-        {
-          "id": "deploy_token",
-          "route": "POST /v1/tokens",
-          "description": "Deploy a new ERC-20 token. Returns immediately with deployStatus: 'pending'.",
-          "price": "$1.00"
-        },
-        {
-          "id": "list_tokens",
-          "route": "GET /v1/tokens",
-          "description": "List tokens deployed by the authenticated wallet",
-          "price": "$0.10"
-        },
-        {
-          "id": "get_token",
-          "route": "GET /v1/tokens/:id",
-          "description": "Get token details: deployStatus, contractAddress, supply, pool",
-          "price": "$0.50"
-        },
-        {
-          "id": "mint_tokens",
-          "route": "POST /v1/tokens/:id/mint",
-          "description": "Mint additional tokens to an address. Requires mintable=true at deploy time.",
-          "price": "$0.001"
-        },
-        {
-          "id": "get_token_supply",
-          "route": "GET /v1/tokens/:id/supply",
-          "description": "Live on-chain total supply from contract",
-          "price": "$0.00"
-        },
-        {
-          "id": "create_pool",
-          "route": "POST /v1/tokens/:id/pool",
-          "description": "Create and initialize a Uniswap V3 pool paired with USDC. One pool per token.",
-          "price": "$0.00"
-        },
-        {
-          "id": "get_pool",
-          "route": "GET /v1/tokens/:id/pool",
-          "description": "Get pool details: poolAddress, token0, token1, fee, sqrtPriceX96, tick",
-          "price": "$0.00"
-        },
-        {
-          "id": "get_liquidity_params",
-          "route": "GET /v1/tokens/:id/pool/liquidity-params",
-          "description": "Get calldata for adding liquidity. Returns approvals[] and position manager params.",
-          "price": "$0.00"
-        }
-      ],
+      "operations": [],
       "providers": [
         {
           "name": "viem",
@@ -942,7 +431,7 @@
       "name": "trace.sh",
       "endpoint": "https://trace.prim.sh",
       "description": "Distributed tracing across services. Follow a request from wallet to spawn to store.",
-      "status": "phantom",
+      "status": "planned",
       "interfaces": {
         "mcp": true,
         "cli": true,
@@ -957,21 +446,14 @@
       "name": "track.sh",
       "endpoint": "track.prim.sh",
       "description": "Package tracking for agents. USPS, FedEx, UPS, DHL and 1000+ carriers. Status, ETA, full event history.",
-      "status": "built",
+      "status": "planned",
       "interfaces": {
         "mcp": true,
         "cli": true,
         "openai": true,
         "rest": true
       },
-      "operations": [
-        {
-          "id": "track_package",
-          "route": "POST /v1/track",
-          "description": "Track a package by tracking number and carrier. Returns status, ETA, and full event history.",
-          "price": "$0.05"
-        }
-      ],
+      "operations": [],
       "providers": [
         {
           "name": "trackingmore",
@@ -984,7 +466,7 @@
       "name": "vault.sh",
       "endpoint": "https://vault.prim.sh",
       "description": "Store API keys, tokens, credentials. Scoped access. Ephemeral or persistent.",
-      "status": "phantom",
+      "status": "planned",
       "interfaces": {
         "mcp": true,
         "cli": true,
@@ -1087,7 +569,7 @@
       "name": "watch.sh",
       "endpoint": "https://watch.prim.sh",
       "description": "Structured logs, metrics, and alerts so agents can observe and correct themselves.",
-      "status": "phantom",
+      "status": "planned",
       "interfaces": {
         "mcp": true,
         "cli": true,

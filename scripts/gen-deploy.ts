@@ -210,11 +210,11 @@ function assembleCaddyfile(): void {
 
 // ── Main ───────────────────────────────────────────────────────────────────
 
-/** Prims ready for VPS deploy artifacts (building or beyond, with a package) */
-const DEPLOYABLE_STATUSES: Set<PrimStatus> = new Set(["building", "testing", "live", "mainnet"]);
+/** Prims deployed to VPS */
+const DEPLOYABLE_STATUSES: Set<PrimStatus> = new Set(["testnet", "mainnet"]);
 
 /** Prims that get Caddy fragments (have DNS records, actually routable) */
-const CADDY_STATUSES: Set<PrimStatus> = new Set(["live", "mainnet"]);
+const CADDY_STATUSES: Set<PrimStatus> = new Set(["testnet", "mainnet"]);
 
 const prims = loadPrimitives(ROOT);
 const deployable = withPackage(prims, ROOT).filter(

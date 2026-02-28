@@ -94,12 +94,16 @@ const V0_GATES: GateDef[] = [
 let failures = 0;
 const nextSteps: string[] = [];
 
-function pass(label: string, detail?: string) {
-  process.stdout.write(`  ✅ ${label}${detail ? `  (${detail})` : ""}\n`);
+// Buffered output — pass a buffer to collect lines instead of writing to stdout.
+// When no buffer is passed, writes directly to stdout (default for sync sections).
+function pass(label: string, detail?: string, buf?: string[]) {
+  const line = `  ✅ ${label}${detail ? `  (${detail})` : ""}\n`;
+  buf ? buf.push(line) : process.stdout.write(line);
 }
 
-function fail(label: string, detail?: string) {
-  process.stdout.write(`  ❌ ${label}${detail ? `  — ${detail}` : ""}\n`);
+function fail(label: string, detail?: string, buf?: string[]) {
+  const line = `  ❌ ${label}${detail ? `  — ${detail}` : ""}\n`;
+  buf ? buf.push(line) : process.stdout.write(line);
   failures++;
 }
 
@@ -112,8 +116,13 @@ function active(label: string, detail?: string) {
   failures++;
 }
 
-function header(emoji: string, title: string) {
-  process.stdout.write(`\n${emoji} ${title}\n${"─".repeat(52)}\n\n`);
+function header(emoji: string, title: string, buf?: string[]) {
+  const line = `\n${emoji} ${title}\n${"─".repeat(52)}\n\n`;
+  buf ? buf.push(line) : process.stdout.write(line);
+}
+
+function flushBuf(buf: string[]) {
+  for (const line of buf) process.stdout.write(line);
 }
 
 // ─── 1. Gates ─────────────────────────────────────────────────────────────
@@ -194,9 +203,15 @@ function checkGates() {
 
 // ─── 2. Live Endpoints ────────────────────────────────────────────────────
 
-async function checkEndpoints(): Promise<string[]> {
-  header("🌐", "Live Endpoints");
+interface AsyncCheckResult {
+  buf: string[];
+  issues: string[];
+}
+
+async function checkEndpoints(): Promise<AsyncCheckResult> {
+  const buf: string[] = [];
   const issues: string[] = [];
+  header("🌐", "Live Endpoints", buf);
 
   for (const host of V0_HOSTS) {
     try {
@@ -204,48 +219,49 @@ async function checkEndpoints(): Promise<string[]> {
         signal: AbortSignal.timeout(FETCH_TIMEOUT),
       });
       if (!res.ok) {
-        fail(host, `HTTP ${res.status}`);
+        fail(host, `HTTP ${res.status}`, buf);
         issues.push(`${host} returned HTTP ${res.status}`);
         continue;
       }
       const data = (await res.json()) as { status?: string };
       if (data.status === "ok") {
-        pass(host);
+        pass(host, undefined, buf);
       } else {
-        fail(host, `status=${data.status ?? "missing"}`);
+        fail(host, `status=${data.status ?? "missing"}`, buf);
         issues.push(`${host} status not ok`);
       }
     } catch (err) {
       const msg = err instanceof Error ? err.message : String(err);
-      fail(host, msg.slice(0, 80));
+      fail(host, msg.slice(0, 80), buf);
       issues.push(`${host} unreachable`);
     }
   }
-  return issues;
+  return { buf, issues };
 }
 
 // ─── 3. DNS ───────────────────────────────────────────────────────────────
 
-async function checkDns(): Promise<string[]> {
-  header("📡", "DNS");
+async function checkDns(): Promise<AsyncCheckResult> {
+  const buf: string[] = [];
   const issues: string[] = [];
+  header("📡", "DNS", buf);
 
   for (const host of V0_HOSTS) {
     try {
       const addrs = await resolve4(host);
       if (addrs.includes(VPS_IP)) {
-        pass(host, VPS_IP);
+        pass(host, VPS_IP, buf);
       } else {
-        fail(host, `resolves to ${addrs.join(", ")} (expected ${VPS_IP})`);
+        fail(host, `resolves to ${addrs.join(", ")} (expected ${VPS_IP})`, buf);
         issues.push(`${host} DNS → wrong IP`);
       }
     } catch (err) {
       const msg = err instanceof Error ? err.message : String(err);
-      fail(host, msg.slice(0, 80));
+      fail(host, msg.slice(0, 80), buf);
       issues.push(`${host} DNS not resolving`);
     }
   }
-  return issues;
+  return { buf, issues };
 }
 
 // ─── 4. Tests ─────────────────────────────────────────────────────────────
@@ -304,9 +320,13 @@ async function main() {
 
   checkGates();
   const testIssues = checkTests();
-  const [endpointIssues, dnsIssues] = await Promise.all([checkEndpoints(), checkDns()]);
+  const [endpoints, dns] = await Promise.all([checkEndpoints(), checkDns()]);
 
-  printNextSteps([...testIssues, ...endpointIssues, ...dnsIssues]);
+  // Flush async sections in display order (endpoints before DNS)
+  flushBuf(endpoints.buf);
+  flushBuf(dns.buf);
+
+  printNextSteps([...testIssues, ...endpoints.issues, ...dns.issues]);
 
   process.stdout.write(`\n${"─".repeat(52)}\n`);
   if (failures === 0) {

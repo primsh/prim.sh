@@ -1,7 +1,6 @@
 id: pay
 name: pay.sh
 endpoint: pay.prim.sh
-status: phantom
 type: payments
 category: crypto
 card_class: p29

@@ -1,7 +1,6 @@
 id: ring
 name: ring.sh
 endpoint: ring.prim.sh
-status: phantom
 type: voice
 category: comms
 card_class: p3

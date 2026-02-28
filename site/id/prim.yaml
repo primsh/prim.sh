@@ -1,7 +1,6 @@
 id: id
 name: id.sh
 endpoint: id.prim.sh
-status: phantom
 type: identity
 category: identity
 card_class: p22

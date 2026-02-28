@@ -1,7 +1,6 @@
 id: mart
 name: mart.sh
 endpoint: mart.prim.sh
-status: phantom
 type: commerce
 category: physical
 card_class: p26

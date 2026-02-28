@@ -1,7 +1,6 @@
 id: pipe
 name: pipe.sh
 endpoint: pipe.prim.sh
-status: phantom
 type: messaging
 category: comms
 card_class: p10

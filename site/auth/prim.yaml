@@ -1,7 +1,6 @@
 id: auth
 name: auth.sh
 endpoint: auth.prim.sh
-status: phantom
 type: auth
 category: identity
 card_class: p17

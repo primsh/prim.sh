@@ -1,7 +1,6 @@
 id: imagine
 name: imagine.sh
 endpoint: imagine.prim.sh
-status: building
 type: intelligence
 category: intelligence
 description: "Media generation for agents. Images, video, audio. Any model, one API. No API keys."

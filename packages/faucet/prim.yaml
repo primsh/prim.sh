@@ -1,7 +1,7 @@
 id: faucet
 name: faucet.sh
 endpoint: faucet.prim.sh
-status: live
+status: testnet
 type: testnet
 category: crypto
 card_class: pfaucet

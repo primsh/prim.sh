@@ -1293,7 +1293,6 @@ async function runWizard(root: string): Promise<{ prim: PrimYaml; yamlStr: strin
     id,
     name,
     endpoint: `${id}.prim.sh`,
-    status: "building",
     type,
     category,
     description,

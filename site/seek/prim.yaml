@@ -1,7 +1,6 @@
 id: seek
 name: seek.sh
 endpoint: seek.prim.sh
-status: phantom
 type: search
 category: intelligence
 card_class: p15

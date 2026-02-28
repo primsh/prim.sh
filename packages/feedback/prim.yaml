@@ -1,7 +1,7 @@
 id: feedback
 name: feedback.sh
 endpoint: feedback.prim.sh
-status: building
+status: testnet
 type: meta
 category: meta
 port: 3014

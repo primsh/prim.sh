@@ -1405,7 +1405,7 @@
               "description": "G5 Build feedback.sh: `pnpm create-prim`, SQLite service logic, deploy to VPS, add feedback_url to x402-middleware errors",
               "owner": ["Garric"],
               "depends": ["L-76"],
-              "status": "pending",
+              "status": "done",
               "release": "v0"
             },
             {

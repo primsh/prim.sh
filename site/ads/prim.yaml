@@ -1,7 +1,6 @@
 id: ads
 name: ads.sh
 endpoint: ads.prim.sh
-status: phantom
 type: advertising
 category: physical
 card_class: p31

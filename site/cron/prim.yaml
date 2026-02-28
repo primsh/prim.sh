@@ -1,7 +1,6 @@
 id: cron
 name: cron.sh
 endpoint: cron.prim.sh
-status: phantom
 type: scheduler
 category: compute
 card_class: p8

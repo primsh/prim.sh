@@ -1,7 +1,6 @@
 id: infer
 name: infer.sh
 endpoint: infer.prim.sh
-status: phantom
 type: ai
 category: intelligence
 card_class: p14

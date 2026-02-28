@@ -11,7 +11,7 @@ import { parse as parseYaml } from "yaml";
 
 // ── Types ──────────────────────────────────────────────────────────────────
 
-export type PrimStatus = "idea" | "planning" | "building" | "testing" | "live" | "mainnet";
+export type PrimStatus = "testnet" | "mainnet" | "hold";
 
 export interface PricingRow {
   op: string;
@@ -152,14 +152,14 @@ export interface Primitive {
   id: string;
   name: string;
   endpoint?: string;
-  status: PrimStatus;
+  status?: PrimStatus;
+  note?: string;
   type: string;
   category?: PrimCategory;
   card_class: string;
   description: string;
   port?: number;
   order: number;
-  phantom?: boolean;
   show_on_index?: boolean;
   env?: string[];
   pricing?: PricingRow[];
@@ -211,7 +211,6 @@ export function loadPrimitives(root?: string): Primitive[] {
   return Array.from(rootMap.values())
     .map((p) => ({
       show_on_index: true,
-      phantom: false,
       ...p,
     }))
     .sort((a, b) => (a.order ?? 999) - (b.order ?? 999) || a.id.localeCompare(b.id)) as Primitive[];
@@ -261,9 +260,9 @@ export function primsForInterface(surface: InterfaceSurface, root?: string): Pri
   });
 }
 
-/** Primitives on VPS (status = live or mainnet) */
+/** Primitives deployed to VPS (status = testnet or mainnet) */
 export function deployed(prims: Primitive[]): Primitive[] {
-  return prims.filter((p) => p.status === "live" || p.status === "mainnet");
+  return prims.filter((p) => p.status === "testnet" || p.status === "mainnet");
 }
 
 /** Primitives deployed to Base mainnet (status = mainnet) */

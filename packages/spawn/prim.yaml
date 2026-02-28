@@ -1,7 +1,8 @@
 id: spawn
 name: spawn.sh
 endpoint: spawn.prim.sh
-status: live
+status: hold
+note: "Delayed until after v0 private beta"
 type: compute
 category: compute
 card_class: p1
