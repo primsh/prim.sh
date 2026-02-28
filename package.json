@@ -49,7 +49,7 @@
     "create-prim": "bun scripts/create-prim.ts",
     "create-provider": "bun scripts/create-provider.ts",
     "prepare": "git config core.hooksPath .githooks 2>/dev/null || true",
-    "clean": "rm -rf dist/ site-dist/ workers/platform/node_modules/",
+    "clean": "rm -rf dist/ site-dist/",
     "clean:worktrees": "git worktree prune && git worktree list"
   },
   "devDependencies": {
