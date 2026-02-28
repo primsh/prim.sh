@@ -95,7 +95,6 @@ jobs:
             --exclude='*.db-wal' \
             --exclude='server.log' \
             --exclude='.env*' \
-            --exclude='brand/assets/' \
             --exclude='research/' \
             --exclude='specs/' \
             --exclude='.claude/' \

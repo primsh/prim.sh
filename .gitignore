@@ -37,9 +37,6 @@ server.log
 gitleaks-report.json
 gitleaks-report.sarif
 
-# Brand assets (large binaries)
-brand/assets/
-
 # Internal planning (migrated to GitHub Issues)
 research/
 tasks/
@@ -49,12 +46,6 @@ site-dist/
 
 # Generated logos (regenerate with: bun scripts/gen-logos.ts)
 site/assets/logos/
-
-# Terminal World generated assets (regenerate with: bun scripts/gen-terminal-world.ts)
-brand/terminal-world/generated/
-
-# Brand fonts (binary)
-brand/fonts/
 
 # D2 diagram generated output
 docs/d2/generated/
