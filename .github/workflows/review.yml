@@ -43,29 +43,29 @@ jobs:
         with:
           claude_code_oauth_token: ${{ secrets.ANTHROPIC_API_KEY }}
           prompt: |
-            Review this PR. Focus on what only AI review can catch — Biome handles formatting, import order, and naming style.
+            Review this PR for bugs, security issues, and architectural problems.
 
-            ## What to review
+            ## Process
 
-            1. **Architecture** — wrong module ownership, import direction violations, shared mutable state
-            2. **Security** — hardcoded secrets, unvalidated input, missing ownership checks, SQL injection
-            3. **Business logic** — incorrect x402 pricing, wrong HTTP status codes, unhandled ServiceResult errors (missing `if (!result.ok)` checks)
-            4. **x402 wiring** — createPrimApp config errors, missing freeRoutes, incorrect paid route map
-            5. **Test gaps** — new endpoints without smoke test coverage, weakened assertions
+            1. Run `gh pr diff ${{ github.event.pull_request.number }}` to read the diff FIRST
+            2. Only open files if the diff reveals something suspicious that needs more context
+            3. If nothing is wrong, stop immediately — do not explore the codebase
 
-            ## What NOT to review (Biome enforces these)
+            ## What to look for
 
-            - Formatting, indentation, line length
-            - Import order or `import type` usage
-            - Unused variables or parameters
-            - Naming style (snake_case vs camelCase)
-            - Explicit `any` (noExplicitAny rule catches this)
+            - Security: hardcoded secrets, unvalidated input, missing ownership checks, injection
+            - Logic bugs: incorrect x402 pricing, wrong HTTP status codes, unhandled ServiceResult errors
+            - Architecture: wrong module ownership, import direction violations
+            - Test gaps: new endpoints without smoke test coverage, weakened assertions
+
+            ## What to ignore (Biome enforces these)
+
+            Formatting, imports, naming, unused vars, explicit `any`
 
             ## Actions
 
-            - If you find fixable bugs or security issues, fix them and push.
-            - Do not change test expectations or weaken assertions.
+            - If you find a fixable bug or security issue, fix it and push
             - Use conventional commit format: type(scope): subject
-            - Keep fixes minimal — only fix what's broken.
-          claude_args: "--max-turns 25 --model claude-sonnet-4-6 --allowedTools Bash,Read,Edit,Write,Glob,Grep"
+            - If nothing is wrong, do nothing — no LGTM comments, no praise
+          claude_args: "--max-turns 10 --model claude-sonnet-4-6 --allowedTools Bash,Read,Edit,Write,Glob,Grep"
           trigger_phrase: "@claude"
