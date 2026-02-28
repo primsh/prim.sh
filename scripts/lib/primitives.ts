@@ -224,6 +224,7 @@ export function getDeployConfig(p: Primitive): Required<DeployConfig> {
     max_body_size: p.deploy?.max_body_size ?? "1MB",
     systemd_after: p.deploy?.systemd_after ?? [],
     extra_caddy: p.deploy?.extra_caddy ?? [],
+    access_log: p.deploy?.access_log ?? false,
   };
 }
 

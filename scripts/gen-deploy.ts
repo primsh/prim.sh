@@ -213,6 +213,9 @@ function assembleCaddyfile(): void {
 /** Prims ready for VPS deploy artifacts (building or beyond, with a package) */
 const DEPLOYABLE_STATUSES: Set<PrimStatus> = new Set(["building", "testing", "live", "mainnet"]);
 
+/** Prims that get Caddy fragments (have DNS records, actually routable) */
+const CADDY_STATUSES: Set<PrimStatus> = new Set(["live", "mainnet"]);
+
 const prims = loadPrimitives(ROOT);
 const deployable = withPackage(prims, ROOT).filter(
   (p) => DEPLOYABLE_STATUSES.has(p.status) && p.endpoint && p.port,
@@ -236,13 +239,15 @@ for (const prim of deployable) {
   const deployConfig = getDeployConfig(prim);
   const hasInstallSh = existsSync(join(ROOT, `packages/${prim.id}/install.sh`));
 
-  // 1. Caddy fragment
-  const caddyContent = genCaddyFragment(prim, hasInstallSh);
-  writeIfChanged(
-    join(GENERATED_DIR, `${prim.id}.caddy`),
-    caddyContent,
-    `deploy/prim/generated/${prim.id}.caddy`,
-  );
+  // 1. Caddy fragment — only for live/mainnet (prims with DNS records)
+  if (CADDY_STATUSES.has(prim.status)) {
+    const caddyContent = genCaddyFragment(prim, hasInstallSh);
+    writeIfChanged(
+      join(GENERATED_DIR, `${prim.id}.caddy`),
+      caddyContent,
+      `deploy/prim/generated/${prim.id}.caddy`,
+    );
+  }
 
   // 2. Systemd unit
   const unitContent = genSystemdUnit(prim.id, prim.name, deployConfig.systemd_after);
