@@ -210,7 +210,7 @@ function assembleCaddyfile(): void {
 
 // ── Main ───────────────────────────────────────────────────────────────────
 
-/** Prims ready for systemd + env artifacts (building or beyond, with a package) */
+/** Prims ready for VPS deploy artifacts (building or beyond, with a package) */
 const DEPLOYABLE_STATUSES: Set<PrimStatus> = new Set(["building", "testing", "live", "mainnet"]);
 
 /** Prims that get Caddy fragments (have DNS records, actually routable) */

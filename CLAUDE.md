@@ -198,7 +198,7 @@ Ten workflows automate the PR-to-deploy pipeline (`.github/workflows/`):
 | `review.yml` | PR open/push, `@claude` comment | Claude reviews for architecture, security, logic, x402 wiring, test gaps; fixes and pushes |
 | `ci-heal.yml` | CI failure on PR branch | Claude reads failed logs, fixes code, pushes |
 | `rebase.yml` | push to main, manual | Forward-merges main into conflicted PRs; Claude resolves real conflicts |
-| `auto-merge.yml` | PR open/push (bots only) | Auto-merges dependabot/renovate patch/minor bumps |
+| `auto-merge.yml` | PR open/push | Enables auto-merge (squash) on all PRs; labels major dep bumps `needs-review` |
 | `deploy.yml` | CI passes on main | Rsync to VPS + Cloudflare Pages deploy + smoke check |
 | `release.yml` | tag push (`v*`) | Bundle CLI, upload to R2, create GitHub Release |
 | `stale.yml` | weekly cron | Mark/close stale issues and PRs |
@@ -220,9 +220,16 @@ PR opens → Claude review (fix + push) → CI runs → auto-merge (squash)
 - **Squash merge only.** Auto-delete branches after merge.
 - Claude review is NOT a required check — it's advisory + auto-fix
 
+### prim-ci GitHub App
+
+All bot workflows (auto-merge, rebase, review, ci-heal) use the `prim-ci` GitHub App token instead of `GITHUB_TOKEN`. This is required because `GITHUB_TOKEN` pushes don't trigger downstream workflows (GitHub's infinite-loop prevention). App token pushes trigger CI normally, keeping the flywheel running.
+
+- **App ID**: stored as `PRIM_CI_APP_ID` repo secret
+- **Private key**: stored as `PRIM_CI_PRIVATE_KEY` repo secret
+- **Local key backup**: `~/.config/prim/prim-ci.pem`
+
 ### Constraints
 
-- Claude review will always fail on PRs that modify `review.yml` (GitHub security feature — expected, not blocking)
 - Merge queue requires GitHub Enterprise or public repo (I-42, deferred)
 - Rebase bot allows 15s for GitHub to recalculate mergeability after main moves — sometimes insufficient; use manual `workflow_dispatch` as fallback
 
