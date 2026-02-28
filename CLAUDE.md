@@ -238,51 +238,21 @@ All bot workflows (auto-merge, rebase, review, ci-heal) use the `prim-ci` GitHub
 
 ## Task Management
 
-Full conventions: `tasks/README.md`. Key rules for this project:
+**GitHub Issues** is the sole source of truth for task tracking. The `tasks/` directory is gitignored.
 
-### Sections
+### Labels
 
-| Abbrev | Scope |
-|--------|-------|
-| HRD | Code quality, security, reliability |
-| PRIMS | Feature work on specific services |
-| INFRA | CI, tooling, observability, cross-cutting |
-| COMM | Docs, Discord, brand, marketing |
-| BKLG | Future primitives, deferred ideas |
-
-### ID Prefixes
-
-| Prefix | Scope | Prefix | Scope |
-|--------|-------|--------|-------|
-| L | Legacy launch (migrated) | HRD | Hardening |
-| W | wallet.sh | E | email.sh |
-| SP | spawn.sh | ST | store.sh |
-| TK | token.sh | D | domain.sh |
-| SE | search.sh | TR | track.sh |
-| M | mem.sh | FC | faucet.sh |
-| OPS | Operations | OBS | Observability |
-| BIZ | Business | SEC | Security |
-| I | Internal tooling | SITE | Marketing site |
-| COM | Community | X4 | x402 middleware |
-
-### Task SOT
-
-`tasks/tasks.json` is the sole source of truth. **TASKS.md does not exist and must never be generated or referenced.** All task reads and writes go through `tasks/tasks.json` directly.
+| Label | Scope |
+|-------|-------|
+| `hrd` | Code quality, security, reliability |
+| `prims` | Feature work on specific services |
+| `infra` | CI, tooling, observability, cross-cutting |
+| `comm` | Docs, Discord, brand, marketing |
+| `good-first-issue` | Contributor onramp |
 
 ### Planning
 
-Use Claude Code's **plan mode** for task planning. Plan docs are NOT stored in the repo — they live in Claude Code's project memory and are managed by plan mode automatically. Do not create `tasks/active/` or `tasks/completed/` plan doc files.
-
-### Completion workflow
-
-1. Update `status` to `"done"` in `tasks/tasks.json`
-
-### What does NOT belong in tasks.json
-
-- Plan docs (use Claude Code plan mode instead)
-- Research notes
-- Milestone retrospectives
-- Generated markdown views (no TASKS.md — read tasks.json directly)
+Use Claude Code's **plan mode** for task planning. Plan docs are not stored in the repo. Use `gh issue create` and `gh issue list` to manage tasks.
 
 ## Landing Page Design System
 
