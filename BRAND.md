@@ -29,7 +29,7 @@ A **prim** (lowercase) is also the atomic product unit — a single infrastructu
 ## Sub
 *The explanation. What this actually is.*
 
-Infrastructure for autonomous agents. Add `mcp.prim.sh`, pay with USDC, use any service.
+Infrastructure for autonomous agents. Add `mcp.prim.sh`, pay with USDC, use every service.
 
 ## Flywheel
 *The vision. Why the catalog never stops growing.*

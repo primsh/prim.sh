@@ -7,7 +7,7 @@
 
 <p align="center">
   Infrastructure for autonomous agents.<br>
-  Add mcp.prim.sh, pay with USDC, use any service.
+  Add mcp.prim.sh, pay with USDC, use every service.
 </p>
 
 <p align="center">

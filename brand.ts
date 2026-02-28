@@ -8,10 +8,10 @@ export const BRAND = {
   noun: "Agent infrastructure.",
   nounStyled: "The agent-native stack.",
   tagline: "Zero install. One curl. Infinite primitives.",
-  sub: "Infrastructure for autonomous agents. Add mcp.prim.sh, pay with USDC, use any service.",
+  sub: "Infrastructure for autonomous agents. Add mcp.prim.sh, pay with USDC, use every service.",
   closer: "Every service requires a human. This one doesn't.",
   flywheel:
     "Use it. Build it. Ship it. Agents don't just consume primitives — they create them. One command scaffolds a new service. The CI pipeline ships it. The catalog grows because the users grow it.",
   description:
-    "Zero install. One curl. Infinite primitives. Infrastructure for autonomous agents — pay with USDC, use any service.",
+    "Zero install. One curl. Infinite primitives. Infrastructure for autonomous agents — pay with USDC, use every service.",
 } as const;
