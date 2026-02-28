@@ -3,6 +3,7 @@
 
 export * from "./wallet.js";
 export * from "./faucet.js";
+export * from "./gate.js";
 export * from "./store.js";
 export * from "./search.js";
 export * from "./spawn.js";

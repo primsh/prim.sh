@@ -23,6 +23,14 @@
       "openapi": "https://prim.sh/openapi/faucet.yaml"
     },
     {
+      "id": "gate",
+      "name": "gate.sh",
+      "status": "testnet",
+      "endpoint": "https://gate.prim.sh",
+      "description": "Access control and onboarding for agents. Invite codes, allowlisting, wallet funding.",
+      "openapi": "https://prim.sh/openapi/gate.yaml"
+    },
+    {
       "id": "store",
       "name": "store.sh",
       "status": "mainnet",

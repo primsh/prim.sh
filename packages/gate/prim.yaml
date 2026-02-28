@@ -1,0 +1,99 @@
+id: gate
+name: gate.sh
+endpoint: gate.prim.sh
+status: testnet
+type: access
+category: access
+card_class: pgate
+description: "Access control and onboarding for agents. Invite codes, allowlisting, wallet funding."
+port: 3015
+order: 3
+phantom: false
+show_on_index: false
+env:
+  - PRIM_NETWORK
+  - GATE_FUND_KEY
+  - GATE_CODES
+  - GATE_USDC_AMOUNT
+  - GATE_ETH_AMOUNT
+  - PRIM_ALLOWLIST_DB
+  - PRIM_INTERNAL_KEY
+pricing:
+  - op: "Redeem invite"
+    price: "free"
+    note: "One-time per code"
+
+interfaces:
+  mcp: false
+  cli: true
+  openai: false
+  rest: true
+
+factory:
+  max_body_size: "1MB"
+  metrics: true
+  free_service: true
+
+tagline: "One code. You're in."
+sub: "Redeem an invite code. Get allowlisted and funded. No signup, no waitlist, no human in the loop."
+
+hero_badges:
+  - "**Free** no payment needed"
+  - "**Invite** code"
+  - "**Base** mainnet"
+  - "**USDC** + ETH"
+
+hero_example: |
+  # Redeem an invite code
+  $ curl -X POST https://gate.prim.sh/v1/redeem \
+      -H "Content-Type: application/json" \
+      -d '{"code": "PRIM-a1b2c3d4", "wallet": "0xYourWalletAddress"}'
+
+  { "status": "redeemed", "wallet": "0x...", "funded": { "usdc": "5.00", "eth": "0.001" } }
+
+quick_start:
+  - "POST /v1/redeem with {\"code\": \"...\", \"wallet\": \"0x...\"} → redeem invite, get funded (free)"
+  - "GET /internal/allowlist/check?address=0x... → check if wallet is allowed (internal)"
+
+tips:
+  - "No x402 payment required — gate.sh is entirely free."
+  - "Each invite code is one-time use. Once redeemed, it cannot be reused."
+  - "Funds $5 USDC + 0.001 ETH on Base for gas."
+  - "Wallet is automatically added to the platform allowlist on redeem."
+
+limits:
+  - "Codes: one-time use, burned on redemption"
+  - "Funding: configurable per deployment (default $5 USDC + 0.001 ETH)"
+
+ownership: "Invite codes are not tied to a wallet. Any valid EVM address can redeem a code."
+
+routes_map:
+  - route: "POST /v1/redeem"
+    request: RedeemRequest
+    response: RedeemResponse
+    status: 200
+    description: "Redeem an invite code. Wallet is allowlisted and funded with USDC + ETH."
+    notes: "Free. No x402 payment required. One-time per code."
+    operation_id: redeem_invite
+    request_type: RedeemRequest
+    response_type: RedeemResponse
+    errors:
+      - { status: 400, code: invalid_request, description: "Missing or invalid wallet address" }
+      - { status: 400, code: invalid_code, description: "Invite code not recognized" }
+      - { status: 409, code: code_redeemed, description: "Invite code already used" }
+      - { status: 501, code: not_configured, description: "Beta funding not configured" }
+      - { status: 502, code: fund_error, description: "On-chain transfer failed" }
+
+cta:
+  headline: "Access is a **POST request**."
+  sub: "No form. No waitlist. One code, you're in."
+
+sections:
+  - type: code
+    title: "API"
+    highlight: "reference"
+    lines:
+      - "POST  /v1/redeem                    # Redeem invite code (free)"
+      - "GET   /internal/allowlist/check      # Check allowlist (internal)"
+      - "POST  /internal/allowlist/add        # Add to allowlist (internal)"
+      - "DELETE /internal/allowlist/:address  # Remove from allowlist (internal)"

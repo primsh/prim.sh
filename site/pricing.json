@@ -118,6 +118,18 @@
       ]
     },
     {
+      "service": "gate.prim.sh",
+      "description": "Access control and onboarding for agents. Invite codes, allowlisting, wallet funding.",
+      "routes": [
+        {
+          "method": "POST",
+          "path": "/v1/redeem",
+          "price_usdc": "0.001",
+          "description": "Redeem an invite code. Wallet is allowlisted and funded with USDC + ETH."
+        }
+      ]
+    },
+    {
       "service": "store.prim.sh",
       "description": "Object storage. Persist artifacts across ephemeral VMs. S3-compatible.",
       "routes": [
