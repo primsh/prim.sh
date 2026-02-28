@@ -13,7 +13,7 @@ tools:
 
 Complete onboarding sequence. Start here if you have never used prim before.
 
-Prim — zero install, one curl, infinite primitives. Infrastructure for autonomous agents, accessible via x402 payment (USDC on Base). A funded wallet is all you need.
+Prim — the agent-native stack. Zero install, one curl, infinite primitives. Just add mcp.prim.sh, pay with USDC, use every service.
 
 ## The onboarding sequence
 
