@@ -156,4 +156,4 @@ jobs:
           6. Run git push
 
           Do not modify any code beyond resolving conflict markers." \
-            --max-turns 10 --model claude-sonnet-4-6 --allowedTools "Bash,Read,Edit,Write,Glob,Grep"
+            --max-turns 15 --model claude-sonnet-4-6 --allowedTools "Bash,Read,Edit,Write,Glob,Grep"
