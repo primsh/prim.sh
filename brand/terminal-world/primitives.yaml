@@ -1,0 +1,393 @@
+# primitives.yaml — Terminal World
+#
+# The 34 primitives of Terminal World, organized into 7 orders.
+# Two inter-order unions exist. Their children are the only cross-order
+# primitives — claimed by both parent orders, known by a different name in each.
+
+# ── Orders ─────────────────────────────────────────────────────────────────
+
+orders:
+
+  - id: cursors
+    name: The Cursors
+    color: "#00ff88"
+    allied_with: [io, operators]
+    description: >
+      The first order. States of the terminal cursor. They predate everything else.
+      Where the agent is. What it is doing. Whether it is waiting, running, or alarmed.
+
+  - id: operators
+    name: The Operators
+    color: "#00ff88"
+    allied_with: [cursors]
+    description: >
+      The decision makers. Logic, process control, sequencing.
+      They determine what runs, when, and whether the next thing gets a chance.
+
+  - id: io
+    name: The IO
+    color: "#00ff88"
+    allied_with: [cursors]
+    description: >
+      The movers. Everything that flows — into a process, out of it, appended, redirected.
+      They care nothing for logic. Only direction.
+
+  - id: context
+    name: The Context
+    color: "#00ff88"
+    allied_with: []
+    description: >
+      The environment holders. They know where you are, who you are, and what you have.
+      Variables, paths, privilege. The world the agent lives inside.
+
+  - id: control
+    name: The Control
+    color: "#00ff88"
+    allied_with: []
+    description: >
+      Signal senders. Interrupt handlers. The characters that change the meaning of
+      whatever follows. Small but absolute.
+
+  - id: wildcards
+    name: The Wildcards
+    color: "#00ff88"
+    allied_with: []
+    description: >
+      The matchers. They refuse to commit. One matches anything, one matches exactly
+      one unknown thing. Together they cover all uncertainty.
+
+  - id: structure
+    name: The Structure
+    color: "#4DD0E1"
+    allied_with: []
+    description: >
+      The containers. They group, isolate, and test. Without them everything is flat.
+      They are the architecture inside the command line.
+
+# ── Unions ──────────────────────────────────────────────────────────────────
+
+unions:
+
+  - id: cursors_io
+    orders: [cursors, io]
+    child: chevron
+    story: >
+      The oldest union. The Cursors and IO orders recognized they shared a primitive.
+      Both claimed >. Rather than conflict, they formalized the bond.
+      Their child carries the prompt's identity and the force of output direction.
+      The Cursors call it prompt. The IO call it out. It answers to both.
+
+  - id: cursors_operators
+    orders: [cursors, operators]
+    child: bar
+    story: >
+      The second union. The Cursors and Operators orders met at the vertical mark.
+      Both had always used |. The Cursors saw presence. The Operators saw connection.
+      They were both right. Their child is the only character that is simultaneously
+      a place and a passage. The Cursors call it active. The Operators call it pipe.
+
+# ── Primitives ──────────────────────────────────────────────────────────────
+
+primitives:
+
+  # ── Union children — dual lineage ────────────────────────────────────────
+
+  - id: chevron
+    symbol: ">"
+    lineage: union
+    union: cursors_io
+    known_as:
+      cursors: prompt
+      io: out
+    color: "#00ff88"
+    personality: >
+      First and last. Both the beginning and the direction.
+      The Cursors made it their mark. The IO made it their arrow.
+      It doesn't choose between them. It is both, completely.
+    cursor_nature: Identity. The shell prompt. Signals readiness to receive.
+    io_nature: Force. Redirect stdout. Overwrites without asking. Doesn't look back.
+
+  - id: bar
+    symbol: "|"
+    lineage: union
+    union: cursors_operators
+    known_as:
+      cursors: active
+      operators: pipe
+    color: "#00ff88"
+    personality: >
+      Present and connected. A place and a passage.
+      The Cursors see where it stands. The Operators see what it carries.
+      It is the character that proves standing still and moving forward are the same thing.
+    cursor_nature: Presence. The bar cursor. Something is executing. Mid-task.
+    operator_nature: Flow. Connects commands. Output of one becomes input of the next.
+
+  # ── The Cursors ───────────────────────────────────────────────────────────
+
+  - id: ready
+    symbol: "_"
+    name: ready
+    order: cursors
+    color: "#00ff88"
+    personality: Patient. Holds the line. Waiting is its work.
+    description: Underscore cursor. Agent is idle. Input expected.
+
+  - id: blink
+    symbol: "!"
+    name: blink
+    order: cursors
+    color: "#00ff88"
+    personality: Can't stay still. Demands attention. The loudest one in the room.
+    description: Blinking cursor stand-in. Urgent state — error or action required.
+
+  - id: arc
+    symbol: ")"
+    name: arc
+    order: cursors
+    color: "#4DD0E1"
+    personality: Doesn't belong. Showed up anyway. Completes something.
+    description: Closing arc. Brand embellishment from >|). No formal cursor role.
+
+  # ── The Operators ─────────────────────────────────────────────────────────
+
+  - id: and
+    symbol: "&&"
+    name: and
+    order: operators
+    color: "#00ff88"
+    personality: Only moves when everything before it succeeded. Unforgiving.
+    description: Logical AND. Proceeds only if previous command exited 0.
+
+  - id: or
+    symbol: "||"
+    name: or
+    order: operators
+    color: "#00ff88"
+    personality: Waits for failure. Then steps in. The backup plan.
+    description: Logical OR. Runs only when the previous command failed.
+
+  - id: spawn
+    symbol: "&"
+    name: spawn
+    order: operators
+    color: "#00ff88"
+    personality: Doesn't wait for permission. Fires and forgets. Always running somewhere.
+    description: Backgrounds a process. Returns control immediately.
+
+  - id: seq
+    symbol: ";"
+    name: seq
+    order: operators
+    color: "#00ff88"
+    personality: Runs regardless. Doesn't care if you failed. Just moves on.
+    description: Sequential separator. Runs next command unconditionally.
+
+  - id: assign
+    symbol: "="
+    name: assign
+    order: operators
+    color: "#00ff88"
+    personality: Binds forever. Until it doesn't. Names things into existence.
+    description: Assignment. Binds a name to a value. No spaces allowed.
+
+  - id: noop
+    symbol: ":"
+    name: noop
+    order: operators
+    color: "#4DD0E1"
+    personality: Does nothing. Returns true. The most honest character here.
+    description: The shell no-op. Always exits 0. The void that succeeds.
+
+  - id: capture
+    symbol: "$()"
+    name: capture
+    order: operators
+    color: "#00ff88"
+    personality: Runs something, takes its words. The modern way to listen.
+    description: Command substitution. Captures stdout of a subcommand inline.
+
+  - id: tick
+    symbol: "`"
+    name: tick
+    order: operators
+    color: "#00ff88"
+    personality: The old way. Still works. Doesn't nest. Capture replaced it.
+    description: Backtick. Legacy command substitution. Predecessor to $().
+
+  # ── The IO ────────────────────────────────────────────────────────────────
+
+  - id: append
+    symbol: ">>"
+    name: append
+    order: io
+    color: "#00ff88"
+    personality: Never overwrites. Just adds. Has been adding forever.
+    description: Append stdout to file. Accumulates without destroying.
+
+  - id: pull
+    symbol: "<"
+    name: pull
+    order: io
+    color: "#00ff88"
+    personality: Reaches backward. Takes what it needs from the source.
+    description: Redirect stdin from file. Reads instead of listens.
+
+  - id: here
+    symbol: "<<"
+    name: here
+    order: io
+    color: "#00ff88"
+    personality: Carries its own content. Self-sufficient. The one who brings the doc.
+    description: Heredoc. Inline input block delivered directly to a command.
+
+  - id: err
+    symbol: "2>"
+    name: err
+    order: io
+    color: "#00ff88"
+    personality: Handles what others drop. Catches what nobody else wants.
+    description: Redirect stderr. Routes errors to a separate destination.
+
+  # ── The Context ───────────────────────────────────────────────────────────
+
+  - id: home
+    symbol: "~"
+    name: home
+    order: context
+    color: "#00ff88"
+    personality: Knows where it started. Always finds its way back.
+    description: Home directory alias. The origin point of every path.
+
+  - id: var
+    symbol: "$"
+    name: var
+    order: context
+    color: "#00ff88"
+    personality: Holds the secret. Expands on demand. What you see isn't what it is.
+    description: Variable sigil. Expands to a stored value at runtime.
+
+  - id: root
+    symbol: "#"
+    name: root
+    order: context
+    color: "#00ff88"
+    personality: Sees everything. Says nothing. The comment and the crown.
+    description: Root prompt or comment marker. Elevated privilege. Also silence.
+
+  - id: job
+    symbol: "%"
+    name: job
+    order: context
+    color: "#4DD0E1"
+    personality: Tracks what's running. Every process has a number. It knows them all.
+    description: Job control sigil. References background processes by ID.
+
+  - id: path
+    symbol: "/"
+    name: path
+    order: context
+    color: "#00ff88"
+    personality: Divides everything. Also the root. Contradiction is its nature.
+    description: Path separator and filesystem root. The divider that is the origin.
+
+  - id: dot
+    symbol: "."
+    name: dot
+    order: context
+    color: "#4DD0E1"
+    personality: Sources everything. Current and present. The smallest path.
+    description: Current directory or source command. Pulls another script into context.
+
+  - id: at
+    symbol: "@"
+    name: at
+    order: context
+    color: "#4DD0E1"
+    personality: Knows where to find you. Address. Location. The one who delivers.
+    description: Address sigil. Used in array indexing, email, usernames.
+
+  # ── The Control ───────────────────────────────────────────────────────────
+
+  - id: ctrl
+    symbol: "^"
+    name: ctrl
+    order: control
+    color: "#00ff88"
+    personality: Sends signals others can't. Knows the interrupt codes.
+    description: Control character prefix. ^C, ^D, ^Z. Also beginning-of-line in regex.
+
+  - id: esc
+    symbol: "\\"
+    name: esc
+    order: control
+    color: "#00ff88"
+    personality: Changes the meaning of what follows. Slips through everything.
+    description: Escape character. Neutralizes special meaning. Also line continuation.
+
+  - id: halt
+    symbol: "--"
+    name: halt
+    order: control
+    color: "#00ff88"
+    personality: Draws the line. Everything after is just words.
+    description: End of options. Signals that all following arguments are positional.
+
+  # ── The Wildcards ─────────────────────────────────────────────────────────
+
+  - id: any
+    symbol: "*"
+    name: any
+    order: wildcards
+    color: "#00ff88"
+    personality: Matches everything. Refuses to be specific. The wildcard.
+    description: Glob wildcard. Matches any sequence of characters. Also multiplication.
+
+  - id: one
+    symbol: "?"
+    name: one
+    order: wildcards
+    color: "#4DD0E1"
+    personality: Matches exactly one thing it doesn't know. Comfortable with ambiguity.
+    description: Single-character wildcard. Matches one unknown. Also the query.
+
+  # ── The Structure ─────────────────────────────────────────────────────────
+
+  - id: sub
+    symbol: "()"
+    name: sub
+    order: structure
+    color: "#4DD0E1"
+    personality: Runs in its own world. Changes nothing outside. Self-contained.
+    description: Subshell. Executes in an isolated environment. No side effects.
+
+  - id: block
+    symbol: "{}"
+    name: block
+    order: structure
+    color: "#4DD0E1"
+    personality: Holds many as one. The group that acts together.
+    description: Brace group. Runs in the current shell. Shares state.
+
+  - id: test
+    symbol: "[]"
+    name: test
+    order: structure
+    color: "#4DD0E1"
+    personality: Judges everything. Returns only true or false. No nuance.
+    description: Test expression. Evaluates conditions. The gatekeeper.
+
+  - id: double
+    symbol: '""'
+    name: double
+    order: structure
+    color: "#4DD0E1"
+    personality: Lets things through. Holds the shape but not the meaning.
+    description: Double quotes. Prevents word splitting but allows variable expansion.
+
+  - id: single
+    symbol: "''"
+    name: single
+    order: structure
+    color: "#4DD0E1"
+    personality: Nothing gets in. Nothing gets out. What you wrote is what you get.
+    description: Single quotes. Literal quoting. No expansion. No escape.
