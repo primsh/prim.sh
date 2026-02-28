@@ -14,7 +14,7 @@ name: Deploy
 #
 #   deploy-site  Marketing site (prim.sh)
 #                Build static dist from site/ → wrangler pages deploy
-#                Secrets: CF_API_TOKEN, CF_ACCOUNT_ID (production environment)
+#                Secrets: CLOUDFLARE_API_TOKEN, CLOUDFLARE_ACCOUNT_ID (production environment)
 #                Variable: PAGES_PROJECT (repo-level)
 #
 #   verify       Smoke check after both jobs complete
@@ -31,8 +31,8 @@ name: Deploy
 #   VPS_KNOWN_HOSTS Output of: ssh-keyscan <VPS_IP>
 #
 # Production environment (used by deploy-site):
-#   CF_API_TOKEN    Cloudflare API token (Pages:Edit permission)
-#   CF_ACCOUNT_ID   Cloudflare account ID
+#   CLOUDFLARE_API_TOKEN    Cloudflare API token (Pages:Edit permission)
+#   CLOUDFLARE_ACCOUNT_ID   Cloudflare account ID
 #
 # ── Required GitHub repository variable ──────────────────────────────────────
 #
@@ -154,8 +154,8 @@ jobs:
 
       - uses: cloudflare/wrangler-action@v3
         with:
-          apiToken: ${{ secrets.CF_API_TOKEN }}
-          accountId: ${{ secrets.CF_ACCOUNT_ID }}
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
           packageManager: npm
           command: pages deploy site-dist --project-name ${{ vars.PAGES_PROJECT }}
 

@@ -125,8 +125,8 @@ export async function fetchDOCosts(): Promise<InfraCost | null> {
 }
 
 export async function fetchR2Costs(): Promise<InfraCost | null> {
-  const token = process.env.CF_API_TOKEN;
-  const accountId = process.env.CF_ACCOUNT_ID;
+  const token = process.env.CLOUDFLARE_API_TOKEN;
+  const accountId = process.env.CLOUDFLARE_ACCOUNT_ID;
   if (!token || !accountId) return null;
 
   const now = new Date();

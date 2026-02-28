@@ -12,7 +12,7 @@
  *   skipHealthCheck — skip the default GET / health check; caller registers custom one (faucet.sh)
  */
 
-import { readFileSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { Hono } from "hono";
 import { bodyLimit } from "hono/body-limit";
@@ -118,7 +118,7 @@ export function createPrimApp(
   const _createWalletAllowlistChecker =
     deps.createWalletAllowlistChecker ?? createWalletAllowlistChecker;
 
-  const LLMS_TXT = llmsTxtPath ? readFileSync(llmsTxtPath, "utf-8") : "";
+  const LLMS_TXT = llmsTxtPath && existsSync(llmsTxtPath) ? readFileSync(llmsTxtPath, "utf-8") : "";
   const logger = createLogger(serviceName);
 
   // Validate PRIM_PAY_TO unless this is a free service
