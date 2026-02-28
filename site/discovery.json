@@ -95,6 +95,13 @@
       "openapi": "https://prim.sh/openapi/track.yaml"
     },
     {
+      "id": "feedback",
+      "name": "feedback.sh",
+      "status": "building",
+      "endpoint": "https://feedback.prim.sh",
+      "description": "Report bugs, friction, and feature requests. Free. Every prim surfaces the feedback URL."
+    },
+    {
       "id": "infer",
       "name": "infer.sh",
       "status": "live",

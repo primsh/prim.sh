@@ -1,0 +1,89 @@
+id: feedback
+name: feedback.sh
+endpoint: feedback.prim.sh
+status: building
+type: meta
+category: meta
+port: 3014
+phantom: false
+show_on_index: false
+description: "Report bugs, friction, and feature requests. Free. Every prim surfaces the feedback URL."
+env:
+  - PRIM_INTERNAL_KEY
+  - FEEDBACK_DB_PATH
+factory:
+  free_service: true
+  metrics: true
+  max_body_size: "1MB"
+interfaces:
+  mcp: false
+  cli: false
+  openai: false
+  rest: true
+tagline: "Tell us what broke."
+sub: "Bug reports, friction points, feature requests, praise. Free API. Every prim surfaces the feedback URL in response headers."
+order: 98
+hero_badges:
+  - "**Free** no payment needed"
+  - "**Feedback** loop"
+  - "**Internal** v0 only"
+hero_example: |
+  # Report a bug
+  $ curl -X POST https://feedback.prim.sh/v1/submit \
+      -H "Content-Type: application/json" \
+      -d '{"primitive":"wallet.sh","type":"bug","body":"Transfer failed silently"}'
+
+  { "id": "abc123", "status": "received" }
+quick_start:
+  - "POST /v1/submit with {\"primitive\":\"wallet.sh\",\"type\":\"bug\",\"body\":\"...\"} → submit feedback (free)"
+  - "GET /v1/feed with x-internal-key header → list recent feedback (internal)"
+tips:
+  - "No x402 payment required — feedback is entirely free."
+  - "Type must be one of: bug, friction, feature, praise."
+  - "Body max 5000 characters."
+  - "Optionally include wallet and request_id for correlation."
+limits:
+  - "Body: max 5000 characters"
+  - "Types: bug, friction, feature, praise"
+pricing:
+  - op: "Submit feedback"
+    price: "free"
+    note: "Always free"
+routes_map:
+  - route: "POST /v1/submit"
+    request: SubmitRequest
+    response: SubmitResponse
+    status: 200
+    description: "Submit feedback about any prim."
+    notes: "Free. No x402 payment required."
+    operation_id: submit_feedback
+    request_type: SubmitRequest
+    response_type: SubmitResponse
+    errors:
+      - { status: 400, code: invalid_request, description: "Missing or invalid fields" }
+  - route: "GET /v1/feed"
+    request: null
+    response: FeedResponse
+    status: 200
+    description: "List recent feedback (internal, requires x-internal-key)."
+    notes: "Internal only."
+    operation_id: list_feedback
+    request_type: null
+    response_type: FeedResponse
+    query_params:
+      - { name: primitive, type: string, description: "Filter by primitive name (optional)" }
+      - { name: limit, type: number, description: "Max items (default 50, max 200)" }
+      - { name: offset, type: number, description: "Pagination offset (default 0)" }
+    errors:
+      - { status: 401, code: unauthorized, description: "Missing or invalid x-internal-key" }
+      - { status: 501, code: not_configured, description: "PRIM_INTERNAL_KEY not set" }
+cta:
+  headline: "Feedback is a **POST request**."
+  sub: "No form. No login. Just tell us what broke."
+sections:
+  - type: code
+    title: "API"
+    highlight: "reference"
+    lines:
+      - "POST  /v1/submit    # Submit feedback (free)"
+      - "GET   /v1/feed      # List feedback (internal)"

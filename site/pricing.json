@@ -622,6 +622,24 @@
       ]
     },
     {
+      "service": "feedback.prim.sh",
+      "description": "Report bugs, friction, and feature requests. Free. Every prim surfaces the feedback URL.",
+      "routes": [
+        {
+          "method": "POST",
+          "path": "/v1/submit",
+          "price_usdc": "free",
+          "description": "Submit feedback about any prim."
+        },
+        {
+          "method": "GET",
+          "path": "/v1/feed",
+          "price_usdc": "0.001",
+          "description": "List recent feedback (internal, requires x-internal-key)."
+        }
+      ]
+    },
+    {
       "service": "infer.prim.sh",
       "description": "LLM inference for agents. Any model, any provider, one API. Per-token pricing. No API keys.",
       "routes": [

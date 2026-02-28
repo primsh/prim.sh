@@ -7,6 +7,7 @@ export * from "./request-id";
 export * from "./pagination";
 export * from "./rate-limit";
 export * from "./errors";
+export * from "./feedback-url";
 export * from "./create-prim-app";
 export * from "./provider";
 export * from "./provider-registry";

@@ -17,6 +17,7 @@ import { resolve } from "node:path";
 import { Hono } from "hono";
 import { bodyLimit } from "hono/body-limit";
 import { createLogger } from "./logger.js";
+import { feedbackUrlMiddleware } from "./feedback-url.js";
 import { metricsHandler, metricsMiddleware } from "./metrics.js";
 import { createAgentStackMiddleware, createWalletAllowlistChecker } from "./middleware.js";
 import { getNetworkConfig } from "./network-config.js";
@@ -75,16 +76,19 @@ export interface PrimAppConfig {
    * Use when the primitive registers a custom health check response (faucet.sh).
    */
   skipHealthCheck?: boolean;
+  /** URL for feedback submission. Defaults to PRIM_FEEDBACK_URL env var. */
+  feedbackUrl?: string;
 }
 
 /**
  * Build a pre-wired Hono app with standard prim.sh middleware stack.
  *
  * Middleware order (unless skipped):
- *   1. requestIdMiddleware
- *   2. bodyLimit (1 MB)
- *   3. metricsMiddleware
- *   4. createAgentStackMiddleware (x402 payment gate)
+ *   1.   requestIdMiddleware
+ *   1.5. feedbackUrlMiddleware (when PRIM_FEEDBACK_URL or config.feedbackUrl is set)
+ *   2.   bodyLimit (1 MB)
+ *   3.   metricsMiddleware
+ *   4.   createAgentStackMiddleware (x402 payment gate)
  *   5. GET /           — health check
  *   6. GET /llms.txt   — LLM-readable spec
  *   7. GET /v1/metrics — operational metrics
@@ -107,6 +111,7 @@ export function createPrimApp(
     skipX402 = false,
     skipBodyLimit = false,
     skipHealthCheck = false,
+    feedbackUrl,
   } = config;
 
   const _createAgentStackMiddleware = deps.createAgentStackMiddleware ?? createAgentStackMiddleware;
@@ -128,6 +133,12 @@ export function createPrimApp(
 
   // 1. Request ID
   app.use("*", requestIdMiddleware());
+
+  // 1.5. Feedback URL header
+  const resolvedFeedbackUrl = feedbackUrl ?? process.env.PRIM_FEEDBACK_URL;
+  if (resolvedFeedbackUrl) {
+    app.use("*", feedbackUrlMiddleware(resolvedFeedbackUrl));
+  }
 
   // 2. Body size limit (1 MB) — unless caller wants to wire its own
   if (!skipBodyLimit) {
