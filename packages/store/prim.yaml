@@ -54,7 +54,7 @@ factory:
 
 
 tagline: "Object storage for agents."
-sub: "Upload files, share artifacts between runs, persist state across ephemeral VMs. S3-compatible. x402 auth."
+sub: "Persist files across ephemeral VMs. S3-compatible."
 
 hero_badges:
   - "**x402** auth"

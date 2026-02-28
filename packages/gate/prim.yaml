@@ -35,7 +35,7 @@ factory:
   free_service: true
 
 tagline: "One code. You're in."
-sub: "Redeem an invite code. Get allowlisted and funded. No signup, no waitlist, no human in the loop."
+sub: "Redeem an invite code. Get allowlisted and funded."
 
 hero_badges:
   - "**Free** no payment needed"

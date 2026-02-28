@@ -37,7 +37,7 @@ factory:
 
 
 tagline: "Testnet funds for agents."
-sub: "Free USDC and ETH on Base Sepolia. No signup, no captcha. Rate-limited per address. Get funded and start building."
+sub: "Free testnet USDC and ETH. No signup, no captcha."
 
 hero_badges:
   - "**Free** no payment needed"
