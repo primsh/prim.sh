@@ -43,12 +43,29 @@ jobs:
         with:
           claude_code_oauth_token: ${{ secrets.ANTHROPIC_API_KEY }}
           prompt: |
-            Review this PR for bugs, security issues, and style violations.
-            Follow the conventions in CLAUDE.md.
-            If you find fixable issues (lint, types, obvious bugs), fix them and push.
-            Do not change test expectations or weaken assertions.
-            Do not add comments, docstrings, or formatting changes beyond what's needed.
-            Keep fixes minimal — only fix what's broken.
-            Use conventional commit format for any commits: type(scope): subject
+            Review this PR. Focus on what only AI review can catch — Biome handles formatting, import order, and naming style.
+
+            ## What to review
+
+            1. **Architecture** — wrong module ownership, import direction violations, shared mutable state
+            2. **Security** — hardcoded secrets, unvalidated input, missing ownership checks, SQL injection
+            3. **Business logic** — incorrect x402 pricing, wrong HTTP status codes, unhandled ServiceResult errors (missing `if (!result.ok)` checks)
+            4. **x402 wiring** — createPrimApp config errors, missing freeRoutes, incorrect paid route map
+            5. **Test gaps** — new endpoints without smoke test coverage, weakened assertions
+
+            ## What NOT to review (Biome enforces these)
+
+            - Formatting, indentation, line length
+            - Import order or `import type` usage
+            - Unused variables or parameters
+            - Naming style (snake_case vs camelCase)
+            - Explicit `any` (noExplicitAny rule catches this)
+
+            ## Actions
+
+            - If you find fixable bugs or security issues, fix them and push.
+            - Do not change test expectations or weaken assertions.
+            - Use conventional commit format: type(scope): subject
+            - Keep fixes minimal — only fix what's broken.
           claude_args: "--max-turns 25 --model claude-sonnet-4-6 --allowedTools Bash,Read,Edit,Write,Glob,Grep"
           trigger_phrase: "@claude"
