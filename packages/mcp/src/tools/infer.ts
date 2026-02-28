@@ -7,176 +7,176 @@ export const inferTools: Tool[] = [
     name: "infer_chat",
     description: "Chat completion. Supports streaming, tool use, structured output. | Price: $0.01",
     inputSchema: {
-        type: "object",
-        properties: {
-          "model": {
-            type: "string",
-          },
-          "messages": {
-            type: "array",
-            items: {
-              type: "object",
-              required: ["role","content"],
-              properties: {
-                "role": {
-                  type: "string",
-                  enum: ["system","user","assistant","tool"],
-                },
-                "content": {
-                  oneOf: [
-                    {
-                      type: "string",
-                    },
-                    {
-                      type: "array",
-                      items: {
-                        type: "object",
-                        required: ["type"],
-                        properties: {
-                          "type": {
-                            type: "string",
-                            enum: ["text","image_url"],
-                          },
-                          "text": {
-                            type: "string",
-                          },
-                          "image_url": {
-                            type: "object",
-                          },
+      type: "object",
+      properties: {
+        model: {
+          type: "string",
+        },
+        messages: {
+          type: "array",
+          items: {
+            type: "object",
+            required: ["role", "content"],
+            properties: {
+              role: {
+                type: "string",
+                enum: ["system", "user", "assistant", "tool"],
+              },
+              content: {
+                oneOf: [
+                  {
+                    type: "string",
+                  },
+                  {
+                    type: "array",
+                    items: {
+                      type: "object",
+                      required: ["type"],
+                      properties: {
+                        type: {
+                          type: "string",
+                          enum: ["text", "image_url"],
+                        },
+                        text: {
+                          type: "string",
+                        },
+                        image_url: {
+                          type: "object",
                         },
                       },
                     },
-                    {
-                      type: "null",
+                  },
+                  {
+                    type: "null",
+                  },
+                ],
+              },
+              name: {
+                type: "string",
+              },
+              tool_call_id: {
+                type: "string",
+              },
+              tool_calls: {
+                type: "array",
+                items: {
+                  type: "object",
+                  required: ["id", "type", "function"],
+                  properties: {
+                    id: {
+                      type: "string",
                     },
-                  ],
-                },
-                "name": {
-                  type: "string",
-                },
-                "tool_call_id": {
-                  type: "string",
-                },
-                "tool_calls": {
-                  type: "array",
-                  items: {
-                    type: "object",
-                    required: ["id","type","function"],
-                    properties: {
-                      "id": {
-                        type: "string",
-                      },
-                      "type": {
-                        type: "string",
-                        enum: ["function"],
-                      },
-                      "function": {
-                        type: "object",
-                      },
+                    type: {
+                      type: "string",
+                      enum: ["function"],
+                    },
+                    function: {
+                      type: "object",
                     },
                   },
                 },
               },
             },
           },
-          "temperature": {
-            type: "number",
-          },
-          "max_tokens": {
-            type: "number",
-          },
-          "top_p": {
-            type: "number",
-          },
-          "frequency_penalty": {
-            type: "number",
-          },
-          "presence_penalty": {
-            type: "number",
-          },
-          "stop": {
-            oneOf: [
-              {
+        },
+        temperature: {
+          type: "number",
+        },
+        max_tokens: {
+          type: "number",
+        },
+        top_p: {
+          type: "number",
+        },
+        frequency_penalty: {
+          type: "number",
+        },
+        presence_penalty: {
+          type: "number",
+        },
+        stop: {
+          oneOf: [
+            {
+              type: "string",
+            },
+            {
+              type: "array",
+              items: {
                 type: "string",
               },
-              {
-                type: "array",
-                items: {
-                  type: "string",
-                },
+            },
+          ],
+        },
+        stream: {
+          type: "boolean",
+        },
+        tools: {
+          type: "array",
+          items: {
+            type: "object",
+            required: ["type", "function"],
+            properties: {
+              type: {
+                type: "string",
+                enum: ["function"],
               },
-            ],
-          },
-          "stream": {
-            type: "boolean",
-          },
-          "tools": {
-            type: "array",
-            items: {
-              type: "object",
-              required: ["type","function"],
-              properties: {
-                "type": {
-                  type: "string",
-                  enum: ["function"],
-                },
-                "function": {
-                  type: "object",
-                },
+              function: {
+                type: "object",
               },
             },
           },
-          "tool_choice": {
-            oneOf: [
-              {
-                type: "string",
-                enum: ["none","auto","required"],
-              },
-              {
-                type: "object",
-              },
-            ],
-          },
-          "response_format": {
-            type: "object",
-          },
         },
-        required: ["model","messages"],
+        tool_choice: {
+          oneOf: [
+            {
+              type: "string",
+              enum: ["none", "auto", "required"],
+            },
+            {
+              type: "object",
+            },
+          ],
+        },
+        response_format: {
+          type: "object",
+        },
       },
+      required: ["model", "messages"],
+    },
   },
   {
     name: "infer_embed",
     description: "Generate embeddings for text input. Returns vector array. | Price: $0.001",
     inputSchema: {
-        type: "object",
-        properties: {
-          "model": {
-            type: "string",
-          },
-          "input": {
-            oneOf: [
-              {
+      type: "object",
+      properties: {
+        model: {
+          type: "string",
+        },
+        input: {
+          oneOf: [
+            {
+              type: "string",
+            },
+            {
+              type: "array",
+              items: {
                 type: "string",
               },
-              {
-                type: "array",
-                items: {
-                  type: "string",
-                },
-              },
-            ],
-          },
+            },
+          ],
         },
-        required: ["model","input"],
       },
+      required: ["model", "input"],
+    },
   },
   {
     name: "infer_list_models",
     description: "List available models with pricing and capabilities. | Price: $0.01",
     inputSchema: {
-        type: "object",
-        properties: {},
-      },
+      type: "object",
+      properties: {},
+    },
   },
 ];
 // END:GENERATED:TOOLS

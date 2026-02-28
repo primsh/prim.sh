@@ -2,7 +2,7 @@
  * W-10 fund request tests: create, list, approve (non-custodial), deny.
  */
 
-import { describe, expect, it, beforeEach, afterEach, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 // Set in-memory DB before any imports
 process.env.WALLET_DB_PATH = ":memory:";
@@ -18,10 +18,10 @@ vi.mock("../src/balance.ts", () => ({
 
 import { resetDb } from "../src/db.ts";
 import {
-  createFundRequest,
-  listFundRequests,
   approveFundRequest,
+  createFundRequest,
   denyFundRequest,
+  listFundRequests,
 } from "../src/service.ts";
 import { registerTestWallet } from "./helpers.ts";
 
@@ -136,7 +136,11 @@ describe("approveFundRequest — success (non-custodial)", () => {
   it("returns status approved with fundingAddress and amount", () => {
     const { address } = registerTestWallet(OWNER);
 
-    const createResult = createFundRequest(address, { amount: "5.00", reason: "Need funds" }, OWNER);
+    const createResult = createFundRequest(
+      address,
+      { amount: "5.00", reason: "Need funds" },
+      OWNER,
+    );
     expect(createResult.ok).toBe(true);
     if (!createResult.ok) return;
     const requestId = createResult.data.id;

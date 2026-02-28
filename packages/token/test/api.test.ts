@@ -4,7 +4,7 @@
  * IMPORTANT: env vars must be set before any module import that touches db/deployer/factory.
  */
 
-import { describe, expect, it, beforeEach, afterEach, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 // ─── Env setup (before imports) ──────────────────────────────────────────
 
@@ -33,13 +33,25 @@ process.env.TOKEN_DEPLOYER_ENCRYPTED_KEY = makeEncryptedKey();
 
 // ─── Mock viem (intercept deployContract / writeContract / readContract) ──────────────────
 
-const deployContractMock = vi.fn(async (_args?: unknown): Promise<`0x${string}`> => "0xTXHASH_DEPLOY_000000000000000000000000000000000000000000000000000000");
-const writeContractMock = vi.fn(async (_args?: unknown): Promise<`0x${string}`> => "0xTXHASH_MINT_000000000000000000000000000000000000000000000000000000");
-const readContractMock = vi.fn(async (_args?: unknown): Promise<unknown> => 100000000000000000000000000n); // 100M with 18 decimals
-const waitForTransactionReceiptMock = vi.fn(async (_args?: unknown): Promise<{ status: "success" | "reverted"; contractAddress: `0x${string}` | null }> => ({
-  status: "success" as const,
-  contractAddress: "0xTOKEN_DEPLOYED_CONTRACT0000000000000001" as `0x${string}`,
-}));
+const deployContractMock = vi.fn(
+  async (_args?: unknown): Promise<`0x${string}`> =>
+    "0xTXHASH_DEPLOY_000000000000000000000000000000000000000000000000000000",
+);
+const writeContractMock = vi.fn(
+  async (_args?: unknown): Promise<`0x${string}`> =>
+    "0xTXHASH_MINT_000000000000000000000000000000000000000000000000000000",
+);
+const readContractMock = vi.fn(
+  async (_args?: unknown): Promise<unknown> => 100000000000000000000000000n,
+); // 100M with 18 decimals
+const waitForTransactionReceiptMock = vi.fn(
+  async (
+    _args?: unknown,
+  ): Promise<{ status: "success" | "reverted"; contractAddress: `0x${string}` | null }> => ({
+    status: "success" as const,
+    contractAddress: "0xTOKEN_DEPLOYED_CONTRACT0000000000000001" as `0x${string}`,
+  }),
+);
 
 vi.mock("viem", async (importOriginal) => {
   const actual = await importOriginal<typeof import("viem")>();
@@ -77,22 +89,19 @@ vi.mock("viem/chains", () => ({
 
 // ─── Import after env + mocks ────────────────────────────────────────────
 
-import { resetDb, getDeploymentById, updateDeploymentStatus } from "../src/db.ts";
+import { getDeploymentById, resetDb, updateDeploymentStatus } from "../src/db.ts";
 import {
-  deployToken,
-  listTokens,
-  getToken,
-  mintTokens,
-  getSupply,
-  validateCreateToken,
   createPool,
-  getPool,
+  deployToken,
   getLiquidityParams,
+  getPool,
+  getSupply,
+  getToken,
+  listTokens,
+  mintTokens,
+  validateCreateToken,
 } from "../src/service.ts";
-import {
-  computeSqrtPriceX96,
-  computeFullRangeTicks,
-} from "../src/uniswap.ts";
+import { computeFullRangeTicks, computeSqrtPriceX96 } from "../src/uniswap.ts";
 
 // ─── Fixtures ────────────────────────────────────────────────────────────
 
@@ -291,7 +300,10 @@ describe("token.sh", () => {
     });
 
     it("deploy — status becomes failed when receipt is reverted", async () => {
-      waitForTransactionReceiptMock.mockResolvedValueOnce({ status: "reverted", contractAddress: null });
+      waitForTransactionReceiptMock.mockResolvedValueOnce({
+        status: "reverted",
+        contractAddress: null,
+      });
       const result = await deployToken(VALID_REQUEST, CALLER);
       expect(result.ok).toBe(true);
       if (!result.ok) return;
@@ -458,14 +470,22 @@ describe("token.sh", () => {
       const result = await deployToken(MINTABLE_REQUEST, CALLER);
       if (!result.ok) throw new Error("Setup failed");
       // Simulate confirmed deploy with contract address
-      updateDeploymentStatus(result.data.token.id, "confirmed", "0xTOKEN00000000000000000000000000000000001");
+      updateDeploymentStatus(
+        result.data.token.id,
+        "confirmed",
+        "0xTOKEN00000000000000000000000000000000001",
+      );
       return result.data.token.id;
     }
 
     async function deployNonMintable(): Promise<string> {
       const result = await deployToken(VALID_REQUEST, CALLER);
       if (!result.ok) throw new Error("Setup failed");
-      updateDeploymentStatus(result.data.token.id, "confirmed", "0xTOKEN00000000000000000000000000000000002");
+      updateDeploymentStatus(
+        result.data.token.id,
+        "confirmed",
+        "0xTOKEN00000000000000000000000000000000002",
+      );
       return result.data.token.id;
     }
 
@@ -564,7 +584,10 @@ describe("token.sh", () => {
 
     it("total_minted not incremented when mint tx reverts", async () => {
       const tokenId = await deployMintable();
-      waitForTransactionReceiptMock.mockResolvedValueOnce({ status: "reverted", contractAddress: null });
+      waitForTransactionReceiptMock.mockResolvedValueOnce({
+        status: "reverted",
+        contractAddress: null,
+      });
       await mintTokens(tokenId, { to: CALLER, amount: "500000" }, CALLER);
       const row = getDeploymentById(tokenId);
       expect(row?.total_minted).toBe("0");
@@ -655,7 +678,11 @@ describe("token.sh", () => {
     async function deployAndConfirm(): Promise<string> {
       const result = await deployToken(VALID_REQUEST, CALLER);
       if (!result.ok) throw new Error("Setup failed");
-      updateDeploymentStatus(result.data.token.id, "confirmed", "0xTOKEN00000000000000000000000000000000003");
+      updateDeploymentStatus(
+        result.data.token.id,
+        "confirmed",
+        "0xTOKEN00000000000000000000000000000000003",
+      );
       return result.data.token.id;
     }
 

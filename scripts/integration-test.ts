@@ -18,9 +18,9 @@
 
 import { spawn } from "node:child_process";
 import type { ChildProcess } from "node:child_process";
-import { readFileSync, writeFileSync, existsSync, appendFileSync } from "node:fs";
-import { privateKeyToAccount, generatePrivateKey } from "viem/accounts";
+import { appendFileSync, existsSync, readFileSync, writeFileSync } from "node:fs";
 import { getAddress } from "viem";
+import { generatePrivateKey, privateKeyToAccount } from "viem/accounts";
 
 // ─── Config ──────────────────────────────────────────────────────────────
 
@@ -78,7 +78,9 @@ if (DRY_RUN) {
     console.log("  ⚠ DO_API_TOKEN not set — spawn.sh tests will be skipped");
   }
   if (!HAS_TOKEN_DEPLOYER) {
-    console.log("  ⚠ TOKEN_MASTER_KEY/TOKEN_DEPLOYER_ENCRYPTED_KEY/BASE_RPC_URL not set — token.sh tests will be skipped");
+    console.log(
+      "  ⚠ TOKEN_MASTER_KEY/TOKEN_DEPLOYER_ENCRYPTED_KEY/BASE_RPC_URL not set — token.sh tests will be skipped",
+    );
   }
   if (!HAS_MEM) {
     console.log("  ⚠ GOOGLE_API_KEY/QDRANT_URL not set — mem.sh tests will be skipped");
@@ -137,7 +139,11 @@ function startService(name: string, entrypoint: string, port: number): Promise<v
 
 function cleanup() {
   for (const child of children) {
-    try { child.kill(); } catch { /* already dead */ }
+    try {
+      child.kill();
+    } catch {
+      /* already dead */
+    }
   }
 }
 
@@ -229,7 +235,8 @@ async function main() {
     }
     if (!res.ok) throw new Error(`POST /v1/wallets → ${res.status}: ${await res.text()}`);
     const data = (await res.json()) as { address: string; chain: string };
-    if (data.address !== walletAddress) throw new Error(`Expected ${walletAddress}, got ${data.address}`);
+    if (data.address !== walletAddress)
+      throw new Error(`Expected ${walletAddress}, got ${data.address}`);
     console.log(`(${walletAddress})`);
   });
 
@@ -283,8 +290,10 @@ async function main() {
     console.log(`(${balance} USDC, funded=${funded})`);
 
     if (!funded) {
-      console.log(`\n    ⚠ Wallet not funded. Full test (store.sh x402) requires USDC.`);
-      console.log(`    Fund manually: https://faucet.circle.com/ → Base Sepolia → ${walletAddress}`);
+      console.log("\n    ⚠ Wallet not funded. Full test (store.sh x402) requires USDC.");
+      console.log(
+        `    Fund manually: https://faucet.circle.com/ → Base Sepolia → ${walletAddress}`,
+      );
     }
   });
 
@@ -320,14 +329,11 @@ async function main() {
   if (testBucketId) {
     // 6. Upload object
     await step("Upload object via x402", async () => {
-      const res = await primFetch(
-        `${STORE_URL}/v1/buckets/${testBucketId}/objects/test.txt`,
-        {
-          method: "PUT",
-          headers: { "Content-Type": "text/plain", "Content-Length": "13" },
-          body: "hello testnet",
-        },
-      );
+      const res = await primFetch(`${STORE_URL}/v1/buckets/${testBucketId}/objects/test.txt`, {
+        method: "PUT",
+        headers: { "Content-Type": "text/plain", "Content-Length": "13" },
+        body: "hello testnet",
+      });
       if (!res.ok) throw new Error(`PUT object → ${res.status}: ${await res.text()}`);
       const data = (await res.json()) as { key: string };
       if (data.key !== "test.txt") throw new Error(`Expected key "test.txt", got "${data.key}"`);
@@ -335,10 +341,9 @@ async function main() {
 
     // 7. Download object — verify body
     await step("Download object via x402", async () => {
-      const res = await primFetch(
-        `${STORE_URL}/v1/buckets/${testBucketId}/objects/test.txt`,
-        { method: "GET" },
-      );
+      const res = await primFetch(`${STORE_URL}/v1/buckets/${testBucketId}/objects/test.txt`, {
+        method: "GET",
+      });
       if (!res.ok) throw new Error(`GET object → ${res.status}: ${await res.text()}`);
       const body = await res.text();
       if (body !== "hello testnet") throw new Error(`Expected "hello testnet", got "${body}"`);
@@ -346,30 +351,26 @@ async function main() {
 
     // 8. Get quota
     await step("Get quota via x402", async () => {
-      const res = await primFetch(
-        `${STORE_URL}/v1/buckets/${testBucketId}/quota`,
-        { method: "GET" },
-      );
+      const res = await primFetch(`${STORE_URL}/v1/buckets/${testBucketId}/quota`, {
+        method: "GET",
+      });
       if (!res.ok) throw new Error(`GET quota → ${res.status}: ${await res.text()}`);
       const data = (await res.json()) as { usage_bytes: number };
-      if (data.usage_bytes !== 13) throw new Error(`Expected usage_bytes=13, got ${data.usage_bytes}`);
+      if (data.usage_bytes !== 13)
+        throw new Error(`Expected usage_bytes=13, got ${data.usage_bytes}`);
     });
 
     // 9. Delete object
     await step("Delete object via x402", async () => {
-      const res = await primFetch(
-        `${STORE_URL}/v1/buckets/${testBucketId}/objects/test.txt`,
-        { method: "DELETE" },
-      );
+      const res = await primFetch(`${STORE_URL}/v1/buckets/${testBucketId}/objects/test.txt`, {
+        method: "DELETE",
+      });
       if (!res.ok) throw new Error(`DELETE object → ${res.status}: ${await res.text()}`);
     });
 
     // 10. Delete bucket
     await step("Delete bucket via x402", async () => {
-      const res = await primFetch(
-        `${STORE_URL}/v1/buckets/${testBucketId}`,
-        { method: "DELETE" },
-      );
+      const res = await primFetch(`${STORE_URL}/v1/buckets/${testBucketId}`, { method: "DELETE" });
       if (!res.ok) throw new Error(`DELETE bucket → ${res.status}: ${await res.text()}`);
       testBucketId = null; // Prevent cleanup from trying to delete again
     });
@@ -380,9 +381,7 @@ async function main() {
   if (!HAS_DO_TOKEN) {
     console.log("\n  Skipping spawn.sh tests — no DO_API_TOKEN");
   } else {
-  console.log("\n─── spawn.sh x402 integration ──────────────────────────────\n");
-
-  {
+    console.log("\n─── spawn.sh x402 integration ──────────────────────────────\n");
     // 11. Register SSH key via x402
     await step("Register SSH key via x402", async () => {
       const { execSync } = await import("node:child_process");
@@ -433,7 +432,10 @@ async function main() {
         while (Date.now() < deadline) {
           const res = await primFetch(`${SPAWN_URL}/v1/servers/${testServerId}`);
           if (!res.ok) throw new Error(`GET server → ${res.status}: ${await res.text()}`);
-          const data = (await res.json()) as { status: string; public_net: { ipv4: { ip: string | null } | null } };
+          const data = (await res.json()) as {
+            status: string;
+            public_net: { ipv4: { ip: string | null } | null };
+          };
           if (data.status === "active") {
             console.log(`(active, ip: ${data.public_net?.ipv4?.ip})`);
             return;
@@ -463,17 +465,16 @@ async function main() {
         testSshKeyId = null;
       });
     }
-  }
   } // else (HAS_DO_TOKEN)
 
   // ─── token.sh tests (requires TOKEN_MASTER_KEY + TOKEN_DEPLOYER_ENCRYPTED_KEY + BASE_RPC_URL) ──
 
   if (!HAS_TOKEN_DEPLOYER) {
-    console.log("\n  Skipping token.sh tests — no TOKEN_MASTER_KEY/TOKEN_DEPLOYER_ENCRYPTED_KEY/BASE_RPC_URL");
+    console.log(
+      "\n  Skipping token.sh tests — no TOKEN_MASTER_KEY/TOKEN_DEPLOYER_ENCRYPTED_KEY/BASE_RPC_URL",
+    );
   } else {
-  console.log("\n─── token.sh x402 integration ──────────────────────────────\n");
-
-  {
+    console.log("\n─── token.sh x402 integration ──────────────────────────────\n");
     // 16. Deploy ERC-20 via x402
     await step("Deploy ERC-20 via x402", async () => {
       const res = await primFetch(`${TOKEN_URL}/v1/tokens`, {
@@ -487,7 +488,9 @@ async function main() {
         }),
       });
       if (!res.ok) throw new Error(`POST /v1/tokens → ${res.status}: ${await res.text()}`);
-      const data = (await res.json()) as { token: { id: string; deployStatus: string; contractAddress: string | null } };
+      const data = (await res.json()) as {
+        token: { id: string; deployStatus: string; contractAddress: string | null };
+      };
       testTokenId = data.token.id;
       console.log(`(id: ${testTokenId}, status: ${data.token.deployStatus})`);
     });
@@ -499,7 +502,9 @@ async function main() {
         while (Date.now() < deadline) {
           const res = await primFetch(`${TOKEN_URL}/v1/tokens/${testTokenId}`);
           if (!res.ok) throw new Error(`GET /v1/tokens/:id → ${res.status}: ${await res.text()}`);
-          const data = (await res.json()) as { token: { deployStatus: string; contractAddress: string | null } };
+          const data = (await res.json()) as {
+            token: { deployStatus: string; contractAddress: string | null };
+          };
           if (data.token.deployStatus === "confirmed" && data.token.contractAddress) {
             console.log(`(confirmed, address: ${data.token.contractAddress})`);
             return;
@@ -515,7 +520,8 @@ async function main() {
         const res = await primFetch(`${TOKEN_URL}/v1/tokens/${testTokenId}/supply`);
         if (!res.ok) throw new Error(`GET supply → ${res.status}: ${await res.text()}`);
         const data = (await res.json()) as { totalSupply: string };
-        if (data.totalSupply !== "1000000") throw new Error(`Expected totalSupply=1000000, got ${data.totalSupply}`);
+        if (data.totalSupply !== "1000000")
+          throw new Error(`Expected totalSupply=1000000, got ${data.totalSupply}`);
         console.log(`(totalSupply: ${data.totalSupply})`);
       });
 
@@ -539,12 +545,15 @@ async function main() {
       await step("Get pool info via x402", async () => {
         const res = await primFetch(`${TOKEN_URL}/v1/tokens/${testTokenId}/pool`);
         if (!res.ok) throw new Error(`GET pool → ${res.status}: ${await res.text()}`);
-        const data = (await res.json()) as { poolAddress: string; sqrtPriceX96: string; tick: number };
+        const data = (await res.json()) as {
+          poolAddress: string;
+          sqrtPriceX96: string;
+          tick: number;
+        };
         if (!data.poolAddress) throw new Error("poolAddress missing from response");
         console.log(`(sqrtPriceX96: ${data.sqrtPriceX96}, tick: ${data.tick})`);
       });
     }
-  }
   } // else (HAS_TOKEN_DEPLOYER)
 
   // ─── mem.sh tests (requires GOOGLE_API_KEY + QDRANT_URL) ──────────────
@@ -552,12 +561,10 @@ async function main() {
   if (!HAS_MEM) {
     console.log("\n  Skipping mem.sh tests — no GOOGLE_API_KEY/QDRANT_URL");
   } else {
-  console.log("\n─── mem.sh x402 integration ────────────────────────────────\n");
+    console.log("\n─── mem.sh x402 integration ────────────────────────────────\n");
 
-  const ts = Date.now();
-  const cacheNamespace = `integ-${ts}`;
-
-  {
+    const ts = Date.now();
+    const cacheNamespace = `integ-${ts}`;
     // 21. Create collection
     await step("Create collection via x402", async () => {
       const res = await primFetch(`${MEM_URL}/v1/collections`, {
@@ -565,11 +572,19 @@ async function main() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ name: `integ-test-${ts}` }),
       });
-      if (res.status !== 201) throw new Error(`POST /v1/collections → ${res.status}: ${await res.text()}`);
-      const data = (await res.json()) as { id: string; name: string; dimension: number; distance: string };
-      if (!data.id.startsWith("c_")) throw new Error(`Expected id starting with "c_", got "${data.id}"`);
+      if (res.status !== 201)
+        throw new Error(`POST /v1/collections → ${res.status}: ${await res.text()}`);
+      const data = (await res.json()) as {
+        id: string;
+        name: string;
+        dimension: number;
+        distance: string;
+      };
+      if (!data.id.startsWith("c_"))
+        throw new Error(`Expected id starting with "c_", got "${data.id}"`);
       if (data.dimension !== 768) throw new Error(`Expected dimension=768, got ${data.dimension}`);
-      if (data.distance !== "Cosine") throw new Error(`Expected distance=Cosine, got ${data.distance}`);
+      if (data.distance !== "Cosine")
+        throw new Error(`Expected distance=Cosine, got ${data.distance}`);
       testCollectionId = data.id;
       console.log(`(collection: ${testCollectionId})`);
     });
@@ -587,9 +602,11 @@ async function main() {
       // 23. Get collection (pre-upsert)
       await step("Get collection (pre-upsert) via x402", async () => {
         const res = await primFetch(`${MEM_URL}/v1/collections/${testCollectionId}`);
-        if (!res.ok) throw new Error(`GET /v1/collections/:id → ${res.status}: ${await res.text()}`);
+        if (!res.ok)
+          throw new Error(`GET /v1/collections/:id → ${res.status}: ${await res.text()}`);
         const data = (await res.json()) as { document_count: number };
-        if (data.document_count !== 0) throw new Error(`Expected document_count=0, got ${data.document_count}`);
+        if (data.document_count !== 0)
+          throw new Error(`Expected document_count=0, got ${data.document_count}`);
       });
 
       // 24. Upsert documents
@@ -599,9 +616,18 @@ async function main() {
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             documents: [
-              { text: "the quick brown fox jumps over the lazy dog", metadata: { source: "classic" } },
-              { text: "artificial intelligence is transforming software development and machine learning", metadata: { source: "tech" } },
-              { text: "the recipe calls for two cups of flour and one egg", metadata: { source: "cooking" } },
+              {
+                text: "the quick brown fox jumps over the lazy dog",
+                metadata: { source: "classic" },
+              },
+              {
+                text: "artificial intelligence is transforming software development and machine learning",
+                metadata: { source: "tech" },
+              },
+              {
+                text: "the recipe calls for two cups of flour and one egg",
+                metadata: { source: "cooking" },
+              },
             ],
           }),
         });
@@ -615,9 +641,11 @@ async function main() {
       // 25. Get collection (post-upsert)
       await step("Get collection (post-upsert) via x402", async () => {
         const res = await primFetch(`${MEM_URL}/v1/collections/${testCollectionId}`);
-        if (!res.ok) throw new Error(`GET /v1/collections/:id → ${res.status}: ${await res.text()}`);
+        if (!res.ok)
+          throw new Error(`GET /v1/collections/:id → ${res.status}: ${await res.text()}`);
         const data = (await res.json()) as { document_count: number };
-        if (data.document_count < 3) throw new Error(`Expected document_count>=3, got ${data.document_count}`);
+        if (data.document_count < 3)
+          throw new Error(`Expected document_count>=3, got ${data.document_count}`);
         console.log(`(document_count: ${data.document_count})`);
       });
 
@@ -631,9 +659,12 @@ async function main() {
         if (!res.ok) throw new Error(`POST /query → ${res.status}: ${await res.text()}`);
         const data = (await res.json()) as { matches: { score: number; text: string }[] };
         if (data.matches.length === 0) throw new Error("Expected matches.length > 0");
-        if (data.matches[0].score <= 0) throw new Error(`Expected score > 0, got ${data.matches[0].score}`);
+        if (data.matches[0].score <= 0)
+          throw new Error(`Expected score > 0, got ${data.matches[0].score}`);
         if (!data.matches[0].text.includes("artificial intelligence")) {
-          throw new Error(`Expected top match to contain "artificial intelligence", got: "${data.matches[0].text}"`);
+          throw new Error(
+            `Expected top match to contain "artificial intelligence", got: "${data.matches[0].text}"`,
+          );
         }
         console.log(`(top match score: ${data.matches[0].score.toFixed(4)})`);
       });
@@ -643,9 +674,11 @@ async function main() {
         const res = await primFetch(`${MEM_URL}/v1/collections/${testCollectionId}`, {
           method: "DELETE",
         });
-        if (!res.ok) throw new Error(`DELETE /v1/collections/:id → ${res.status}: ${await res.text()}`);
+        if (!res.ok)
+          throw new Error(`DELETE /v1/collections/:id → ${res.status}: ${await res.text()}`);
         const data = (await res.json()) as { status: string };
-        if (data.status !== "deleted") throw new Error(`Expected status=deleted, got ${data.status}`);
+        if (data.status !== "deleted")
+          throw new Error(`Expected status=deleted, got ${data.status}`);
         testCollectionId = null;
       });
     }
@@ -661,10 +694,17 @@ async function main() {
         body: JSON.stringify({ value: { agent: "smoke" }, ttl: 300 }),
       });
       if (!res.ok) throw new Error(`PUT /v1/cache/:ns/:key → ${res.status}: ${await res.text()}`);
-      const data = (await res.json()) as { namespace: string; key: string; value: { agent: string }; expires_at: string | null };
-      if (data.namespace !== cacheNamespace) throw new Error(`Expected namespace=${cacheNamespace}, got ${data.namespace}`);
+      const data = (await res.json()) as {
+        namespace: string;
+        key: string;
+        value: { agent: string };
+        expires_at: string | null;
+      };
+      if (data.namespace !== cacheNamespace)
+        throw new Error(`Expected namespace=${cacheNamespace}, got ${data.namespace}`);
       if (data.key !== "testkey") throw new Error(`Expected key=testkey, got ${data.key}`);
-      if (data.value.agent !== "smoke") throw new Error(`Expected value.agent=smoke, got ${data.value.agent}`);
+      if (data.value.agent !== "smoke")
+        throw new Error(`Expected value.agent=smoke, got ${data.value.agent}`);
       if (data.expires_at === null) throw new Error("Expected expires_at to be set");
     });
 
@@ -673,7 +713,8 @@ async function main() {
       const res = await primFetch(`${MEM_URL}/v1/cache/${cacheNamespace}/testkey`);
       if (!res.ok) throw new Error(`GET /v1/cache/:ns/:key → ${res.status}: ${await res.text()}`);
       const data = (await res.json()) as { value: { agent: string } };
-      if (data.value.agent !== "smoke") throw new Error(`Expected value.agent=smoke, got ${data.value.agent}`);
+      if (data.value.agent !== "smoke")
+        throw new Error(`Expected value.agent=smoke, got ${data.value.agent}`);
     });
 
     // 30. Cache delete
@@ -681,7 +722,8 @@ async function main() {
       const res = await primFetch(`${MEM_URL}/v1/cache/${cacheNamespace}/testkey`, {
         method: "DELETE",
       });
-      if (!res.ok) throw new Error(`DELETE /v1/cache/:ns/:key → ${res.status}: ${await res.text()}`);
+      if (!res.ok)
+        throw new Error(`DELETE /v1/cache/:ns/:key → ${res.status}: ${await res.text()}`);
       const data = (await res.json()) as { status: string };
       if (data.status !== "deleted") throw new Error(`Expected status=deleted, got ${data.status}`);
     });
@@ -695,7 +737,6 @@ async function main() {
       const res = await primFetch(`${MEM_URL}/v1/cache/${cacheNamespace}/testkey`);
       if (res.status !== 404) throw new Error(`Expected 404, got ${res.status}`);
     });
-  }
   } // else (HAS_MEM)
 }
 

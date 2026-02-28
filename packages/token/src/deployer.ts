@@ -1,8 +1,8 @@
 import { createCipheriv, createDecipheriv, randomBytes } from "node:crypto";
-import { createWalletClient, createPublicClient, http } from "viem";
+import { http, createPublicClient, createWalletClient } from "viem";
+import type { Account, Chain, Hex, Transport, WalletClient } from "viem";
 import { privateKeyToAccount } from "viem/accounts";
 import { base, baseSepolia } from "viem/chains";
-import type { Hex, WalletClient, Transport, Chain, Account } from "viem";
 
 interface EncryptedKeyBlob {
   version: 1;
@@ -63,14 +63,18 @@ export function getChain(): Chain {
   const chainId = Number(process.env.BASE_CHAIN_ID ?? "8453");
   if (chainId === 84532) return baseSepolia;
   if (chainId === 8453) return base;
-  throw new Error(`Unsupported BASE_CHAIN_ID: ${chainId}. Supported: 8453 (Base), 84532 (Base Sepolia)`);
+  throw new Error(
+    `Unsupported BASE_CHAIN_ID: ${chainId}. Supported: 8453 (Base), 84532 (Base Sepolia)`,
+  );
 }
 
 /**
  * Assert that the RPC's reported chain ID matches our configured chain.
  * Call before any write tx to catch mismatched BASE_RPC_URL / BASE_CHAIN_ID early.
  */
-export async function assertChainId(publicClient: ReturnType<typeof createPublicClient>): Promise<void> {
+export async function assertChainId(
+  publicClient: ReturnType<typeof createPublicClient>,
+): Promise<void> {
   const expectedId = getChain().id;
   const actualId = await publicClient.getChainId();
   if (actualId !== expectedId) {

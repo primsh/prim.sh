@@ -3,48 +3,61 @@ import { join } from "node:path";
 import {
   createAgentStackMiddleware,
   createWalletAllowlistChecker,
-  getNetworkConfig,
   forbidden,
+  getNetworkConfig,
   notFound,
 } from "@primsh/x402-middleware";
-import { createPrimApp } from "@primsh/x402-middleware/create-prim-app";
-import { addToAllowlist, removeFromAllowlist, isAllowed, createAllowlistChecker } from "@primsh/x402-middleware/allowlist-db";
-import type {
-  RegisterWalletRequest,
-  WalletListResponse,
-  WalletDetailResponse,
-  DeactivateWalletResponse,
-  FundRequestResponse,
-  FundRequestListResponse,
-  ApproveFundRequestResponse,
-  DenyFundRequestResponse,
-  PolicyResponse,
-  PauseResponse,
-  ResumeResponse,
-  ApiError,
-} from "./api.ts";
 import {
-  registerWallet,
-  listWallets,
-  getWallet,
-  deactivateWallet,
-  createFundRequest,
-  listFundRequests,
+  addToAllowlist,
+  createAllowlistChecker,
+  isAllowed,
+  removeFromAllowlist,
+} from "@primsh/x402-middleware/allowlist-db";
+import { createPrimApp } from "@primsh/x402-middleware/create-prim-app";
+import type {
+  ApiError,
+  ApproveFundRequestResponse,
+  DeactivateWalletResponse,
+  DenyFundRequestResponse,
+  FundRequestListResponse,
+  FundRequestResponse,
+  PauseResponse,
+  PolicyResponse,
+  RegisterWalletRequest,
+  ResumeResponse,
+  WalletDetailResponse,
+  WalletListResponse,
+} from "./api.ts";
+import type {
+  CreateFundRequestRequest,
+  DenyFundRequestRequest,
+  PauseRequest,
+  PolicyUpdateRequest,
+  ResumeRequest,
+} from "./api.ts";
+import { getState, pause, resume } from "./circuit-breaker.ts";
+import {
   approveFundRequest,
+  createFundRequest,
+  deactivateWallet,
   denyFundRequest,
   getSpendingPolicy,
-  updateSpendingPolicy,
+  getWallet,
+  listFundRequests,
+  listWallets,
   pauseWallet,
+  registerWallet,
   resumeWallet,
+  updateSpendingPolicy,
 } from "./service.ts";
-import type { CreateFundRequestRequest, DenyFundRequestRequest, PolicyUpdateRequest, PauseRequest, ResumeRequest } from "./api.ts";
-import { pause, resume, getState } from "./circuit-breaker.ts";
 
 const networkConfig = getNetworkConfig();
 const PAY_TO_ADDRESS = process.env.PRIM_PAY_TO as string; // validated by createPrimApp
 const NETWORK = networkConfig.network;
 const INTERNAL_KEY = process.env.PRIM_INTERNAL_KEY;
-const ALLOWLIST_DB_PATH = process.env.PRIM_ALLOWLIST_DB ?? join(process.env.PRIM_DATA_DIR ?? "/var/lib/prim", "allowlist.db");
+const ALLOWLIST_DB_PATH =
+  process.env.PRIM_ALLOWLIST_DB ??
+  join(process.env.PRIM_DATA_DIR ?? "/var/lib/prim", "allowlist.db");
 const allowlistChecker = createAllowlistChecker(ALLOWLIST_DB_PATH);
 
 const WALLET_ROUTES = {
@@ -66,30 +79,84 @@ const WALLET_ROUTES = {
 const app = createPrimApp(
   {
     serviceName: "wallet.sh",
-    llmsTxtPath: import.meta.dir ? resolve(import.meta.dir, "../../../site/wallet/llms.txt") : undefined,
+    llmsTxtPath: import.meta.dir
+      ? resolve(import.meta.dir, "../../../site/wallet/llms.txt")
+      : undefined,
     routes: WALLET_ROUTES,
     metricsName: "wallet.prim.sh",
     skipX402: true,
     pricing: {
       routes: [
         { method: "GET", path: "/v1/wallets", price_usdc: "0.001", description: "List wallets" },
-        { method: "GET", path: "/v1/wallets/{address}", price_usdc: "0.001", description: "Get wallet detail" },
-        { method: "DELETE", path: "/v1/wallets/{address}", price_usdc: "0.01", description: "Deactivate wallet" },
-        { method: "GET", path: "/v1/wallets/{address}/fund-requests", price_usdc: "0.001", description: "List fund requests" },
-        { method: "POST", path: "/v1/wallets/{address}/fund-request", price_usdc: "0.001", description: "Create fund request" },
-        { method: "POST", path: "/v1/fund-requests/{id}/approve", price_usdc: "0.01", description: "Approve fund request" },
-        { method: "POST", path: "/v1/fund-requests/{id}/deny", price_usdc: "0.001", description: "Deny fund request" },
-        { method: "GET", path: "/v1/wallets/{address}/policy", price_usdc: "0.001", description: "Get spending policy" },
-        { method: "PUT", path: "/v1/wallets/{address}/policy", price_usdc: "0.005", description: "Update spending policy" },
-        { method: "POST", path: "/v1/wallets/{address}/pause", price_usdc: "0.001", description: "Pause wallet" },
-        { method: "POST", path: "/v1/wallets/{address}/resume", price_usdc: "0.001", description: "Resume wallet" },
+        {
+          method: "GET",
+          path: "/v1/wallets/{address}",
+          price_usdc: "0.001",
+          description: "Get wallet detail",
+        },
+        {
+          method: "DELETE",
+          path: "/v1/wallets/{address}",
+          price_usdc: "0.01",
+          description: "Deactivate wallet",
+        },
+        {
+          method: "GET",
+          path: "/v1/wallets/{address}/fund-requests",
+          price_usdc: "0.001",
+          description: "List fund requests",
+        },
+        {
+          method: "POST",
+          path: "/v1/wallets/{address}/fund-request",
+          price_usdc: "0.001",
+          description: "Create fund request",
+        },
+        {
+          method: "POST",
+          path: "/v1/fund-requests/{id}/approve",
+          price_usdc: "0.01",
+          description: "Approve fund request",
+        },
+        {
+          method: "POST",
+          path: "/v1/fund-requests/{id}/deny",
+          price_usdc: "0.001",
+          description: "Deny fund request",
+        },
+        {
+          method: "GET",
+          path: "/v1/wallets/{address}/policy",
+          price_usdc: "0.001",
+          description: "Get spending policy",
+        },
+        {
+          method: "PUT",
+          path: "/v1/wallets/{address}/policy",
+          price_usdc: "0.005",
+          description: "Update spending policy",
+        },
+        {
+          method: "POST",
+          path: "/v1/wallets/{address}/pause",
+          price_usdc: "0.001",
+          description: "Pause wallet",
+        },
+        {
+          method: "POST",
+          path: "/v1/wallets/{address}/resume",
+          price_usdc: "0.001",
+          description: "Resume wallet",
+        },
       ],
     },
   },
   { createAgentStackMiddleware, createWalletAllowlistChecker },
 );
 
-const logger = (app as typeof app & { logger: { warn: (msg: string, extra?: Record<string, unknown>) => void } }).logger;
+const logger = (
+  app as typeof app & { logger: { warn: (msg: string, extra?: Record<string, unknown>) => void } }
+).logger;
 
 // Register x402 manually — wallet uses local SQLite allowlist checker
 app.get("/v1/metrics", () => new Response()); // placeholder registered by factory; metrics route already registered above
@@ -126,13 +193,21 @@ app.post("/v1/wallets", async (c) => {
     body = await c.req.json<Partial<RegisterWalletRequest>>();
   } catch (err) {
     logger.warn("JSON parse failed on POST /v1/wallets", { error: String(err) });
-    return c.json({ error: { code: "invalid_request", message: "Invalid JSON body" } } as ApiError, 400);
+    return c.json(
+      { error: { code: "invalid_request", message: "Invalid JSON body" } } as ApiError,
+      400,
+    );
   }
 
   const { address, signature, timestamp } = body;
   if (!address || !signature || !timestamp) {
     return c.json(
-      { error: { code: "invalid_request", message: "Missing required fields: address, signature, timestamp" } } as ApiError,
+      {
+        error: {
+          code: "invalid_request",
+          message: "Missing required fields: address, signature, timestamp",
+        },
+      } as ApiError,
       400,
     );
   }
@@ -213,13 +288,23 @@ app.post("/v1/wallets/:address/fund-request", async (c) => {
   try {
     body = await c.req.json<Partial<CreateFundRequestRequest>>();
   } catch (err) {
-    logger.warn("JSON parse failed on POST /v1/wallets/:address/fund-request", { error: String(err) });
-    return c.json({ error: { code: "invalid_request", message: "Invalid JSON body" } } as ApiError, 400);
+    logger.warn("JSON parse failed on POST /v1/wallets/:address/fund-request", {
+      error: String(err),
+    });
+    return c.json(
+      { error: { code: "invalid_request", message: "Invalid JSON body" } } as ApiError,
+      400,
+    );
   }
 
   const { amount, reason } = body;
   if (!amount || !reason) {
-    return c.json({ error: { code: "invalid_request", message: "Missing required fields: amount, reason" } } as ApiError, 400);
+    return c.json(
+      {
+        error: { code: "invalid_request", message: "Missing required fields: amount, reason" },
+      } as ApiError,
+      400,
+    );
   }
 
   const result = createFundRequest(address, { amount, reason }, caller);
@@ -317,7 +402,10 @@ app.put("/v1/wallets/:address/policy", async (c) => {
     body = await c.req.json<Partial<PolicyUpdateRequest>>();
   } catch (err) {
     logger.warn("JSON parse failed on PUT /v1/wallets/:address/policy", { error: String(err) });
-    return c.json({ error: { code: "invalid_request", message: "Invalid JSON body" } } as ApiError, 400);
+    return c.json(
+      { error: { code: "invalid_request", message: "Invalid JSON body" } } as ApiError,
+      400,
+    );
   }
 
   const result = updateSpendingPolicy(address, caller, body);
@@ -344,7 +432,12 @@ app.post("/v1/wallets/:address/pause", async (c) => {
   }
   const effectiveScope = (scope ?? "all") as import("./api.ts").PauseScope;
   if (!["all", "send", "swap"].includes(effectiveScope)) {
-    return c.json({ error: { code: "invalid_request", message: "scope must be one of: all, send, swap" } } as ApiError, 400);
+    return c.json(
+      {
+        error: { code: "invalid_request", message: "scope must be one of: all, send, swap" },
+      } as ApiError,
+      400,
+    );
   }
 
   const result = pauseWallet(address, caller, effectiveScope);
@@ -372,7 +465,12 @@ app.post("/v1/wallets/:address/resume", async (c) => {
   }
   const effectiveScope = (scope ?? "all") as import("./api.ts").PauseScope;
   if (!["all", "send", "swap"].includes(effectiveScope)) {
-    return c.json({ error: { code: "invalid_request", message: "scope must be one of: all, send, swap" } } as ApiError, 400);
+    return c.json(
+      {
+        error: { code: "invalid_request", message: "scope must be one of: all, send, swap" },
+      } as ApiError,
+      400,
+    );
   }
 
   const result = resumeWallet(address, caller, effectiveScope);
@@ -393,12 +491,22 @@ app.post("/v1/admin/circuit-breaker/pause", async (c) => {
     const body = await c.req.json<{ scope?: string }>();
     scope = body.scope;
   } catch (err) {
-    logger.warn("JSON parse failed on POST /v1/admin/circuit-breaker/pause", { error: String(err) });
-    return c.json({ error: { code: "invalid_request", message: "Invalid JSON body" } } as ApiError, 400);
+    logger.warn("JSON parse failed on POST /v1/admin/circuit-breaker/pause", {
+      error: String(err),
+    });
+    return c.json(
+      { error: { code: "invalid_request", message: "Invalid JSON body" } } as ApiError,
+      400,
+    );
   }
 
   if (!scope || !["all", "send", "swap"].includes(scope)) {
-    return c.json({ error: { code: "invalid_request", message: "scope must be one of: all, send, swap" } } as ApiError, 400);
+    return c.json(
+      {
+        error: { code: "invalid_request", message: "scope must be one of: all, send, swap" },
+      } as ApiError,
+      400,
+    );
   }
 
   pause(scope as "all" | "send" | "swap");
@@ -412,12 +520,22 @@ app.post("/v1/admin/circuit-breaker/resume", async (c) => {
     const body = await c.req.json<{ scope?: string }>();
     scope = body.scope;
   } catch (err) {
-    logger.warn("JSON parse failed on POST /v1/admin/circuit-breaker/resume", { error: String(err) });
-    return c.json({ error: { code: "invalid_request", message: "Invalid JSON body" } } as ApiError, 400);
+    logger.warn("JSON parse failed on POST /v1/admin/circuit-breaker/resume", {
+      error: String(err),
+    });
+    return c.json(
+      { error: { code: "invalid_request", message: "Invalid JSON body" } } as ApiError,
+      400,
+    );
   }
 
   if (!scope || !["all", "send", "swap"].includes(scope)) {
-    return c.json({ error: { code: "invalid_request", message: "scope must be one of: all, send, swap" } } as ApiError, 400);
+    return c.json(
+      {
+        error: { code: "invalid_request", message: "scope must be one of: all, send, swap" },
+      } as ApiError,
+      400,
+    );
   }
 
   resume(scope as "all" | "send" | "swap");
@@ -434,7 +552,10 @@ app.get("/v1/admin/circuit-breaker", (c) => {
 
 function internalAuth(c: Parameters<import("hono").MiddlewareHandler>[0]): Response | null {
   if (!INTERNAL_KEY) {
-    return c.json({ error: { code: "not_configured", message: "Internal API not configured" } }, 501);
+    return c.json(
+      { error: { code: "not_configured", message: "Internal API not configured" } },
+      501,
+    );
   }
   const key = c.req.header("x-internal-key");
   if (key !== INTERNAL_KEY) {
@@ -457,7 +578,10 @@ app.post("/internal/allowlist/add", async (c) => {
   }
 
   if (!body.address) {
-    return c.json({ error: { code: "invalid_request", message: "Missing required field: address" } }, 400);
+    return c.json(
+      { error: { code: "invalid_request", message: "Missing required field: address" } },
+      400,
+    );
   }
 
   addToAllowlist(ALLOWLIST_DB_PATH, body.address, body.added_by ?? "internal", body.note);
@@ -481,7 +605,10 @@ app.get("/internal/allowlist/check", (c) => {
 
   const address = c.req.query("address");
   if (!address) {
-    return c.json({ error: { code: "invalid_request", message: "Missing query param: address" } }, 400);
+    return c.json(
+      { error: { code: "invalid_request", message: "Missing query param: address" } },
+      400,
+    );
   }
 
   const allowed = isAllowed(ALLOWLIST_DB_PATH, address);

@@ -15,13 +15,13 @@
  *   bun scripts/gate-runner.ts --dry-run --canary      # Dry-run canary
  */
 
-import { parseArgs } from "node:util";
-import { resolve, join } from "node:path";
 import { existsSync, mkdirSync } from "node:fs";
+import { join, resolve } from "node:path";
+import { parseArgs } from "node:util";
+import { getAddress } from "viem";
+import { privateKeyToAccount } from "viem/accounts";
 import { createPrimFetch } from "../packages/x402-client/src/index.ts";
 import { loadPrimitives } from "./lib/primitives.js";
-import { privateKeyToAccount } from "viem/accounts";
-import { getAddress } from "viem";
 
 // ── Types ──────────────────────────────────────────────────────────────────
 
@@ -241,17 +241,13 @@ function matchShape(actual: unknown, expected: unknown, path = "$"): string | nu
         // "number >= N" pattern
         const geMatch = expected.match(/^number\s*>=\s*(\d+)$/);
         if (geMatch) {
-          if (typeof actual !== "number")
-            return `${path}: expected number, got ${typeof actual}`;
+          if (typeof actual !== "number") return `${path}: expected number, got ${typeof actual}`;
           const threshold = Number.parseInt(geMatch[1], 10);
-          return actual >= threshold
-            ? null
-            : `${path}: expected >= ${threshold}, got ${actual}`;
+          return actual >= threshold ? null : `${path}: expected >= ${threshold}, got ${actual}`;
         }
         // "non-empty string"
         if (expected === "non-empty string") {
-          if (typeof actual !== "string")
-            return `${path}: expected string, got ${typeof actual}`;
+          if (typeof actual !== "string") return `${path}: expected string, got ${typeof actual}`;
           return actual.length > 0 ? null : `${path}: expected non-empty string`;
         }
         // Template variable (e.g. "{{agent_address}}") — just check it's a string
@@ -393,7 +389,8 @@ const CANARY_TOOLS = [
     type: "function",
     function: {
       name: "http_request",
-      description: "Make an HTTP request to a prim.sh API endpoint. x402 payments are handled automatically.",
+      description:
+        "Make an HTTP request to a prim.sh API endpoint. x402 payments are handled automatically.",
       parameters: {
         type: "object",
         properties: {
@@ -430,7 +427,12 @@ async function executeToolCall(
   toolCall: CanaryToolCall,
   primFetch: typeof fetch,
 ): Promise<{ status: number; body: unknown; ok: boolean }> {
-  const { method, url, body, headers: extraHeaders } = toolCall.arguments as {
+  const {
+    method,
+    url,
+    body,
+    headers: extraHeaders,
+  } = toolCall.arguments as {
     method: string;
     url: string;
     body?: Record<string, unknown>;
@@ -521,7 +523,8 @@ async function runCanaryGroup(
   const messages: ChatMessage[] = [
     {
       role: "system",
-      content: "You are an API tester for prim.sh. Use the http_request tool to make API calls. Be concise and structured in your final report.",
+      content:
+        "You are an API tester for prim.sh. Use the http_request tool to make API calls. Be concise and structured in your final report.",
     },
     {
       role: "user",
@@ -566,7 +569,7 @@ async function runCanaryGroup(
       };
     }
 
-    const chatResponse = await inferResponse.json() as {
+    const chatResponse = (await inferResponse.json()) as {
       choices: Array<{
         message: {
           role: string;
@@ -735,6 +738,7 @@ async function runCanaryGroup(
     for (const pattern of notePatterns) {
       let match: RegExpExecArray | null;
       pattern.lastIndex = 0;
+      // biome-ignore lint/suspicious/noAssignInExpressions: standard regex iteration
       while ((match = pattern.exec(agentSummary)) !== null) {
         const note = match[1].trim();
         if (note.length > 10 && !uxNotes.includes(note)) {
@@ -828,9 +832,10 @@ async function main() {
 
       for (const group of groups) {
         const primIds = getGroupPrimIds(group, testIndex);
-        const llmsPath = primIds.length === 1
-          ? `site/${primIds[0]}/llms.txt`
-          : "site/llms.txt (multi-prim fallback)";
+        const llmsPath =
+          primIds.length === 1
+            ? `site/${primIds[0]}/llms.txt`
+            : "site/llms.txt (multi-prim fallback)";
         console.log(`${c.bold(`Group: ${group.id}`)} (${group.name})`);
         console.log(`  ${c.dim("prims:")}     ${primIds.join(", ")}`);
         console.log(`  ${c.dim("llms.txt:")}  ${llmsPath}`);
@@ -980,11 +985,13 @@ async function main() {
     }
 
     console.log("─────────────────");
-    const overallColor = failCount > 0 || errorCount > 0 ? c.red : warnCount > 0 ? c.yellow : c.green;
+    const overallColor =
+      failCount > 0 || errorCount > 0 ? c.red : warnCount > 0 ? c.yellow : c.green;
     let summaryExtra = "";
     if (failCount > 0) summaryExtra += `${failCount} fail`;
     if (warnCount > 0) summaryExtra += summaryExtra ? `, ${warnCount} warn` : `${warnCount} warn`;
-    if (errorCount > 0) summaryExtra += summaryExtra ? `, ${errorCount} error` : `${errorCount} error`;
+    if (errorCount > 0)
+      summaryExtra += summaryExtra ? `, ${errorCount} error` : `${errorCount} error`;
     console.log(
       `${"Total".padEnd(14)} ${overallColor(`${passCount}/${totalGroups}`)} groups  ${summaryExtra ? `(${summaryExtra})` : ""}\n`,
     );
@@ -1012,7 +1019,7 @@ async function main() {
       },
     };
 
-    await Bun.write(resultPath, JSON.stringify(canaryRunResult, null, 2) + "\n");
+    await Bun.write(resultPath, `${JSON.stringify(canaryRunResult, null, 2)}\n`);
     console.log(`Results: ${resultPath}`);
 
     // ── CI Gating (canary) ────────────────────────────────────────────
@@ -1152,10 +1159,8 @@ async function main() {
         result.actual_status = response.status;
 
         // Special cases: 409 on wallet registration = pass, 429 on faucet = pass
-        const isWalletReg409 =
-          testId === "W-1" && response.status === 409;
-        const isFaucetRateLimit =
-          (testId === "F-1" || testId === "F-2") && response.status === 429;
+        const isWalletReg409 = testId === "W-1" && response.status === 409;
+        const isFaucetRateLimit = (testId === "F-1" || testId === "F-2") && response.status === 429;
 
         if (isWalletReg409 || isFaucetRateLimit) {
           result.result = "pass";
@@ -1185,10 +1190,7 @@ async function main() {
           } catch {
             responseBody = null;
           }
-        } else if (
-          testDef.expected.body_equals !== undefined ||
-          contentType.includes("text/")
-        ) {
+        } else if (testDef.expected.body_equals !== undefined || contentType.includes("text/")) {
           try {
             responseBody = await response.text();
           } catch {
@@ -1231,7 +1233,7 @@ async function main() {
           const bodyPreview =
             typeof responseBody === "string"
               ? responseBody.slice(0, 200)
-              : JSON.stringify(responseBody)?.slice(0, 200) ?? "";
+              : (JSON.stringify(responseBody)?.slice(0, 200) ?? "");
           result.run_note = `expected ${testDef.expected.status}, got ${response.status}. Body: ${bodyPreview}`;
         }
 
@@ -1332,7 +1334,7 @@ async function main() {
     summary: { total, pass, fail, blocked },
   };
 
-  await Bun.write(resultPath, JSON.stringify(runResult, null, 2) + "\n");
+  await Bun.write(resultPath, `${JSON.stringify(runResult, null, 2)}\n`);
   console.log(`Results: ${resultPath}`);
 
   // ── CI Gating ──────────────────────────────────────────────────────────

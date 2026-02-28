@@ -18,8 +18,8 @@
 
 import { readFileSync, writeFileSync } from "node:fs";
 import { resolve } from "node:path";
-import Ajv2020 from "ajv/dist/2020";
 import addFormats from "ajv-formats";
+import Ajv2020 from "ajv/dist/2020";
 
 // ── Types ──────────────────────────────────────────────────────────────────
 
@@ -194,7 +194,7 @@ function parseHeadingTitle(heading: string): string {
 
 /** Split text into blocks at a given heading level (## or ### or ####) */
 function splitAtLevel(text: string, level: number): string[] {
-  const prefix = "#".repeat(level) + " ";
+  const prefix = `${"#".repeat(level)} `;
   const parts = text.split(new RegExp(`(?=^${prefix})`, "m"));
   return parts.filter((p) => p.trim());
 }
@@ -351,7 +351,7 @@ if (!valid) {
 }
 
 const outputPath = `${ROOT}/tasks/tasks.json`;
-writeFileSync(outputPath, JSON.stringify(data, null, 2) + "\n");
+writeFileSync(outputPath, `${JSON.stringify(data, null, 2)}\n`);
 
 // Summary
 let taskCount = 0;
@@ -366,4 +366,4 @@ for (const section of data.sections) {
 }
 
 console.log(`✅ tasks/tasks.json written — ${data.sections.length} sections, ${taskCount} tasks`);
-console.log(`   Validated against tasks/tasks.schema.json`);
+console.log("   Validated against tasks/tasks.schema.json");

@@ -19,9 +19,9 @@
  */
 
 import { execSync } from "node:child_process";
+import { resolve4 } from "node:dns/promises";
 import { existsSync } from "node:fs";
 import { resolve } from "node:path";
-import { resolve4 } from "node:dns/promises";
 import { loadPrimitives } from "./lib/primitives.js";
 
 // ─── Config ──────────────────────────────────────────────────────────────────
@@ -35,7 +35,10 @@ if (!VPS_IP) {
 const _prims = loadPrimitives();
 const PRIMITIVES = _prims.filter((p) => p.port).map((p) => p.id);
 const PORTS: Record<string, number> = Object.fromEntries(
-  _prims.filter((p) => p.port).map((p) => [p.id, p.port!]),
+  _prims
+    .filter((p) => p.port)
+    // biome-ignore lint/style/noNonNullAssertion: filtered by p.port truthiness check
+    .map((p) => [p.id, p.port!]),
 );
 
 type Primitive = string;
@@ -43,14 +46,49 @@ type Primitive = string;
 // BEGIN:PRIM:ENV
 const REQUIRED_ENV: Record<Primitive, string[]> = {
   wallet: ["PRIM_PAY_TO", "PRIM_NETWORK", "PRIM_INTERNAL_KEY"],
-  faucet: ["PRIM_NETWORK", "CIRCLE_API_KEY", "CDP_API_KEY_ID", "CDP_API_KEY_SECRET", "FAUCET_REFILL_THRESHOLD_ETH", "FAUCET_REFILL_BATCH_SIZE"],
+  faucet: [
+    "PRIM_NETWORK",
+    "CIRCLE_API_KEY",
+    "CDP_API_KEY_ID",
+    "CDP_API_KEY_SECRET",
+    "FAUCET_REFILL_THRESHOLD_ETH",
+    "FAUCET_REFILL_BATCH_SIZE",
+  ],
   spawn: ["PRIM_PAY_TO", "PRIM_NETWORK", "DO_API_TOKEN", "WALLET_INTERNAL_URL"],
-  store: ["PRIM_PAY_TO", "PRIM_NETWORK", "CLOUDFLARE_ACCOUNT_ID", "R2_ACCESS_KEY_ID", "R2_SECRET_ACCESS_KEY", "WALLET_INTERNAL_URL"],
-  email: ["PRIM_PAY_TO", "PRIM_NETWORK", "STALWART_URL", "STALWART_API_KEY", "EMAIL_DEFAULT_DOMAIN", "WALLET_INTERNAL_URL"],
+  store: [
+    "PRIM_PAY_TO",
+    "PRIM_NETWORK",
+    "CLOUDFLARE_ACCOUNT_ID",
+    "R2_ACCESS_KEY_ID",
+    "R2_SECRET_ACCESS_KEY",
+    "WALLET_INTERNAL_URL",
+  ],
+  email: [
+    "PRIM_PAY_TO",
+    "PRIM_NETWORK",
+    "STALWART_URL",
+    "STALWART_API_KEY",
+    "EMAIL_DEFAULT_DOMAIN",
+    "WALLET_INTERNAL_URL",
+  ],
   search: ["PRIM_PAY_TO", "PRIM_NETWORK", "TAVILY_API_KEY", "WALLET_INTERNAL_URL"],
-  token: ["PRIM_PAY_TO", "PRIM_NETWORK", "TOKEN_MASTER_KEY", "TOKEN_DEPLOYER_ENCRYPTED_KEY", "BASE_RPC_URL", "WALLET_INTERNAL_URL"],
+  token: [
+    "PRIM_PAY_TO",
+    "PRIM_NETWORK",
+    "TOKEN_MASTER_KEY",
+    "TOKEN_DEPLOYER_ENCRYPTED_KEY",
+    "BASE_RPC_URL",
+    "WALLET_INTERNAL_URL",
+  ],
   mem: ["PRIM_PAY_TO", "PRIM_NETWORK", "QDRANT_URL", "GOOGLE_API_KEY", "WALLET_INTERNAL_URL"],
-  domain: ["PRIM_PAY_TO", "PRIM_NETWORK", "CLOUDFLARE_API_TOKEN", "CLOUDFLARE_ZONE_ID", "NAMESILO_API_KEY", "WALLET_INTERNAL_URL"],
+  domain: [
+    "PRIM_PAY_TO",
+    "PRIM_NETWORK",
+    "CLOUDFLARE_API_TOKEN",
+    "CLOUDFLARE_ZONE_ID",
+    "NAMESILO_API_KEY",
+    "WALLET_INTERNAL_URL",
+  ],
   track: ["PRIM_PAY_TO", "PRIM_NETWORK", "TRACKINGMORE_API_KEY", "WALLET_INTERNAL_URL"],
   infer: ["PRIM_PAY_TO", "PRIM_NETWORK", "OPENROUTER_API_KEY", "WALLET_INTERNAL_URL"],
   create: ["PRIM_NETWORK", "WALLET_INTERNAL_URL"],
@@ -131,10 +169,7 @@ function checkTests(primitive: Primitive) {
     const failMatch = stdout.match(/(\d+) failed/);
     const passMatch = stdout.match(/(\d+) passed/);
     if (failMatch) {
-      fail(
-        `${failMatch[1]} test(s) failed`,
-        passMatch ? `${passMatch[1]} passed` : undefined,
-      );
+      fail(`${failMatch[1]} test(s) failed`, passMatch ? `${passMatch[1]} passed` : undefined);
     } else {
       fail("pnpm test", stdout.slice(0, 120));
     }
@@ -321,7 +356,10 @@ async function checkDns(primitive: Primitive) {
     if (addrs.includes(VPS_IP)) {
       pass(host, VPS_IP);
     } else {
-      warn(host, `resolves to ${addrs.join(", ")} (expected ${VPS_IP}) — update DNS before going live`);
+      warn(
+        host,
+        `resolves to ${addrs.join(", ")} (expected ${VPS_IP}) — update DNS before going live`,
+      );
     }
   } catch (err) {
     const msg = err instanceof Error ? err.message : String(err);
@@ -335,7 +373,7 @@ async function main() {
   const primitive = process.argv[2] as Primitive | undefined;
 
   if (!primitive || !PRIMITIVES.includes(primitive)) {
-    console.error(`\nUsage: bun scripts/pre-deploy.ts <primitive>`);
+    console.error("\nUsage: bun scripts/pre-deploy.ts <primitive>");
     console.error(`\nKnown primitives: ${PRIMITIVES.join(", ")}\n`);
     process.exit(1);
   }
@@ -345,7 +383,7 @@ async function main() {
   const pkgOk = checkPackageExists(primitive);
   if (!pkgOk) {
     // No point running tests if the package doesn't exist
-    console.log("\n--- Result " + "─".repeat(47) + "\n");
+    console.log(`\n--- Result ${"─".repeat(47)}\n`);
     console.log("  Package not found — aborting remaining checks.\n");
     process.exit(1);
   }

@@ -7,12 +7,12 @@ import type { MailboxRow } from "./db.ts";
 import {
   getExpiredMailboxes,
   getFailedCleanups,
-  markExpired,
-  markCleanupDone,
-  markCleanupDeadLetter,
   incrementCleanupAttempts,
+  markCleanupDeadLetter,
+  markCleanupDone,
+  markExpired,
 } from "./db.ts";
-import { deletePrincipal, StalwartError } from "./stalwart.ts";
+import { StalwartError, deletePrincipal } from "./stalwart.ts";
 
 const SWEEP_INTERVAL_MS = Number(process.env.EMAIL_SWEEP_INTERVAL_MS) || 300_000;
 const SWEEP_BATCH_SIZE = Number(process.env.EMAIL_SWEEP_BATCH_SIZE) || 50;
@@ -85,7 +85,9 @@ export async function runExpirySweep(): Promise<number> {
  * Start the periodic expiry sweep. Returns the interval handle for cleanup.
  */
 export function startExpirySweep(intervalMs?: number): ReturnType<typeof setInterval> {
-  return setInterval(() => { runExpirySweep(); }, intervalMs ?? SWEEP_INTERVAL_MS);
+  return setInterval(() => {
+    runExpirySweep();
+  }, intervalMs ?? SWEEP_INTERVAL_MS);
 }
 
 /**

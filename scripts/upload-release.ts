@@ -42,9 +42,10 @@ const client = new AwsClient({ accessKeyId, secretAccessKey, service: "s3" });
 
 const body = localPath === "-" ? await Bun.stdin.bytes() : readFileSync(localPath);
 
-const contentType = r2Key.endsWith("VERSION") || r2Key.endsWith(".sha256")
-  ? "text/plain"
-  : "application/octet-stream";
+const contentType =
+  r2Key.endsWith("VERSION") || r2Key.endsWith(".sha256")
+    ? "text/plain"
+    : "application/octet-stream";
 
 const url = `https://${accountId}.r2.cloudflarestorage.com/prim-releases/${r2Key}`;
 

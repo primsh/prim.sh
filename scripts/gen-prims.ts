@@ -10,10 +10,16 @@
  *   bun scripts/gen-prims.ts --check  # diff against disk, exit 1 if any file would change
  */
 
-import { readFileSync, writeFileSync, existsSync } from "node:fs";
+import { existsSync, readFileSync, writeFileSync } from "node:fs";
 import { join, resolve } from "node:path";
-import { loadPrimitives, deployed, mainnetDeployed, TYPE_TO_CATEGORY, type Primitive } from "./lib/primitives.js";
 import { parseApiFile } from "./lib/parse-api.js";
+import {
+  type Primitive,
+  TYPE_TO_CATEGORY,
+  deployed,
+  loadPrimitives,
+  mainnetDeployed,
+} from "./lib/primitives.js";
 import { parseRoutePrices, renderLlmsTxt } from "./lib/render-llms-txt.js";
 import { renderSkillsJson } from "./lib/render-skills.js";
 
@@ -28,7 +34,7 @@ function inject(
   filePath: string,
   section: string,
   content: string,
-  style: CommentStyle = "html"
+  style: CommentStyle = "html",
 ): { changed: boolean; result: string; missing?: boolean } {
   const [open, close] =
     style === "html"
@@ -52,11 +58,19 @@ function inject(
   return { changed, result };
 }
 
-function applyOrCheck(filePath: string, section: string, content: string, style: CommentStyle = "html", required = true): void {
+function applyOrCheck(
+  filePath: string,
+  section: string,
+  content: string,
+  style: CommentStyle = "html",
+  required = true,
+): void {
   const { changed, result, missing } = inject(filePath, section, content, style);
   if (missing) {
     if (required) {
-      console.error(`  ✗ ${filePath} [${section}] missing markers — run pnpm gen:prims after adding them`);
+      console.error(
+        `  ✗ ${filePath} [${section}] missing markers — run pnpm gen:prims after adding them`,
+      );
       anyFailed = true;
     } else {
       console.log(`  – ${filePath} [${section}] no markers (skipped)`);
@@ -162,7 +176,7 @@ function genReadmeTable(prims: Primitive[]): string {
 function genPreDeployEnvs(prims: Primitive[]): string {
   const built = prims.filter((p) => p.env && p.env.length > 0);
   const entries = built
-    .map((p) => `  ${p.id}: [${p.env!.map((e) => `"${e}"`).join(", ")}],`)
+    .map((p) => `  ${p.id}: [${p.env?.map((e) => `"${e}"`).join(", ")}],`)
     .join("\n");
   return `const REQUIRED_ENV: Record<Primitive, string[]> = {\n${entries}\n};`;
 }
@@ -192,7 +206,9 @@ function genStatusBadge(p: Primitive): string {
 function genPricingRows(p: Primitive): string {
   if (!p.pricing || p.pricing.length === 0) return "";
   return p.pricing
-    .map((row) => `      <tr><td>${row.op}</td><td>${row.price}</td><td>${row.note ?? ""}</td></tr>`)
+    .map(
+      (row) => `      <tr><td>${row.op}</td><td>${row.price}</td><td>${row.note ?? ""}</td></tr>`,
+    )
     .join("\n");
 }
 
@@ -213,7 +229,6 @@ function genBashEndpoints(prims: Primitive[]): string {
   });
   return `ENDPOINTS=(\n${lines.join("\n")}\n)`;
 }
-
 
 // ── Main ───────────────────────────────────────────────────────────────────
 
@@ -259,13 +274,23 @@ applyOrCheck(join(ROOT, "deploy/prim/deploy.sh"), "SERVICES", genBashServices(pr
 applyOrCheck(join(ROOT, "deploy/prim/setup.sh"), "SERVICES", genBashServices(prims), "bash");
 
 // 7. deploy/prim/healthcheck.sh — ENDPOINTS array
-applyOrCheck(join(ROOT, "deploy/prim/healthcheck.sh"), "ENDPOINTS", genBashEndpoints(prims), "bash");
+applyOrCheck(
+  join(ROOT, "deploy/prim/healthcheck.sh"),
+  "ENDPOINTS",
+  genBashEndpoints(prims),
+  "bash",
+);
 
 // 8. scripts/metrics-snapshot.sh — SERVICES array
 applyOrCheck(join(ROOT, "scripts/metrics-snapshot.sh"), "SERVICES", genBashServices(prims), "bash");
 
 // 9. scripts/g2-mainnet-switchover.sh — MAINNET_SERVICES array
-applyOrCheck(join(ROOT, "scripts/g2-mainnet-switchover.sh"), "MAINNET_SERVICES", genBashMainnetServices(prims), "bash");
+applyOrCheck(
+  join(ROOT, "scripts/g2-mainnet-switchover.sh"),
+  "MAINNET_SERVICES",
+  genBashMainnetServices(prims),
+  "bash",
+);
 
 // 10. Per-page status badge + pricing
 for (const p of prims) {
@@ -336,14 +361,23 @@ for (const p of primsWithRoutes) {
     const content = readFileSync(primLlmsPath, "utf8").trimEnd();
     if (content) sections.push(content);
   }
-  const fullContent = sections.join("\n\n---\n\n") + "\n";
+  const fullContent = `${sections.join("\n\n---\n\n")}\n`;
   applyFullFile(join(ROOT, "site/llms-full.txt"), fullContent);
 }
 
 // 12. site/sitemap.xml
 {
   const BASE_URL = "https://prim.sh";
-  const staticPages = ["/", "/access", "/terms", "/privacy", "/llms.txt", "/llms-full.txt", "/pricing.json", "/discovery.json"];
+  const staticPages = [
+    "/",
+    "/access",
+    "/terms",
+    "/privacy",
+    "/llms.txt",
+    "/llms-full.txt",
+    "/pricing.json",
+    "/discovery.json",
+  ];
   const urls: string[] = [];
 
   for (const page of staticPages) {
@@ -381,7 +415,13 @@ ${urls.join("\n")}
 // 13. site/pricing.json — generated from prim.yaml pricing data
 {
   const builtPrims = prims.filter(
-    (p) => (p.status === "mainnet" || p.status === "live" || p.status === "building" || p.status === "testing") && p.pricing && p.pricing.length > 0
+    (p) =>
+      (p.status === "mainnet" ||
+        p.status === "live" ||
+        p.status === "building" ||
+        p.status === "testing") &&
+      p.pricing &&
+      p.pricing.length > 0,
   );
 
   const services = builtPrims.map((p) => {
@@ -392,13 +432,16 @@ ${urls.join("\n")}
     if (p.routes_map && p.routes_map.length > 0) {
       // Build a price lookup from pricing rows (op → price string)
       // Try to match routes to pricing ops; fall back to a default price
-      const defaultPrice = p.pricing!.find((r) => r.op.toLowerCase().includes("read") || r.op.toLowerCase().includes("api call"));
+      const defaultPrice = p.pricing?.find(
+        (r) => r.op.toLowerCase().includes("read") || r.op.toLowerCase().includes("api call"),
+      );
       const defaultPriceStr = defaultPrice ? defaultPrice.price.replace("$", "") : "0.001";
 
       for (const rm of p.routes_map) {
         const [method, path] = rm.route.split(" ", 2);
         // Find matching pricing row
         let price = defaultPriceStr;
+        // biome-ignore lint/style/noNonNullAssertion: pricing existence checked in outer condition
         for (const pr of p.pricing!) {
           const opLower = pr.op.toLowerCase();
           const descLower = rm.description.toLowerCase();
@@ -424,6 +467,7 @@ ${urls.join("\n")}
       }
     } else {
       // No routes_map: emit one row per pricing entry
+      // biome-ignore lint/style/noNonNullAssertion: pricing existence checked in outer condition
       for (const pr of p.pricing!) {
         routes.push({
           method: "—",
@@ -437,7 +481,7 @@ ${urls.join("\n")}
     return { service: endpoint, description: p.description, routes };
   });
 
-  const pricingJson = JSON.stringify(
+  const pricingJson = `${JSON.stringify(
     {
       updated: new Date().toISOString().slice(0, 10),
       currency: "USDC",
@@ -445,8 +489,8 @@ ${urls.join("\n")}
       services,
     },
     null,
-    2
-  ) + "\n";
+    2,
+  )}\n`;
 
   const pricingPath = join(ROOT, "site/pricing.json");
   if (CHECK_MODE) {
@@ -475,7 +519,11 @@ ${urls.join("\n")}
 // 14. site/discovery.json — full primitive registry for agent discovery
 {
   const builtPrims = prims.filter(
-    (p) => p.status === "mainnet" || p.status === "live" || p.status === "building" || p.status === "testing"
+    (p) =>
+      p.status === "mainnet" ||
+      p.status === "live" ||
+      p.status === "building" ||
+      p.status === "testing",
   );
 
   const primitives = builtPrims.map((p) => {
@@ -500,7 +548,7 @@ ${urls.join("\n")}
     return entry;
   });
 
-  const discoveryContent = JSON.stringify(
+  const discoveryContent = `${JSON.stringify(
     {
       name: "prim.sh",
       description: "The agent-native stack",
@@ -517,8 +565,8 @@ ${urls.join("\n")}
       },
     },
     null,
-    2
-  ) + "\n";
+    2,
+  )}\n`;
 
   applyFullFile(join(ROOT, "site/discovery.json"), discoveryContent);
 }

@@ -1,9 +1,9 @@
-import { createWalletClient, createPublicClient, http, parseEther, formatEther } from "viem";
-import { baseSepolia } from "viem/chains";
-import { privateKeyToAccount } from "viem/accounts";
-import type { Address, Hex } from "viem";
 import { getNetworkConfig } from "@primsh/x402-middleware";
-import type { TreasuryStatus, RefillResult } from "./api.ts";
+import { http, createPublicClient, createWalletClient, formatEther, parseEther } from "viem";
+import type { Address, Hex } from "viem";
+import { privateKeyToAccount } from "viem/accounts";
+import { baseSepolia } from "viem/chains";
+import type { RefillResult, TreasuryStatus } from "./api.ts";
 
 export interface DripResult {
   tx_hash: string;
@@ -20,11 +20,16 @@ class NonceQueue {
   private current: number | null = null;
   private pending: Promise<void> = Promise.resolve();
 
-  async next(publicClient: { getTransactionCount: (args: { address: Address }) => Promise<number> }, address: Address): Promise<number> {
+  async next(
+    publicClient: { getTransactionCount: (args: { address: Address }) => Promise<number> },
+    address: Address,
+  ): Promise<number> {
     // Serialize nonce assignment — each caller waits for the previous one
     const prev = this.pending;
     let resolve: (() => void) | undefined;
-    this.pending = new Promise((r) => { resolve = r; });
+    this.pending = new Promise((r) => {
+      resolve = r;
+    });
 
     await prev;
 
@@ -241,9 +246,7 @@ export async function dripUsdc(address: string): Promise<DripResult> {
   } catch (treasuryErr) {
     nonceQueue.reset();
     const treasuryMsg = treasuryErr instanceof Error ? treasuryErr.message : String(treasuryErr);
-    throw new Error(
-      `Circle failed (${circleError}); treasury also failed: ${treasuryMsg}`,
-    );
+    throw new Error(`Circle failed (${circleError}); treasury also failed: ${treasuryMsg}`);
   }
 }
 

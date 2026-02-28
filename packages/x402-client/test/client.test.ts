@@ -7,8 +7,8 @@
  * - viem createPublicClient to avoid real RPC calls
  */
 
-import { describe, expect, it, vi, beforeEach } from "vitest";
 import { encodePaymentRequiredHeader } from "@x402/core/http";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 
 // ── Mock x402 client so tests don't need real EIP-3009 signing ────────────────
 
@@ -328,13 +328,16 @@ describe("createPrimFetch", () => {
 
   describe("settlement failure retry", () => {
     function makeSettlement402(): Response {
-      return new Response(JSON.stringify({ error: "Settlement failed", details: "nonce collision" }), {
-        status: 402,
-        headers: {
-          "X-Payment-Required": makePaymentRequiredHeader(),
-          "Content-Type": "application/json",
+      return new Response(
+        JSON.stringify({ error: "Settlement failed", details: "nonce collision" }),
+        {
+          status: 402,
+          headers: {
+            "X-Payment-Required": makePaymentRequiredHeader(),
+            "Content-Type": "application/json",
+          },
         },
-      });
+      );
     }
 
     it("settlement fails then succeeds: returns 200, fetch called 3 times, 2s delay", async () => {
@@ -389,16 +392,13 @@ describe("createPrimFetch", () => {
     });
 
     it("non-settlement 402: not retried, fetch called exactly 2 times", async () => {
-      const insufficientFunds402 = new Response(
-        JSON.stringify({ error: "Insufficient funds" }),
-        {
-          status: 402,
-          headers: {
-            "X-Payment-Required": makePaymentRequiredHeader(),
-            "Content-Type": "application/json",
-          },
+      const insufficientFunds402 = new Response(JSON.stringify({ error: "Insufficient funds" }), {
+        status: 402,
+        headers: {
+          "X-Payment-Required": makePaymentRequiredHeader(),
+          "Content-Type": "application/json",
         },
-      );
+      });
 
       const mockFetch = vi
         .fn()

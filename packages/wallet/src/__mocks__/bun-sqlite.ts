@@ -5,7 +5,9 @@
 import { createRequire } from "node:module";
 
 const nodeRequire = createRequire(import.meta.url);
-const { DatabaseSync } = nodeRequire("node:sqlite") as { DatabaseSync: new (path: string) => NodeSqliteDb };
+const { DatabaseSync } = nodeRequire("node:sqlite") as {
+  DatabaseSync: new (path: string) => NodeSqliteDb;
+};
 
 interface NodeSqliteRunResult {
   changes: number;
@@ -82,7 +84,9 @@ export class Database {
     stmt.run(...params);
     // Retrieve changes count via a separate query
     const changesRow = this.db.prepare("SELECT changes() as n").get() as { n: number } | undefined;
-    const liRow = this.db.prepare("SELECT last_insert_rowid() as id").get() as { id: number } | undefined;
+    const liRow = this.db.prepare("SELECT last_insert_rowid() as id").get() as
+      | { id: number }
+      | undefined;
     return { changes: changesRow?.n ?? 0, lastInsertRowid: liRow?.id ?? 0 };
   }
 

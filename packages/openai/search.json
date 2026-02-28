@@ -20,10 +20,7 @@
           "search_depth": {
             "type": "string",
             "description": "Search depth. \"advanced\" uses more sources and costs more upstream compute. (default: \"basic\")",
-            "enum": [
-              "basic",
-              "advanced"
-            ]
+            "enum": ["basic", "advanced"]
           },
           "country": {
             "type": "string",
@@ -32,12 +29,7 @@
           "time_range": {
             "type": "string",
             "description": "Restrict results to the given time range.",
-            "enum": [
-              "day",
-              "week",
-              "month",
-              "year"
-            ]
+            "enum": ["day", "week", "month", "year"]
           },
           "include_answer": {
             "type": "boolean",
@@ -58,9 +50,7 @@
             }
           }
         },
-        "required": [
-          "query"
-        ]
+        "required": ["query"]
       }
     }
   },
@@ -85,10 +75,7 @@
           "search_depth": {
             "type": "string",
             "description": "Search depth. \"advanced\" uses more sources and costs more upstream compute. (default: \"basic\")",
-            "enum": [
-              "basic",
-              "advanced"
-            ]
+            "enum": ["basic", "advanced"]
           },
           "country": {
             "type": "string",
@@ -97,12 +84,7 @@
           "time_range": {
             "type": "string",
             "description": "Restrict results to the given time range.",
-            "enum": [
-              "day",
-              "week",
-              "month",
-              "year"
-            ]
+            "enum": ["day", "week", "month", "year"]
           },
           "include_answer": {
             "type": "boolean",
@@ -123,9 +105,7 @@
             }
           }
         },
-        "required": [
-          "query"
-        ]
+        "required": ["query"]
       }
     }
   },
@@ -148,15 +128,10 @@
           "format": {
             "type": "string",
             "description": "Output format for extracted content. (default: \"markdown\")",
-            "enum": [
-              "markdown",
-              "text"
-            ]
+            "enum": ["markdown", "text"]
           }
         },
-        "required": [
-          "urls"
-        ]
+        "required": ["urls"]
       }
     }
   }

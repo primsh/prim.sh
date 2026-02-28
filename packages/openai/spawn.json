@@ -39,12 +39,7 @@
             "description": "Cloud-init user data script to run on first boot."
           }
         },
-        "required": [
-          "name",
-          "type",
-          "image",
-          "location"
-        ]
+        "required": ["name", "type", "image", "location"]
       }
     }
   },
@@ -84,9 +79,7 @@
             "description": "Prim server ID."
           }
         },
-        "required": [
-          "id"
-        ]
+        "required": ["id"]
       }
     }
   },
@@ -103,9 +96,7 @@
             "description": "Prim server ID."
           }
         },
-        "required": [
-          "id"
-        ]
+        "required": ["id"]
       }
     }
   },
@@ -122,9 +113,7 @@
             "description": "Prim server ID."
           }
         },
-        "required": [
-          "id"
-        ]
+        "required": ["id"]
       }
     }
   },
@@ -141,9 +130,7 @@
             "description": "Prim server ID."
           }
         },
-        "required": [
-          "id"
-        ]
+        "required": ["id"]
       }
     }
   },
@@ -160,9 +147,7 @@
             "description": "Prim server ID."
           }
         },
-        "required": [
-          "id"
-        ]
+        "required": ["id"]
       }
     }
   },
@@ -187,10 +172,7 @@
             "description": "Whether to upgrade the disk alongside the CPU/RAM. Irreversible if true. (default: false)"
           }
         },
-        "required": [
-          "id",
-          "type"
-        ]
+        "required": ["id", "type"]
       }
     }
   },
@@ -211,10 +193,7 @@
             "description": "OS image slug to rebuild with."
           }
         },
-        "required": [
-          "id",
-          "image"
-        ]
+        "required": ["id", "image"]
       }
     }
   },
@@ -235,10 +214,7 @@
             "description": "The public key string (e.g. `ssh-ed25519 AAAA...`)."
           }
         },
-        "required": [
-          "name",
-          "public_key"
-        ]
+        "required": ["name", "public_key"]
       }
     }
   },
@@ -266,9 +242,7 @@
             "description": "Prim SSH key ID."
           }
         },
-        "required": [
-          "id"
-        ]
+        "required": ["id"]
       }
     }
   }

@@ -1,4 +1,4 @@
-import { describe, expect, it, vi, beforeEach } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import { ProviderRegistry } from "../src/provider-registry.ts";
 import type { PrimProvider, ProviderHealth } from "../src/provider.ts";
 
@@ -22,7 +22,9 @@ describe("ProviderRegistry.register", () => {
   it("throws when registering a duplicate name", () => {
     const reg = new ProviderRegistry();
     reg.register("a", () => makeProvider("a"));
-    expect(() => reg.register("a", () => makeProvider("a"))).toThrow('Provider "a" is already registered');
+    expect(() => reg.register("a", () => makeProvider("a"))).toThrow(
+      'Provider "a" is already registered',
+    );
   });
 
   it("list() returns names in registration order", () => {

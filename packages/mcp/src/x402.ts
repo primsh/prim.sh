@@ -1,5 +1,5 @@
-import { createPrimFetch } from "@primsh/x402-client";
 import { getConfig } from "@primsh/keystore";
+import { createPrimFetch } from "@primsh/x402-client";
 
 export interface WalletConfig {
   address?: string;

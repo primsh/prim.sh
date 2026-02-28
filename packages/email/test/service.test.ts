@@ -1,4 +1,4 @@
-import { describe, expect, it, vi, beforeEach } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 
 vi.mock("../src/stalwart", () => ({
   StalwartError: class StalwartError extends Error {
@@ -78,7 +78,12 @@ vi.mock("../src/db", () => {
   const webhooks = new Map<string, Record<string, unknown>>();
   return {
     insertMailbox: vi.fn((params: Record<string, unknown>) => {
-      rows.set(params.id as string, { ...params, status: "active", stalwart_cleanup_failed: 0, cleanup_attempts: 0 });
+      rows.set(params.id as string, {
+        ...params,
+        status: "active",
+        stalwart_cleanup_failed: 0,
+        cleanup_attempts: 0,
+      });
     }),
     getMailboxById: vi.fn((id: string) => rows.get(id) ?? null),
     getMailboxByAddress: vi.fn((address: string) => {
@@ -91,7 +96,9 @@ vi.mock("../src/db", () => {
     }),
     getMailboxesByOwnerAll: vi.fn((owner: string, limit: number, _offset: number) => {
       return [...rows.values()]
-        .filter((r) => r.owner_wallet === owner && (r.status === "active" || r.status === "expired"))
+        .filter(
+          (r) => r.owner_wallet === owner && (r.status === "active" || r.status === "expired"),
+        )
         .slice(0, limit);
     }),
     countMailboxesByOwner: vi.fn((owner: string) => {
@@ -99,8 +106,9 @@ vi.mock("../src/db", () => {
         .length;
     }),
     countMailboxesByOwnerAll: vi.fn((owner: string) => {
-      return [...rows.values()].filter((r) => r.owner_wallet === owner && (r.status === "active" || r.status === "expired"))
-        .length;
+      return [...rows.values()].filter(
+        (r) => r.owner_wallet === owner && (r.status === "active" || r.status === "expired"),
+      ).length;
     }),
     deleteMailboxRow: vi.fn((id: string) => {
       rows.delete(id);
@@ -113,10 +121,14 @@ vi.mock("../src/db", () => {
       webhooks.set(params.id as string, { ...params, status: "active", consecutive_failures: 0 });
     }),
     getWebhooksByMailbox: vi.fn((mailboxId: string) => {
-      return [...webhooks.values()].filter((w) => w.mailbox_id === mailboxId && w.status === "active");
+      return [...webhooks.values()].filter(
+        (w) => w.mailbox_id === mailboxId && w.status === "active",
+      );
     }),
     getWebhookById: vi.fn((id: string) => webhooks.get(id) ?? null),
-    deleteWebhookRow: vi.fn((id: string) => { webhooks.delete(id); }),
+    deleteWebhookRow: vi.fn((id: string) => {
+      webhooks.delete(id);
+    }),
     getDomainByName: vi.fn(() => null),
     getDomainById: vi.fn(() => null),
     insertDomain: vi.fn(),
@@ -131,12 +143,25 @@ vi.mock("../src/db", () => {
   };
 });
 
-import { createMailbox, listMailboxes, getMailbox, deleteMailbox, listMessages, getMessage, sendMessage, renewMailbox, registerWebhook, listWebhooks, deleteWebhook, handleIngestEvent } from "../src/service";
-import { verifySignature, dispatchWebhookDeliveries } from "../src/webhook-delivery";
-import { createPrincipal, deletePrincipal, StalwartError } from "../src/stalwart";
-import { JmapError, queryEmails, getEmail, sendEmail } from "../src/jmap";
 import { getJmapContext } from "../src/context";
 import * as dbMock from "../src/db";
+import { JmapError, getEmail, queryEmails, sendEmail } from "../src/jmap";
+import {
+  createMailbox,
+  deleteMailbox,
+  deleteWebhook,
+  getMailbox,
+  getMessage,
+  handleIngestEvent,
+  listMailboxes,
+  listMessages,
+  listWebhooks,
+  registerWebhook,
+  renewMailbox,
+  sendMessage,
+} from "../src/service";
+import { StalwartError, createPrincipal, deletePrincipal } from "../src/stalwart";
+import { dispatchWebhookDeliveries, verifySignature } from "../src/webhook-delivery";
 
 const WALLET_A = "0xaaa";
 const WALLET_B = "0xbbb";
@@ -588,10 +613,7 @@ describe("email service", () => {
 
       await listMessages("mbx_test", WALLET_A, { limit: 200 });
 
-      expect(queryEmails).toHaveBeenCalledWith(
-        MOCK_CTX,
-        expect.objectContaining({ limit: 100 }),
-      );
+      expect(queryEmails).toHaveBeenCalledWith(MOCK_CTX, expect.objectContaining({ limit: 100 }));
     });
 
     it("returns jmap_error on JMAP failure", async () => {
@@ -892,7 +914,9 @@ describe("email service", () => {
 
       // Manually expire the row in mock store
       // biome-ignore lint/suspicious/noExplicitAny: accessing mock internals
-      const row = ((dbMock as any)._rows as Map<string, Record<string, unknown>>).get(created.data.id);
+      const row = ((dbMock as any)._rows as Map<string, Record<string, unknown>>).get(
+        created.data.id,
+      );
       if (row) {
         row.expires_at = Date.now() - 1_000;
       }
@@ -1245,7 +1269,9 @@ describe("email service", () => {
 
       // Manually set expires_at to past
       // biome-ignore lint/suspicious/noExplicitAny: accessing mock internals
-      const row = ((dbMock as any)._rows as Map<string, Record<string, unknown>>).get(created.data.id);
+      const row = ((dbMock as any)._rows as Map<string, Record<string, unknown>>).get(
+        created.data.id,
+      );
       if (row) {
         row.expires_at = Date.now() - 1_000;
       }
@@ -1263,7 +1289,9 @@ describe("email service", () => {
       if (!created.ok) return;
 
       // biome-ignore lint/suspicious/noExplicitAny: accessing mock internals
-      const row = ((dbMock as any)._rows as Map<string, Record<string, unknown>>).get(created.data.id);
+      const row = ((dbMock as any)._rows as Map<string, Record<string, unknown>>).get(
+        created.data.id,
+      );
       if (row) {
         row.expires_at = Date.now() - 1_000;
       }
@@ -1283,7 +1311,9 @@ describe("email service", () => {
       if (!created.ok) return;
 
       // biome-ignore lint/suspicious/noExplicitAny: accessing mock internals
-      const row = ((dbMock as any)._rows as Map<string, Record<string, unknown>>).get(created.data.id);
+      const row = ((dbMock as any)._rows as Map<string, Record<string, unknown>>).get(
+        created.data.id,
+      );
       if (row) {
         row.expires_at = Date.now() - 1_000;
       }

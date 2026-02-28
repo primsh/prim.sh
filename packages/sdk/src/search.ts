@@ -81,7 +81,9 @@ export interface ExtractResponse {
 
 // ── Client ─────────────────────────────────────────────────────────────────
 
-export function createSearchClient(primFetch: (input: RequestInfo | URL, init?: RequestInit) => Promise<Response>) {
+export function createSearchClient(
+  primFetch: (input: RequestInfo | URL, init?: RequestInit) => Promise<Response>,
+) {
   const baseUrl = "https://search.prim.sh";
   return {
     async searchWeb(req: SearchRequest): Promise<SearchResponse> {

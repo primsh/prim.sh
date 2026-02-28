@@ -1,4 +1,4 @@
-import { describe, expect, it, vi, beforeEach, afterEach } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 vi.mock("../src/crypto", () => ({
   decryptPassword: vi.fn((enc: string) => enc.replace("encrypted:", "")),
@@ -11,10 +11,20 @@ vi.mock("../src/db", () => ({
   updateWebhookStatus: vi.fn(),
 }));
 
-import { signPayload, verifySignature, deliverWebhook, dispatchWebhookDeliveries } from "../src/webhook-delivery";
-import { insertWebhookLog, incrementWebhookFailures, resetWebhookFailures, updateWebhookStatus } from "../src/db";
-import type { WebhookRow } from "../src/db";
 import type { WebhookPayload } from "../src/api";
+import {
+  incrementWebhookFailures,
+  insertWebhookLog,
+  resetWebhookFailures,
+  updateWebhookStatus,
+} from "../src/db";
+import type { WebhookRow } from "../src/db";
+import {
+  deliverWebhook,
+  dispatchWebhookDeliveries,
+  signPayload,
+  verifySignature,
+} from "../src/webhook-delivery";
 
 function makeWebhook(overrides: Partial<WebhookRow> = {}): WebhookRow {
   return {

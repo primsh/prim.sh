@@ -1,7 +1,7 @@
-import { ProviderError } from "./provider.ts";
-import type { SearchRequest, SearchResponse, ExtractRequest, ExtractResponse } from "./api.ts";
-import type { SearchProvider, ExtractProvider } from "./provider.ts";
 import type { ProviderRegistry } from "@primsh/x402-middleware";
+import type { ExtractRequest, ExtractResponse, SearchRequest, SearchResponse } from "./api.ts";
+import { ProviderError } from "./provider.ts";
+import type { ExtractProvider, SearchProvider } from "./provider.ts";
 
 type ServiceResult<T> =
   | { ok: true; data: T }
@@ -16,9 +16,7 @@ type ServiceResult<T> =
 let _registry: ProviderRegistry<SearchProvider & ExtractProvider> | undefined;
 let _extractRegistry: ProviderRegistry<ExtractProvider> | undefined;
 
-export function setRegistry(
-  registry: ProviderRegistry<SearchProvider & ExtractProvider>,
-): void {
+export function setRegistry(registry: ProviderRegistry<SearchProvider & ExtractProvider>): void {
   _registry = registry;
 }
 

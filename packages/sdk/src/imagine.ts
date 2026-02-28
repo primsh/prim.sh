@@ -20,7 +20,9 @@ export type UpscaleResponse = Record<string, unknown>;
 
 // ── Client ─────────────────────────────────────────────────────────────────
 
-export function createImagineClient(primFetch: (input: RequestInfo | URL, init?: RequestInit) => Promise<Response>) {
+export function createImagineClient(
+  primFetch: (input: RequestInfo | URL, init?: RequestInit) => Promise<Response>,
+) {
   const baseUrl = "https://imagine.prim.sh";
   return {
     async generate(req: GenerateRequest): Promise<GenerateResponse> {

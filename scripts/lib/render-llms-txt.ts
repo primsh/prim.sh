@@ -5,9 +5,9 @@
  * Also exports parseRoutePrices() for extracting ROUTES const from index.ts.
  */
 
-import { readFileSync, existsSync } from "node:fs";
-import type { Primitive, RouteMapping } from "./primitives.js";
+import { existsSync, readFileSync } from "node:fs";
 import type { ParsedApi, ParsedField } from "./parse-api.js";
+import type { Primitive, RouteMapping } from "./primitives.js";
 
 // ── Route price extraction ────────────────────────────────────────────────────
 
@@ -30,6 +30,7 @@ export function parseRoutePrices(indexPath: string): Map<string, string> {
   // Each line: "METHOD /path": "$price",
   const lineRe = /"([A-Z]+\s+\/[^"]+)"\s*:\s*"(\$[^"]+)"/g;
   let m: RegExpExecArray | null;
+  // biome-ignore lint/suspicious/noAssignInExpressions: standard regex iteration
   while ((m = lineRe.exec(inner)) !== null) {
     const rawRoute = m[1];
     const price = m[2];
@@ -46,7 +47,7 @@ export function parseRoutePrices(indexPath: string): Map<string, string> {
 // ── Alignment helpers ─────────────────────────────────────────────────────────
 
 function pad(s: string, width: number): string {
-  return s.length >= width ? s + "  " : s + " ".repeat(width - s.length + 2);
+  return s.length >= width ? `${s}  ` : s + " ".repeat(width - s.length + 2);
 }
 
 function columnAlign(rows: string[][]): string[] {
@@ -57,12 +58,12 @@ function columnAlign(rows: string[][]): string[] {
       widths[c] = Math.max(widths[c] ?? 0, row[c].length);
     }
   }
-  return rows.map((row) =>
-    "  " +
-    row
-      .map((cell, c) => (c < row.length - 1 ? pad(cell, widths[c]) : cell))
-      .join("")
-      .trimEnd()
+  return rows.map(
+    (row) =>
+      `  ${row
+        .map((cell, c) => (c < row.length - 1 ? pad(cell, widths[c]) : cell))
+        .join("")
+        .trimEnd()}`,
   );
 }
 
@@ -73,6 +74,7 @@ function extractPathParams(route: string): string[] {
   const params: string[] = [];
   const re = /:([A-Za-z_][A-Za-z0-9_]*)/g;
   let m: RegExpExecArray | null;
+  // biome-ignore lint/suspicious/noAssignInExpressions: standard regex iteration
   while ((m = re.exec(route)) !== null) {
     params.push(m[1]);
   }
@@ -87,10 +89,12 @@ function extractPathParams(route: string): string[] {
  */
 function lookupPrice(route: string, prices: Map<string, string>): string | null {
   // Direct lookup
+  // biome-ignore lint/style/noNonNullAssertion: guarded by .has() check
   if (prices.has(route)) return prices.get(route)!;
 
   // Normalize ":param" to "[param]" for lookup
   const bracketForm = route.replace(/:([A-Za-z_][A-Za-z0-9_]*)/g, "[$1]");
+  // biome-ignore lint/style/noNonNullAssertion: guarded by .has() check
   if (prices.has(bracketForm)) return prices.get(bracketForm)!;
 
   // Normalize ":key" wildcard params to "*"
@@ -98,6 +102,7 @@ function lookupPrice(route: string, prices: Map<string, string>): string | null 
     // Use * for final path params that look like wildcards
     return `[${name}]`;
   });
+  // biome-ignore lint/style/noNonNullAssertion: guarded by .has() check
   if (prices.has(wildcardForm)) return prices.get(wildcardForm)!;
 
   // Try matching by prefix: the route in routes_map may use :key where ROUTES uses *
@@ -118,7 +123,10 @@ function lookupPrice(route: string, prices: Map<string, string>): string | null 
       const kk = kParts[i];
       // Both are static — must match exactly
       if (!pp.startsWith(":") && !kk.startsWith("[") && kk !== "*") {
-        if (pp !== kk) { match = false; break; }
+        if (pp !== kk) {
+          match = false;
+          break;
+        }
       }
       // Either is a param/wildcard — matches anything
     }
@@ -134,18 +142,13 @@ function lookupPrice(route: string, prices: Map<string, string>): string | null 
  * Render a list of ParsedField objects as column-aligned text rows.
  * reqLabel: "required" | "optional" — override for response fields (no req/opt)
  */
-function renderFields(
-  fields: ParsedField[],
-  indent: string,
-  showReqOpt: boolean
-): string {
+function renderFields(fields: ParsedField[], indent: string, showReqOpt: boolean): string {
   if (fields.length === 0) return "";
   const rows: string[][] = fields.map((f) => {
     if (showReqOpt) {
       return [f.name, f.type, f.optional ? "optional" : "required", f.description];
-    } else {
-      return [f.name, f.type, f.description];
     }
+    return [f.name, f.type, f.description];
   });
   return columnAlign(rows)
     .map((l) => indent + l.trimStart())
@@ -177,7 +180,7 @@ function renderHeader(p: Primitive): string {
 
   const authLine = isFaucet
     ? "None (free, rate-limited by address). Wallet must be on allowlist during beta."
-    : `x402 (USDC on Base Sepolia). GET /, GET /pricing, GET /v1/metrics are free.`;
+    : "x402 (USDC on Base Sepolia). GET /, GET /pricing, GET /v1/metrics are free.";
   const chainLine = "Base Sepolia (eip155:84532) during beta.";
 
   const lines = [
@@ -189,7 +192,7 @@ function renderHeader(p: Primitive): string {
     `Auth: ${authLine}`,
     `Chain: ${chainLine}`,
     "",
-    `Install:`,
+    "Install:",
     `  curl -fsSL https://${endpoint}/install.sh | sh`,
   ];
 
@@ -228,9 +231,7 @@ function renderX402Section(p: Primitive, api: ParsedApi): string {
   if (isFaucet) return "";
 
   const errorCodesBlock =
-    api.errorCodes.length > 0
-      ? api.errorCodes.map((c) => `  ${c}`).join("\n")
-      : "  (none)";
+    api.errorCodes.length > 0 ? api.errorCodes.map((c) => `  ${c}`).join("\n") : "  (none)";
 
   return [
     "## x402 Payment",
@@ -249,9 +250,7 @@ function renderX402Section(p: Primitive, api: ParsedApi): string {
 
 function renderFreeErrorSection(api: ParsedApi): string {
   const errorCodesBlock =
-    api.errorCodes.length > 0
-      ? api.errorCodes.map((c) => `  ${c}`).join("\n")
-      : "  (none)";
+    api.errorCodes.length > 0 ? api.errorCodes.map((c) => `  ${c}`).join("\n") : "  (none)";
 
   return [
     "## Error envelope",
@@ -288,11 +287,11 @@ function renderFreeEndpoints(p: Primitive): string {
     `  service   string  "${endpoint}"`,
     `  currency  string  "USDC"`,
     `  network   string  "eip155:8453"`,
-    `  routes    array   Route pricing list`,
-    `    .method       string  HTTP method`,
-    `    .path         string  URL path`,
-    `    .price_usdc   string  Price in USDC (decimal string)`,
-    `    .description  string  Human-readable description`,
+    "  routes    array   Route pricing list",
+    "    .method       string  HTTP method",
+    "    .path         string  URL path",
+    "    .price_usdc   string  Price in USDC (decimal string)",
+    "    .description  string  Human-readable description",
     "",
     "---",
     "",
@@ -304,18 +303,14 @@ function renderFreeEndpoints(p: Primitive): string {
     "",
     "Response (200):",
     `  service     string  "${endpoint}"`,
-    `  uptime_s    number  Seconds since last restart`,
-    `  requests    object  Request counts and latencies by endpoint`,
-    `  payments    object  Payment counts by endpoint`,
-    `  errors      object  Error counts by status code`,
+    "  uptime_s    number  Seconds since last restart",
+    "  requests    object  Request counts and latencies by endpoint",
+    "  payments    object  Payment counts by endpoint",
+    "  errors      object  Error counts by status code",
   ].join("\n");
 }
 
-function renderRoute(
-  rm: RouteMapping,
-  api: ParsedApi,
-  prices: Map<string, string>
-): string {
+function renderRoute(rm: RouteMapping, api: ParsedApi, prices: Map<string, string>): string {
   const [method, ...pathParts] = rm.route.split(" ");
   const path = pathParts.join(" ");
   const lines: string[] = [];
@@ -417,11 +412,7 @@ function renderOwnership(p: Primitive): string {
  * @param api         ParsedApi from parseApiFile
  * @param prices      Route price map from parseRoutePrices
  */
-export function renderLlmsTxt(
-  p: Primitive,
-  api: ParsedApi,
-  prices: Map<string, string>
-): string {
+export function renderLlmsTxt(p: Primitive, api: ParsedApi, prices: Map<string, string>): string {
   const isFaucet = p.id === "faucet";
   const sections: string[] = [];
 
@@ -478,5 +469,8 @@ export function renderLlmsTxt(
   }
 
   // Join sections with double-newline separator, then normalize trailing newlines
-  return sections.join("\n\n").replace(/\n{3,}/g, "\n\n").trimEnd() + "\n";
+  return `${sections
+    .join("\n\n")
+    .replace(/\n{3,}/g, "\n\n")
+    .trimEnd()}\n`;
 }

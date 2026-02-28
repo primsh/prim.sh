@@ -55,10 +55,14 @@ export function getDb(): Database {
   // R-8: additive columns for expiry management
   try {
     _db.run("ALTER TABLE mailboxes ADD COLUMN stalwart_cleanup_failed INTEGER NOT NULL DEFAULT 0");
-  } catch { /* column already exists */ }
+  } catch {
+    /* column already exists */
+  }
   try {
     _db.run("ALTER TABLE mailboxes ADD COLUMN cleanup_attempts INTEGER NOT NULL DEFAULT 0");
-  } catch { /* column already exists */ }
+  } catch {
+    /* column already exists */
+  }
 
   // R-7: webhooks tables
   _db.run(`
@@ -169,14 +173,17 @@ export function insertMailbox(params: {
   );
 }
 
-export function updateMailboxJmap(id: string, params: {
-  jmap_api_url: string;
-  jmap_account_id: string;
-  jmap_identity_id: string;
-  jmap_inbox_id: string;
-  jmap_drafts_id: string;
-  jmap_sent_id: string;
-}): void {
+export function updateMailboxJmap(
+  id: string,
+  params: {
+    jmap_api_url: string;
+    jmap_account_id: string;
+    jmap_identity_id: string;
+    jmap_inbox_id: string;
+    jmap_drafts_id: string;
+    jmap_sent_id: string;
+  },
+): void {
   const db = getDb();
   db.query(
     "UPDATE mailboxes SET jmap_api_url = ?, jmap_account_id = ?, jmap_identity_id = ?, jmap_inbox_id = ?, jmap_drafts_id = ?, jmap_sent_id = ? WHERE id = ?",
@@ -242,23 +249,20 @@ export function getFailedCleanups(limit: number): MailboxRow[] {
 
 export function markExpired(id: string, cleanupFailed: boolean): void {
   const db = getDb();
-  db.query(
-    "UPDATE mailboxes SET status = 'expired', stalwart_cleanup_failed = ? WHERE id = ?",
-  ).run(cleanupFailed ? 1 : 0, id);
+  db.query("UPDATE mailboxes SET status = 'expired', stalwart_cleanup_failed = ? WHERE id = ?").run(
+    cleanupFailed ? 1 : 0,
+    id,
+  );
 }
 
 export function markCleanupDone(id: string): void {
   const db = getDb();
-  db.query(
-    "UPDATE mailboxes SET stalwart_cleanup_failed = 0 WHERE id = ?",
-  ).run(id);
+  db.query("UPDATE mailboxes SET stalwart_cleanup_failed = 0 WHERE id = ?").run(id);
 }
 
 export function markCleanupDeadLetter(id: string): void {
   const db = getDb();
-  db.query(
-    "UPDATE mailboxes SET stalwart_cleanup_failed = -1 WHERE id = ?",
-  ).run(id);
+  db.query("UPDATE mailboxes SET stalwart_cleanup_failed = -1 WHERE id = ?").run(id);
 }
 
 export function updateExpiresAt(id: string, expiresAt: number | null): void {
@@ -292,7 +296,9 @@ export function countMailboxesByOwnerAll(owner: string): number {
 
 export function getMailboxByAddress(address: string): MailboxRow | null {
   const db = getDb();
-  return db.query<MailboxRow, [string]>("SELECT * FROM mailboxes WHERE address = ?").get(address) ?? null;
+  return (
+    db.query<MailboxRow, [string]>("SELECT * FROM mailboxes WHERE address = ?").get(address) ?? null
+  );
 }
 
 // ─── Webhook queries (R-7) ────────────────────────────────────────────
@@ -332,14 +338,24 @@ export function insertWebhook(params: {
   const db = getDb();
   db.query(
     "INSERT INTO webhooks (id, mailbox_id, owner_wallet, url, secret_enc, events, created_at) VALUES (?, ?, ?, ?, ?, ?, ?)",
-  ).run(params.id, params.mailbox_id, params.owner_wallet, params.url, params.secret_enc, params.events, params.created_at);
+  ).run(
+    params.id,
+    params.mailbox_id,
+    params.owner_wallet,
+    params.url,
+    params.secret_enc,
+    params.events,
+    params.created_at,
+  );
 }
 
 export function getWebhooksByMailbox(mailboxId: string): WebhookRow[] {
   const db = getDb();
-  return db.query<WebhookRow, [string]>(
-    "SELECT * FROM webhooks WHERE mailbox_id = ? AND status = 'active'",
-  ).all(mailboxId);
+  return db
+    .query<WebhookRow, [string]>(
+      "SELECT * FROM webhooks WHERE mailbox_id = ? AND status = 'active'",
+    )
+    .all(mailboxId);
 }
 
 export function getWebhookById(id: string): WebhookRow | null {
@@ -359,10 +375,14 @@ export function updateWebhookStatus(id: string, status: string): void {
 
 export function incrementWebhookFailures(id: string): number {
   const db = getDb();
-  db.query("UPDATE webhooks SET consecutive_failures = consecutive_failures + 1 WHERE id = ?").run(id);
-  const row = db.query<{ consecutive_failures: number }, [string]>(
-    "SELECT consecutive_failures FROM webhooks WHERE id = ?",
-  ).get(id) as { consecutive_failures: number } | null;
+  db.query("UPDATE webhooks SET consecutive_failures = consecutive_failures + 1 WHERE id = ?").run(
+    id,
+  );
+  const row = db
+    .query<{ consecutive_failures: number }, [string]>(
+      "SELECT consecutive_failures FROM webhooks WHERE id = ?",
+    )
+    .get(id) as { consecutive_failures: number } | null;
   return row?.consecutive_failures ?? 0;
 }
 
@@ -382,7 +402,15 @@ export function insertWebhookLog(params: {
   const db = getDb();
   db.query(
     "INSERT INTO webhooks_log (webhook_id, message_id, status_code, attempt, delivered_at, error, created_at) VALUES (?, ?, ?, ?, ?, ?, ?)",
-  ).run(params.webhook_id, params.message_id, params.status_code, params.attempt, params.delivered_at, params.error, Date.now());
+  ).run(
+    params.webhook_id,
+    params.message_id,
+    params.status_code,
+    params.attempt,
+    params.delivered_at,
+    params.error,
+    Date.now(),
+  );
 }
 
 // ─── Domain queries (R-9) ────────────────────────────────────────────
@@ -423,7 +451,9 @@ export function getDomainById(id: string): DomainRow | null {
 
 export function getDomainByName(domain: string): DomainRow | null {
   const db = getDb();
-  return db.query<DomainRow, [string]>("SELECT * FROM domains WHERE domain = ?").get(domain) ?? null;
+  return (
+    db.query<DomainRow, [string]>("SELECT * FROM domains WHERE domain = ?").get(domain) ?? null
+  );
 }
 
 export function getDomainsByOwner(owner: string, limit: number, offset: number): DomainRow[] {
@@ -445,21 +475,33 @@ export function countDomainsByOwner(owner: string): number {
   return row?.count ?? 0;
 }
 
-export function updateDomainVerification(id: string, params: {
-  mx_verified: boolean;
-  spf_verified: boolean;
-  dmarc_verified: boolean;
-}): void {
+export function updateDomainVerification(
+  id: string,
+  params: {
+    mx_verified: boolean;
+    spf_verified: boolean;
+    dmarc_verified: boolean;
+  },
+): void {
   const db = getDb();
   db.query(
     "UPDATE domains SET mx_verified = ?, spf_verified = ?, dmarc_verified = ?, updated_at = ? WHERE id = ?",
-  ).run(params.mx_verified ? 1 : 0, params.spf_verified ? 1 : 0, params.dmarc_verified ? 1 : 0, Date.now(), id);
+  ).run(
+    params.mx_verified ? 1 : 0,
+    params.spf_verified ? 1 : 0,
+    params.dmarc_verified ? 1 : 0,
+    Date.now(),
+    id,
+  );
 }
 
-export function updateDomainProvisioned(id: string, params: {
-  dkim_rsa_record: string | null;
-  dkim_ed_record: string | null;
-}): void {
+export function updateDomainProvisioned(
+  id: string,
+  params: {
+    dkim_rsa_record: string | null;
+    dkim_ed_record: string | null;
+  },
+): void {
   const db = getDb();
   db.query(
     "UPDATE domains SET status = 'active', stalwart_provisioned = 1, dkim_rsa_record = ?, dkim_ed_record = ?, verified_at = ?, updated_at = ? WHERE id = ?",

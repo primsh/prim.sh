@@ -1,5 +1,5 @@
-import { describe, expect, it, vi, beforeEach } from "vitest";
 import type { Context, Next } from "hono";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 
 vi.hoisted(() => {
   process.env.PRIM_NETWORK = "eip155:8453";
@@ -12,9 +12,9 @@ vi.mock("@primsh/x402-middleware", async (importOriginal) => {
   const original = await importOriginal<typeof import("@primsh/x402-middleware")>();
   return {
     ...original,
-    createAgentStackMiddleware: vi.fn(
-      () => async (_c: Context, next: Next) => { await next(); },
-    ),
+    createAgentStackMiddleware: vi.fn(() => async (_c: Context, next: Next) => {
+      await next();
+    }),
     createWalletAllowlistChecker: vi.fn(() => () => Promise.resolve(true)),
   };
 });
@@ -27,14 +27,14 @@ vi.mock("../src/service.ts", async (importOriginal) => {
     scaffold: vi.fn(),
     validate: vi.fn(),
     schema: vi.fn(),
-    ports: vi.fn()
+    ports: vi.fn(),
   };
 });
 
-import app from "../src/index.ts";
-import { scaffold, schema, ports } from "../src/service.ts";
 import { createAgentStackMiddleware } from "@primsh/x402-middleware";
 import type { ScaffoldResponse } from "../src/api.ts";
+import app from "../src/index.ts";
+import { ports, scaffold, schema } from "../src/service.ts";
 
 const MOCK_SCAFFOLD_RESPONSE: ScaffoldResponse = {
   id: "test-prim",
@@ -75,7 +75,7 @@ describe("create.sh app", () => {
         "POST /v1/scaffold": expect.any(String),
         "POST /v1/validate": expect.any(String),
         "GET /v1/schema": expect.any(String),
-        "GET /v1/ports": expect.any(String)
+        "GET /v1/ports": expect.any(String),
       }),
     );
   });
@@ -121,7 +121,10 @@ describe("create.sh app", () => {
 
   // Check 7: GET /v1/ports returns 200 without needing a JSON body
   it("GET /v1/ports returns 200 with port data", async () => {
-    vi.mocked(ports).mockResolvedValueOnce({ ok: true, data: { allocated: [], next_available: 3020 } });
+    vi.mocked(ports).mockResolvedValueOnce({
+      ok: true,
+      data: { allocated: [], next_available: 3020 },
+    });
     const res = await app.request("/v1/ports");
     expect(res.status).toBe(200);
     const body = await res.json();

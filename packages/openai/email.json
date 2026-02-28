@@ -59,9 +59,7 @@
             "description": "Mailbox ID."
           }
         },
-        "required": [
-          "id"
-        ]
+        "required": ["id"]
       }
     }
   },
@@ -78,9 +76,7 @@
             "description": "Mailbox ID."
           }
         },
-        "required": [
-          "id"
-        ]
+        "required": ["id"]
       }
     }
   },
@@ -101,9 +97,7 @@
             "description": "Additional milliseconds to extend the mailbox TTL. Defaults to 7 days (604800000)."
           }
         },
-        "required": [
-          "id"
-        ]
+        "required": ["id"]
       }
     }
   },
@@ -131,9 +125,7 @@
             "minimum": 0
           }
         },
-        "required": [
-          "id"
-        ]
+        "required": ["id"]
       }
     }
   },
@@ -154,10 +146,7 @@
             "description": "Message ID."
           }
         },
-        "required": [
-          "id",
-          "msgId"
-        ]
+        "required": ["id", "msgId"]
       }
     }
   },
@@ -201,11 +190,7 @@
             "format": "email"
           }
         },
-        "required": [
-          "id",
-          "to",
-          "subject"
-        ]
+        "required": ["id", "to", "subject"]
       }
     }
   },
@@ -238,10 +223,7 @@
             }
           }
         },
-        "required": [
-          "id",
-          "url"
-        ]
+        "required": ["id", "url"]
       }
     }
   },
@@ -258,9 +240,7 @@
             "description": "Mailbox ID."
           }
         },
-        "required": [
-          "id"
-        ]
+        "required": ["id"]
       }
     }
   },
@@ -281,10 +261,7 @@
             "description": "Webhook ID."
           }
         },
-        "required": [
-          "id",
-          "whId"
-        ]
+        "required": ["id", "whId"]
       }
     }
   },
@@ -301,9 +278,7 @@
             "description": "Domain name to register (e.g. \"example.com\")."
           }
         },
-        "required": [
-          "domain"
-        ]
+        "required": ["domain"]
       }
     }
   },
@@ -343,9 +318,7 @@
             "description": "Domain ID."
           }
         },
-        "required": [
-          "id"
-        ]
+        "required": ["id"]
       }
     }
   },
@@ -362,9 +335,7 @@
             "description": "Domain ID."
           }
         },
-        "required": [
-          "id"
-        ]
+        "required": ["id"]
       }
     }
   },
@@ -381,9 +352,7 @@
             "description": "Domain ID."
           }
         },
-        "required": [
-          "id"
-        ]
+        "required": ["id"]
       }
     }
   }

@@ -1,11 +1,11 @@
 import { describe, expect, it, vi } from "vitest";
 
 // Check 1: startMcpServer export defined
-import { startMcpServer, isPrimitive } from "../src/server.ts";
+import { isPrimitive, startMcpServer } from "../src/server.ts";
 
-// Check 3: Tool arrays
-import { walletTools, handleWalletTool } from "../src/tools/wallet.ts";
 import { faucetTools, handleFaucetTool } from "../src/tools/faucet.ts";
+// Check 3: Tool arrays
+import { handleWalletTool, walletTools } from "../src/tools/wallet.ts";
 
 describe("MCP package smoke tests", () => {
   // Check 1: startMcpServer export is defined
@@ -46,9 +46,9 @@ describe("MCP package smoke tests", () => {
 
   // Check 4: Happy path — handler returns valid CallToolResult shape
   it("handleWalletTool returns valid CallToolResult on success", async () => {
-    const mockFetch = vi.fn().mockResolvedValue(
-      new Response(JSON.stringify({ wallets: [] }), { status: 200 }),
-    );
+    const mockFetch = vi
+      .fn()
+      .mockResolvedValue(new Response(JSON.stringify({ wallets: [] }), { status: 200 }));
 
     const result = await handleWalletTool(
       "wallet_list_wallets",
@@ -64,9 +64,11 @@ describe("MCP package smoke tests", () => {
   });
 
   it("handleFaucetTool returns valid CallToolResult on success", async () => {
-    const mockFetchGlobal = vi.fn().mockResolvedValue(
-      new Response(JSON.stringify({ txHash: "0xabc", amount: "10" }), { status: 200 }),
-    );
+    const mockFetchGlobal = vi
+      .fn()
+      .mockResolvedValue(
+        new Response(JSON.stringify({ txHash: "0xabc", amount: "10" }), { status: 200 }),
+      );
     vi.stubGlobal("fetch", mockFetchGlobal);
 
     const result = await handleFaucetTool(
@@ -85,9 +87,9 @@ describe("MCP package smoke tests", () => {
 
   // Check 5: Error path — handler returns isError on fetch failure
   it("handleWalletTool returns isError on non-OK response", async () => {
-    const mockFetch = vi.fn().mockResolvedValue(
-      new Response(JSON.stringify({ error: "not found" }), { status: 404 }),
-    );
+    const mockFetch = vi
+      .fn()
+      .mockResolvedValue(new Response(JSON.stringify({ error: "not found" }), { status: 404 }));
 
     const result = await handleWalletTool(
       "wallet_list_wallets",
@@ -100,9 +102,9 @@ describe("MCP package smoke tests", () => {
   });
 
   it("handleFaucetTool returns isError on non-OK response", async () => {
-    const mockFetchGlobal = vi.fn().mockResolvedValue(
-      new Response(JSON.stringify({ error: "rate limited" }), { status: 429 }),
-    );
+    const mockFetchGlobal = vi
+      .fn()
+      .mockResolvedValue(new Response(JSON.stringify({ error: "rate limited" }), { status: 429 }));
     vi.stubGlobal("fetch", mockFetchGlobal);
 
     const result = await handleFaucetTool(

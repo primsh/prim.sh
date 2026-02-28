@@ -36,11 +36,18 @@ export function createAllowlistChecker(dbPath: string): (address: string) => Pro
 
 export function isAllowed(dbPath: string, address: string): boolean {
   const db = getDb(dbPath);
-  const row = db.prepare("SELECT 1 FROM allowed_wallets WHERE address = ?").get(address.toLowerCase());
+  const row = db
+    .prepare("SELECT 1 FROM allowed_wallets WHERE address = ?")
+    .get(address.toLowerCase());
   return row !== null;
 }
 
-export function addToAllowlist(dbPath: string, address: string, addedBy: string, note?: string): void {
+export function addToAllowlist(
+  dbPath: string,
+  address: string,
+  addedBy: string,
+  note?: string,
+): void {
   const db = getDb(dbPath);
   db.prepare(
     "INSERT OR REPLACE INTO allowed_wallets (address, added_by, note) VALUES (?, ?, ?)",

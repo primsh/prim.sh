@@ -1,4 +1,4 @@
-import { describe, expect, it, vi, beforeEach } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 
 vi.mock("../src/stalwart", () => ({
   StalwartError: class StalwartError extends Error {
@@ -25,17 +25,17 @@ vi.mock("../src/db", () => {
   };
 });
 
-import { expireMailbox, runExpirySweep } from "../src/expiry";
-import { deletePrincipal, StalwartError } from "../src/stalwart";
 import {
   getExpiredMailboxes,
   getFailedCleanups,
-  markExpired,
-  markCleanupDone,
-  markCleanupDeadLetter,
   incrementCleanupAttempts,
+  markCleanupDeadLetter,
+  markCleanupDone,
+  markExpired,
 } from "../src/db";
 import type { MailboxRow } from "../src/db";
+import { expireMailbox, runExpirySweep } from "../src/expiry";
+import { StalwartError, deletePrincipal } from "../src/stalwart";
 
 function makeRow(overrides: Partial<MailboxRow> = {}): MailboxRow {
   return {
@@ -151,7 +151,11 @@ describe("expiry", () => {
         cleanup_attempts: 0,
       });
 
-      (getExpiredMailboxes as ReturnType<typeof vi.fn>).mockReturnValue([expired1, expired2, expired3]);
+      (getExpiredMailboxes as ReturnType<typeof vi.fn>).mockReturnValue([
+        expired1,
+        expired2,
+        expired3,
+      ]);
       (getFailedCleanups as ReturnType<typeof vi.fn>).mockReturnValue([failed1]);
       (deletePrincipal as ReturnType<typeof vi.fn>).mockResolvedValue(undefined);
 

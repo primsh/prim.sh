@@ -5,35 +5,38 @@ import type { CallToolResult } from "@modelcontextprotocol/sdk/types.js";
 export const createTools: Tool[] = [
   {
     name: "create_scaffold",
-    description: "Generate a complete prim package from a prim.yaml spec. Returns file manifest with contents. | Price: $0.01",
+    description:
+      "Generate a complete prim package from a prim.yaml spec. Returns file manifest with contents. | Price: $0.01",
     inputSchema: {
-        type: "object",
-        properties: {},
-      },
+      type: "object",
+      properties: {},
+    },
   },
   {
     name: "create_validate",
-    description: "Validate a prim.yaml spec against the schema without generating files. | Price: $0.01",
+    description:
+      "Validate a prim.yaml spec against the schema without generating files. | Price: $0.01",
     inputSchema: {
-        type: "object",
-        properties: {},
-      },
+      type: "object",
+      properties: {},
+    },
   },
   {
     name: "create_get_schema",
-    description: "Return the prim.yaml JSON schema for agents to reference when writing specs. | Price: $0.01",
+    description:
+      "Return the prim.yaml JSON schema for agents to reference when writing specs. | Price: $0.01",
     inputSchema: {
-        type: "object",
-        properties: {},
-      },
+      type: "object",
+      properties: {},
+    },
   },
   {
     name: "create_get_ports",
     description: "Return allocated ports and next available port number. | Price: $0.01",
     inputSchema: {
-        type: "object",
-        properties: {},
-      },
+      type: "object",
+      properties: {},
+    },
   },
 ];
 // END:GENERATED:TOOLS

@@ -49,7 +49,9 @@ export async function runSpawnCommand(sub: string, argv: string[]): Promise<void
       case "add": {
         const name = getFlag("name", argv);
         if (!name) {
-          process.stderr.write("Usage: prim spawn ssh-key add --name NAME --public-key KEY|--file PATH\n");
+          process.stderr.write(
+            "Usage: prim spawn ssh-key add --name NAME --public-key KEY|--file PATH\n",
+          );
           process.exit(1);
         }
         let publicKey = getFlag("public-key", argv);
@@ -58,7 +60,9 @@ export async function runSpawnCommand(sub: string, argv: string[]): Promise<void
           publicKey = readFileSync(filePath, "utf-8").trim();
         }
         if (!publicKey) {
-          process.stderr.write("Usage: prim spawn ssh-key add --name NAME --public-key KEY|--file PATH\n");
+          process.stderr.write(
+            "Usage: prim spawn ssh-key add --name NAME --public-key KEY|--file PATH\n",
+          );
           process.exit(1);
         }
         const res = await primFetch(`${baseUrl}/v1/ssh-keys`, {

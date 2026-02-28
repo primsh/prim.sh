@@ -26,7 +26,10 @@ export async function handleReportTool(
 
   return {
     content: [
-      { type: "text", text: "prim_report is currently unavailable — the internal report module was removed during repo scrub (HRD-23)." },
+      {
+        type: "text",
+        text: "prim_report is currently unavailable — the internal report module was removed during repo scrub (HRD-23).",
+      },
     ],
     isError: true,
   };

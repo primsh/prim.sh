@@ -27,7 +27,10 @@
       "additionalProperties": false,
       "properties": {
         "id": { "type": "string", "description": "Unique task ID (e.g. HRD-3, L-27)" },
-        "description": { "type": "string", "description": "Task summary, ~120 chars. Plan references stripped." },
+        "description": {
+          "type": "string",
+          "description": "Task summary, ~120 chars. Plan references stripped."
+        },
         "owner": {
           "type": "array",
           "items": { "type": "string" },
@@ -40,10 +43,7 @@
         },
         "status": { "$ref": "#/$defs/Status" },
         "release": {
-          "oneOf": [
-            { "type": "string", "pattern": "^v\\d+\\.\\d+\\.\\d+$" },
-            { "type": "null" }
-          ],
+          "oneOf": [{ "type": "string", "pattern": "^v\\d+\\.\\d+\\.\\d+$" }, { "type": "null" }],
           "description": "Semver release this task blocks, or null."
         },
         "plan": {

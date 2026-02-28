@@ -2,11 +2,11 @@
 // Usage: bun run site/serve.ts
 // Port 3000
 
+import { existsSync, readFileSync, readdirSync } from "node:fs";
+import { join, resolve } from "node:path";
 import { parse } from "yaml";
-import { readFileSync, existsSync, readdirSync } from "node:fs";
-import { resolve, join } from "node:path";
-import { render, renderFooter, type PrimConfig } from "./template.ts";
 import { BRAND } from "../brand.ts";
+import { type PrimConfig, render, renderFooter } from "./template.ts";
 
 const PORT = Number(process.env.PORT ?? 3000);
 const ROOT = resolve(import.meta.dir, "..");
@@ -39,8 +39,10 @@ const NOT_FOUND_HTML = `<!DOCTYPE html>
 </html>`;
 
 const ACCESS_PATH = join(ROOT, "site/access/index.html");
-const ACCESS_TEMPLATE = readFileSync(ACCESS_PATH, "utf-8")
-  .replace("{{footer:access}}", renderFooter(`<a href="/">${BRAND.name}</a> / access`));
+const ACCESS_TEMPLATE = readFileSync(ACCESS_PATH, "utf-8").replace(
+  "{{footer:access}}",
+  renderFooter(`<a href="/">${BRAND.name}</a> / access`),
+);
 
 const STATIC_ROUTES: Record<string, string> = {
   "/terms": join(ROOT, "site/terms/index.html"),
@@ -53,10 +55,7 @@ const STATIC_ROUTES: Record<string, string> = {
 
 /** Load a prim.yaml. Package dir wins over site dir. */
 function loadPrimYaml(id: string): PrimConfig | null {
-  const candidates = [
-    join(ROOT, `packages/${id}/prim.yaml`),
-    join(ROOT, `site/${id}/prim.yaml`),
-  ];
+  const candidates = [join(ROOT, `packages/${id}/prim.yaml`), join(ROOT, `site/${id}/prim.yaml`)];
   for (const p of candidates) {
     if (existsSync(p)) {
       try {

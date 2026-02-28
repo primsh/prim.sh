@@ -172,7 +172,9 @@ export interface ReconcileQuotaResponse {
 
 // ── Client ─────────────────────────────────────────────────────────────────
 
-export function createStoreClient(primFetch: (input: RequestInfo | URL, init?: RequestInit) => Promise<Response>) {
+export function createStoreClient(
+  primFetch: (input: RequestInfo | URL, init?: RequestInit) => Promise<Response>,
+) {
   const baseUrl = "https://store.prim.sh";
   return {
     async createBucket(req: CreateBucketRequest): Promise<CreateBucketResponse> {
@@ -215,7 +217,11 @@ export function createStoreClient(primFetch: (input: RequestInfo | URL, init?: R
       const res = await primFetch(url);
       return res.json() as Promise<ListObjectsResponse>;
     },
-    async putObject(params: PutObjectParams, body: BodyInit, contentType?: string): Promise<PutObjectResponse> {
+    async putObject(
+      params: PutObjectParams,
+      body: BodyInit,
+      contentType?: string,
+    ): Promise<PutObjectResponse> {
       const url = `${baseUrl}/v1/buckets/${encodeURIComponent(params.id)}/objects/${encodeURIComponent(params.key)}`;
       const res = await primFetch(url, {
         method: "PUT",

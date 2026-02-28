@@ -10,10 +10,10 @@
  *   bun scripts/gen-docs.ts --check  # diff against disk, exit 1 if any file would change
  */
 
-import { readFileSync, writeFileSync, existsSync } from "node:fs";
+import { existsSync, readFileSync, writeFileSync } from "node:fs";
 import { join, resolve } from "node:path";
-import { loadPrimitives, withPackage } from "./lib/primitives.js";
 import { parseApiFile } from "./lib/parse-api.js";
+import { loadPrimitives, withPackage } from "./lib/primitives.js";
 import { parseRoutePrices } from "./lib/render-llms-txt.js";
 import { renderReadme } from "./lib/render-readme.js";
 
@@ -30,7 +30,7 @@ function inject(
   filePath: string,
   section: string,
   content: string,
-  style: CommentStyle = "html"
+  style: CommentStyle = "html",
 ): { changed: boolean; result: string; missing?: boolean } {
   const [open, close] =
     style === "html"
@@ -54,10 +54,17 @@ function inject(
   return { changed, result };
 }
 
-function applyOrCheck(filePath: string, section: string, content: string, style: CommentStyle = "html"): void {
+function applyOrCheck(
+  filePath: string,
+  section: string,
+  content: string,
+  style: CommentStyle = "html",
+): void {
   const { changed, result, missing } = inject(filePath, section, content, style);
   if (missing) {
-    console.error(`  ✗ ${filePath} [${section}] missing markers — add markers and run pnpm gen:docs`);
+    console.error(
+      `  ✗ ${filePath} [${section}] missing markers — add markers and run pnpm gen:docs`,
+    );
     anyFailed = true;
     return;
   }

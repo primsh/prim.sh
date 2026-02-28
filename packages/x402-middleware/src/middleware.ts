@@ -1,23 +1,22 @@
-import type { MiddlewareHandler } from "hono";
-import { paymentMiddlewareFromConfig } from "@x402/hono";
 import { HTTPFacilitatorClient, decodePaymentSignatureHeader } from "@x402/core/http";
 import type { FacilitatorClient, RouteConfig } from "@x402/core/server";
-import type { SchemeRegistration } from "@x402/hono";
 import type { Network } from "@x402/core/types";
 import { ExactEvmScheme } from "@x402/evm/exact/server";
+import { paymentMiddlewareFromConfig } from "@x402/hono";
+import type { SchemeRegistration } from "@x402/hono";
+import type { MiddlewareHandler } from "hono";
+import { createLogger } from "./logger.js";
+import { RateLimiter } from "./rate-limit.js";
 import type {
   AgentStackMiddlewareOptions,
   AgentStackRouteConfig,
   RouteConfig as AgentStackRouteConfigEntry,
 } from "./types.js";
-import { createLogger } from "./logger.js";
-import { RateLimiter } from "./rate-limit.js";
 
 const log = createLogger("x402-middleware", { module: "allowlist" });
 
 const DEFAULT_NETWORK: Network = "eip155:8453";
-const DEFAULT_FACILITATOR_URL =
-  process.env.FACILITATOR_URL ?? "https://facilitator.payai.network";
+const DEFAULT_FACILITATOR_URL = process.env.FACILITATOR_URL ?? "https://facilitator.payai.network";
 const WALLET_ADDRESS_KEY = "walletAddress";
 const WALLET_CHECK_TIMEOUT_MS = 2000;
 
@@ -30,7 +29,9 @@ const WALLET_CHECK_TIMEOUT_MS = 2000;
  *
  * @param walletInternalUrl - Base URL for wallet.sh internal API (e.g. "http://127.0.0.1:3001")
  */
-export function createWalletAllowlistChecker(walletInternalUrl: string): (address: string) => Promise<boolean> {
+export function createWalletAllowlistChecker(
+  walletInternalUrl: string,
+): (address: string) => Promise<boolean> {
   const internalKey = process.env.PRIM_INTERNAL_KEY;
   if (!internalKey) {
     log.warn("PRIM_INTERNAL_KEY not set — allowlist checks will fail");
@@ -101,7 +102,12 @@ function buildAllowlist(options: AgentStackMiddlewareOptions): Set<string> | nul
 
   const envVar = process.env.PRIM_ALLOWLIST;
   if (envVar && envVar.trim().length > 0) {
-    raw.push(...envVar.split(",").map((s) => s.trim()).filter(Boolean));
+    raw.push(
+      ...envVar
+        .split(",")
+        .map((s) => s.trim())
+        .filter(Boolean),
+    );
   }
 
   if (raw.length === 0) return null;
@@ -138,8 +144,7 @@ export function createAgentStackMiddleware(
   }
 
   function extractWalletAddress(c: Parameters<MiddlewareHandler>[0]) {
-    const header =
-      c.req.header("payment-signature") ?? c.req.header("x-payment");
+    const header = c.req.header("payment-signature") ?? c.req.header("x-payment");
 
     if (!header) return;
 
@@ -151,9 +156,7 @@ export function createAgentStackMiddleware(
       };
 
       const from =
-        decoded.payload?.authorization?.from ??
-        decoded.authorization?.from ??
-        decoded.from;
+        decoded.payload?.authorization?.from ?? decoded.authorization?.from ?? decoded.from;
 
       if (typeof from === "string") {
         c.set(WALLET_ADDRESS_KEY, from);
@@ -183,11 +186,14 @@ export function createAgentStackMiddleware(
     c.header("X-RateLimit-Remaining", String(result.remaining));
     c.header("X-RateLimit-Reset", String(Math.ceil(result.resetMs / 1000)));
     if (!result.allowed) {
-      return c.json({
-        error: "rate_limited",
-        message: "Too many requests. Try again later.",
-        retry_after: Math.ceil(result.resetMs / 1000),
-      }, 429);
+      return c.json(
+        {
+          error: "rate_limited",
+          message: "Too many requests. Try again later.",
+          retry_after: Math.ceil(result.resetMs / 1000),
+        },
+        429,
+      );
     }
     return null;
   }
@@ -196,13 +202,16 @@ export function createAgentStackMiddleware(
     return async (c: Parameters<MiddlewareHandler>[0], next: Parameters<MiddlewareHandler>[1]) => {
       extractWalletAddress(c);
       if (await denyWallet(c)) {
-        return c.json({
-          error: "wallet_not_allowed",
-          message: accessUrl
-            ? `This service is in private beta. Request access via ${accessUrl}`
-            : "This service is in private beta",
-          ...(accessUrl && { access_url: accessUrl }),
-        }, 403);
+        return c.json(
+          {
+            error: "wallet_not_allowed",
+            message: accessUrl
+              ? `This service is in private beta. Request access via ${accessUrl}`
+              : "This service is in private beta",
+            ...(accessUrl && { access_url: accessUrl }),
+          },
+          403,
+        );
       }
       const rateLimitResponse = checkRateLimit(c);
       if (rateLimitResponse) return rateLimitResponse;
@@ -213,29 +222,25 @@ export function createAgentStackMiddleware(
   const facilitatorClient: FacilitatorClient = new HTTPFacilitatorClient({
     url: facilitatorUrl,
   });
-  const schemes: SchemeRegistration[] = [
-    { network, server: new ExactEvmScheme() },
-  ];
-  const payment = paymentMiddlewareFromConfig(
-    effectiveRoutes,
-    facilitatorClient,
-    schemes,
-  );
+  const schemes: SchemeRegistration[] = [{ network, server: new ExactEvmScheme() }];
+  const payment = paymentMiddlewareFromConfig(effectiveRoutes, facilitatorClient, schemes);
 
   return async (c, next) => {
     extractWalletAddress(c);
     if (await denyWallet(c)) {
-      return c.json({
+      return c.json(
+        {
           error: "wallet_not_allowed",
           message: accessUrl
             ? `This service is in private beta. Request access via ${accessUrl}`
             : "This service is in private beta",
           ...(accessUrl && { access_url: accessUrl }),
-        }, 403);
+        },
+        403,
+      );
     }
     const rateLimitResponse = checkRateLimit(c);
     if (rateLimitResponse) return rateLimitResponse;
     return payment(c, next);
   };
 }
-

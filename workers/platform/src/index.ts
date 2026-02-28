@@ -64,9 +64,7 @@ app.post("/access/request", async (c) => {
   }
 
   const id = generateId();
-  await c.env.DB.prepare(
-    "INSERT INTO access_requests (id, wallet, reason) VALUES (?, ?, ?)",
-  )
+  await c.env.DB.prepare("INSERT INTO access_requests (id, wallet, reason) VALUES (?, ?, ?)")
     .bind(id, body.wallet.toLowerCase(), body.reason ?? null)
     .run();
 
@@ -92,11 +90,7 @@ app.post("/access/requests/:id/approve", async (c) => {
   if (!isAdmin(c)) return c.json({ error: "Unauthorized" }, 401);
 
   const id = c.req.param("id");
-  const row = await c.env.DB.prepare(
-    "SELECT * FROM access_requests WHERE id = ?",
-  )
-    .bind(id)
-    .first();
+  const row = await c.env.DB.prepare("SELECT * FROM access_requests WHERE id = ?").bind(id).first();
 
   if (!row) return c.json({ error: "Request not found" }, 404);
   if (row.status !== "pending") {
@@ -136,11 +130,7 @@ app.post("/access/requests/:id/deny", async (c) => {
     // reason is optional
   }
 
-  const row = await c.env.DB.prepare(
-    "SELECT * FROM access_requests WHERE id = ?",
-  )
-    .bind(id)
-    .first();
+  const row = await c.env.DB.prepare("SELECT * FROM access_requests WHERE id = ?").bind(id).first();
 
   if (!row) return c.json({ error: "Request not found" }, 404);
   if (row.status !== "pending") {
@@ -169,10 +159,7 @@ app.post("/invites", async (c) => {
   let wallet: string | undefined;
   try {
     const decoded = JSON.parse(atob(paymentHeader));
-    wallet =
-      decoded?.payload?.authorization?.from ??
-      decoded?.authorization?.from ??
-      decoded?.from;
+    wallet = decoded?.payload?.authorization?.from ?? decoded?.authorization?.from ?? decoded?.from;
   } catch {
     return c.json({ error: "Invalid payment header" }, 400);
   }
@@ -182,9 +169,7 @@ app.post("/invites", async (c) => {
   }
 
   const code = generateCode();
-  await c.env.DB.prepare(
-    "INSERT INTO invite_codes (code, created_by) VALUES (?, ?)",
-  )
+  await c.env.DB.prepare("INSERT INTO invite_codes (code, created_by) VALUES (?, ?)")
     .bind(code, wallet.toLowerCase())
     .run();
 
@@ -204,9 +189,7 @@ app.post("/invites/redeem", async (c) => {
     return c.json({ error: "Missing required fields: code, wallet" }, 400);
   }
 
-  const row = await c.env.DB.prepare(
-    "SELECT * FROM invite_codes WHERE code = ?",
-  )
+  const row = await c.env.DB.prepare("SELECT * FROM invite_codes WHERE code = ?")
     .bind(body.code)
     .first();
 

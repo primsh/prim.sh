@@ -7,30 +7,31 @@ export const imagineTools: Tool[] = [
     name: "imagine_generate",
     description: "Generate an image from a text prompt. Returns base64 or URL. | Price: $0.02",
     inputSchema: {
-        type: "object",
-      },
+      type: "object",
+    },
   },
   {
     name: "imagine_describe",
-    description: "Describe an image. Accepts base64 or URL. Returns text description. | Price: $0.005",
+    description:
+      "Describe an image. Accepts base64 or URL. Returns text description. | Price: $0.005",
     inputSchema: {
-        type: "object",
-      },
+      type: "object",
+    },
   },
   {
     name: "imagine_upscale",
     description: "Upscale an image to higher resolution. Accepts base64 or URL. | Price: $0.01",
     inputSchema: {
-        type: "object",
-      },
+      type: "object",
+    },
   },
   {
     name: "imagine_list_models",
     description: "List available image models with capabilities and pricing. | Price: $0.01",
     inputSchema: {
-        type: "object",
-        properties: {},
-      },
+      type: "object",
+      properties: {},
+    },
   },
 ];
 // END:GENERATED:TOOLS

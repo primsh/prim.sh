@@ -5,7 +5,7 @@
  * Policy engine still exists for agent-side spending visibility.
  */
 
-import { describe, expect, it, beforeEach, afterEach, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 process.env.WALLET_DB_PATH = ":memory:";
 
@@ -47,15 +47,22 @@ vi.stubGlobal(
 );
 
 import {
-  resetDb,
   getPolicy,
-  upsertPolicy,
-  setPauseState,
   incrementDailySpent,
   resetDailySpentIfNeeded,
+  resetDb,
+  setPauseState,
+  upsertPolicy,
 } from "../src/db.ts";
-import { getSpendingPolicy, updateSpendingPolicy, pauseWallet, resumeWallet, listWallets, getWallet } from "../src/service.ts";
 import { recordSpend } from "../src/policy.ts";
+import {
+  getSpendingPolicy,
+  getWallet,
+  listWallets,
+  pauseWallet,
+  resumeWallet,
+  updateSpendingPolicy,
+} from "../src/service.ts";
 import { registerTestWallet } from "./helpers.ts";
 
 // ─── Helpers ──────────────────────────────────────────────────────────────
@@ -270,7 +277,9 @@ describe("policyRowToResponse — corrupted allowed_primitives JSON", () => {
     if (result.ok) {
       expect(result.data.allowed_primitives).toBeNull();
     }
-    expect(writtenLines.some((line) => line.includes("corrupted allowed_primitives JSON"))).toBe(true);
+    expect(writtenLines.some((line) => line.includes("corrupted allowed_primitives JSON"))).toBe(
+      true,
+    );
 
     stdoutSpy.mockRestore();
   });

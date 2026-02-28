@@ -12,14 +12,14 @@
  *   skipHealthCheck — skip the default GET / health check; caller registers custom one (faucet.sh)
  */
 
-import { Hono } from "hono";
-import { bodyLimit } from "hono/body-limit";
 import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
-import { createAgentStackMiddleware, createWalletAllowlistChecker } from "./middleware.js";
+import { Hono } from "hono";
+import { bodyLimit } from "hono/body-limit";
 import { createLogger } from "./logger.js";
+import { metricsHandler, metricsMiddleware } from "./metrics.js";
+import { createAgentStackMiddleware, createWalletAllowlistChecker } from "./middleware.js";
 import { getNetworkConfig } from "./network-config.js";
-import { metricsMiddleware, metricsHandler } from "./metrics.js";
 import { requestIdMiddleware } from "./request-id.js";
 import type { AgentStackRouteConfig } from "./types.js";
 
@@ -110,7 +110,8 @@ export function createPrimApp(
   } = config;
 
   const _createAgentStackMiddleware = deps.createAgentStackMiddleware ?? createAgentStackMiddleware;
-  const _createWalletAllowlistChecker = deps.createWalletAllowlistChecker ?? createWalletAllowlistChecker;
+  const _createWalletAllowlistChecker =
+    deps.createWalletAllowlistChecker ?? createWalletAllowlistChecker;
 
   const LLMS_TXT = llmsTxtPath ? readFileSync(llmsTxtPath, "utf-8") : "";
   const logger = createLogger(serviceName);
@@ -197,7 +198,8 @@ export function createPrimApp(
   }
 
   // Expose logger so callers can use the same logger instance
-  (app as Hono<{ Variables: AppVariables }> & { logger: ReturnType<typeof createLogger> }).logger = logger;
+  (app as Hono<{ Variables: AppVariables }> & { logger: ReturnType<typeof createLogger> }).logger =
+    logger;
 
   return app;
 }

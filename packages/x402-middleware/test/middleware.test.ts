@@ -1,14 +1,8 @@
-import { describe, expect, it, beforeAll, afterAll, vi, beforeEach, afterEach } from "vitest";
+import { decodePaymentRequiredHeader, encodePaymentSignatureHeader } from "@x402/core/http";
 import { Hono } from "hono";
-import {
-  createAgentStackMiddleware,
-  type AgentStackRouteConfig,
-} from "../src/middleware.ts";
+import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
+import { type AgentStackRouteConfig, createAgentStackMiddleware } from "../src/middleware.ts";
 import type { AgentStackMiddlewareOptions } from "../src/types.ts";
-import {
-  decodePaymentRequiredHeader,
-  encodePaymentSignatureHeader,
-} from "@x402/core/http";
 
 const TEST_PAY_TO = "0xPayToAddress";
 const TEST_NETWORK = "eip155:8453";
@@ -47,17 +41,11 @@ function createApp() {
 
 const mockFetch = vi.fn(async (input: RequestInfo | URL) => {
   const url =
-    typeof input === "string"
-      ? input
-      : input instanceof Request
-        ? input.url
-        : input.toString();
+    typeof input === "string" ? input : input instanceof Request ? input.url : input.toString();
   if (url.endsWith("/supported")) {
     return new Response(
       JSON.stringify({
-        kinds: [
-          { x402Version: 2, scheme: "exact", network: TEST_NETWORK },
-        ],
+        kinds: [{ x402Version: 2, scheme: "exact", network: TEST_NETWORK }],
         extensions: [],
         signers: {},
       }),
@@ -136,9 +124,7 @@ describe("AgentStack x402 middleware", () => {
       },
     };
 
-    const header = encodePaymentSignatureHeader(
-      paymentPayload as unknown as never,
-    );
+    const header = encodePaymentSignatureHeader(paymentPayload as unknown as never);
 
     const res = await app.request("/free", {
       method: "GET",
@@ -504,7 +490,10 @@ describe("Per-wallet rate limiting", () => {
 
     await app.request("/free", { method: "GET", headers: { "PAYMENT-SIGNATURE": header } });
     await app.request("/free", { method: "GET", headers: { "PAYMENT-SIGNATURE": header } });
-    const res = await app.request("/free", { method: "GET", headers: { "PAYMENT-SIGNATURE": header } });
+    const res = await app.request("/free", {
+      method: "GET",
+      headers: { "PAYMENT-SIGNATURE": header },
+    });
 
     expect(res.status).toBe(429);
     const body = await res.json();
@@ -516,7 +505,10 @@ describe("Per-wallet rate limiting", () => {
     const app = createRateLimitedApp(5);
     const header = makePaymentHeader("0xHeaderTest");
 
-    const res = await app.request("/free", { method: "GET", headers: { "PAYMENT-SIGNATURE": header } });
+    const res = await app.request("/free", {
+      method: "GET",
+      headers: { "PAYMENT-SIGNATURE": header },
+    });
 
     expect(res.status).toBe(200);
     expect(res.headers.get("X-RateLimit-Limit")).toBe("5");
@@ -530,10 +522,16 @@ describe("Per-wallet rate limiting", () => {
     const headerB = makePaymentHeader("0xWalletB");
 
     await app.request("/free", { method: "GET", headers: { "PAYMENT-SIGNATURE": headerA } });
-    const resA = await app.request("/free", { method: "GET", headers: { "PAYMENT-SIGNATURE": headerA } });
+    const resA = await app.request("/free", {
+      method: "GET",
+      headers: { "PAYMENT-SIGNATURE": headerA },
+    });
     expect(resA.status).toBe(429);
 
-    const resB = await app.request("/free", { method: "GET", headers: { "PAYMENT-SIGNATURE": headerB } });
+    const resB = await app.request("/free", {
+      method: "GET",
+      headers: { "PAYMENT-SIGNATURE": headerB },
+    });
     expect(resB.status).toBe(200);
   });
 
@@ -564,4 +562,3 @@ describe("Per-wallet rate limiting", () => {
     );
   });
 });
-

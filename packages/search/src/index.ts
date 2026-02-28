@@ -1,17 +1,27 @@
-import { Hono } from "hono";
-import { bodyLimit } from "hono/body-limit";
 import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
+import { Hono } from "hono";
+import { bodyLimit } from "hono/body-limit";
 
 const LLMS_TXT = import.meta.dir
   ? readFileSync(resolve(import.meta.dir, "../../../site/search/llms.txt"), "utf-8")
   : "";
-import { createAgentStackMiddleware, createWalletAllowlistChecker, createLogger, getNetworkConfig, metricsMiddleware, metricsHandler, requestIdMiddleware, invalidRequest, ProviderRegistry } from "@primsh/x402-middleware";
+import {
+  ProviderRegistry,
+  createAgentStackMiddleware,
+  createLogger,
+  createWalletAllowlistChecker,
+  getNetworkConfig,
+  invalidRequest,
+  metricsHandler,
+  metricsMiddleware,
+  requestIdMiddleware,
+} from "@primsh/x402-middleware";
 import type { ApiError } from "@primsh/x402-middleware";
-import type { SearchRequest, ExtractRequest } from "./api.ts";
-import { searchWeb, searchNews, extractUrls, setRegistry } from "./service.ts";
+import type { ExtractRequest, SearchRequest } from "./api.ts";
+import type { ExtractProvider, SearchProvider } from "./provider.ts";
+import { extractUrls, searchNews, searchWeb, setRegistry } from "./service.ts";
 import { TavilyClient } from "./tavily.ts";
-import type { SearchProvider, ExtractProvider } from "./provider.ts";
 
 const logger = createLogger("search.sh");
 
@@ -71,10 +81,13 @@ const app = new Hono<{ Variables: AppVariables }>();
 
 app.use("*", requestIdMiddleware());
 
-app.use("*", bodyLimit({
-  maxSize: 1024 * 1024,
-  onError: (c) => c.json({ error: "Request too large" }, 413),
-}));
+app.use(
+  "*",
+  bodyLimit({
+    maxSize: 1024 * 1024,
+    onError: (c) => c.json({ error: "Request too large" }, 413),
+  }),
+);
 
 app.use("*", metricsMiddleware());
 
@@ -84,7 +97,13 @@ app.use(
     {
       payTo: PAY_TO_ADDRESS,
       network: NETWORK,
-      freeRoutes: ["GET /", "GET /pricing", "GET /llms.txt", "GET /v1/metrics", "GET /health/providers"],
+      freeRoutes: [
+        "GET /",
+        "GET /pricing",
+        "GET /llms.txt",
+        "GET /v1/metrics",
+        "GET /health/providers",
+      ],
       checkAllowlist,
     },
     { ...SEARCH_ROUTES },
@@ -114,7 +133,12 @@ app.get("/pricing", (c) => {
     routes: [
       { method: "POST", path: "/v1/search", price_usdc: "0.01", description: "Web search" },
       { method: "POST", path: "/v1/search/news", price_usdc: "0.01", description: "News search" },
-      { method: "POST", path: "/v1/extract", price_usdc: "0.005", description: "URL content extraction" },
+      {
+        method: "POST",
+        path: "/v1/extract",
+        price_usdc: "0.005",
+        description: "URL content extraction",
+      },
     ],
   });
 });
@@ -125,7 +149,11 @@ app.get("/health/providers", async (c) => {
   const active = searchRegistry.list()[0]; // best-effort; get() is async
   const providers: Record<string, { ok: boolean; latency_ms: number; message?: string }> = {};
   for (const [name, health] of results) {
-    providers[name] = { ok: health.ok, latency_ms: health.latency_ms, ...(health.message ? { message: health.message } : {}) };
+    providers[name] = {
+      ok: health.ok,
+      latency_ms: health.latency_ms,
+      ...(health.message ? { message: health.message } : {}),
+    };
   }
   return c.json({ providers, active });
 });

@@ -1,4 +1,10 @@
-import type { ChatRequest, ChatResponse, EmbedRequest, EmbedResponse, ModelsResponse } from "./api.ts";
+import type {
+  ChatRequest,
+  ChatResponse,
+  EmbedRequest,
+  EmbedResponse,
+  ModelsResponse,
+} from "./api.ts";
 
 // ─── Provider interface ───────────────────────────────────────────────────────
 

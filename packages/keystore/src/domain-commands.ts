@@ -74,7 +74,9 @@ export async function runDomainCommand(sub: string, argv: string[]): Promise<voi
         url.searchParams.set("limit", limit);
         const res = await primFetch(url.toString());
         if (!res.ok) return handleError(res);
-        const data = (await res.json()) as { zones: Array<{ id: string; domain: string; status: string }> };
+        const data = (await res.json()) as {
+          zones: Array<{ id: string; domain: string; status: string }>;
+        };
         if (quiet) {
           for (const z of data.zones) console.log(z.id);
         } else {
@@ -238,7 +240,9 @@ export async function runDomainCommand(sub: string, argv: string[]): Promise<voi
         }
         const res = await primFetch(`${baseUrl}/v1/zones/${zoneId}/records`);
         if (!res.ok) return handleError(res);
-        const data = (await res.json()) as { records: Array<{ id: string; type: string; name: string; content: string }> };
+        const data = (await res.json()) as {
+          records: Array<{ id: string; type: string; name: string; content: string }>;
+        };
         if (quiet) {
           for (const r of data.records) console.log(r.id);
         } else {
@@ -491,9 +495,7 @@ export async function runDomainCommand(sub: string, argv: string[]): Promise<voi
     }
 
     default:
-      console.log(
-        "Usage: prim domain <search|quote|register|recover|status|ns|zone|record>",
-      );
+      console.log("Usage: prim domain <search|quote|register|recover|status|ns|zone|record>");
       process.exit(1);
   }
 }

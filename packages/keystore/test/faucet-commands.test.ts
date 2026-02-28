@@ -5,14 +5,14 @@
  * getDefaultAddress is mocked to control address resolution.
  */
 
-import { describe, it, expect, vi, beforeEach, afterEach, type MockInstance } from "vitest";
+import { type MockInstance, afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 vi.mock("../src/config.ts", () => ({
   getDefaultAddress: vi.fn(),
 }));
 
 import { getDefaultAddress } from "../src/config.ts";
-import { runFaucetCommand, resolveFaucetUrl } from "../src/faucet-commands.ts";
+import { resolveFaucetUrl, runFaucetCommand } from "../src/faucet-commands.ts";
 
 // --- Helpers ----------------------------------------------------------------
 
@@ -197,12 +197,8 @@ describe("address resolution", () => {
 
   it("exits 1 when no address and no default wallet", async () => {
     vi.mocked(getDefaultAddress).mockResolvedValue(null);
-    await expect(
-      runFaucetCommand("usdc", ["faucet", "usdc"]),
-    ).rejects.toThrow("process.exit(1)");
-    expect(stderrSpy).toHaveBeenCalledWith(
-      expect.stringContaining("No address provided"),
-    );
+    await expect(runFaucetCommand("usdc", ["faucet", "usdc"])).rejects.toThrow("process.exit(1)");
+    expect(stderrSpy).toHaveBeenCalledWith(expect.stringContaining("No address provided"));
   });
 
   it("does not treat flags as positional address", async () => {
@@ -223,18 +219,18 @@ describe("address resolution", () => {
 describe("error handling", () => {
   it("non-ok response prints error message and code, exits 1", async () => {
     fetchSpy.mockResolvedValue(errorResponse("rate_limited", "Next drip in 30 minutes", 429));
-    await expect(
-      runFaucetCommand("usdc", ["faucet", "usdc", "0xABC"]),
-    ).rejects.toThrow("process.exit(1)");
+    await expect(runFaucetCommand("usdc", ["faucet", "usdc", "0xABC"])).rejects.toThrow(
+      "process.exit(1)",
+    );
     expect(stderrSpy).toHaveBeenCalledWith("Error: Next drip in 30 minutes (rate_limited)\n");
     expect(exitSpy).toHaveBeenCalledWith(1);
   });
 
   it("400 invalid request error is reported correctly", async () => {
     fetchSpy.mockResolvedValue(errorResponse("invalid_request", "Valid address required", 400));
-    await expect(
-      runFaucetCommand("eth", ["faucet", "eth", "0xBAD"]),
-    ).rejects.toThrow("process.exit(1)");
+    await expect(runFaucetCommand("eth", ["faucet", "eth", "0xBAD"])).rejects.toThrow(
+      "process.exit(1)",
+    );
     expect(stderrSpy).toHaveBeenCalledWith("Error: Valid address required (invalid_request)\n");
   });
 });
@@ -278,9 +274,7 @@ describe("URL resolution", () => {
 
 describe("unknown subcommand", () => {
   it("prints usage and exits 1", async () => {
-    await expect(
-      runFaucetCommand("bogus", ["faucet", "bogus"]),
-    ).rejects.toThrow("process.exit(1)");
+    await expect(runFaucetCommand("bogus", ["faucet", "bogus"])).rejects.toThrow("process.exit(1)");
     expect(consoleLogSpy).toHaveBeenCalledWith(expect.stringContaining("Usage:"));
   });
 });

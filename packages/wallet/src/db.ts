@@ -110,7 +110,9 @@ export function getDb(): Database {
     )
   `);
 
-  _db.run("CREATE INDEX IF NOT EXISTS idx_execution_events_execution_id ON execution_events(execution_id)");
+  _db.run(
+    "CREATE INDEX IF NOT EXISTS idx_execution_events_execution_id ON execution_events(execution_id)",
+  );
 
   _db.run(`
     CREATE TABLE IF NOT EXISTS dead_letters (
@@ -139,7 +141,9 @@ export function getDb(): Database {
     )
   `);
 
-  _db.run("CREATE INDEX IF NOT EXISTS idx_fund_requests_wallet_address ON fund_requests(wallet_address)");
+  _db.run(
+    "CREATE INDEX IF NOT EXISTS idx_fund_requests_wallet_address ON fund_requests(wallet_address)",
+  );
 
   _db.run(`
     CREATE TABLE IF NOT EXISTS policies (
@@ -186,9 +190,9 @@ export function insertWallet(wallet: {
 
 export function getWalletByAddress(address: string): WalletRow | null {
   const db = getDb();
-  return db
-    .query<WalletRow, [string]>("SELECT * FROM wallets WHERE address = ?")
-    .get(address) ?? null;
+  return (
+    db.query<WalletRow, [string]>("SELECT * FROM wallets WHERE address = ?").get(address) ?? null
+  );
 }
 
 export function getWalletsByOwner(owner: string, limit: number, after?: string): WalletRow[] {
@@ -211,17 +215,20 @@ export function deactivateWallet(address: string): void {
   const db = getDb();
   const now = Date.now();
   const deactivatedAt = new Date().toISOString();
-  db.query(
-    "UPDATE wallets SET deactivated_at = ?, updated_at = ? WHERE address = ?",
-  ).run(deactivatedAt, now, address);
+  db.query("UPDATE wallets SET deactivated_at = ?, updated_at = ? WHERE address = ?").run(
+    deactivatedAt,
+    now,
+    address,
+  );
 }
 
 export function reactivateWallet(address: string): void {
   const db = getDb();
   const now = Date.now();
-  db.query(
-    "UPDATE wallets SET deactivated_at = NULL, updated_at = ? WHERE address = ?",
-  ).run(now, address);
+  db.query("UPDATE wallets SET deactivated_at = NULL, updated_at = ? WHERE address = ?").run(
+    now,
+    address,
+  );
 }
 
 export function getExecution(idempotencyKey: string): ExecutionRow | null {
@@ -243,7 +250,14 @@ export function insertExecution(params: {
   const now = Date.now();
   db.query(
     "INSERT INTO executions (idempotency_key, wallet_address, action_type, payload_hash, status, result, created_at, updated_at) VALUES (?, ?, ?, ?, 'queued', NULL, ?, ?)",
-  ).run(params.idempotencyKey, params.walletAddress, params.actionType, params.payloadHash, now, now);
+  ).run(
+    params.idempotencyKey,
+    params.walletAddress,
+    params.actionType,
+    params.payloadHash,
+    now,
+    now,
+  );
 }
 
 export function completeExecution(
@@ -277,7 +291,11 @@ export function markAborted(idempotencyKey: string, reason: string): void {
   ).run(JSON.stringify({ reason }), now, idempotencyKey);
 }
 
-export function appendEvent(executionId: string, eventType: string, payload?: Record<string, unknown>): void {
+export function appendEvent(
+  executionId: string,
+  eventType: string,
+  payload?: Record<string, unknown>,
+): void {
   const db = getDb();
   const now = Date.now();
   db.query(
@@ -294,7 +312,11 @@ export function getEventsByExecution(executionId: string): ExecutionEventRow[] {
     .all(executionId);
 }
 
-export function insertDeadLetter(executionId: string | null, reason: string, payload?: Record<string, unknown>): void {
+export function insertDeadLetter(
+  executionId: string | null,
+  reason: string,
+  payload?: Record<string, unknown>,
+): void {
   const db = getDb();
   const now = Date.now();
   db.query(
@@ -302,7 +324,11 @@ export function insertDeadLetter(executionId: string | null, reason: string, pay
   ).run(executionId, reason, payload !== undefined ? JSON.stringify(payload) : null, now);
 }
 
-export function getExecutionsByWallet(walletAddress: string, limit: number, after?: string): ExecutionRow[] {
+export function getExecutionsByWallet(
+  walletAddress: string,
+  limit: number,
+  after?: string,
+): ExecutionRow[] {
   const db = getDb();
   if (after) {
     return db
@@ -334,9 +360,9 @@ export function insertFundRequest(params: {
 
 export function getFundRequestById(id: string): FundRequestRow | null {
   const db = getDb();
-  return db
-    .query<FundRequestRow, [string]>("SELECT * FROM fund_requests WHERE id = ?")
-    .get(id) ?? null;
+  return (
+    db.query<FundRequestRow, [string]>("SELECT * FROM fund_requests WHERE id = ?").get(id) ?? null
+  );
 }
 
 export function getFundRequestsByWallet(

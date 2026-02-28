@@ -3,7 +3,7 @@
  * Tests DO-specific behavior: image translation, tag generation, IP extraction, error parsing.
  */
 
-import { describe, expect, it, vi, beforeEach } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 
 process.env.DO_API_TOKEN = "test-do-token";
 
@@ -17,11 +17,14 @@ function makeDODroplet(overrides: Partial<Record<string, unknown>> = {}): Record
     networks: {
       v4: [
         { ip_address: "10.0.0.1", netmask: "255.255.0.0", gateway: "10.0.0.1", type: "private" },
-        { ip_address: "203.0.113.1", netmask: "255.255.255.0", gateway: "203.0.113.1", type: "public" },
+        {
+          ip_address: "203.0.113.1",
+          netmask: "255.255.255.0",
+          gateway: "203.0.113.1",
+          type: "public",
+        },
       ],
-      v6: [
-        { ip_address: "2604:a880::1", netmask: 64, gateway: "2604:a880::gw", type: "public" },
-      ],
+      v6: [{ ip_address: "2604:a880::1", netmask: 64, gateway: "2604:a880::gw", type: "public" }],
     },
     size_slug: "s-2vcpu-4gb",
     image: { slug: "ubuntu-24-04-x64" },
@@ -32,7 +35,12 @@ function makeDODroplet(overrides: Partial<Record<string, unknown>> = {}): Record
 }
 
 const mockFetch = vi.fn(async (input: RequestInfo | URL, _init?: RequestInit) => {
-  const url = typeof input === "string" ? input : input instanceof Request ? input.url : (input as URL).toString();
+  const url =
+    typeof input === "string"
+      ? input
+      : input instanceof Request
+        ? input.url
+        : (input as URL).toString();
 
   // Create droplet
   if (url === "https://api.digitalocean.com/v2/droplets" && _init?.method === "POST") {
@@ -47,10 +55,10 @@ const mockFetch = vi.fn(async (input: RequestInfo | URL, _init?: RequestInit) =>
 
   // Get droplet
   if (url.match(/\/v2\/droplets\/\d+$/) && (!_init?.method || _init.method === "GET")) {
-    return new Response(
-      JSON.stringify({ droplet: makeDODroplet() }),
-      { status: 200, headers: { "Content-Type": "application/json" } },
-    );
+    return new Response(JSON.stringify({ droplet: makeDODroplet() }), {
+      status: 200,
+      headers: { "Content-Type": "application/json" },
+    });
   }
 
   // Actions
@@ -76,13 +84,21 @@ const mockFetch = vi.fn(async (input: RequestInfo | URL, _init?: RequestInit) =>
   if (url === "https://api.digitalocean.com/v2/account/keys" && _init?.method === "POST") {
     return new Response(
       JSON.stringify({
-        ssh_key: { id: 3001, name: "test-key", fingerprint: "aa:bb:cc:dd", public_key: "ssh-rsa AAAA test" },
+        ssh_key: {
+          id: 3001,
+          name: "test-key",
+          fingerprint: "aa:bb:cc:dd",
+          public_key: "ssh-rsa AAAA test",
+        },
       }),
       { status: 201, headers: { "Content-Type": "application/json" } },
     );
   }
 
-  return new Response(JSON.stringify({ ok: true }), { status: 200, headers: { "Content-Type": "application/json" } });
+  return new Response(JSON.stringify({ ok: true }), {
+    status: 200,
+    headers: { "Content-Type": "application/json" },
+  });
 });
 
 vi.stubGlobal("fetch", mockFetch);
@@ -102,7 +118,11 @@ describe("capabilities", () => {
     const types = provider.serverTypes();
     expect(types).toHaveLength(3);
     expect(types.map((t) => t.name)).toEqual(["small", "medium", "large"]);
-    expect(types.map((t) => t.providerType)).toEqual(["s-2vcpu-4gb", "s-4vcpu-8gb", "s-8vcpu-16gb"]);
+    expect(types.map((t) => t.providerType)).toEqual([
+      "s-2vcpu-4gb",
+      "s-4vcpu-8gb",
+      "s-8vcpu-16gb",
+    ]);
   });
 
   it("images — returns spawn-style image names (not DO slugs)", () => {
@@ -133,7 +153,9 @@ describe("image translation", () => {
     });
 
     const call = mockFetch.mock.calls.find(
-      ([url, init]) => url === "https://api.digitalocean.com/v2/droplets" && (init as RequestInit)?.method === "POST",
+      ([url, init]) =>
+        url === "https://api.digitalocean.com/v2/droplets" &&
+        (init as RequestInit)?.method === "POST",
     );
     const body = JSON.parse((call?.[1] as RequestInit)?.body as string) as Record<string, unknown>;
     expect(body.image).toBe("ubuntu-24-04-x64");
@@ -148,7 +170,8 @@ describe("image translation", () => {
     await provider.rebuildServer("12345", "debian-12");
 
     const call = mockFetch.mock.calls.find(
-      ([url, init]) => url.toString().includes("/actions") && (init as RequestInit)?.method === "POST",
+      ([url, init]) =>
+        url.toString().includes("/actions") && (init as RequestInit)?.method === "POST",
     );
     const body = JSON.parse((call?.[1] as RequestInit)?.body as string) as Record<string, unknown>;
     expect(body.image).toBe("debian-12-x64");
@@ -168,7 +191,9 @@ describe("tag generation", () => {
     });
 
     const call = mockFetch.mock.calls.find(
-      ([url, init]) => url === "https://api.digitalocean.com/v2/droplets" && (init as RequestInit)?.method === "POST",
+      ([url, init]) =>
+        url === "https://api.digitalocean.com/v2/droplets" &&
+        (init as RequestInit)?.method === "POST",
     );
     const body = JSON.parse((call?.[1] as RequestInit)?.body as string) as Record<string, unknown>;
     expect(body.tags).toEqual(["wallet:0xABC", "env:test"]);
@@ -212,7 +237,10 @@ describe("error handling", () => {
   it("404 — maps to not_found ProviderError", async () => {
     mockFetch.mockImplementationOnce(async () => {
       return new Response(
-        JSON.stringify({ id: "not_found", message: "The resource you requested could not be found." }),
+        JSON.stringify({
+          id: "not_found",
+          message: "The resource you requested could not be found.",
+        }),
         { status: 404, headers: { "Content-Type": "application/json" } },
       );
     });
@@ -245,10 +273,10 @@ describe("error handling", () => {
 
   it("500 — maps to provider_error", async () => {
     mockFetch.mockImplementationOnce(async () => {
-      return new Response(
-        JSON.stringify({ id: "server_error", message: "Something went wrong" }),
-        { status: 500, headers: { "Content-Type": "application/json" } },
-      );
+      return new Response(JSON.stringify({ id: "server_error", message: "Something went wrong" }), {
+        status: 500,
+        headers: { "Content-Type": "application/json" },
+      });
     });
 
     try {
@@ -278,10 +306,14 @@ describe("action routing", () => {
 
       const call = mockFetch.mock.calls.find(
         ([url, init]) =>
-          (url as string).includes("/droplets/12345/actions") && (init as RequestInit)?.method === "POST",
+          (url as string).includes("/droplets/12345/actions") &&
+          (init as RequestInit)?.method === "POST",
       );
       expect(call).toBeDefined();
-      const body = JSON.parse((call?.[1] as RequestInit)?.body as string) as Record<string, unknown>;
+      const body = JSON.parse((call?.[1] as RequestInit)?.body as string) as Record<
+        string,
+        unknown
+      >;
       expect(body.type).toBe(expectedType);
     }
   });
@@ -290,7 +322,8 @@ describe("action routing", () => {
     await provider.resizeServer("12345", "s-4vcpu-8gb", true);
 
     const call = mockFetch.mock.calls.find(
-      ([url, init]) => (url as string).includes("/actions") && (init as RequestInit)?.method === "POST",
+      ([url, init]) =>
+        (url as string).includes("/actions") && (init as RequestInit)?.method === "POST",
     );
     const body = JSON.parse((call?.[1] as RequestInit)?.body as string) as Record<string, unknown>;
     expect(body.type).toBe("resize");

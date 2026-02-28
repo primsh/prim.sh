@@ -91,10 +91,7 @@ export interface QueryResult {
   position: number;
 }
 
-export async function discoverSession(
-  authHeader: string,
-  baseUrl?: string,
-): Promise<JmapSession> {
+export async function discoverSession(authHeader: string, baseUrl?: string): Promise<JmapSession> {
   const jmapUrl = baseUrl ?? getJmapBaseUrl();
 
   // Step 1: GET /.well-known/jmap → follow redirect manually (auth header is
@@ -240,18 +237,11 @@ async function jmapCall(
 function checkMethodError(response: [string, Record<string, unknown>, string]): void {
   if (response[0] === "error") {
     const detail = response[1];
-    throw new JmapError(
-      500,
-      "jmap_error",
-      `JMAP method error: ${detail.type ?? "unknown"}`,
-    );
+    throw new JmapError(500, "jmap_error", `JMAP method error: ${detail.type ?? "unknown"}`);
   }
 }
 
-export async function queryEmails(
-  ctx: JmapContextLike,
-  opts: QueryOpts,
-): Promise<QueryResult> {
+export async function queryEmails(ctx: JmapContextLike, opts: QueryOpts): Promise<QueryResult> {
   const filter: Record<string, string> = {};
   if (opts.mailboxId) {
     filter.inMailbox = opts.mailboxId;
@@ -321,10 +311,7 @@ export async function queryEmails(
   return { messages, total, position };
 }
 
-export async function getEmail(
-  ctx: JmapContextLike,
-  emailId: string,
-): Promise<JmapEmailDetail> {
+export async function getEmail(ctx: JmapContextLike, emailId: string): Promise<JmapEmailDetail> {
   const batch = await jmapCall(ctx, [
     [
       "Email/get",
@@ -392,13 +379,13 @@ export interface SendResult {
   submissionId: string;
 }
 
-export async function sendEmail(
-  ctx: JmapContextLike,
-  opts: SendEmailOpts,
-): Promise<SendResult> {
+export async function sendEmail(ctx: JmapContextLike, opts: SendEmailOpts): Promise<SendResult> {
   // Build bodyStructure + bodyValues based on provided parts
   let bodyStructure: Record<string, unknown>;
-  const bodyValues: Record<string, { value: string; isEncodingProblem?: boolean; isTruncated?: boolean }> = {};
+  const bodyValues: Record<
+    string,
+    { value: string; isEncodingProblem?: boolean; isTruncated?: boolean }
+  > = {};
 
   const hasText = opts.textBody !== null;
   const hasHtml = opts.htmlBody !== null;
@@ -422,11 +409,7 @@ export async function sendEmail(
   }
 
   // Build recipient arrays for envelope
-  const allRecipients = [
-    ...opts.to,
-    ...(opts.cc ?? []),
-    ...(opts.bcc ?? []),
-  ];
+  const allRecipients = [...opts.to, ...(opts.cc ?? []), ...(opts.bcc ?? [])];
 
   const batch = await jmapCall(
     ctx,
@@ -482,7 +465,9 @@ export async function sendEmail(
     throw new JmapError(500, "jmap_error", "Email/set response missing");
   }
 
-  const emailNotCreated = emailSetResponse[1].notCreated as Record<string, { type: string; description?: string }> | undefined;
+  const emailNotCreated = emailSetResponse[1].notCreated as
+    | Record<string, { type: string; description?: string }>
+    | undefined;
   if (emailNotCreated?.draft) {
     const reason = emailNotCreated.draft.description ?? emailNotCreated.draft.type;
     throw new JmapError(400, "invalid_request", `Email creation failed: ${reason}`);
@@ -499,7 +484,9 @@ export async function sendEmail(
     throw new JmapError(500, "jmap_error", "EmailSubmission/set response missing");
   }
 
-  const subNotCreated = subResponse[1].notCreated as Record<string, { type: string; description?: string }> | undefined;
+  const subNotCreated = subResponse[1].notCreated as
+    | Record<string, { type: string; description?: string }>
+    | undefined;
   if (subNotCreated?.sub) {
     const reason = subNotCreated.sub.description ?? subNotCreated.sub.type;
     throw new JmapError(502, "jmap_error", `Email submission failed: ${reason}`);

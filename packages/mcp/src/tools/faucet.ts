@@ -7,46 +7,46 @@ export const faucetTools: Tool[] = [
     name: "faucet_drip_usdc",
     description: "Dispense test USDC",
     inputSchema: {
-        type: "object",
-        properties: {
-          "address": {
-            type: "string",
-            description: "EVM-compatible wallet address (42-char hex, checksummed or lowercase)",
-            pattern: "^0x[0-9a-fA-F]{40}$",
-          },
+      type: "object",
+      properties: {
+        address: {
+          type: "string",
+          description: "EVM-compatible wallet address (42-char hex, checksummed or lowercase)",
+          pattern: "^0x[0-9a-fA-F]{40}$",
         },
-        required: ["address"],
       },
+      required: ["address"],
+    },
   },
   {
     name: "faucet_drip_eth",
     description: "Dispense test ETH",
     inputSchema: {
-        type: "object",
-        properties: {
-          "address": {
-            type: "string",
-            description: "EVM-compatible wallet address (42-char hex, checksummed or lowercase)",
-            pattern: "^0x[0-9a-fA-F]{40}$",
-          },
+      type: "object",
+      properties: {
+        address: {
+          type: "string",
+          description: "EVM-compatible wallet address (42-char hex, checksummed or lowercase)",
+          pattern: "^0x[0-9a-fA-F]{40}$",
         },
-        required: ["address"],
       },
+      required: ["address"],
+    },
   },
   {
     name: "faucet_get_faucet_status",
     description: "Check rate limit status",
     inputSchema: {
-        type: "object",
-        properties: {
-          "address": {
-            type: "string",
-            description: "EVM wallet address (checksummed or lowercase)",
-            pattern: "^0x[0-9a-fA-F]{40}$",
-          },
+      type: "object",
+      properties: {
+        address: {
+          type: "string",
+          description: "EVM wallet address (checksummed or lowercase)",
+          pattern: "^0x[0-9a-fA-F]{40}$",
         },
-        required: ["address"],
       },
+      required: ["address"],
+    },
   },
 ];
 // END:GENERATED:TOOLS

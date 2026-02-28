@@ -19,8 +19,8 @@
  *   - all checks pass > 99%
  */
 
-import http from "k6/http";
 import { check, sleep } from "k6";
+import http from "k6/http";
 import { Rate, Trend } from "k6/metrics";
 
 // Custom metrics per service
@@ -31,7 +31,7 @@ export const options = {
   stages: [
     { duration: "30s", target: 10 }, // ramp up
     { duration: "60s", target: 10 }, // sustained
-    { duration: "15s", target: 0 },  // ramp down
+    { duration: "15s", target: 0 }, // ramp down
   ],
   thresholds: {
     // Global: p95 < 500ms, error rate < 1%
@@ -45,16 +45,16 @@ export const options = {
 
 // Service registry: name → public HTTPS URL
 const SERVICES = [
-  { name: "wallet.sh",  url: "https://wallet.prim.sh/",  port: 3001 },
-  { name: "faucet.sh",  url: "https://faucet.prim.sh/",  port: 3003 },
-  { name: "spawn.sh",   url: "https://spawn.prim.sh/",   port: 3004 },
-  { name: "store.sh",   url: "https://store.prim.sh/",   port: 3002 },
-  { name: "email.sh",   url: "https://email.prim.sh/",   port: 3006 },
-  { name: "search.sh",  url: "https://search.prim.sh/",  port: 3005 },
-  { name: "token.sh",   url: "https://token.prim.sh/",   port: 3007 },
-  { name: "mem.sh",     url: "https://mem.prim.sh/",     port: 3008 },
-  { name: "domain.sh",  url: "https://domain.prim.sh/",  port: 3009 },
-  { name: "track.sh",   url: "https://track.prim.sh/",   port: 3010 },
+  { name: "wallet.sh", url: "https://wallet.prim.sh/", port: 3001 },
+  { name: "faucet.sh", url: "https://faucet.prim.sh/", port: 3003 },
+  { name: "spawn.sh", url: "https://spawn.prim.sh/", port: 3004 },
+  { name: "store.sh", url: "https://store.prim.sh/", port: 3002 },
+  { name: "email.sh", url: "https://email.prim.sh/", port: 3006 },
+  { name: "search.sh", url: "https://search.prim.sh/", port: 3005 },
+  { name: "token.sh", url: "https://token.prim.sh/", port: 3007 },
+  { name: "mem.sh", url: "https://mem.prim.sh/", port: 3008 },
+  { name: "domain.sh", url: "https://domain.prim.sh/", port: 3009 },
+  { name: "track.sh", url: "https://track.prim.sh/", port: 3010 },
 ];
 
 // Spread VUs across services using round-robin based on __VU index

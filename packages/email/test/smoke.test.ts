@@ -1,5 +1,5 @@
-import { describe, expect, it, vi, beforeEach } from "vitest";
 import type { Context, Next } from "hono";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 
 vi.hoisted(() => {
   process.env.PRIM_NETWORK = "eip155:8453";
@@ -13,12 +13,10 @@ vi.mock("@primsh/x402-middleware", async (importOriginal) => {
   const original = await importOriginal<typeof import("@primsh/x402-middleware")>();
   return {
     ...original,
-    createAgentStackMiddleware: vi.fn(
-      () => async (c: Context, next: Next) => {
-        c.set("walletAddress", "0x0000000000000000000000000000000000000001");
-        await next();
-      },
-    ),
+    createAgentStackMiddleware: vi.fn(() => async (c: Context, next: Next) => {
+      c.set("walletAddress", "0x0000000000000000000000000000000000000001");
+      await next();
+    }),
     createWalletAllowlistChecker: vi.fn(() => () => Promise.resolve(true)),
   };
 });
@@ -45,10 +43,10 @@ vi.mock("../src/service.ts", async (importOriginal) => {
   };
 });
 
-import app from "../src/index.ts";
-import { createMailbox } from "../src/service.ts";
 import { createAgentStackMiddleware } from "@primsh/x402-middleware";
 import type { MailboxResponse } from "../src/api.ts";
+import app from "../src/index.ts";
+import { createMailbox } from "../src/service.ts";
 
 const MOCK_MAILBOX: MailboxResponse = {
   id: "mbx_abc123",

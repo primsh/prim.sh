@@ -5,11 +5,11 @@
 // Cards in index.html are managed by gen-prims.ts (source of truth).
 // This script only does brand copy substitution and prim subpage rendering.
 
-import { readFileSync, writeFileSync, mkdirSync, cpSync, existsSync, readdirSync } from "node:fs";
-import { resolve, join } from "node:path";
+import { cpSync, existsSync, mkdirSync, readFileSync, readdirSync, writeFileSync } from "node:fs";
+import { join, resolve } from "node:path";
 import { parse } from "yaml";
-import { render, renderFooter, setBuildHash, type PrimConfig } from "./template.ts";
 import { BRAND } from "../brand.ts";
+import { type PrimConfig, render, renderFooter, setBuildHash } from "./template.ts";
 
 // Set cache-bust hash for template CSS references
 const buildHash = process.env.GITHUB_SHA?.slice(0, 8) ?? Date.now().toString(36);
@@ -27,10 +27,7 @@ const out = src
   .replace("{{footer}}", renderFooter(BRAND.name));
 
 // Cache-bust CSS in homepage (prim subpages handled by template.ts setBuildHash)
-const outBusted = out.replace(
-  'href="/assets/prim.css"',
-  `href="/assets/prim.css?v=${buildHash}"`
-);
+const outBusted = out.replace('href="/assets/prim.css"', `href="/assets/prim.css?v=${buildHash}"`);
 
 mkdirSync(resolve(ROOT, "site-dist"), { recursive: true });
 writeFileSync(resolve(ROOT, "site-dist/index.html"), outBusted);
@@ -41,7 +38,10 @@ console.log("[build] site-dist/index.html written");
 const accessPath = resolve(ROOT, "site/access/index.html");
 if (existsSync(accessPath)) {
   const accessSrc = readFileSync(accessPath, "utf-8");
-  const accessOut = accessSrc.replace("{{footer:access}}", renderFooter(`<a href="/">${BRAND.name}</a> / access`));
+  const accessOut = accessSrc.replace(
+    "{{footer:access}}",
+    renderFooter(`<a href="/">${BRAND.name}</a> / access`),
+  );
   mkdirSync(resolve(ROOT, "site-dist/access"), { recursive: true });
   writeFileSync(resolve(ROOT, "site-dist/access/index.html"), accessOut);
   console.log("[build] site-dist/access/index.html written");
@@ -50,10 +50,7 @@ if (existsSync(accessPath)) {
 // ── prim subpages from prim.yaml ─────────────────────────────────────────────
 
 function loadPrimYaml(id: string): PrimConfig | null {
-  const candidates = [
-    join(ROOT, `packages/${id}/prim.yaml`),
-    join(ROOT, `site/${id}/prim.yaml`),
-  ];
+  const candidates = [join(ROOT, `packages/${id}/prim.yaml`), join(ROOT, `site/${id}/prim.yaml`)];
   for (const p of candidates) {
     if (existsSync(p)) {
       try {
@@ -89,10 +86,7 @@ console.log(`[build] ${primCount} prim pages written`);
 
 let llmsCount = 0;
 for (const id of primIds) {
-  const candidates = [
-    join(ROOT, `site/${id}/llms.txt`),
-    join(ROOT, `packages/${id}/llms.txt`),
-  ];
+  const candidates = [join(ROOT, `site/${id}/llms.txt`), join(ROOT, `packages/${id}/llms.txt`)];
   for (const p of candidates) {
     if (existsSync(p)) {
       mkdirSync(resolve(ROOT, `site-dist/${id}`), { recursive: true });

@@ -1,12 +1,20 @@
 #!/usr/bin/env bun
 import { existsSync, readFileSync } from "node:fs";
-import { createKey, importKey, listKeys, exportKey, removeKey, loadKey, loadAccount } from "./keystore.ts";
-import { getDefaultAddress, setDefaultAddress } from "./config.ts";
-import { getUsdcBalance } from "./balance.ts";
-import { decryptFromV3 } from "./crypto.ts";
-import type { KeystoreFile } from "./types.ts";
-import { getFlag, hasFlag, resolvePassphrase } from "./flags.ts";
 import pkg from "../package.json";
+import { getUsdcBalance } from "./balance.ts";
+import { getDefaultAddress, setDefaultAddress } from "./config.ts";
+import { decryptFromV3 } from "./crypto.ts";
+import { getFlag, hasFlag, resolvePassphrase } from "./flags.ts";
+import {
+  createKey,
+  exportKey,
+  importKey,
+  listKeys,
+  loadAccount,
+  loadKey,
+  removeKey,
+} from "./keystore.ts";
+import type { KeystoreFile } from "./types.ts";
 
 const argv = process.argv.slice(2);
 
@@ -98,7 +106,7 @@ async function main() {
     const mcpPath = new URL("../../mcp/src/server.ts", import.meta.url).href;
     await wrapCommand(async () => {
       // biome-ignore lint/suspicious/noExplicitAny: cross-package dynamic import
-      const mcpModule = await import(mcpPath) as any;
+      const mcpModule = (await import(mcpPath)) as any;
       const { startMcpServer, isPrimitive } = mcpModule;
       // mcp has no subcommand — flags start at argv[1], not argv[2].
       // Pad argv so getFlag (which scans from index 2) sees the right positions.
@@ -291,7 +299,8 @@ async function main() {
 
       case "register": {
         // EIP-191 registration with wallet.prim.sh
-        const walletUrl = getFlag("url", argv) ?? process.env.PRIM_WALLET_URL ?? "https://wallet.prim.sh";
+        const walletUrl =
+          getFlag("url", argv) ?? process.env.PRIM_WALLET_URL ?? "https://wallet.prim.sh";
         const passphrase = await resolvePassphrase(argv);
         const account = await loadAccount(undefined, { passphrase });
         const address = account.address;
@@ -313,7 +322,9 @@ async function main() {
       }
 
       default:
-        console.log("Usage: prim wallet <create|register|list|balance|import|export|default|remove>");
+        console.log(
+          "Usage: prim wallet <create|register|list|balance|import|export|default|remove>",
+        );
         process.exit(1);
     }
   });

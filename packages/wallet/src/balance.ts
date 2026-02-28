@@ -1,7 +1,7 @@
-import { createPublicClient, http, formatUnits } from "viem";
-import { base, baseSepolia } from "viem/chains";
+import { createLogger, getNetworkConfig } from "@primsh/x402-middleware";
+import { http, createPublicClient, formatUnits } from "viem";
 import type { Address } from "viem";
-import { getNetworkConfig, createLogger } from "@primsh/x402-middleware";
+import { base, baseSepolia } from "viem/chains";
 
 const log = createLogger("wallet.sh", { module: "balance" });
 
@@ -38,7 +38,9 @@ function getClient() {
   return _client as ReturnType<typeof createPublicClient>;
 }
 
-export async function getUsdcBalance(address: Address): Promise<{ balance: string; funded: boolean }> {
+export async function getUsdcBalance(
+  address: Address,
+): Promise<{ balance: string; funded: boolean }> {
   try {
     const { usdcAddress } = getNetworkConfig();
     const raw = (await getClient().readContract({

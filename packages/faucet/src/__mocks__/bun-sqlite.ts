@@ -5,7 +5,9 @@
 import { createRequire } from "node:module";
 
 const nodeRequire = createRequire(import.meta.url);
-const { DatabaseSync } = nodeRequire("node:sqlite") as { DatabaseSync: new (path: string) => NodeSqliteDb };
+const { DatabaseSync } = nodeRequire("node:sqlite") as {
+  DatabaseSync: new (path: string) => NodeSqliteDb;
+};
 
 interface NodeSqliteStmt {
   get(...args: unknown[]): unknown;

@@ -1,35 +1,35 @@
 import { randomBytes } from "node:crypto";
-import {
-  insertServer,
-  getServerById,
-  getServersByOwner,
-  countServersByOwner,
-  countActiveServersByOwner,
-  updateServerStatus,
-  updateServerTypeAndImage,
-  insertSshKey,
-  getSshKeyById,
-  getSshKeysByOwner,
-  deleteSshKeyRow,
-} from "./db.ts";
-import { getProvider } from "./providers.ts";
-import { ProviderError, type CloudProvider } from "./provider.ts";
 import type {
+  ActionOnlyResponse,
   CreateServerRequest,
   CreateServerResponse,
-  ServerListResponse,
-  ServerResponse,
+  CreateSshKeyRequest,
   DeleteServerResponse,
-  ActionOnlyResponse,
-  ResizeRequest,
-  ResizeResponse,
   RebuildRequest,
   RebuildResponse,
-  CreateSshKeyRequest,
-  SshKeyResponse,
+  ResizeRequest,
+  ResizeResponse,
+  ServerListResponse,
+  ServerResponse,
   SshKeyListResponse,
+  SshKeyResponse,
 } from "./api.ts";
+import {
+  countActiveServersByOwner,
+  countServersByOwner,
+  deleteSshKeyRow,
+  getServerById,
+  getServersByOwner,
+  getSshKeyById,
+  getSshKeysByOwner,
+  insertServer,
+  insertSshKey,
+  updateServerStatus,
+  updateServerTypeAndImage,
+} from "./db.ts";
 import type { ServerRow, SshKeyRow } from "./db.ts";
+import { type CloudProvider, ProviderError } from "./provider.ts";
+import { getProvider } from "./providers.ts";
 
 // ─── Constants ────────────────────────────────────────────────────────────
 
@@ -41,7 +41,10 @@ function getMaxServersPerWallet(): number {
 
 function getAllowedTypes(): Set<string> {
   return new Set(
-    (process.env.SPAWN_ALLOWED_TYPES ?? "small").split(",").map((t) => t.trim()).filter(Boolean),
+    (process.env.SPAWN_ALLOWED_TYPES ?? "small")
+      .split(",")
+      .map((t) => t.trim())
+      .filter(Boolean),
   );
 }
 
@@ -204,10 +207,20 @@ export async function createServer(
     for (const keyId of request.ssh_keys) {
       const keyRow = getSshKeyById(keyId);
       if (!keyRow) {
-        return { ok: false, status: 404, code: "not_found", message: `SSH key not found: ${keyId}` };
+        return {
+          ok: false,
+          status: 404,
+          code: "not_found",
+          message: `SSH key not found: ${keyId}`,
+        };
       }
       if (keyRow.owner_wallet !== callerWallet) {
-        return { ok: false, status: 403, code: "forbidden", message: `SSH key not owned by caller: ${keyId}` };
+        return {
+          ok: false,
+          status: 403,
+          code: "forbidden",
+          message: `SSH key not owned by caller: ${keyId}`,
+        };
       }
       providerSshKeyIds.push(keyRow.provider_resource_id);
     }
@@ -271,11 +284,7 @@ export async function createServer(
   }
 }
 
-export function listServers(
-  callerWallet: string,
-  limit: number,
-  page: number,
-): ServerListResponse {
+export function listServers(callerWallet: string, limit: number, page: number): ServerListResponse {
   const offset = (page - 1) * limit;
   const rows = getServersByOwner(callerWallet, limit, offset);
   const total = countServersByOwner(callerWallet);

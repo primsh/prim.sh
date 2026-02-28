@@ -5,8 +5,8 @@
  * emits a complete README.md markdown string.
  */
 
-import type { Primitive, RouteMapping } from "./primitives.js";
 import type { ParsedApi, ParsedField } from "./parse-api.js";
+import type { Primitive, RouteMapping } from "./primitives.js";
 
 // ── Helpers ────────────────────────────────────────────────────────────────────
 
@@ -27,12 +27,18 @@ function resolveFields(name: string, api: ParsedApi): ParsedField[] {
   return ownFields;
 }
 
-function lookupPrice(route: string, prices: Map<string, string>, pricing?: Primitive["pricing"]): string {
+function lookupPrice(
+  route: string,
+  prices: Map<string, string>,
+  pricing?: Primitive["pricing"],
+): string {
   // Try direct lookup
+  // biome-ignore lint/style/noNonNullAssertion: guarded by .has() check
   if (prices.has(route)) return prices.get(route)!;
 
   // Normalize ":param" to "[param]" for lookup
   const bracketForm = route.replace(/:([A-Za-z_][A-Za-z0-9_]*)/g, "[$1]");
+  // biome-ignore lint/style/noNonNullAssertion: guarded by .has() check
   if (prices.has(bracketForm)) return prices.get(bracketForm)!;
 
   // Try prefix matching (same logic as render-llms-txt.ts)
@@ -51,7 +57,10 @@ function lookupPrice(route: string, prices: Map<string, string>, pricing?: Primi
       const pp = pathParts[i];
       const kk = kParts[i];
       if (!pp.startsWith(":") && !kk.startsWith("[") && kk !== "*") {
-        if (pp !== kk) { match = false; break; }
+        if (pp !== kk) {
+          match = false;
+          break;
+        }
       }
     }
     if (match) return val;
@@ -74,7 +83,8 @@ function renderRoutes(p: Primitive, api: ParsedApi | null, prices: Map<string, s
   const routes = p.routes_map ?? [];
   if (routes.length === 0) return "";
 
-  const header = "| Route | Description | Price | Request | Response |\n|-------|-------------|-------|---------|----------|";
+  const header =
+    "| Route | Description | Price | Request | Response |\n|-------|-------------|-------|---------|----------|";
   const rows = routes.map((r) => {
     const price = lookupPrice(r.route, prices, p.pricing);
     const reqType = r.request_type ?? r.request ?? "—";
@@ -161,9 +171,7 @@ function renderUsage(p: Primitive): string {
   const endpoint = p.endpoint ?? `${p.id}.prim.sh`;
   const routes = p.routes_map ?? [];
   const firstPost = routes.find((r) => r.route.startsWith("POST "));
-  const examplePath = firstPost
-    ? firstPost.route.replace(/^[A-Z]+\s+/, "")
-    : "/v1/...";
+  const examplePath = firstPost ? firstPost.route.replace(/^[A-Z]+\s+/, "") : "/v1/...";
 
   return `## Usage
 

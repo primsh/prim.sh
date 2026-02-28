@@ -5,22 +5,22 @@
  * tests only cover DB-level primitives.
  */
 
-import { describe, expect, it, beforeEach, afterEach } from "vitest";
+import { afterEach, beforeEach, describe, expect, it } from "vitest";
 
 process.env.WALLET_DB_PATH = ":memory:";
 
 import {
-  resetDb,
-  getDb,
-  insertExecution,
-  getExecution,
-  completeExecution,
-  tryClaim,
-  markAborted,
   appendEvent,
+  completeExecution,
+  getDb,
   getEventsByExecution,
-  insertDeadLetter,
+  getExecution,
   getExecutionsByWallet,
+  insertDeadLetter,
+  insertExecution,
+  markAborted,
+  resetDb,
+  tryClaim,
 } from "../src/db.ts";
 import { registerTestWallet } from "./helpers.ts";
 

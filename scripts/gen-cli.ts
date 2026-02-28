@@ -15,7 +15,7 @@
  *   bun scripts/gen-cli.ts search   # regenerate one prim by id
  */
 
-import { readFileSync, writeFileSync, existsSync } from "node:fs";
+import { existsSync, readFileSync, writeFileSync } from "node:fs";
 import { join, resolve } from "node:path";
 import { parse as parseYaml } from "yaml";
 import { primsForInterface } from "./lib/primitives.js";
@@ -123,9 +123,13 @@ function extractPathParams(path: string): string[] {
   return matches.map((m) => m.slice(1, -1));
 }
 
-function resolveSchemaRef(spec: OpenAPISpec, schema: SchemaObject | undefined): SchemaObject | null {
+function resolveSchemaRef(
+  spec: OpenAPISpec,
+  schema: SchemaObject | undefined,
+): SchemaObject | null {
   if (!schema) return null;
   if (schema.$ref) {
+    // biome-ignore lint/style/noNonNullAssertion: split always returns at least one element
     const refName = schema.$ref.split("/").pop()!;
     const resolved = spec.components?.schemas?.[refName] as SchemaObject | undefined;
     return resolved ?? null;
@@ -141,11 +145,43 @@ function getBodySchema(spec: OpenAPISpec, op: Operation): SchemaObject | null {
 
 // JS reserved words that cannot be used as variable names
 const JS_RESERVED = new Set([
-  "break", "case", "catch", "class", "const", "continue", "debugger",
-  "default", "delete", "do", "else", "export", "extends", "finally",
-  "for", "function", "if", "import", "in", "instanceof", "let", "new",
-  "null", "return", "static", "super", "switch", "this", "throw", "try",
-  "typeof", "undefined", "var", "void", "while", "with", "yield",
+  "break",
+  "case",
+  "catch",
+  "class",
+  "const",
+  "continue",
+  "debugger",
+  "default",
+  "delete",
+  "do",
+  "else",
+  "export",
+  "extends",
+  "finally",
+  "for",
+  "function",
+  "if",
+  "import",
+  "in",
+  "instanceof",
+  "let",
+  "new",
+  "null",
+  "return",
+  "static",
+  "super",
+  "switch",
+  "this",
+  "throw",
+  "try",
+  "typeof",
+  "undefined",
+  "var",
+  "void",
+  "while",
+  "with",
+  "yield",
 ]);
 
 /**
@@ -208,8 +244,18 @@ function classifyRoute(
   // Identify candidate subgroup: a non-param segment that is NOT an action word
   // that maps directly to a top-level CLI verb (start/stop/reboot etc.)
   const actionWords = new Set([
-    "start", "stop", "reboot", "rebuild", "resize", "activate",
-    "verify", "renew", "send", "quota", "reconcile", "mail-setup",
+    "start",
+    "stop",
+    "reboot",
+    "rebuild",
+    "resize",
+    "activate",
+    "verify",
+    "renew",
+    "send",
+    "quota",
+    "reconcile",
+    "mail-setup",
     "configure-ns",
   ]);
 
@@ -224,8 +270,14 @@ function classifyRoute(
       // Sub-resource after a path param
       // If this is a well-known sub-resource, make it a subgroup
       const subResources = new Set([
-        "pool", "records", "webhooks", "ssh-keys", "objects",
-        "upsert", "query", "cache",
+        "pool",
+        "records",
+        "webhooks",
+        "ssh-keys",
+        "objects",
+        "upsert",
+        "query",
+        "cache",
       ]);
       // "liquidity-params" is part of pool subgroup
       if (seg === "liquidity-params") {
@@ -363,7 +415,11 @@ function deriveLeafName(opId: string, method: string, path: string): string {
   if (directMap[opId]) return directMap[opId];
 
   // Fallback: convert camelCase operationId to a CLI name
-  const words = opId.replace(/([A-Z])/g, " $1").trim().toLowerCase().split(" ");
+  const words = opId
+    .replace(/([A-Z])/g, " $1")
+    .trim()
+    .toLowerCase()
+    .split(" ");
   if (words[0] === "list") return "ls";
   if (words[0] === "create") return "create";
   if (words[0] === "get") return "get";
@@ -450,18 +506,13 @@ function getBodyProps(spec: OpenAPISpec, bodySchema: SchemaObject | null): PropI
  * Pick the primary positional arg for a route body.
  * Returns the property name if there's an obvious "primary" field.
  */
-function pickPositionalArg(
-  bodyProps: PropInfo[],
-  pathParams: string[],
-): string | null {
+function pickPositionalArg(bodyProps: PropInfo[], pathParams: string[]): string | null {
   // Don't assign positional if there are multiple path params already
   if (pathParams.length >= 2) return null;
 
   const primaryNames = ["query", "text", "address"];
   for (const pname of primaryNames) {
-    const prop = bodyProps.find(
-      (p) => p.name === pname && p.required && p.type === "string",
-    );
+    const prop = bodyProps.find((p) => p.name === pname && p.required && p.type === "string");
     if (prop) return prop.name;
   }
   return null;
@@ -484,10 +535,11 @@ function derivePrimConfig(spec: OpenAPISpec, id: string): PrimConfig {
   const pascal = id.charAt(0).toUpperCase() + id.slice(1);
 
   // Faucet-like: no x402 payment at all
-  const allOps = Object.values(spec.paths).flatMap((pi) =>
-    (["get", "post", "put", "delete", "patch"] as const)
-      .map((m) => pi[m])
-      .filter(Boolean) as Operation[]
+  const allOps = Object.values(spec.paths).flatMap(
+    (pi) =>
+      (["get", "post", "put", "delete", "patch"] as const)
+        .map((m) => pi[m])
+        .filter(Boolean) as Operation[],
   );
   const paidOps = allOps.filter((op) => !isSkipped(op) && !isFreeOperation(op));
   const isFaucetLike = paidOps.length === 0;
@@ -511,8 +563,8 @@ function inferMaxPayment(spec: OpenAPISpec): string {
       if (!op) continue;
       const price = op["x-price"];
       if (price) {
-        const num = parseFloat(price.replace("$", ""));
-        if (!isNaN(num) && num > max) max = num;
+        const num = Number.parseFloat(price.replace("$", ""));
+        if (!Number.isNaN(num) && num > max) max = num;
       }
     }
   }
@@ -598,7 +650,14 @@ function genHandlerBody(
   }
 
   if (requiredVars.length > 0) {
-    const usageStr = buildUsageString(route, prim, pathParams, positionalField, bodyProps, argvOffset);
+    const usageStr = buildUsageString(
+      route,
+      prim,
+      pathParams,
+      positionalField,
+      bodyProps,
+      argvOffset,
+    );
     lines.push(`${ind}if (${requiredVars.map((v) => `!${v}`).join(" || ")}) {`);
     lines.push(`${ind}  process.stderr.write(`);
     lines.push(`${ind}    "${usageStr}\\n",`);
@@ -608,8 +667,7 @@ function genHandlerBody(
   }
 
   // --- Build request body ---
-  const hasBody =
-    (route.method === "POST" || route.method === "PUT") && bodyProps.length > 0;
+  const hasBody = (route.method === "POST" || route.method === "PUT") && bodyProps.length > 0;
 
   if (hasBody) {
     lines.push(`${ind}const reqBody: Record<string, unknown> = {};`);
@@ -749,14 +807,14 @@ function generateCommandFile(spec: OpenAPISpec, id: string): string {
 
   if (routes.length === 0) {
     return [
-      `// Generated by scripts/gen-cli.ts — do not edit manually.`,
-      `// Regenerate: pnpm gen:cli`,
-      `// BEGIN:PRIM:CLI`,
-      ``,
+      "// Generated by scripts/gen-cli.ts — do not edit manually.",
+      "// Regenerate: pnpm gen:cli",
+      "// BEGIN:PRIM:CLI",
+      "",
       `// No CLI routes found in ${id}.yaml`,
-      ``,
-      `// END:PRIM:CLI`,
-      ``,
+      "",
+      "// END:PRIM:CLI",
+      "",
     ].join("\n");
   }
 
@@ -780,10 +838,10 @@ function generateCommandFile(spec: OpenAPISpec, id: string): string {
 
   const lines: string[] = [];
 
-  lines.push(`// Generated by scripts/gen-cli.ts — do not edit manually.`);
-  lines.push(`// Regenerate: pnpm gen:cli`);
-  lines.push(`// BEGIN:PRIM:CLI`);
-  lines.push(``);
+  lines.push("// Generated by scripts/gen-cli.ts — do not edit manually.");
+  lines.push("// Regenerate: pnpm gen:cli");
+  lines.push("// BEGIN:PRIM:CLI");
+  lines.push("");
 
   // Imports
   if (prim.isFaucetLike) {
@@ -794,55 +852,61 @@ function generateCommandFile(spec: OpenAPISpec, id: string): string {
     lines.push(`import { getConfig } from "./config.ts";`);
     lines.push(`import { getFlag, hasFlag, resolvePassphrase } from "./flags.ts";`);
   }
-  lines.push(``);
+  lines.push("");
 
   // URL resolver
   lines.push(`export function ${prim.resolverName}(argv: string[]): string {`);
   lines.push(`  const flag = getFlag("url", argv);`);
-  lines.push(`  if (flag) return flag;`);
+  lines.push("  if (flag) return flag;");
   lines.push(`  if (process.env.${prim.envVar}) return process.env.${prim.envVar};`);
   lines.push(`  return "${prim.defaultUrl}";`);
-  lines.push(`}`);
-  lines.push(``);
+  lines.push("}");
+  lines.push("");
 
   // Error handler
-  lines.push(`async function handleError(res: Response): Promise<never> {`);
-  lines.push(`  let message = \`HTTP \${res.status}\`;`);
+  lines.push("async function handleError(res: Response): Promise<never> {");
+  lines.push("  let message = `HTTP ${res.status}`;");
   lines.push(`  let code = "unknown";`);
-  lines.push(`  try {`);
-  lines.push(`    const body = (await res.json()) as { error?: { code: string; message: string } };`);
-  lines.push(`    if (body.error) {`);
-  lines.push(`      message = body.error.message;`);
-  lines.push(`      code = body.error.code;`);
-  lines.push(`    }`);
-  lines.push(`  } catch {`);
-  lines.push(`    // ignore parse error`);
-  lines.push(`  }`);
-  lines.push(`  process.stderr.write(\`Error: \${message} (\${code})\\n\`);`);
-  lines.push(`  process.exit(1);`);
-  lines.push(`}`);
-  lines.push(``);
+  lines.push("  try {");
+  lines.push(
+    "    const body = (await res.json()) as { error?: { code: string; message: string } };",
+  );
+  lines.push("    if (body.error) {");
+  lines.push("      message = body.error.message;");
+  lines.push("      code = body.error.code;");
+  lines.push("    }");
+  lines.push("  } catch {");
+  lines.push("    // ignore parse error");
+  lines.push("  }");
+  lines.push("  process.stderr.write(`Error: ${message} (${code})\\n`);");
+  lines.push("  process.exit(1);");
+  lines.push("}");
+  lines.push("");
 
   // Main command function
-  lines.push(`export async function ${prim.funcName}(sub: string, argv: string[]): Promise<void> {`);
+  lines.push(
+    `export async function ${prim.funcName}(sub: string, argv: string[]): Promise<void> {`,
+  );
   lines.push(`  const baseUrl = ${prim.resolverName}(argv);`);
   lines.push(`  const quiet = hasFlag("quiet", argv);`);
 
   if (!prim.isFaucetLike) {
     lines.push(`  const walletFlag = getFlag("wallet", argv);`);
-    lines.push(`  const passphrase = await resolvePassphrase(argv);`);
+    lines.push("  const passphrase = await resolvePassphrase(argv);");
     lines.push(`  const maxPaymentFlag = getFlag("max-payment", argv);`);
-    lines.push(`  const config = await getConfig();`);
-    lines.push(`  const primFetch = createPrimFetch({`);
-    lines.push(`    keystore:`);
-    lines.push(`      walletFlag !== undefined || passphrase !== undefined`);
-    lines.push(`        ? { address: walletFlag, passphrase }`);
-    lines.push(`        : true,`);
-    lines.push(`    maxPayment: maxPaymentFlag ?? process.env.PRIM_MAX_PAYMENT ?? "${prim.maxPayment}",`);
-    lines.push(`    network: config.network,`);
-    lines.push(`  });`);
+    lines.push("  const config = await getConfig();");
+    lines.push("  const primFetch = createPrimFetch({");
+    lines.push("    keystore:");
+    lines.push("      walletFlag !== undefined || passphrase !== undefined");
+    lines.push("        ? { address: walletFlag, passphrase }");
+    lines.push("        : true,");
+    lines.push(
+      `    maxPayment: maxPaymentFlag ?? process.env.PRIM_MAX_PAYMENT ?? "${prim.maxPayment}",`,
+    );
+    lines.push("    network: config.network,");
+    lines.push("  });");
   }
-  lines.push(``);
+  lines.push("");
 
   // Help block
   lines.push(`  if (!sub || sub === "--help" || sub === "-h") {`);
@@ -858,9 +922,9 @@ function generateCommandFile(spec: OpenAPISpec, id: string): string {
       lines.push(`    console.log("  ${u}");`);
     }
   }
-  lines.push(`    process.exit(1);`);
-  lines.push(`  }`);
-  lines.push(``);
+  lines.push("    process.exit(1);");
+  lines.push("  }");
+  lines.push("");
 
   // Subgroup dispatchers
   for (const [sg, sgRoutes] of subgroupMap) {
@@ -872,44 +936,44 @@ function generateCommandFile(spec: OpenAPISpec, id: string): string {
     for (const r of sgRoutes) {
       lines.push(`      case "${r.leafName}": {`);
       lines.push(genHandlerBody(spec, r, prim, 3));
-      lines.push(`        break;`);
-      lines.push(`      }`);
-      lines.push(``);
+      lines.push("        break;");
+      lines.push("      }");
+      lines.push("");
     }
     const leaves = sgRoutes.map((r) => r.leafName).join("|");
-    lines.push(`      default:`);
+    lines.push("      default:");
     lines.push(`        console.log("Usage: prim ${prim.id} ${sg} <${leaves}>");`);
-    lines.push(`        process.exit(1);`);
-    lines.push(`    }`);
-    lines.push(`    return;`);
-    lines.push(`  }`);
-    lines.push(``);
+    lines.push("        process.exit(1);");
+    lines.push("    }");
+    lines.push("    return;");
+    lines.push("  }");
+    lines.push("");
   }
 
   // Top-level switch
   if (topLevel.length > 0) {
-    lines.push(`  switch (sub) {`);
+    lines.push("  switch (sub) {");
     for (const r of topLevel) {
       lines.push(`    case "${r.leafName}": {`);
       lines.push(genHandlerBody(spec, r, prim, 2));
-      lines.push(`      break;`);
-      lines.push(`    }`);
-      lines.push(``);
+      lines.push("      break;");
+      lines.push("    }");
+      lines.push("");
     }
-    lines.push(`    default:`);
+    lines.push("    default:");
     lines.push(`      console.log("Usage: prim ${prim.id} <${allCmds}>");`);
-    lines.push(`      process.exit(1);`);
-    lines.push(`  }`);
+    lines.push("      process.exit(1);");
+    lines.push("  }");
   } else {
     // All subcommands are in subgroups — no top-level switch needed
     lines.push(`  console.log("Usage: prim ${prim.id} <${allCmds}>");`);
-    lines.push(`  process.exit(1);`);
+    lines.push("  process.exit(1);");
   }
 
-  lines.push(`}`);
-  lines.push(``);
-  lines.push(`// END:PRIM:CLI`);
-  lines.push(``);
+  lines.push("}");
+  lines.push("");
+  lines.push("// END:PRIM:CLI");
+  lines.push("");
 
   return lines.join("\n");
 }
@@ -923,7 +987,9 @@ const keystoreSrcDir = join(ROOT, "packages/keystore/src");
 // Prims with OpenAPI specs that have CLI commands
 // (wallet is excluded — its CLI is part of cli.ts directly)
 // wallet excluded — its CLI is hand-maintained in cli.ts
-const CLI_PRIMS = primsForInterface("cli").map((p) => p.id).filter((id) => id !== "wallet");
+const CLI_PRIMS = primsForInterface("cli")
+  .map((p) => p.id)
+  .filter((id) => id !== "wallet");
 
 const primsToProcess = TARGET_PRIM ? [TARGET_PRIM] : CLI_PRIMS;
 
@@ -969,7 +1035,9 @@ for (const id of primsToProcess) {
     } else if (!isGenerated) {
       console.log(`  – packages/keystore/src/${id}-commands.ts (manually maintained, skipped)`);
     } else if (changed) {
-      console.error(`  ✗ packages/keystore/src/${id}-commands.ts is out of date — run pnpm gen:cli`);
+      console.error(
+        `  ✗ packages/keystore/src/${id}-commands.ts is out of date — run pnpm gen:cli`,
+      );
       anyFailed = true;
     } else {
       console.log(`  ✓ packages/keystore/src/${id}-commands.ts`);

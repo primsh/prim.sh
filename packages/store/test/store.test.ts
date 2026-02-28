@@ -7,7 +7,7 @@
  * IMPORTANT: env vars must be set before any module import that touches db/cloudflare.
  */
 
-import { describe, expect, it, beforeEach, afterEach, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 // Set env before imports
 process.env.STORE_DB_PATH = ":memory:";
@@ -41,7 +41,11 @@ const mockFetch = vi.fn(async (input: RequestInfo | URL, _init?: RequestInit) =>
   if (url.match(/\/accounts\/[^/]+\/r2\/buckets$/) && method === "POST") {
     const body = JSON.parse(_init?.body as string);
     return new Response(
-      JSON.stringify({ success: true, errors: [], result: makeCfBucket({ name: body.name, location: body.locationHint ?? "enam" }) }),
+      JSON.stringify({
+        success: true,
+        errors: [],
+        result: makeCfBucket({ name: body.name, location: body.locationHint ?? "enam" }),
+      }),
       { status: 200, headers: { "Content-Type": "application/json" } },
     );
   }
@@ -57,22 +61,24 @@ const mockFetch = vi.fn(async (input: RequestInfo | URL, _init?: RequestInit) =>
 
   // CF: DELETE /accounts/.*/r2/buckets/<name> — delete bucket
   if (url.match(/\/accounts\/[^/]+\/r2\/buckets\/[^/]+$/) && method === "DELETE") {
-    return new Response(
-      JSON.stringify({ success: true, errors: [], result: {} }),
-      { status: 200, headers: { "Content-Type": "application/json" } },
-    );
+    return new Response(JSON.stringify({ success: true, errors: [], result: {} }), {
+      status: 200,
+      headers: { "Content-Type": "application/json" },
+    });
   }
 
   // CF: GET /accounts/.*/r2/buckets — list buckets
   if (url.match(/\/accounts\/[^/]+\/r2\/buckets$/) && method === "GET") {
-    return new Response(
-      JSON.stringify({ success: true, errors: [], result: { buckets: [] } }),
-      { status: 200, headers: { "Content-Type": "application/json" } },
-    );
+    return new Response(JSON.stringify({ success: true, errors: [], result: { buckets: [] } }), {
+      status: 200,
+      headers: { "Content-Type": "application/json" },
+    });
   }
 
   // ─── S3-compatible API mocks ──────────────────────────────────────────
-  const s3Match = url.match(/^https:\/\/test-cf-account\.r2\.cloudflarestorage\.com\/([^/?]+)(\/(.+?))?(\?.*)?$/);
+  const s3Match = url.match(
+    /^https:\/\/test-cf-account\.r2\.cloudflarestorage\.com\/([^/?]+)(\/(.+?))?(\?.*)?$/,
+  );
   if (s3Match) {
     const _bucketName = s3Match[1];
     const objectKey = s3Match[3];
@@ -145,21 +151,27 @@ const mockFetch = vi.fn(async (input: RequestInfo | URL, _init?: RequestInit) =>
 vi.stubGlobal("fetch", mockFetch);
 
 // Import after env + fetch stub
-import { resetDb, getBucketById, getQuota, setQuota as dbSetQuota, setUsage as dbSetUsage } from "../src/db.ts";
+import {
+  setQuota as dbSetQuota,
+  setUsage as dbSetUsage,
+  getBucketById,
+  getQuota,
+  resetDb,
+} from "../src/db.ts";
 import {
   createBucket,
-  listBuckets,
-  getBucket,
   deleteBucket,
-  isValidBucketName,
-  putObject,
-  getObject,
   deleteObject,
-  listObjects,
-  isValidObjectKey,
+  getBucket,
+  getObject,
   getUsage,
-  setQuotaForBucket,
+  isValidBucketName,
+  isValidObjectKey,
+  listBuckets,
+  listObjects,
+  putObject,
   reconcileUsage,
+  setQuotaForBucket,
 } from "../src/service.ts";
 
 // ─── Fixtures ────────────────────────────────────────────────────────────
@@ -459,7 +471,14 @@ describe("store.sh", () => {
 
     it("putObject — upload succeeds", async () => {
       const bucketId = await createTestBucket();
-      const result = await putObject(bucketId, "hello.txt", "hello world", "text/plain", CALLER, 11);
+      const result = await putObject(
+        bucketId,
+        "hello.txt",
+        "hello world",
+        "text/plain",
+        CALLER,
+        11,
+      );
       expect(result.ok).toBe(true);
       if (!result.ok) return;
       expect(result.data.key).toBe("hello.txt");
@@ -468,7 +487,14 @@ describe("store.sh", () => {
 
     it("putObject — nested key with slashes", async () => {
       const bucketId = await createTestBucket();
-      const result = await putObject(bucketId, "folder/sub/file.txt", "data", "text/plain", CALLER, 4);
+      const result = await putObject(
+        bucketId,
+        "folder/sub/file.txt",
+        "data",
+        "text/plain",
+        CALLER,
+        4,
+      );
       expect(result.ok).toBe(true);
       if (!result.ok) return;
       expect(result.data.key).toBe("folder/sub/file.txt");
@@ -533,10 +559,13 @@ describe("store.sh", () => {
     it("getObject — nonexistent key returns 404", async () => {
       const bucketId = await createTestBucket();
       mockFetch.mockImplementationOnce(async () => {
-        return new Response("<Error><Code>NoSuchKey</Code><Message>The specified key does not exist.</Message></Error>", {
-          status: 404,
-          headers: { "Content-Type": "application/xml" },
-        });
+        return new Response(
+          "<Error><Code>NoSuchKey</Code><Message>The specified key does not exist.</Message></Error>",
+          {
+            status: 404,
+            headers: { "Content-Type": "application/xml" },
+          },
+        );
       });
       const result = await getObject(bucketId, "missing.txt", CALLER);
       expect(result.ok).toBe(false);
@@ -571,15 +600,19 @@ describe("store.sh", () => {
     it("deleteObject — S3 error propagation", async () => {
       const bucketId = await createTestBucket();
       // HEAD succeeds (returns object size)
-      mockFetch.mockImplementationOnce(async () =>
-        new Response(null, { status: 200, headers: { "Content-Length": "42", ETag: '"e"' } }),
+      mockFetch.mockImplementationOnce(
+        async () =>
+          new Response(null, { status: 200, headers: { "Content-Length": "42", ETag: '"e"' } }),
       );
       // DELETE fails with AccessDenied
       mockFetch.mockImplementationOnce(async () => {
-        return new Response("<Error><Code>AccessDenied</Code><Message>Access Denied</Message></Error>", {
-          status: 403,
-          headers: { "Content-Type": "application/xml" },
-        });
+        return new Response(
+          "<Error><Code>AccessDenied</Code><Message>Access Denied</Message></Error>",
+          {
+            status: 403,
+            headers: { "Content-Type": "application/xml" },
+          },
+        );
       });
       const result = await deleteObject(bucketId, "hello.txt", CALLER);
       expect(result.ok).toBe(false);
@@ -713,8 +746,9 @@ describe("store.sh", () => {
       await putObject(bucketId, "file.txt", "data", "text/plain", CALLER, 100);
       // Overwrite: HEAD returns old size 100
       // (default mock returns Content-Length: 42, override for this test)
-      mockFetch.mockImplementationOnce(async () =>
-        new Response(null, { status: 200, headers: { "Content-Length": "100", ETag: '"old"' } }),
+      mockFetch.mockImplementationOnce(
+        async () =>
+          new Response(null, { status: 200, headers: { "Content-Length": "100", ETag: '"old"' } }),
       );
       await putObject(bucketId, "file.txt", "data", "text/plain", CALLER, 150);
       const quota = getQuota(bucketId);
@@ -727,8 +761,9 @@ describe("store.sh", () => {
       // Seed usage
       dbSetUsage(bucketId, 100);
       // HEAD returns size 100 before delete
-      mockFetch.mockImplementationOnce(async () =>
-        new Response(null, { status: 200, headers: { "Content-Length": "100", ETag: '"e"' } }),
+      mockFetch.mockImplementationOnce(
+        async () =>
+          new Response(null, { status: 200, headers: { "Content-Length": "100", ETag: '"e"' } }),
       );
       await deleteObject(bucketId, "file.txt", CALLER);
       const quota = getQuota(bucketId);
@@ -973,8 +1008,9 @@ describe("store.sh", () => {
 
       // Overwrite: old object was 5 bytes, new is 10 bytes — net delta = 5 bytes
       // total would be (1GB - 10) + 5 = 1GB - 5 → allowed
-      mockFetch.mockImplementationOnce(async () =>
-        new Response(null, { status: 200, headers: { "Content-Length": "5", ETag: '"old"' } }),
+      mockFetch.mockImplementationOnce(
+        async () =>
+          new Response(null, { status: 200, headers: { "Content-Length": "5", ETag: '"old"' } }),
       );
       const result = await putObject(bucketId, "file.txt", "xxxxxxxxxx", "text/plain", CALLER, 10);
       expect(result.ok).toBe(true);
@@ -1001,7 +1037,10 @@ describe("store.sh", () => {
     it("CF 409 → service returns bucket_name_taken", async () => {
       mockFetch.mockImplementationOnce(async () => {
         return new Response(
-          JSON.stringify({ success: false, errors: [{ code: 409, message: "Bucket already exists" }] }),
+          JSON.stringify({
+            success: false,
+            errors: [{ code: 409, message: "Bucket already exists" }],
+          }),
           { status: 409, headers: { "Content-Type": "application/json" } },
         );
       });

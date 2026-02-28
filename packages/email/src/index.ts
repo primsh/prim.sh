@@ -3,50 +3,50 @@ import {
   createAgentStackMiddleware,
   createWalletAllowlistChecker,
   forbidden,
-  notFound,
   invalidRequest,
+  notFound,
   serviceError,
 } from "@primsh/x402-middleware";
 import type { ApiError } from "@primsh/x402-middleware";
 import { createPrimApp } from "@primsh/x402-middleware/create-prim-app";
 import type {
   CreateMailboxRequest,
+  DeleteDomainResponse,
+  DeleteMailboxResponse,
+  DeleteWebhookResponse,
+  DomainListResponse,
+  DomainResponse,
+  EmailDetail,
+  EmailListResponse,
+  MailboxListResponse,
+  MailboxResponse,
+  RegisterDomainRequest,
+  RegisterWebhookRequest,
   RenewMailboxRequest,
   SendMessageRequest,
-  RegisterWebhookRequest,
-  RegisterDomainRequest,
-  MailboxResponse,
-  MailboxListResponse,
-  DeleteMailboxResponse,
-  EmailListResponse,
-  EmailDetail,
   SendMessageResponse,
-  WebhookResponse,
-  WebhookListResponse,
-  DeleteWebhookResponse,
-  DomainResponse,
-  DomainListResponse,
-  DeleteDomainResponse,
   VerifyDomainResponse,
+  WebhookListResponse,
+  WebhookResponse,
 } from "./api.ts";
 import {
   createMailbox,
-  listMailboxes,
-  getMailbox,
-  deleteMailbox,
-  listMessages,
-  getMessage,
-  sendMessage,
-  renewMailbox,
-  registerWebhook,
-  listWebhooks,
-  deleteWebhook,
-  handleIngestEvent,
-  registerDomain,
-  listDomains,
-  getDomain,
-  verifyDomain,
   deleteDomain,
+  deleteMailbox,
+  deleteWebhook,
+  getDomain,
+  getMailbox,
+  getMessage,
+  handleIngestEvent,
+  listDomains,
+  listMailboxes,
+  listMessages,
+  listWebhooks,
+  registerDomain,
+  registerWebhook,
+  renewMailbox,
+  sendMessage,
+  verifyDomain,
 } from "./service.ts";
 
 const EMAIL_ROUTES = {
@@ -75,35 +75,109 @@ function stalwartError(message: string): ApiError {
 const app = createPrimApp(
   {
     serviceName: "email.sh",
-    llmsTxtPath: import.meta.dir ? resolve(import.meta.dir, "../../../site/email/llms.txt") : undefined,
+    llmsTxtPath: import.meta.dir
+      ? resolve(import.meta.dir, "../../../site/email/llms.txt")
+      : undefined,
     routes: EMAIL_ROUTES,
     extraFreeRoutes: ["POST /internal/hooks/ingest"],
     metricsName: "email.prim.sh",
     pricing: {
       routes: [
-        { method: "POST", path: "/v1/mailboxes", price_usdc: "0.05", description: "Create mailbox" },
-        { method: "GET", path: "/v1/mailboxes", price_usdc: "0.001", description: "List mailboxes" },
-        { method: "GET", path: "/v1/mailboxes/{id}", price_usdc: "0.001", description: "Get mailbox" },
-        { method: "DELETE", path: "/v1/mailboxes/{id}", price_usdc: "0.01", description: "Delete mailbox" },
-        { method: "POST", path: "/v1/mailboxes/{id}/renew", price_usdc: "0.01", description: "Renew mailbox" },
-        { method: "GET", path: "/v1/mailboxes/{id}/messages", price_usdc: "0.001", description: "List messages" },
-        { method: "GET", path: "/v1/mailboxes/{id}/messages/{msgId}", price_usdc: "0.001", description: "Get message" },
-        { method: "POST", path: "/v1/mailboxes/{id}/send", price_usdc: "0.01", description: "Send email" },
-        { method: "POST", path: "/v1/mailboxes/{id}/webhooks", price_usdc: "0.01", description: "Register webhook" },
-        { method: "GET", path: "/v1/mailboxes/{id}/webhooks", price_usdc: "0.001", description: "List webhooks" },
-        { method: "DELETE", path: "/v1/mailboxes/{id}/webhooks/{whId}", price_usdc: "0.001", description: "Delete webhook" },
-        { method: "POST", path: "/v1/domains", price_usdc: "0.05", description: "Register custom domain" },
+        {
+          method: "POST",
+          path: "/v1/mailboxes",
+          price_usdc: "0.05",
+          description: "Create mailbox",
+        },
+        {
+          method: "GET",
+          path: "/v1/mailboxes",
+          price_usdc: "0.001",
+          description: "List mailboxes",
+        },
+        {
+          method: "GET",
+          path: "/v1/mailboxes/{id}",
+          price_usdc: "0.001",
+          description: "Get mailbox",
+        },
+        {
+          method: "DELETE",
+          path: "/v1/mailboxes/{id}",
+          price_usdc: "0.01",
+          description: "Delete mailbox",
+        },
+        {
+          method: "POST",
+          path: "/v1/mailboxes/{id}/renew",
+          price_usdc: "0.01",
+          description: "Renew mailbox",
+        },
+        {
+          method: "GET",
+          path: "/v1/mailboxes/{id}/messages",
+          price_usdc: "0.001",
+          description: "List messages",
+        },
+        {
+          method: "GET",
+          path: "/v1/mailboxes/{id}/messages/{msgId}",
+          price_usdc: "0.001",
+          description: "Get message",
+        },
+        {
+          method: "POST",
+          path: "/v1/mailboxes/{id}/send",
+          price_usdc: "0.01",
+          description: "Send email",
+        },
+        {
+          method: "POST",
+          path: "/v1/mailboxes/{id}/webhooks",
+          price_usdc: "0.01",
+          description: "Register webhook",
+        },
+        {
+          method: "GET",
+          path: "/v1/mailboxes/{id}/webhooks",
+          price_usdc: "0.001",
+          description: "List webhooks",
+        },
+        {
+          method: "DELETE",
+          path: "/v1/mailboxes/{id}/webhooks/{whId}",
+          price_usdc: "0.001",
+          description: "Delete webhook",
+        },
+        {
+          method: "POST",
+          path: "/v1/domains",
+          price_usdc: "0.05",
+          description: "Register custom domain",
+        },
         { method: "GET", path: "/v1/domains", price_usdc: "0.001", description: "List domains" },
         { method: "GET", path: "/v1/domains/{id}", price_usdc: "0.001", description: "Get domain" },
-        { method: "POST", path: "/v1/domains/{id}/verify", price_usdc: "0.01", description: "Verify domain DNS" },
-        { method: "DELETE", path: "/v1/domains/{id}", price_usdc: "0.01", description: "Delete domain" },
+        {
+          method: "POST",
+          path: "/v1/domains/{id}/verify",
+          price_usdc: "0.01",
+          description: "Verify domain DNS",
+        },
+        {
+          method: "DELETE",
+          path: "/v1/domains/{id}",
+          price_usdc: "0.01",
+          description: "Delete domain",
+        },
       ],
     },
   },
   { createAgentStackMiddleware, createWalletAllowlistChecker },
 );
 
-const logger = (app as typeof app & { logger: { warn: (msg: string, extra?: Record<string, unknown>) => void } }).logger;
+const logger = (
+  app as typeof app & { logger: { warn: (msg: string, extra?: Record<string, unknown>) => void } }
+).logger;
 
 // POST /v1/mailboxes — Create mailbox
 app.post("/v1/mailboxes", async (c) => {
@@ -121,8 +195,10 @@ app.post("/v1/mailboxes", async (c) => {
   const result = await createMailbox(body, caller);
   if (!result.ok) {
     if (result.code === "invalid_request") return c.json(invalidRequest(result.message), 400);
-    if (result.code === "username_taken") return c.json(serviceError("username_taken", result.message), 409);
-    if (result.code === "conflict") return c.json(stalwartError(result.message), (result.status ?? 503) as 503);
+    if (result.code === "username_taken")
+      return c.json(serviceError("username_taken", result.message), 409);
+    if (result.code === "conflict")
+      return c.json(stalwartError(result.message), (result.status ?? 503) as 503);
     return c.json(stalwartError(result.message), result.status as 502);
   }
   return c.json(result.data as MailboxResponse, 201);
@@ -309,7 +385,8 @@ app.post("/v1/domains", async (c) => {
   const result = await registerDomain(body, caller);
   if (!result.ok) {
     if (result.code === "invalid_request") return c.json(invalidRequest(result.message), 400);
-    if (result.code === "domain_taken") return c.json(serviceError("domain_taken", result.message), 409);
+    if (result.code === "domain_taken")
+      return c.json(serviceError("domain_taken", result.message), 409);
     return c.json(serviceError(result.code, result.message), result.status as 502);
   }
   return c.json(result.data as DomainResponse, 201);

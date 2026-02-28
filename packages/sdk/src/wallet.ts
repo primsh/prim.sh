@@ -198,7 +198,9 @@ export interface ResumeWalletResponse {
 
 // ── Client ─────────────────────────────────────────────────────────────────
 
-export function createWalletClient(primFetch: (input: RequestInfo | URL, init?: RequestInit) => Promise<Response>) {
+export function createWalletClient(
+  primFetch: (input: RequestInfo | URL, init?: RequestInit) => Promise<Response>,
+) {
   const baseUrl = "https://wallet.prim.sh";
   return {
     async registerWallet(req: RegisterWalletRequest): Promise<RegisterWalletResponse> {

@@ -156,7 +156,9 @@ export type DeleteCacheResponse = Record<string, unknown>;
 
 // ── Client ─────────────────────────────────────────────────────────────────
 
-export function createMemClient(primFetch: (input: RequestInfo | URL, init?: RequestInit) => Promise<Response>) {
+export function createMemClient(
+  primFetch: (input: RequestInfo | URL, init?: RequestInit) => Promise<Response>,
+) {
   const baseUrl = "https://mem.prim.sh";
   return {
     async createCollection(req: CreateCollectionRequest): Promise<CollectionResponse> {
@@ -189,7 +191,10 @@ export function createMemClient(primFetch: (input: RequestInfo | URL, init?: Req
       });
       return res.json() as Promise<DeleteCollectionResponse>;
     },
-    async upsertDocuments(params: UpsertDocumentsParams, req: UpsertDocumentsRequest): Promise<UpsertDocumentsResponse> {
+    async upsertDocuments(
+      params: UpsertDocumentsParams,
+      req: UpsertDocumentsRequest,
+    ): Promise<UpsertDocumentsResponse> {
       const url = `${baseUrl}/v1/collections/${encodeURIComponent(params.id)}/upsert`;
       const res = await primFetch(url, {
         method: "POST",
@@ -198,7 +203,10 @@ export function createMemClient(primFetch: (input: RequestInfo | URL, init?: Req
       });
       return res.json() as Promise<UpsertDocumentsResponse>;
     },
-    async queryCollection(params: QueryCollectionParams, req: QueryCollectionRequest): Promise<QueryCollectionResponse> {
+    async queryCollection(
+      params: QueryCollectionParams,
+      req: QueryCollectionRequest,
+    ): Promise<QueryCollectionResponse> {
       const url = `${baseUrl}/v1/collections/${encodeURIComponent(params.id)}/query`;
       const res = await primFetch(url, {
         method: "POST",

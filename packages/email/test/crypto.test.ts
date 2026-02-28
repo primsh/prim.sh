@@ -1,6 +1,6 @@
-import { describe, expect, it, beforeEach, afterEach } from "vitest";
-import { encryptPassword, decryptPassword, getEncryptionKey } from "../src/crypto";
 import { randomBytes } from "node:crypto";
+import { afterEach, beforeEach, describe, expect, it } from "vitest";
+import { decryptPassword, encryptPassword, getEncryptionKey } from "../src/crypto";
 
 const TEST_KEY = randomBytes(32).toString("hex");
 
@@ -47,7 +47,9 @@ describe("crypto", () => {
 
   it("throws when EMAIL_ENCRYPTION_KEY is missing", () => {
     process.env.EMAIL_ENCRYPTION_KEY = "";
-    expect(() => getEncryptionKey()).toThrow("EMAIL_ENCRYPTION_KEY environment variable is required");
+    expect(() => getEncryptionKey()).toThrow(
+      "EMAIL_ENCRYPTION_KEY environment variable is required",
+    );
   });
 
   it("throws when EMAIL_ENCRYPTION_KEY is wrong length", () => {

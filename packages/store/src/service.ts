@@ -1,16 +1,16 @@
 import { randomBytes } from "node:crypto";
 import {
-  insertBucket,
-  getBucketById,
-  getBucketByCfName,
-  getBucketsByOwner,
   countBucketsByOwner,
-  getTotalStorageByOwner,
-  deleteBucketRow,
   getQuota as dbGetQuota,
   setQuota as dbSetQuota,
-  incrementUsage,
   decrementUsage,
+  deleteBucketRow,
+  getBucketByCfName,
+  getBucketById,
+  getBucketsByOwner,
+  getTotalStorageByOwner,
+  incrementUsage,
+  insertBucket,
   setUsage,
 } from "./db.ts";
 
@@ -18,30 +18,30 @@ import {
 const MAX_BUCKETS_PER_WALLET = Number(process.env.STORE_MAX_BUCKETS_PER_WALLET ?? 10);
 const DEFAULT_BUCKET_QUOTA = Number(process.env.STORE_DEFAULT_BUCKET_QUOTA ?? 104857600); // 100MB
 const MAX_STORAGE_PER_WALLET = Number(process.env.STORE_MAX_STORAGE_PER_WALLET ?? 1073741824); // 1GB
+import type {
+  BucketListResponse,
+  BucketResponse,
+  CreateBucketRequest,
+  CreateBucketResponse,
+  DeleteObjectResponse,
+  ObjectListResponse,
+  PutObjectResponse,
+  QuotaResponse,
+  ReconcileResponse,
+} from "./api.ts";
 import {
   CloudflareError,
   createBucket as cfCreateBucket,
   deleteBucket as cfDeleteBucket,
 } from "./cloudflare.ts";
-import {
-  putObject as s3PutObject,
-  getObject as s3GetObject,
-  deleteObject as s3DeleteObject,
-  listObjects as s3ListObjects,
-  headObject as s3HeadObject,
-} from "./s3.ts";
-import type {
-  BucketResponse,
-  BucketListResponse,
-  CreateBucketRequest,
-  CreateBucketResponse,
-  PutObjectResponse,
-  DeleteObjectResponse,
-  ObjectListResponse,
-  QuotaResponse,
-  ReconcileResponse,
-} from "./api.ts";
 import type { BucketRow } from "./db.ts";
+import {
+  deleteObject as s3DeleteObject,
+  getObject as s3GetObject,
+  headObject as s3HeadObject,
+  listObjects as s3ListObjects,
+  putObject as s3PutObject,
+} from "./s3.ts";
 
 // ─── Helpers ─────────────────────────────────────────────────────────────
 
@@ -111,7 +111,8 @@ export async function createBucket(
       ok: false,
       status: 400,
       code: "invalid_request",
-      message: "Invalid bucket name. Must be 3-63 chars, lowercase alphanumeric and hyphens, no consecutive hyphens.",
+      message:
+        "Invalid bucket name. Must be 3-63 chars, lowercase alphanumeric and hyphens, no consecutive hyphens.",
     };
   }
 
@@ -162,11 +163,7 @@ export async function createBucket(
   }
 }
 
-export function listBuckets(
-  callerWallet: string,
-  limit: number,
-  page: number,
-): BucketListResponse {
+export function listBuckets(callerWallet: string, limit: number, page: number): BucketListResponse {
   const offset = (page - 1) * limit;
   const rows = getBucketsByOwner(callerWallet, limit, offset);
   const total = countBucketsByOwner(callerWallet);
@@ -183,10 +180,7 @@ export function listBuckets(
   };
 }
 
-export function getBucket(
-  bucketId: string,
-  callerWallet: string,
-): ServiceResult<BucketResponse> {
+export function getBucket(bucketId: string, callerWallet: string): ServiceResult<BucketResponse> {
   const check = checkBucketOwnership(bucketId, callerWallet);
   if (!check.ok) return check;
   return { ok: true, data: rowToBucketResponse(check.row) };
@@ -256,7 +250,9 @@ export async function putObject(
     try {
       const existing = await s3HeadObject(check.row.cf_name, key);
       if (existing) oldSize = existing.size;
-    } catch { /* head failed — assume new object */ }
+    } catch {
+      /* head failed — assume new object */
+    }
   }
 
   // Quota enforcement
@@ -310,7 +306,9 @@ export async function getObject(
   bucketId: string,
   key: string,
   callerWallet: string,
-): Promise<ServiceResult<{ body: ReadableStream; contentType: string; contentLength: number; etag: string }>> {
+): Promise<
+  ServiceResult<{ body: ReadableStream; contentType: string; contentLength: number; etag: string }>
+> {
   const check = checkBucketOwnership(bucketId, callerWallet);
   if (!check.ok) return check;
 
@@ -356,7 +354,9 @@ export async function deleteObject(
   try {
     const head = await s3HeadObject(check.row.cf_name, key);
     if (head) objectSize = head.size;
-  } catch { /* object may already be gone — skip usage decrement */ }
+  } catch {
+    /* object may already be gone — skip usage decrement */
+  }
 
   try {
     await s3DeleteObject(check.row.cf_name, key);
@@ -417,10 +417,7 @@ function computeUsagePct(usageBytes: number, quotaBytes: number | null): number 
   return Math.round((usageBytes / quotaBytes) * 100 * 100) / 100;
 }
 
-export function getUsage(
-  bucketId: string,
-  callerWallet: string,
-): ServiceResult<QuotaResponse> {
+export function getUsage(bucketId: string, callerWallet: string): ServiceResult<QuotaResponse> {
   const check = checkBucketOwnership(bucketId, callerWallet);
   if (!check.ok) return check;
 

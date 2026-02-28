@@ -16,9 +16,7 @@
             "description": "Comma-separated TLDs to check (e.g. \"com,xyz,io\"). Defaults to common TLDs."
           }
         },
-        "required": [
-          "query"
-        ]
+        "required": ["query"]
       }
     }
   },
@@ -39,9 +37,7 @@
             "description": "Registration period in years (default 1)."
           }
         },
-        "required": [
-          "domain"
-        ]
+        "required": ["domain"]
       }
     }
   },
@@ -58,9 +54,7 @@
             "description": "Quote ID from POST /v1/domains/quote. Valid for 15 minutes."
           }
         },
-        "required": [
-          "quote_id"
-        ]
+        "required": ["quote_id"]
       }
     }
   },
@@ -77,9 +71,7 @@
             "description": "Recovery token from the original RegisterResponse."
           }
         },
-        "required": [
-          "recovery_token"
-        ]
+        "required": ["recovery_token"]
       }
     }
   },
@@ -96,9 +88,7 @@
             "description": "Fully qualified domain name."
           }
         },
-        "required": [
-          "domain"
-        ]
+        "required": ["domain"]
       }
     }
   },
@@ -115,9 +105,7 @@
             "description": "Fully qualified domain name."
           }
         },
-        "required": [
-          "domain"
-        ]
+        "required": ["domain"]
       }
     }
   },
@@ -134,9 +122,7 @@
             "description": "Domain name for the zone."
           }
         },
-        "required": [
-          "domain"
-        ]
+        "required": ["domain"]
       }
     }
   },
@@ -176,9 +162,7 @@
             "description": "Zone ID."
           }
         },
-        "required": [
-          "id"
-        ]
+        "required": ["id"]
       }
     }
   },
@@ -195,9 +179,7 @@
             "description": "Zone ID."
           }
         },
-        "required": [
-          "id"
-        ]
+        "required": ["id"]
       }
     }
   },
@@ -214,9 +196,7 @@
             "description": "Zone ID."
           }
         },
-        "required": [
-          "zone_id"
-        ]
+        "required": ["zone_id"]
       }
     }
   },
@@ -233,9 +213,7 @@
             "description": "Zone ID."
           }
         },
-        "required": [
-          "zone_id"
-        ]
+        "required": ["zone_id"]
       }
     }
   },
@@ -264,11 +242,7 @@
             "description": "Optional DKIM public keys."
           }
         },
-        "required": [
-          "zone_id",
-          "mail_server",
-          "mail_server_ip"
-        ]
+        "required": ["zone_id", "mail_server", "mail_server_ip"]
       }
     }
   },
@@ -303,9 +277,7 @@
             }
           }
         },
-        "required": [
-          "zone_id"
-        ]
+        "required": ["zone_id"]
       }
     }
   },
@@ -324,16 +296,7 @@
           "type": {
             "type": "string",
             "description": "DNS record type.",
-            "enum": [
-              "A",
-              "AAAA",
-              "CNAME",
-              "MX",
-              "TXT",
-              "SRV",
-              "CAA",
-              "NS"
-            ]
+            "enum": ["A", "AAAA", "CNAME", "MX", "TXT", "SRV", "CAA", "NS"]
           },
           "name": {
             "type": "string",
@@ -356,12 +319,7 @@
             "description": "Priority for MX/SRV records."
           }
         },
-        "required": [
-          "zone_id",
-          "type",
-          "name",
-          "content"
-        ]
+        "required": ["zone_id", "type", "name", "content"]
       }
     }
   },
@@ -378,9 +336,7 @@
             "description": "Zone ID."
           }
         },
-        "required": [
-          "zone_id"
-        ]
+        "required": ["zone_id"]
       }
     }
   },
@@ -401,10 +357,7 @@
             "description": "Record ID."
           }
         },
-        "required": [
-          "zone_id",
-          "id"
-        ]
+        "required": ["zone_id", "id"]
       }
     }
   },
@@ -426,16 +379,7 @@
           },
           "type": {
             "type": "string",
-            "enum": [
-              "A",
-              "AAAA",
-              "CNAME",
-              "MX",
-              "TXT",
-              "SRV",
-              "CAA",
-              "NS"
-            ]
+            "enum": ["A", "AAAA", "CNAME", "MX", "TXT", "SRV", "CAA", "NS"]
           },
           "name": {
             "type": "string"
@@ -453,10 +397,7 @@
             "type": "integer"
           }
         },
-        "required": [
-          "zone_id",
-          "id"
-        ]
+        "required": ["zone_id", "id"]
       }
     }
   },
@@ -477,10 +418,7 @@
             "description": "Record ID."
           }
         },
-        "required": [
-          "zone_id",
-          "id"
-        ]
+        "required": ["zone_id", "id"]
       }
     }
   }

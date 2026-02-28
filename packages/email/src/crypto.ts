@@ -1,4 +1,4 @@
-import { randomBytes, createCipheriv, createDecipheriv } from "node:crypto";
+import { createCipheriv, createDecipheriv, randomBytes } from "node:crypto";
 
 const ALGORITHM = "aes-256-gcm";
 const IV_LENGTH = 12;
@@ -7,7 +7,8 @@ const TAG_LENGTH = 16;
 export function getEncryptionKey(): Buffer {
   const hex = process.env.EMAIL_ENCRYPTION_KEY;
   if (!hex) throw new Error("EMAIL_ENCRYPTION_KEY environment variable is required");
-  if (hex.length !== 64) throw new Error("EMAIL_ENCRYPTION_KEY must be 64 hex characters (32 bytes)");
+  if (hex.length !== 64)
+    throw new Error("EMAIL_ENCRYPTION_KEY must be 64 hex characters (32 bytes)");
   return Buffer.from(hex, "hex");
 }
 

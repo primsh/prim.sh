@@ -1,5 +1,5 @@
 #!/usr/bin/env bun
-import { startMcpServer, isPrimitive } from "./server.js";
+import { isPrimitive, startMcpServer } from "./server.js";
 import type { Primitive } from "./server.js";
 
 const argv = process.argv.slice(2);
@@ -56,8 +56,6 @@ if (primitivesFlag) {
 }
 
 startMcpServer({ primitives, walletAddress: walletFlag }).catch((err) => {
-  process.stderr.write(
-    `Fatal: ${err instanceof Error ? err.message : String(err)}\n`,
-  );
+  process.stderr.write(`Fatal: ${err instanceof Error ? err.message : String(err)}\n`);
   process.exit(1);
 });

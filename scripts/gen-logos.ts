@@ -13,9 +13,9 @@
  *   bun scripts/gen-logos.ts --check  # verify logos are up to date
  */
 
-import { writeFileSync, readFileSync, mkdirSync, existsSync } from "node:fs";
+import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { join, resolve } from "node:path";
-import { loadPrimitives, CATEGORY_COLORS, TYPE_TO_CATEGORY } from "./lib/primitives.js";
+import { CATEGORY_COLORS, TYPE_TO_CATEGORY, loadPrimitives } from "./lib/primitives.js";
 import type { PrimCategory } from "./lib/primitives.js";
 
 const ROOT = resolve(import.meta.dir, "..");
@@ -26,9 +26,9 @@ let anyFailed = false;
 // ── SVG templates ──────────────────────────────────────────────────────────
 
 interface MarkConfig {
-  primary: string;    // chevron color
-  secondary: string;  // cursor color
-  bg: string | null;  // null = transparent
+  primary: string; // chevron color
+  secondary: string; // cursor color
+  bg: string | null; // null = transparent
 }
 
 function chevron(cfg: MarkConfig): string {
@@ -135,5 +135,5 @@ if (CHECK_MODE) {
     console.log("[gen-logos] All logos up to date.");
   }
 } else {
-  console.log(`[gen-logos] Done.`);
+  console.log("[gen-logos] Done.");
 }

@@ -1,5 +1,5 @@
-import { describe, expect, it, vi, beforeEach } from "vitest";
 import { randomBytes } from "node:crypto";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const TEST_KEY = randomBytes(32).toString("hex");
 
@@ -18,8 +18,9 @@ vi.mock("../src/jmap", () => ({
     }
   },
   discoverSession: vi.fn(),
-  buildBasicAuth: vi.fn((email: string, password: string) =>
-    `Basic ${Buffer.from(`${email}:${password}`).toString("base64")}`,
+  buildBasicAuth: vi.fn(
+    (email: string, password: string) =>
+      `Basic ${Buffer.from(`${email}:${password}`).toString("base64")}`,
   ),
 }));
 
@@ -34,8 +35,8 @@ vi.mock("../src/db", () => {
 
 import { getJmapContext } from "../src/context";
 import { encryptPassword } from "../src/crypto";
-import { discoverSession, JmapError } from "../src/jmap";
 import * as dbMock from "../src/db";
+import { JmapError, discoverSession } from "../src/jmap";
 
 const WALLET = "0xaaa";
 

@@ -364,7 +364,9 @@ export type DeleteRecordResponse = Record<string, unknown>;
 
 // ── Client ─────────────────────────────────────────────────────────────────
 
-export function createDomainClient(primFetch: (input: RequestInfo | URL, init?: RequestInit) => Promise<Response>) {
+export function createDomainClient(
+  primFetch: (input: RequestInfo | URL, init?: RequestInit) => Promise<Response>,
+) {
   const baseUrl = "https://domain.prim.sh";
   return {
     async searchDomains(params: SearchDomainsParams): Promise<SearchDomainsResponse> {
@@ -466,7 +468,10 @@ export function createDomainClient(primFetch: (input: RequestInfo | URL, init?: 
       });
       return res.json() as Promise<MailSetupResponse>;
     },
-    async batchRecords(params: BatchRecordsParams, req: BatchRecordsRequest): Promise<BatchRecordsResponse> {
+    async batchRecords(
+      params: BatchRecordsParams,
+      req: BatchRecordsRequest,
+    ): Promise<BatchRecordsResponse> {
       const url = `${baseUrl}/v1/zones/${encodeURIComponent(params.zone_id)}/records/batch`;
       const res = await primFetch(url, {
         method: "POST",
@@ -475,7 +480,10 @@ export function createDomainClient(primFetch: (input: RequestInfo | URL, init?: 
       });
       return res.json() as Promise<BatchRecordsResponse>;
     },
-    async createRecord(params: CreateRecordParams, req: CreateRecordRequest): Promise<RecordResponse> {
+    async createRecord(
+      params: CreateRecordParams,
+      req: CreateRecordRequest,
+    ): Promise<RecordResponse> {
       const url = `${baseUrl}/v1/zones/${encodeURIComponent(params.zone_id)}/records`;
       const res = await primFetch(url, {
         method: "POST",
@@ -494,7 +502,10 @@ export function createDomainClient(primFetch: (input: RequestInfo | URL, init?: 
       const res = await primFetch(url);
       return res.json() as Promise<RecordResponse>;
     },
-    async updateRecord(params: UpdateRecordParams, req: UpdateRecordRequest): Promise<RecordResponse> {
+    async updateRecord(
+      params: UpdateRecordParams,
+      req: UpdateRecordRequest,
+    ): Promise<RecordResponse> {
       const url = `${baseUrl}/v1/zones/${encodeURIComponent(params.zone_id)}/records/${encodeURIComponent(params.id)}`;
       const res = await primFetch(url, {
         method: "PUT",

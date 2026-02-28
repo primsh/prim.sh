@@ -15,8 +15,8 @@
  *   bun scripts/gen-openai.ts --check  # diff against disk, exit 1 if stale
  */
 
-import { readFileSync, writeFileSync, existsSync, mkdirSync } from "node:fs";
-import { join, resolve, basename } from "node:path";
+import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
+import { basename, join, resolve } from "node:path";
 import { parse as parseYaml } from "yaml";
 import { primsForInterface } from "./lib/primitives.js";
 
@@ -210,18 +210,14 @@ const SPEC_OPERATION_OVERRIDES: Record<string, Record<string, string>> = {
 };
 
 // Operations to skip (free/health endpoints with no meaningful parameters)
-const SKIP_OPERATIONS = new Set([
-  "healthCheck",
-  "getLlmsTxt",
-  "llmsTxt",
-]);
+const SKIP_OPERATIONS = new Set(["healthCheck", "getLlmsTxt", "llmsTxt"]);
 
 // ── Schema resolution ──────────────────────────────────────────────────────
 
 function resolveRef(spec: OpenApiSpec, ref: string): OpenApiProperty | null {
   if (!ref.startsWith("#/")) return null;
   const parts = ref.slice(2).split("/");
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  // biome-ignore lint/suspicious/noExplicitAny: dynamic typing required
   let obj: any = spec;
   for (const part of parts) {
     if (obj == null || typeof obj !== "object") return null;
@@ -240,7 +236,11 @@ function resolveProperty(spec: OpenApiSpec, prop: OpenApiProperty): OpenApiPrope
 
 // Convert an OpenAPI property to an OpenAI-compatible JSON Schema property.
 // Returns a clean object without unsupported fields.
-function convertProperty(spec: OpenApiSpec, prop: OpenApiProperty, topLevel = false): Record<string, unknown> {
+function convertProperty(
+  spec: OpenApiSpec,
+  prop: OpenApiProperty,
+  topLevel = false,
+): Record<string, unknown> {
   const resolved = resolveProperty(spec, prop);
 
   // Handle oneOf: pick the most useful variant (prefer array over string for urls-style fields)
@@ -317,7 +317,7 @@ function buildDescription(op: OpenApiOperation): string {
     // Truncate long descriptions — keep first sentence (not splitting on decimal points)
     // Matches sentences ending with punctuation that is NOT preceded by a digit
     const firstSentence = desc.match(/^(.*?(?<!\d)[.!?])(?:\s|$)/)?.[1]?.trim();
-    const snippet = firstSentence ?? (desc.length > 120 ? desc.slice(0, 120) + "…" : desc);
+    const snippet = firstSentence ?? (desc.length > 120 ? `${desc.slice(0, 120)}…` : desc);
     if (snippet && snippet !== summary) {
       // Avoid double-period if text already ends with punctuation
       const sep = /[.!?]$/.test(text) ? " " : ". ";
@@ -348,10 +348,7 @@ interface ParametersResult {
   required: string[];
 }
 
-function buildParameters(
-  spec: OpenApiSpec,
-  op: OpenApiOperation,
-): ParametersResult {
+function buildParameters(spec: OpenApiSpec, op: OpenApiOperation): ParametersResult {
   const properties: Record<string, unknown> = {};
   const required: string[] = [];
 
@@ -401,7 +398,13 @@ function specToTools(specId: string, spec: OpenApiSpec): OpenAiFunction[] {
       if (SKIP_OPERATIONS.has(operationId)) continue;
 
       // Resolve tool name: spec override > global map > auto-derive
-      const toolName = overrides[operationId] ?? OPERATION_ID_TO_TOOL_NAME[operationId] ?? `${specId}_${operationId.replace(/([A-Z])/g, "_$1").toLowerCase().replace(/^_/, "")}`;
+      const toolName =
+        overrides[operationId] ??
+        OPERATION_ID_TO_TOOL_NAME[operationId] ??
+        `${specId}_${operationId
+          .replace(/([A-Z])/g, "_$1")
+          .toLowerCase()
+          .replace(/^_/, "")}`;
 
       const description = buildDescription(op);
       const { properties, required } = buildParameters(spec, op);
@@ -484,13 +487,13 @@ for (const specFile of specFiles) {
   primIds.push(specId);
   allTools.push(...tools);
 
-  const perPrimJson = JSON.stringify(tools, null, 2) + "\n";
+  const perPrimJson = `${JSON.stringify(tools, null, 2)}\n`;
   applyFile(join(OUTPUT_DIR, `${specId}.json`), perPrimJson);
   console.log(`     ${tools.length} tool(s)`);
 }
 
 // Combined all.json
-const allJson = JSON.stringify(allTools, null, 2) + "\n";
+const allJson = `${JSON.stringify(allTools, null, 2)}\n`;
 applyFile(join(OUTPUT_DIR, "all.json"), allJson);
 console.log(`  total: ${allTools.length} tools across ${primIds.length} prims`);
 
@@ -513,7 +516,9 @@ if (CHECK_MODE) {
       JSON.stringify(existingParsed.prims) === JSON.stringify(manifest.prims) &&
       existingParsed.tool_count === manifest.tool_count;
     if (!matches) {
-      console.error(`  ✗ ${join(OUTPUT_DIR, "manifest.json")} is out of date — run pnpm gen:openai`);
+      console.error(
+        `  ✗ ${join(OUTPUT_DIR, "manifest.json")} is out of date — run pnpm gen:openai`,
+      );
       anyFailed = true;
     } else {
       console.log(`  ✓ ${join(OUTPUT_DIR, "manifest.json")}`);
@@ -523,7 +528,7 @@ if (CHECK_MODE) {
     anyFailed = true;
   }
 } else {
-  const manifestJson = JSON.stringify(manifest, null, 2) + "\n";
+  const manifestJson = `${JSON.stringify(manifest, null, 2)}\n`;
   writeFileSync(join(OUTPUT_DIR, "manifest.json"), manifestJson);
   console.log(`  ✓ ${join(OUTPUT_DIR, "manifest.json")}`);
 }

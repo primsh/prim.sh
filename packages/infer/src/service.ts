@@ -1,7 +1,13 @@
 import { ProviderError } from "./provider.ts";
 // Re-export for convenience
 export { ProviderError } from "./provider.ts";
-import type { ChatRequest, EmbedRequest, ChatResponse, EmbedResponse, ModelsResponse } from "./api.ts";
+import type {
+  ChatRequest,
+  ChatResponse,
+  EmbedRequest,
+  EmbedResponse,
+  ModelsResponse,
+} from "./api.ts";
 import { getClient } from "./openrouter.ts";
 
 // ─── ServiceResult ────────────────────────────────────────────────────────────
@@ -22,14 +28,17 @@ function handleProviderError(err: unknown): ServiceResult<never> {
 
 // ─── Service functions ────────────────────────────────────────────────────────
 
-export async function chat(
-  body: ChatRequest,
-): Promise<ServiceResult<ChatResponse>> {
+export async function chat(body: ChatRequest): Promise<ServiceResult<ChatResponse>> {
   if (!body.model?.trim()) {
     return { ok: false, status: 400, code: "invalid_request", message: "model is required" };
   }
   if (!Array.isArray(body.messages) || body.messages.length === 0) {
-    return { ok: false, status: 400, code: "invalid_request", message: "messages is required and must be non-empty" };
+    return {
+      ok: false,
+      status: 400,
+      code: "invalid_request",
+      message: "messages is required and must be non-empty",
+    };
   }
 
   try {
@@ -41,14 +50,22 @@ export async function chat(
   }
 }
 
-export async function embed(
-  body: EmbedRequest,
-): Promise<ServiceResult<EmbedResponse>> {
+export async function embed(body: EmbedRequest): Promise<ServiceResult<EmbedResponse>> {
   if (!body.model?.trim()) {
     return { ok: false, status: 400, code: "invalid_request", message: "model is required" };
   }
-  if (body.input === undefined || body.input === null || (typeof body.input === "string" && !body.input.trim()) || (Array.isArray(body.input) && body.input.length === 0)) {
-    return { ok: false, status: 400, code: "invalid_request", message: "input is required and must be non-empty" };
+  if (
+    body.input === undefined ||
+    body.input === null ||
+    (typeof body.input === "string" && !body.input.trim()) ||
+    (Array.isArray(body.input) && body.input.length === 0)
+  ) {
+    return {
+      ok: false,
+      status: 400,
+      code: "invalid_request",
+      message: "input is required and must be non-empty",
+    };
   }
 
   try {

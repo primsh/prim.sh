@@ -1,28 +1,24 @@
 import { resolve } from "node:path";
-import type { ContentfulStatusCode } from "hono/utils/http-status";
 import {
   createAgentStackMiddleware,
   createWalletAllowlistChecker,
   forbidden,
-  notFound,
   invalidRequest,
+  notFound,
 } from "@primsh/x402-middleware";
 import type { ApiError } from "@primsh/x402-middleware";
 import { createPrimApp } from "@primsh/x402-middleware/create-prim-app";
-import type {
-  CreateTokenRequest,
-  MintRequest,
-  CreatePoolRequest,
-} from "./api.ts";
+import type { ContentfulStatusCode } from "hono/utils/http-status";
+import type { CreatePoolRequest, CreateTokenRequest, MintRequest } from "./api.ts";
 import {
-  deployToken,
-  listTokens,
-  getToken,
-  mintTokens,
-  getSupply,
   createPool,
-  getPool,
+  deployToken,
   getLiquidityParams,
+  getPool,
+  getSupply,
+  getToken,
+  listTokens,
+  mintTokens,
 } from "./service.ts";
 
 const TOKEN_ROUTES = {
@@ -55,14 +51,18 @@ function poolExists(message: string): ApiError {
 const app = createPrimApp(
   {
     serviceName: "token.sh",
-    llmsTxtPath: import.meta.dir ? resolve(import.meta.dir, "../../../site/token/llms.txt") : undefined,
+    llmsTxtPath: import.meta.dir
+      ? resolve(import.meta.dir, "../../../site/token/llms.txt")
+      : undefined,
     routes: TOKEN_ROUTES,
     metricsName: "token.prim.sh",
   },
   { createAgentStackMiddleware, createWalletAllowlistChecker },
 );
 
-const logger = (app as typeof app & { logger: { warn: (msg: string, extra?: Record<string, unknown>) => void } }).logger;
+const logger = (
+  app as typeof app & { logger: { warn: (msg: string, extra?: Record<string, unknown>) => void } }
+).logger;
 
 // POST /v1/tokens — Deploy new ERC-20
 app.post("/v1/tokens", async (c) => {
@@ -92,7 +92,8 @@ app.get("/v1/tokens", (c) => {
   if (!caller) return c.json(forbidden("No wallet address in payment"), 403);
 
   const result = listTokens(caller);
-  if (!result.ok) return c.json(invalidRequest(result.message), result.status as ContentfulStatusCode);
+  if (!result.ok)
+    return c.json(invalidRequest(result.message), result.status as ContentfulStatusCode);
   return c.json(result.data, 200);
 });
 

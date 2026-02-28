@@ -25,8 +25,8 @@
  *   PRIM_INTERNAL_KEY  — internal auth for allowlist cleanup (required)
  */
 
-import { generatePrivateKey, privateKeyToAccount } from "viem/accounts";
 import { getAddress } from "viem";
+import { generatePrivateKey, privateKeyToAccount } from "viem/accounts";
 
 // ─── Config ──────────────────────────────────────────────────────────────
 
@@ -42,7 +42,9 @@ const API_URL = process.env.PRIM_API_URL ?? `https://api.${new URL(BASE).hostnam
 
 const network = process.env.PRIM_NETWORK;
 if (network !== "eip155:84532") {
-  console.error(`\n✗ PRIM_NETWORK must be eip155:84532 (Base Sepolia). Got: ${network ?? "(unset)"}`);
+  console.error(
+    `\n✗ PRIM_NETWORK must be eip155:84532 (Base Sepolia). Got: ${network ?? "(unset)"}`,
+  );
   console.error("  This script refuses to run on mainnet.");
   process.exit(1);
 }
@@ -167,9 +169,11 @@ async function main() {
         body: JSON.stringify({ wallet: walletAddress, reason: "e2e smoke test" }),
         signal: AbortSignal.timeout(10_000),
       });
-      if (res.status !== 201) throw new Error(`Expected 201, got ${res.status}: ${await res.text()}`);
+      if (res.status !== 201)
+        throw new Error(`Expected 201, got ${res.status}: ${await res.text()}`);
       const body = (await res.json()) as { status?: string; id?: string };
-      if (body.status !== "pending") throw new Error(`Expected status=pending, got status=${body.status}`);
+      if (body.status !== "pending")
+        throw new Error(`Expected status=pending, got status=${body.status}`);
       if (!body.id) throw new Error("Missing id in access request response");
       requestId = body.id;
       console.log(`(request id=${requestId}) `);
@@ -183,9 +187,11 @@ async function main() {
         headers: { "x-admin-key": PRIM_ADMIN_KEY as string },
         signal: AbortSignal.timeout(10_000),
       });
-      if (res.status !== 200) throw new Error(`Expected 200, got ${res.status}: ${await res.text()}`);
+      if (res.status !== 200)
+        throw new Error(`Expected 200, got ${res.status}: ${await res.text()}`);
       const body = (await res.json()) as { status?: string };
-      if (body.status !== "approved") throw new Error(`Expected status=approved, got status=${body.status}`);
+      if (body.status !== "approved")
+        throw new Error(`Expected status=approved, got status=${body.status}`);
       console.log("(approved) ");
     });
   }

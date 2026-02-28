@@ -7,10 +7,10 @@
  */
 
 import { execSync } from "node:child_process";
+import { resolve4 } from "node:dns/promises";
 import { existsSync, readFileSync } from "node:fs";
 import { join, resolve } from "node:path";
-import { resolve4 } from "node:dns/promises";
-import { loadPrimitives, getGateOverrides } from "./primitives.js";
+import { getGateOverrides, loadPrimitives } from "./primitives.js";
 
 export type GateTarget = "testing" | "live";
 
@@ -74,7 +74,9 @@ async function checkBuildingToTesting(
     hasSmokeScript = Boolean(pkg.scripts?.["test:smoke"]);
   }
 
-  const gateConfig = prim ? getGateOverrides(prim) : { coverage_threshold: 80, allow_todo: false, skip_smoke: false, approved_by: "" };
+  const gateConfig = prim
+    ? getGateOverrides(prim)
+    : { coverage_threshold: 80, allow_todo: false, skip_smoke: false, approved_by: "" };
 
   if (hasSmokeScript && !gateConfig.skip_smoke) {
     try {
@@ -117,7 +119,9 @@ async function checkBuildingToTesting(
   // 5. No TODO/FIXME
   if (!gateConfig.allow_todo && existsSync(srcDir)) {
     if (grep(srcDir, "TODO\\|FIXME")) {
-      failures.push(`TODO/FIXME found in packages/${primId}/src/ (set gates.allow_todo: true to override)`);
+      failures.push(
+        `TODO/FIXME found in packages/${primId}/src/ (set gates.allow_todo: true to override)`,
+      );
     }
   }
 
@@ -159,10 +163,8 @@ async function checkTestingToLive(
   const endpoint = prim?.endpoint ?? `${primId}.prim.sh`;
   const fragment = join(root, `deploy/prim/generated/${primId}.caddy`);
   const caddyfile = join(root, "deploy/prim/Caddyfile");
-  const fragmentOk = existsSync(fragment) &&
-    readFileSync(fragment, "utf-8").includes(endpoint);
-  const caddyfileOk = existsSync(caddyfile) &&
-    readFileSync(caddyfile, "utf-8").includes(endpoint);
+  const fragmentOk = existsSync(fragment) && readFileSync(fragment, "utf-8").includes(endpoint);
+  const caddyfileOk = existsSync(caddyfile) && readFileSync(caddyfile, "utf-8").includes(endpoint);
   if (!fragmentOk && !caddyfileOk) {
     failures.push(`no Caddy block found for ${endpoint}`);
   }
@@ -234,7 +236,9 @@ async function checkLiveConfirmation(
         signal: AbortSignal.timeout(5_000),
       });
       if (res.status !== 402) {
-        warnings.push(`POST ${testPath} returned ${res.status} (expected 402 — is x402 middleware active?)`);
+        warnings.push(
+          `POST ${testPath} returned ${res.status} (expected 402 — is x402 middleware active?)`,
+        );
       }
     } catch (err) {
       const msg = err instanceof Error ? err.message : String(err);
@@ -246,10 +250,11 @@ async function checkLiveConfirmation(
   if (prim) {
     const gates = getGateOverrides(prim);
     if (!gates.approved_by) {
-      failures.push(`manual sign-off required — set gates.approved_by in packages/${primId}/prim.yaml`);
+      failures.push(
+        `manual sign-off required — set gates.approved_by in packages/${primId}/prim.yaml`,
+      );
     }
   }
-
 }
 
 // ── External deps (shared) ─────────────────────────────────────────────────
@@ -264,7 +269,9 @@ async function checkExternalDeps(primId: string, failures: string[]): Promise<vo
     try {
       const res = await fetch(`${qdrantUrl.replace(/\/$/, "")}/healthz`, {
         signal: AbortSignal.timeout(5_000),
-      }).catch(() => fetch(`${qdrantUrl.replace(/\/$/, "")}/`, { signal: AbortSignal.timeout(5_000) }));
+      }).catch(() =>
+        fetch(`${qdrantUrl.replace(/\/$/, "")}/`, { signal: AbortSignal.timeout(5_000) }),
+      );
       if (!res.ok) failures.push(`Qdrant ${qdrantUrl} returned HTTP ${res.status}`);
     } catch (err) {
       const msg = err instanceof Error ? err.message : String(err);
@@ -279,7 +286,9 @@ async function checkExternalDeps(primId: string, failures: string[]): Promise<vo
       return;
     }
     try {
-      const res = await fetch(`${stalwartUrl.replace(/\/$/, "")}/`, { signal: AbortSignal.timeout(5_000) });
+      const res = await fetch(`${stalwartUrl.replace(/\/$/, "")}/`, {
+        signal: AbortSignal.timeout(5_000),
+      });
       if (![200, 401, 404].includes(res.status)) {
         failures.push(`Stalwart ${stalwartUrl} returned HTTP ${res.status}`);
       }

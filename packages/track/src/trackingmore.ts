@@ -107,7 +107,10 @@ export class TrackingMoreClient implements TrackProvider {
         if (/already exists/i.test(msg)) {
           shouldFallbackToGet = true;
         } else {
-          throw new ProviderError(msg || `TrackingMore API error: ${resp.status}`, "provider_error");
+          throw new ProviderError(
+            msg || `TrackingMore API error: ${resp.status}`,
+            "provider_error",
+          );
         }
       } catch (inner) {
         if (inner instanceof ProviderError) throw inner;

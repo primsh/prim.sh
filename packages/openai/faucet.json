@@ -13,9 +13,7 @@
             "pattern": "^0x[0-9a-fA-F]{40}$"
           }
         },
-        "required": [
-          "address"
-        ]
+        "required": ["address"]
       }
     }
   },
@@ -33,9 +31,7 @@
             "pattern": "^0x[0-9a-fA-F]{40}$"
           }
         },
-        "required": [
-          "address"
-        ]
+        "required": ["address"]
       }
     }
   },
@@ -53,9 +49,7 @@
             "pattern": "^0x[0-9a-fA-F]{40}$"
           }
         },
-        "required": [
-          "address"
-        ]
+        "required": ["address"]
       }
     }
   }

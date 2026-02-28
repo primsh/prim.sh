@@ -2,9 +2,9 @@
  * Provider registry — maps provider name to CloudProvider instance.
  */
 
-import type { CloudProvider } from "./provider.ts";
 import { createDigitalOceanProvider } from "./digitalocean.ts";
 import { createHetznerProvider } from "./hetzner.ts";
+import type { CloudProvider } from "./provider.ts";
 
 const registry = new Map<string, CloudProvider>();
 

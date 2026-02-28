@@ -3,40 +3,40 @@ import {
   createAgentStackMiddleware,
   createWalletAllowlistChecker,
   forbidden,
-  notFound,
   invalidRequest,
+  notFound,
   serviceError,
 } from "@primsh/x402-middleware";
 import type { ApiError } from "@primsh/x402-middleware";
 import { createPrimApp } from "@primsh/x402-middleware/create-prim-app";
 import type {
+  ActionOnlyResponse,
   CreateServerRequest,
   CreateServerResponse,
-  ServerListResponse,
-  ServerResponse,
+  CreateSshKeyRequest,
   DeleteServerResponse,
-  ActionOnlyResponse,
-  ResizeRequest,
-  ResizeResponse,
   RebuildRequest,
   RebuildResponse,
-  CreateSshKeyRequest,
-  SshKeyResponse,
+  ResizeRequest,
+  ResizeResponse,
+  ServerListResponse,
+  ServerResponse,
   SshKeyListResponse,
+  SshKeyResponse,
 } from "./api.ts";
 import {
   createServer,
-  listServers,
-  getServer,
   deleteServer,
-  startServer,
-  stopServer,
+  deleteSshKey,
+  getServer,
+  listServers,
+  listSshKeys,
   rebootServer,
-  resizeServer,
   rebuildServer,
   registerSshKey,
-  listSshKeys,
-  deleteSshKey,
+  resizeServer,
+  startServer,
+  stopServer,
 } from "./service.ts";
 
 const SPAWN_ROUTES = {
@@ -61,7 +61,9 @@ function providerError(message: string): ApiError {
 const app = createPrimApp(
   {
     serviceName: "spawn.sh",
-    llmsTxtPath: import.meta.dir ? resolve(import.meta.dir, "../../../site/spawn/llms.txt") : undefined,
+    llmsTxtPath: import.meta.dir
+      ? resolve(import.meta.dir, "../../../site/spawn/llms.txt")
+      : undefined,
     routes: SPAWN_ROUTES,
     metricsName: "spawn.prim.sh",
     pricing: {
@@ -69,22 +71,64 @@ const app = createPrimApp(
         { method: "POST", path: "/v1/servers", price_usdc: "0.01", description: "Create server" },
         { method: "GET", path: "/v1/servers", price_usdc: "0.001", description: "List servers" },
         { method: "GET", path: "/v1/servers/{id}", price_usdc: "0.001", description: "Get server" },
-        { method: "DELETE", path: "/v1/servers/{id}", price_usdc: "0.005", description: "Delete server" },
-        { method: "POST", path: "/v1/servers/{id}/start", price_usdc: "0.002", description: "Start server" },
-        { method: "POST", path: "/v1/servers/{id}/stop", price_usdc: "0.002", description: "Stop server" },
-        { method: "POST", path: "/v1/servers/{id}/reboot", price_usdc: "0.002", description: "Reboot server" },
-        { method: "POST", path: "/v1/servers/{id}/resize", price_usdc: "0.01", description: "Resize server" },
-        { method: "POST", path: "/v1/servers/{id}/rebuild", price_usdc: "0.005", description: "Rebuild server" },
-        { method: "POST", path: "/v1/ssh-keys", price_usdc: "0.001", description: "Register SSH key" },
+        {
+          method: "DELETE",
+          path: "/v1/servers/{id}",
+          price_usdc: "0.005",
+          description: "Delete server",
+        },
+        {
+          method: "POST",
+          path: "/v1/servers/{id}/start",
+          price_usdc: "0.002",
+          description: "Start server",
+        },
+        {
+          method: "POST",
+          path: "/v1/servers/{id}/stop",
+          price_usdc: "0.002",
+          description: "Stop server",
+        },
+        {
+          method: "POST",
+          path: "/v1/servers/{id}/reboot",
+          price_usdc: "0.002",
+          description: "Reboot server",
+        },
+        {
+          method: "POST",
+          path: "/v1/servers/{id}/resize",
+          price_usdc: "0.01",
+          description: "Resize server",
+        },
+        {
+          method: "POST",
+          path: "/v1/servers/{id}/rebuild",
+          price_usdc: "0.005",
+          description: "Rebuild server",
+        },
+        {
+          method: "POST",
+          path: "/v1/ssh-keys",
+          price_usdc: "0.001",
+          description: "Register SSH key",
+        },
         { method: "GET", path: "/v1/ssh-keys", price_usdc: "0.001", description: "List SSH keys" },
-        { method: "DELETE", path: "/v1/ssh-keys/{id}", price_usdc: "0.001", description: "Delete SSH key" },
+        {
+          method: "DELETE",
+          path: "/v1/ssh-keys/{id}",
+          price_usdc: "0.001",
+          description: "Delete SSH key",
+        },
       ],
     },
   },
   { createAgentStackMiddleware, createWalletAllowlistChecker },
 );
 
-const logger = (app as typeof app & { logger: { warn: (msg: string, extra?: Record<string, unknown>) => void } }).logger;
+const logger = (
+  app as typeof app & { logger: { warn: (msg: string, extra?: Record<string, unknown>) => void } }
+).logger;
 
 // POST /v1/servers — Create server
 app.post("/v1/servers", async (c) => {

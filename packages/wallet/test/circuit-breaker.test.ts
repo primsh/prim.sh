@@ -4,7 +4,7 @@
  * sendUsdc integration tests removed in W-10 (non-custodial refactor).
  */
 
-import { describe, expect, it, beforeEach, afterEach, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 vi.hoisted(() => {
   process.env.PRIM_PAY_TO = "0x0000000000000000000000000000000000000001";
@@ -37,9 +37,9 @@ const mockFetch = vi.fn(async (input: RequestInfo | URL) => {
 
 vi.stubGlobal("fetch", mockFetch);
 
+import { getState, isPaused, pause, resume } from "../src/circuit-breaker.ts";
 // Import modules after mocks are set up
 import { resetDb } from "../src/db.ts";
-import { pause, resume, isPaused, getState } from "../src/circuit-breaker.ts";
 import app from "../src/index.ts";
 
 beforeEach(() => {
@@ -149,7 +149,7 @@ describe("admin routes", () => {
     });
 
     expect(res.status).toBe(200);
-    const body = await res.json() as { scope: string; paused: boolean };
+    const body = (await res.json()) as { scope: string; paused: boolean };
     expect(body.scope).toBe("send");
     expect(body.paused).toBe(true);
     expect(isPaused("send")).toBe(true);
@@ -166,7 +166,7 @@ describe("admin routes", () => {
     });
 
     expect(res.status).toBe(200);
-    const body = await res.json() as { scope: string; paused: boolean };
+    const body = (await res.json()) as { scope: string; paused: boolean };
     expect(body.scope).toBe("send");
     expect(body.paused).toBe(false);
     expect(isPaused("send")).toBe(false);
@@ -177,7 +177,7 @@ describe("admin routes", () => {
 
     const res = await app.request("/v1/admin/circuit-breaker");
     expect(res.status).toBe(200);
-    const state = await res.json() as Record<string, string | null>;
+    const state = (await res.json()) as Record<string, string | null>;
     expect(typeof state.all).toBe("string");
   });
 

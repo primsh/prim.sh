@@ -54,7 +54,9 @@ export interface GetFaucetStatusParams {
 
 // ── Client ─────────────────────────────────────────────────────────────────
 
-export function createFaucetClient(primFetch: (input: RequestInfo | URL, init?: RequestInit) => Promise<Response>) {
+export function createFaucetClient(
+  primFetch: (input: RequestInfo | URL, init?: RequestInit) => Promise<Response>,
+) {
   const baseUrl = "https://faucet.prim.sh";
   return {
     async dripUsdc(req: DripRequest): Promise<DripResult> {

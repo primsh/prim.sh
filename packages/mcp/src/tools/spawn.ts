@@ -7,215 +7,215 @@ export const spawnTools: Tool[] = [
     name: "spawn_list_servers",
     description: "List servers | Price: $0.001",
     inputSchema: {
-        type: "object",
-        properties: {
-          "limit": {
-            type: "integer",
-            minimum: 1,
-            maximum: 100,
-            default: 20,
-            description: "Number of servers to return. Max 100.",
-          },
-          "page": {
-            type: "integer",
-            minimum: 1,
-            default: 1,
-            description: "Page number (1-indexed).",
-          },
+      type: "object",
+      properties: {
+        limit: {
+          type: "integer",
+          minimum: 1,
+          maximum: 100,
+          default: 20,
+          description: "Number of servers to return. Max 100.",
+        },
+        page: {
+          type: "integer",
+          minimum: 1,
+          default: 1,
+          description: "Page number (1-indexed).",
         },
       },
+    },
   },
   {
     name: "spawn_create_server",
     description: "Create a server | Price: $0.01",
     inputSchema: {
-        type: "object",
-        properties: {
-          "name": {
-            type: "string",
-            description: "Server name (provider-level label).",
-          },
-          "type": {
-            type: "string",
-            description: "Server type slug. Only `small` is available in beta.",
-          },
-          "image": {
-            type: "string",
-            description: "OS image slug.",
-          },
-          "location": {
-            type: "string",
-            description: "Data center location slug.",
-          },
-          "provider": {
-            type: "string",
-            description: "Cloud provider. Defaults to Hetzner.",
-          },
-          "ssh_keys": {
-            type: "array",
-            items: {
-              type: "string",
-            },
-            description: "Array of SSH key IDs (from `POST /v1/ssh-keys`) to install.",
-          },
-          "user_data": {
-            type: "string",
-            description: "Cloud-init user data script to run on first boot.",
-          },
+      type: "object",
+      properties: {
+        name: {
+          type: "string",
+          description: "Server name (provider-level label).",
         },
-        required: ["name","type","image","location"],
+        type: {
+          type: "string",
+          description: "Server type slug. Only `small` is available in beta.",
+        },
+        image: {
+          type: "string",
+          description: "OS image slug.",
+        },
+        location: {
+          type: "string",
+          description: "Data center location slug.",
+        },
+        provider: {
+          type: "string",
+          description: "Cloud provider. Defaults to Hetzner.",
+        },
+        ssh_keys: {
+          type: "array",
+          items: {
+            type: "string",
+          },
+          description: "Array of SSH key IDs (from `POST /v1/ssh-keys`) to install.",
+        },
+        user_data: {
+          type: "string",
+          description: "Cloud-init user data script to run on first boot.",
+        },
       },
+      required: ["name", "type", "image", "location"],
+    },
   },
   {
     name: "spawn_get_server",
     description: "Get server | Price: $0.001",
     inputSchema: {
-        type: "object",
-        properties: {
-          "id": {
-            type: "string",
-            description: "Prim server ID.",
-          },
+      type: "object",
+      properties: {
+        id: {
+          type: "string",
+          description: "Prim server ID.",
         },
-        required: ["id"],
       },
+      required: ["id"],
+    },
   },
   {
     name: "spawn_delete_server",
     description: "Delete server | Price: $0.005",
     inputSchema: {
-        type: "object",
-        properties: {
-          "id": {
-            type: "string",
-            description: "Prim server ID.",
-          },
+      type: "object",
+      properties: {
+        id: {
+          type: "string",
+          description: "Prim server ID.",
         },
-        required: ["id"],
       },
+      required: ["id"],
+    },
   },
   {
     name: "spawn_start_server",
     description: "Start server | Price: $0.002",
     inputSchema: {
-        type: "object",
-        properties: {
-          "id": {
-            type: "string",
-            description: "Prim server ID.",
-          },
+      type: "object",
+      properties: {
+        id: {
+          type: "string",
+          description: "Prim server ID.",
         },
-        required: ["id"],
       },
+      required: ["id"],
+    },
   },
   {
     name: "spawn_stop_server",
     description: "Stop server | Price: $0.002",
     inputSchema: {
-        type: "object",
-        properties: {
-          "id": {
-            type: "string",
-            description: "Prim server ID.",
-          },
+      type: "object",
+      properties: {
+        id: {
+          type: "string",
+          description: "Prim server ID.",
         },
-        required: ["id"],
       },
+      required: ["id"],
+    },
   },
   {
     name: "spawn_reboot_server",
     description: "Reboot server | Price: $0.002",
     inputSchema: {
-        type: "object",
-        properties: {
-          "id": {
-            type: "string",
-            description: "Prim server ID.",
-          },
+      type: "object",
+      properties: {
+        id: {
+          type: "string",
+          description: "Prim server ID.",
         },
-        required: ["id"],
       },
+      required: ["id"],
+    },
   },
   {
     name: "spawn_resize_server",
     description: "Resize server | Price: $0.01",
     inputSchema: {
-        type: "object",
-        properties: {
-          "id": {
-            type: "string",
-            description: "Prim server ID.",
-          },
-          "type": {
-            type: "string",
-            description: "Target server type slug.",
-          },
-          "upgrade_disk": {
-            type: "boolean",
-            description: "Whether to upgrade the disk alongside the CPU/RAM. Irreversible if true.",
-            default: false,
-          },
+      type: "object",
+      properties: {
+        id: {
+          type: "string",
+          description: "Prim server ID.",
         },
-        required: ["id","type"],
+        type: {
+          type: "string",
+          description: "Target server type slug.",
+        },
+        upgrade_disk: {
+          type: "boolean",
+          description: "Whether to upgrade the disk alongside the CPU/RAM. Irreversible if true.",
+          default: false,
+        },
       },
+      required: ["id", "type"],
+    },
   },
   {
     name: "spawn_rebuild_server",
     description: "Rebuild server | Price: $0.005",
     inputSchema: {
-        type: "object",
-        properties: {
-          "id": {
-            type: "string",
-            description: "Prim server ID.",
-          },
-          "image": {
-            type: "string",
-            description: "OS image slug to rebuild with.",
-          },
+      type: "object",
+      properties: {
+        id: {
+          type: "string",
+          description: "Prim server ID.",
         },
-        required: ["id","image"],
+        image: {
+          type: "string",
+          description: "OS image slug to rebuild with.",
+        },
       },
+      required: ["id", "image"],
+    },
   },
   {
     name: "spawn_list_ssh_keys",
     description: "List SSH keys | Price: $0.001",
     inputSchema: {
-        type: "object",
-        properties: {},
-      },
+      type: "object",
+      properties: {},
+    },
   },
   {
     name: "spawn_create_ssh_key",
     description: "Register SSH key | Price: $0.001",
     inputSchema: {
-        type: "object",
-        properties: {
-          "name": {
-            type: "string",
-            description: "Human-readable label for this key.",
-          },
-          "public_key": {
-            type: "string",
-            description: "The public key string (e.g. `ssh-ed25519 AAAA...`).",
-          },
+      type: "object",
+      properties: {
+        name: {
+          type: "string",
+          description: "Human-readable label for this key.",
         },
-        required: ["name","public_key"],
+        public_key: {
+          type: "string",
+          description: "The public key string (e.g. `ssh-ed25519 AAAA...`).",
+        },
       },
+      required: ["name", "public_key"],
+    },
   },
   {
     name: "spawn_delete_ssh_key",
     description: "Delete SSH key | Price: $0.001",
     inputSchema: {
-        type: "object",
-        properties: {
-          "id": {
-            type: "string",
-            description: "Prim SSH key ID.",
-          },
+      type: "object",
+      properties: {
+        id: {
+          type: "string",
+          description: "Prim SSH key ID.",
         },
-        required: ["id"],
       },
+      required: ["id"],
+    },
   },
 ];
 // END:GENERATED:TOOLS

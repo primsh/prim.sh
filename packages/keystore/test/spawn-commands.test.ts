@@ -6,7 +6,7 @@
  * node:fs is partially mocked for readFileSync (ssh-key add --file).
  */
 
-import { describe, it, expect, vi, beforeEach, afterEach, type MockInstance } from "vitest";
+import { type MockInstance, afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 vi.mock("@primsh/x402-client", () => ({
   createPrimFetch: vi.fn(),
@@ -24,10 +24,10 @@ vi.mock("node:fs", async (importOriginal) => {
   };
 });
 
-import { createPrimFetch } from "@primsh/x402-client";
 import { readFileSync } from "node:fs";
+import { createPrimFetch } from "@primsh/x402-client";
 import { getConfig } from "../src/config.ts";
-import { runSpawnCommand, resolveSpawnUrl } from "../src/spawn-commands.ts";
+import { resolveSpawnUrl, runSpawnCommand } from "../src/spawn-commands.ts";
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -53,7 +53,13 @@ function okCreateServer(id = "srv_123") {
       owner_wallet: "0xABC",
       created_at: "2026-01-01T00:00:00Z",
     },
-    action: { id: "act_1", command: "create", status: "in-progress", started_at: "2026-01-01T00:00:00Z", finished_at: null },
+    action: {
+      id: "act_1",
+      command: "create",
+      status: "in-progress",
+      started_at: "2026-01-01T00:00:00Z",
+      finished_at: null,
+    },
     deposit_charged: "5.00",
     deposit_remaining: "95.00",
   });
@@ -100,7 +106,13 @@ function okDeleted() {
 
 function okAction(command = "reboot") {
   return jsonResponse(200, {
-    action: { id: "act_1", command, status: "in-progress", started_at: "2026-01-01T00:00:00Z", finished_at: null },
+    action: {
+      id: "act_1",
+      command,
+      status: "in-progress",
+      started_at: "2026-01-01T00:00:00Z",
+      finished_at: null,
+    },
   });
 }
 
@@ -172,12 +184,24 @@ afterEach(() => {
 describe("create", () => {
   it("POSTs to /v1/servers with body and prints JSON", async () => {
     mockFetch.mockResolvedValue(okCreateServer());
-    await runSpawnCommand("create", ["spawn", "create", "--name=my-server", "--type=small", "--image=ubuntu-24.04", "--location=nyc3"]);
+    await runSpawnCommand("create", [
+      "spawn",
+      "create",
+      "--name=my-server",
+      "--type=small",
+      "--image=ubuntu-24.04",
+      "--location=nyc3",
+    ]);
     expect(mockFetch).toHaveBeenCalledWith(
       "https://spawn.prim.sh/v1/servers",
       expect.objectContaining({
         method: "POST",
-        body: JSON.stringify({ name: "my-server", type: "small", image: "ubuntu-24.04", location: "nyc3" }),
+        body: JSON.stringify({
+          name: "my-server",
+          type: "small",
+          image: "ubuntu-24.04",
+          location: "nyc3",
+        }),
       }),
     );
     expect(consoleLogSpy).toHaveBeenCalledWith(expect.stringContaining("srv_123"));
@@ -218,9 +242,7 @@ describe("create", () => {
   });
 
   it("exits 1 when --name is missing", async () => {
-    await expect(
-      runSpawnCommand("create", ["spawn", "create"]),
-    ).rejects.toThrow("process.exit(1)");
+    await expect(runSpawnCommand("create", ["spawn", "create"])).rejects.toThrow("process.exit(1)");
     expect(stderrSpy).toHaveBeenCalledWith(expect.stringContaining("--name NAME"));
   });
 });
@@ -279,9 +301,7 @@ describe("get", () => {
   });
 
   it("exits 1 when server ID is missing", async () => {
-    await expect(
-      runSpawnCommand("get", ["spawn", "get"]),
-    ).rejects.toThrow("process.exit(1)");
+    await expect(runSpawnCommand("get", ["spawn", "get"])).rejects.toThrow("process.exit(1)");
     expect(stderrSpy).toHaveBeenCalledWith(expect.stringContaining("SERVER_ID"));
   });
 });
@@ -306,9 +326,7 @@ describe("rm", () => {
   });
 
   it("exits 1 when server ID is missing", async () => {
-    await expect(
-      runSpawnCommand("rm", ["spawn", "rm"]),
-    ).rejects.toThrow("process.exit(1)");
+    await expect(runSpawnCommand("rm", ["spawn", "rm"])).rejects.toThrow("process.exit(1)");
   });
 });
 
@@ -326,9 +344,7 @@ describe("reboot", () => {
   });
 
   it("exits 1 when server ID is missing", async () => {
-    await expect(
-      runSpawnCommand("reboot", ["spawn", "reboot"]),
-    ).rejects.toThrow("process.exit(1)");
+    await expect(runSpawnCommand("reboot", ["spawn", "reboot"])).rejects.toThrow("process.exit(1)");
   });
 });
 
@@ -345,9 +361,7 @@ describe("stop", () => {
   });
 
   it("exits 1 when server ID is missing", async () => {
-    await expect(
-      runSpawnCommand("stop", ["spawn", "stop"]),
-    ).rejects.toThrow("process.exit(1)");
+    await expect(runSpawnCommand("stop", ["spawn", "stop"])).rejects.toThrow("process.exit(1)");
   });
 });
 
@@ -364,9 +378,7 @@ describe("start", () => {
   });
 
   it("exits 1 when server ID is missing", async () => {
-    await expect(
-      runSpawnCommand("start", ["spawn", "start"]),
-    ).rejects.toThrow("process.exit(1)");
+    await expect(runSpawnCommand("start", ["spawn", "start"])).rejects.toThrow("process.exit(1)");
   });
 });
 
@@ -375,7 +387,13 @@ describe("start", () => {
 describe("ssh-key add", () => {
   it("POSTs to /v1/ssh-keys with name and public_key", async () => {
     mockFetch.mockResolvedValue(okSshKey());
-    await runSpawnCommand("ssh-key", ["spawn", "ssh-key", "add", "--name=my-key", "--public-key=ssh-ed25519 AAAAC3..."]);
+    await runSpawnCommand("ssh-key", [
+      "spawn",
+      "ssh-key",
+      "add",
+      "--name=my-key",
+      "--public-key=ssh-ed25519 AAAAC3...",
+    ]);
     expect(mockFetch).toHaveBeenCalledWith(
       "https://spawn.prim.sh/v1/ssh-keys",
       expect.objectContaining({
@@ -389,7 +407,13 @@ describe("ssh-key add", () => {
   it("reads public key from --file", async () => {
     vi.mocked(readFileSync).mockReturnValue("ssh-ed25519 AAAAC3FromFile\n");
     mockFetch.mockResolvedValue(okSshKey());
-    await runSpawnCommand("ssh-key", ["spawn", "ssh-key", "add", "--name=file-key", "--file=/tmp/id_ed25519.pub"]);
+    await runSpawnCommand("ssh-key", [
+      "spawn",
+      "ssh-key",
+      "add",
+      "--name=file-key",
+      "--file=/tmp/id_ed25519.pub",
+    ]);
     expect(readFileSync).toHaveBeenCalledWith("/tmp/id_ed25519.pub", "utf-8");
     expect(mockFetch).toHaveBeenCalledWith(
       expect.anything(),
@@ -401,7 +425,14 @@ describe("ssh-key add", () => {
 
   it("--quiet prints only the key ID", async () => {
     mockFetch.mockResolvedValue(okSshKey("key_quiet"));
-    await runSpawnCommand("ssh-key", ["spawn", "ssh-key", "add", "--name=k", "--public-key=ssh-ed25519 X", "--quiet"]);
+    await runSpawnCommand("ssh-key", [
+      "spawn",
+      "ssh-key",
+      "add",
+      "--name=k",
+      "--public-key=ssh-ed25519 X",
+      "--quiet",
+    ]);
     expect(consoleLogSpy).toHaveBeenCalledWith("key_quiet");
     expect(consoleLogSpy).toHaveBeenCalledTimes(1);
   });
@@ -459,9 +490,9 @@ describe("ssh-key rm", () => {
   });
 
   it("exits 1 when key ID is missing", async () => {
-    await expect(
-      runSpawnCommand("ssh-key", ["spawn", "ssh-key", "rm"]),
-    ).rejects.toThrow("process.exit(1)");
+    await expect(runSpawnCommand("ssh-key", ["spawn", "ssh-key", "rm"])).rejects.toThrow(
+      "process.exit(1)",
+    );
   });
 });
 
@@ -470,18 +501,18 @@ describe("ssh-key rm", () => {
 describe("error handling", () => {
   it("non-ok response prints error message and code, exits 1", async () => {
     mockFetch.mockResolvedValue(errorResponse("not_found", "Server not found"));
-    await expect(
-      runSpawnCommand("get", ["spawn", "get", "srv_missing"]),
-    ).rejects.toThrow("process.exit(1)");
+    await expect(runSpawnCommand("get", ["spawn", "get", "srv_missing"])).rejects.toThrow(
+      "process.exit(1)",
+    );
     expect(stderrSpy).toHaveBeenCalledWith("Error: Server not found (not_found)\n");
     expect(exitSpy).toHaveBeenCalledWith(1);
   });
 
   it("403 forbidden error is reported correctly", async () => {
     mockFetch.mockResolvedValue(errorResponse("forbidden", "Access denied", 403));
-    await expect(
-      runSpawnCommand("rm", ["spawn", "rm", "srv_xyz"]),
-    ).rejects.toThrow("process.exit(1)");
+    await expect(runSpawnCommand("rm", ["spawn", "rm", "srv_xyz"])).rejects.toThrow(
+      "process.exit(1)",
+    );
     expect(stderrSpy).toHaveBeenCalledWith("Error: Access denied (forbidden)\n");
   });
 });
@@ -525,9 +556,7 @@ describe("URL resolution", () => {
 
 describe("unknown subcommand", () => {
   it("prints usage and exits 1", async () => {
-    await expect(
-      runSpawnCommand("foobar", ["spawn", "foobar"]),
-    ).rejects.toThrow("process.exit(1)");
+    await expect(runSpawnCommand("foobar", ["spawn", "foobar"])).rejects.toThrow("process.exit(1)");
     expect(consoleLogSpy).toHaveBeenCalledWith(expect.stringContaining("Usage:"));
   });
 });

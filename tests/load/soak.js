@@ -15,38 +15,38 @@
  *   - no p99 > 2s (no occasional large spikes caused by GC or conn pool exhaustion)
  */
 
-import http from "k6/http";
 import { check, sleep } from "k6";
+import http from "k6/http";
 import { Rate, Trend } from "k6/metrics";
 
 const DURATION = __ENV.DURATION ?? "60m";
 
-const errorRate   = new Rate("soak_errors");
+const errorRate = new Rate("soak_errors");
 const latencyTrend = new Trend("soak_latency_ms", true);
 
 export const options = {
   stages: [
-    { duration: "1m",    target: 5 },   // gentle ramp
-    { duration: DURATION, target: 5 },  // sustained soak
-    { duration: "1m",    target: 0 },   // wind down
+    { duration: "1m", target: 5 }, // gentle ramp
+    { duration: DURATION, target: 5 }, // sustained soak
+    { duration: "1m", target: 0 }, // wind down
   ],
   thresholds: {
-    http_req_duration:  ["p(95)<500", "p(99)<2000"],
-    http_req_failed:    ["rate<0.01"],
-    soak_errors:        ["rate<0.01"],
-    soak_latency_ms:    ["p(95)<500"],
+    http_req_duration: ["p(95)<500", "p(99)<2000"],
+    http_req_failed: ["rate<0.01"],
+    soak_errors: ["rate<0.01"],
+    soak_latency_ms: ["p(95)<500"],
   },
 };
 
 const SERVICES = [
-  { name: "wallet.sh",  url: "https://wallet.prim.sh/" },
-  { name: "faucet.sh",  url: "https://faucet.prim.sh/" },
-  { name: "store.sh",   url: "https://store.prim.sh/" },
-  { name: "spawn.sh",   url: "https://spawn.prim.sh/" },
-  { name: "search.sh",  url: "https://search.prim.sh/" },
-  { name: "email.sh",   url: "https://email.prim.sh/" },
-  { name: "domain.sh",  url: "https://domain.prim.sh/" },
-  { name: "track.sh",   url: "https://track.prim.sh/" },
+  { name: "wallet.sh", url: "https://wallet.prim.sh/" },
+  { name: "faucet.sh", url: "https://faucet.prim.sh/" },
+  { name: "store.sh", url: "https://store.prim.sh/" },
+  { name: "spawn.sh", url: "https://spawn.prim.sh/" },
+  { name: "search.sh", url: "https://search.prim.sh/" },
+  { name: "email.sh", url: "https://email.prim.sh/" },
+  { name: "domain.sh", url: "https://domain.prim.sh/" },
+  { name: "track.sh", url: "https://track.prim.sh/" },
 ];
 
 export default function () {
@@ -61,7 +61,7 @@ export default function () {
   latencyTrend.add(res.timings.duration, { service: service.name });
 
   check(res, {
-    [`${service.name}: 200`]:    (r) => r.status === 200,
+    [`${service.name}: 200`]: (r) => r.status === 200,
     [`${service.name}: <500ms`]: (r) => r.timings.duration < 500,
   });
 

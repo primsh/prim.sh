@@ -1,5 +1,12 @@
-import { describe, expect, it, vi, beforeEach, afterEach } from "vitest";
-import { discoverSession, buildBasicAuth, JmapError, queryEmails, getEmail, sendEmail } from "../src/jmap";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import {
+  JmapError,
+  buildBasicAuth,
+  discoverSession,
+  getEmail,
+  queryEmails,
+  sendEmail,
+} from "../src/jmap";
 
 const MOCK_BASE_URL = "https://mail.test.com";
 const AUTH_HEADER = buildBasicAuth("[email protected]", "password123");
@@ -51,7 +58,8 @@ describe("jmap client", () => {
   });
 
   it("discovers session with correct apiUrl and accountId", async () => {
-    globalThis.fetch = vi.fn()
+    globalThis.fetch = vi
+      .fn()
       .mockResolvedValueOnce({
         ok: true,
         status: 200,
@@ -70,7 +78,8 @@ describe("jmap client", () => {
   });
 
   it("extracts mailbox IDs by role", async () => {
-    globalThis.fetch = vi.fn()
+    globalThis.fetch = vi
+      .fn()
       .mockResolvedValueOnce({
         ok: true,
         status: 200,
@@ -90,7 +99,8 @@ describe("jmap client", () => {
   });
 
   it("extracts identityId from first identity", async () => {
-    globalThis.fetch = vi.fn()
+    globalThis.fetch = vi
+      .fn()
       .mockResolvedValueOnce({
         ok: true,
         status: 200,
@@ -125,7 +135,8 @@ describe("jmap client", () => {
   });
 
   it("throws when inbox role is missing", async () => {
-    globalThis.fetch = vi.fn()
+    globalThis.fetch = vi
+      .fn()
       .mockResolvedValueOnce({
         ok: true,
         status: 200,
@@ -137,7 +148,11 @@ describe("jmap client", () => {
         json: async () => ({
           methodResponses: [
             ["Mailbox/get", { list: [{ id: "mb_trash", role: "trash", name: "Trash" }] }, "mb"],
-            ["Identity/get", { list: [{ id: "id_1", email: "[email protected]", name: "Test" }] }, "id"],
+            [
+              "Identity/get",
+              { list: [{ id: "id_1", email: "[email protected]", name: "Test" }] },
+              "id",
+            ],
           ],
         }),
       });
@@ -152,7 +167,8 @@ describe("jmap client", () => {
   });
 
   it("handles missing drafts/sent gracefully", async () => {
-    globalThis.fetch = vi.fn()
+    globalThis.fetch = vi
+      .fn()
       .mockResolvedValueOnce({
         ok: true,
         status: 200,
@@ -164,7 +180,11 @@ describe("jmap client", () => {
         json: async () => ({
           methodResponses: [
             ["Mailbox/get", { list: [{ id: "mb_inbox", role: "inbox", name: "Inbox" }] }, "mb"],
-            ["Identity/get", { list: [{ id: "id_1", email: "[email protected]", name: "Test" }] }, "id"],
+            [
+              "Identity/get",
+              { list: [{ id: "id_1", email: "[email protected]", name: "Test" }] },
+              "id",
+            ],
           ],
         }),
       });
@@ -201,11 +221,7 @@ describe("jmap client", () => {
         status: 200,
         json: async () => ({
           methodResponses: [
-            [
-              "Email/query",
-              { ids: ["e1", "e2"], total: 42, position: 0 },
-              "q",
-            ],
+            ["Email/query", { ids: ["e1", "e2"], total: 42, position: 0 }, "q"],
             [
               "Email/get",
               {
@@ -286,9 +302,7 @@ describe("jmap client", () => {
         ok: true,
         status: 200,
         json: async () => ({
-          methodResponses: [
-            ["error", { type: "serverFail" }, "q"],
-          ],
+          methodResponses: [["error", { type: "serverFail" }, "q"]],
         }),
       });
 
@@ -422,13 +436,7 @@ describe("jmap client", () => {
         ok: true,
         status: 200,
         json: async () => ({
-          methodResponses: [
-            [
-              "Email/get",
-              { list: [], notFound: ["e_missing"] },
-              "e",
-            ],
-          ],
+          methodResponses: [["Email/get", { list: [], notFound: ["e_missing"] }, "e"]],
         }),
       });
 
@@ -447,9 +455,7 @@ describe("jmap client", () => {
         ok: true,
         status: 200,
         json: async () => ({
-          methodResponses: [
-            ["Email/get", { list: [], notFound: [] }, "e"],
-          ],
+          methodResponses: [["Email/get", { list: [], notFound: [] }, "e"]],
         }),
       });
 
@@ -553,7 +559,11 @@ describe("jmap client", () => {
         status: 200,
         json: async () => ({
           methodResponses: [
-            ["Email/set", { notCreated: { draft: { type: "invalidProperties", description: "bad subject" } } }, "e"],
+            [
+              "Email/set",
+              { notCreated: { draft: { type: "invalidProperties", description: "bad subject" } } },
+              "e",
+            ],
             ["EmailSubmission/set", { created: { sub: { id: "sub_xyz" } } }, "es"],
           ],
         }),
@@ -577,7 +587,11 @@ describe("jmap client", () => {
         json: async () => ({
           methodResponses: [
             ["Email/set", { created: { draft: { id: "email_abc" } } }, "e"],
-            ["EmailSubmission/set", { notCreated: { sub: { type: "forbidden", description: "rate limited" } } }, "es"],
+            [
+              "EmailSubmission/set",
+              { notCreated: { sub: { type: "forbidden", description: "rate limited" } } },
+              "es",
+            ],
           ],
         }),
       });

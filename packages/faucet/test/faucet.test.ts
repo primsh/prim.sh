@@ -4,7 +4,7 @@
  * IMPORTANT: env vars must be set before any module import that touches network config.
  */
 
-import { describe, expect, it, beforeEach, afterEach, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 // Set testnet env before any imports
 process.env.PRIM_NETWORK = "eip155:84532";
@@ -52,36 +52,37 @@ vi.mock("@coinbase/cdp-sdk", () => ({
 // ─── Mock fetch (Circle Faucet API + wallet.sh allowlist) ─────────────────
 
 /** Underlying mock for Circle API calls — tests configure this via setupCircleSuccess/Error */
-const mockCircleFetch = vi.fn<
-  [RequestInfo | URL, RequestInit | undefined],
-  Promise<Response>
->();
+const mockCircleFetch = vi.fn<[RequestInfo | URL, RequestInit | undefined], Promise<Response>>();
 
 /**
  * Global fetch stub that routes:
  *  - wallet.sh allowlist checks → auto-approve (always allowed in tests)
  *  - everything else → mockCircleFetch (configured per-test)
  */
-const mockFetch = vi.fn<
-  [RequestInfo | URL, RequestInit | undefined],
-  Promise<Response>
->().mockImplementation((input, init) => {
-  const url = typeof input === "string" ? input : input instanceof URL ? input.toString() : (input as Request).url;
-  if (url.includes("/internal/allowlist/check")) {
-    return Promise.resolve(
-      new Response(JSON.stringify({ allowed: true }), {
-        status: 200,
-        headers: { "Content-Type": "application/json" },
-      }),
-    );
-  }
-  return mockCircleFetch(input, init);
-});
+const mockFetch = vi
+  .fn<[RequestInfo | URL, RequestInit | undefined], Promise<Response>>()
+  .mockImplementation((input, init) => {
+    const url =
+      typeof input === "string"
+        ? input
+        : input instanceof URL
+          ? input.toString()
+          : (input as Request).url;
+    if (url.includes("/internal/allowlist/check")) {
+      return Promise.resolve(
+        new Response(JSON.stringify({ allowed: true }), {
+          status: 200,
+          headers: { "Content-Type": "application/json" },
+        }),
+      );
+    }
+    return mockCircleFetch(input, init);
+  });
 vi.stubGlobal("fetch", mockFetch);
 
+import { cleanupOldEntries, getLastDrip, resetDb, upsertDrip } from "../src/db.ts";
 // Import app and db helpers after env + mocks are set up
 import app from "../src/index.ts";
-import { resetDb, upsertDrip, getLastDrip, cleanupOldEntries } from "../src/db.ts";
 
 // ─── Test helpers ─────────────────────────────────────────────────────────
 
@@ -98,10 +99,10 @@ async function postJson(path: string, body: unknown): Promise<Response> {
 
 function setupCircleSuccess(): void {
   mockCircleFetch.mockResolvedValue(
-    new Response(
-      JSON.stringify({ txHash: "0xCircleTxHash123" }),
-      { status: 200, headers: { "Content-Type": "application/json" } },
-    ),
+    new Response(JSON.stringify({ txHash: "0xCircleTxHash123" }), {
+      status: 200,
+      headers: { "Content-Type": "application/json" },
+    }),
   );
 }
 

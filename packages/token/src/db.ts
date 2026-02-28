@@ -123,7 +123,9 @@ export function resetDb(): void {
 
 export function getDeploymentById(id: string): DeploymentRow | null {
   const db = getDb();
-  return db.query<DeploymentRow, [string]>("SELECT * FROM deployments WHERE id = ?").get(id) ?? null;
+  return (
+    db.query<DeploymentRow, [string]>("SELECT * FROM deployments WHERE id = ?").get(id) ?? null
+  );
 }
 
 export function getDeploymentsByOwner(owner: string): DeploymentRow[] {
@@ -170,11 +172,7 @@ export function insertDeployment(params: {
   );
 }
 
-export function updateDeploymentStatus(
-  id: string,
-  status: string,
-  contractAddress?: string,
-): void {
+export function updateDeploymentStatus(id: string, status: string, contractAddress?: string): void {
   const db = getDb();
   if (contractAddress) {
     db.query(
@@ -220,11 +218,7 @@ export interface PoolRow {
 
 export function getPoolByTokenId(tokenId: string): PoolRow | null {
   const db = getDb();
-  return (
-    db
-      .query<PoolRow, [string]>("SELECT * FROM pools WHERE token_id = ?")
-      .get(tokenId) ?? null
-  );
+  return db.query<PoolRow, [string]>("SELECT * FROM pools WHERE token_id = ?").get(tokenId) ?? null;
 }
 
 export function insertPool(params: {

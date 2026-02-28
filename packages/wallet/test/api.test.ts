@@ -4,16 +4,16 @@
  * Rewritten in W-10 for non-custodial registration (EIP-191 signature).
  */
 
-import { describe, expect, it, beforeAll, afterAll, beforeEach, vi } from "vitest";
+import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 
 vi.hoisted(() => {
   process.env.PRIM_PAY_TO = "0x0000000000000000000000000000000000000001";
   process.env.WALLET_DB_PATH = ":memory:";
 });
 
-import { privateKeyToAccount, generatePrivateKey } from "viem/accounts";
-import { getAddress } from "viem";
 import { encodePaymentSignatureHeader } from "@x402/core/http";
+import { getAddress } from "viem";
+import { generatePrivateKey, privateKeyToAccount } from "viem/accounts";
 
 const NETWORK = "eip155:8453";
 

@@ -6,8 +6,8 @@
  */
 
 import { stringify } from "yaml";
-import type { Primitive, RouteMapping } from "./primitives.js";
 import type { ParsedApi, ParsedInterface } from "./parse-api.js";
+import type { Primitive, RouteMapping } from "./primitives.js";
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -21,6 +21,7 @@ function extractPathParams(route: string): string[] {
   const params: string[] = [];
   const re = /:([A-Za-z_][A-Za-z0-9_]*)/g;
   let m: RegExpExecArray | null;
+  // biome-ignore lint/suspicious/noAssignInExpressions: standard regex iteration
   while ((m = re.exec(route)) !== null) {
     params.push(m[1]);
   }
@@ -28,8 +29,10 @@ function extractPathParams(route: string): string[] {
 }
 
 function lookupPrice(route: string, prices: Map<string, string>): string | null {
+  // biome-ignore lint/style/noNonNullAssertion: guarded by .has() check
   if (prices.has(route)) return prices.get(route)!;
   const bracketForm = route.replace(/:([A-Za-z_][A-Za-z0-9_]*)/g, "[$1]");
+  // biome-ignore lint/style/noNonNullAssertion: guarded by .has() check
   if (prices.has(bracketForm)) return prices.get(bracketForm)!;
   const method = route.split(" ")[0];
   const path = route.split(" ").slice(1).join(" ");
@@ -45,7 +48,10 @@ function lookupPrice(route: string, prices: Map<string, string>): string | null 
       const pp = pathParts[i];
       const kk = kParts[i];
       if (!pp.startsWith(":") && !kk.startsWith("[") && kk !== "*") {
-        if (pp !== kk) { match = false; break; }
+        if (pp !== kk) {
+          match = false;
+          break;
+        }
       }
     }
     if (match) return val;
@@ -76,8 +82,16 @@ function splitUnion(typeStr: string): string[] {
       current += ch;
       continue;
     }
-    if (ch === "{" || ch === "(" || ch === "<") { depth++; current += ch; continue; }
-    if (ch === "}" || ch === ")" || ch === ">") { depth--; current += ch; continue; }
+    if (ch === "{" || ch === "(" || ch === "<") {
+      depth++;
+      current += ch;
+      continue;
+    }
+    if (ch === "}" || ch === ")" || ch === ">") {
+      depth--;
+      current += ch;
+      continue;
+    }
     if (ch === "|" && depth === 0) {
       parts.push(current.trim());
       current = "";
@@ -92,6 +106,7 @@ function splitUnion(typeStr: string): string[] {
 // ── Type → OpenAPI schema ────────────────────────────────────────────────────
 
 function typeToSchema(typeStr: string, interfaces: Map<string, ParsedInterface>): Schema {
+  // biome-ignore lint/style/noParameterAssign: local mutation for convenience
   typeStr = typeStr.trim();
 
   if (typeStr === "object" || typeStr.startsWith("{")) return { type: "object" };
@@ -102,15 +117,15 @@ function typeToSchema(typeStr: string, interfaces: Map<string, ParsedInterface>)
   // Union types — checked BEFORE literal/array to handle "a" | "b" and string | string[]
   if (typeStr.includes("|")) {
     const parts = splitUnion(typeStr);
-    const hasNull = parts.some(p => p === "null");
-    const nonNullParts = parts.filter(p => p !== "null");
+    const hasNull = parts.some((p) => p === "null");
+    const nonNullParts = parts.filter((p) => p !== "null");
 
     // All string literals (possibly nullable)
-    const allLiterals = nonNullParts.every(p =>
-      (p.startsWith('"') && p.endsWith('"')) || (p.startsWith("'") && p.endsWith("'"))
+    const allLiterals = nonNullParts.every(
+      (p) => (p.startsWith('"') && p.endsWith('"')) || (p.startsWith("'") && p.endsWith("'")),
     );
     if (allLiterals && nonNullParts.length > 0) {
-      const values = nonNullParts.map(p => p.slice(1, -1));
+      const values = nonNullParts.map((p) => p.slice(1, -1));
       const enumSchema: Schema = { type: "string", enum: values };
       if (hasNull) return { oneOf: [enumSchema, { type: "null" }] };
       return enumSchema;
@@ -144,8 +159,10 @@ function typeToSchema(typeStr: string, interfaces: Map<string, ParsedInterface>)
   }
 
   // Single string literal: "list", "function", etc.
-  if ((typeStr.startsWith('"') && typeStr.endsWith('"')) ||
-      (typeStr.startsWith("'") && typeStr.endsWith("'"))) {
+  if (
+    (typeStr.startsWith('"') && typeStr.endsWith('"')) ||
+    (typeStr.startsWith("'") && typeStr.endsWith("'"))
+  ) {
     return { type: "string", enum: [typeStr.slice(1, -1)] };
   }
 
@@ -167,7 +184,7 @@ function typeToSchema(typeStr: string, interfaces: Map<string, ParsedInterface>)
 
 function extractInterfaceRefs(typeStr: string, interfaces: Map<string, ParsedInterface>): string[] {
   const tokens = typeStr.split(/[^A-Za-z_$0-9]+/).filter(Boolean);
-  return tokens.filter(t => interfaces.has(t) && t !== "ApiError" && t !== "ApiErrorDetail");
+  return tokens.filter((t) => interfaces.has(t) && t !== "ApiError" && t !== "ApiErrorDetail");
 }
 
 function collectReferencedInterfaces(
@@ -177,10 +194,12 @@ function collectReferencedInterfaces(
   const visited = new Set<string>();
   const queue = [...rootTypes];
   while (queue.length > 0) {
+    // biome-ignore lint/style/noNonNullAssertion: queue is non-empty per while condition
     const name = queue.pop()!;
     if (visited.has(name) || !interfaces.has(name)) continue;
     if (name === "ApiError" || name === "ApiErrorDetail") continue;
     visited.add(name);
+    // biome-ignore lint/style/noNonNullAssertion: guarded by .has() check above
     const iface = interfaces.get(name)!;
     for (const field of iface.fields) {
       for (const ref of extractInterfaceRefs(field.type, interfaces)) {
@@ -209,7 +228,7 @@ function interfaceToSchema(
   }
   if (allFields.length === 0) return { type: "object" };
 
-  const required = allFields.filter(f => !f.optional).map(f => f.name);
+  const required = allFields.filter((f) => !f.optional).map((f) => f.name);
   const properties: Record<string, Schema> = {};
   for (const field of allFields) {
     const schema = typeToSchema(field.type, interfaces);
@@ -252,6 +271,7 @@ function buildSchemas(api: ParsedApi, referenced: Set<string>): Record<string, S
   };
 
   for (const name of [...referenced].sort()) {
+    // biome-ignore lint/style/noNonNullAssertion: name comes from referenced set which was built from interfaces keys
     const iface = api.interfaces.get(name)!;
     schemas[name] = interfaceToSchema(iface, api.interfaces);
   }
@@ -413,11 +433,7 @@ function buildPaths(
 
 // ── Main renderer ────────────────────────────────────────────────────────────
 
-export function renderOpenApi(
-  p: Primitive,
-  api: ParsedApi,
-  prices: Map<string, string>,
-): string {
+export function renderOpenApi(p: Primitive, api: ParsedApi, prices: Map<string, string>): string {
   const endpoint = p.endpoint ?? `${p.id}.prim.sh`;
 
   const rootTypes: string[] = [];

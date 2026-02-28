@@ -5,7 +5,7 @@
  * Used by gen-prims.ts, pre-deploy.ts, launch-status.ts, gate-check.ts, deploy-prim.ts.
  */
 
-import { readFileSync, existsSync, readdirSync } from "node:fs";
+import { existsSync, readFileSync, readdirSync } from "node:fs";
 import { join, resolve } from "node:path";
 import { parse as parseYaml } from "yaml";
 
@@ -20,16 +20,16 @@ export interface PricingRow {
 }
 
 export interface GateConfig {
-  coverage_threshold?: number;  // default 80
-  allow_todo?: boolean;          // default false
-  skip_smoke?: boolean;          // default false
-  approved_by?: string;          // required for testing → live
+  coverage_threshold?: number; // default 80
+  allow_todo?: boolean; // default false
+  skip_smoke?: boolean; // default false
+  approved_by?: string; // required for testing → live
 }
 
 export interface DeployConfig {
-  max_body_size?: string;        // default "1MB"
-  systemd_after?: string[];      // extra After= units
-  extra_caddy?: string[];        // additional Caddy blocks
+  max_body_size?: string; // default "1MB"
+  systemd_after?: string[]; // extra After= units
+  extra_caddy?: string[]; // additional Caddy blocks
 }
 
 export interface RouteQueryParam {
@@ -76,9 +76,9 @@ export interface Interfaces {
 }
 
 export interface FactoryConfig {
-  max_body_size?: string;   // default "1MB"
-  metrics?: boolean;         // default true
-  free_service?: boolean;    // default false
+  max_body_size?: string; // default "1MB"
+  metrics?: boolean; // default true
+  free_service?: boolean; // default false
 }
 
 export type PrimCategory =
@@ -94,27 +94,56 @@ export type PrimCategory =
 
 /** Category → accent color. Single source of truth for the color system. */
 export const CATEGORY_COLORS: Record<PrimCategory, string> = {
-  crypto:       "#00ff88",  // neon green
-  compute:      "#4DD0E1",  // cyan
-  storage:      "#FFB74D",  // amber
-  comms:        "#6C8EFF",  // blue
-  intelligence: "#B39DDB",  // purple
-  identity:     "#FFC107",  // gold
-  ops:          "#FF3D00",  // orange
-  physical:     "#F48FB1",  // pink
-  meta:         "#E0E0E0",  // white/silver
+  crypto: "#00ff88", // neon green
+  compute: "#4DD0E1", // cyan
+  storage: "#FFB74D", // amber
+  comms: "#6C8EFF", // blue
+  intelligence: "#B39DDB", // purple
+  identity: "#FFC107", // gold
+  ops: "#FF3D00", // orange
+  physical: "#F48FB1", // pink
+  meta: "#E0E0E0", // white/silver
 };
 
 /** Map existing `type` values to categories */
 export const TYPE_TO_CATEGORY: Record<string, PrimCategory> = {
-  crypto: "crypto", defi: "crypto", testnet: "crypto", payments: "crypto",
-  compute: "compute", execution: "compute", scheduler: "compute", scheduling: "compute", deploy: "compute",
-  storage: "storage", memory: "storage", secrets: "storage",
-  email: "comms", messaging: "comms", voice: "comms", phone: "comms", browser: "comms",
-  intelligence: "intelligence", ai: "intelligence", search: "intelligence", documentation: "intelligence",
-  auth: "identity", oauth: "identity", identity: "identity", domains: "identity",
-  observability: "ops", tracing: "ops", logistics: "ops", coordination: "ops", social: "ops",
-  labor: "physical", commerce: "physical", location: "physical", maps: "physical", advertising: "physical", legal: "physical", compliance: "physical",
+  crypto: "crypto",
+  defi: "crypto",
+  testnet: "crypto",
+  payments: "crypto",
+  compute: "compute",
+  execution: "compute",
+  scheduler: "compute",
+  scheduling: "compute",
+  deploy: "compute",
+  storage: "storage",
+  memory: "storage",
+  secrets: "storage",
+  email: "comms",
+  messaging: "comms",
+  voice: "comms",
+  phone: "comms",
+  browser: "comms",
+  intelligence: "intelligence",
+  ai: "intelligence",
+  search: "intelligence",
+  documentation: "intelligence",
+  auth: "identity",
+  oauth: "identity",
+  identity: "identity",
+  domains: "identity",
+  observability: "ops",
+  tracing: "ops",
+  logistics: "ops",
+  coordination: "ops",
+  social: "ops",
+  labor: "physical",
+  commerce: "physical",
+  location: "physical",
+  maps: "physical",
+  advertising: "physical",
+  legal: "physical",
+  compliance: "physical",
   meta: "meta",
 };
 

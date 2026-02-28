@@ -88,10 +88,6 @@ export interface ApiError {
   };
 }
 
-export const ERROR_CODES = [
-  "invalid_request",
-  "rate_limited",
-  "provider_error",
-] as const;
+export const ERROR_CODES = ["invalid_request", "rate_limited", "provider_error"] as const;
 
 export type ErrorCode = (typeof ERROR_CODES)[number];

@@ -123,7 +123,9 @@ export function getDb(): Database {
     )
   `);
 
-  _db.run("CREATE INDEX IF NOT EXISTS idx_registrations_recovery_token ON registrations(recovery_token)");
+  _db.run(
+    "CREATE INDEX IF NOT EXISTS idx_registrations_recovery_token ON registrations(recovery_token)",
+  );
   _db.run("CREATE INDEX IF NOT EXISTS idx_registrations_owner ON registrations(owner_wallet)");
 
   return _db;
@@ -153,7 +155,16 @@ export function insertZone(params: {
   db.query(
     `INSERT INTO zones (id, cloudflare_id, domain, owner_wallet, status, nameservers, created_at, updated_at)
      VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
-  ).run(params.id, params.cloudflare_id, params.domain, params.owner_wallet, params.status, JSON.stringify(params.nameservers), now, now);
+  ).run(
+    params.id,
+    params.cloudflare_id,
+    params.domain,
+    params.owner_wallet,
+    params.status,
+    JSON.stringify(params.nameservers),
+    now,
+    now,
+  );
 }
 
 export function getZoneById(id: string): ZoneRow | null {
@@ -178,7 +189,9 @@ export function getZonesByOwner(owner: string, limit: number, offset: number): Z
 export function countZonesByOwner(owner: string): number {
   const db = getDb();
   const row = db
-    .query<{ count: number }, [string]>("SELECT COUNT(*) as count FROM zones WHERE owner_wallet = ?")
+    .query<{ count: number }, [string]>(
+      "SELECT COUNT(*) as count FROM zones WHERE owner_wallet = ?",
+    )
     .get(owner) as { count: number } | null;
   return row?.count ?? 0;
 }
@@ -212,7 +225,19 @@ export function insertRecord(params: {
   db.query(
     `INSERT INTO records (id, cloudflare_id, zone_id, type, name, content, ttl, proxied, priority, created_at, updated_at)
      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-  ).run(params.id, params.cloudflare_id, params.zone_id, params.type, params.name, params.content, params.ttl, params.proxied ? 1 : 0, params.priority, now, now);
+  ).run(
+    params.id,
+    params.cloudflare_id,
+    params.zone_id,
+    params.type,
+    params.name,
+    params.content,
+    params.ttl,
+    params.proxied ? 1 : 0,
+    params.priority,
+    now,
+    now,
+  );
 }
 
 export function getRecordById(id: string): RecordRow | null {
@@ -222,7 +247,9 @@ export function getRecordById(id: string): RecordRow | null {
 
 export function getRecordByCloudflareId(cfId: string): RecordRow | null {
   const db = getDb();
-  return db.query<RecordRow, [string]>("SELECT * FROM records WHERE cloudflare_id = ?").get(cfId) ?? null;
+  return (
+    db.query<RecordRow, [string]>("SELECT * FROM records WHERE cloudflare_id = ?").get(cfId) ?? null
+  );
 }
 
 export function getRecordsByZone(zoneId: string): RecordRow[] {
@@ -232,27 +259,51 @@ export function getRecordsByZone(zoneId: string): RecordRow[] {
     .all(zoneId);
 }
 
-export function updateRecordRow(id: string, params: {
-  cloudflare_id?: string;
-  type?: string;
-  name?: string;
-  content?: string;
-  ttl?: number;
-  proxied?: boolean;
-  priority?: number | null;
-}): void {
+export function updateRecordRow(
+  id: string,
+  params: {
+    cloudflare_id?: string;
+    type?: string;
+    name?: string;
+    content?: string;
+    ttl?: number;
+    proxied?: boolean;
+    priority?: number | null;
+  },
+): void {
   const db = getDb();
   const now = Date.now();
   const sets: string[] = ["updated_at = ?"];
   const values: unknown[] = [now];
 
-  if (params.cloudflare_id !== undefined) { sets.push("cloudflare_id = ?"); values.push(params.cloudflare_id); }
-  if (params.type !== undefined) { sets.push("type = ?"); values.push(params.type); }
-  if (params.name !== undefined) { sets.push("name = ?"); values.push(params.name); }
-  if (params.content !== undefined) { sets.push("content = ?"); values.push(params.content); }
-  if (params.ttl !== undefined) { sets.push("ttl = ?"); values.push(params.ttl); }
-  if (params.proxied !== undefined) { sets.push("proxied = ?"); values.push(params.proxied ? 1 : 0); }
-  if (params.priority !== undefined) { sets.push("priority = ?"); values.push(params.priority); }
+  if (params.cloudflare_id !== undefined) {
+    sets.push("cloudflare_id = ?");
+    values.push(params.cloudflare_id);
+  }
+  if (params.type !== undefined) {
+    sets.push("type = ?");
+    values.push(params.type);
+  }
+  if (params.name !== undefined) {
+    sets.push("name = ?");
+    values.push(params.name);
+  }
+  if (params.content !== undefined) {
+    sets.push("content = ?");
+    values.push(params.content);
+  }
+  if (params.ttl !== undefined) {
+    sets.push("ttl = ?");
+    values.push(params.ttl);
+  }
+  if (params.proxied !== undefined) {
+    sets.push("proxied = ?");
+    values.push(params.proxied ? 1 : 0);
+  }
+  if (params.priority !== undefined) {
+    sets.push("priority = ?");
+    values.push(params.priority);
+  }
 
   values.push(id);
   // biome-ignore lint/suspicious/noExplicitAny: dynamic SQL params built from validated fields
@@ -286,7 +337,17 @@ export function insertQuote(params: {
   db.query(
     `INSERT INTO quotes (id, domain, years, registrar_cost_cents, margin_cents, total_cents, caller_wallet, created_at, expires_at)
      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-  ).run(params.id, params.domain, params.years, params.registrar_cost_cents, params.margin_cents, params.total_cents, params.caller_wallet, now, params.expires_at);
+  ).run(
+    params.id,
+    params.domain,
+    params.years,
+    params.registrar_cost_cents,
+    params.margin_cents,
+    params.total_cents,
+    params.caller_wallet,
+    now,
+    params.expires_at,
+  );
 }
 
 export function getQuoteById(id: string): QuoteRow | null {
@@ -313,37 +374,68 @@ export function insertRegistration(params: {
     `INSERT INTO registrations (id, domain, quote_id, recovery_token, namesilo_order_id, zone_id, ns_configured, owner_wallet, total_cents, created_at, updated_at)
      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
   ).run(
-    params.id, params.domain, params.quote_id, params.recovery_token,
-    params.namesilo_order_id, params.zone_id, params.ns_configured ? 1 : 0,
-    params.owner_wallet, params.total_cents, now, now,
+    params.id,
+    params.domain,
+    params.quote_id,
+    params.recovery_token,
+    params.namesilo_order_id,
+    params.zone_id,
+    params.ns_configured ? 1 : 0,
+    params.owner_wallet,
+    params.total_cents,
+    now,
+    now,
   );
 }
 
 export function getRegistrationByRecoveryToken(token: string): RegistrationRow | null {
   const db = getDb();
-  return db.query<RegistrationRow, [string]>("SELECT * FROM registrations WHERE recovery_token = ?").get(token) ?? null;
+  return (
+    db
+      .query<RegistrationRow, [string]>("SELECT * FROM registrations WHERE recovery_token = ?")
+      .get(token) ?? null
+  );
 }
 
 export function getRegistrationByDomain(domain: string): RegistrationRow | null {
   const db = getDb();
-  return db.query<RegistrationRow, [string]>("SELECT * FROM registrations WHERE domain = ?").get(domain) ?? null;
+  return (
+    db
+      .query<RegistrationRow, [string]>("SELECT * FROM registrations WHERE domain = ?")
+      .get(domain) ?? null
+  );
 }
 
-export function updateRegistration(id: string, params: {
-  zone_id?: string | null;
-  ns_configured?: boolean;
-  recovery_token?: string | null;
-  namesilo_order_id?: string | null;
-}): void {
+export function updateRegistration(
+  id: string,
+  params: {
+    zone_id?: string | null;
+    ns_configured?: boolean;
+    recovery_token?: string | null;
+    namesilo_order_id?: string | null;
+  },
+): void {
   const db = getDb();
   const now = Date.now();
   const sets: string[] = ["updated_at = ?"];
   const values: unknown[] = [now];
 
-  if (params.zone_id !== undefined) { sets.push("zone_id = ?"); values.push(params.zone_id); }
-  if (params.ns_configured !== undefined) { sets.push("ns_configured = ?"); values.push(params.ns_configured ? 1 : 0); }
-  if (params.recovery_token !== undefined) { sets.push("recovery_token = ?"); values.push(params.recovery_token); }
-  if (params.namesilo_order_id !== undefined) { sets.push("namesilo_order_id = ?"); values.push(params.namesilo_order_id); }
+  if (params.zone_id !== undefined) {
+    sets.push("zone_id = ?");
+    values.push(params.zone_id);
+  }
+  if (params.ns_configured !== undefined) {
+    sets.push("ns_configured = ?");
+    values.push(params.ns_configured ? 1 : 0);
+  }
+  if (params.recovery_token !== undefined) {
+    sets.push("recovery_token = ?");
+    values.push(params.recovery_token);
+  }
+  if (params.namesilo_order_id !== undefined) {
+    sets.push("namesilo_order_id = ?");
+    values.push(params.namesilo_order_id);
+  }
 
   values.push(id);
   // biome-ignore lint/suspicious/noExplicitAny: dynamic SQL params built from validated fields

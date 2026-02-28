@@ -4,15 +4,15 @@
  */
 
 import { createHmac, timingSafeEqual } from "node:crypto";
+import type { WebhookPayload } from "./api.ts";
 import { decryptPassword } from "./crypto.ts";
 import {
-  insertWebhookLog,
   incrementWebhookFailures,
+  insertWebhookLog,
   resetWebhookFailures,
   updateWebhookStatus,
 } from "./db.ts";
 import type { WebhookRow } from "./db.ts";
-import type { WebhookPayload } from "./api.ts";
 
 const DELIVERY_TIMEOUT_MS = Number(process.env.WEBHOOK_DELIVERY_TIMEOUT_MS) || 10_000;
 const MAX_RETRIES = Number(process.env.WEBHOOK_MAX_RETRIES) || 3;
@@ -94,10 +94,7 @@ async function attemptDelivery(
  * Deliver a webhook payload with retry logic.
  * Retries on 5xx/network errors. Does NOT retry on 4xx (permanent failure).
  */
-export async function deliverWebhook(
-  webhook: WebhookRow,
-  payload: WebhookPayload,
-): Promise<void> {
+export async function deliverWebhook(webhook: WebhookRow, payload: WebhookPayload): Promise<void> {
   for (let attempt = 1; attempt <= MAX_RETRIES; attempt++) {
     const delay = RETRY_DELAYS[attempt - 1] ?? 0;
     if (delay > 0) {
@@ -128,10 +125,7 @@ export async function deliverWebhook(
  * Dispatch webhook delivery for all active webhooks on a mailbox.
  * Runs asynchronously — does not block the caller.
  */
-export function dispatchWebhookDeliveries(
-  webhooks: WebhookRow[],
-  payload: WebhookPayload,
-): void {
+export function dispatchWebhookDeliveries(webhooks: WebhookRow[], payload: WebhookPayload): void {
   for (const wh of webhooks) {
     // Fire and forget — delivery runs in background
     deliverWebhook(wh, payload);
