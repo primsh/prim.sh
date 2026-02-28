@@ -41,7 +41,7 @@ let written = 0;
 
 for (const id of dirs) {
   const cfg = loadYaml(join(pkgDir, id, "prim.yaml"));
-  if (!cfg || !cfg.status) continue;
+  if (!cfg || (cfg.status !== "testnet" && cfg.status !== "mainnet")) continue;
 
   const { name, endpoint } = cfg;
 
