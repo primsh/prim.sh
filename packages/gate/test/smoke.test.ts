@@ -5,23 +5,38 @@ process.env.GATE_FUND_KEY = "0x0000000000000000000000000000000000000000000000000
 process.env.GATE_CODES = "TEST-CODE-1,TEST-CODE-2";
 process.env.PRIM_INTERNAL_KEY = "test-internal-key";
 
-// Mock x402-middleware — gate uses freeService so no x402, but createPrimApp still imports it
-vi.mock("@primsh/x402-middleware", async (importOriginal) => {
-  const original = await importOriginal<typeof import("@primsh/x402-middleware")>();
-  return {
-    ...original,
-    createAgentStackMiddleware: vi.fn(
-      () =>
-        async (
-          _c: import("hono").Context,
-          next: import("hono").Next,
-        ) => {
-          await next();
-        },
-    ),
-    createWalletAllowlistChecker: vi.fn(() => () => Promise.resolve(true)),
-  };
+// Mock x402-middleware — gate uses freeService so no x402, but createPrimApp still imports it.
+// Simple factory (no importOriginal) to avoid pulling in @x402/* deps that vitest can't resolve.
+vi.mock("@primsh/x402-middleware", () => ({
+  createAgentStackMiddleware: vi.fn(
+    () =>
+      async (
+        _c: import("hono").Context,
+        next: import("hono").Next,
+      ) => {
+        await next();
+      },
+  ),
+  createWalletAllowlistChecker: vi.fn(() => () => Promise.resolve(true)),
+  createLogger: vi.fn(() => ({ info: vi.fn(), warn: vi.fn(), error: vi.fn() })),
+  getNetworkConfig: vi.fn(() => ({
+    chainId: 84532,
+    chain: { id: 84532, name: "Base Sepolia" },
+    facilitatorUrl: "https://facilitator.example.com",
+    usdcAddress: "0x036CbD53842c5426634e7929541eC2318f3dCF7e",
+  })),
+}));
+
+// Mock create-prim-app subpath — gate imports it directly.
+// Use vi.hoisted to make Hono available inside the hoisted mock factory.
+const { hoistedHono } = vi.hoisted(() => {
+  // biome-ignore lint/suspicious/noExplicitAny: vitest hoisted mock needs dynamic require
+  const { Hono } = require("hono") as any;
+  return { hoistedHono: Hono };
 });
+vi.mock("@primsh/x402-middleware/create-prim-app", () => ({
+  createPrimApp: vi.fn((_config: unknown) => new hoistedHono()),
+}));
 
 // Mock allowlist-db so no real SQLite files
 vi.mock("@primsh/x402-middleware/allowlist-db", () => ({
