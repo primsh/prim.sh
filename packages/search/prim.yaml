@@ -38,7 +38,7 @@ providers:
 interfaces:
   mcp: true
   cli: true
-  openai: true
+  tools: true
   rest: true
 
 factory:

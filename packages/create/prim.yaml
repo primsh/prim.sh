@@ -43,7 +43,7 @@ providers: []
 interfaces:
   mcp: true
   cli: true
-  openai: true
+  tools: true
 factory:
   free_service: true
   skip_x402: false

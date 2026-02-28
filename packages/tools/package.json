@@ -1,7 +1,7 @@
 {
-  "name": "@primsh/openai",
+  "name": "@primsh/tools",
   "version": "0.1.0",
-  "description": "OpenAI function calling tool definitions for prim.sh primitives",
+  "description": "Function calling tool definitions for prim.sh primitives",
   "license": "MIT",
   "type": "module",
   "main": "tools.json",

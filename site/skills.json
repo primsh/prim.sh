@@ -1,6 +1,6 @@
 {
   "version": "1.0.0",
-  "generated": "2026-02-28T20:08:43.436Z",
+  "generated": "2026-02-28T22:47:01.556Z",
   "primitives": [
     {
       "id": "auth",
@@ -11,7 +11,7 @@
       "interfaces": {
         "mcp": true,
         "cli": true,
-        "openai": true,
+        "tools": true,
         "rest": true
       },
       "operations": [],
@@ -26,7 +26,7 @@
       "interfaces": {
         "mcp": true,
         "cli": true,
-        "openai": true,
+        "tools": true,
         "rest": true
       },
       "operations": [],
@@ -41,7 +41,7 @@
       "interfaces": {
         "mcp": true,
         "cli": true,
-        "openai": true,
+        "tools": true,
         "rest": true
       },
       "operations": [],
@@ -56,7 +56,7 @@
       "interfaces": {
         "mcp": true,
         "cli": true,
-        "openai": true,
+        "tools": true,
         "rest": true
       },
       "operations": [],
@@ -71,7 +71,7 @@
       "interfaces": {
         "mcp": true,
         "cli": true,
-        "openai": true,
+        "tools": true,
         "rest": true
       },
       "operations": [],
@@ -86,7 +86,7 @@
       "interfaces": {
         "mcp": true,
         "cli": true,
-        "openai": true,
+        "tools": true,
         "rest": true
       },
       "operations": [],
@@ -101,7 +101,7 @@
       "interfaces": {
         "mcp": true,
         "cli": true,
-        "openai": true,
+        "tools": true,
         "rest": true
       },
       "operations": [],
@@ -125,7 +125,7 @@
       "interfaces": {
         "mcp": true,
         "cli": true,
-        "openai": true,
+        "tools": true,
         "rest": true
       },
       "operations": [],
@@ -145,7 +145,7 @@
       "interfaces": {
         "mcp": true,
         "cli": true,
-        "openai": true,
+        "tools": true,
         "rest": true
       },
       "operations": [
@@ -191,7 +191,7 @@
       "interfaces": {
         "mcp": true,
         "cli": true,
-        "openai": false,
+        "tools": false,
         "rest": true
       },
       "operations": [],
@@ -215,7 +215,7 @@
       "interfaces": {
         "mcp": true,
         "cli": true,
-        "openai": true,
+        "tools": true,
         "rest": true
       },
       "operations": [],
@@ -235,7 +235,7 @@
       "interfaces": {
         "mcp": true,
         "cli": true,
-        "openai": true,
+        "tools": true,
         "rest": true
       },
       "operations": [],
@@ -250,7 +250,7 @@
       "interfaces": {
         "mcp": true,
         "cli": true,
-        "openai": true,
+        "tools": true,
         "rest": true
       },
       "operations": [],
@@ -265,7 +265,7 @@
       "interfaces": {
         "mcp": true,
         "cli": true,
-        "openai": true,
+        "tools": true,
         "rest": true
       },
       "operations": [
@@ -304,7 +304,7 @@
       "interfaces": {
         "mcp": true,
         "cli": true,
-        "openai": true,
+        "tools": true,
         "rest": true
       },
       "operations": [],
@@ -328,7 +328,7 @@
       "interfaces": {
         "mcp": true,
         "cli": true,
-        "openai": true,
+        "tools": true,
         "rest": true
       },
       "operations": [
@@ -415,7 +415,7 @@
       "interfaces": {
         "mcp": true,
         "cli": true,
-        "openai": true,
+        "tools": true,
         "rest": true
       },
       "operations": [],
@@ -435,7 +435,7 @@
       "interfaces": {
         "mcp": true,
         "cli": true,
-        "openai": true,
+        "tools": true,
         "rest": true
       },
       "operations": [],
@@ -450,7 +450,7 @@
       "interfaces": {
         "mcp": true,
         "cli": true,
-        "openai": true,
+        "tools": true,
         "rest": true
       },
       "operations": [],
@@ -470,7 +470,7 @@
       "interfaces": {
         "mcp": true,
         "cli": true,
-        "openai": true,
+        "tools": true,
         "rest": true
       },
       "operations": [],
@@ -485,7 +485,7 @@
       "interfaces": {
         "mcp": true,
         "cli": true,
-        "openai": true,
+        "tools": true,
         "rest": true
       },
       "operations": [
@@ -573,7 +573,7 @@
       "interfaces": {
         "mcp": true,
         "cli": true,
-        "openai": true,
+        "tools": true,
         "rest": true
       },
       "operations": [],

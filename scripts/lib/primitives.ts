@@ -72,7 +72,7 @@ export interface Provider {
 export interface Interfaces {
   mcp: boolean;
   cli: boolean;
-  openai: boolean;
+  tools: boolean;
   rest: boolean;
 }
 
@@ -254,7 +254,7 @@ export function specPath(primId: string, root?: string): string {
 
 // ── Filters ────────────────────────────────────────────────────────────────
 
-export type InterfaceSurface = "mcp" | "cli" | "openai" | "rest";
+export type InterfaceSurface = "mcp" | "cli" | "tools" | "rest";
 
 /** Primitives eligible for a given integration surface (has OpenAPI spec + interface enabled) */
 export function primsForInterface(surface: InterfaceSurface, root?: string): Primitive[] {

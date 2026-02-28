@@ -1,7 +1,7 @@
 {
   "name": "@primsh/imagine",
   "version": "0.0.0",
-  "private": false,
+  "private": true,
   "type": "module",
   "main": "src/index.ts",
   "description": "Media generation for agents. Images, video, audio. Any model, one API. No API keys.",

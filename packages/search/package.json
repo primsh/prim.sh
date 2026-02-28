@@ -1,7 +1,7 @@
 {
   "name": "@primsh/search",
   "version": "0.0.0",
-  "private": false,
+  "private": true,
   "type": "module",
   "main": "src/index.ts",
   "description": "Web search via Tavily API",

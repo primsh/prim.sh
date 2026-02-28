@@ -1,18 +1,18 @@
 #!/usr/bin/env bun
 /**
- * gen-openai.ts — OpenAI function schema generator
+ * gen-tools.ts — Function calling tool definition generator
  *
- * Reads OpenAPI specs from packages/<id>/openapi.yaml and outputs OpenAI-compatible
- * tool definitions (function calling format) to packages/openai/.
+ * Reads OpenAPI specs from packages/<id>/openapi.yaml and outputs function calling
+ * tool definitions (compatible with OpenAI, Gemini, Mistral, etc.) to packages/tools/.
  *
  * Output:
- *   packages/openai/<id>.json      — per-prim tool array
- *   packages/openai/tools.json     — all tools combined
- *   packages/openai/manifest.json  — metadata (version, prim list, timestamp)
+ *   packages/tools/<id>.json      — per-prim tool array
+ *   packages/tools/tools.json     — all tools combined
+ *   packages/tools/manifest.json  — metadata (version, prim list, timestamp)
  *
  * Usage:
- *   bun scripts/gen-openai.ts          # generate
- *   bun scripts/gen-openai.ts --check  # diff against disk, exit 1 if stale
+ *   bun scripts/gen-tools.ts          # generate
+ *   bun scripts/gen-tools.ts --check  # diff against disk, exit 1 if stale
  */
 
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
@@ -21,7 +21,7 @@ import { parse as parseYaml } from "yaml";
 import { primsForInterface, specPath } from "./lib/primitives.js";
 
 const ROOT = resolve(import.meta.dir, "..");
-const OUTPUT_DIR = join(ROOT, "packages", "openai");
+const OUTPUT_DIR = join(ROOT, "packages", "tools");
 const CHECK_MODE = process.argv.includes("--check");
 
 let anyFailed = false;
@@ -439,7 +439,7 @@ function applyFile(filePath: string, content: string): void {
 
   if (CHECK_MODE) {
     if (changed) {
-      console.error(`  ✗ ${filePath} is out of date — run pnpm gen:openai`);
+      console.error(`  ✗ ${filePath} is out of date — run pnpm gen:tools`);
       anyFailed = true;
     } else {
       console.log(`  ✓ ${filePath}`);
@@ -456,7 +456,7 @@ if (!CHECK_MODE) {
   mkdirSync(OUTPUT_DIR, { recursive: true });
 }
 
-const eligiblePrims = primsForInterface("openai");
+const eligiblePrims = primsForInterface("tools");
 
 console.log(`Processing ${eligiblePrims.length} OpenAPI specs`);
 console.log(CHECK_MODE ? "Mode: check\n" : "Mode: generate\n");
@@ -516,14 +516,14 @@ if (CHECK_MODE) {
       existingParsed.tool_count === manifest.tool_count;
     if (!matches) {
       console.error(
-        `  ✗ ${join(OUTPUT_DIR, "manifest.json")} is out of date — run pnpm gen:openai`,
+        `  ✗ ${join(OUTPUT_DIR, "manifest.json")} is out of date — run pnpm gen:tools`,
       );
       anyFailed = true;
     } else {
       console.log(`  ✓ ${join(OUTPUT_DIR, "manifest.json")}`);
     }
   } else {
-    console.error(`  ✗ ${join(OUTPUT_DIR, "manifest.json")} missing — run pnpm gen:openai`);
+    console.error(`  ✗ ${join(OUTPUT_DIR, "manifest.json")} missing — run pnpm gen:tools`);
     anyFailed = true;
   }
 } else {
@@ -533,10 +533,10 @@ if (CHECK_MODE) {
 }
 
 if (CHECK_MODE && anyFailed) {
-  console.error("\nOpenAI schemas are out of date. Run: pnpm gen:openai");
+  console.error("\nTool definitions are out of date. Run: pnpm gen:tools");
   process.exit(1);
 } else if (CHECK_MODE) {
-  console.log("\nAll OpenAI schemas are up to date.");
+  console.log("\nAll tool definitions are up to date.");
 } else {
   console.log("\nDone.");
 }

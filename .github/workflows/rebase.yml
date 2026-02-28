@@ -152,7 +152,7 @@ jobs:
              - List additions (imports, array entries, YAML lists): keep both
           3. Run git add <file> for each resolved file
           4. Verify no markers remain: grep -rn '<<<<<<< ' . should return nothing
-          5. Run pnpm install --frozen-lockfile, then pnpm gen:mcp && pnpm gen:cli && pnpm gen:openai && pnpm gen:tests && pnpm gen:docs to regenerate generated files
+          5. Run pnpm install --frozen-lockfile, then pnpm gen:mcp && pnpm gen:cli && pnpm gen:tools && pnpm gen:tests && pnpm gen:docs to regenerate generated files
           6. Stage any changed generated files with git add
           7. Run git commit --no-edit to complete the merge
           8. Run git push

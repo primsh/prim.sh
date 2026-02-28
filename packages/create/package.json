@@ -1,7 +1,7 @@
 {
   "name": "@primsh/create",
   "version": "0.0.0",
-  "private": false,
+  "private": true,
   "type": "module",
   "main": "src/index.ts",
   "description": "Scaffold new prim.sh primitives. Write a prim.yaml spec, get a complete package with passing tests.",

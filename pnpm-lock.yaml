@@ -270,8 +270,6 @@ importers:
         specifier: ^1.6.1
         version: 1.6.1(@types/node@25.3.0)
 
-  packages/openai: {}
-
   packages/sdk:
     dependencies:
       '@primsh/x402-client':
@@ -363,6 +361,8 @@ importers:
       vitest:
         specifier: ^1.6.1
         version: 1.6.1(@types/node@25.3.0)
+
+  packages/tools: {}
 
   packages/track:
     dependencies:

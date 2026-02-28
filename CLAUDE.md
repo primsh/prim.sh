@@ -37,7 +37,7 @@ prim/
 │   ├── spawn/                # @primsh/spawn (spawn.sh)
 │   ├── sdk/                  # @primsh/sdk (generated typed clients)
 │   ├── mcp/                  # @primsh/mcp (generated MCP tools)
-│   └── openai/               # @primsh/openai (generated OpenAI tool schemas)
+│   └── tools/                # @primsh/tools (function-calling tool definitions)
 ├── site/                     # Landing pages (HTML, moved from root)
 │   ├── serve.ts              # Dev server (Bun)
 │   └── <primitive>/index.html
@@ -269,12 +269,12 @@ Dark-mode, monospace, CSS custom properties:
 
 | Command | What it does |
 |---------|-------------|
-| `pnpm gen` | Run all generators (prims, mcp, cli, openai, tests, docs) |
+| `pnpm gen` | Run all generators (prims, mcp, cli, tools, tests, docs) |
 | `pnpm gen:check` | Check all generated files are up to date (CI) |
 | `pnpm gen:prims` | Regenerate site cards, llms.txt, status badges, pricing rows |
 | `pnpm gen:mcp` | Regenerate MCP server configs |
 | `pnpm gen:cli` | Regenerate CLI tool definitions |
-| `pnpm gen:openai` | Regenerate OpenAI plugin manifests |
+| `pnpm gen:tools` | Regenerate function-calling tool definitions |
 | `pnpm gen:tests` | Regenerate smoke test scaffolds |
 | `pnpm gen:docs` | Regenerate per-package READMEs + this section |
 

@@ -74,7 +74,7 @@ ownership: "All resources scoped to the wallet address extracted from the x402 p
 interfaces:
   mcp: true
   cli: true
-  openai: true
+  tools: true
   rest: true
 
 factory:

@@ -18,7 +18,7 @@ factory:
 interfaces:
   mcp: false
   cli: false
-  openai: false
+  tools: false
   rest: true
 tagline: "Tell us what broke."
 sub: "Bug reports, friction, and feature requests. Free API."

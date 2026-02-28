@@ -102,7 +102,6 @@ console.log(`[build] ${llmsCount} per-prim llms.txt copied`);
 
 const staticFiles = [
   "llms.txt",
-  "llms-full.txt",
   "pricing.json",
   "discovery.json",
   "sitemap.xml",

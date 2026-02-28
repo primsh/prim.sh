@@ -59,7 +59,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - gitleaks pre-commit hook and CI secret scan job
 - Biome tightened: `organizeImports`, `noExplicitAny`, `useImportType`
 - infer.sh: OpenRouter-backed LLM inference primitive (INF-1 through INF-5)
-- Agent discovery surface: `llms-full.txt`, sitemap, robots.txt, response headers, OpenAI plugin manifests
+- Agent discovery surface: sitemap, robots.txt, response headers, function-calling tool definitions
 - OpenAPI 3.1 specs generated from `api.ts` + `prim.yaml` for all live primitives
 - Per-prim OG image generator (`gen-og-images`)
 - Platform binaries + GitHub Release workflow (`release.yml`)
