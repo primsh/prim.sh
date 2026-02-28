@@ -1,5 +1,5 @@
 // THIS FILE IS GENERATED — DO NOT EDIT
-// Source: specs/openapi/email.yaml
+// Source: packages/email/openapi.yaml
 // Regenerate: pnpm gen:sdk
 
 // ── Types ──────────────────────────────────────────────────────────────────

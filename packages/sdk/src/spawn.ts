@@ -1,5 +1,5 @@
 // THIS FILE IS GENERATED — DO NOT EDIT
-// Source: specs/openapi/spawn.yaml
+// Source: packages/spawn/openapi.yaml
 // Regenerate: pnpm gen:sdk
 
 // ── Types ──────────────────────────────────────────────────────────────────

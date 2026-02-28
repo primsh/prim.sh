@@ -1,5 +1,5 @@
 // THIS FILE IS GENERATED — DO NOT EDIT
-// Source: specs/openapi/search.yaml
+// Source: packages/search/openapi.yaml
 // Regenerate: pnpm gen:sdk
 
 // ── Types ──────────────────────────────────────────────────────────────────

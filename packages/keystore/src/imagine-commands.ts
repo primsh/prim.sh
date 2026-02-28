@@ -1,5 +1,5 @@
 // THIS FILE IS GENERATED — DO NOT EDIT
-// Source: specs/openapi/imagine.yaml
+// Source: packages/imagine/openapi.yaml
 // Regenerate: pnpm gen:cli
 // BEGIN:PRIM:CLI
 

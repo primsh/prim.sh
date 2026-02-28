@@ -1,5 +1,5 @@
 // THIS FILE IS GENERATED — DO NOT EDIT
-// Source: specs/openapi/infer.yaml
+// Source: packages/infer/openapi.yaml
 // Regenerate: pnpm gen:sdk
 
 // ── Types ──────────────────────────────────────────────────────────────────

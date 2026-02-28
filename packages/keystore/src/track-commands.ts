@@ -1,5 +1,5 @@
 // THIS FILE IS GENERATED — DO NOT EDIT
-// Source: specs/openapi/track.yaml
+// Source: packages/track/openapi.yaml
 // Regenerate: pnpm gen:cli
 // BEGIN:PRIM:CLI
 

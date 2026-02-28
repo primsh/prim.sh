@@ -2,7 +2,7 @@
 /**
  * check-openapi.ts — Validate OpenAPI specs against actual code.
  *
- * For each YAML spec in specs/openapi/:
+ * For each OpenAPI spec at packages/<id>/openapi.yaml:
  *   1. Checks that every error code in the package's api.ts ERROR_CODES is documented in the spec
  *   2. Checks that every endpoint path in the spec has a corresponding route in the package's index.ts
  *   3. Warns on response schema field name mismatches between spec and api.ts interfaces
@@ -10,21 +10,16 @@
  * Exit 0 if all checks pass, 1 if any fail.
  */
 
-import { readFileSync, readdirSync } from "node:fs";
-import { basename, join, resolve } from "node:path";
+import { readFileSync } from "node:fs";
+import { join, resolve } from "node:path";
 import { parse as parseYaml } from "yaml";
+import { primsForInterface, specPath } from "./lib/primitives.js";
 
 const ROOT = resolve(import.meta.dir, "..");
-const SPECS_DIR = join(ROOT, "specs", "openapi");
 
 interface CheckResult {
   errors: string[];
   warnings: string[];
-}
-
-// Map spec filenames to package names (most are 1:1, but some differ)
-function specToPackageName(specFile: string): string {
-  return basename(specFile, ".yaml");
 }
 
 // Extract ERROR_CODES from api.ts
@@ -172,17 +167,17 @@ function findMatchingSchemas(
   return pairs;
 }
 
-function checkSpec(specFile: string): CheckResult {
+function checkSpec(primId: string): CheckResult {
   const result: CheckResult = { errors: [], warnings: [] };
-  const pkgName = specToPackageName(specFile);
-  const specPath = join(SPECS_DIR, specFile);
+  const pkgName = primId;
+  const sp = specPath(primId);
   const apiPath = join(ROOT, "packages", pkgName, "src", "api.ts");
   const indexPath = join(ROOT, "packages", pkgName, "src", "index.ts");
 
   // Parse spec
   let spec: Record<string, unknown>;
   try {
-    spec = parseYaml(readFileSync(specPath, "utf8")) as Record<string, unknown>;
+    spec = parseYaml(readFileSync(sp, "utf8")) as Record<string, unknown>;
   } catch (e) {
     result.errors.push(`Failed to parse ${specFile}: ${e}`);
     return result;
@@ -312,18 +307,16 @@ function routeMatches(route: string, pattern: string): boolean {
 
 // ── Main ──────────────────────────────────────────────────────────────────
 
-const specFiles = readdirSync(SPECS_DIR)
-  .filter((f) => f.endsWith(".yaml"))
-  .sort();
+const prims = primsForInterface("rest").map((p) => p.id).sort();
 let hasErrors = false;
 
-console.log(`Checking ${specFiles.length} OpenAPI specs...\n`);
+console.log(`Checking ${prims.length} OpenAPI specs...\n`);
 
-for (const specFile of specFiles.sort()) {
-  const result = checkSpec(specFile);
+for (const primId of prims) {
+  const result = checkSpec(primId);
 
   if (result.errors.length > 0 || result.warnings.length > 0) {
-    console.log(`--- ${specFile} ---`);
+    console.log(`--- ${primId} ---`);
     for (const err of result.errors) {
       console.log(`  ERROR: ${err}`);
       hasErrors = true;

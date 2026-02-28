@@ -1,5 +1,5 @@
 // THIS FILE IS GENERATED — DO NOT EDIT
-// Source: specs/openapi/<id>.yaml (all prims with rest interface)
+// Source: packages/<id>/openapi.yaml (all prims with rest interface)
 // Regenerate: pnpm gen:sdk
 
 export * from "./wallet.js";

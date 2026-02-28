@@ -1,5 +1,5 @@
 // THIS FILE IS GENERATED — DO NOT EDIT
-// Source: specs/openapi/token.yaml
+// Source: packages/token/openapi.yaml
 // Regenerate: pnpm gen:sdk
 
 // ── Types ──────────────────────────────────────────────────────────────────
