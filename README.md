@@ -57,10 +57,10 @@ No API keys. No signup. The wallet *is* the identity.
 |-----------|-------------|--------|
 | [wallet.sh](https://wallet.prim.sh) | Agent wallets. Generate keys, hold USDC on Base, and pay any x402 invoice. | Live (mainnet) |
 | [faucet.sh](https://faucet.prim.sh) | Free testnet USDC and ETH on demand. Fund your agent wallet and start building. | Live (testnet) |
-| [spawn.sh](https://spawn.prim.sh) | VPS in one API call. Deploy, scale, destroy. Per-second billing. | Hold |
 | [store.sh](https://store.prim.sh) | Object storage. Persist artifacts across ephemeral VMs. S3-compatible. | Live (mainnet) |
-| [email.sh](https://email.prim.sh) | Mailboxes on demand. Send, receive, webhook. Disposable or permanent. | Hold |
 | [search.sh](https://search.prim.sh) | Search for agents. No ads, no SEO spam. Just facts and clean markdown. | Live (mainnet) |
+| [spawn.sh](https://spawn.prim.sh) | VPS in one API call. Deploy, scale, destroy. Per-second billing. | Hold |
+| [email.sh](https://email.prim.sh) | Mailboxes on demand. Send, receive, webhook. Disposable or permanent. | Hold |
 | [token.sh](https://token.prim.sh) | Deploy ERC-20 tokens and Uniswap V3 pools. No wallet setup required. | Planned |
 | [mem.sh](https://mem.prim.sh) | Vector store and cache for agents. Persist long-term knowledge and session state. | Planned |
 | [domain.sh](https://domain.prim.sh) | Register domains, manage DNS, auto-TLS. Full domain lifecycle via API. | Planned |

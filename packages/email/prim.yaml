@@ -8,7 +8,7 @@ category: comms
 card_class: p2
 description: "Mailboxes on demand. Send, receive, webhook. Disposable or permanent."
 port: 3006
-order: 5
+order: 6
 phantom: false
 env:
   - PRIM_PAY_TO

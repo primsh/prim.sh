@@ -10,10 +10,10 @@
   <url><loc>https://prim.sh/discovery.json</loc></url>
   <url><loc>https://prim.sh/wallet/llms.txt</loc></url>
   <url><loc>https://prim.sh/faucet/llms.txt</loc></url>
-  <url><loc>https://prim.sh/spawn/llms.txt</loc></url>
   <url><loc>https://prim.sh/store/llms.txt</loc></url>
-  <url><loc>https://prim.sh/email/llms.txt</loc></url>
   <url><loc>https://prim.sh/search/llms.txt</loc></url>
+  <url><loc>https://prim.sh/spawn/llms.txt</loc></url>
+  <url><loc>https://prim.sh/email/llms.txt</loc></url>
   <url><loc>https://prim.sh/token/llms.txt</loc></url>
   <url><loc>https://prim.sh/mem/llms.txt</loc></url>
   <url><loc>https://prim.sh/domain/llms.txt</loc></url>
