@@ -3,14 +3,13 @@
     "type": "function",
     "function": {
       "name": "faucet_usdc",
-      "description": "Dispense test USDC. Dispenses 10 test USDC on Base Sepolia to the given wallet address.",
+      "description": "Dispense 10 test USDC on Base Sepolia. Rate limit: once per 2 hours per address. Free.",
       "parameters": {
         "type": "object",
         "properties": {
           "address": {
             "type": "string",
-            "description": "EVM-compatible wallet address (42-char hex, checksummed or lowercase)",
-            "pattern": "^0x[0-9a-fA-F]{40}$"
+            "description": "EVM wallet address to drip to (0x... 42 chars)."
           }
         },
         "required": [
@@ -23,14 +22,13 @@
     "type": "function",
     "function": {
       "name": "faucet_eth",
-      "description": "Dispense test ETH. Dispenses 0.01 test ETH on Base Sepolia to the given wallet address.",
+      "description": "Dispense 0.01 test ETH on Base Sepolia. Rate limit: once per 1 hour per address. Free.",
       "parameters": {
         "type": "object",
         "properties": {
           "address": {
             "type": "string",
-            "description": "EVM-compatible wallet address (42-char hex, checksummed or lowercase)",
-            "pattern": "^0x[0-9a-fA-F]{40}$"
+            "description": "EVM wallet address to drip to (0x... 42 chars)."
           }
         },
         "required": [
@@ -43,19 +41,37 @@
     "type": "function",
     "function": {
       "name": "faucet_status",
-      "description": "Check rate limit status. Returns the current rate limit status for a wallet address across both faucet types (USDC and ETH).",
+      "description": "Check rate limit status for a wallet address across both faucets. Free.",
       "parameters": {
         "type": "object",
         "properties": {
           "address": {
             "type": "string",
-            "description": "EVM wallet address (checksummed or lowercase)",
-            "pattern": "^0x[0-9a-fA-F]{40}$"
+            "description": "EVM wallet address (required)"
           }
-        },
-        "required": [
-          "address"
-        ]
+        }
+      }
+    }
+  },
+  {
+    "type": "function",
+    "function": {
+      "name": "faucet_get_treasury_status",
+      "description": "Check treasury wallet ETH balance and refill status. Free.",
+      "parameters": {
+        "type": "object",
+        "properties": {}
+      }
+    }
+  },
+  {
+    "type": "function",
+    "function": {
+      "name": "faucet_refill_treasury",
+      "description": "Batch-claim testnet ETH from Coinbase CDP faucet into treasury. Rate limited to once per 10 minutes. Free.",
+      "parameters": {
+        "type": "object",
+        "properties": {}
       }
     }
   }

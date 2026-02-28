@@ -1,6 +1,6 @@
 {
   "version": "1.0.0",
-  "generated_at": "2026-02-28T19:55:03.954Z",
+  "generated_at": "2026-02-28T20:08:43.740Z",
   "prims": [
     "wallet",
     "faucet",
@@ -15,5 +15,5 @@
     "infer",
     "create"
   ],
-  "tool_count": 101
+  "tool_count": 100
 }

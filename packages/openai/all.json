@@ -3,31 +3,29 @@
     "type": "function",
     "function": {
       "name": "wallet_register",
-      "description": "Register a wallet. Register an Ethereum wallet address via EIP-191 signature. Free — no payment required.",
+      "description": "Register a wallet via EIP-191 signature. Free.",
       "parameters": {
         "type": "object",
         "properties": {
           "address": {
             "type": "string",
-            "description": "Ethereum wallet address to register",
-            "pattern": "^0x[a-fA-F0-9]{40}$"
+            "description": "Ethereum address to register (0x... 42 chars, checksummed)."
           },
           "signature": {
             "type": "string",
-            "description": "EIP-191 signature over the registration message"
+            "description": "EIP-191 signature over \"Register <address> with prim.sh at <timestamp>\"."
           },
           "timestamp": {
             "type": "string",
-            "description": "ISO 8601 UTC timestamp used in the signed message (must be within 5 min of now)",
-            "format": "date-time"
+            "description": "ISO 8601 UTC timestamp used in the signed message. Must be within 5 minutes of server time."
           },
           "chain": {
             "type": "string",
-            "description": "Chain identifier. Defaults to \"base\"."
+            "description": "Chain identifier. Default \"base\"."
           },
           "label": {
             "type": "string",
-            "description": "Optional human-readable label for this wallet"
+            "description": "Human-readable label for this wallet."
           }
         },
         "required": [
@@ -42,19 +40,17 @@
     "type": "function",
     "function": {
       "name": "wallet_list",
-      "description": "List registered wallets. Returns a paginated list of wallets registered by the caller's address. Price: $0.001 via x402 (USDC on Base).",
+      "description": "List registered wallets owned by the calling wallet. Price: $0.001 via x402 (USDC on Base).",
       "parameters": {
         "type": "object",
         "properties": {
           "limit": {
             "type": "integer",
-            "description": "Number of wallets to return (1–100, default 20)",
-            "minimum": 1,
-            "maximum": 100
+            "description": "1-100, default 20"
           },
           "after": {
             "type": "string",
-            "description": "Cursor from a previous response for pagination"
+            "description": "Cursor from previous response"
           }
         }
       }
@@ -64,10 +60,18 @@
     "type": "function",
     "function": {
       "name": "wallet_get",
-      "description": "Get wallet details. Returns full details for a single wallet, including balance, policy, and status. Price: $0.001 via x402 (USDC on Base).",
+      "description": "Get full wallet details including balance, policy, and status. Price: $0.001 via x402 (USDC on Base).",
       "parameters": {
         "type": "object",
-        "properties": {}
+        "properties": {
+          "address": {
+            "type": "string",
+            "description": "address parameter"
+          }
+        },
+        "required": [
+          "address"
+        ]
       }
     }
   },
@@ -75,10 +79,18 @@
     "type": "function",
     "function": {
       "name": "wallet_deactivate",
-      "description": "Deactivate a wallet. Permanently deactivates the wallet. Price: $0.01 via x402 (USDC on Base).",
+      "description": "Permanently deactivate a wallet. Irreversible. Pending fund requests cancelled. Price: $0.01 via x402 (USDC on Base).",
       "parameters": {
         "type": "object",
-        "properties": {}
+        "properties": {
+          "address": {
+            "type": "string",
+            "description": "address parameter"
+          }
+        },
+        "required": [
+          "address"
+        ]
       }
     }
   },
@@ -86,20 +98,25 @@
     "type": "function",
     "function": {
       "name": "wallet_fund_request_create",
-      "description": "Create a fund request. Request USDC funding for a wallet. Price: $0.001 via x402 (USDC on Base).",
+      "description": "Request USDC funding for a wallet. A human operator can approve or deny. Price: $0.001 via x402 (USDC on Base).",
       "parameters": {
         "type": "object",
         "properties": {
+          "address": {
+            "type": "string",
+            "description": "address parameter"
+          },
           "amount": {
             "type": "string",
-            "description": "Requested USDC amount as a decimal string (e.g. \"10.00\")"
+            "description": "Requested USDC amount as a decimal string (e.g. \"10.00\")."
           },
           "reason": {
             "type": "string",
-            "description": "Human-readable reason for the funding request"
+            "description": "Human-readable reason for the funding request."
           }
         },
         "required": [
+          "address",
           "amount",
           "reason"
         ]
@@ -110,21 +127,26 @@
     "type": "function",
     "function": {
       "name": "wallet_fund_request_list",
-      "description": "List fund requests for a wallet. Returns a paginated list of all fund requests for the given wallet address. Price: $0.001 via x402 (USDC on Base).",
+      "description": "List all fund requests for a wallet. Price: $0.001 via x402 (USDC on Base).",
       "parameters": {
         "type": "object",
         "properties": {
+          "address": {
+            "type": "string",
+            "description": "address parameter"
+          },
           "limit": {
             "type": "integer",
-            "description": "Number of requests to return (1–100, default 20)",
-            "minimum": 1,
-            "maximum": 100
+            "description": "1-100, default 20"
           },
           "after": {
             "type": "string",
-            "description": "Cursor from a previous response for pagination"
+            "description": "Cursor from previous response"
           }
-        }
+        },
+        "required": [
+          "address"
+        ]
       }
     }
   },
@@ -132,10 +154,18 @@
     "type": "function",
     "function": {
       "name": "wallet_fund_request_approve",
-      "description": "Approve a fund request. Approve a pending fund request. Price: $0.01 via x402 (USDC on Base).",
+      "description": "Approve a pending fund request. Returns the address to send USDC to. Price: $0.01 via x402 (USDC on Base).",
       "parameters": {
         "type": "object",
-        "properties": {}
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "id parameter"
+          }
+        },
+        "required": [
+          "id"
+        ]
       }
     }
   },
@@ -143,15 +173,22 @@
     "type": "function",
     "function": {
       "name": "wallet_fund_request_deny",
-      "description": "Deny a fund request. Deny a pending fund request. Price: $0.001 via x402 (USDC on Base).",
+      "description": "Deny a pending fund request. Price: $0.001 via x402 (USDC on Base).",
       "parameters": {
         "type": "object",
         "properties": {
+          "id": {
+            "type": "string",
+            "description": "id parameter"
+          },
           "reason": {
             "type": "string",
-            "description": "Optional reason for denying the request"
+            "description": "Reason for denial."
           }
-        }
+        },
+        "required": [
+          "id"
+        ]
       }
     }
   },
@@ -159,10 +196,18 @@
     "type": "function",
     "function": {
       "name": "wallet_policy_get",
-      "description": "Get spending policy. Returns the current spending policy for the wallet. Price: $0.001 via x402 (USDC on Base).",
+      "description": "Get the spending policy for a wallet. Price: $0.001 via x402 (USDC on Base).",
       "parameters": {
         "type": "object",
-        "properties": {}
+        "properties": {
+          "address": {
+            "type": "string",
+            "description": "address parameter"
+          }
+        },
+        "required": [
+          "address"
+        ]
       }
     }
   },
@@ -170,26 +215,30 @@
     "type": "function",
     "function": {
       "name": "wallet_policy_update",
-      "description": "Update spending policy. Update the spending policy for the wallet. Price: $0.005 via x402 (USDC on Base).",
+      "description": "Update spending policy for a wallet. All fields optional. Pass null to remove a limit. Price: $0.005 via x402 (USDC on Base).",
       "parameters": {
         "type": "object",
         "properties": {
+          "address": {
+            "type": "string",
+            "description": "address parameter"
+          },
           "maxPerTx": {
             "type": "string",
-            "description": "Maximum USDC per transaction. Pass null to remove the limit."
+            "description": "Max USDC per transaction. Pass null to remove the limit."
           },
           "maxPerDay": {
             "type": "string",
-            "description": "Maximum USDC per day. Pass null to remove the limit."
+            "description": "Max USDC per day. Pass null to remove the limit."
           },
           "allowedPrimitives": {
             "type": "array",
-            "description": "Allowed primitive hostnames. Pass null to allow all.",
-            "items": {
-              "type": "string"
-            }
+            "description": "Allowed primitive hostnames. Pass null to allow all."
           }
-        }
+        },
+        "required": [
+          "address"
+        ]
       }
     }
   },
@@ -197,20 +246,22 @@
     "type": "function",
     "function": {
       "name": "wallet_pause",
-      "description": "Pause a wallet. Pause all or a subset of operations for a wallet. Price: $0.001 via x402 (USDC on Base).",
+      "description": "Pause operations for a wallet. Temporarily halts spending without deactivating. Price: $0.001 via x402 (USDC on Base).",
       "parameters": {
         "type": "object",
         "properties": {
+          "address": {
+            "type": "string",
+            "description": "address parameter"
+          },
           "scope": {
             "type": "string",
-            "description": "Which operations to pause (default: \"all\")",
-            "enum": [
-              "all",
-              "send",
-              "swap"
-            ]
+            "description": "Scope to pause. \"all\" | \"send\" | \"swap\". Default \"all\"."
           }
-        }
+        },
+        "required": [
+          "address"
+        ]
       }
     }
   },
@@ -218,20 +269,22 @@
     "type": "function",
     "function": {
       "name": "wallet_resume",
-      "description": "Resume a paused wallet. Resume operations for a paused wallet. Price: $0.001 via x402 (USDC on Base).",
+      "description": "Resume operations for a paused wallet. Price: $0.001 via x402 (USDC on Base).",
       "parameters": {
         "type": "object",
         "properties": {
+          "address": {
+            "type": "string",
+            "description": "address parameter"
+          },
           "scope": {
             "type": "string",
-            "description": "Which operations to resume (default: \"all\")",
-            "enum": [
-              "all",
-              "send",
-              "swap"
-            ]
+            "description": "Scope to resume. \"all\" | \"send\" | \"swap\". Default \"all\"."
           }
-        }
+        },
+        "required": [
+          "address"
+        ]
       }
     }
   },
@@ -239,14 +292,13 @@
     "type": "function",
     "function": {
       "name": "faucet_usdc",
-      "description": "Dispense test USDC. Dispenses 10 test USDC on Base Sepolia to the given wallet address.",
+      "description": "Dispense 10 test USDC on Base Sepolia. Rate limit: once per 2 hours per address. Free.",
       "parameters": {
         "type": "object",
         "properties": {
           "address": {
             "type": "string",
-            "description": "EVM-compatible wallet address (42-char hex, checksummed or lowercase)",
-            "pattern": "^0x[0-9a-fA-F]{40}$"
+            "description": "EVM wallet address to drip to (0x... 42 chars)."
           }
         },
         "required": [
@@ -259,14 +311,13 @@
     "type": "function",
     "function": {
       "name": "faucet_eth",
-      "description": "Dispense test ETH. Dispenses 0.01 test ETH on Base Sepolia to the given wallet address.",
+      "description": "Dispense 0.01 test ETH on Base Sepolia. Rate limit: once per 1 hour per address. Free.",
       "parameters": {
         "type": "object",
         "properties": {
           "address": {
             "type": "string",
-            "description": "EVM-compatible wallet address (42-char hex, checksummed or lowercase)",
-            "pattern": "^0x[0-9a-fA-F]{40}$"
+            "description": "EVM wallet address to drip to (0x... 42 chars)."
           }
         },
         "required": [
@@ -279,19 +330,37 @@
     "type": "function",
     "function": {
       "name": "faucet_status",
-      "description": "Check rate limit status. Returns the current rate limit status for a wallet address across both faucet types (USDC and ETH).",
+      "description": "Check rate limit status for a wallet address across both faucets. Free.",
       "parameters": {
         "type": "object",
         "properties": {
           "address": {
             "type": "string",
-            "description": "EVM wallet address (checksummed or lowercase)",
-            "pattern": "^0x[0-9a-fA-F]{40}$"
+            "description": "EVM wallet address (required)"
           }
-        },
-        "required": [
-          "address"
-        ]
+        }
+      }
+    }
+  },
+  {
+    "type": "function",
+    "function": {
+      "name": "faucet_get_treasury_status",
+      "description": "Check treasury wallet ETH balance and refill status. Free.",
+      "parameters": {
+        "type": "object",
+        "properties": {}
+      }
+    }
+  },
+  {
+    "type": "function",
+    "function": {
+      "name": "faucet_refill_treasury",
+      "description": "Batch-claim testnet ETH from Coinbase CDP faucet into treasury. Rate limited to once per 10 minutes. Free.",
+      "parameters": {
+        "type": "object",
+        "properties": {}
       }
     }
   },
@@ -299,17 +368,17 @@
     "type": "function",
     "function": {
       "name": "store_bucket_create",
-      "description": "Create a bucket. Creates a new storage bucket owned by the paying wallet address. Price: $0.05 via x402 (USDC on Base).",
+      "description": "Create a new storage bucket. Price: $0.05 via x402 (USDC on Base).",
       "parameters": {
         "type": "object",
         "properties": {
           "name": {
             "type": "string",
-            "description": "Bucket name. Must be unique per wallet. Alphanumeric, hyphens, underscores."
+            "description": "Bucket name. Unique per wallet. 3-63 chars, alphanumeric + hyphens."
           },
           "location": {
             "type": "string",
-            "description": "Storage region (optional). Defaults to primary region."
+            "description": "Storage region (e.g. \"us-east-1\"). Defaults to primary region."
           }
         },
         "required": [
@@ -322,20 +391,17 @@
     "type": "function",
     "function": {
       "name": "store_bucket_list",
-      "description": "List buckets. Returns all buckets owned by the paying wallet address. Price: $0.001 via x402 (USDC on Base).",
+      "description": "List all buckets owned by the calling wallet. Price: $0.001 via x402 (USDC on Base).",
       "parameters": {
         "type": "object",
         "properties": {
           "limit": {
             "type": "integer",
-            "description": "Number of buckets per page (1–100, default 20).",
-            "minimum": 1,
-            "maximum": 100
+            "description": "1-100, default 20"
           },
           "page": {
             "type": "integer",
-            "description": "Page number (1-based, default 1).",
-            "minimum": 1
+            "description": "1-based page number, default 1"
           }
         }
       }
@@ -345,13 +411,13 @@
     "type": "function",
     "function": {
       "name": "store_bucket_get",
-      "description": "Get bucket details. Returns details for a single bucket. Price: $0.001 via x402 (USDC on Base).",
+      "description": "Get details for a single bucket. Caller must own the bucket. Price: $0.001 via x402 (USDC on Base).",
       "parameters": {
         "type": "object",
         "properties": {
           "id": {
             "type": "string",
-            "description": "Bucket ID."
+            "description": "id parameter"
           }
         },
         "required": [
@@ -364,46 +430,13 @@
     "type": "function",
     "function": {
       "name": "store_bucket_delete",
-      "description": "Delete a bucket. Deletes a bucket. Price: $0.01 via x402 (USDC on Base).",
+      "description": "Delete a bucket. Bucket must be empty first. Price: $0.01 via x402 (USDC on Base).",
       "parameters": {
         "type": "object",
         "properties": {
           "id": {
             "type": "string",
-            "description": "Bucket ID."
-          }
-        },
-        "required": [
-          "id"
-        ]
-      }
-    }
-  },
-  {
-    "type": "function",
-    "function": {
-      "name": "store_object_list",
-      "description": "List objects in a bucket. Lists objects in a bucket with optional prefix filtering. Price: $0.001 via x402 (USDC on Base).",
-      "parameters": {
-        "type": "object",
-        "properties": {
-          "id": {
-            "type": "string",
-            "description": "Bucket ID."
-          },
-          "prefix": {
-            "type": "string",
-            "description": "Filter objects by key prefix (e.g. \"notes/\" to list only keys starting with \"notes/\")."
-          },
-          "limit": {
-            "type": "integer",
-            "description": "Maximum number of objects to return (1–1000, default 100).",
-            "minimum": 1,
-            "maximum": 1000
-          },
-          "cursor": {
-            "type": "string",
-            "description": "Pagination cursor from the previous response's `next_cursor`."
+            "description": "id parameter"
           }
         },
         "required": [
@@ -416,17 +449,17 @@
     "type": "function",
     "function": {
       "name": "store_object_put",
-      "description": "Upload an object. Uploads an object to a bucket. Price: $0.001 via x402 (USDC on Base).",
+      "description": "Upload an object. Key may include slashes. Content-Length header required. Request body is raw bytes. Price: $0.001 via x402 (USDC on Base).",
       "parameters": {
         "type": "object",
         "properties": {
           "id": {
             "type": "string",
-            "description": "Bucket ID."
+            "description": "id parameter"
           },
           "key": {
             "type": "string",
-            "description": "Object key (path). May include slashes (e.g. \"notes/2026/feb.txt\")."
+            "description": "key parameter"
           }
         },
         "required": [
@@ -440,17 +473,17 @@
     "type": "function",
     "function": {
       "name": "store_object_get",
-      "description": "Download an object. Downloads an object from a bucket. Price: $0.001 via x402 (USDC on Base).",
+      "description": "Download an object. Response body is streamed directly. Price: $0.001 via x402 (USDC on Base).",
       "parameters": {
         "type": "object",
         "properties": {
           "id": {
             "type": "string",
-            "description": "Bucket ID."
+            "description": "id parameter"
           },
           "key": {
             "type": "string",
-            "description": "Object key (path). May include slashes."
+            "description": "key parameter"
           }
         },
         "required": [
@@ -464,17 +497,17 @@
     "type": "function",
     "function": {
       "name": "store_object_delete",
-      "description": "Delete an object. Deletes an object from a bucket. Price: $0.001 via x402 (USDC on Base).",
+      "description": "Delete an object from a bucket. Price: $0.001 via x402 (USDC on Base).",
       "parameters": {
         "type": "object",
         "properties": {
           "id": {
             "type": "string",
-            "description": "Bucket ID."
+            "description": "id parameter"
           },
           "key": {
             "type": "string",
-            "description": "Object key (path). May include slashes."
+            "description": "key parameter"
           }
         },
         "required": [
@@ -487,14 +520,45 @@
   {
     "type": "function",
     "function": {
-      "name": "store_quota_get",
-      "description": "Get bucket quota and usage. Returns the current quota limit and storage usage for a bucket. Price: $0.001 via x402 (USDC on Base).",
+      "name": "store_object_list",
+      "description": "List objects in a bucket. Cursor-based pagination. Price: $0.001 via x402 (USDC on Base).",
       "parameters": {
         "type": "object",
         "properties": {
           "id": {
             "type": "string",
-            "description": "Bucket ID."
+            "description": "id parameter"
+          },
+          "prefix": {
+            "type": "string",
+            "description": "Filter by key prefix (e.g. notes/)"
+          },
+          "limit": {
+            "type": "integer",
+            "description": "1-1000, default 100"
+          },
+          "cursor": {
+            "type": "string",
+            "description": "Cursor from previous response's next_cursor"
+          }
+        },
+        "required": [
+          "id"
+        ]
+      }
+    }
+  },
+  {
+    "type": "function",
+    "function": {
+      "name": "store_quota_get",
+      "description": "Get quota and usage for a bucket. Price: $0.001 via x402 (USDC on Base).",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "id parameter"
           }
         },
         "required": [
@@ -507,17 +571,17 @@
     "type": "function",
     "function": {
       "name": "store_quota_set",
-      "description": "Set bucket quota. Sets the storage quota for a bucket. Price: $0.01 via x402 (USDC on Base).",
+      "description": "Set the storage quota for a bucket. Pass null to reset to default (100 MB). Price: $0.01 via x402 (USDC on Base).",
       "parameters": {
         "type": "object",
         "properties": {
           "id": {
             "type": "string",
-            "description": "Bucket ID."
+            "description": "id parameter"
           },
           "quota_bytes": {
-            "type": "integer",
-            "description": "New quota in bytes, or null to reset to default (100 MB)."
+            "type": "number",
+            "description": "New quota in bytes. Pass null to reset to default (100 MB)."
           }
         },
         "required": [
@@ -531,13 +595,13 @@
     "type": "function",
     "function": {
       "name": "store_quota_reconcile",
-      "description": "Reconcile bucket usage. Recomputes the bucket's usage_bytes by scanning actual R2 storage. Price: $0.05 via x402 (USDC on Base).",
+      "description": "Recompute bucket usage by scanning actual R2 storage. Use when usage_bytes appears incorrect. Price: $0.05 via x402 (USDC on Base).",
       "parameters": {
         "type": "object",
         "properties": {
           "id": {
             "type": "string",
-            "description": "Bucket ID."
+            "description": "id parameter"
           }
         },
         "required": [
@@ -550,7 +614,7 @@
     "type": "function",
     "function": {
       "name": "search_web",
-      "description": "Web search. Search the web and return ranked results. Price: $0.01 via x402 (USDC on Base).",
+      "description": "Search the web and return ranked results with optional AI-generated answer. Price: $0.01 via x402 (USDC on Base).",
       "parameters": {
         "type": "object",
         "properties": {
@@ -559,14 +623,12 @@
             "description": "Search query string."
           },
           "max_results": {
-            "type": "integer",
-            "description": "Maximum number of results to return. Range 1–20. (default: 10)",
-            "minimum": 1,
-            "maximum": 20
+            "type": "number",
+            "description": "Maximum number of results to return. 1-20, default 10."
           },
           "search_depth": {
             "type": "string",
-            "description": "Search depth. \"advanced\" uses more sources and costs more upstream compute. (default: \"basic\")",
+            "description": "Search depth. \"basic\" | \"advanced\", default \"basic\".",
             "enum": [
               "basic",
               "advanced"
@@ -574,11 +636,11 @@
           },
           "country": {
             "type": "string",
-            "description": "Two-letter ISO 3166-1 alpha-2 country code to bias results."
+            "description": "Two-letter ISO 3166-1 country code to bias results (e.g. \"US\")."
           },
           "time_range": {
             "type": "string",
-            "description": "Restrict results to the given time range.",
+            "description": "Restrict results by recency. \"day\" | \"week\" | \"month\" | \"year\".",
             "enum": [
               "day",
               "week",
@@ -588,18 +650,18 @@
           },
           "include_answer": {
             "type": "boolean",
-            "description": "If true, the response includes an AI-generated answer summarizing the results. (default: false)"
+            "description": "Include AI-generated answer summarizing top results. Default false."
           },
           "include_domains": {
             "type": "array",
-            "description": "Restrict results to these domains only.",
+            "description": "Restrict results to these domains only (e.g. [\"docs.base.org\"]).",
             "items": {
               "type": "string"
             }
           },
           "exclude_domains": {
             "type": "array",
-            "description": "Exclude results from these domains.",
+            "description": "Exclude results from these domains (e.g. [\"reddit.com\"]).",
             "items": {
               "type": "string"
             }
@@ -615,7 +677,7 @@
     "type": "function",
     "function": {
       "name": "search_news",
-      "description": "News search. Search for recent news articles. Price: $0.01 via x402 (USDC on Base).",
+      "description": "Search for recent news articles, ordered by recency. Price: $0.01 via x402 (USDC on Base).",
       "parameters": {
         "type": "object",
         "properties": {
@@ -624,14 +686,12 @@
             "description": "Search query string."
           },
           "max_results": {
-            "type": "integer",
-            "description": "Maximum number of results to return. Range 1–20. (default: 10)",
-            "minimum": 1,
-            "maximum": 20
+            "type": "number",
+            "description": "Maximum number of results to return. 1-20, default 10."
           },
           "search_depth": {
             "type": "string",
-            "description": "Search depth. \"advanced\" uses more sources and costs more upstream compute. (default: \"basic\")",
+            "description": "Search depth. \"basic\" | \"advanced\", default \"basic\".",
             "enum": [
               "basic",
               "advanced"
@@ -639,11 +699,11 @@
           },
           "country": {
             "type": "string",
-            "description": "Two-letter ISO 3166-1 alpha-2 country code to bias results."
+            "description": "Two-letter ISO 3166-1 country code to bias results (e.g. \"US\")."
           },
           "time_range": {
             "type": "string",
-            "description": "Restrict results to the given time range.",
+            "description": "Restrict results by recency. \"day\" | \"week\" | \"month\" | \"year\".",
             "enum": [
               "day",
               "week",
@@ -653,18 +713,18 @@
           },
           "include_answer": {
             "type": "boolean",
-            "description": "If true, the response includes an AI-generated answer summarizing the results. (default: false)"
+            "description": "Include AI-generated answer summarizing top results. Default false."
           },
           "include_domains": {
             "type": "array",
-            "description": "Restrict results to these domains only.",
+            "description": "Restrict results to these domains only (e.g. [\"docs.base.org\"]).",
             "items": {
               "type": "string"
             }
           },
           "exclude_domains": {
             "type": "array",
-            "description": "Exclude results from these domains.",
+            "description": "Exclude results from these domains (e.g. [\"reddit.com\"]).",
             "items": {
               "type": "string"
             }
@@ -679,22 +739,21 @@
   {
     "type": "function",
     "function": {
-      "name": "search_extract",
-      "description": "Extract URL content. Extract readable content from one or more URLs. Price: $0.005 via x402 (USDC on Base).",
+      "name": "search_extract_url",
+      "description": "Extract readable content from one or more URLs as markdown or plain text. Failed extractions are in the failed array. Price: $0.005 via x402 (USDC on Base).",
       "parameters": {
         "type": "object",
         "properties": {
           "urls": {
             "type": "array",
-            "description": "URL or array of URLs to extract content from.",
             "items": {
-              "type": "string",
-              "format": "uri"
-            }
+              "type": "string"
+            },
+            "description": "URL string or array of URLs to extract content from."
           },
           "format": {
             "type": "string",
-            "description": "Output format for extracted content. (default: \"markdown\")",
+            "description": "Output format. \"markdown\" | \"text\", default \"markdown\".",
             "enum": [
               "markdown",
               "text"
@@ -711,7 +770,7 @@
     "type": "function",
     "function": {
       "name": "spawn_server_create",
-      "description": "Create a server. Provisions a new VPS. Price: $0.01 via x402 (USDC on Base).",
+      "description": "Provision a new VPS. Returns immediately with status 'initializing'. Poll GET /v1/servers/:id until status is 'running' to get IP address. Price: $0.01 via x402 (USDC on Base).",
       "parameters": {
         "type": "object",
         "properties": {
@@ -721,30 +780,30 @@
           },
           "type": {
             "type": "string",
-            "description": "Server type slug. Only `small` is available in beta."
+            "description": "Server type slug. Only \"small\" (2 vCPU, 4 GB RAM) available in beta."
           },
           "image": {
             "type": "string",
-            "description": "OS image slug."
+            "description": "OS image slug (e.g. \"ubuntu-24.04\", \"debian-12\")."
           },
           "location": {
             "type": "string",
-            "description": "Data center location slug."
+            "description": "Data center slug (e.g. \"nyc3\", \"sfo3\", \"lon1\")."
           },
           "provider": {
             "type": "string",
-            "description": "Cloud provider. Defaults to Hetzner."
+            "description": "Cloud provider. Default \"digitalocean\"."
           },
           "ssh_keys": {
             "type": "array",
-            "description": "Array of SSH key IDs (from `POST /v1/ssh-keys`) to install.",
+            "description": "SSH key IDs from POST /v1/ssh-keys to install on the server.",
             "items": {
               "type": "string"
             }
           },
           "user_data": {
             "type": "string",
-            "description": "Cloud-init user data script to run on first boot."
+            "description": "Cloud-init script to run on first boot."
           }
         },
         "required": [
@@ -760,20 +819,17 @@
     "type": "function",
     "function": {
       "name": "spawn_server_list",
-      "description": "List servers. Returns all servers owned by the authenticated wallet, paginated. Price: $0.001 via x402 (USDC on Base).",
+      "description": "List all servers owned by the calling wallet. Price: $0.001 via x402 (USDC on Base).",
       "parameters": {
         "type": "object",
         "properties": {
           "limit": {
             "type": "integer",
-            "description": "Number of servers to return. Max 100.",
-            "minimum": 1,
-            "maximum": 100
+            "description": "1-100, default 20"
           },
           "page": {
             "type": "integer",
-            "description": "Page number (1-indexed).",
-            "minimum": 1
+            "description": "1-based page number, default 1"
           }
         }
       }
@@ -783,13 +839,13 @@
     "type": "function",
     "function": {
       "name": "spawn_server_get",
-      "description": "Get server. Returns full details for a single server. Price: $0.001 via x402 (USDC on Base).",
+      "description": "Get full details for a single server. Poll this until status='running'. Price: $0.001 via x402 (USDC on Base).",
       "parameters": {
         "type": "object",
         "properties": {
           "id": {
             "type": "string",
-            "description": "Prim server ID."
+            "description": "id parameter"
           }
         },
         "required": [
@@ -802,13 +858,13 @@
     "type": "function",
     "function": {
       "name": "spawn_server_delete",
-      "description": "Delete server. Destroys the server and releases its resources. Price: $0.005 via x402 (USDC on Base).",
+      "description": "Destroy a server and release its resources. Unused deposit is refunded. Price: $0.005 via x402 (USDC on Base).",
       "parameters": {
         "type": "object",
         "properties": {
           "id": {
             "type": "string",
-            "description": "Prim server ID."
+            "description": "id parameter"
           }
         },
         "required": [
@@ -821,13 +877,13 @@
     "type": "function",
     "function": {
       "name": "spawn_server_start",
-      "description": "Start server. Starts a stopped server. Price: $0.002 via x402 (USDC on Base).",
+      "description": "Start a stopped server. Price: $0.002 via x402 (USDC on Base).",
       "parameters": {
         "type": "object",
         "properties": {
           "id": {
             "type": "string",
-            "description": "Prim server ID."
+            "description": "id parameter"
           }
         },
         "required": [
@@ -840,13 +896,13 @@
     "type": "function",
     "function": {
       "name": "spawn_server_stop",
-      "description": "Stop server. Stops a running server (graceful shutdown). Price: $0.002 via x402 (USDC on Base).",
+      "description": "Stop a running server (graceful shutdown). Price: $0.002 via x402 (USDC on Base).",
       "parameters": {
         "type": "object",
         "properties": {
           "id": {
             "type": "string",
-            "description": "Prim server ID."
+            "description": "id parameter"
           }
         },
         "required": [
@@ -859,13 +915,13 @@
     "type": "function",
     "function": {
       "name": "spawn_server_reboot",
-      "description": "Reboot server. Reboots a running server. Price: $0.002 via x402 (USDC on Base).",
+      "description": "Reboot a running server. Price: $0.002 via x402 (USDC on Base).",
       "parameters": {
         "type": "object",
         "properties": {
           "id": {
             "type": "string",
-            "description": "Prim server ID."
+            "description": "id parameter"
           }
         },
         "required": [
@@ -878,13 +934,13 @@
     "type": "function",
     "function": {
       "name": "spawn_server_resize",
-      "description": "Resize server. Changes the server type (CPU/RAM). Price: $0.01 via x402 (USDC on Base).",
+      "description": "Change server type (CPU/RAM). Server must be stopped first. Deposit adjusted. Price: $0.01 via x402 (USDC on Base).",
       "parameters": {
         "type": "object",
         "properties": {
           "id": {
             "type": "string",
-            "description": "Prim server ID."
+            "description": "id parameter"
           },
           "type": {
             "type": "string",
@@ -892,7 +948,7 @@
           },
           "upgrade_disk": {
             "type": "boolean",
-            "description": "Whether to upgrade the disk alongside the CPU/RAM. Irreversible if true. (default: false)"
+            "description": "Upgrade disk along with CPU/RAM. Irreversible if true. Default false."
           }
         },
         "required": [
@@ -906,17 +962,17 @@
     "type": "function",
     "function": {
       "name": "spawn_server_rebuild",
-      "description": "Rebuild server. Reinstalls the server from a fresh OS image. Price: $0.005 via x402 (USDC on Base).",
+      "description": "Reinstall from a fresh OS image. All data on server is destroyed. Price: $0.005 via x402 (USDC on Base).",
       "parameters": {
         "type": "object",
         "properties": {
           "id": {
             "type": "string",
-            "description": "Prim server ID."
+            "description": "id parameter"
           },
           "image": {
             "type": "string",
-            "description": "OS image slug to rebuild with."
+            "description": "OS image slug to rebuild with (e.g. \"debian-12\")."
           }
         },
         "required": [
@@ -930,17 +986,17 @@
     "type": "function",
     "function": {
       "name": "spawn_ssh_key_create",
-      "description": "Register SSH key. Registers a public SSH key with the provider. Price: $0.001 via x402 (USDC on Base).",
+      "description": "Register a public SSH key. Returned ID can be used in ssh_keys when creating a server. Price: $0.001 via x402 (USDC on Base).",
       "parameters": {
         "type": "object",
         "properties": {
           "name": {
             "type": "string",
-            "description": "Human-readable label for this key."
+            "description": "Human-readable label for this SSH key."
           },
           "public_key": {
             "type": "string",
-            "description": "The public key string (e.g. `ssh-ed25519 AAAA...`)."
+            "description": "Public key string (e.g. \"ssh-ed25519 AAAA...\")."
           }
         },
         "required": [
@@ -954,7 +1010,7 @@
     "type": "function",
     "function": {
       "name": "spawn_ssh_key_list",
-      "description": "List SSH keys. Returns all SSH keys registered by the authenticated wallet. Price: $0.001 via x402 (USDC on Base).",
+      "description": "List all SSH keys registered by the calling wallet. Price: $0.001 via x402 (USDC on Base).",
       "parameters": {
         "type": "object",
         "properties": {}
@@ -965,13 +1021,13 @@
     "type": "function",
     "function": {
       "name": "spawn_ssh_key_delete",
-      "description": "Delete SSH key. Removes an SSH key from the provider. Price: $0.001 via x402 (USDC on Base).",
+      "description": "Remove an SSH key. Keys in use by active servers remain until server is rebuilt. Price: $0.001 via x402 (USDC on Base).",
       "parameters": {
         "type": "object",
         "properties": {
           "id": {
             "type": "string",
-            "description": "Prim SSH key ID."
+            "description": "id parameter"
           }
         },
         "required": [
@@ -984,21 +1040,21 @@
     "type": "function",
     "function": {
       "name": "email_mailbox_create",
-      "description": "Create a mailbox. Creates a new email mailbox owned by the paying wallet address. Price: $0.05 via x402 (USDC on Base).",
+      "description": "Create a mailbox. Optional: username, domain, ttl_ms. Price: $0.05 via x402 (USDC on Base).",
       "parameters": {
         "type": "object",
         "properties": {
           "username": {
             "type": "string",
-            "description": "Desired local part of the email address. Generated randomly if omitted."
+            "description": "Desired username. Omit for random generation."
           },
           "domain": {
             "type": "string",
-            "description": "Email domain to use. Must be a verified custom domain or the shared default domain."
+            "description": "Domain for the mailbox (must be registered). Omit for default domain."
           },
           "ttl_ms": {
-            "type": "integer",
-            "description": "Mailbox lifetime in milliseconds. Defaults to 7 days (604800000). Pass null for no expiry."
+            "type": "number",
+            "description": "TTL in milliseconds. Omit for permanent mailbox."
           }
         }
       }
@@ -1008,20 +1064,17 @@
     "type": "function",
     "function": {
       "name": "email_mailbox_list",
-      "description": "List mailboxes. Returns all mailboxes owned by the paying wallet address. Price: $0.001 via x402 (USDC on Base).",
+      "description": "List mailboxes owned by the calling wallet (paginated). Price: $0.001 via x402 (USDC on Base).",
       "parameters": {
         "type": "object",
         "properties": {
           "limit": {
             "type": "integer",
-            "description": "Number of mailboxes per page (1–100, default 20).",
-            "minimum": 1,
-            "maximum": 100
+            "description": "1-100, default 20"
           },
-          "page": {
-            "type": "integer",
-            "description": "Page number (1-based, default 1).",
-            "minimum": 1
+          "after": {
+            "type": "string",
+            "description": "Cursor from previous response"
           }
         }
       }
@@ -1031,13 +1084,13 @@
     "type": "function",
     "function": {
       "name": "email_mailbox_get",
-      "description": "Get mailbox details. Returns details for a single mailbox. Price: $0.001 via x402 (USDC on Base).",
+      "description": "Get mailbox metadata including expires_at. Price: $0.001 via x402 (USDC on Base).",
       "parameters": {
         "type": "object",
         "properties": {
           "id": {
             "type": "string",
-            "description": "Mailbox ID."
+            "description": "id parameter"
           }
         },
         "required": [
@@ -1050,13 +1103,13 @@
     "type": "function",
     "function": {
       "name": "email_mailbox_delete",
-      "description": "Delete a mailbox. Permanently deletes a mailbox and all its messages. Price: $0.01 via x402 (USDC on Base).",
+      "description": "Permanently delete a mailbox and all messages. Price: $0.01 via x402 (USDC on Base).",
       "parameters": {
         "type": "object",
         "properties": {
           "id": {
             "type": "string",
-            "description": "Mailbox ID."
+            "description": "id parameter"
           }
         },
         "required": [
@@ -1069,17 +1122,17 @@
     "type": "function",
     "function": {
       "name": "email_mailbox_renew",
-      "description": "Renew mailbox TTL. Extends the expiry time of a mailbox. Price: $0.01 via x402 (USDC on Base).",
+      "description": "Extend mailbox TTL by ttl_ms milliseconds. Price: $0.01 via x402 (USDC on Base).",
       "parameters": {
         "type": "object",
         "properties": {
           "id": {
             "type": "string",
-            "description": "Mailbox ID."
+            "description": "id parameter"
           },
           "ttl_ms": {
-            "type": "integer",
-            "description": "Additional milliseconds to extend the mailbox TTL. Defaults to 7 days (604800000)."
+            "type": "number",
+            "description": "Extension duration in milliseconds. Omit to apply default TTL."
           }
         },
         "required": [
@@ -1092,24 +1145,21 @@
     "type": "function",
     "function": {
       "name": "email_messages_list",
-      "description": "List messages in a mailbox. Returns messages in a mailbox, newest first. Price: $0.001 via x402 (USDC on Base).",
+      "description": "List messages in a mailbox, newest first. Price: $0.001 via x402 (USDC on Base).",
       "parameters": {
         "type": "object",
         "properties": {
           "id": {
             "type": "string",
-            "description": "Mailbox ID."
+            "description": "id parameter"
           },
           "limit": {
             "type": "integer",
-            "description": "Maximum number of messages to return (1–100, default 20).",
-            "minimum": 1,
-            "maximum": 100
+            "description": "1-100, default 20"
           },
-          "position": {
+          "after": {
             "type": "integer",
-            "description": "Zero-based position offset to start from (default 0).",
-            "minimum": 0
+            "description": "Position-based cursor for pagination"
           }
         },
         "required": [
@@ -1122,17 +1172,17 @@
     "type": "function",
     "function": {
       "name": "email_message_get",
-      "description": "Get message detail. Returns the full content of a single message including body. Price: $0.001 via x402 (USDC on Base).",
+      "description": "Get full message including textBody and htmlBody. Price: $0.001 via x402 (USDC on Base).",
       "parameters": {
         "type": "object",
         "properties": {
           "id": {
             "type": "string",
-            "description": "Mailbox ID."
+            "description": "id parameter"
           },
           "msgId": {
             "type": "string",
-            "description": "Message ID."
+            "description": "msgId parameter"
           }
         },
         "required": [
@@ -1146,18 +1196,17 @@
     "type": "function",
     "function": {
       "name": "email_send",
-      "description": "Send email from a mailbox. Sends an outbound email from the mailbox address. Price: $0.01 via x402 (USDC on Base).",
+      "description": "Send email from a mailbox. Requires to, subject, and body or html. Price: $0.01 via x402 (USDC on Base).",
       "parameters": {
         "type": "object",
         "properties": {
           "id": {
             "type": "string",
-            "description": "Mailbox ID."
+            "description": "id parameter"
           },
           "to": {
             "type": "string",
-            "description": "Recipient email address.",
-            "format": "email"
+            "description": "Recipient email address."
           },
           "subject": {
             "type": "string",
@@ -1165,21 +1214,19 @@
           },
           "body": {
             "type": "string",
-            "description": "Plain-text message body."
+            "description": "Plain-text body. Either body or html is required."
           },
           "html": {
             "type": "string",
-            "description": "HTML message body. Can be provided alongside `body` for multipart messages."
+            "description": "HTML body. Either body or html is required."
           },
           "cc": {
             "type": "string",
-            "description": "CC recipient email address.",
-            "format": "email"
+            "description": "CC recipient email address."
           },
           "bcc": {
             "type": "string",
-            "description": "BCC recipient email address.",
-            "format": "email"
+            "description": "BCC recipient email address."
           }
         },
         "required": [
@@ -1194,26 +1241,25 @@
     "type": "function",
     "function": {
       "name": "email_webhook_create",
-      "description": "Register a webhook. Registers a webhook URL to receive notifications for this mailbox. Price: $0.01 via x402 (USDC on Base).",
+      "description": "Register a webhook URL for message.received events. Optional secret for HMAC signing. Price: $0.01 via x402 (USDC on Base).",
       "parameters": {
         "type": "object",
         "properties": {
           "id": {
             "type": "string",
-            "description": "Mailbox ID."
+            "description": "id parameter"
           },
           "url": {
             "type": "string",
-            "description": "HTTPS URL to receive webhook events.",
-            "format": "uri"
+            "description": "HTTPS URL to receive webhook POST requests."
           },
           "secret": {
             "type": "string",
-            "description": "Optional signing secret. Used to generate HMAC-SHA256 signatures."
+            "description": "HMAC secret for X-Prim-Signature verification."
           },
           "events": {
             "type": "array",
-            "description": "Event types to subscribe to. Defaults to all events.",
+            "description": "Events to subscribe to. Defaults to [\"message.received\"].",
             "items": {
               "type": "string"
             }
@@ -1230,13 +1276,13 @@
     "type": "function",
     "function": {
       "name": "email_webhook_list",
-      "description": "List webhooks for a mailbox. Returns all registered webhooks for a mailbox. Price: $0.001 via x402 (USDC on Base).",
+      "description": "List webhooks for a mailbox. Price: $0.001 via x402 (USDC on Base).",
       "parameters": {
         "type": "object",
         "properties": {
           "id": {
             "type": "string",
-            "description": "Mailbox ID."
+            "description": "id parameter"
           }
         },
         "required": [
@@ -1249,17 +1295,17 @@
     "type": "function",
     "function": {
       "name": "email_webhook_delete",
-      "description": "Delete a webhook. Removes a webhook registration from a mailbox. Price: $0.001 via x402 (USDC on Base).",
+      "description": "Delete a webhook. Price: $0.001 via x402 (USDC on Base).",
       "parameters": {
         "type": "object",
         "properties": {
           "id": {
             "type": "string",
-            "description": "Mailbox ID."
+            "description": "id parameter"
           },
           "whId": {
             "type": "string",
-            "description": "Webhook ID."
+            "description": "whId parameter"
           }
         },
         "required": [
@@ -1273,13 +1319,13 @@
     "type": "function",
     "function": {
       "name": "email_domain_register",
-      "description": "Register an email domain. Registers a custom domain for use with email.prim.sh mailboxes. Price: $0.05 via x402 (USDC on Base).",
+      "description": "Register a custom domain. Returns required_records for DNS. Price: $0.05 via x402 (USDC on Base).",
       "parameters": {
         "type": "object",
         "properties": {
           "domain": {
             "type": "string",
-            "description": "Domain name to register (e.g. \"example.com\")."
+            "description": "Domain name to register (e.g. \"myproject.com\")."
           }
         },
         "required": [
@@ -1292,20 +1338,17 @@
     "type": "function",
     "function": {
       "name": "email_domain_list",
-      "description": "List registered domains. Returns all domains registered by the paying wallet address. Price: $0.001 via x402 (USDC on Base).",
+      "description": "List registered custom domains (paginated). Price: $0.001 via x402 (USDC on Base).",
       "parameters": {
         "type": "object",
         "properties": {
           "limit": {
             "type": "integer",
-            "description": "Number of domains per page (1–100, default 20).",
-            "minimum": 1,
-            "maximum": 100
+            "description": "1-100, default 20"
           },
-          "page": {
-            "type": "integer",
-            "description": "Page number (1-based, default 1).",
-            "minimum": 1
+          "after": {
+            "type": "string",
+            "description": "Cursor from previous response"
           }
         }
       }
@@ -1315,13 +1358,13 @@
     "type": "function",
     "function": {
       "name": "email_domain_get",
-      "description": "Get domain details. Returns details for a single domain. Price: $0.001 via x402 (USDC on Base).",
+      "description": "Get domain details and verification status. Price: $0.001 via x402 (USDC on Base).",
       "parameters": {
         "type": "object",
         "properties": {
           "id": {
             "type": "string",
-            "description": "Domain ID."
+            "description": "id parameter"
           }
         },
         "required": [
@@ -1334,13 +1377,13 @@
     "type": "function",
     "function": {
       "name": "email_domain_delete",
-      "description": "Delete a domain. Removes a custom domain registration. Price: $0.01 via x402 (USDC on Base).",
+      "description": "Remove a custom domain registration. Price: $0.01 via x402 (USDC on Base).",
       "parameters": {
         "type": "object",
         "properties": {
           "id": {
             "type": "string",
-            "description": "Domain ID."
+            "description": "id parameter"
           }
         },
         "required": [
@@ -1353,13 +1396,13 @@
     "type": "function",
     "function": {
       "name": "email_domain_verify",
-      "description": "Verify domain ownership. Checks that the required DNS records are present and live for this domain. Price: $0.01 via x402 (USDC on Base).",
+      "description": "Verify DNS records. On success: status → verified, dkim_records returned. Price: $0.01 via x402 (USDC on Base).",
       "parameters": {
         "type": "object",
         "properties": {
           "id": {
             "type": "string",
-            "description": "Domain ID."
+            "description": "id parameter"
           }
         },
         "required": [
@@ -1372,36 +1415,33 @@
     "type": "function",
     "function": {
       "name": "token_deploy",
-      "description": "Deploy ERC-20 token. Deploys a new ERC-20 token contract to Base. Price: $1.00 via x402 (USDC on Base).",
+      "description": "Deploy a new ERC-20 token. Returns immediately with deployStatus: 'pending'. Poll GET /v1/tokens/:id until deployStatus is 'confirmed' before minting or pooling. Price: $1.00 via x402 (USDC on Base).",
       "parameters": {
         "type": "object",
         "properties": {
           "name": {
             "type": "string",
-            "description": "Token name."
+            "description": "Token name (e.g. \"AgentCoin\")."
           },
           "symbol": {
             "type": "string",
-            "description": "Token ticker symbol (uppercase alphanumeric, 1–11 chars).",
-            "pattern": "^[A-Z0-9]+$"
+            "description": "Token symbol (e.g. \"AGT\")."
           },
           "decimals": {
-            "type": "integer",
-            "description": "Decimal places (default 18). Most ERC-20 tokens use 18.",
-            "minimum": 0,
-            "maximum": 18
+            "type": "number",
+            "description": "Decimal places. Default 18."
           },
           "initialSupply": {
             "type": "string",
-            "description": "Initial supply in raw token units. For 1M tokens with 18 decimals, pass \"1000000000000000000000000\"."
+            "description": "Initial supply as a raw integer string (e.g. \"1000000000000000000\" = 1 token at 18 decimals)."
           },
           "mintable": {
             "type": "boolean",
-            "description": "Whether additional tokens can be minted after deploy (default false). Immutable after deployment."
+            "description": "Whether additional tokens can be minted after deployment. Default false."
           },
           "maxSupply": {
             "type": "string",
-            "description": "Maximum mintable supply in raw units. null or omit for no cap. Only meaningful if mintable is true."
+            "description": "Maximum mintable supply as a raw integer string. Null = unlimited. Only applies if mintable is true."
           }
         },
         "required": [
@@ -1416,22 +1456,10 @@
     "type": "function",
     "function": {
       "name": "token_list",
-      "description": "List tokens. Returns all tokens deployed by the paying wallet. Price: $0.001 via x402 (USDC on Base).",
+      "description": "List tokens deployed by the authenticated wallet. Price: $0.001 via x402 (USDC on Base).",
       "parameters": {
         "type": "object",
-        "properties": {
-          "limit": {
-            "type": "integer",
-            "description": "Number of tokens per page (1–100, default 20).",
-            "minimum": 1,
-            "maximum": 100
-          },
-          "page": {
-            "type": "integer",
-            "description": "Page number (1-based, default 1).",
-            "minimum": 1
-          }
-        }
+        "properties": {}
       }
     }
   },
@@ -1439,13 +1467,13 @@
     "type": "function",
     "function": {
       "name": "token_get",
-      "description": "Get token details. Returns details for a single token. Price: $0.001 via x402 (USDC on Base).",
+      "description": "Get token details: deployStatus, contractAddress, supply, pool. Price: $0.001 via x402 (USDC on Base).",
       "parameters": {
         "type": "object",
         "properties": {
           "id": {
             "type": "string",
-            "description": "Token ID."
+            "description": "id parameter"
           }
         },
         "required": [
@@ -1458,22 +1486,21 @@
     "type": "function",
     "function": {
       "name": "token_mint",
-      "description": "Mint additional tokens. Mints additional tokens to a recipient address. Price: $0.10 via x402 (USDC on Base).",
+      "description": "Mint additional tokens to an address. Requires mintable=true at deploy time. Price: $0.10 via x402 (USDC on Base).",
       "parameters": {
         "type": "object",
         "properties": {
           "id": {
             "type": "string",
-            "description": "Token ID."
+            "description": "id parameter"
           },
           "to": {
             "type": "string",
-            "description": "Recipient Ethereum address.",
-            "pattern": "^0x[a-fA-F0-9]{40}$"
+            "description": "Recipient address to mint tokens to."
           },
           "amount": {
             "type": "string",
-            "description": "Amount to mint in raw token units."
+            "description": "Amount to mint as a raw integer string."
           }
         },
         "required": [
@@ -1488,13 +1515,13 @@
     "type": "function",
     "function": {
       "name": "token_supply",
-      "description": "Get total supply. Returns the live on-chain total supply by querying the contract directly. Price: $0.001 via x402 (USDC on Base).",
+      "description": "Live on-chain total supply from contract. Price: $0.001 via x402 (USDC on Base).",
       "parameters": {
         "type": "object",
         "properties": {
           "id": {
             "type": "string",
-            "description": "Token ID."
+            "description": "id parameter"
           }
         },
         "required": [
@@ -1507,26 +1534,21 @@
     "type": "function",
     "function": {
       "name": "token_pool_create",
-      "description": "Create Uniswap V3 pool. Creates and initializes a Uniswap V3 pool for the token paired with USDC. Price: $0.50 via x402 (USDC on Base).",
+      "description": "Create and initialize a Uniswap V3 pool paired with USDC. One pool per token. Price: $0.50 via x402 (USDC on Base).",
       "parameters": {
         "type": "object",
         "properties": {
           "id": {
             "type": "string",
-            "description": "Token ID."
+            "description": "id parameter"
           },
           "pricePerToken": {
             "type": "string",
-            "description": "Initial price in USDC per token as a decimal string (e.g. \"0.001\" for 0.1 cents per token)."
+            "description": "Initial price per token in USDC as a decimal string (e.g. \"0.001\")."
           },
           "feeTier": {
-            "type": "integer",
-            "description": "Uniswap V3 fee tier in hundredths of a basis point. Valid values are 500 (0.05%), 3000 (0.3%), 10000 (1%). Default 3000.",
-            "enum": [
-              500,
-              3000,
-              10000
-            ]
+            "type": "number",
+            "description": "Uniswap V3 fee tier. 500 | 3000 | 10000, default 3000."
           }
         },
         "required": [
@@ -1540,13 +1562,13 @@
     "type": "function",
     "function": {
       "name": "token_pool_get",
-      "description": "Get pool details. Returns details for the Uniswap V3 pool associated with the token. Price: $0.001 via x402 (USDC on Base).",
+      "description": "Get pool details: poolAddress, token0, token1, fee, sqrtPriceX96, tick. Price: $0.001 via x402 (USDC on Base).",
       "parameters": {
         "type": "object",
         "properties": {
           "id": {
             "type": "string",
-            "description": "Token ID."
+            "description": "id parameter"
           }
         },
         "required": [
@@ -1559,27 +1581,25 @@
     "type": "function",
     "function": {
       "name": "token_pool_liquidity_params",
-      "description": "Get liquidity parameters. Returns the calldata parameters for adding liquidity to the token's Uniswap V3 pool. Price: $0.001 via x402 (USDC on Base).",
+      "description": "Get calldata for adding liquidity. Returns approvals[] and position manager params. Price: $0.001 via x402 (USDC on Base).",
       "parameters": {
         "type": "object",
         "properties": {
           "id": {
             "type": "string",
-            "description": "Token ID."
+            "description": "id parameter"
           },
           "tokenAmount": {
             "type": "string",
-            "description": "Amount of tokens to add as liquidity in raw units."
+            "description": "Raw token amount to add as liquidity"
           },
           "usdcAmount": {
             "type": "string",
-            "description": "Amount of USDC to add as liquidity in raw units (USDC has 6 decimals, so $1 = \"1000000\")."
+            "description": "Raw USDC amount to pair (6 decimals)"
           }
         },
         "required": [
-          "id",
-          "tokenAmount",
-          "usdcAmount"
+          "id"
         ]
       }
     }
@@ -1588,17 +1608,17 @@
     "type": "function",
     "function": {
       "name": "mem_collection_create",
-      "description": "Create a collection. Creates a new vector collection owned by the paying wallet address. Price: $0.01 via x402 (USDC on Base).",
+      "description": "Create a vector collection. Price: $0.01 via x402 (USDC on Base).",
       "parameters": {
         "type": "object",
         "properties": {
           "name": {
             "type": "string",
-            "description": "Collection name. Must be unique per wallet."
+            "description": "Collection name. Unique per wallet."
           },
           "distance": {
             "type": "string",
-            "description": "Distance metric (default Cosine).",
+            "description": "Distance metric for similarity search. Default \"Cosine\".",
             "enum": [
               "Cosine",
               "Euclid",
@@ -1606,8 +1626,8 @@
             ]
           },
           "dimension": {
-            "type": "integer",
-            "description": "Vector dimension (default 1536 for text-embedding-3-small)."
+            "type": "number",
+            "description": "Vector dimension. Must match the embedding model used. Default 1536."
           }
         },
         "required": [
@@ -1620,20 +1640,17 @@
     "type": "function",
     "function": {
       "name": "mem_collection_list",
-      "description": "List collections. Returns all collections owned by the paying wallet address. Price: $0.001 via x402 (USDC on Base).",
+      "description": "List collections owned by the calling wallet (paginated). document_count is null — use GET :id. Price: $0.001 via x402 (USDC on Base).",
       "parameters": {
         "type": "object",
         "properties": {
           "limit": {
             "type": "integer",
-            "description": "Number of collections per page (1–100, default 20).",
-            "minimum": 1,
-            "maximum": 100
+            "description": "1-100, default 20"
           },
-          "page": {
-            "type": "integer",
-            "description": "Page number (1-based, default 1).",
-            "minimum": 1
+          "after": {
+            "type": "string",
+            "description": "Cursor from previous response"
           }
         }
       }
@@ -1643,13 +1660,13 @@
     "type": "function",
     "function": {
       "name": "mem_collection_get",
-      "description": "Get collection details. Returns details for a single collection including live document_count. Price: $0.001 via x402 (USDC on Base).",
+      "description": "Get collection with live document_count from Qdrant. Price: $0.001 via x402 (USDC on Base).",
       "parameters": {
         "type": "object",
         "properties": {
           "id": {
             "type": "string",
-            "description": "Collection ID (UUID)."
+            "description": "id parameter"
           }
         },
         "required": [
@@ -1662,13 +1679,13 @@
     "type": "function",
     "function": {
       "name": "mem_collection_delete",
-      "description": "Delete a collection. Deletes a collection and all its documents. Price: $0.01 via x402 (USDC on Base).",
+      "description": "Delete collection and all documents. Irreversible. Price: $0.01 via x402 (USDC on Base).",
       "parameters": {
         "type": "object",
         "properties": {
           "id": {
             "type": "string",
-            "description": "Collection ID (UUID)."
+            "description": "id parameter"
           }
         },
         "required": [
@@ -1681,17 +1698,17 @@
     "type": "function",
     "function": {
       "name": "mem_upsert",
-      "description": "Upsert documents. Embeds and stores documents in the collection. Price: $0.001 via x402 (USDC on Base).",
+      "description": "Embed and store documents. Each document: {id?, text, metadata?}. Existing IDs are replaced. Price: $0.001 via x402 (USDC on Base).",
       "parameters": {
         "type": "object",
         "properties": {
           "id": {
             "type": "string",
-            "description": "Collection ID (UUID)."
+            "description": "id parameter"
           },
           "documents": {
             "type": "array",
-            "description": "Documents to embed and upsert.",
+            "description": "Documents to upsert. Existing IDs are overwritten.",
             "items": {
               "type": "object"
             }
@@ -1708,24 +1725,25 @@
     "type": "function",
     "function": {
       "name": "mem_query",
-      "description": "Semantic query. Embeds the query text and searches the collection for semantically similar documents. Price: $0.001 via x402 (USDC on Base).",
+      "description": "Semantic search. Fields: text (required), top_k, filter (Qdrant native format). Price: $0.001 via x402 (USDC on Base).",
       "parameters": {
         "type": "object",
         "properties": {
           "id": {
             "type": "string",
-            "description": "Collection ID (UUID)."
+            "description": "id parameter"
           },
           "text": {
             "type": "string",
-            "description": "Query text to embed and search."
+            "description": "Query text to embed and search against."
           },
           "top_k": {
-            "type": "integer",
-            "description": "Maximum number of results to return (default 10)."
+            "type": "number",
+            "description": "Number of nearest neighbors to return. Default 10."
           },
           "filter": {
-            "description": "Qdrant-native filter passthrough for metadata filtering."
+            "type": "string",
+            "description": "Qdrant-native filter passthrough."
           }
         },
         "required": [
@@ -1739,23 +1757,24 @@
     "type": "function",
     "function": {
       "name": "mem_cache_put",
-      "description": "Set cache entry. Stores a value under the given namespace and key. Price: $0.0001 via x402 (USDC on Base).",
+      "description": "Store a value in the KV cache. Optional ttl in seconds for expiry. Price: $0.0001 via x402 (USDC on Base).",
       "parameters": {
         "type": "object",
         "properties": {
           "namespace": {
             "type": "string",
-            "description": "Cache namespace (scoped to wallet)."
+            "description": "namespace parameter"
           },
           "key": {
             "type": "string",
-            "description": "Cache key."
+            "description": "key parameter"
           },
           "value": {
-            "description": "Value to store (any JSON-serializable type)."
+            "type": "string",
+            "description": "Value to store. Any JSON-serializable value."
           },
           "ttl": {
-            "type": "integer",
+            "type": "number",
             "description": "TTL in seconds. Omit or null for permanent."
           }
         },
@@ -1771,17 +1790,17 @@
     "type": "function",
     "function": {
       "name": "mem_cache_get",
-      "description": "Get cache entry. Returns the stored value for the given namespace and key. Price: $0.0001 via x402 (USDC on Base).",
+      "description": "Retrieve a cache value. Returns 404 if missing or expired. Price: $0.0001 via x402 (USDC on Base).",
       "parameters": {
         "type": "object",
         "properties": {
           "namespace": {
             "type": "string",
-            "description": "Cache namespace."
+            "description": "namespace parameter"
           },
           "key": {
             "type": "string",
-            "description": "Cache key."
+            "description": "key parameter"
           }
         },
         "required": [
@@ -1795,17 +1814,17 @@
     "type": "function",
     "function": {
       "name": "mem_cache_delete",
-      "description": "Delete cache entry. Deletes the cache entry for the given namespace and key. Price: $0.0001 via x402 (USDC on Base).",
+      "description": "Delete a cache entry. Price: $0.0001 via x402 (USDC on Base).",
       "parameters": {
         "type": "object",
         "properties": {
           "namespace": {
             "type": "string",
-            "description": "Cache namespace."
+            "description": "namespace parameter"
           },
           "key": {
             "type": "string",
-            "description": "Cache key."
+            "description": "key parameter"
           }
         },
         "required": [
@@ -1819,22 +1838,19 @@
     "type": "function",
     "function": {
       "name": "domain_search",
-      "description": "Search domain availability. Check availability and pricing for one or more domain names. Price: $0.001 via x402 (USDC on Base).",
+      "description": "Check availability and pricing for a domain query. Price: $0.001 via x402 (USDC on Base).",
       "parameters": {
         "type": "object",
         "properties": {
           "query": {
             "type": "string",
-            "description": "Domain name to search (without TLD, e.g. \"myagent\")."
+            "description": "Domain name or keyword to search"
           },
           "tlds": {
             "type": "string",
-            "description": "Comma-separated TLDs to check (e.g. \"com,xyz,io\"). Defaults to common TLDs."
+            "description": "Comma-separated TLDs (e.g. com,xyz,io)"
           }
-        },
-        "required": [
-          "query"
-        ]
+        }
       }
     }
   },
@@ -1842,59 +1858,21 @@
     "type": "function",
     "function": {
       "name": "domain_quote",
-      "description": "Get price quote. Get a time-limited price quote for registering a domain. Price: $0.001 via x402 (USDC on Base).",
+      "description": "Get a 15-minute price quote for a domain. Price: $0.001 via x402 (USDC on Base).",
       "parameters": {
         "type": "object",
         "properties": {
           "domain": {
             "type": "string",
-            "description": "Fully qualified domain name to quote."
+            "description": "Domain name to quote (e.g. \"example.com\")."
           },
           "years": {
-            "type": "integer",
-            "description": "Registration period in years (default 1)."
+            "type": "number",
+            "description": "Number of years to register. Default 1."
           }
         },
         "required": [
           "domain"
-        ]
-      }
-    }
-  },
-  {
-    "type": "function",
-    "function": {
-      "name": "domain_register",
-      "description": "Register domain. Register a domain using a valid quote. Price: dynamic (from quote) via x402 (USDC on Base).",
-      "parameters": {
-        "type": "object",
-        "properties": {
-          "quote_id": {
-            "type": "string",
-            "description": "Quote ID from POST /v1/domains/quote. Valid for 15 minutes."
-          }
-        },
-        "required": [
-          "quote_id"
-        ]
-      }
-    }
-  },
-  {
-    "type": "function",
-    "function": {
-      "name": "domain_recover",
-      "description": "Recover registration. Retry Cloudflare zone creation and/or nameserver configuration after a partial failure during `POST /v1/domains/register`. Free — no payment required.",
-      "parameters": {
-        "type": "object",
-        "properties": {
-          "recovery_token": {
-            "type": "string",
-            "description": "Recovery token from the original RegisterResponse."
-          }
-        },
-        "required": [
-          "recovery_token"
         ]
       }
     }
@@ -1903,32 +1881,13 @@
     "type": "function",
     "function": {
       "name": "domain_status",
-      "description": "Registration status. Check the full post-registration pipeline status for a domain your wallet registered. Price: $0.001 via x402 (USDC on Base).",
+      "description": "Full post-registration pipeline status (ns_propagated, zone_active, all_ready). Price: $0.001 via x402 (USDC on Base).",
       "parameters": {
         "type": "object",
         "properties": {
           "domain": {
             "type": "string",
-            "description": "Fully qualified domain name."
-          }
-        },
-        "required": [
-          "domain"
-        ]
-      }
-    }
-  },
-  {
-    "type": "function",
-    "function": {
-      "name": "domain_configure_ns",
-      "description": "Configure nameservers. Retry nameserver configuration at the registrar for a domain your wallet registered. Free — no payment required.",
-      "parameters": {
-        "type": "object",
-        "properties": {
-          "domain": {
-            "type": "string",
-            "description": "Fully qualified domain name."
+            "description": "domain parameter"
           }
         },
         "required": [
@@ -1941,13 +1900,13 @@
     "type": "function",
     "function": {
       "name": "domain_zone_create",
-      "description": "Create zone. Create a Cloudflare DNS zone for a domain. Price: $0.05 via x402 (USDC on Base).",
+      "description": "Create a Cloudflare DNS zone. Returns nameservers to set at your registrar. Price: $0.05 via x402 (USDC on Base).",
       "parameters": {
         "type": "object",
         "properties": {
           "domain": {
             "type": "string",
-            "description": "Domain name for the zone."
+            "description": "Domain name to create a zone for (e.g. \"example.com\")."
           }
         },
         "required": [
@@ -1960,20 +1919,17 @@
     "type": "function",
     "function": {
       "name": "domain_zone_list",
-      "description": "List zones. Returns all DNS zones owned by the paying wallet address. Price: $0.001 via x402 (USDC on Base).",
+      "description": "List DNS zones owned by the calling wallet (paginated). Price: $0.001 via x402 (USDC on Base).",
       "parameters": {
         "type": "object",
         "properties": {
           "limit": {
             "type": "integer",
-            "description": "Number of zones per page (1–100, default 20).",
-            "minimum": 1,
-            "maximum": 100
+            "description": "1-100, default 20"
           },
-          "page": {
-            "type": "integer",
-            "description": "Page number (1-based, default 1).",
-            "minimum": 1
+          "after": {
+            "type": "string",
+            "description": "Cursor from previous response"
           }
         }
       }
@@ -1983,13 +1939,13 @@
     "type": "function",
     "function": {
       "name": "domain_zone_get",
-      "description": "Get zone. Returns details for a single zone. Price: $0.001 via x402 (USDC on Base).",
+      "description": "Get zone details. Price: $0.001 via x402 (USDC on Base).",
       "parameters": {
         "type": "object",
         "properties": {
           "id": {
             "type": "string",
-            "description": "Zone ID."
+            "description": "id parameter"
           }
         },
         "required": [
@@ -2002,13 +1958,13 @@
     "type": "function",
     "function": {
       "name": "domain_zone_delete",
-      "description": "Delete zone. Deletes a Cloudflare DNS zone and all its records. Price: $0.01 via x402 (USDC on Base).",
+      "description": "Delete zone and all records. Irreversible. Price: $0.01 via x402 (USDC on Base).",
       "parameters": {
         "type": "object",
         "properties": {
           "id": {
             "type": "string",
-            "description": "Zone ID."
+            "description": "id parameter"
           }
         },
         "required": [
@@ -2021,13 +1977,13 @@
     "type": "function",
     "function": {
       "name": "domain_zone_activate",
-      "description": "Activate zone. Request Cloudflare to immediately re-check nameserver activation for a pending zone. Price: $0.001 via x402 (USDC on Base).",
+      "description": "Request Cloudflare NS re-check for faster activation. Price: $0.001 via x402 (USDC on Base).",
       "parameters": {
         "type": "object",
         "properties": {
           "zone_id": {
             "type": "string",
-            "description": "Zone ID."
+            "description": "zone_id parameter"
           }
         },
         "required": [
@@ -2040,13 +1996,13 @@
     "type": "function",
     "function": {
       "name": "domain_zone_verify",
-      "description": "Verify zone propagation. Check DNS propagation for a zone — verifies nameservers and all DNS records. Price: $0.001 via x402 (USDC on Base).",
+      "description": "Check DNS propagation for all zone records. Price: $0.001 via x402 (USDC on Base).",
       "parameters": {
         "type": "object",
         "properties": {
           "zone_id": {
             "type": "string",
-            "description": "Zone ID."
+            "description": "zone_id parameter"
           }
         },
         "required": [
@@ -2059,25 +2015,25 @@
     "type": "function",
     "function": {
       "name": "domain_zone_mail_setup",
-      "description": "Setup mail DNS records. Configure all DNS records required for email delivery: MX, SPF (TXT), DMARC (TXT), and optionally DKIM (TXT). Price: $0.005 via x402 (USDC on Base).",
+      "description": "Configure MX, SPF, DMARC, DKIM in one call. Idempotent. Price: $0.005 via x402 (USDC on Base).",
       "parameters": {
         "type": "object",
         "properties": {
           "zone_id": {
             "type": "string",
-            "description": "Zone ID."
+            "description": "zone_id parameter"
           },
           "mail_server": {
             "type": "string",
-            "description": "Mail server hostname (e.g. \"mail.example.com\")."
+            "description": "Mail server hostname (e.g. \"mail.prim.sh\")."
           },
           "mail_server_ip": {
             "type": "string",
-            "description": "Mail server IP address for the A record."
+            "description": "Mail server IPv4 address (used for SPF record)."
           },
           "dkim": {
             "type": "object",
-            "description": "Optional DKIM public keys."
+            "description": "DKIM keys to configure. Provide rsa and/or ed25519."
           }
         },
         "required": [
@@ -2092,28 +2048,31 @@
     "type": "function",
     "function": {
       "name": "domain_record_batch",
-      "description": "Batch record operations. Create, update, and delete DNS records in a single request. Price: $0.005 via x402 (USDC on Base).",
+      "description": "Create, update, and delete DNS records in one atomic request. Price: $0.005 via x402 (USDC on Base).",
       "parameters": {
         "type": "object",
         "properties": {
           "zone_id": {
             "type": "string",
-            "description": "Zone ID."
+            "description": "zone_id parameter"
           },
           "create": {
             "type": "array",
+            "description": "Records to create.",
             "items": {
               "type": "object"
             }
           },
           "update": {
             "type": "array",
+            "description": "Records to update.",
             "items": {
               "type": "object"
             }
           },
           "delete": {
             "type": "array",
+            "description": "Records to delete.",
             "items": {
               "type": "object"
             }
@@ -2129,47 +2088,37 @@
     "type": "function",
     "function": {
       "name": "domain_record_create",
-      "description": "Create record. Create a single DNS record in a zone. Price: $0.001 via x402 (USDC on Base).",
+      "description": "Create a DNS record (A, AAAA, CNAME, MX, TXT, SRV, CAA, NS). Price: $0.001 via x402 (USDC on Base).",
       "parameters": {
         "type": "object",
         "properties": {
           "zone_id": {
             "type": "string",
-            "description": "Zone ID."
+            "description": "zone_id parameter"
           },
           "type": {
             "type": "string",
-            "description": "DNS record type.",
-            "enum": [
-              "A",
-              "AAAA",
-              "CNAME",
-              "MX",
-              "TXT",
-              "SRV",
-              "CAA",
-              "NS"
-            ]
+            "description": "DNS record type."
           },
           "name": {
             "type": "string",
-            "description": "Record name relative to zone root. Use \"@\" for root."
+            "description": "DNS record name (hostname)."
           },
           "content": {
             "type": "string",
-            "description": "Record content (IP for A/AAAA, hostname for CNAME/MX, text for TXT)."
+            "description": "DNS record value."
           },
           "ttl": {
-            "type": "integer",
-            "description": "TTL in seconds. 1 = automatic."
+            "type": "number",
+            "description": "TTL in seconds. Default 1 (auto)."
           },
           "proxied": {
             "type": "boolean",
-            "description": "Proxy through Cloudflare (A/AAAA/CNAME only)."
+            "description": "Enable Cloudflare proxying. Default false."
           },
           "priority": {
-            "type": "integer",
-            "description": "Priority for MX/SRV records."
+            "type": "number",
+            "description": "Priority for MX and SRV records."
           }
         },
         "required": [
@@ -2185,13 +2134,13 @@
     "type": "function",
     "function": {
       "name": "domain_record_list",
-      "description": "List records. Returns all DNS records in a zone. Price: $0.001 via x402 (USDC on Base).",
+      "description": "List all records in a DNS zone. Price: $0.001 via x402 (USDC on Base).",
       "parameters": {
         "type": "object",
         "properties": {
           "zone_id": {
             "type": "string",
-            "description": "Zone ID."
+            "description": "zone_id parameter"
           }
         },
         "required": [
@@ -2204,17 +2153,17 @@
     "type": "function",
     "function": {
       "name": "domain_record_get",
-      "description": "Get record. Returns a single DNS record. Price: $0.001 via x402 (USDC on Base).",
+      "description": "Get a single DNS record. Price: $0.001 via x402 (USDC on Base).",
       "parameters": {
         "type": "object",
         "properties": {
           "zone_id": {
             "type": "string",
-            "description": "Zone ID."
+            "description": "zone_id parameter"
           },
           "id": {
             "type": "string",
-            "description": "Record ID."
+            "description": "id parameter"
           }
         },
         "required": [
@@ -2228,45 +2177,41 @@
     "type": "function",
     "function": {
       "name": "domain_record_update",
-      "description": "Update record. Update a DNS record. Price: $0.001 via x402 (USDC on Base).",
+      "description": "Update a DNS record. Price: $0.001 via x402 (USDC on Base).",
       "parameters": {
         "type": "object",
         "properties": {
           "zone_id": {
             "type": "string",
-            "description": "Zone ID."
+            "description": "zone_id parameter"
           },
           "id": {
             "type": "string",
-            "description": "Record ID."
+            "description": "id parameter"
           },
           "type": {
             "type": "string",
-            "enum": [
-              "A",
-              "AAAA",
-              "CNAME",
-              "MX",
-              "TXT",
-              "SRV",
-              "CAA",
-              "NS"
-            ]
+            "description": "DNS record type."
           },
           "name": {
-            "type": "string"
+            "type": "string",
+            "description": "DNS record name."
           },
           "content": {
-            "type": "string"
+            "type": "string",
+            "description": "DNS record value."
           },
           "ttl": {
-            "type": "integer"
+            "type": "number",
+            "description": "TTL in seconds."
           },
           "proxied": {
-            "type": "boolean"
+            "type": "boolean",
+            "description": "Enable Cloudflare proxying."
           },
           "priority": {
-            "type": "integer"
+            "type": "number",
+            "description": "Priority for MX and SRV records."
           }
         },
         "required": [
@@ -2280,17 +2225,17 @@
     "type": "function",
     "function": {
       "name": "domain_record_delete",
-      "description": "Delete record. Delete a DNS record from a zone. Price: $0.001 via x402 (USDC on Base).",
+      "description": "Delete a DNS record. Price: $0.001 via x402 (USDC on Base).",
       "parameters": {
         "type": "object",
         "properties": {
           "zone_id": {
             "type": "string",
-            "description": "Zone ID."
+            "description": "zone_id parameter"
           },
           "id": {
             "type": "string",
-            "description": "Record ID."
+            "description": "id parameter"
           }
         },
         "required": [
