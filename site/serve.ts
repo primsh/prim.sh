@@ -5,7 +5,7 @@
 import { existsSync, readFileSync, readdirSync } from "node:fs";
 import { join, resolve } from "node:path";
 import { parse } from "yaml";
-import { BRAND } from "../brand.ts";
+import { BRAND } from "./brand.ts";
 import { type PrimConfig, render, renderFooter } from "./template.ts";
 
 const PORT = Number(process.env.PORT ?? 3000);

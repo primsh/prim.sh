@@ -8,7 +8,7 @@
 import { cpSync, existsSync, mkdirSync, readFileSync, readdirSync, writeFileSync } from "node:fs";
 import { join, resolve } from "node:path";
 import { parse } from "yaml";
-import { BRAND } from "../brand.ts";
+import { BRAND } from "./brand.ts";
 import { type PrimConfig, render, renderFooter, setBuildHash } from "./template.ts";
 
 // Set cache-bust hash for template CSS references

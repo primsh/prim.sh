@@ -1,7 +1,7 @@
 // site/template.ts — SSR template for prim.sh primitive pages
 // render(config) → HTML string. CSS is inlined.
 
-import { BRAND } from "../brand.ts";
+import { BRAND } from "./brand.ts";
 
 export interface PricingRow {
   op: string;
