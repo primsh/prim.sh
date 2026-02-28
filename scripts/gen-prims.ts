@@ -181,9 +181,9 @@ function genStatusBadge(p: Primitive): string {
     hold: "○ Hold",
   };
   const classes: Record<string, string> = {
-    mainnet: "status-live",
-    testnet: "status-live",
-    hold: "status-built",
+    mainnet: "status-mainnet",
+    testnet: "status-testnet",
+    hold: "status-phantom",
   };
   const label = labels[p.status ?? ""] ?? "◌ Planned";
   const cls = classes[p.status ?? ""] ?? "status-phantom";

@@ -209,25 +209,15 @@ a:hover {
 .badge strong {
   color: var(--accent);
 }
-.badge.status-testing {
-  background: rgba(0, 200, 80, 0.08);
-  border-color: rgba(0, 200, 80, 0.3);
-  color: #00c850;
-}
-.badge.status-live {
+.badge.status-mainnet {
   background: rgba(0, 255, 100, 0.1);
   border-color: rgba(0, 255, 100, 0.4);
   color: #00ff64;
 }
-.badge.status-built {
-  background: rgba(255, 200, 0, 0.08);
-  border-color: rgba(255, 200, 0, 0.3);
-  color: #ffc800;
-}
-.badge.status-building {
-  background: rgba(255, 140, 0, 0.08);
-  border-color: rgba(255, 140, 0, 0.3);
-  color: #ff8c00;
+.badge.status-testnet {
+  background: rgba(0, 200, 80, 0.08);
+  border-color: rgba(0, 200, 80, 0.3);
+  color: #00c850;
 }
 .badge.status-phantom {
   background: var(--surface);
