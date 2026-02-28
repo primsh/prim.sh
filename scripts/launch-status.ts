@@ -266,6 +266,21 @@ async function checkDns(): Promise<AsyncCheckResult> {
 
 // ─── 4. Tests ─────────────────────────────────────────────────────────────
 
+/** Sum test/file counts across all vitest package outputs. */
+function aggregateTestCounts(output: string): {
+  tests: number;
+  files: number;
+  packages: number;
+} {
+  const testMatches = [...output.matchAll(/Tests\s+(\d+) passed/g)];
+  const fileMatches = [...output.matchAll(/Test Files\s+(\d+) passed/g)];
+  return {
+    tests: testMatches.reduce((s, m) => s + Number(m[1]), 0),
+    files: fileMatches.reduce((s, m) => s + Number(m[1]), 0),
+    packages: testMatches.length,
+  };
+}
+
 function checkTests(): string[] {
   header("🧪", "Tests");
   const issues: string[] = [];
@@ -276,11 +291,10 @@ function checkTests(): string[] {
       timeout: 120_000,
       encoding: "utf-8",
     });
-    const testMatch = output.match(/Tests\s+(\d+) passed/);
-    const fileMatch = output.match(/Test Files\s+(\d+) passed/);
+    const { tests, files, packages } = aggregateTestCounts(output);
     pass(
-      testMatch && fileMatch
-        ? `${testMatch[1]} tests in ${fileMatch[1]} files`
+      tests > 0 && files > 0
+        ? `${tests} tests in ${files} files across ${packages} packages`
         : "pnpm -r test passed",
     );
   } catch (err) {
@@ -288,8 +302,14 @@ function checkTests(): string[] {
       typeof (err as { stdout?: string }).stdout === "string"
         ? (err as { stdout: string }).stdout
         : "";
-    const failMatch = stdout.match(/(\d+) failed/);
-    fail(failMatch ? `${failMatch[1]} test(s) failed` : "pnpm -r test failed");
+    const { tests: passedTests, packages } = aggregateTestCounts(stdout);
+    const failMatches = [...stdout.matchAll(/Tests\s+.*?(\d+) failed/g)];
+    const totalFailed = failMatches.reduce((s, m) => s + Number(m[1]), 0);
+    if (totalFailed > 0) {
+      fail(`${totalFailed} test(s) failed (${passedTests} passed across ${packages} packages)`);
+    } else {
+      fail("pnpm -r test failed");
+    }
     issues.push("tests failing — run pnpm -r test");
   }
   return issues;
