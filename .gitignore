@@ -28,6 +28,7 @@ scripts/.env.*
 
 # Generated
 TASKS.md
+brand/
 
 # Logs
 *.log
