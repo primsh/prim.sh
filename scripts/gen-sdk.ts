@@ -2,7 +2,7 @@
 /**
  * gen-sdk.ts — Typed SDK client generator
  *
- * Reads specs/openapi/<id>.yaml and generates packages/sdk/src/<id>.ts.
+ * Reads packages/<id>/openapi.yaml and generates packages/sdk/src/<id>.ts.
  * Each file exports a typed client factory function.
  *
  * Usage:
@@ -14,12 +14,11 @@
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { join, resolve } from "node:path";
 import { parse as parseYaml } from "yaml";
-import { primsForInterface } from "./lib/primitives.js";
+import { primsForInterface, specPath } from "./lib/primitives.js";
 import { renderSdkClient } from "./lib/render-sdk.js";
 import type { OpenApiSpec } from "./lib/render-sdk.js";
 
 const ROOT = resolve(import.meta.dir, "..");
-const SPECS_DIR = join(ROOT, "specs", "openapi");
 const OUTPUT_DIR = join(ROOT, "packages", "sdk", "src");
 const CHECK_MODE = process.argv.includes("--check");
 
@@ -71,16 +70,16 @@ console.log(CHECK_MODE ? "Mode: check\n" : "Mode: generate\n");
 const generatedIds: string[] = [];
 
 for (const prim of prims) {
-  const specPath = join(SPECS_DIR, `${prim.id}.yaml`);
+  const sp = specPath(prim.id);
 
-  if (!existsSync(specPath)) {
+  if (!existsSync(sp)) {
     console.log(`  – ${prim.id}: no OpenAPI spec (skipped)`);
     continue;
   }
 
   let spec: OpenApiSpec;
   try {
-    spec = parseYaml(readFileSync(specPath, "utf8")) as OpenApiSpec;
+    spec = parseYaml(readFileSync(sp, "utf8")) as OpenApiSpec;
   } catch (e) {
     console.error(`  ERROR: Failed to parse ${prim.id}.yaml: ${e}`);
     anyFailed = true;
@@ -142,7 +141,7 @@ if (generatedIds.length > 0) {
 
   const barrelLines: string[] = [
     "// THIS FILE IS GENERATED — DO NOT EDIT",
-    "// Source: specs/openapi/<id>.yaml (all prims with rest interface)",
+    "// Source: packages/<id>/openapi.yaml (all prims with rest interface)",
     "// Regenerate: pnpm gen:sdk",
     "",
   ];

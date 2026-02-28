@@ -2,12 +2,12 @@
 /**
  * gen-openai.ts — OpenAI function schema generator
  *
- * Reads OpenAPI specs from specs/openapi/*.yaml and outputs OpenAI-compatible
+ * Reads OpenAPI specs from packages/<id>/openapi.yaml and outputs OpenAI-compatible
  * tool definitions (function calling format) to packages/openai/.
  *
  * Output:
  *   packages/openai/<id>.json      — per-prim tool array
- *   packages/openai/all.json       — all tools combined
+ *   packages/openai/tools.json     — all tools combined
  *   packages/openai/manifest.json  — metadata (version, prim list, timestamp)
  *
  * Usage:
@@ -16,12 +16,11 @@
  */
 
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
-import { basename, join, resolve } from "node:path";
+import { join, resolve } from "node:path";
 import { parse as parseYaml } from "yaml";
-import { primsForInterface } from "./lib/primitives.js";
+import { primsForInterface, specPath } from "./lib/primitives.js";
 
 const ROOT = resolve(import.meta.dir, "..");
-const SPECS_DIR = join(ROOT, "specs", "openapi");
 const OUTPUT_DIR = join(ROOT, "packages", "openai");
 const CHECK_MODE = process.argv.includes("--check");
 
@@ -457,23 +456,23 @@ if (!CHECK_MODE) {
   mkdirSync(OUTPUT_DIR, { recursive: true });
 }
 
-const specFiles = primsForInterface("openai").map((p) => `${p.id}.yaml`);
+const eligiblePrims = primsForInterface("openai");
 
-console.log(`Processing ${specFiles.length} OpenAPI specs`);
+console.log(`Processing ${eligiblePrims.length} OpenAPI specs`);
 console.log(CHECK_MODE ? "Mode: check\n" : "Mode: generate\n");
 
 const allTools: OpenAiFunction[] = [];
 const primIds: string[] = [];
 
-for (const specFile of specFiles) {
-  const specId = basename(specFile, ".yaml");
-  const specPath = join(SPECS_DIR, specFile);
+for (const prim of eligiblePrims) {
+  const specId = prim.id;
+  const sp = specPath(specId);
 
   let spec: OpenApiSpec;
   try {
-    spec = parseYaml(readFileSync(specPath, "utf8")) as OpenApiSpec;
+    spec = parseYaml(readFileSync(sp, "utf8")) as OpenApiSpec;
   } catch (e) {
-    console.error(`  ERROR: Failed to parse ${specFile}: ${e}`);
+    console.error(`  ERROR: Failed to parse ${specId}: ${e}`);
     anyFailed = true;
     continue;
   }
@@ -494,7 +493,7 @@ for (const specFile of specFiles) {
 
 // Combined all.json
 const allJson = `${JSON.stringify(allTools, null, 2)}\n`;
-applyFile(join(OUTPUT_DIR, "all.json"), allJson);
+applyFile(join(OUTPUT_DIR, "tools.json"), allJson);
 console.log(`  total: ${allTools.length} tools across ${primIds.length} prims`);
 
 // manifest.json

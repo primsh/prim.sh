@@ -244,17 +244,24 @@ export function getGateOverrides(p: Primitive): Required<GateConfig> {
   };
 }
 
+// ── OpenAPI spec paths ─────────────────────────────────────────────────────
+
+/** Path to a prim's colocated OpenAPI spec: packages/<id>/openapi.yaml */
+export function specPath(primId: string, root?: string): string {
+  const ROOT = root ?? resolve(new URL("../..", import.meta.url).pathname);
+  return join(ROOT, "packages", primId, "openapi.yaml");
+}
+
 // ── Filters ────────────────────────────────────────────────────────────────
 
 export type InterfaceSurface = "mcp" | "cli" | "openai" | "rest";
 
 /** Primitives eligible for a given integration surface (has OpenAPI spec + interface enabled) */
 export function primsForInterface(surface: InterfaceSurface, root?: string): Primitive[] {
-  const ROOT = root ?? resolve(new URL("../..", import.meta.url).pathname);
   const prims = loadPrimitives(root);
   return prims.filter((p) => {
     // Must have an OpenAPI spec
-    if (!existsSync(join(ROOT, "specs/openapi", `${p.id}.yaml`))) return false;
+    if (!existsSync(specPath(p.id, root))) return false;
     // Interface flag defaults to true if absent
     return p.interfaces?.[surface] !== false;
   });

@@ -32,12 +32,18 @@ prim/
 ├── packages/
 │   ├── x402-middleware/      # @primsh/x402-middleware (shared)
 │   ├── wallet/               # @primsh/wallet (wallet.sh)
+│   │   └── openapi.yaml     # Generated OpenAPI spec (colocated)
 │   ├── email/                # @primsh/email (email.sh)
-│   └── spawn/                # @primsh/spawn (spawn.sh)
+│   ├── spawn/                # @primsh/spawn (spawn.sh)
+│   ├── sdk/                  # @primsh/sdk (generated typed clients)
+│   ├── mcp/                  # @primsh/mcp (generated MCP tools)
+│   └── openai/               # @primsh/openai (generated OpenAI tool schemas)
 ├── site/                     # Landing pages (HTML, moved from root)
 │   ├── serve.ts              # Dev server (Bun)
 │   └── <primitive>/index.html
-├── specs/                    # Product specs
+├── tasks/
+│   ├── tasks.json            # SOT for all task data
+│   └── tasks.schema.json     # JSON Schema draft 2020-12
 ├── package.json              # Workspace root
 ├── pnpm-workspace.yaml
 ├── tsconfig.base.json

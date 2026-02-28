@@ -523,7 +523,7 @@ ${urls.join("\n")}
       entry.llms_txt = `https://prim.sh/${p.id}/llms.txt`;
     }
     // Only include openapi if the spec file exists
-    const openapiPath = join(ROOT, "specs/openapi", `${p.id}.yaml`);
+    const openapiPath = join(ROOT, "packages", p.id, "openapi.yaml");
     if (existsSync(openapiPath)) {
       entry.openapi = `https://prim.sh/openapi/${p.id}.yaml`;
     }
