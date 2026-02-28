@@ -86,7 +86,7 @@ Social: hive, ads
 
 ## Code Conventions
 
-Biome enforces lint + format (2-space indent, 100-char lines). These conventions go beyond Biome — Claude review enforces them:
+Biome enforces lint + format (2-space indent, 100-char lines, `organizeImports`, `noExplicitAny`, `useImportType`). These conventions go beyond Biome — Claude review enforces them:
 
 ### API shape
 
@@ -174,6 +174,14 @@ Reference implementation: `packages/track/test/smoke.test.ts`
 
 Scope = lowercased task ID prefix. If no task ID: `fix/`, `feat/`, `chore/`.
 
+### Commit messages
+
+Conventional commit format enforced by `.githooks/commit-msg`:
+
+`type(scope): subject` — scope optional, subject ≤72 chars
+
+Types: `feat|fix|chore|docs|refactor|test|ci|perf|build|style`
+
 ### Rules
 
 - Never push directly to `main`
@@ -182,12 +190,12 @@ Scope = lowercased task ID prefix. If no task ID: `fix/`, `feat/`, `chore/`.
 
 ## CI Automation
 
-Nine workflows automate the PR-to-deploy pipeline (`.github/workflows/`):
+Ten workflows automate the PR-to-deploy pipeline (`.github/workflows/`):
 
 | Workflow | Trigger | What it does |
 |----------|---------|-------------|
-| `ci.yml` | push to main, PRs | Lint, typecheck, test, gen check, audit, safeguards, secret scan |
-| `review.yml` | PR open/push, `@claude` comment | Claude reviews for bugs, security, style; fixes and pushes |
+| `ci.yml` | push to main, PRs | Lint, typecheck, test, gen check, audit, safeguards, secret scan, commit lint |
+| `review.yml` | PR open/push, `@claude` comment | Claude reviews for architecture, security, logic, x402 wiring, test gaps; fixes and pushes |
 | `ci-heal.yml` | CI failure on PR branch | Claude reads failed logs, fixes code, pushes |
 | `rebase.yml` | push to main, manual | Forward-merges main into conflicted PRs; Claude resolves real conflicts |
 | `auto-merge.yml` | PR open/push (bots only) | Auto-merges dependabot/renovate patch/minor bumps |
@@ -207,7 +215,7 @@ PR opens → Claude review (fix + push) → CI runs → auto-merge (squash)
 
 ### Branch protection (main)
 
-- **Required checks**: Lint, Typecheck, Test, Gen check, Audit, Safeguards, Secret scan
+- **Required checks**: Lint, Typecheck, Test, Gen check, Audit, Safeguards, Secret scan (commit lint is advisory only)
 - **`strict: false`** — PRs merge in parallel without needing to be up-to-date with main
 - **Squash merge only.** Auto-delete branches after merge.
 - Claude review is NOT a required check — it's advisory + auto-fix
