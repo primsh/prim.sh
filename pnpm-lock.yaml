@@ -125,6 +125,25 @@ importers:
         specifier: ^1.6.1
         version: 1.6.1(@types/node@25.3.0)
 
+  packages/feedback:
+    dependencies:
+      '@primsh/x402-middleware':
+        specifier: workspace:*
+        version: link:../x402-middleware
+      hono:
+        specifier: ^4.4.7
+        version: 4.12.2
+    devDependencies:
+      '@types/node':
+        specifier: ^25.3.0
+        version: 25.3.0
+      typescript:
+        specifier: ^5.6.3
+        version: 5.9.3
+      vitest:
+        specifier: ^1.6.1
+        version: 1.6.1(@types/node@25.3.0)
+
   packages/imagine:
     dependencies:
       '@primsh/x402-middleware':

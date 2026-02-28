@@ -235,6 +235,13 @@ primitives:
     order: 25
     phantom: true
 
+  - id: feedback
+    name: feedback.sh
+    type: meta
+    order: 98
+    phantom: false
+    show_on_index: false
+
   # ── Backlog (not shown on index) ───────────────────────────────────────────
   - id: infer
     name: infer.sh
