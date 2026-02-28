@@ -48,6 +48,14 @@
                   "status": "done",
                   "release": "v1.0.0",
                   "plan": "tasks/completed/hrd-10-rate-limiting.md"
+                },
+                {
+                  "id": "HRD-41",
+                  "description": "Add unmocked createPrimApp boot test: missing llmsTxtPath, missing env vars → still boots to 200",
+                  "owner": ["Claude"],
+                  "depends": [],
+                  "status": "pending",
+                  "release": null
                 }
               ]
             },
