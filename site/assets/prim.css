@@ -48,6 +48,7 @@
 }
 html {
   scroll-behavior: smooth;
+  overflow-x: hidden;
 }
 body {
   background: var(--bg);
@@ -73,6 +74,7 @@ a:hover {
   align-items: center;
   text-align: center;
   position: relative;
+  overflow: hidden;
 }
 .hero::before {
   content: "";
