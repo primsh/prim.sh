@@ -9,7 +9,7 @@ requires: []
 
 Executable runbook. Run each step, check the output, diagnose failures before proceeding.
 
-Network: Base Sepolia testnet (`eip155:84532`). Payment: USDC (6 decimals).
+Network: Base mainnet (`eip155:8453`). Payment: USDC (6 decimals).
 
 ---
 
@@ -63,9 +63,7 @@ prim wallet create
 
 ---
 
-## Step 4: Fund wallet
-
-### With invite code
+## Step 4: Redeem invite code
 
 ```sh
 prim gate invite --code {{CODE}} --wallet <ADDRESS>
@@ -73,21 +71,10 @@ prim gate invite --code {{CODE}} --wallet <ADDRESS>
 
 | Response | Action |
 |----------|--------|
-| `"status": "redeemed"` | Funded. Proceed to Step 5. |
+| `"status": "redeemed"` | Wallet funded and allowlisted. Proceed to Step 5. |
 | `invalid_code` | Code invalid. Check for typos (case-sensitive). Stop. |
-| `code_redeemed` | Already used. Fall through to faucet. |
-| `fund_error` | On-chain failure. Fall through to faucet. |
-
-### Faucet fallback
-
-```sh
-prim faucet usdc
-```
-
-| Response | Action |
-|----------|--------|
-| `tx_hash` present | Funded. Proceed. |
-| 429 / rate limited | Run `prim faucet status`. Report cooldown time. Stop. |
+| `code_redeemed` | Already used. Request a new code. Stop. |
+| `fund_error` | On-chain funding failed. Retry once. If persistent, stop and report. |
 
 ---
 
@@ -97,7 +84,7 @@ prim faucet usdc
 prim wallet balance
 ```
 
-**Expected**: `0x<ADDRESS>  X.XX USDC  [eip155:84532]` with balance > 0.
+**Expected**: `0x<ADDRESS>  X.XX USDC  [eip155:8453]` with balance > 0.
 
 **If `(unfunded)`**: transaction may be settling. Wait 10 seconds, retry up to 3 times.
 
@@ -126,7 +113,7 @@ prim store rm-bucket onboard-test
 
 | Error | Diagnosis |
 |-------|-----------|
-| 402 | Wallet unfunded. Run `prim wallet balance`, then `prim faucet usdc`. |
+| 402 | Wallet unfunded. Check `prim wallet balance`. |
 | 403 `wallet_not_allowed` | Invite code not redeemed. Redo Step 4. |
 
 ---
@@ -170,7 +157,7 @@ Onboarding complete.
 
   Wallet:  <address>
   Balance: <balance> USDC
-  Network: eip155:84532 (Base Sepolia)
+  Network: eip155:8453 (Base)
   store:   OK | FAILED
   search:  OK | FAILED
 
