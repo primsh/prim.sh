@@ -32,6 +32,7 @@ pricing:
 
 deploy:
   max_body_size: "128MB"
+  access_log: true
 
 providers:
   - name: cloudflare-r2

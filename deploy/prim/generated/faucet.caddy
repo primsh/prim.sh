@@ -1,0 +1,13 @@
+faucet.prim.sh {
+    import security_headers
+    request_body {
+        max_size 1MB
+    }
+    handle /install.sh {
+        root * /opt/prim/packages/faucet
+        file_server
+    }
+    handle {
+        reverse_proxy localhost:3003
+    }
+}

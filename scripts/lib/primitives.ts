@@ -30,6 +30,7 @@ export interface DeployConfig {
   max_body_size?: string; // default "1MB"
   systemd_after?: string[]; // extra After= units
   extra_caddy?: string[]; // additional Caddy blocks
+  access_log?: boolean; // enable JSON access log in Caddy
 }
 
 export interface RouteQueryParam {
