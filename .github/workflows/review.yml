@@ -41,5 +41,5 @@ jobs:
             Do not change test expectations or weaken assertions.
             Do not add comments, docstrings, or formatting changes beyond what's needed.
             Keep fixes minimal — only fix what's broken.
-          claude_args: "--max-turns 10 --model claude-sonnet-4-6 --allowedTools Bash,Read,Edit,Write,Glob,Grep"
+          claude_args: "--max-turns 25 --model claude-sonnet-4-6 --allowedTools Bash,Read,Edit,Write,Glob,Grep"
           trigger_phrase: "@claude"
