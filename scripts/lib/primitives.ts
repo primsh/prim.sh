@@ -11,7 +11,7 @@ import { parse as parseYaml } from "yaml";
 
 // ── Types ──────────────────────────────────────────────────────────────────
 
-export type PrimStatus = "idea" | "planning" | "building" | "testing" | "live";
+export type PrimStatus = "idea" | "planning" | "building" | "testing" | "live" | "mainnet";
 
 export interface PricingRow {
   op: string;
@@ -230,9 +230,14 @@ export function primsForInterface(surface: InterfaceSurface, root?: string): Pri
   });
 }
 
-/** Primitives on VPS (status = live) */
+/** Primitives on VPS (status = live or mainnet) */
 export function deployed(prims: Primitive[]): Primitive[] {
-  return prims.filter((p) => p.status === "live");
+  return prims.filter((p) => p.status === "live" || p.status === "mainnet");
+}
+
+/** Primitives deployed to Base mainnet (status = mainnet) */
+export function mainnetDeployed(prims: Primitive[]): Primitive[] {
+  return prims.filter((p) => p.status === "mainnet");
 }
 
 /** Primitives that have a packages/<id>/ directory */

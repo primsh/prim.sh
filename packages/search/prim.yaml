@@ -1,7 +1,7 @@
 id: search
 name: search.sh
 endpoint: search.prim.sh
-status: live
+status: mainnet
 type: search
 category: intelligence
 card_class: p12

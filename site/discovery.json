@@ -7,7 +7,7 @@
     {
       "id": "wallet",
       "name": "wallet.sh",
-      "status": "live",
+      "status": "mainnet",
       "endpoint": "https://wallet.prim.sh",
       "description": "Agent wallets. Generate keys, hold USDC on Base, and pay any x402 invoice.",
       "llms_txt": "https://prim.sh/wallet/llms.txt",
@@ -34,7 +34,7 @@
     {
       "id": "store",
       "name": "store.sh",
-      "status": "live",
+      "status": "mainnet",
       "endpoint": "https://store.prim.sh",
       "description": "Object storage. Persist artifacts across ephemeral VMs. S3-compatible.",
       "llms_txt": "https://prim.sh/store/llms.txt",
@@ -52,7 +52,7 @@
     {
       "id": "search",
       "name": "search.sh",
-      "status": "live",
+      "status": "mainnet",
       "endpoint": "https://search.prim.sh",
       "description": "Search for agents. No ads, no SEO spam. Just facts and clean markdown.",
       "llms_txt": "https://prim.sh/search/llms.txt",

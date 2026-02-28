@@ -21,8 +21,9 @@ fi
 source "$(dirname "${BASH_SOURCE[0]}")/../deploy/prim/prim-env.sh"
 
 LOG_FILE="/var/log/prim-g2-switchover.log"
-# V0 scope: intentionally limited to these 3 prims (not all deployed services)
-V0_SERVICES=(wallet store search)
+# BEGIN:PRIM:MAINNET_SERVICES
+MAINNET_SERVICES=(wallet store search)
+# END:PRIM:MAINNET_SERVICES
 
 log() {
   local ts
@@ -43,7 +44,7 @@ dry() {
 
 log "=== G2 mainnet switchover start (dry_run=$DRY_RUN) ==="
 
-for svc in "${V0_SERVICES[@]}"; do
+for svc in "${MAINNET_SERVICES[@]}"; do
   env_file="$ENV_DIR/$svc.env"
   if [[ ! -f "$env_file" ]]; then
     log "ERROR: missing $env_file — abort"
@@ -56,7 +57,7 @@ log "Preflight OK: all env files present"
 
 log "Step 1: Switch PRIM_NETWORK to mainnet in env files"
 
-for svc in "${V0_SERVICES[@]}"; do
+for svc in "${MAINNET_SERVICES[@]}"; do
   env_file="$ENV_DIR/$svc.env"
   current=$(grep -E "^PRIM_NETWORK=" "$env_file" 2>/dev/null || echo "PRIM_NETWORK=<not set>")
 
@@ -80,7 +81,7 @@ done
 
 log "Step 2: Restart v0 services"
 
-for svc in "${V0_SERVICES[@]}"; do
+for svc in "${MAINNET_SERVICES[@]}"; do
   log "  Restarting prim-$svc..."
   dry "systemctl restart prim-$svc"
   if ! $DRY_RUN; then

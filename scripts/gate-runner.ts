@@ -1347,7 +1347,7 @@ async function main() {
       if (!testDef) continue;
 
       const status = getServiceStatus(testDef.service, primStatusMap);
-      if (status === "live") {
+      if (status === "live" || status === "mainnet") {
         liveFailure = true;
         console.log(c.red(`CI FAIL: ${r.id} (${testDef.service}) is live and failed`));
       } else {
