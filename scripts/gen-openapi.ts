@@ -31,7 +31,8 @@ let anyFailed = false;
 
 function isGenerated(filePath: string): boolean {
   if (!existsSync(filePath)) return false;
-  return readFileSync(filePath, "utf8").startsWith(GENERATED_MARKER);
+  const content = readFileSync(filePath, "utf8");
+  return content.startsWith(GENERATED_MARKER) || content.startsWith("# THIS FILE IS GENERATED");
 }
 
 function applyFullFile(filePath: string, content: string): void {
