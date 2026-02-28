@@ -1,0 +1,184 @@
+direction: down
+
+title: {
+  label: prim.sh beta onboarding flow
+  near: top-center
+  style.font-size: 24
+  style.bold: true
+}
+
+prompt: {
+  label: "curl -fsSL prim.sh/install.sh | sh\nprim skill onboard --code PRIM-XXXXXXXX"
+  shape: page
+  style.fill: "#1c1c3a"
+  style.font-color: "#8b8bff"
+  style.font: mono
+}
+
+install: {
+  label: "1. prim --version"
+  shape: rectangle
+}
+
+install_fix: {
+  label: "curl -fsSL prim.sh/install.sh | sh"
+  shape: rectangle
+  style.fill: "#2d2d2d"
+}
+
+connectivity: {
+  label: "2. curl wallet.prim.sh"
+  shape: rectangle
+}
+
+cdn_down: {
+  label: "dl.prim.sh unreachable"
+  shape: hexagon
+  style.fill: "#4a1c1c"
+  style.font-color: "#ff6b6b"
+}
+
+api_down: {
+  label: "API unreachable"
+  shape: hexagon
+  style.fill: "#4a1c1c"
+  style.font-color: "#ff6b6b"
+}
+
+wallet_check: {
+  label: "3. prim wallet list"
+  shape: rectangle
+}
+
+wallet_create: {
+  label: "prim wallet create"
+  shape: rectangle
+  style.fill: "#2d2d2d"
+}
+
+gate: {
+  label: "4. prim gate invite\n--code PRIM-XXX\n--wallet 0x..."
+  shape: rectangle
+}
+
+gate_result: {
+  label: "gate result"
+  shape: diamond
+}
+
+invalid_code: {
+  label: "invalid_code\ncheck typos"
+  shape: hexagon
+  style.fill: "#4a1c1c"
+  style.font-color: "#ff6b6b"
+}
+
+code_redeemed: {
+  label: "code_redeemed\nrequest new code"
+  shape: hexagon
+  style.fill: "#4a1c1c"
+  style.font-color: "#ff6b6b"
+}
+
+fund_error: {
+  label: "fund_error\nretry once"
+  shape: hexagon
+  style.fill: "#4a3a1c"
+  style.font-color: "#ffb86b"
+}
+
+balance: {
+  label: "5. prim wallet balance"
+  shape: rectangle
+}
+
+balance_retry: {
+  label: "wait 10s, retry x3"
+  shape: rectangle
+  style.fill: "#2d2d2d"
+}
+
+store_test: {
+  label: "6. store.sh\ncreate-bucket → put → get → cleanup"
+  shape: rectangle
+}
+
+search_test: {
+  label: "7. search.sh\nprim search web \"...\""
+  shape: rectangle
+}
+
+feedback: {
+  label: "8. curl feedback.prim.sh/v1/submit"
+  shape: rectangle
+  style.fill: "#2d2d2d"
+}
+
+done: {
+  label: "Onboarding complete\nprim.sh/llms.txt"
+  shape: page
+  style.fill: "#1c3a1c"
+  style.font-color: "#6bff6b"
+}
+
+err_402: {
+  label: "402 — unfunded\ncheck balance"
+  shape: hexagon
+  style.fill: "#4a3a1c"
+  style.font-color: "#ffb86b"
+}
+
+err_403: {
+  label: "403 — not allowed\nredo gate invite"
+  shape: hexagon
+  style.fill: "#4a3a1c"
+  style.font-color: "#ffb86b"
+}
+
+# Flow — error edges declared BEFORE happy path so layout places errors left, happy path right
+
+prompt -> install: "agent executes"
+
+# Step 1
+install -> install_fix: "command not found" {style.stroke: "#ff6b6b"}
+install -> connectivity: OK {style.stroke: "#6bff6b"}
+install_fix -> cdn_down: "non-200" {style.stroke: "#ff6b6b"}
+install_fix -> install: retry {style.stroke-dash: 3}
+
+# Step 2
+connectivity -> api_down: "non-200" {style.stroke: "#ff6b6b"}
+connectivity -> wallet_check: "200" {style.stroke: "#6bff6b"}
+
+# Step 3
+wallet_check -> wallet_create: "no wallets" {style.stroke: "#ff6b6b"}
+wallet_check -> gate: "has wallets" {style.stroke: "#6bff6b"}
+wallet_create -> gate {style.stroke: "#6bff6b"}
+
+# Step 4
+gate -> gate_result
+gate_result -> invalid_code: "invalid_code" {style.stroke: "#ff6b6b"}
+gate_result -> code_redeemed: "code_redeemed" {style.stroke: "#ff6b6b"}
+gate_result -> fund_error: "fund_error" {style.stroke: "#ffb86b"}
+gate_result -> balance: "redeemed" {style.stroke: "#6bff6b"}
+fund_error -> gate: "retry once" {style.stroke-dash: 3}
+
+# Step 5
+balance -> balance_retry: "(unfunded)" {style.stroke: "#ffb86b"}
+balance -> store_test: "balance > 0" {style.stroke: "#6bff6b"}
+balance_retry -> balance: retry {style.stroke-dash: 3}
+
+# Step 6
+store_test -> err_403: "403" {style.stroke: "#ff6b6b"}
+store_test -> err_402: "402" {style.stroke: "#ff6b6b"}
+store_test -> search_test: OK {style.stroke: "#6bff6b"}
+
+# Step 7
+search_test -> err_402: "402" {style.stroke: "#ff6b6b"}
+search_test -> feedback: OK {style.stroke: "#6bff6b"}
+
+# Step 8
+feedback -> done {style.stroke: "#6bff6b"}
+
+# Recovery loops
+err_402 -> balance: "after fix" {style.stroke-dash: 3}
+err_403 -> gate: "after fix" {style.stroke-dash: 3}
