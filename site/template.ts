@@ -71,7 +71,7 @@ export interface PrimConfig {
   id: string;
   name: string;
   endpoint: string;
-  status: "live" | "testing" | "built" | "building" | "phantom";
+  status: "mainnet" | "testnet" | "hold" | "phantom";
   type?: string;
   card_class?: string;
   description?: string;
@@ -189,14 +189,10 @@ ${items}
 /** Status badge label + class */
 function statusInfo(status: string): { cls: string; label: string } {
   switch (status) {
-    case "live":
-      return { cls: "status-live", label: "● Live" };
-    case "testing":
-      return { cls: "status-testing", label: "● Live (testnet)" };
-    case "built":
-      return { cls: "status-built", label: "○ Built — deploy pending" };
-    case "building":
-      return { cls: "status-building", label: "◌ Building" };
+    case "mainnet":
+      return { cls: "status-mainnet", label: "● Mainnet" };
+    case "testnet":
+      return { cls: "status-testnet", label: "● Testnet" };
     default:
       return { cls: "status-phantom", label: "○ Phantom" };
   }
@@ -600,8 +596,8 @@ function headMeta(cfg: PrimConfig): string {
 // ── main render ───────────────────────────────────────────────────────────────
 
 export function render(cfg: PrimConfig): string {
-  // Phantom pages use minimal template
-  if (!cfg.sections && cfg.status === "phantom") {
+  // Non-deployed prims use minimal coming-soon template
+  if (cfg.status !== "mainnet" && cfg.status !== "testnet") {
     return renderComingSoon(cfg);
   }
 
