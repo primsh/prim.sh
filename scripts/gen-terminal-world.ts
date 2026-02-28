@@ -586,9 +586,57 @@ for (const u of users) {
   console.log(`  users/${u.id}.svg`);
 }
 
+// ── Terminal World card (280x420) — the master card ──────────────────────────
+
+const WORLD_VP: Viewport = { w: 280, cx: 140, mt: 16, mb: 80, pad: 28 };
+const daemonCount = prims.filter(p => p.show_on_index !== false).length;
+
+function worldSvg(): string {
+  const d = extract(">|)", WORLD_VP);
+
+  const layers = [
+    { name: "Primitives", count: primitives.length, color: G, desc: "Shell characters. The alphabet." },
+    { name: "Orders", count: orders.length, color: G, desc: "Alliances of function." },
+    { name: "Shells", count: shells.length, color: C, desc: "Living environments." },
+    { name: "Daemons", count: daemonCount, color: "#FF8C42", desc: "Services for agents." },
+    { name: "Agents", count: agents.length, color: "#CC785C", desc: "AI that acts." },
+    { name: "Users", count: users.length, color: "#F48FB1", desc: "Humans with intent." },
+  ];
+
+  const layerStartY = 118;
+  const layerH = 36;
+  let layerSvg = "";
+  for (let i = 0; i < layers.length; i++) {
+    const l = layers[i];
+    const y = layerStartY + i * layerH;
+    layerSvg += `  <text x="36" y="${y}" font-family="${LABEL_FONT}" font-size="11" fill="${l.color}" dominant-baseline="middle">${l.name}</text>\n`;
+    layerSvg += `  <text x="150" y="${y}" font-family="${LABEL_FONT}" font-size="11" fill="${DIM}" dominant-baseline="middle">${l.count}</text>\n`;
+    layerSvg += `  <text x="174" y="${y}" font-family="${LABEL_FONT}" font-size="9" fill="#333" dominant-baseline="middle">${l.desc}</text>\n`;
+    if (i < layers.length - 1) {
+      layerSvg += `  <line x1="36" y1="${y + 16}" x2="244" y2="${y + 16}" stroke="#1a1a1a" stroke-width="1"/>\n`;
+    }
+  }
+
+  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 280 420">
+  <rect width="280" height="420" fill="${BG}"/>
+  <rect width="280" height="420" fill="none" stroke="${G}" stroke-width="1" rx="6" stroke-opacity="0.4"/>
+  <path d="${d}" fill="${G}" stroke="${G}" stroke-width="${ROUND}" stroke-linejoin="round" stroke-linecap="round" paint-order="stroke"/>
+  <text x="140" y="96" font-family="${LABEL_FONT}" font-size="14" fill="${G}" text-anchor="middle" dominant-baseline="middle" letter-spacing="5">Terminal World</text>
+  ${layerSvg}
+  <rect x="24" y="390" width="232" height="1" fill="${DIM}"/>
+  <text x="140" y="408" font-family="${LABEL_FONT}" font-size="9" fill="#2a2a2a" text-anchor="middle" dominant-baseline="middle" letter-spacing="2">PRIM.SH</text>
+</svg>
+`;
+}
+
+writeFileSync(join(BASE, "terminal-world.svg"), worldSvg());
+console.log("\n── World ──");
+console.log("  terminal-world.svg");
+
 console.log(`\nTotal → ${BASE}`);
 console.log(`  ${primitives.length} primitives, ${orders.length} orders`);
-console.log(`  ${prims.filter(p => p.show_on_index !== false).length} daemons`);
+console.log(`  ${daemonCount} daemons`);
 console.log(`  ${shells.length} shells`);
 console.log(`  ${agents.length} agents`);
 console.log(`  ${users.length} users`);
+console.log(`  1 world card`);

@@ -52,6 +52,7 @@ site-dist/
 site/assets/logos/
 
 # Terminal World generated assets (regenerate with: bun scripts/gen-terminal-world.ts)
+brand/terminal-world/*.svg
 brand/terminal-world/*/icons/
 brand/terminal-world/*/cards/
 brand/terminal-world/*/*.svg
