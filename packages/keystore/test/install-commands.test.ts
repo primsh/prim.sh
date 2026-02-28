@@ -475,9 +475,9 @@ describe("runUninstallCommand", () => {
 // ---------------------------------------------------------------------------
 
 describe("runSkillCommand", () => {
-  it("rejects unknown primitive", async () => {
+  it("rejects unknown skill", async () => {
     await expect(runSkillCommand("bogus", ["skill", "bogus"])).rejects.toThrow(
-      "Unknown primitive: bogus",
+      "Unknown skill: bogus",
     );
   });
 
@@ -496,5 +496,41 @@ describe("runSkillCommand", () => {
 
     process.stdout.write = origWrite;
     expect(chunks.join("")).toContain("name: store");
+  });
+
+  it("prints onboard skill with placeholder when no --code flag", async () => {
+    mockExistsSync.mockReturnValue(true);
+    mockReadFileSync.mockReturnValue("prim gate invite --code {{CODE}} --wallet <ADDR>");
+
+    const chunks: string[] = [];
+    const origWrite = process.stdout.write;
+    process.stdout.write = ((chunk: string) => {
+      chunks.push(chunk);
+      return true;
+    }) as typeof process.stdout.write;
+
+    await runSkillCommand("onboard", ["skill", "onboard"]);
+
+    process.stdout.write = origWrite;
+    expect(chunks.join("")).toContain("<YOUR_INVITE_CODE>");
+    expect(chunks.join("")).not.toContain("{{CODE}}");
+  });
+
+  it("prints onboard skill with code substituted when --code provided", async () => {
+    mockExistsSync.mockReturnValue(true);
+    mockReadFileSync.mockReturnValue("prim gate invite --code {{CODE}} --wallet <ADDR>");
+
+    const chunks: string[] = [];
+    const origWrite = process.stdout.write;
+    process.stdout.write = ((chunk: string) => {
+      chunks.push(chunk);
+      return true;
+    }) as typeof process.stdout.write;
+
+    await runSkillCommand("onboard", ["skill", "onboard", "--code", "PRIM-abc123"]);
+
+    process.stdout.write = origWrite;
+    expect(chunks.join("")).toContain("PRIM-abc123");
+    expect(chunks.join("")).not.toContain("{{CODE}}");
   });
 });
