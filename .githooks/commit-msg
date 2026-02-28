@@ -1,0 +1,32 @@
+#!/bin/sh
+# Commit message format: type(scope): subject
+# Types: feat|fix|chore|docs|refactor|test|ci|perf|build|style
+# Subject: ≤72 chars, lowercase first letter, no trailing period
+
+MSG_FILE="$1"
+MSG=$(head -1 "$MSG_FILE")
+
+# Allow merge commits
+echo "$MSG" | grep -qE '^Merge ' && exit 0
+
+# Allow revert commits
+echo "$MSG" | grep -qE '^Revert ' && exit 0
+
+# Validate conventional commit format
+if ! echo "$MSG" | grep -qE '^(feat|fix|chore|docs|refactor|test|ci|perf|build|style)(\([a-z0-9-]+\))?: .{1,72}$'; then
+  echo ""
+  echo "ERROR: Invalid commit message format."
+  echo ""
+  echo "  Expected: type(scope): subject"
+  echo "  Types:    feat|fix|chore|docs|refactor|test|ci|perf|build|style"
+  echo "  Subject:  ≤72 chars"
+  echo ""
+  echo "  Examples:"
+  echo "    feat(wallet): add balance endpoint"
+  echo "    fix: resolve race condition in keystore"
+  echo "    chore(lint): tighten biome rules"
+  echo ""
+  echo "  Your message: $MSG"
+  echo ""
+  exit 1
+fi
