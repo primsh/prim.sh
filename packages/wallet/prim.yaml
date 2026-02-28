@@ -13,6 +13,9 @@ env:
   - PRIM_PAY_TO
   - PRIM_NETWORK
   - PRIM_INTERNAL_KEY
+deploy:
+  access_log: true
+
 pricing:
   - op: "Wallet registration"
     price: "free"

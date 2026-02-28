@@ -1,0 +1,17 @@
+search.prim.sh {
+    import security_headers
+    log {
+        output file /var/log/caddy/search-access.log
+        format json
+    }
+    request_body {
+        max_size 1MB
+    }
+    handle /install.sh {
+        root * /opt/prim/packages/search
+        file_server
+    }
+    handle {
+        reverse_proxy localhost:3005
+    }
+}

@@ -23,6 +23,20 @@
     }
 }
 
+create.prim.sh {
+    import security_headers
+    request_body {
+        max_size 1MB
+    }
+    handle /install.sh {
+        root * /opt/prim/packages/create
+        file_server
+    }
+    handle {
+        reverse_proxy localhost:3011
+    }
+}
+
 domain.prim.sh {
     import security_headers
     request_body {
@@ -53,20 +67,8 @@ email.prim.sh {
 
 mail.prim.sh {
     import security_headers
-    request_body {
-        max_size 25MB
-    }
+    request_body { max_size 25MB }
     reverse_proxy localhost:8080
-}
-
-feedback.prim.sh {
-    import security_headers
-    request_body {
-        max_size 1MB
-    }
-    handle {
-        reverse_proxy localhost:3014
-    }
 }
 
 faucet.prim.sh {
@@ -80,6 +82,44 @@ faucet.prim.sh {
     }
     handle {
         reverse_proxy localhost:3003
+    }
+}
+
+feedback.prim.sh {
+    import security_headers
+    request_body {
+        max_size 1MB
+    }
+    handle {
+        reverse_proxy localhost:3014
+    }
+}
+
+imagine.prim.sh {
+    import security_headers
+    request_body {
+        max_size 1MB
+    }
+    handle /install.sh {
+        root * /opt/prim/packages/imagine
+        file_server
+    }
+    handle {
+        reverse_proxy localhost:3013
+    }
+}
+
+infer.prim.sh {
+    import security_headers
+    request_body {
+        max_size 1MB
+    }
+    handle /install.sh {
+        root * /opt/prim/packages/infer
+        file_server
+    }
+    handle {
+        reverse_proxy localhost:3012
     }
 }
 

@@ -25,6 +25,9 @@ pricing:
     price: "$0.005"
     note: "Per URL"
 
+deploy:
+  access_log: true
+
 providers:
   - name: tavily
     env: [TAVILY_API_KEY]
