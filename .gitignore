@@ -52,14 +52,19 @@ site-dist/
 site/assets/logos/
 
 # Terminal World generated assets (regenerate with: bun scripts/gen-terminal-world.ts)
-brand/terminal-world/*.svg
-brand/terminal-world/*/icons/
-brand/terminal-world/*/cards/
-brand/terminal-world/*/*.svg
-brand/terminal-world/daemons/
-brand/terminal-world/shells/
-brand/terminal-world/agents/
-brand/terminal-world/users/
+brand/terminal-world/generated/
+
+# Brand fonts (binary)
+brand/fonts/
+
+# D2 diagram generated output
+docs/d2/generated/
+
+# Test run output
+tests/runs/
+
+# Wrangler build cache
+.wrangler/
 
 # Generated OG images (regenerate with: bun scripts/gen-og-images.ts)
 site/assets/og/

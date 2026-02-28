@@ -2,15 +2,15 @@
 /**
  * gen-terminal-world.ts — generate all Terminal World assets
  *
- * Output:
- *   brand/terminal-world/<order>/icons/{id}.svg  — primitive icons (120x150)
- *   brand/terminal-world/<order>/cards/{id}.svg  — primitive cards (280x420)
- *   brand/terminal-world/<order>/<order>.svg     — order cards (280x420)
- *   brand/terminal-world/daemons/{id}.svg         — daemon cards (280x420)
- *   brand/terminal-world/shells/{id}.svg         — shell cards (280x420)
- *
- *   brand/terminal-world/agents/{id}.svg        — agent cards (280x420)
- *   brand/terminal-world/users/{id}.svg         — user archetype cards (280x420)
+ * Output (all under brand/terminal-world/generated/, gitignored):
+ *   <order>/icons/{id}.svg  — primitive icons (120x150)
+ *   <order>/cards/{id}.svg  — primitive cards (280x420)
+ *   <order>/<order>.svg     — order cards (280x420)
+ *   daemons/{id}.svg        — daemon cards (280x420)
+ *   shells/{id}.svg         — shell cards (280x420)
+ *   agents/{id}.svg         — agent cards (280x420)
+ *   users/{id}.svg          — user archetype cards (280x420)
+ *   terminal-world.svg      — world overview card
  *
  * Usage: bun scripts/gen-terminal-world.ts
  */
@@ -23,6 +23,7 @@ import type { PrimCategory } from "./lib/primitives.js";
 
 const ROOT = resolve(import.meta.dir, "..");
 const BASE = join(ROOT, "brand/terminal-world");
+const GEN = join(BASE, "generated");
 const FONT_PATH = "/Applications/Xcode.app/Contents/SharedFrameworks/DVTUserInterfaceKit.framework/Versions/A/Resources/Fonts/SF-Mono.ttf";
 
 const BG = "#0a0a0a";
@@ -315,7 +316,7 @@ function orderSvg(o: Order): string {
 // Layout: brand/terminal-world/<order>/{icons,cards}/*.svg + order card at <order>/<order>.svg
 
 for (const o of orders) {
-  const oDir = join(BASE, o.id);
+  const oDir = join(GEN, o.id);
   mkdirSync(join(oDir, "icons"), { recursive: true });
   mkdirSync(join(oDir, "cards"), { recursive: true });
 
@@ -336,7 +337,7 @@ console.log(`\n${primitives.length} primitives, ${orders.length} orders`);
 
 // ── Daemon cards (280x420) — from prim.yaml ────────────────────────────────
 
-const DAEMON_OUT = join(BASE, "daemons");
+const DAEMON_OUT = join(GEN, "daemons");
 mkdirSync(DAEMON_OUT, { recursive: true });
 
 const DAEMON_VP: Viewport = { w: 280, cx: 140, mt: 30, mb: 120, pad: 24 };
@@ -389,7 +390,7 @@ for (const p of prims) {
 
 // ── Shell cards (280x420) — hand-curated ────────────────────────────────────
 
-const SHELL_OUT = join(BASE, "shells");
+const SHELL_OUT = join(GEN, "shells");
 mkdirSync(SHELL_OUT, { recursive: true });
 
 interface Shell {
@@ -455,7 +456,7 @@ for (const s of shells) {
 
 // ── Agent cards (280x420) — top AI agents ───────────────────────────────────
 
-const AGENT_OUT = join(BASE, "agents");
+const AGENT_OUT = join(GEN, "agents");
 mkdirSync(AGENT_OUT, { recursive: true });
 
 interface Agent {
@@ -578,7 +579,7 @@ for (const a of agents) {
 
 // ── User archetype cards (280x420) ───────────────────────────────────────────
 
-const USER_OUT = join(BASE, "users");
+const USER_OUT = join(GEN, "users");
 mkdirSync(USER_OUT, { recursive: true });
 
 interface UserArchetype {
@@ -740,7 +741,7 @@ function worldSvg(): string {
 `;
 }
 
-writeFileSync(join(BASE, "terminal-world.svg"), worldSvg());
+writeFileSync(join(GEN, "terminal-world.svg"), worldSvg());
 console.log("\n── World ──");
 console.log("  terminal-world.svg");
 
