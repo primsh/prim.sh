@@ -1,4 +1,4 @@
-import { getDefaultAddress } from "./config.ts";
+import { getDefaultAddress } from "@primsh/keystore";
 import { getFlag, hasFlag } from "./flags.ts";
 
 export function resolveFaucetUrl(argv: string[]): string {

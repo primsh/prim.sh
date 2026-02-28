@@ -4,7 +4,7 @@
   "private": false,
   "type": "module",
   "main": "src/index.ts",
-  "description": "Encrypted keystore and CLI for Prim wallet management",
+  "description": "Encrypted keystore library for Prim wallet management",
   "repository": {
     "type": "git",
     "url": "https://github.com/primsh/prim",
@@ -12,25 +12,16 @@
   },
   "license": "Apache-2.0",
   "author": "Prim (https://prim.sh)",
-  "keywords": ["prim", "x402", "keystore", "crypto", "wallet", "cli"],
-  "bin": {
-    "prim": "src/cli.ts"
-  },
+  "keywords": ["prim", "x402", "keystore", "crypto", "wallet"],
   "scripts": {
     "lint": "biome lint .",
     "format": "biome format .",
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "test": "vitest --run",
-    "check": "pnpm lint && pnpm typecheck && pnpm test",
-    "build:binary:linux-x64": "bun build --compile --target=bun-linux-x64 src/cli.ts --outfile ../../dist/prim-linux-x64",
-    "build:binary:linux-arm64": "bun build --compile --target=bun-linux-arm64 src/cli.ts --outfile ../../dist/prim-linux-arm64",
-    "build:binary:darwin-x64": "bun build --compile --target=bun-darwin-x64 src/cli.ts --outfile ../../dist/prim-darwin-x64",
-    "build:binary:darwin-arm64": "bun build --compile --target=bun-darwin-arm64 src/cli.ts --outfile ../../dist/prim-darwin-arm64",
-    "build:binaries": "pnpm build:binary:linux-x64 && pnpm build:binary:linux-arm64 && pnpm build:binary:darwin-x64 && pnpm build:binary:darwin-arm64"
+    "check": "pnpm lint && pnpm typecheck && pnpm test"
   },
   "dependencies": {
     "@primsh/x402-middleware": "workspace:*",
-    "@primsh/x402-client": "workspace:*",
     "viem": "^2.21.0"
   },
   "devDependencies": {

@@ -12,7 +12,7 @@ vi.mock("@primsh/x402-client", () => ({
   createPrimFetch: vi.fn(),
 }));
 
-vi.mock("../src/config.ts", () => ({
+vi.mock("@primsh/keystore", () => ({
   getConfig: vi.fn(),
 }));
 
@@ -36,7 +36,7 @@ vi.mock("node:fs/promises", async (importOriginal) => {
 import { readFileSync, statSync } from "node:fs";
 import { writeFile } from "node:fs/promises";
 import { createPrimFetch } from "@primsh/x402-client";
-import { getConfig } from "../src/config.ts";
+import { getConfig } from "@primsh/keystore";
 import { resolveStoreUrl, runStoreCommand } from "../src/store-commands.ts";
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────

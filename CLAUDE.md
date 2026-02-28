@@ -238,21 +238,11 @@ All bot workflows (auto-merge, rebase, review, ci-heal) use the `prim-ci` GitHub
 
 ## Task Management
 
-**GitHub Issues** is the sole source of truth for task tracking. The `tasks/` directory is gitignored.
-
-### Labels
-
-| Label | Scope |
-|-------|-------|
-| `hrd` | Code quality, security, reliability |
-| `prims` | Feature work on specific services |
-| `infra` | CI, tooling, observability, cross-cutting |
-| `comm` | Docs, Discord, brand, marketing |
-| `good-first-issue` | Contributor onramp |
+**`tasks/tasks.json`** is the sole source of truth for task tracking. The entire `tasks/` directory is gitignored — it lives on disk only.
 
 ### Planning
 
-Use Claude Code's **plan mode** for task planning. Plan docs are not stored in the repo. Use `gh issue create` and `gh issue list` to manage tasks.
+Use Claude Code's **plan mode** for task planning. Plan docs live in `tasks/active/` while in progress.
 
 ## Landing Page Design System
 

@@ -24,7 +24,7 @@
     "typecheck": "pnpm -r typecheck",
     "test": "pnpm -r test",
     "check": "pnpm -r lint && pnpm -r typecheck && pnpm -r test",
-    "build:binaries": "pnpm --filter @primsh/keystore build:binaries",
+    "build:binaries": "pnpm --filter @primsh/cli build:binaries",
     "gen:openapi": "bun scripts/gen-openapi.ts",
     "gen:sdk": "bun scripts/gen-sdk.ts",
     "gen": "bun scripts/gen-openapi.ts && bun scripts/gen-prims.ts && bun scripts/gen-mcp.ts && bun scripts/gen-cli.ts && bun scripts/gen-tools.ts && bun scripts/gen-tests.ts && bun scripts/gen-docs.ts && bun scripts/gen-sdk.ts && bun scripts/gen-deploy.ts && bun scripts/gen-logos.ts && bun scripts/gen-og-images.ts",

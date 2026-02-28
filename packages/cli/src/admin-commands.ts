@@ -1,4 +1,4 @@
-import { getConfig } from "./config.ts";
+import { getConfig } from "@primsh/keystore";
 import { getFlag } from "./flags.ts";
 
 function resolveAdminKey(): string {

@@ -12,7 +12,7 @@ vi.mock("@primsh/x402-client", () => ({
   createPrimFetch: vi.fn(),
 }));
 
-vi.mock("../src/config.ts", () => ({
+vi.mock("@primsh/keystore", () => ({
   getConfig: vi.fn(),
 }));
 
@@ -26,7 +26,7 @@ vi.mock("node:fs", async (importOriginal) => {
 
 import { readFileSync } from "node:fs";
 import { createPrimFetch } from "@primsh/x402-client";
-import { getConfig } from "../src/config.ts";
+import { getConfig } from "@primsh/keystore";
 import { resolveSpawnUrl, runSpawnCommand } from "../src/spawn-commands.ts";
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────

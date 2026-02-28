@@ -13,7 +13,7 @@
  *   8. prim store rm            (cleanup — also in finally trap)
  *   9. prim store rm-bucket     (cleanup — also in finally trap)
  *
- * Note: this script runs against packages/keystore/src/cli.ts via `bun run`.
+ * Note: this script runs against packages/cli/src/cli.ts via `bun run`.
  * Once L-11 (compiled binary) is done, swap CLI_PATH → path to compiled `prim` binary.
  *
  * Run from VPS (public DNS resolves *.prim.sh):

@@ -1,20 +1,21 @@
 #!/usr/bin/env bun
 import { existsSync, readFileSync } from "node:fs";
-import pkg from "../package.json";
-import { getUsdcBalance } from "./balance.ts";
-import { getDefaultAddress, setDefaultAddress } from "./config.ts";
-import { decryptFromV3 } from "./crypto.ts";
-import { getFlag, hasFlag, resolvePassphrase } from "./flags.ts";
 import {
   createKey,
+  decryptFromV3,
   exportKey,
+  getDefaultAddress,
+  getUsdcBalance,
   importKey,
   listKeys,
   loadAccount,
   loadKey,
   removeKey,
-} from "./keystore.ts";
-import type { KeystoreFile } from "./types.ts";
+  setDefaultAddress,
+} from "@primsh/keystore";
+import type { KeystoreFile } from "@primsh/keystore";
+import pkg from "../package.json";
+import { getFlag, hasFlag, resolvePassphrase } from "./flags.ts";
 
 const argv = process.argv.slice(2);
 
