@@ -1,56 +1,47 @@
+// THIS FILE IS GENERATED — DO NOT EDIT
+// Source: specs/openapi/mem.yaml
+// Regenerate: pnpm gen:mcp
+
 import type { Tool } from "@modelcontextprotocol/sdk/types.js";
 import type { CallToolResult } from "@modelcontextprotocol/sdk/types.js";
 
 // BEGIN:GENERATED:TOOLS
 export const memTools: Tool[] = [
   {
-    name: "mem_llms_txt",
-    description: "Machine-readable API reference",
-    inputSchema: {
-        type: "object",
-        properties: {},
-      },
-  },
-  {
     name: "mem_list_collections",
-    description: "List collections | Price: $0.001",
+    description: "List collections owned by the calling wallet (paginated). document_count is null — use GET :id. | Price: $0.001",
     inputSchema: {
         type: "object",
         properties: {
           "limit": {
             type: "integer",
-            minimum: 1,
-            maximum: 100,
-            default: 20,
-            description: "Number of collections per page (1–100, default 20).",
+            description: "1-100, default 20",
           },
-          "page": {
-            type: "integer",
-            minimum: 1,
-            default: 1,
-            description: "Page number (1-based, default 1).",
+          "after": {
+            type: "string",
+            description: "Cursor from previous response",
           },
         },
       },
   },
   {
     name: "mem_create_collection",
-    description: "Create a collection | Price: $0.01",
+    description: "Create a vector collection | Price: $0.01",
     inputSchema: {
         type: "object",
         properties: {
           "name": {
             type: "string",
-            description: "Collection name. Must be unique per wallet.",
+            description: "Collection name. Unique per wallet.",
           },
           "distance": {
             type: "string",
             enum: ["Cosine","Euclid","Dot"],
-            description: "Distance metric (default Cosine).",
+            description: "Distance metric for similarity search. Default \"Cosine\".",
           },
           "dimension": {
-            type: "integer",
-            description: "Vector dimension (default 1536 for text-embedding-3-small).",
+            type: "number",
+            description: "Vector dimension. Must match the embedding model used. Default 1536.",
           },
         },
         required: ["name"],
@@ -58,13 +49,13 @@ export const memTools: Tool[] = [
   },
   {
     name: "mem_get_collection",
-    description: "Get collection details | Price: $0.001",
+    description: "Get collection with live document_count from Qdrant | Price: $0.001",
     inputSchema: {
         type: "object",
         properties: {
           "id": {
             type: "string",
-            description: "Collection ID (UUID).",
+            description: "id parameter",
           },
         },
         required: ["id"],
@@ -72,13 +63,13 @@ export const memTools: Tool[] = [
   },
   {
     name: "mem_delete_collection",
-    description: "Delete a collection | Price: $0.01",
+    description: "Delete collection and all documents. Irreversible. | Price: $0.01",
     inputSchema: {
         type: "object",
         properties: {
           "id": {
             type: "string",
-            description: "Collection ID (UUID).",
+            description: "id parameter",
           },
         },
         required: ["id"],
@@ -86,13 +77,13 @@ export const memTools: Tool[] = [
   },
   {
     name: "mem_upsert_documents",
-    description: "Upsert documents | Price: $0.001",
+    description: "Embed and store documents. Each document: {id?, text, metadata?}. Existing IDs are replaced. | Price: $0.001",
     inputSchema: {
         type: "object",
         properties: {
           "id": {
             type: "string",
-            description: "Collection ID (UUID).",
+            description: "id parameter",
           },
           "documents": {
             type: "array",
@@ -102,21 +93,19 @@ export const memTools: Tool[] = [
               properties: {
                 "id": {
                   type: "string",
-                  format: "uuid",
-                  description: "Document UUID. Auto-generated if omitted.",
+                  description: "Must be UUID v4 if provided; omit to auto-generate.",
                 },
                 "text": {
                   type: "string",
-                  description: "Text content to embed and store.",
+                  description: "Document text to embed and store.",
                 },
                 "metadata": {
-                  type: "object",
-                  additionalProperties: true,
-                  description: "Arbitrary key-value metadata stored alongside the vector.",
+                  type: "string",
+                  description: "Arbitrary JSON metadata to store alongside the vector.",
                 },
               },
             },
-            description: "Documents to embed and upsert.",
+            description: "Documents to upsert. Existing IDs are overwritten.",
           },
         },
         required: ["id","documents"],
@@ -124,24 +113,25 @@ export const memTools: Tool[] = [
   },
   {
     name: "mem_query_collection",
-    description: "Semantic query | Price: $0.001",
+    description: "Semantic search. Fields: text (required), top_k, filter (Qdrant native format). | Price: $0.001",
     inputSchema: {
         type: "object",
         properties: {
           "id": {
             type: "string",
-            description: "Collection ID (UUID).",
+            description: "id parameter",
           },
           "text": {
             type: "string",
-            description: "Query text to embed and search.",
+            description: "Query text to embed and search against.",
           },
           "top_k": {
-            type: "integer",
-            description: "Maximum number of results to return (default 10).",
+            type: "number",
+            description: "Number of nearest neighbors to return. Default 10.",
           },
           "filter": {
-            description: "Qdrant-native filter passthrough for metadata filtering.",
+            type: "string",
+            description: "Qdrant-native filter passthrough.",
           },
         },
         required: ["id","text"],
@@ -149,17 +139,17 @@ export const memTools: Tool[] = [
   },
   {
     name: "mem_get_cache",
-    description: "Get cache entry | Price: $0.0001",
+    description: "Retrieve a cache value. Returns 404 if missing or expired. | Price: $0.0001",
     inputSchema: {
         type: "object",
         properties: {
           "namespace": {
             type: "string",
-            description: "Cache namespace.",
+            description: "namespace parameter",
           },
           "key": {
             type: "string",
-            description: "Cache key.",
+            description: "key parameter",
           },
         },
         required: ["namespace","key"],
@@ -167,23 +157,24 @@ export const memTools: Tool[] = [
   },
   {
     name: "mem_set_cache",
-    description: "Set cache entry | Price: $0.0001",
+    description: "Store a value in the KV cache. Optional ttl in seconds for expiry. | Price: $0.0001",
     inputSchema: {
         type: "object",
         properties: {
           "namespace": {
             type: "string",
-            description: "Cache namespace (scoped to wallet).",
+            description: "namespace parameter",
           },
           "key": {
             type: "string",
-            description: "Cache key.",
+            description: "key parameter",
           },
           "value": {
-            description: "Value to store (any JSON-serializable type).",
+            type: "string",
+            description: "Value to store. Any JSON-serializable value.",
           },
           "ttl": {
-            type: ["integer","null"],
+            type: ["number","null"],
             description: "TTL in seconds. Omit or null for permanent.",
           },
         },
@@ -192,17 +183,17 @@ export const memTools: Tool[] = [
   },
   {
     name: "mem_delete_cache",
-    description: "Delete cache entry | Price: $0.0001",
+    description: "Delete a cache entry | Price: $0.0001",
     inputSchema: {
         type: "object",
         properties: {
           "namespace": {
             type: "string",
-            description: "Cache namespace.",
+            description: "namespace parameter",
           },
           "key": {
             type: "string",
-            description: "Cache key.",
+            description: "key parameter",
           },
         },
         required: ["namespace","key"],
@@ -220,17 +211,10 @@ export async function handleMemTool(
 ): Promise<CallToolResult> {
   try {
     switch (name) {
-      case "mem_llms_txt": {
-        const res = await primFetch(`${baseUrl}/llms.txt`);
-        const data = await res.json();
-        if (!res.ok) return errorResult(data);
-        return { content: [{ type: "text", text: JSON.stringify(data, null, 2) }] };
-      }
-
       case "mem_list_collections": {
         const url = new URL(`${baseUrl}/v1/collections`);
         if (args.limit !== undefined) url.searchParams.set("limit", String(args.limit));
-        if (args.page !== undefined) url.searchParams.set("page", String(args.page));
+        if (args.after !== undefined) url.searchParams.set("after", String(args.after));
         const res = await primFetch(url.toString());
         const data = await res.json();
         if (!res.ok) return errorResult(data);

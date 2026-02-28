@@ -1,0 +1,23 @@
+#!/bin/sh
+# Pre-push hook: verify generated files are up to date
+# Catches cascading staleness (e.g., OpenAPI → OpenAI → SDK) before CI does.
+# Install: git config core.hooksPath .githooks
+
+# Skip if explicitly bypassed
+if [ "$PRIM_SKIP_GEN_CHECK" = "1" ]; then
+  exit 0
+fi
+
+echo "Running gen:check..."
+pnpm gen:check --silent 2>&1
+EXIT_CODE=$?
+
+if [ $EXIT_CODE -ne 0 ]; then
+  echo ""
+  echo "ERROR: Generated files are out of date."
+  echo ""
+  echo "  Fix: pnpm gen && git add <changed files>"
+  echo "  Skip: PRIM_SKIP_GEN_CHECK=1 git push"
+  echo ""
+  exit 1
+fi

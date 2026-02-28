@@ -1,3 +1,7 @@
+# THIS FILE IS GENERATED — DO NOT EDIT
+# Source: packages/wallet/prim.yaml + packages/wallet/src/api.ts
+# Regenerate: pnpm gen:prims
+
 # wallet.prim.sh
 
 Agent wallets. Generate keys, hold USDC on Base, and pay any x402 invoice.

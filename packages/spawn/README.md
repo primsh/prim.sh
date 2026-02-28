@@ -1,3 +1,7 @@
+<!-- THIS FILE IS GENERATED — DO NOT EDIT
+     Source: packages/spawn/prim.yaml + packages/spawn/src/api.ts
+     Regenerate: pnpm gen:docs -->
+
 # spawn.sh
 
 > VPS in one API call. Deploy, scale, destroy. Per-second billing.

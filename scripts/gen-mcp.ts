@@ -526,6 +526,10 @@ function generateSections(prim: string, spec: OpenApiSpec): GeneratedSection {
 
 function buildFullFile(prim: string, toolsDef: string, handlerDef: string): string {
   return [
+    `// THIS FILE IS GENERATED — DO NOT EDIT`,
+    `// Source: specs/openapi/${prim}.yaml`,
+    `// Regenerate: pnpm gen:mcp`,
+    ``,
     `import type { Tool } from "@modelcontextprotocol/sdk/types.js";`,
     `import type { CallToolResult } from "@modelcontextprotocol/sdk/types.js";`,
     "",
@@ -613,9 +617,16 @@ for (const prim of PRIMS) {
   let finalContent: string;
   const existing = existsSync(outPath) ? readFileSync(outPath, "utf8") : null;
 
+  const GEN_HEADER = `// THIS FILE IS GENERATED — DO NOT EDIT\n// Source: specs/openapi/${prim}.yaml\n// Regenerate: pnpm gen:mcp\n\n`;
+
   if (existing?.includes("// BEGIN:GENERATED:TOOLS")) {
     // File already has markers — inject into existing file
-    finalContent = injectMarkers(existing, toolsDef, handlerDef);
+    let injected = injectMarkers(existing, toolsDef, handlerDef);
+    // Ensure generated header is present at top of file
+    if (!injected.startsWith("// THIS FILE IS GENERATED")) {
+      injected = GEN_HEADER + injected;
+    }
+    finalContent = injected;
   } else {
     // First run — write full file
     finalContent = buildFullFile(prim, toolsDef, handlerDef);

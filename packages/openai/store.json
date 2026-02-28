@@ -3,17 +3,17 @@
     "type": "function",
     "function": {
       "name": "store_bucket_create",
-      "description": "Create a bucket. Creates a new storage bucket owned by the paying wallet address. Price: $0.05 via x402 (USDC on Base).",
+      "description": "Create a new storage bucket. Price: $0.05 via x402 (USDC on Base).",
       "parameters": {
         "type": "object",
         "properties": {
           "name": {
             "type": "string",
-            "description": "Bucket name. Must be unique per wallet. Alphanumeric, hyphens, underscores."
+            "description": "Bucket name. Unique per wallet. 3-63 chars, alphanumeric + hyphens."
           },
           "location": {
             "type": "string",
-            "description": "Storage region (optional). Defaults to primary region."
+            "description": "Storage region (e.g. \"us-east-1\"). Defaults to primary region."
           }
         },
         "required": [
@@ -26,20 +26,17 @@
     "type": "function",
     "function": {
       "name": "store_bucket_list",
-      "description": "List buckets. Returns all buckets owned by the paying wallet address. Price: $0.001 via x402 (USDC on Base).",
+      "description": "List all buckets owned by the calling wallet. Price: $0.001 via x402 (USDC on Base).",
       "parameters": {
         "type": "object",
         "properties": {
           "limit": {
             "type": "integer",
-            "description": "Number of buckets per page (1–100, default 20).",
-            "minimum": 1,
-            "maximum": 100
+            "description": "1-100, default 20"
           },
           "page": {
             "type": "integer",
-            "description": "Page number (1-based, default 1).",
-            "minimum": 1
+            "description": "1-based page number, default 1"
           }
         }
       }
@@ -49,13 +46,13 @@
     "type": "function",
     "function": {
       "name": "store_bucket_get",
-      "description": "Get bucket details. Returns details for a single bucket. Price: $0.001 via x402 (USDC on Base).",
+      "description": "Get details for a single bucket. Caller must own the bucket. Price: $0.001 via x402 (USDC on Base).",
       "parameters": {
         "type": "object",
         "properties": {
           "id": {
             "type": "string",
-            "description": "Bucket ID."
+            "description": "id parameter"
           }
         },
         "required": [
@@ -68,46 +65,13 @@
     "type": "function",
     "function": {
       "name": "store_bucket_delete",
-      "description": "Delete a bucket. Deletes a bucket. Price: $0.01 via x402 (USDC on Base).",
+      "description": "Delete a bucket. Bucket must be empty first. Price: $0.01 via x402 (USDC on Base).",
       "parameters": {
         "type": "object",
         "properties": {
           "id": {
             "type": "string",
-            "description": "Bucket ID."
-          }
-        },
-        "required": [
-          "id"
-        ]
-      }
-    }
-  },
-  {
-    "type": "function",
-    "function": {
-      "name": "store_object_list",
-      "description": "List objects in a bucket. Lists objects in a bucket with optional prefix filtering. Price: $0.001 via x402 (USDC on Base).",
-      "parameters": {
-        "type": "object",
-        "properties": {
-          "id": {
-            "type": "string",
-            "description": "Bucket ID."
-          },
-          "prefix": {
-            "type": "string",
-            "description": "Filter objects by key prefix (e.g. \"notes/\" to list only keys starting with \"notes/\")."
-          },
-          "limit": {
-            "type": "integer",
-            "description": "Maximum number of objects to return (1–1000, default 100).",
-            "minimum": 1,
-            "maximum": 1000
-          },
-          "cursor": {
-            "type": "string",
-            "description": "Pagination cursor from the previous response's `next_cursor`."
+            "description": "id parameter"
           }
         },
         "required": [
@@ -120,17 +84,17 @@
     "type": "function",
     "function": {
       "name": "store_object_put",
-      "description": "Upload an object. Uploads an object to a bucket. Price: $0.001 via x402 (USDC on Base).",
+      "description": "Upload an object. Key may include slashes. Content-Length header required. Request body is raw bytes. Price: $0.001 via x402 (USDC on Base).",
       "parameters": {
         "type": "object",
         "properties": {
           "id": {
             "type": "string",
-            "description": "Bucket ID."
+            "description": "id parameter"
           },
           "key": {
             "type": "string",
-            "description": "Object key (path). May include slashes (e.g. \"notes/2026/feb.txt\")."
+            "description": "key parameter"
           }
         },
         "required": [
@@ -144,17 +108,17 @@
     "type": "function",
     "function": {
       "name": "store_object_get",
-      "description": "Download an object. Downloads an object from a bucket. Price: $0.001 via x402 (USDC on Base).",
+      "description": "Download an object. Response body is streamed directly. Price: $0.001 via x402 (USDC on Base).",
       "parameters": {
         "type": "object",
         "properties": {
           "id": {
             "type": "string",
-            "description": "Bucket ID."
+            "description": "id parameter"
           },
           "key": {
             "type": "string",
-            "description": "Object key (path). May include slashes."
+            "description": "key parameter"
           }
         },
         "required": [
@@ -168,17 +132,17 @@
     "type": "function",
     "function": {
       "name": "store_object_delete",
-      "description": "Delete an object. Deletes an object from a bucket. Price: $0.001 via x402 (USDC on Base).",
+      "description": "Delete an object from a bucket. Price: $0.001 via x402 (USDC on Base).",
       "parameters": {
         "type": "object",
         "properties": {
           "id": {
             "type": "string",
-            "description": "Bucket ID."
+            "description": "id parameter"
           },
           "key": {
             "type": "string",
-            "description": "Object key (path). May include slashes."
+            "description": "key parameter"
           }
         },
         "required": [
@@ -191,14 +155,45 @@
   {
     "type": "function",
     "function": {
-      "name": "store_quota_get",
-      "description": "Get bucket quota and usage. Returns the current quota limit and storage usage for a bucket. Price: $0.001 via x402 (USDC on Base).",
+      "name": "store_object_list",
+      "description": "List objects in a bucket. Cursor-based pagination. Price: $0.001 via x402 (USDC on Base).",
       "parameters": {
         "type": "object",
         "properties": {
           "id": {
             "type": "string",
-            "description": "Bucket ID."
+            "description": "id parameter"
+          },
+          "prefix": {
+            "type": "string",
+            "description": "Filter by key prefix (e.g. notes/)"
+          },
+          "limit": {
+            "type": "integer",
+            "description": "1-1000, default 100"
+          },
+          "cursor": {
+            "type": "string",
+            "description": "Cursor from previous response's next_cursor"
+          }
+        },
+        "required": [
+          "id"
+        ]
+      }
+    }
+  },
+  {
+    "type": "function",
+    "function": {
+      "name": "store_quota_get",
+      "description": "Get quota and usage for a bucket. Price: $0.001 via x402 (USDC on Base).",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "id parameter"
           }
         },
         "required": [
@@ -211,17 +206,17 @@
     "type": "function",
     "function": {
       "name": "store_quota_set",
-      "description": "Set bucket quota. Sets the storage quota for a bucket. Price: $0.01 via x402 (USDC on Base).",
+      "description": "Set the storage quota for a bucket. Pass null to reset to default (100 MB). Price: $0.01 via x402 (USDC on Base).",
       "parameters": {
         "type": "object",
         "properties": {
           "id": {
             "type": "string",
-            "description": "Bucket ID."
+            "description": "id parameter"
           },
           "quota_bytes": {
-            "type": "integer",
-            "description": "New quota in bytes, or null to reset to default (100 MB)."
+            "type": "number",
+            "description": "New quota in bytes. Pass null to reset to default (100 MB)."
           }
         },
         "required": [
@@ -235,13 +230,13 @@
     "type": "function",
     "function": {
       "name": "store_quota_reconcile",
-      "description": "Reconcile bucket usage. Recomputes the bucket's usage_bytes by scanning actual R2 storage. Price: $0.05 via x402 (USDC on Base).",
+      "description": "Recompute bucket usage by scanning actual R2 storage. Use when usage_bytes appears incorrect. Price: $0.05 via x402 (USDC on Base).",
       "parameters": {
         "type": "object",
         "properties": {
           "id": {
             "type": "string",
-            "description": "Bucket ID."
+            "description": "id parameter"
           }
         },
         "required": [

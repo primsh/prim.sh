@@ -1,4 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
+<!-- THIS FILE IS GENERATED — DO NOT EDIT
+     Source: packages/<id>/prim.yaml (all prims)
+     Regenerate: pnpm gen:prims -->
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url><loc>https://prim.sh/</loc></url>
   <url><loc>https://prim.sh/access</loc></url>

@@ -1,3 +1,7 @@
+<!-- THIS FILE IS GENERATED — DO NOT EDIT
+     Source: packages/create/prim.yaml + packages/create/src/api.ts
+     Regenerate: pnpm gen:docs -->
+
 # create.sh
 
 > Scaffold new prim.sh primitives. Write a prim.yaml spec, get a complete package with passing tests.

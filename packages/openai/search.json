@@ -3,7 +3,7 @@
     "type": "function",
     "function": {
       "name": "search_web",
-      "description": "Web search. Search the web and return ranked results. Price: $0.01 via x402 (USDC on Base).",
+      "description": "Search the web and return ranked results with optional AI-generated answer. Price: $0.01 via x402 (USDC on Base).",
       "parameters": {
         "type": "object",
         "properties": {
@@ -12,14 +12,12 @@
             "description": "Search query string."
           },
           "max_results": {
-            "type": "integer",
-            "description": "Maximum number of results to return. Range 1–20. (default: 10)",
-            "minimum": 1,
-            "maximum": 20
+            "type": "number",
+            "description": "Maximum number of results to return. 1-20, default 10."
           },
           "search_depth": {
             "type": "string",
-            "description": "Search depth. \"advanced\" uses more sources and costs more upstream compute. (default: \"basic\")",
+            "description": "Search depth. \"basic\" | \"advanced\", default \"basic\".",
             "enum": [
               "basic",
               "advanced"
@@ -27,11 +25,11 @@
           },
           "country": {
             "type": "string",
-            "description": "Two-letter ISO 3166-1 alpha-2 country code to bias results."
+            "description": "Two-letter ISO 3166-1 country code to bias results (e.g. \"US\")."
           },
           "time_range": {
             "type": "string",
-            "description": "Restrict results to the given time range.",
+            "description": "Restrict results by recency. \"day\" | \"week\" | \"month\" | \"year\".",
             "enum": [
               "day",
               "week",
@@ -41,18 +39,18 @@
           },
           "include_answer": {
             "type": "boolean",
-            "description": "If true, the response includes an AI-generated answer summarizing the results. (default: false)"
+            "description": "Include AI-generated answer summarizing top results. Default false."
           },
           "include_domains": {
             "type": "array",
-            "description": "Restrict results to these domains only.",
+            "description": "Restrict results to these domains only (e.g. [\"docs.base.org\"]).",
             "items": {
               "type": "string"
             }
           },
           "exclude_domains": {
             "type": "array",
-            "description": "Exclude results from these domains.",
+            "description": "Exclude results from these domains (e.g. [\"reddit.com\"]).",
             "items": {
               "type": "string"
             }
@@ -68,7 +66,7 @@
     "type": "function",
     "function": {
       "name": "search_news",
-      "description": "News search. Search for recent news articles. Price: $0.01 via x402 (USDC on Base).",
+      "description": "Search for recent news articles, ordered by recency. Price: $0.01 via x402 (USDC on Base).",
       "parameters": {
         "type": "object",
         "properties": {
@@ -77,14 +75,12 @@
             "description": "Search query string."
           },
           "max_results": {
-            "type": "integer",
-            "description": "Maximum number of results to return. Range 1–20. (default: 10)",
-            "minimum": 1,
-            "maximum": 20
+            "type": "number",
+            "description": "Maximum number of results to return. 1-20, default 10."
           },
           "search_depth": {
             "type": "string",
-            "description": "Search depth. \"advanced\" uses more sources and costs more upstream compute. (default: \"basic\")",
+            "description": "Search depth. \"basic\" | \"advanced\", default \"basic\".",
             "enum": [
               "basic",
               "advanced"
@@ -92,11 +88,11 @@
           },
           "country": {
             "type": "string",
-            "description": "Two-letter ISO 3166-1 alpha-2 country code to bias results."
+            "description": "Two-letter ISO 3166-1 country code to bias results (e.g. \"US\")."
           },
           "time_range": {
             "type": "string",
-            "description": "Restrict results to the given time range.",
+            "description": "Restrict results by recency. \"day\" | \"week\" | \"month\" | \"year\".",
             "enum": [
               "day",
               "week",
@@ -106,18 +102,18 @@
           },
           "include_answer": {
             "type": "boolean",
-            "description": "If true, the response includes an AI-generated answer summarizing the results. (default: false)"
+            "description": "Include AI-generated answer summarizing top results. Default false."
           },
           "include_domains": {
             "type": "array",
-            "description": "Restrict results to these domains only.",
+            "description": "Restrict results to these domains only (e.g. [\"docs.base.org\"]).",
             "items": {
               "type": "string"
             }
           },
           "exclude_domains": {
             "type": "array",
-            "description": "Exclude results from these domains.",
+            "description": "Exclude results from these domains (e.g. [\"reddit.com\"]).",
             "items": {
               "type": "string"
             }
@@ -132,22 +128,21 @@
   {
     "type": "function",
     "function": {
-      "name": "search_extract",
-      "description": "Extract URL content. Extract readable content from one or more URLs. Price: $0.005 via x402 (USDC on Base).",
+      "name": "search_extract_url",
+      "description": "Extract readable content from one or more URLs as markdown or plain text. Failed extractions are in the failed array. Price: $0.005 via x402 (USDC on Base).",
       "parameters": {
         "type": "object",
         "properties": {
           "urls": {
             "type": "array",
-            "description": "URL or array of URLs to extract content from.",
             "items": {
-              "type": "string",
-              "format": "uri"
-            }
+              "type": "string"
+            },
+            "description": "URL string or array of URLs to extract content from."
           },
           "format": {
             "type": "string",
-            "description": "Output format for extracted content. (default: \"markdown\")",
+            "description": "Output format. \"markdown\" | \"text\", default \"markdown\".",
             "enum": [
               "markdown",
               "text"

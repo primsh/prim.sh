@@ -1,48 +1,53 @@
 #!/bin/sh
+# THIS FILE IS GENERATED — DO NOT EDIT
+# Source: packages/wallet/prim.yaml
+# Regenerate: pnpm gen:install
+
 # Install wallet.sh — prim.sh
 # Usage: curl -fsSL https://wallet.prim.sh/install.sh | sh
 set -eu
 
-LIB_DIR="$HOME/.prim/lib"
 BIN_DIR="$HOME/.prim/bin"
 BIN="$BIN_DIR/prim"
-CLI="$LIB_DIR/cli.js"
 BASE_URL="https://dl.prim.sh/latest"
 
-# Ensure Bun is installed
-if ! command -v bun >/dev/null 2>&1; then
-  echo "Bun not found. Installing Bun..."
-  curl -fsSL https://bun.sh/install | bash
-  export PATH="$HOME/.bun/bin:$PATH"
-fi
+# Detect platform
+OS=$(uname -s | tr '[:upper:]' '[:lower:]')
+ARCH=$(uname -m)
+case "$ARCH" in
+  x86_64)  ARCH="x64" ;;
+  aarch64|arm64) ARCH="arm64" ;;
+  *) echo "Unsupported architecture: $ARCH" >&2; exit 1 ;;
+esac
 
-echo "Installing prim..."
+BINARY="prim-${OS}-${ARCH}"
 
-mkdir -p "$LIB_DIR" "$BIN_DIR"
+echo "Installing prim (${OS}-${ARCH})..."
+
+mkdir -p "$BIN_DIR"
 TMPDIR=$(mktemp -d)
 trap 'rm -rf "$TMPDIR"' EXIT
 
-# Download bundle + checksum
-curl -fsSL -o "$TMPDIR/cli.js" "$BASE_URL/cli.js"
-curl -fsSL -o "$TMPDIR/cli.js.sha256" "$BASE_URL/cli.js.sha256"
+# Download binary + checksums
+curl -fsSL -o "$TMPDIR/$BINARY" "$BASE_URL/$BINARY"
+curl -fsSL -o "$TMPDIR/checksums.sha256" "$BASE_URL/checksums.sha256"
 
 # Verify checksum
 cd "$TMPDIR"
+EXPECTED=$(grep "$BINARY" checksums.sha256)
+if [ -z "$EXPECTED" ]; then
+  echo "No checksum found for $BINARY" >&2
+  exit 1
+fi
 if command -v sha256sum >/dev/null 2>&1; then
-  sha256sum -c cli.js.sha256 >/dev/null
+  echo "$EXPECTED" | sha256sum -c >/dev/null
 elif command -v shasum >/dev/null 2>&1; then
-  shasum -a 256 -c cli.js.sha256 >/dev/null
+  echo "$EXPECTED" | shasum -a 256 -c >/dev/null
 fi
 cd - >/dev/null
 
-# Install bundle
-cp "$TMPDIR/cli.js" "$CLI"
-
-# Write wrapper
-cat > "$BIN" <<'EOF'
-#!/bin/sh
-exec bun run "$HOME/.prim/lib/cli.js" "$@"
-EOF
+# Install binary
+cp "$TMPDIR/$BINARY" "$BIN"
 chmod +x "$BIN"
 
 # Install wallet.sh skills

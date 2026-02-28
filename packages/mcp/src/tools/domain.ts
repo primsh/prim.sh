@@ -1,3 +1,7 @@
+// THIS FILE IS GENERATED — DO NOT EDIT
+// Source: specs/openapi/domain.yaml
+// Regenerate: pnpm gen:mcp
+
 import type { Tool } from "@modelcontextprotocol/sdk/types.js";
 import type { CallToolResult } from "@modelcontextprotocol/sdk/types.js";
 
@@ -5,91 +9,48 @@ import type { CallToolResult } from "@modelcontextprotocol/sdk/types.js";
 export const domainTools: Tool[] = [
   {
     name: "domain_search_domains",
-    description: "Search domain availability | Price: $0.001",
+    description: "Check availability and pricing for a domain query | Price: $0.001",
     inputSchema: {
         type: "object",
         properties: {
           "query": {
             type: "string",
-            description: "Domain name to search (without TLD, e.g. \"myagent\").",
+            description: "Domain name or keyword to search",
           },
           "tlds": {
             type: "string",
-            description: "Comma-separated TLDs to check (e.g. \"com,xyz,io\"). Defaults to common TLDs.",
+            description: "Comma-separated TLDs (e.g. com,xyz,io)",
           },
         },
-        required: ["query"],
       },
   },
   {
     name: "domain_quote_domain",
-    description: "Get price quote | Price: $0.001",
+    description: "Get a 15-minute price quote for a domain | Price: $0.001",
     inputSchema: {
         type: "object",
         properties: {
           "domain": {
             type: "string",
-            description: "Fully qualified domain name to quote.",
+            description: "Domain name to quote (e.g. \"example.com\").",
           },
           "years": {
-            type: "integer",
-            description: "Registration period in years (default 1).",
+            type: "number",
+            description: "Number of years to register. Default 1.",
           },
         },
         required: ["domain"],
-      },
-  },
-  {
-    name: "domain_register_domain",
-    description: "Register domain | Price: dynamic (from quote)",
-    inputSchema: {
-        type: "object",
-        properties: {
-          "quote_id": {
-            type: "string",
-            description: "Quote ID from POST /v1/domains/quote. Valid for 15 minutes.",
-          },
-        },
-        required: ["quote_id"],
-      },
-  },
-  {
-    name: "domain_recover_registration",
-    description: "Recover registration",
-    inputSchema: {
-        type: "object",
-        properties: {
-          "recovery_token": {
-            type: "string",
-            description: "Recovery token from the original RegisterResponse.",
-          },
-        },
-        required: ["recovery_token"],
       },
   },
   {
     name: "domain_get_domain_status",
-    description: "Registration status | Price: $0.001",
+    description: "Full post-registration pipeline status (ns_propagated, zone_active, all_ready) | Price: $0.001",
     inputSchema: {
         type: "object",
         properties: {
           "domain": {
             type: "string",
-            description: "Fully qualified domain name.",
-          },
-        },
-        required: ["domain"],
-      },
-  },
-  {
-    name: "domain_configure_ns",
-    description: "Configure nameservers",
-    inputSchema: {
-        type: "object",
-        properties: {
-          "domain": {
-            type: "string",
-            description: "Fully qualified domain name.",
+            description: "domain parameter",
           },
         },
         required: ["domain"],
@@ -97,35 +58,30 @@ export const domainTools: Tool[] = [
   },
   {
     name: "domain_list_zones",
-    description: "List zones | Price: $0.001",
+    description: "List DNS zones owned by the calling wallet (paginated) | Price: $0.001",
     inputSchema: {
         type: "object",
         properties: {
           "limit": {
             type: "integer",
-            minimum: 1,
-            maximum: 100,
-            default: 20,
-            description: "Number of zones per page (1–100, default 20).",
+            description: "1-100, default 20",
           },
-          "page": {
-            type: "integer",
-            minimum: 1,
-            default: 1,
-            description: "Page number (1-based, default 1).",
+          "after": {
+            type: "string",
+            description: "Cursor from previous response",
           },
         },
       },
   },
   {
     name: "domain_create_zone",
-    description: "Create zone | Price: $0.05",
+    description: "Create a Cloudflare DNS zone. Returns nameservers to set at your registrar. | Price: $0.05",
     inputSchema: {
         type: "object",
         properties: {
           "domain": {
             type: "string",
-            description: "Domain name for the zone.",
+            description: "Domain name to create a zone for (e.g. \"example.com\").",
           },
         },
         required: ["domain"],
@@ -133,13 +89,13 @@ export const domainTools: Tool[] = [
   },
   {
     name: "domain_get_zone",
-    description: "Get zone | Price: $0.001",
+    description: "Get zone details | Price: $0.001",
     inputSchema: {
         type: "object",
         properties: {
           "id": {
             type: "string",
-            description: "Zone ID.",
+            description: "id parameter",
           },
         },
         required: ["id"],
@@ -147,13 +103,13 @@ export const domainTools: Tool[] = [
   },
   {
     name: "domain_delete_zone",
-    description: "Delete zone | Price: $0.01",
+    description: "Delete zone and all records. Irreversible. | Price: $0.01",
     inputSchema: {
         type: "object",
         properties: {
           "id": {
             type: "string",
-            description: "Zone ID.",
+            description: "id parameter",
           },
         },
         required: ["id"],
@@ -161,13 +117,13 @@ export const domainTools: Tool[] = [
   },
   {
     name: "domain_activate_zone",
-    description: "Activate zone | Price: $0.001",
+    description: "Request Cloudflare NS re-check for faster activation | Price: $0.001",
     inputSchema: {
         type: "object",
         properties: {
           "zone_id": {
             type: "string",
-            description: "Zone ID.",
+            description: "zone_id parameter",
           },
         },
         required: ["zone_id"],
@@ -175,13 +131,13 @@ export const domainTools: Tool[] = [
   },
   {
     name: "domain_verify_zone",
-    description: "Verify zone propagation | Price: $0.001",
+    description: "Check DNS propagation for all zone records | Price: $0.001",
     inputSchema: {
         type: "object",
         properties: {
           "zone_id": {
             type: "string",
-            description: "Zone ID.",
+            description: "zone_id parameter",
           },
         },
         required: ["zone_id"],
@@ -189,51 +145,25 @@ export const domainTools: Tool[] = [
   },
   {
     name: "domain_setup_mail",
-    description: "Setup mail DNS records | Price: $0.005",
+    description: "Configure MX, SPF, DMARC, DKIM in one call. Idempotent. | Price: $0.005",
     inputSchema: {
         type: "object",
         properties: {
           "zone_id": {
             type: "string",
-            description: "Zone ID.",
+            description: "zone_id parameter",
           },
           "mail_server": {
             type: "string",
-            description: "Mail server hostname (e.g. \"mail.example.com\").",
+            description: "Mail server hostname (e.g. \"mail.prim.sh\").",
           },
           "mail_server_ip": {
             type: "string",
-            description: "Mail server IP address for the A record.",
+            description: "Mail server IPv4 address (used for SPF record).",
           },
           "dkim": {
             type: "object",
-            description: "Optional DKIM public keys.",
-            properties: {
-              "rsa": {
-                type: "object",
-                required: ["selector","public_key"],
-                properties: {
-                  "selector": {
-                    type: "string",
-                  },
-                  "public_key": {
-                    type: "string",
-                  },
-                },
-              },
-              "ed25519": {
-                type: "object",
-                required: ["selector","public_key"],
-                properties: {
-                  "selector": {
-                    type: "string",
-                  },
-                  "public_key": {
-                    type: "string",
-                  },
-                },
-              },
-            },
+            description: "DKIM keys to configure. Provide rsa and/or ed25519.",
           },
         },
         required: ["zone_id","mail_server","mail_server_ip"],
@@ -241,13 +171,13 @@ export const domainTools: Tool[] = [
   },
   {
     name: "domain_batch_records",
-    description: "Batch record operations | Price: $0.005",
+    description: "Create, update, and delete DNS records in one atomic request | Price: $0.005",
     inputSchema: {
         type: "object",
         properties: {
           "zone_id": {
             type: "string",
-            description: "Zone ID.",
+            description: "zone_id parameter",
           },
           "create": {
             type: "array",
@@ -257,25 +187,31 @@ export const domainTools: Tool[] = [
               properties: {
                 "type": {
                   type: "string",
-                  enum: ["A","AAAA","CNAME","MX","TXT","SRV","CAA","NS"],
+                  description: "DNS record type.",
                 },
                 "name": {
                   type: "string",
+                  description: "DNS record name.",
                 },
                 "content": {
                   type: "string",
+                  description: "DNS record value.",
                 },
                 "ttl": {
-                  type: "integer",
+                  type: "number",
+                  description: "TTL in seconds. Default 1 (auto).",
                 },
                 "proxied": {
                   type: "boolean",
+                  description: "Enable Cloudflare proxying. Default false.",
                 },
                 "priority": {
-                  type: "integer",
+                  type: "number",
+                  description: "Priority for MX and SRV records.",
                 },
               },
             },
+            description: "Records to create.",
           },
           "update": {
             type: "array",
@@ -285,28 +221,35 @@ export const domainTools: Tool[] = [
               properties: {
                 "id": {
                   type: "string",
-                },
-                "type": {
-                  type: "string",
-                  enum: ["A","AAAA","CNAME","MX","TXT","SRV","CAA","NS"],
-                },
-                "name": {
-                  type: "string",
+                  description: "ID of the record to update.",
                 },
                 "content": {
                   type: "string",
+                  description: "New DNS record value.",
                 },
                 "ttl": {
-                  type: "integer",
+                  type: "number",
+                  description: "New TTL in seconds.",
                 },
                 "proxied": {
                   type: "boolean",
+                  description: "Updated proxying flag.",
                 },
                 "priority": {
-                  type: "integer",
+                  type: "number",
+                  description: "Updated priority.",
+                },
+                "type": {
+                  type: "string",
+                  description: "Updated record type.",
+                },
+                "name": {
+                  type: "string",
+                  description: "Updated record name.",
                 },
               },
             },
+            description: "Records to update.",
           },
           "delete": {
             type: "array",
@@ -316,9 +259,11 @@ export const domainTools: Tool[] = [
               properties: {
                 "id": {
                   type: "string",
+                  description: "ID of the record to delete.",
                 },
               },
             },
+            description: "Records to delete.",
           },
         },
         required: ["zone_id"],
@@ -326,13 +271,13 @@ export const domainTools: Tool[] = [
   },
   {
     name: "domain_list_records",
-    description: "List records | Price: $0.001",
+    description: "List all records in a DNS zone | Price: $0.001",
     inputSchema: {
         type: "object",
         properties: {
           "zone_id": {
             type: "string",
-            description: "Zone ID.",
+            description: "zone_id parameter",
           },
         },
         required: ["zone_id"],
@@ -340,38 +285,37 @@ export const domainTools: Tool[] = [
   },
   {
     name: "domain_create_record",
-    description: "Create record | Price: $0.001",
+    description: "Create a DNS record (A, AAAA, CNAME, MX, TXT, SRV, CAA, NS) | Price: $0.001",
     inputSchema: {
         type: "object",
         properties: {
           "zone_id": {
             type: "string",
-            description: "Zone ID.",
+            description: "zone_id parameter",
           },
           "type": {
             type: "string",
-            enum: ["A","AAAA","CNAME","MX","TXT","SRV","CAA","NS"],
             description: "DNS record type.",
           },
           "name": {
             type: "string",
-            description: "Record name relative to zone root. Use \"@\" for root.",
+            description: "DNS record name (hostname).",
           },
           "content": {
             type: "string",
-            description: "Record content (IP for A/AAAA, hostname for CNAME/MX, text for TXT).",
+            description: "DNS record value.",
           },
           "ttl": {
-            type: "integer",
-            description: "TTL in seconds. 1 = automatic.",
+            type: "number",
+            description: "TTL in seconds. Default 1 (auto).",
           },
           "proxied": {
             type: "boolean",
-            description: "Proxy through Cloudflare (A/AAAA/CNAME only).",
+            description: "Enable Cloudflare proxying. Default false.",
           },
           "priority": {
-            type: "integer",
-            description: "Priority for MX/SRV records.",
+            type: "number",
+            description: "Priority for MX and SRV records.",
           },
         },
         required: ["zone_id","type","name","content"],
@@ -379,17 +323,17 @@ export const domainTools: Tool[] = [
   },
   {
     name: "domain_get_record",
-    description: "Get record | Price: $0.001",
+    description: "Get a single DNS record | Price: $0.001",
     inputSchema: {
         type: "object",
         properties: {
           "zone_id": {
             type: "string",
-            description: "Zone ID.",
+            description: "zone_id parameter",
           },
           "id": {
             type: "string",
-            description: "Record ID.",
+            description: "id parameter",
           },
         },
         required: ["zone_id","id"],
@@ -397,36 +341,41 @@ export const domainTools: Tool[] = [
   },
   {
     name: "domain_update_record",
-    description: "Update record | Price: $0.001",
+    description: "Update a DNS record | Price: $0.001",
     inputSchema: {
         type: "object",
         properties: {
           "zone_id": {
             type: "string",
-            description: "Zone ID.",
+            description: "zone_id parameter",
           },
           "id": {
             type: "string",
-            description: "Record ID.",
+            description: "id parameter",
           },
           "type": {
             type: "string",
-            enum: ["A","AAAA","CNAME","MX","TXT","SRV","CAA","NS"],
+            description: "DNS record type.",
           },
           "name": {
             type: "string",
+            description: "DNS record name.",
           },
           "content": {
             type: "string",
+            description: "DNS record value.",
           },
           "ttl": {
-            type: "integer",
+            type: "number",
+            description: "TTL in seconds.",
           },
           "proxied": {
             type: "boolean",
+            description: "Enable Cloudflare proxying.",
           },
           "priority": {
-            type: "integer",
+            type: "number",
+            description: "Priority for MX and SRV records.",
           },
         },
         required: ["zone_id","id"],
@@ -434,17 +383,17 @@ export const domainTools: Tool[] = [
   },
   {
     name: "domain_delete_record",
-    description: "Delete record | Price: $0.001",
+    description: "Delete a DNS record | Price: $0.001",
     inputSchema: {
         type: "object",
         properties: {
           "zone_id": {
             type: "string",
-            description: "Zone ID.",
+            description: "zone_id parameter",
           },
           "id": {
             type: "string",
-            description: "Record ID.",
+            description: "id parameter",
           },
         },
         required: ["zone_id","id"],
@@ -464,7 +413,7 @@ export async function handleDomainTool(
     switch (name) {
       case "domain_search_domains": {
         const url = new URL(`${baseUrl}/v1/domains/search`);
-        url.searchParams.set("query", String(args.query));
+        if (args.query !== undefined) url.searchParams.set("query", String(args.query));
         if (args.tlds !== undefined) url.searchParams.set("tlds", String(args.tlds));
         const res = await primFetch(url.toString());
         const data = await res.json();
@@ -483,37 +432,8 @@ export async function handleDomainTool(
         return { content: [{ type: "text", text: JSON.stringify(data, null, 2) }] };
       }
 
-      case "domain_register_domain": {
-        const res = await primFetch(`${baseUrl}/v1/domains/register`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(args),
-        });
-        const data = await res.json();
-        if (!res.ok) return errorResult(data);
-        return { content: [{ type: "text", text: JSON.stringify(data, null, 2) }] };
-      }
-
-      case "domain_recover_registration": {
-        const res = await primFetch(`${baseUrl}/v1/domains/recover`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(args),
-        });
-        const data = await res.json();
-        if (!res.ok) return errorResult(data);
-        return { content: [{ type: "text", text: JSON.stringify(data, null, 2) }] };
-      }
-
       case "domain_get_domain_status": {
         const res = await primFetch(`${baseUrl}/v1/domains/${args.domain}/status`);
-        const data = await res.json();
-        if (!res.ok) return errorResult(data);
-        return { content: [{ type: "text", text: JSON.stringify(data, null, 2) }] };
-      }
-
-      case "domain_configure_ns": {
-        const res = await primFetch(`${baseUrl}/v1/domains/${args.domain}/configure-ns`, { method: "POST" });
         const data = await res.json();
         if (!res.ok) return errorResult(data);
         return { content: [{ type: "text", text: JSON.stringify(data, null, 2) }] };
@@ -522,7 +442,7 @@ export async function handleDomainTool(
       case "domain_list_zones": {
         const url = new URL(`${baseUrl}/v1/zones`);
         if (args.limit !== undefined) url.searchParams.set("limit", String(args.limit));
-        if (args.page !== undefined) url.searchParams.set("page", String(args.page));
+        if (args.after !== undefined) url.searchParams.set("after", String(args.after));
         const res = await primFetch(url.toString());
         const data = await res.json();
         if (!res.ok) return errorResult(data);

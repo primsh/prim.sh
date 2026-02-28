@@ -1,3 +1,7 @@
+<!-- THIS FILE IS GENERATED — DO NOT EDIT
+     Source: packages/gate/prim.yaml + packages/gate/src/api.ts
+     Regenerate: pnpm gen:docs -->
+
 # gate.sh
 
 > Access control and onboarding for agents. Invite codes, allowlisting, wallet funding.

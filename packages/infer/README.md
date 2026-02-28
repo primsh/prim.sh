@@ -1,3 +1,7 @@
+<!-- THIS FILE IS GENERATED — DO NOT EDIT
+     Source: packages/infer/prim.yaml + packages/infer/src/api.ts
+     Regenerate: pnpm gen:docs -->
+
 # infer.sh
 
 > LLM inference for agents. Any model, any provider, one API. Per-token pricing. No API keys.

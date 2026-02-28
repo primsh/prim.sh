@@ -3,22 +3,19 @@
     "type": "function",
     "function": {
       "name": "domain_search",
-      "description": "Search domain availability. Check availability and pricing for one or more domain names. Price: $0.001 via x402 (USDC on Base).",
+      "description": "Check availability and pricing for a domain query. Price: $0.001 via x402 (USDC on Base).",
       "parameters": {
         "type": "object",
         "properties": {
           "query": {
             "type": "string",
-            "description": "Domain name to search (without TLD, e.g. \"myagent\")."
+            "description": "Domain name or keyword to search"
           },
           "tlds": {
             "type": "string",
-            "description": "Comma-separated TLDs to check (e.g. \"com,xyz,io\"). Defaults to common TLDs."
+            "description": "Comma-separated TLDs (e.g. com,xyz,io)"
           }
-        },
-        "required": [
-          "query"
-        ]
+        }
       }
     }
   },
@@ -26,59 +23,21 @@
     "type": "function",
     "function": {
       "name": "domain_quote",
-      "description": "Get price quote. Get a time-limited price quote for registering a domain. Price: $0.001 via x402 (USDC on Base).",
+      "description": "Get a 15-minute price quote for a domain. Price: $0.001 via x402 (USDC on Base).",
       "parameters": {
         "type": "object",
         "properties": {
           "domain": {
             "type": "string",
-            "description": "Fully qualified domain name to quote."
+            "description": "Domain name to quote (e.g. \"example.com\")."
           },
           "years": {
-            "type": "integer",
-            "description": "Registration period in years (default 1)."
+            "type": "number",
+            "description": "Number of years to register. Default 1."
           }
         },
         "required": [
           "domain"
-        ]
-      }
-    }
-  },
-  {
-    "type": "function",
-    "function": {
-      "name": "domain_register",
-      "description": "Register domain. Register a domain using a valid quote. Price: dynamic (from quote) via x402 (USDC on Base).",
-      "parameters": {
-        "type": "object",
-        "properties": {
-          "quote_id": {
-            "type": "string",
-            "description": "Quote ID from POST /v1/domains/quote. Valid for 15 minutes."
-          }
-        },
-        "required": [
-          "quote_id"
-        ]
-      }
-    }
-  },
-  {
-    "type": "function",
-    "function": {
-      "name": "domain_recover",
-      "description": "Recover registration. Retry Cloudflare zone creation and/or nameserver configuration after a partial failure during `POST /v1/domains/register`. Free — no payment required.",
-      "parameters": {
-        "type": "object",
-        "properties": {
-          "recovery_token": {
-            "type": "string",
-            "description": "Recovery token from the original RegisterResponse."
-          }
-        },
-        "required": [
-          "recovery_token"
         ]
       }
     }
@@ -87,32 +46,13 @@
     "type": "function",
     "function": {
       "name": "domain_status",
-      "description": "Registration status. Check the full post-registration pipeline status for a domain your wallet registered. Price: $0.001 via x402 (USDC on Base).",
+      "description": "Full post-registration pipeline status (ns_propagated, zone_active, all_ready). Price: $0.001 via x402 (USDC on Base).",
       "parameters": {
         "type": "object",
         "properties": {
           "domain": {
             "type": "string",
-            "description": "Fully qualified domain name."
-          }
-        },
-        "required": [
-          "domain"
-        ]
-      }
-    }
-  },
-  {
-    "type": "function",
-    "function": {
-      "name": "domain_configure_ns",
-      "description": "Configure nameservers. Retry nameserver configuration at the registrar for a domain your wallet registered. Free — no payment required.",
-      "parameters": {
-        "type": "object",
-        "properties": {
-          "domain": {
-            "type": "string",
-            "description": "Fully qualified domain name."
+            "description": "domain parameter"
           }
         },
         "required": [
@@ -125,13 +65,13 @@
     "type": "function",
     "function": {
       "name": "domain_zone_create",
-      "description": "Create zone. Create a Cloudflare DNS zone for a domain. Price: $0.05 via x402 (USDC on Base).",
+      "description": "Create a Cloudflare DNS zone. Returns nameservers to set at your registrar. Price: $0.05 via x402 (USDC on Base).",
       "parameters": {
         "type": "object",
         "properties": {
           "domain": {
             "type": "string",
-            "description": "Domain name for the zone."
+            "description": "Domain name to create a zone for (e.g. \"example.com\")."
           }
         },
         "required": [
@@ -144,20 +84,17 @@
     "type": "function",
     "function": {
       "name": "domain_zone_list",
-      "description": "List zones. Returns all DNS zones owned by the paying wallet address. Price: $0.001 via x402 (USDC on Base).",
+      "description": "List DNS zones owned by the calling wallet (paginated). Price: $0.001 via x402 (USDC on Base).",
       "parameters": {
         "type": "object",
         "properties": {
           "limit": {
             "type": "integer",
-            "description": "Number of zones per page (1–100, default 20).",
-            "minimum": 1,
-            "maximum": 100
+            "description": "1-100, default 20"
           },
-          "page": {
-            "type": "integer",
-            "description": "Page number (1-based, default 1).",
-            "minimum": 1
+          "after": {
+            "type": "string",
+            "description": "Cursor from previous response"
           }
         }
       }
@@ -167,13 +104,13 @@
     "type": "function",
     "function": {
       "name": "domain_zone_get",
-      "description": "Get zone. Returns details for a single zone. Price: $0.001 via x402 (USDC on Base).",
+      "description": "Get zone details. Price: $0.001 via x402 (USDC on Base).",
       "parameters": {
         "type": "object",
         "properties": {
           "id": {
             "type": "string",
-            "description": "Zone ID."
+            "description": "id parameter"
           }
         },
         "required": [
@@ -186,13 +123,13 @@
     "type": "function",
     "function": {
       "name": "domain_zone_delete",
-      "description": "Delete zone. Deletes a Cloudflare DNS zone and all its records. Price: $0.01 via x402 (USDC on Base).",
+      "description": "Delete zone and all records. Irreversible. Price: $0.01 via x402 (USDC on Base).",
       "parameters": {
         "type": "object",
         "properties": {
           "id": {
             "type": "string",
-            "description": "Zone ID."
+            "description": "id parameter"
           }
         },
         "required": [
@@ -205,13 +142,13 @@
     "type": "function",
     "function": {
       "name": "domain_zone_activate",
-      "description": "Activate zone. Request Cloudflare to immediately re-check nameserver activation for a pending zone. Price: $0.001 via x402 (USDC on Base).",
+      "description": "Request Cloudflare NS re-check for faster activation. Price: $0.001 via x402 (USDC on Base).",
       "parameters": {
         "type": "object",
         "properties": {
           "zone_id": {
             "type": "string",
-            "description": "Zone ID."
+            "description": "zone_id parameter"
           }
         },
         "required": [
@@ -224,13 +161,13 @@
     "type": "function",
     "function": {
       "name": "domain_zone_verify",
-      "description": "Verify zone propagation. Check DNS propagation for a zone — verifies nameservers and all DNS records. Price: $0.001 via x402 (USDC on Base).",
+      "description": "Check DNS propagation for all zone records. Price: $0.001 via x402 (USDC on Base).",
       "parameters": {
         "type": "object",
         "properties": {
           "zone_id": {
             "type": "string",
-            "description": "Zone ID."
+            "description": "zone_id parameter"
           }
         },
         "required": [
@@ -243,25 +180,25 @@
     "type": "function",
     "function": {
       "name": "domain_zone_mail_setup",
-      "description": "Setup mail DNS records. Configure all DNS records required for email delivery: MX, SPF (TXT), DMARC (TXT), and optionally DKIM (TXT). Price: $0.005 via x402 (USDC on Base).",
+      "description": "Configure MX, SPF, DMARC, DKIM in one call. Idempotent. Price: $0.005 via x402 (USDC on Base).",
       "parameters": {
         "type": "object",
         "properties": {
           "zone_id": {
             "type": "string",
-            "description": "Zone ID."
+            "description": "zone_id parameter"
           },
           "mail_server": {
             "type": "string",
-            "description": "Mail server hostname (e.g. \"mail.example.com\")."
+            "description": "Mail server hostname (e.g. \"mail.prim.sh\")."
           },
           "mail_server_ip": {
             "type": "string",
-            "description": "Mail server IP address for the A record."
+            "description": "Mail server IPv4 address (used for SPF record)."
           },
           "dkim": {
             "type": "object",
-            "description": "Optional DKIM public keys."
+            "description": "DKIM keys to configure. Provide rsa and/or ed25519."
           }
         },
         "required": [
@@ -276,28 +213,31 @@
     "type": "function",
     "function": {
       "name": "domain_record_batch",
-      "description": "Batch record operations. Create, update, and delete DNS records in a single request. Price: $0.005 via x402 (USDC on Base).",
+      "description": "Create, update, and delete DNS records in one atomic request. Price: $0.005 via x402 (USDC on Base).",
       "parameters": {
         "type": "object",
         "properties": {
           "zone_id": {
             "type": "string",
-            "description": "Zone ID."
+            "description": "zone_id parameter"
           },
           "create": {
             "type": "array",
+            "description": "Records to create.",
             "items": {
               "type": "object"
             }
           },
           "update": {
             "type": "array",
+            "description": "Records to update.",
             "items": {
               "type": "object"
             }
           },
           "delete": {
             "type": "array",
+            "description": "Records to delete.",
             "items": {
               "type": "object"
             }
@@ -313,47 +253,37 @@
     "type": "function",
     "function": {
       "name": "domain_record_create",
-      "description": "Create record. Create a single DNS record in a zone. Price: $0.001 via x402 (USDC on Base).",
+      "description": "Create a DNS record (A, AAAA, CNAME, MX, TXT, SRV, CAA, NS). Price: $0.001 via x402 (USDC on Base).",
       "parameters": {
         "type": "object",
         "properties": {
           "zone_id": {
             "type": "string",
-            "description": "Zone ID."
+            "description": "zone_id parameter"
           },
           "type": {
             "type": "string",
-            "description": "DNS record type.",
-            "enum": [
-              "A",
-              "AAAA",
-              "CNAME",
-              "MX",
-              "TXT",
-              "SRV",
-              "CAA",
-              "NS"
-            ]
+            "description": "DNS record type."
           },
           "name": {
             "type": "string",
-            "description": "Record name relative to zone root. Use \"@\" for root."
+            "description": "DNS record name (hostname)."
           },
           "content": {
             "type": "string",
-            "description": "Record content (IP for A/AAAA, hostname for CNAME/MX, text for TXT)."
+            "description": "DNS record value."
           },
           "ttl": {
-            "type": "integer",
-            "description": "TTL in seconds. 1 = automatic."
+            "type": "number",
+            "description": "TTL in seconds. Default 1 (auto)."
           },
           "proxied": {
             "type": "boolean",
-            "description": "Proxy through Cloudflare (A/AAAA/CNAME only)."
+            "description": "Enable Cloudflare proxying. Default false."
           },
           "priority": {
-            "type": "integer",
-            "description": "Priority for MX/SRV records."
+            "type": "number",
+            "description": "Priority for MX and SRV records."
           }
         },
         "required": [
@@ -369,13 +299,13 @@
     "type": "function",
     "function": {
       "name": "domain_record_list",
-      "description": "List records. Returns all DNS records in a zone. Price: $0.001 via x402 (USDC on Base).",
+      "description": "List all records in a DNS zone. Price: $0.001 via x402 (USDC on Base).",
       "parameters": {
         "type": "object",
         "properties": {
           "zone_id": {
             "type": "string",
-            "description": "Zone ID."
+            "description": "zone_id parameter"
           }
         },
         "required": [
@@ -388,17 +318,17 @@
     "type": "function",
     "function": {
       "name": "domain_record_get",
-      "description": "Get record. Returns a single DNS record. Price: $0.001 via x402 (USDC on Base).",
+      "description": "Get a single DNS record. Price: $0.001 via x402 (USDC on Base).",
       "parameters": {
         "type": "object",
         "properties": {
           "zone_id": {
             "type": "string",
-            "description": "Zone ID."
+            "description": "zone_id parameter"
           },
           "id": {
             "type": "string",
-            "description": "Record ID."
+            "description": "id parameter"
           }
         },
         "required": [
@@ -412,45 +342,41 @@
     "type": "function",
     "function": {
       "name": "domain_record_update",
-      "description": "Update record. Update a DNS record. Price: $0.001 via x402 (USDC on Base).",
+      "description": "Update a DNS record. Price: $0.001 via x402 (USDC on Base).",
       "parameters": {
         "type": "object",
         "properties": {
           "zone_id": {
             "type": "string",
-            "description": "Zone ID."
+            "description": "zone_id parameter"
           },
           "id": {
             "type": "string",
-            "description": "Record ID."
+            "description": "id parameter"
           },
           "type": {
             "type": "string",
-            "enum": [
-              "A",
-              "AAAA",
-              "CNAME",
-              "MX",
-              "TXT",
-              "SRV",
-              "CAA",
-              "NS"
-            ]
+            "description": "DNS record type."
           },
           "name": {
-            "type": "string"
+            "type": "string",
+            "description": "DNS record name."
           },
           "content": {
-            "type": "string"
+            "type": "string",
+            "description": "DNS record value."
           },
           "ttl": {
-            "type": "integer"
+            "type": "number",
+            "description": "TTL in seconds."
           },
           "proxied": {
-            "type": "boolean"
+            "type": "boolean",
+            "description": "Enable Cloudflare proxying."
           },
           "priority": {
-            "type": "integer"
+            "type": "number",
+            "description": "Priority for MX and SRV records."
           }
         },
         "required": [
@@ -464,17 +390,17 @@
     "type": "function",
     "function": {
       "name": "domain_record_delete",
-      "description": "Delete record. Delete a DNS record from a zone. Price: $0.001 via x402 (USDC on Base).",
+      "description": "Delete a DNS record. Price: $0.001 via x402 (USDC on Base).",
       "parameters": {
         "type": "object",
         "properties": {
           "zone_id": {
             "type": "string",
-            "description": "Zone ID."
+            "description": "zone_id parameter"
           },
           "id": {
             "type": "string",
-            "description": "Record ID."
+            "description": "id parameter"
           }
         },
         "required": [

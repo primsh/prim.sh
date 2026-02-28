@@ -1,3 +1,7 @@
+<!-- THIS FILE IS GENERATED — DO NOT EDIT
+     Source: packages/imagine/prim.yaml + packages/imagine/src/api.ts
+     Regenerate: pnpm gen:docs -->
+
 # imagine.sh
 
 > Media generation for agents. Images, video, audio. Any model, one API. No API keys.
