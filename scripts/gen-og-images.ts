@@ -15,7 +15,7 @@
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { join, resolve } from "node:path";
 import { Resvg } from "@resvg/resvg-js";
-import { BRAND } from "../brand.js";
+import { BRAND } from "../site/brand.js";
 import { CATEGORY_COLORS, TYPE_TO_CATEGORY, loadPrimitives } from "./lib/primitives.js";
 import type { PrimCategory } from "./lib/primitives.js";
 
