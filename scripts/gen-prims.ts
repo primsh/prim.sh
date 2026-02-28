@@ -12,7 +12,7 @@
 
 import { readFileSync, writeFileSync, existsSync } from "node:fs";
 import { join, resolve } from "node:path";
-import { loadPrimitives, deployed, TYPE_TO_CATEGORY, type Primitive } from "./lib/primitives.js";
+import { loadPrimitives, deployed, mainnetDeployed, TYPE_TO_CATEGORY, type Primitive } from "./lib/primitives.js";
 import { parseApiFile } from "./lib/parse-api.js";
 import { parseRoutePrices, renderLlmsTxt } from "./lib/render-llms-txt.js";
 import { renderSkillsJson } from "./lib/render-skills.js";
@@ -100,7 +100,7 @@ function genCards(prims: Primitive[]): string {
   const cards = prims.filter((p) => p.show_on_index !== false);
   return cards
     .map((p) => {
-      const isLive = p.status === "live" || p.status === "testing";
+      const isLive = p.status === "live" || p.status === "mainnet" || p.status === "testing";
       const category = p.category ?? TYPE_TO_CATEGORY[p.type] ?? "meta";
       const cls = [
         "product",
@@ -126,7 +126,7 @@ ${link}
 }
 
 function genLlmsTxtSections(prims: Primitive[]): string {
-  const live = prims.filter((p) => p.status === "live");
+  const live = prims.filter((p) => p.status === "live" || p.status === "mainnet");
   const built = prims.filter((p) => p.status === "building" || p.status === "testing");
   const planned = prims.filter((p) => p.status === "idea" || p.status === "planning");
 
@@ -146,11 +146,13 @@ function genReadmeTable(prims: Primitive[]): string {
     .filter((p) => p.show_on_index !== false)
     .map((p) => {
       const statusLabel =
-        p.status === "live"
-          ? "Live"
-          : p.status === "building" || p.status === "testing"
-            ? "Built"
-            : "Phantom";
+        p.status === "mainnet"
+          ? "Live (mainnet)"
+          : p.status === "live"
+            ? "Live"
+            : p.status === "building" || p.status === "testing"
+              ? "Built"
+              : "Phantom";
       const link = p.endpoint ? `[${p.name}](https://${p.endpoint})` : p.name;
       return `| ${link} | ${p.description} | ${statusLabel} |`;
     });
@@ -167,6 +169,7 @@ function genPreDeployEnvs(prims: Primitive[]): string {
 
 function genStatusBadge(p: Primitive): string {
   const labels: Record<string, string> = {
+    mainnet: "● Live (mainnet)",
     live: "● Live",
     testing: "○ Built — testing",
     building: "○ Built — deploy pending",
@@ -174,6 +177,7 @@ function genStatusBadge(p: Primitive): string {
     idea: "◌ Phantom",
   };
   const classes: Record<string, string> = {
+    mainnet: "status-live",
     live: "status-live",
     testing: "status-built",
     building: "status-built",
@@ -197,6 +201,11 @@ function genBashServices(prims: Primitive[]): string {
   return `SERVICES=(${ids.join(" ")})`;
 }
 
+function genBashMainnetServices(prims: Primitive[]): string {
+  const ids = mainnetDeployed(prims).map((p) => p.id);
+  return `MAINNET_SERVICES=(${ids.join(" ")})`;
+}
+
 function genBashEndpoints(prims: Primitive[]): string {
   const lines = deployed(prims).map((p) => {
     const host = p.endpoint ?? `${p.id}.prim.sh`;
@@ -205,13 +214,6 @@ function genBashEndpoints(prims: Primitive[]): string {
   return `ENDPOINTS=(\n${lines.join("\n")}\n)`;
 }
 
-function genBashMetricsEndpoints(prims: Primitive[]): string {
-  const lines = deployed(prims).map((p) => {
-    const host = p.endpoint ?? `${p.id}.prim.sh`;
-    return `  "https://${host}/v1/metrics"`;
-  });
-  return `ENDPOINTS=(\n${lines.join("\n")}\n)`;
-}
 
 // ── Main ───────────────────────────────────────────────────────────────────
 
@@ -259,10 +261,13 @@ applyOrCheck(join(ROOT, "deploy/prim/setup.sh"), "SERVICES", genBashServices(pri
 // 7. deploy/prim/healthcheck.sh — ENDPOINTS array
 applyOrCheck(join(ROOT, "deploy/prim/healthcheck.sh"), "ENDPOINTS", genBashEndpoints(prims), "bash");
 
-// 8. scripts/metrics-snapshot.sh — ENDPOINTS array (with /v1/metrics path)
-applyOrCheck(join(ROOT, "scripts/metrics-snapshot.sh"), "ENDPOINTS", genBashMetricsEndpoints(prims), "bash");
+// 8. scripts/metrics-snapshot.sh — SERVICES array
+applyOrCheck(join(ROOT, "scripts/metrics-snapshot.sh"), "SERVICES", genBashServices(prims), "bash");
 
-// 9. Per-page status badge + pricing
+// 9. scripts/g2-mainnet-switchover.sh — MAINNET_SERVICES array
+applyOrCheck(join(ROOT, "scripts/g2-mainnet-switchover.sh"), "MAINNET_SERVICES", genBashMainnetServices(prims), "bash");
+
+// 10. Per-page status badge + pricing
 for (const p of prims) {
   const pagePath = join(ROOT, "site", p.id, "index.html");
   if (!existsSync(pagePath)) continue;
@@ -376,7 +381,7 @@ ${urls.join("\n")}
 // 13. site/pricing.json — generated from prim.yaml pricing data
 {
   const builtPrims = prims.filter(
-    (p) => (p.status === "live" || p.status === "building" || p.status === "testing") && p.pricing && p.pricing.length > 0
+    (p) => (p.status === "mainnet" || p.status === "live" || p.status === "building" || p.status === "testing") && p.pricing && p.pricing.length > 0
   );
 
   const services = builtPrims.map((p) => {
@@ -470,7 +475,7 @@ ${urls.join("\n")}
 // 14. site/discovery.json — full primitive registry for agent discovery
 {
   const builtPrims = prims.filter(
-    (p) => p.status === "live" || p.status === "building" || p.status === "testing"
+    (p) => p.status === "mainnet" || p.status === "live" || p.status === "building" || p.status === "testing"
   );
 
   const primitives = builtPrims.map((p) => {

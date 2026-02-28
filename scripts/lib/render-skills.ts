@@ -39,7 +39,7 @@ export function renderSkillsJson(prims: Primitive[]): string {
     .filter((p) => p.show_on_index !== false)
     .sort((a, b) => a.id.localeCompare(b.id))
     .map((p) => {
-      const isActive = p.status === "live" || p.status === "testing" || p.status === "building";
+      const isActive = p.status === "mainnet" || p.status === "live" || p.status === "testing" || p.status === "building";
 
       const operations: SkillOperation[] =
         isActive && p.routes_map
@@ -57,7 +57,7 @@ export function renderSkillsJson(prims: Primitive[]): string {
         endpoint: p.endpoint ?? `https://${p.id}.prim.sh`,
         description: p.description,
         status:
-          p.status === "live"
+          p.status === "mainnet" || p.status === "live"
             ? "live"
             : p.status === "testing" || p.status === "building"
               ? "built"

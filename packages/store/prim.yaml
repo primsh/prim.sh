@@ -1,7 +1,7 @@
 id: store
 name: store.sh
 endpoint: store.prim.sh
-status: live
+status: mainnet
 type: storage
 category: storage
 card_class: p4
