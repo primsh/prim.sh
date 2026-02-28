@@ -51,6 +51,16 @@ site-dist/
 # Generated logos (regenerate with: bun scripts/gen-logos.ts)
 site/assets/logos/
 
+# Terminal World generated assets (regenerate with: bun scripts/gen-terminal-world.ts)
+brand/terminal-world/*.svg
+brand/terminal-world/*/icons/
+brand/terminal-world/*/cards/
+brand/terminal-world/*/*.svg
+brand/terminal-world/daemons/
+brand/terminal-world/shells/
+brand/terminal-world/agents/
+brand/terminal-world/users/
+
 # Generated OG images (regenerate with: bun scripts/gen-og-images.ts)
 site/assets/og/
 
