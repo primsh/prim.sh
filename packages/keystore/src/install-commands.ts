@@ -18,6 +18,9 @@ const PRIMITIVES = [
 ] as const;
 type Primitive = (typeof PRIMITIVES)[number];
 
+const META_SKILLS = ["onboard"] as const;
+const ALL_SKILLS = [...PRIMITIVES, ...META_SKILLS] as const;
+
 /** Which primitives require wallet to be installed alongside them. */
 const REQUIRES_WALLET: ReadonlySet<string> = new Set([
   "store",
@@ -369,19 +372,26 @@ export async function runSkillCommand(
   argv: string[],
 ): Promise<void> {
   if (!subcommand) {
-    console.log(`Usage: prim skill <name>\nAvailable: ${PRIMITIVES.join(", ")}`);
+    console.log(`Usage: prim skill <name>\nAvailable: ${ALL_SKILLS.join(", ")}`);
     return;
   }
 
-  if (!(PRIMITIVES as readonly string[]).includes(subcommand)) {
-    throw new Error(`Unknown primitive: ${subcommand}. Valid: ${PRIMITIVES.join(", ")}`);
+  if (!(ALL_SKILLS as readonly string[]).includes(subcommand)) {
+    throw new Error(`Unknown skill: ${subcommand}. Valid: ${ALL_SKILLS.join(", ")}`);
   }
 
-  const content = getSkillContent(subcommand);
+  let content = getSkillContent(subcommand);
   if (!content) {
     throw new Error(
       `Skill file not found for ${subcommand}. Skills may not be bundled in this build.`,
     );
   }
+
+  if (subcommand === "onboard") {
+    const code = getFlag("code", argv);
+    const replacement = code || "<YOUR_INVITE_CODE>";
+    content = content.replace(/\{\{CODE\}\}/g, () => replacement);
+  }
+
   process.stdout.write(content);
 }

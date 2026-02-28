@@ -180,7 +180,7 @@ async function main() {
     console.log("  prim admin     <list-requests|approve|deny|add-wallet|remove-wallet>");
     console.log("  prim install   <primitive|all> [--agent claude|cursor|generic]");
     console.log("  prim uninstall <primitive|all>");
-    console.log("  prim skill     <primitive>");
+    console.log("  prim skill     <primitive|onboard>");
     process.exit(1);
   }
 
