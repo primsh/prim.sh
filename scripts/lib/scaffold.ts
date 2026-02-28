@@ -815,7 +815,7 @@ function genReadme(prim: PrimYaml, routePrices: Record<string, string>): string 
 
 > ${prim.description}
 
-Part of the [prim.sh](https://prim.sh) agent-native stack. x402 payment (USDC on Base) is the sole auth — no signup, no GUI, no KYC.
+Part of [prim.sh](https://prim.sh) — zero install, one curl, infinite primitives. x402 payment (USDC on Base) is the sole auth.
 
 ## Routes
 

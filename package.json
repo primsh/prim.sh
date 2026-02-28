@@ -2,7 +2,7 @@
   "name": "prim",
   "version": "0.0.0",
   "private": true,
-  "description": "The agent-native stack. Infrastructure primitives for AI agents. Zero signup, x402 payment, pay-per-call.",
+  "description": "Zero install. One curl. Infinite primitives. Infrastructure for autonomous agents — pay with USDC, use every service.",
   "homepage": "https://prim.sh",
   "author": "Primitive Shell (https://primitiveshell.com)",
   "license": "Apache-2.0",

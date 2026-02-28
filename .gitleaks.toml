@@ -50,7 +50,6 @@ paths = [
     "bun.lock",
     # Binary/image assets
     "site/assets/",
-    "brand/assets/",
 ]
 
 # ── Prim-specific custom rules ────────────────────────────────────────────────

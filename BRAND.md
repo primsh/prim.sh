@@ -22,14 +22,19 @@ The brand name is **Prim**. The `.sh` is the domain TLD *and* part of the name's
 A **prim** (lowercase) is also the atomic product unit — a single infrastructure primitive. "Add another prim." "Which prims are you using?" The product is **Prim**. The building blocks are **prims**.
 
 ## Tagline
-*What we are. Goes next to the logo.*
+*The hook. Makes you stop scrolling.*
 
-**The agent-native stack.**
+**Zero install. One curl. Infinite primitives.**
 
-## One-liner
-*What we offer. The elevator pitch.*
+## Sub
+*The explanation. What this actually is.*
 
-Infinite primitives. Zero signup. One payment token.
+Infrastructure for autonomous agents. Add `mcp.prim.sh`, pay with USDC, use every service.
+
+## Flywheel
+*The vision. Why the catalog never stops growing.*
+
+Use it. Build it. Ship it. Agents don't just consume primitives — they create them. One command scaffolds a new service. The CI pipeline ships it. The catalog grows because the users grow it.
 
 ## Closer
 *The last thing they read. The emotional hook.*

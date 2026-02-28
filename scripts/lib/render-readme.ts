@@ -76,7 +76,7 @@ function renderTitle(p: Primitive): string {
 }
 
 function renderIntro(): string {
-  return "Part of the [prim.sh](https://prim.sh) agent-native stack. x402 payment (USDC on Base) is the sole auth — no signup, no GUI, no KYC.";
+  return "Part of [prim.sh](https://prim.sh) — zero install, one curl, infinite primitives. x402 payment (USDC on Base) is the sole auth.";
 }
 
 function renderRoutes(p: Primitive, api: ParsedApi | null, prices: Map<string, string>): string {

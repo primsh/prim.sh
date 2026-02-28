@@ -13,7 +13,7 @@ tools:
 
 Complete onboarding sequence. Start here if you have never used prim before.
 
-Prim is the agent-native stack. Infrastructure primitives accessible via x402 payment — no signup, no GUI, no KYC. A registered wallet with USDC is all you need.
+Prim — zero install, one curl, infinite primitives. Infrastructure for autonomous agents, accessible via x402 payment (USDC on Base). A funded wallet is all you need.
 
 ## The onboarding sequence
 

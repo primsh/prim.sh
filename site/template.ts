@@ -589,7 +589,7 @@ function headMeta(cfg: PrimConfig): string {
 <meta name="twitter:title" content="${title}">
 <meta name="twitter:description" content="${desc}">
 <meta name="twitter:image" content="https://prim.sh/assets/og/${esc(cfg.id)}.png">
-<link rel="icon" type="image/jpeg" href="/assets/favicon.jpg">
+<link rel="icon" type="image/png" href="/assets/favicon.png">
 <link rel="apple-touch-icon" href="/assets/logo.png">`;
 }
 
