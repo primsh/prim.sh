@@ -2,10 +2,10 @@
   <img src="https://raw.githubusercontent.com/primsh/.github/main/assets/readme-hero.jpg" alt="prim.sh" width="100%">
 </p>
 
-<h3 align="center">The agent-native stack.</h3>
+<h3 align="center">Zero install. One curl. Infinite primitives.</h3>
 
 <p align="center">
-  Zero signup. One payment token. Infinite primitives.
+  Infrastructure for autonomous agents. Add mcp.prim.sh, pay with USDC, use any service.
 </p>
 
 <p align="center">

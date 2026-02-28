@@ -528,7 +528,7 @@ ${urls.join("\n")}
   const discoveryContent = `${JSON.stringify(
     {
       name: "prim.sh",
-      description: "The agent-native stack",
+      description: "Zero install. One curl. Infinite primitives.",
       version: "beta",
       network: "eip155:84532",
       primitives,
