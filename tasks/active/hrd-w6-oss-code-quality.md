@@ -19,6 +19,8 @@ The codebase has strong structural qualities (consistent package layout, strict 
 | HRD-W1 (OSS readiness) | Merged | None. W1 covered smoke tests, pagination, rate limiting, SECURITY.md. |
 | I-43 (root file clutter) | Pending on main | None. File moves, not code quality. |
 | COM-14 (semver decision) | Pending, owner: Garric | None. Version bump decision. |
+| COM-3 (JSDoc api.ts interfaces) | Done | **Partial overlap with HRD-54/55/56**. COM-3 added JSDoc to api.ts interface *fields*. HRD-54–56 cover service.ts *functions* — zero overlap in actual files. |
+| HRD-31 (shared CLI error handler) | Done | **Partial overlap with HRD-53**. HRD-31 extracted handler in cli.ts, but gen-cli.ts still emits it per-file. HRD-53 finishes the job. |
 | HRD-W5 CHANGELOG.md | In scrub worktree | No conflict — this wave doesn't touch CHANGELOG. |
 
 **Recommendation**: Merge HRD-W5 first (it's complete), then this wave builds on clean main.
@@ -95,12 +97,14 @@ Every index.ts has identical try/catch JSON parsing (~8 lines, repeated 35+ time
 
 **Owner**: Claude | **Depends**: — | **Effort**: Low
 
-8 generated `*-commands.ts` files in keystore have identical `handleError()` (14 lines each).
+14 generated `*-commands.ts` files in keystore each have their own `handleError()` (14 lines each). HRD-31 (done) extracted a shared handler in `cli.ts`, but `gen-cli.ts` still emits the function inline per-file — so the duplication persists in generated code.
 
 **What to do**:
-- Create `packages/keystore/src/cli-utils.ts` with shared `handleError()`
+- Create `packages/keystore/src/cli-utils.ts` with shared `handleError()` (or reuse the one from HRD-31 in cli.ts)
 - Update `scripts/gen-cli.ts` template to `import { handleError } from "./cli-utils.ts"` instead of emitting the function inline
 - Regenerate CLI commands: `pnpm gen:cli`
+
+**Note**: HRD-35 (pending) covers the email CLI double-print bug where both `handleError` and `wrapCommand` catch. That's a bug fix, not a dedup task — distinct from this.
 
 ---
 
