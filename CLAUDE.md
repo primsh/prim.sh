@@ -84,6 +84,59 @@ Social: hive, ads
 3. spawn.sh — VPS provisioning (wraps Hetzner)
 4. llms.txt — Machine-readable primitive catalog
 
+## Code Conventions
+
+Biome enforces lint + format (2-space indent, 100-char lines). These conventions go beyond Biome — Claude review enforces them:
+
+### API shape
+
+- Response fields use **snake_case**: `tx_hash`, `wallet_address`, `created_at`
+- Timestamps are ISO 8601: `new Date().toISOString()`
+- Money values are **decimal strings** to avoid float precision: `"5.25"` not `5.25`
+
+### TypeScript
+
+- **`interface`** for request/response contracts and object shapes
+- **`type`** for discriminated unions, literal unions, and type operators
+- Use `import type { ... }` for type-only imports
+- No `any` — use `unknown` + type guards
+
+### Error handling
+
+Services return a discriminated union, never throw for business logic:
+
+```typescript
+type ServiceResult<T> =
+  | { ok: true; data: T }
+  | { ok: false; status: number; code: string; message: string };
+```
+
+Handlers check `if (!result.ok)` and map to `c.json({ error: { code, message } }, status)`. Only JSON parsing and external SDK calls use try/catch. Re-throw unhandled exceptions — never swallow silently.
+
+### Imports (ordering)
+
+1. Node.js built-ins (`node:crypto`, `node:fs`)
+2. Third-party packages (`viem`, `hono`)
+3. Internal packages (`@primsh/x402-middleware`)
+4. Local modules (`./db.ts`, `./api.ts`)
+
+### Hono app structure
+
+Every primitive uses `createPrimApp()` from `@primsh/x402-middleware/create-prim-app`:
+
+1. Define route → price map (`const ROUTES = { ... } as const`)
+2. Call `createPrimApp({ serviceName, routes, pricing, ... })`
+3. Register routes — extract caller via `c.get("walletAddress")`
+4. `export default app`
+
+### Security (Claude review must flag)
+
+- Hardcoded secrets, API keys, or private keys in source
+- `process.env` access without fallback or validation
+- Missing ownership checks on protected routes
+- SQL/NoSQL injection vectors
+- Unvalidated user input passed to external APIs
+
 ## Smoke Test Standard
 
 Every primitive package has two test files:
@@ -126,6 +179,44 @@ Scope = lowercased task ID prefix. If no task ID: `fix/`, `feat/`, `chore/`.
 - Never push directly to `main`
 - Never use `--no-verify` or `--force-push` unless explicitly instructed
 - PRs require CI to pass before merge
+
+## CI Automation
+
+Nine workflows automate the PR-to-deploy pipeline (`.github/workflows/`):
+
+| Workflow | Trigger | What it does |
+|----------|---------|-------------|
+| `ci.yml` | push to main, PRs | Lint, typecheck, test, gen check, audit, safeguards, secret scan |
+| `review.yml` | PR open/push, `@claude` comment | Claude reviews for bugs, security, style; fixes and pushes |
+| `ci-heal.yml` | CI failure on PR branch | Claude reads failed logs, fixes code, pushes |
+| `rebase.yml` | push to main, manual | Forward-merges main into conflicted PRs; Claude resolves real conflicts |
+| `auto-merge.yml` | PR open/push (bots only) | Auto-merges dependabot/renovate patch/minor bumps |
+| `deploy.yml` | CI passes on main | Rsync to VPS + Cloudflare Pages deploy + smoke check |
+| `release.yml` | tag push (`v*`) | Bundle CLI, upload to R2, create GitHub Release |
+| `stale.yml` | weekly cron | Mark/close stale issues and PRs |
+| `dedupe.yml` | issue opened | Detect duplicate issues by title similarity |
+
+### The shipping flywheel
+
+```
+PR opens → Claude review (fix + push) → CI runs → auto-merge (squash)
+  → main updates → rebase bot resolves conflicts on other PRs
+  → CI reruns → auto-merge → deploy to VPS + Cloudflare Pages
+  → if CI breaks on a PR → ci-heal fixes it → CI reruns → auto-merge
+```
+
+### Branch protection (main)
+
+- **Required checks**: Lint, Typecheck, Test, Gen check, Audit, Safeguards, Secret scan
+- **`strict: false`** — PRs merge in parallel without needing to be up-to-date with main
+- **Squash merge only.** Auto-delete branches after merge.
+- Claude review is NOT a required check — it's advisory + auto-fix
+
+### Constraints
+
+- Claude review will always fail on PRs that modify `review.yml` (GitHub security feature — expected, not blocking)
+- Merge queue requires GitHub Enterprise or public repo (I-42, deferred)
+- Rebase bot allows 15s for GitHub to recalculate mergeability after main moves — sometimes insufficient; use manual `workflow_dispatch` as fallback
 
 ## Task Management
 
