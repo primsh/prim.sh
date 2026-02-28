@@ -38,7 +38,7 @@ prim/
 │   ├── serve.ts              # Dev server (Bun)
 │   └── <primitive>/index.html
 ├── specs/                    # Product specs
-├── tasks/                    # Plan docs (active/ and completed/)
+├── tasks/
 │   ├── tasks.json            # SOT for all task data
 │   └── tasks.schema.json     # JSON Schema draft 2020-12
 ├── package.json              # Workspace root
@@ -266,16 +266,19 @@ Full conventions: `tasks/README.md`. Key rules for this project:
 
 `tasks/tasks.json` is the sole source of truth. **TASKS.md does not exist and must never be generated or referenced.** All task reads and writes go through `tasks/tasks.json` directly.
 
+### Planning
+
+Use Claude Code's **plan mode** for task planning. Plan docs are NOT stored in the repo — they live in Claude Code's project memory and are managed by plan mode automatically. Do not create `tasks/active/` or `tasks/completed/` plan doc files.
+
 ### Completion workflow
 
 1. Update `status` to `"done"` in `tasks/tasks.json`
-2. If plan doc exists: `git mv tasks/active/<plan>.md tasks/completed/`
 
 ### What does NOT belong in tasks.json
 
-- Research notes (go to `tasks/research/`)
-- Milestone retrospectives (go to `tasks/completed/milestones.md`)
-- Plan doc indexes (live in `tasks/README.md`)
+- Plan docs (use Claude Code plan mode instead)
+- Research notes
+- Milestone retrospectives
 - Generated markdown views (no TASKS.md — read tasks.json directly)
 
 ## Landing Page Design System
