@@ -17,7 +17,9 @@
                 {
                   "id": "HRD-3",
                   "description": "Expand wallet smoke test to 5-check contract (match `track/test/smoke.test.ts`)",
-                  "owner": ["Claude"],
+                  "owner": [
+                    "Claude"
+                  ],
                   "depends": [],
                   "status": "done",
                   "release": "v1.0.0"
@@ -25,8 +27,12 @@
                 {
                   "id": "HRD-4",
                   "description": "Add try-catch around `JSON.parse` calls in service layers (wallet, email, store).",
-                  "owner": ["Claude"],
-                  "depends": ["HRD-3"],
+                  "owner": [
+                    "Claude"
+                  ],
+                  "depends": [
+                    "HRD-3"
+                  ],
                   "status": "done",
                   "release": "v1.0.0",
                   "plan": "tasks/completed/hrd-4-json-parse-safety.md"
@@ -34,8 +40,12 @@
                 {
                   "id": "HRD-8",
                   "description": "Standardize pagination: define shared response shape across all list endpoints.",
-                  "owner": ["Claude"],
-                  "depends": ["HRD-4"],
+                  "owner": [
+                    "Claude"
+                  ],
+                  "depends": [
+                    "HRD-4"
+                  ],
                   "status": "done",
                   "release": "v1.0.0",
                   "plan": "tasks/completed/hrd-8-pagination-standard.md"
@@ -43,16 +53,22 @@
                 {
                   "id": "HRD-10",
                   "description": "Add per-wallet rate limiting to x402-middleware (configurable, default 60/min).",
-                  "owner": ["Claude"],
-                  "depends": ["HRD-8"],
+                  "owner": [
+                    "Claude"
+                  ],
+                  "depends": [
+                    "HRD-8"
+                  ],
                   "status": "done",
                   "release": "v1.0.0",
                   "plan": "tasks/completed/hrd-10-rate-limiting.md"
                 },
                 {
                   "id": "HRD-41",
-                  "description": "Add unmocked createPrimApp boot test: missing llmsTxtPath, missing env vars → still boots to 200",
-                  "owner": ["Claude"],
+                  "description": "Add unmocked createPrimApp boot test: missing llmsTxtPath, missing env vars \u2192 still boots to 200",
+                  "owner": [
+                    "Claude"
+                  ],
                   "depends": [],
                   "status": "pending",
                   "release": null
@@ -67,7 +83,9 @@
                 {
                   "id": "HRD-2",
                   "description": "Fix `allowlist-db.ts` DB handle leak: use singleton pattern from `wallet/db.ts`",
-                  "owner": ["Claude"],
+                  "owner": [
+                    "Claude"
+                  ],
                   "depends": [],
                   "status": "done",
                   "release": "v1.0.0"
@@ -75,7 +93,9 @@
                 {
                   "id": "HRD-5",
                   "description": "Fix `setUTCHours(24)` in `wallet/src/db.ts` \u2014 use explicit date arithmetic",
-                  "owner": ["Claude"],
+                  "owner": [
+                    "Claude"
+                  ],
                   "depends": [],
                   "status": "done",
                   "release": "v1.0.0"
@@ -90,7 +110,9 @@
                 {
                   "id": "HRD-1",
                   "description": "Remove `*.db` + `server.log` from repo; scrub `.env.email` from git history",
-                  "owner": ["Garric"],
+                  "owner": [
+                    "Garric"
+                  ],
                   "depends": [],
                   "status": "done",
                   "release": "v1.0.0"
@@ -98,7 +120,9 @@
                 {
                   "id": "HRD-6",
                   "description": "Create `SECURITY.md` (referenced by CONTRIBUTING.md but missing)",
-                  "owner": ["Claude"],
+                  "owner": [
+                    "Claude"
+                  ],
                   "depends": [],
                   "status": "done",
                   "release": "v1.0.0"
@@ -106,7 +130,9 @@
                 {
                   "id": "HRD-7",
                   "description": "Add `pnpm -r lint` + `pnpm -r typecheck` to `.github/workflows/ci.yml`",
-                  "owner": ["Claude"],
+                  "owner": [
+                    "Claude"
+                  ],
                   "depends": [],
                   "status": "done",
                   "release": "v1.0.0"
@@ -114,7 +140,9 @@
                 {
                   "id": "HRD-9",
                   "description": "Add per-package `README.md` (purpose, install, API summary)",
-                  "owner": ["Claude"],
+                  "owner": [
+                    "Claude"
+                  ],
                   "depends": [],
                   "status": "done",
                   "release": "v1.0.0"
@@ -122,7 +150,9 @@
                 {
                   "id": "HRD-20",
                   "description": "Scrub sensitive data: VPS IP from runbook, treasury wallet from plan doc, personal emails from completed task, infra details from CLAUDE.md",
-                  "owner": ["Garric"],
+                  "owner": [
+                    "Garric"
+                  ],
                   "depends": [],
                   "status": "done",
                   "release": "v1.0.0"
@@ -130,7 +160,9 @@
                 {
                   "id": "HRD-21",
                   "description": "Add package.json metadata (description, repository, license, author, keywords) to all packages",
-                  "owner": ["Claude"],
+                  "owner": [
+                    "Claude"
+                  ],
                   "depends": [],
                   "status": "done",
                   "release": "v1.0.0"
@@ -152,7 +184,9 @@
                 {
                   "id": "HRD-11",
                   "description": "Replace silent catch blocks with logger.warn() across all handlers (~7 files, ~30 catch blocks)",
-                  "owner": ["Claude"],
+                  "owner": [
+                    "Claude"
+                  ],
                   "depends": [],
                   "status": "done",
                   "release": "v1.0.0"
@@ -160,8 +194,12 @@
                 {
                   "id": "HRD-12",
                   "description": "Fail-fast on missing PRIM_PAY_TO \u2014 zero-address fallback \u2192 startup crash with clear error message",
-                  "owner": ["Claude"],
-                  "depends": ["HRD-11"],
+                  "owner": [
+                    "Claude"
+                  ],
+                  "depends": [
+                    "HRD-11"
+                  ],
                   "status": "done",
                   "release": "v1.0.0"
                 }
@@ -175,24 +213,36 @@
                 {
                   "id": "HRD-13",
                   "description": "Extract shared error helpers (forbidden, notFound, invalidRequest, serviceError) into @primsh/x402-middleware",
-                  "owner": ["Claude"],
-                  "depends": ["HRD-12"],
+                  "owner": [
+                    "Claude"
+                  ],
+                  "depends": [
+                    "HRD-12"
+                  ],
                   "status": "done",
                   "release": "v1.0.0"
                 },
                 {
                   "id": "HRD-14",
                   "description": "Normalize all API response fields to snake_case (created_at not createdAt) across api.ts + service.ts",
-                  "owner": ["Claude"],
-                  "depends": ["HRD-13"],
+                  "owner": [
+                    "Claude"
+                  ],
+                  "depends": [
+                    "HRD-13"
+                  ],
                   "status": "done",
                   "release": "v1.0.0"
                 },
                 {
                   "id": "HRD-22",
                   "description": "Consistent verb-position convention in api.ts interface names: standardize Create*/Register*/Set* prefix ordering across all 10 prims (e.g. CreateServerRequest not ServerCreateRequest)",
-                  "owner": ["Claude"],
-                  "depends": ["HRD-14"],
+                  "owner": [
+                    "Claude"
+                  ],
+                  "depends": [
+                    "HRD-14"
+                  ],
                   "status": "pending",
                   "release": null
                 }
@@ -206,31 +256,45 @@
                 {
                   "id": "HRD-17",
                   "description": "Backfill spawn/test/smoke.test.ts to 5-check contract (currently only 2 assertions)",
-                  "owner": ["Claude"],
-                  "depends": ["HRD-14"],
+                  "owner": [
+                    "Claude"
+                  ],
+                  "depends": [
+                    "HRD-14"
+                  ],
                   "status": "done",
                   "release": "v1.0.0"
                 },
                 {
                   "id": "HRD-18",
                   "description": "Add email/test/smoke.test.ts with 5-check contract (currently missing)",
-                  "owner": ["Claude"],
-                  "depends": ["HRD-14"],
+                  "owner": [
+                    "Claude"
+                  ],
+                  "depends": [
+                    "HRD-14"
+                  ],
                   "status": "done",
                   "release": "v1.0.0"
                 },
                 {
                   "id": "HRD-19",
                   "description": "Fix token test mock typing \u2014 replace vi.fn<any[], any>() biome-ignore with properly typed mocks",
-                  "owner": ["Claude"],
-                  "depends": ["HRD-14"],
+                  "owner": [
+                    "Claude"
+                  ],
+                  "depends": [
+                    "HRD-14"
+                  ],
                   "status": "done",
                   "release": "v1.0.0"
                 },
                 {
                   "id": "HRD-26",
                   "description": "Add packages/mcp/test/smoke.test.ts \u2014 zero tests on 14-source-file MCP server package",
-                  "owner": ["Claude"],
+                  "owner": [
+                    "Claude"
+                  ],
                   "depends": [],
                   "status": "done",
                   "release": null
@@ -245,7 +309,9 @@
                 {
                   "id": "HRD-15",
                   "description": "Fix pagination cursor/page inconsistency \u2014 email treats cursor as numeric offset, wallet as string",
-                  "owner": ["Claude"],
+                  "owner": [
+                    "Claude"
+                  ],
                   "depends": [],
                   "status": "pending",
                   "release": null
@@ -253,8 +319,12 @@
                 {
                   "id": "HRD-16",
                   "description": "Add Zod schemas for request body validation \u2014 replace bare c.req.json<T>() with z.parse()",
-                  "owner": ["Claude"],
-                  "depends": ["HRD-15"],
+                  "owner": [
+                    "Claude"
+                  ],
+                  "depends": [
+                    "HRD-15"
+                  ],
                   "status": "pending",
                   "release": null
                 }
@@ -274,7 +344,9 @@
                 {
                   "id": "HRD-23",
                   "description": "Final repo scrub: .gitignore (generated/, timestamps), delete orig assets, remove ops docs, scrub residual VPS IPs, exclude internal scripts",
-                  "owner": ["Claude"],
+                  "owner": [
+                    "Claude"
+                  ],
                   "depends": [],
                   "status": "done",
                   "release": "v1.0.0",
@@ -290,7 +362,9 @@
                 {
                   "id": "HRD-26",
                   "description": "Add packages/mcp/test/smoke.test.ts \u2014 zero tests on 14-source-file MCP server package",
-                  "owner": ["Claude"],
+                  "owner": [
+                    "Claude"
+                  ],
                   "depends": [],
                   "status": "done",
                   "release": null,
@@ -299,7 +373,9 @@
                 {
                   "id": "HRD-27",
                   "description": "Backfill search/test/smoke.test.ts to 5-check contract (currently 12 lines)",
-                  "owner": ["Claude"],
+                  "owner": [
+                    "Claude"
+                  ],
                   "depends": [],
                   "status": "done",
                   "release": null
@@ -307,7 +383,9 @@
                 {
                   "id": "HRD-28",
                   "description": "Backfill domain/test/smoke.test.ts to 5-check contract (currently 37 lines)",
-                  "owner": ["Claude"],
+                  "owner": [
+                    "Claude"
+                  ],
                   "depends": [],
                   "status": "done",
                   "release": null
@@ -315,7 +393,9 @@
                 {
                   "id": "HRD-29",
                   "description": "Backfill store/test/smoke.test.ts to 5-check contract (currently 49 lines)",
-                  "owner": ["Claude"],
+                  "owner": [
+                    "Claude"
+                  ],
                   "depends": [],
                   "status": "done",
                   "release": null
@@ -330,7 +410,9 @@
                 {
                   "id": "HRD-30",
                   "description": "Replace residual console.warn() \u2192 structured logger in wallet/src/service.ts + email/src/service.ts (HRD-11 residual)",
-                  "owner": ["Claude"],
+                  "owner": [
+                    "Claude"
+                  ],
                   "depends": [],
                   "status": "done",
                   "release": null,
@@ -339,7 +421,9 @@
                 {
                   "id": "HRD-31",
                   "description": "Extract shared CLI error handler in keystore/src/cli.ts (11 identical try-catch blocks)",
-                  "owner": ["Claude"],
+                  "owner": [
+                    "Claude"
+                  ],
                   "depends": [],
                   "status": "done",
                   "release": null
@@ -361,7 +445,9 @@
                 {
                   "id": "HRD-32",
                   "description": "`--help` exits code 1; on some subcommands (e.g. `email create --help`) hits paid API before showing usage",
-                  "owner": ["Claude"],
+                  "owner": [
+                    "Claude"
+                  ],
                   "depends": [],
                   "status": "pending",
                   "release": null
@@ -369,7 +455,9 @@
                 {
                   "id": "HRD-33",
                   "description": "`spawn get` returns human-readable text while all other commands return JSON. Add `--json` flag globally.",
-                  "owner": ["Claude"],
+                  "owner": [
+                    "Claude"
+                  ],
                   "depends": [],
                   "status": "pending",
                   "release": null
@@ -377,7 +465,9 @@
                 {
                   "id": "HRD-34",
                   "description": "`--ssh-keys` flag parses single string char-by-char \u2014 `sk_abc` becomes error \"key not found: s\"",
-                  "owner": ["Claude"],
+                  "owner": [
+                    "Claude"
+                  ],
                   "depends": [],
                   "status": "pending",
                   "release": null
@@ -385,7 +475,9 @@
                 {
                   "id": "HRD-35",
                   "description": "Email CLI errors double-print \u2014 both `handleError` and `wrapCommand` catch block write to stderr",
-                  "owner": ["Claude"],
+                  "owner": [
+                    "Claude"
+                  ],
                   "depends": [],
                   "status": "pending",
                   "release": null
@@ -393,7 +485,9 @@
                 {
                   "id": "HRD-36",
                   "description": "`store ls BUCKET_ID` returns bucket metadata instead of listing objects. API has GET /v1/buckets/{id}/objects.",
-                  "owner": ["Claude"],
+                  "owner": [
+                    "Claude"
+                  ],
                   "depends": [],
                   "status": "pending",
                   "release": null
@@ -401,7 +495,9 @@
                 {
                   "id": "HRD-37",
                   "description": "CLI defaults to eip155:8453 (mainnet); server runs eip155:84532. Silent 500 with no diagnostic error msg.",
-                  "owner": ["Claude"],
+                  "owner": [
+                    "Claude"
+                  ],
                   "depends": [],
                   "status": "pending",
                   "release": null
@@ -416,7 +512,9 @@
                 {
                   "id": "HRD-38",
                   "description": "Show x402 cost per request in CLI output (e.g. `Paid: 0.001 USDC`) or via `--verbose` flag",
-                  "owner": ["Claude"],
+                  "owner": [
+                    "Claude"
+                  ],
                   "depends": [],
                   "status": "pending",
                   "release": null
@@ -424,7 +522,9 @@
                 {
                   "id": "HRD-39",
                   "description": "`wallet balance` shows mainnet chain (eip155:8453) even when wallet funded on testnet (eip155:84532)",
-                  "owner": ["Claude"],
+                  "owner": [
+                    "Claude"
+                  ],
                   "depends": [],
                   "status": "pending",
                   "release": null
@@ -432,7 +532,9 @@
                 {
                   "id": "HRD-40",
                   "description": "Add `prim wallet info` and `prim wallet policy` CLI commands wrapping paid GET /v1/wallets/{addr} endpoints",
-                  "owner": ["Claude"],
+                  "owner": [
+                    "Claude"
+                  ],
                   "depends": [],
                   "status": "pending",
                   "release": null
@@ -456,7 +558,9 @@
             {
               "id": "ST-7",
               "description": "Presigned URLs (GET + PUT): time-limited signed R2 URLs for direct agent access",
-              "owner": ["Claude"],
+              "owner": [
+                "Claude"
+              ],
               "depends": [],
               "status": "pending",
               "release": null
@@ -464,7 +568,9 @@
             {
               "id": "ST-8",
               "description": "Public buckets: per-bucket public-read flag, stable object URLs",
-              "owner": ["Claude"],
+              "owner": [
+                "Claude"
+              ],
               "depends": [],
               "status": "pending",
               "release": null
@@ -472,7 +578,9 @@
             {
               "id": "ST-9",
               "description": "Multipart upload: S3 multipart API for objects >5MB",
-              "owner": ["Claude"],
+              "owner": [
+                "Claude"
+              ],
               "depends": [],
               "status": "pending",
               "release": null
@@ -480,7 +588,9 @@
             {
               "id": "ST-10",
               "description": "Object copy: within or between owned buckets",
-              "owner": ["Claude"],
+              "owner": [
+                "Claude"
+              ],
               "depends": [],
               "status": "pending",
               "release": null
@@ -488,7 +598,9 @@
             {
               "id": "ST-11",
               "description": "Lifecycle rules: per-bucket auto-expiry policies",
-              "owner": ["Claude"],
+              "owner": [
+                "Claude"
+              ],
               "depends": [],
               "status": "pending",
               "release": null
@@ -496,7 +608,9 @@
             {
               "id": "ST-12",
               "description": "Bucket event webhooks: HMAC-signed callbacks on create/delete",
-              "owner": ["Claude"],
+              "owner": [
+                "Claude"
+              ],
               "depends": [],
               "status": "pending",
               "release": null
@@ -504,7 +618,9 @@
             {
               "id": "ST-13",
               "description": "Object metadata + tagging: custom key-value metadata",
-              "owner": ["Claude"],
+              "owner": [
+                "Claude"
+              ],
               "depends": [],
               "status": "pending",
               "release": null
@@ -519,7 +635,9 @@
             {
               "id": "E-8",
               "description": "Fix mailbox creation 500: POST /v1/mailboxes crashes after x402 payment succeeds. User charged, no mailbox.",
-              "owner": ["Claude"],
+              "owner": [
+                "Claude"
+              ],
               "depends": [],
               "status": "pending",
               "release": "v1.0.0"
@@ -527,7 +645,9 @@
             {
               "id": "E-4",
               "description": "Domain warmup: send low-volume emails to engaged recipients, ramp over weeks",
-              "owner": ["Claude"],
+              "owner": [
+                "Claude"
+              ],
               "depends": [],
               "status": "pending",
               "release": null
@@ -535,24 +655,37 @@
             {
               "id": "E-5",
               "description": "Verify Gmail inbox delivery (not spam) after warmup + PTR + DMARC changes",
-              "owner": ["Claude"],
-              "depends": ["E-4"],
+              "owner": [
+                "Claude"
+              ],
+              "depends": [
+                "E-4"
+              ],
               "status": "pending",
               "release": null
             },
             {
               "id": "E-6",
               "description": "Verify Apple Mail / iCloud delivery after warmup",
-              "owner": ["Claude"],
-              "depends": ["E-4"],
+              "owner": [
+                "Claude"
+              ],
+              "depends": [
+                "E-4"
+              ],
               "status": "pending",
               "release": null
             },
             {
               "id": "E-7",
               "description": "Upgrade DMARC back to `p=quarantine` once inbox delivery is consistent",
-              "owner": ["Claude"],
-              "depends": ["E-5", "E-6"],
+              "owner": [
+                "Claude"
+              ],
+              "depends": [
+                "E-5",
+                "E-6"
+              ],
               "status": "pending",
               "release": null
             }
@@ -565,7 +698,9 @@
             {
               "id": "SP-7",
               "description": "DockerProvider: Docker container tier as default (10\u201350x cheaper than VMs).",
-              "owner": ["Claude"],
+              "owner": [
+                "Claude"
+              ],
               "depends": [],
               "status": "pending",
               "release": null,
@@ -575,7 +710,9 @@
               "id": "SP-8",
               "description": "Nested spawn: POST /v1/servers/{id}/containers \u2014 create/list/destroy containers on an existing spawn via SSH+Docker. Enables spawn-inside-spawn for agent replication.",
               "owner": [],
-              "depends": ["SP-7"],
+              "depends": [
+                "SP-7"
+              ],
               "status": "pending",
               "release": null
             }
@@ -602,7 +739,10 @@
             {
               "id": "TR-2",
               "description": "Smoke test + deploy: live Shippo call, systemd unit, Caddy route, DNS, env vars",
-              "owner": ["Claude", "Garric"],
+              "owner": [
+                "Claude",
+                "Garric"
+              ],
               "depends": [],
               "status": "pending",
               "release": null
@@ -617,7 +757,9 @@
             {
               "id": "L-27",
               "description": "**DO FIRST.** Deploy $PRIM ERC-20 to Base mainnet. Register ticker on BaseScan. 100% supply to treasury wallet. Pool deferred",
-              "owner": ["Garric"],
+              "owner": [
+                "Garric"
+              ],
               "depends": [],
               "status": "pending",
               "release": "v1.0.0"
@@ -625,8 +767,13 @@
             {
               "id": "PRIM-2",
               "description": "$PRIM utility design: fee discounts, governance, access tiers, revenue share. Design doc only.",
-              "owner": ["Garric", "Claude"],
-              "depends": ["L-27"],
+              "owner": [
+                "Garric",
+                "Claude"
+              ],
+              "depends": [
+                "L-27"
+              ],
               "status": "pending",
               "release": "v1.0.0",
               "plan": "tasks/active/prim-2-token-utility-2026-02-26.md"
@@ -641,7 +788,9 @@
             {
               "id": "FB-1",
               "description": "issue.sh MVP: POST /v1/issues \u2014 agents file structured bug reports + feature requests via x402. Bug reports free.",
-              "owner": ["Claude"],
+              "owner": [
+                "Claude"
+              ],
               "depends": [],
               "status": "pending",
               "release": null
@@ -649,24 +798,36 @@
             {
               "id": "FB-2",
               "description": "issue.sh read endpoints: GET /v1/issues, GET /v1/issues/:id, POST /v1/issues/:id/comments. x402 paid.",
-              "owner": ["Claude"],
-              "depends": ["FB-1"],
+              "owner": [
+                "Claude"
+              ],
+              "depends": [
+                "FB-1"
+              ],
               "status": "pending",
               "release": null
             },
             {
               "id": "FB-3",
               "description": "issue.sh \u2192 GitHub sync: auto-create GitHub issues from agent reports. Label by primitive + severity.",
-              "owner": ["Claude"],
-              "depends": ["FB-1"],
+              "owner": [
+                "Claude"
+              ],
+              "depends": [
+                "FB-1"
+              ],
               "status": "pending",
               "release": null
             },
             {
               "id": "FB-4",
               "description": "x402-middleware: add `report` URL (https://issue.prim.sh/v1/issues) to every error envelope automatically. One change, all prims get it for free.",
-              "owner": ["Claude"],
-              "depends": ["FB-1"],
+              "owner": [
+                "Claude"
+              ],
+              "depends": [
+                "FB-1"
+              ],
               "status": "pending",
               "release": null
             }
@@ -680,7 +841,9 @@
             {
               "id": "INF-1",
               "description": "Fill api.ts types: OpenAI-compatible ChatRequest/Response, EmbedRequest/Response, ModelsResponse. Include Message, Tool, ToolCall, ContentPart, Choice, Usage.",
-              "owner": ["Claude"],
+              "owner": [
+                "Claude"
+              ],
               "depends": [],
               "status": "done",
               "release": null,
@@ -689,8 +852,12 @@
             {
               "id": "INF-2",
               "description": "Implement openrouter.ts: chat/embed/models methods wrapping OpenRouter API. Fix env var INFER_API_KEY \u2192 OPENROUTER_API_KEY. Add prim.sh referer headers.",
-              "owner": ["Claude"],
-              "depends": ["INF-1"],
+              "owner": [
+                "Claude"
+              ],
+              "depends": [
+                "INF-1"
+              ],
               "status": "done",
               "release": null,
               "plan": "tasks/active/inf-infer-sh-pipeline.md"
@@ -698,8 +865,12 @@
             {
               "id": "INF-3",
               "description": "Implement service.ts: validation + provider delegation for chat (model+messages required), embed (model+input required), models (no input). handleProviderError helper.",
-              "owner": ["Claude"],
-              "depends": ["INF-2"],
+              "owner": [
+                "Claude"
+              ],
+              "depends": [
+                "INF-2"
+              ],
               "status": "done",
               "release": null,
               "plan": "tasks/active/inf-infer-sh-pipeline.md"
@@ -707,8 +878,12 @@
             {
               "id": "INF-4",
               "description": "Fix scaffolder bugs in index.ts: GET /v1/models tries to parse JSON body from GET request; models() service signature takes unnecessary body param.",
-              "owner": ["Claude"],
-              "depends": ["INF-1"],
+              "owner": [
+                "Claude"
+              ],
+              "depends": [
+                "INF-1"
+              ],
               "status": "done",
               "release": null,
               "plan": "tasks/active/inf-infer-sh-pipeline.md"
@@ -716,8 +891,13 @@
             {
               "id": "INF-5",
               "description": "Update smoke test with realistic ChatResponse mock, verify 5/5 checks pass after implementation.",
-              "owner": ["Claude"],
-              "depends": ["INF-3", "INF-4"],
+              "owner": [
+                "Claude"
+              ],
+              "depends": [
+                "INF-3",
+                "INF-4"
+              ],
               "status": "done",
               "release": null,
               "plan": "tasks/active/inf-infer-sh-pipeline.md"
@@ -725,8 +905,12 @@
             {
               "id": "INF-6",
               "description": "Deploy infer.sh to VPS: systemd unit, /etc/prim/infer.env, Caddy route (port 3012), prim.yaml status \u2192 live, pnpm gen:prims.",
-              "owner": ["Garric"],
-              "depends": ["INF-5"],
+              "owner": [
+                "Garric"
+              ],
+              "depends": [
+                "INF-5"
+              ],
               "status": "done",
               "release": null,
               "plan": "tasks/active/inf-infer-sh-pipeline.md"
@@ -753,7 +937,9 @@
                 {
                   "id": "I-4",
                   "description": "Parallelize CI: split into concurrent jobs (setup \u2192 lint|typecheck|test|gen-check PARA), add concurrency + bun cache",
-                  "owner": ["Claude"],
+                  "owner": [
+                    "Claude"
+                  ],
                   "depends": [],
                   "status": "pending",
                   "release": null,
@@ -762,8 +948,12 @@
                 {
                   "id": "I-3",
                   "description": "CI OpenAPI spec validation \u2014 check that spec response shapes match PaginatedList<T> and error envelopes at build time",
-                  "owner": ["Claude"],
-                  "depends": ["I-4"],
+                  "owner": [
+                    "Claude"
+                  ],
+                  "depends": [
+                    "I-4"
+                  ],
                   "status": "pending",
                   "release": null,
                   "plan": "tasks/active/i-3-coverage-gate-2026-02-26.md"
@@ -771,7 +961,9 @@
                 {
                   "id": "I-38",
                   "description": "Hyperscaling superagent flywheel factory \u2014 agent-driven create \u2192 PR \u2192 CI \u2192 merge \u2192 deploy pipeline",
-                  "owner": ["Claude"],
+                  "owner": [
+                    "Claude"
+                  ],
                   "depends": [],
                   "status": "pending",
                   "release": null,
@@ -819,7 +1011,9 @@
                 {
                   "id": "L-29",
                   "description": "GH Action: auto-dedupe issues, stale auto-close (30d), bot PR auto-merge if CI passes",
-                  "owner": ["Claude"],
+                  "owner": [
+                    "Claude"
+                  ],
                   "depends": [],
                   "status": "pending",
                   "release": null,
@@ -828,7 +1022,9 @@
                 {
                   "id": "OPS-5",
                   "description": "GHA deploy pipeline: SSH deploy key (restricted to deploy.sh) + .github/workflows/deploy.yml (check \u2192 rsync \u2192 restart). Replaces manual sync:vps for prod.",
-                  "owner": ["Claude"],
+                  "owner": [
+                    "Claude"
+                  ],
                   "depends": [],
                   "status": "pending",
                   "release": null,
@@ -844,7 +1040,9 @@
                 {
                   "id": "OPS-4",
                   "description": "Load test baseline: k6 against health + store CRUD, document capacity thresholds",
-                  "owner": ["Claude"],
+                  "owner": [
+                    "Claude"
+                  ],
                   "depends": [],
                   "status": "pending",
                   "release": null,
@@ -853,7 +1051,9 @@
                 {
                   "id": "SEC-1a",
                   "description": "Add `.gitleaks.toml` + pre-commit hook to block new secrets from landing. Non-destructive, no stop-the-world.",
-                  "owner": ["Claude"],
+                  "owner": [
+                    "Claude"
+                  ],
                   "depends": [],
                   "status": "done",
                   "release": "v1.0.0"
@@ -861,16 +1061,24 @@
                 {
                   "id": "SEC-1b",
                   "description": "Run `gitleaks detect --log-opts=\"--all\"` on full history. Triage findings as true/false positives. Read-only.",
-                  "owner": ["Claude"],
-                  "depends": ["SEC-1a"],
+                  "owner": [
+                    "Claude"
+                  ],
+                  "depends": [
+                    "SEC-1a"
+                  ],
                   "status": "done",
                   "release": "v1.0.0"
                 },
                 {
                   "id": "SEC-1c",
                   "description": "If true positives found: rotate active secrets, rewrite history with BFG/filter-repo, force push, all collaborators re-clone.",
-                  "owner": ["Claude"],
-                  "depends": ["SEC-1b"],
+                  "owner": [
+                    "Claude"
+                  ],
+                  "depends": [
+                    "SEC-1b"
+                  ],
                   "status": "done",
                   "release": "v1.0.0",
                   "plan": "tasks/active/sec-1-git-secrets-audit-2026-02-26.md"
@@ -885,7 +1093,9 @@
                 {
                   "id": "I-2",
                   "description": "Migrate TASKS.md \u2192 tasks.json: define schema, convert data, update launch-status.ts + docs, optional TASKS.md codegen.",
-                  "owner": ["Claude"],
+                  "owner": [
+                    "Claude"
+                  ],
                   "depends": [],
                   "status": "pending",
                   "release": null,
@@ -903,16 +1113,28 @@
             {
               "id": "L-60",
               "description": "Pricing audit: review x402 pricing against real provider costs. Risks: spawn ($0.01 create vs $4/mo DO), token ($1 deploy vs $10-50 gas)",
-              "owner": ["Claude", "Garric"],
-              "depends": ["L-22"],
+              "owner": [
+                "Claude",
+                "Garric"
+              ],
+              "depends": [
+                "L-22"
+              ],
               "status": "pending",
               "release": null
             },
             {
               "id": "L-14",
               "description": "Full token launch: create Uniswap pool, fund liquidity, make repo public, announce. Seed pool conservatively ($2\u20133K USDC)",
-              "owner": ["Garric", "Claude"],
-              "depends": ["L-15", "L-27", "PRIM-2"],
+              "owner": [
+                "Garric",
+                "Claude"
+              ],
+              "depends": [
+                "L-15",
+                "L-27",
+                "PRIM-2"
+              ],
               "status": "pending",
               "release": "v1.0.0"
             }
@@ -926,15 +1148,21 @@
             {
               "id": "L-22",
               "description": "Mainnet switchover: VPS env files `eip155:84532` \u2192 `eip155:8453`, set prod `PRIM_PAY_TO`, fund facilitator with mainnet USDC",
-              "owner": ["Garric"],
-              "depends": ["L-27"],
+              "owner": [
+                "Garric"
+              ],
+              "depends": [
+                "L-27"
+              ],
               "status": "pending",
               "release": "v1.0.0"
             },
             {
               "id": "L-70",
               "description": "Deploy token.sh to VPS: systemd unit (prim-token:3007), Caddy route, DNS, env vars, smoke test",
-              "owner": ["Garric"],
+              "owner": [
+                "Garric"
+              ],
               "depends": [],
               "status": "pending",
               "release": "v1.0.0"
@@ -942,7 +1170,9 @@
             {
               "id": "L-71",
               "description": "Deploy mem.sh to VPS: Qdrant instance, systemd unit (prim-mem:3008), Caddy route, DNS, env vars, smoke test",
-              "owner": ["Garric"],
+              "owner": [
+                "Garric"
+              ],
               "depends": [],
               "status": "pending",
               "release": "v1.0.0"
@@ -950,15 +1180,22 @@
             {
               "id": "L-15",
               "description": "Pre-public checklist: rotate Stalwart admin password + relay-wrapper API key, confirm .env files gitignored",
-              "owner": ["Garric"],
-              "depends": ["HRD-20", "SEC-1c"],
+              "owner": [
+                "Garric"
+              ],
+              "depends": [
+                "HRD-20",
+                "SEC-1c"
+              ],
               "status": "pending",
               "release": "v1.0.0"
             },
             {
               "id": "OPS-6",
               "description": "Fund treasury wallet 0x09D896... with testnet ETH on Base Sepolia \u2014 faucet ETH drip returns 502",
-              "owner": ["Garric"],
+              "owner": [
+                "Garric"
+              ],
               "depends": [],
               "status": "pending",
               "release": null
@@ -966,7 +1203,9 @@
             {
               "id": "OPS-14",
               "description": "Staging environment on testnet (Sepolia). Second VPS namespace, separate env files, staging.*.prim.sh DNS. Defer until I-38 factory starts shipping primitives automatically \u2014 that's when CI\u2192staging\u2192mainnet pipeline earns its keep.",
-              "owner": ["Garric"],
+              "owner": [
+                "Garric"
+              ],
               "depends": [],
               "status": "backlog",
               "release": null
@@ -974,8 +1213,12 @@
             {
               "id": "L-81",
               "description": "Cut release/v0 branch when I-38 factory starts and tracks diverge. Until then, tag v0.0.0 on main. Branch only when v0 hotfixes would conflict with factory work in-flight on main.",
-              "owner": ["Garric"],
-              "depends": ["L-80"],
+              "owner": [
+                "Garric"
+              ],
+              "depends": [
+                "L-80"
+              ],
               "status": "backlog",
               "release": null
             }
@@ -994,7 +1237,9 @@
                 {
                   "id": "I-5",
                   "description": "createPrimApp() factory in x402-middleware: env validation, middleware wiring, health, llms.txt, pricing, error mapping. Migrate track + search as proof.",
-                  "owner": ["Claude"],
+                  "owner": [
+                    "Claude"
+                  ],
                   "depends": [],
                   "status": "done",
                   "release": null,
@@ -1003,8 +1248,12 @@
                 {
                   "id": "I-6",
                   "description": "Migrate remaining 8 prims to createPrimApp() (wallet, store, spawn, faucet, email, mem, domain, token). Factory supports opt-out for special middleware.",
-                  "owner": ["Claude"],
-                  "depends": ["I-5"],
+                  "owner": [
+                    "Claude"
+                  ],
+                  "depends": [
+                    "I-5"
+                  ],
                   "status": "done",
                   "release": null,
                   "plan": "tasks/active/i-6-migrate-prims-to-factory.md"
@@ -1012,8 +1261,12 @@
                 {
                   "id": "I-7",
                   "description": "Conformance runner: `pnpm test:conformance` verifies every live prim passes 5-check contract + generated files up-to-date. Add to CI.",
-                  "owner": ["Claude"],
-                  "depends": ["I-6"],
+                  "owner": [
+                    "Claude"
+                  ],
+                  "depends": [
+                    "I-6"
+                  ],
                   "status": "done",
                   "release": null,
                   "plan": "tasks/active/i-7-conformance-runner.md"
@@ -1027,8 +1280,12 @@
                 {
                   "id": "I-8",
                   "description": "Extend prim.yaml schema: add `providers` section (name, env, status, default), `interface` flags, strengthen routes_map typing. Update Primitive type.",
-                  "owner": ["Claude"],
-                  "depends": ["I-5"],
+                  "owner": [
+                    "Claude"
+                  ],
+                  "depends": [
+                    "I-5"
+                  ],
                   "status": "done",
                   "release": null,
                   "plan": "tasks/active/i-8-prim-yaml-schema-v2.md"
@@ -1050,8 +1307,12 @@
                 {
                   "id": "I-18",
                   "description": "Write OpenAPI 3.1 specs for live prims: wallet, store, spawn, faucet, search, email. Full JSON Schema, x402 security scheme, x-price, examples.",
-                  "owner": ["Claude"],
-                  "depends": ["I-8"],
+                  "owner": [
+                    "Claude"
+                  ],
+                  "depends": [
+                    "I-8"
+                  ],
                   "status": "done",
                   "release": null,
                   "plan": "tasks/active/i-18-openapi-specs-live.md"
@@ -1059,8 +1320,12 @@
                 {
                   "id": "I-19",
                   "description": "Write OpenAPI 3.1 specs for built prims: mem, domain, token. Same standard as I-18. Existing drafts in specs/openapi/ may be partially complete.",
-                  "owner": ["Claude"],
-                  "depends": ["I-8"],
+                  "owner": [
+                    "Claude"
+                  ],
+                  "depends": [
+                    "I-8"
+                  ],
                   "status": "done",
                   "release": null,
                   "plan": "tasks/active/i-19-openapi-specs-built.md"
@@ -1075,8 +1340,12 @@
                 {
                   "id": "I-12",
                   "description": "MCP tool generator: `pnpm gen:mcp` reads OpenAPI specs \u2192 generates packages/mcp/src/tools/*.ts. Replaces manually maintained tool files.",
-                  "owner": ["Claude"],
-                  "depends": ["I-18"],
+                  "owner": [
+                    "Claude"
+                  ],
+                  "depends": [
+                    "I-18"
+                  ],
                   "status": "done",
                   "release": null,
                   "plan": "tasks/completed/i-12-mcp-generator.md"
@@ -1084,8 +1353,12 @@
                 {
                   "id": "I-13",
                   "description": "CLI command generator: `pnpm gen:cli` reads OpenAPI specs \u2192 generates packages/keystore/src/*-commands.ts. Replaces manually maintained CLI files.",
-                  "owner": ["Claude"],
-                  "depends": ["I-18"],
+                  "owner": [
+                    "Claude"
+                  ],
+                  "depends": [
+                    "I-18"
+                  ],
                   "status": "done",
                   "release": null,
                   "plan": "tasks/completed/i-13-cli-generator.md"
@@ -1093,8 +1366,12 @@
                 {
                   "id": "I-14",
                   "description": "OpenAI function schema generator: `pnpm gen:openai` reads OpenAPI specs \u2192 outputs JSON with OpenAI-compatible tool definitions for Responses API.",
-                  "owner": ["Claude"],
-                  "depends": ["I-18"],
+                  "owner": [
+                    "Claude"
+                  ],
+                  "depends": [
+                    "I-18"
+                  ],
                   "status": "done",
                   "release": null,
                   "plan": "tasks/active/i-14-openai-schema-generator.md"
@@ -1108,8 +1385,15 @@
                 {
                   "id": "I-15",
                   "description": "Unified gen pipeline: single `pnpm gen` runs gen:prims + gen:tests + gen:mcp + gen:cli + gen:openai. `pnpm gen:check` validates all. CI blocks if stale.",
-                  "owner": ["Claude"],
-                  "depends": ["I-10", "I-12", "I-13", "I-14"],
+                  "owner": [
+                    "Claude"
+                  ],
+                  "depends": [
+                    "I-10",
+                    "I-12",
+                    "I-13",
+                    "I-14"
+                  ],
                   "status": "done",
                   "release": null
                 }
@@ -1130,8 +1414,12 @@
                 {
                   "id": "I-9",
                   "description": "`pnpm create-prim <id>` scaffolder: reads prim.yaml, generates package.json, tsconfig, vitest.config, install.sh, src/{index,api,service,provider}.ts, smoke.test.ts, README.",
-                  "owner": ["Claude"],
-                  "depends": ["I-8"],
+                  "owner": [
+                    "Claude"
+                  ],
+                  "depends": [
+                    "I-8"
+                  ],
                   "status": "done",
                   "release": null,
                   "plan": "tasks/active/i-9-prim-scaffolder.md"
@@ -1139,8 +1427,12 @@
                 {
                   "id": "I-10",
                   "description": "Smoke test generator: `pnpm gen:tests` reads routes_map + api.ts types, generates conformant smoke.test.ts with all 5 checks. Wire into `pnpm gen`.",
-                  "owner": ["Claude"],
-                  "depends": ["I-9"],
+                  "owner": [
+                    "Claude"
+                  ],
+                  "depends": [
+                    "I-9"
+                  ],
                   "status": "done",
                   "release": null,
                   "plan": "tasks/active/i-10-smoke-test-generator.md"
@@ -1148,8 +1440,12 @@
                 {
                   "id": "I-11",
                   "description": "Interactive prim.yaml creator: `pnpm create-prim --interactive` CLI wizard (id, name, routes, pricing, providers, accent). Also usable as LLM skill.",
-                  "owner": ["Claude"],
-                  "depends": ["I-9"],
+                  "owner": [
+                    "Claude"
+                  ],
+                  "depends": [
+                    "I-9"
+                  ],
                   "status": "done",
                   "release": null,
                   "plan": "tasks/completed/i-11-interactive-prim-creator.md"
@@ -1163,8 +1459,12 @@
                 {
                   "id": "I-20",
                   "description": "Write agent skill docs: getting-started.md, per-prim workflows (wallet, store, spawn, search, email, mem, domain, token), multi-prim.md cross-primitive patterns.",
-                  "owner": ["Claude"],
-                  "depends": ["I-18"],
+                  "owner": [
+                    "Claude"
+                  ],
+                  "depends": [
+                    "I-18"
+                  ],
                   "status": "done",
                   "release": null,
                   "plan": "tasks/completed/i-20-skills.md"
@@ -1178,8 +1478,13 @@
                 {
                   "id": "I-21",
                   "description": "Plugin install system: `prim install <primitive|all>`, manifest registry, MCP config injection into Claude/Cursor/VS Code, agent env detection.",
-                  "owner": ["Claude"],
-                  "depends": ["I-12", "I-20"],
+                  "owner": [
+                    "Claude"
+                  ],
+                  "depends": [
+                    "I-12",
+                    "I-20"
+                  ],
                   "status": "done",
                   "release": null,
                   "plan": "tasks/active/i-21-plugin-install-system.md"
@@ -1196,8 +1501,12 @@
             {
               "id": "I-16",
               "description": "PrimProvider base interface in x402-middleware: name, init(config), healthCheck(). Each prim extends with domain methods. Document the contract.",
-              "owner": ["Claude"],
-              "depends": ["I-8"],
+              "owner": [
+                "Claude"
+              ],
+              "depends": [
+                "I-8"
+              ],
               "status": "done",
               "release": null,
               "plan": "tasks/completed/i-16-provider-interface.md"
@@ -1205,8 +1514,12 @@
             {
               "id": "I-17",
               "description": "Provider registry + selection utility: config-driven vendor selection (env-based), fallback chains, health-check-on-startup. Migrate search.sh (Tavily) as proof.",
-              "owner": ["Claude"],
-              "depends": ["I-16"],
+              "owner": [
+                "Claude"
+              ],
+              "depends": [
+                "I-16"
+              ],
               "status": "done",
               "release": null,
               "plan": "tasks/completed/i-17-provider-registry.md"
@@ -1221,8 +1534,12 @@
             {
               "id": "I-30",
               "description": "Gate runner script: spawns isolated VPS via spawn.sh, installs prim CLI + wallet, configures infer.sh for agent reasoning, runs smoke-test-plan.json groups against live endpoints, collects pass/fail, tears down VPS. Runs locally and in CI.",
-              "owner": ["Claude"],
-              "depends": ["INF-6"],
+              "owner": [
+                "Claude"
+              ],
+              "depends": [
+                "INF-6"
+              ],
               "status": "done",
               "release": null,
               "plan": "tasks/active/i-30-gate-runner.md"
@@ -1230,8 +1547,12 @@
             {
               "id": "I-31",
               "description": "Add infer.sh test group to smoke-test-plan.json: health check, chat completion, embeddings, list models.",
-              "owner": ["Claude"],
-              "depends": ["INF-6"],
+              "owner": [
+                "Claude"
+              ],
+              "depends": [
+                "INF-6"
+              ],
               "status": "done",
               "release": null,
               "plan": "tasks/active/i-30-gate-runner.md"
@@ -1239,8 +1560,12 @@
             {
               "id": "I-32",
               "description": "CI gate workflow: on push, detect prim status changes. New prim \u2192 run gate, soft-fail (warn but don't block merge). Already-live prim \u2192 run gate, hard-fail (CI blocks). Quality gate for going live.",
-              "owner": ["Claude"],
-              "depends": ["I-30"],
+              "owner": [
+                "Claude"
+              ],
+              "depends": [
+                "I-30"
+              ],
               "status": "pending",
               "release": null,
               "plan": "tasks/active/i-30-gate-runner.md"
@@ -1248,16 +1573,24 @@
             {
               "id": "I-33",
               "description": "gen:gate \u2014 codegen smoke-test-plan.json entries from prim.yaml routes_map. For each live prim: emit health check + one test per route (method, endpoint, expected status/shape). Manual overrides (captures, special-case notes, group prompts) stay hand-written.",
-              "owner": ["Claude"],
-              "depends": ["I-30"],
+              "owner": [
+                "Claude"
+              ],
+              "depends": [
+                "I-30"
+              ],
               "status": "done",
               "release": null
             },
             {
               "id": "I-34",
               "description": "Agent canary: --canary flag on gate-runner.ts. For each group, sends prompt + prim's llms.txt to infer.sh, agent reasons about API and makes real x402 calls, reports structured results + UX observations. Catches issues deterministic tests miss (confusing errors, missing docs, broken workflows).",
-              "owner": ["Claude"],
-              "depends": ["I-30"],
+              "owner": [
+                "Claude"
+              ],
+              "depends": [
+                "I-30"
+              ],
               "status": "done",
               "release": null,
               "plan": "tasks/active/i-30-gate-runner.md"
@@ -1272,7 +1605,9 @@
             {
               "id": "OPS-7",
               "description": "gen:deploy generator: read prim.yaml \u2192 generate systemd unit, Caddy block, env template for each live prim. All three are boilerplate that only varies by package name, port, subdomain, and env list.",
-              "owner": ["Claude"],
+              "owner": [
+                "Claude"
+              ],
               "depends": [],
               "status": "pending",
               "release": null
@@ -1280,7 +1615,9 @@
             {
               "id": "OPS-8",
               "description": "Pre-deploy pricing validation: gen:prims --check should verify all route prices are parseable by x402 (numeric `$X.XX` format). Catch `$pass-through + 10%` style placeholders before they hit production.",
-              "owner": ["Claude"],
+              "owner": [
+                "Claude"
+              ],
               "depends": [],
               "status": "pending",
               "release": null
@@ -1288,16 +1625,25 @@
             {
               "id": "OPS-9",
               "description": "deploy-prim.sh script: given a prim ID, handles full deploy lifecycle \u2014 create DNS A record (Cloudflare API), install systemd unit, create env file from template + secrets, reload Caddy, start service, run healthcheck.",
-              "owner": ["Claude"],
-              "depends": ["OPS-7"],
+              "owner": [
+                "Claude"
+              ],
+              "depends": [
+                "OPS-7"
+              ],
               "status": "pending",
               "release": null
             },
             {
               "id": "OPS-10",
               "description": "CI auto-deploy: on push to main, diff prim.yaml status changes (building\u2192live), run deploy-prim.sh for each newly live prim. Extends OPS-5 GHA pipeline.",
-              "owner": ["Claude"],
-              "depends": ["OPS-5", "OPS-9"],
+              "owner": [
+                "Claude"
+              ],
+              "depends": [
+                "OPS-5",
+                "OPS-9"
+              ],
               "status": "pending",
               "release": null
             }
@@ -1316,7 +1662,9 @@
                 {
                   "id": "I-36",
                   "description": "gen:openapi \u2014 generate OpenAPI 3.1 specs from api.ts types + prim.yaml routes_map. Closes YAML\u2192everything loop. track/infer/imagine currently invisible to MCP/CLI/OpenAI gen.",
-                  "owner": ["Claude"],
+                  "owner": [
+                    "Claude"
+                  ],
                   "depends": [],
                   "status": "pending",
                   "release": null
@@ -1324,7 +1672,9 @@
                 {
                   "id": "I-37",
                   "description": "Dynamic deploy.sh SERVICES \u2014 read prim.yaml status:live instead of hardcoded array. 4 prims (token, mem, domain, track) missing from auto-restart.",
-                  "owner": ["Claude"],
+                  "owner": [
+                    "Claude"
+                  ],
                   "depends": [],
                   "status": "pending",
                   "release": null
@@ -1339,7 +1689,9 @@
                 {
                   "id": "OPS-11",
                   "description": "Backup all DBs \u2014 add email.db, mem.db, token.db, domain.db to backup.sh rotation. Currently only wallet, store, spawn, faucet are backed up.",
-                  "owner": ["Claude"],
+                  "owner": [
+                    "Claude"
+                  ],
                   "depends": [],
                   "status": "pending",
                   "release": null
@@ -1347,7 +1699,9 @@
                 {
                   "id": "OPS-12",
                   "description": "CI strict mode \u2014 remove `continue-on-error: true` from OpenAPI validation and dependency audit jobs. Failures currently invisible.",
-                  "owner": ["Claude"],
+                  "owner": [
+                    "Claude"
+                  ],
                   "depends": [],
                   "status": "pending",
                   "release": null
@@ -1355,15 +1709,29 @@
                 {
                   "id": "OPS-13",
                   "description": "Configure health alerting \u2014 set ALERT_WEBHOOK_URL in healthcheck.sh cron (Discord webhook or email). Currently monitoring runs but alerts go nowhere.",
-                  "owner": ["Claude"],
+                  "owner": [
+                    "Claude"
+                  ],
                   "depends": [],
                   "status": "pending",
                   "release": null
                 },
                 {
                   "id": "I-39",
-                  "description": "API key usage cost tracking — add usage-based providers (GEMINI_API_KEY, OPENROUTER_API_KEY, etc.) to specs/pricing.yaml infrastructure section and scripts/expenses.ts. Each provider needs: API or dashboard URL to fetch usage, per-unit cost, monthly cap if any. Goal: expenses.ts includes these in the fixed+variable cost breakdown so total operational cost is visible in one place.",
-                  "owner": ["Claude"],
+                  "description": "API key usage cost tracking \u2014 add usage-based providers (GEMINI_API_KEY, OPENROUTER_API_KEY, etc.) to specs/pricing.yaml infrastructure section and scripts/expenses.ts. Each provider needs: API or dashboard URL to fetch usage, per-unit cost, monthly cap if any. Goal: expenses.ts includes these in the fixed+variable cost breakdown so total operational cost is visible in one place.",
+                  "owner": [
+                    "Claude"
+                  ],
+                  "depends": [],
+                  "status": "pending",
+                  "release": null
+                },
+                {
+                  "id": "I-43",
+                  "description": "Reduce root file clutter: mv CODE_OF_CONDUCT.md CONTRIBUTING.md SECURITY.md \u2192 .github/; mv BRAND.md \u2192 docs/; mv test-flow.ts test-spawn.ts \u2192 tests/; mv brand.ts \u2192 site/brand.ts (update 3 site/ imports); mv primitives.yaml \u2192 scripts/primitives.yaml (update join(ROOT,...) in scripts/lib/primitives.ts)",
+                  "owner": [
+                    "Claude"
+                  ],
                   "depends": [],
                   "status": "pending",
                   "release": null
@@ -1378,8 +1746,12 @@
                 {
                   "id": "I-35",
                   "description": "Post-deploy health gate in CI \u2014 after deploy-vps job, poll all live service health endpoints. Fail the pipeline if any service is down. Catches bad deploys before they stick.",
-                  "owner": ["Claude"],
-                  "depends": ["OPS-5"],
+                  "owner": [
+                    "Claude"
+                  ],
+                  "depends": [
+                    "OPS-5"
+                  ],
                   "status": "pending",
                   "release": null
                 }
@@ -1395,40 +1767,61 @@
             {
               "id": "L-76",
               "description": "G3 Dogfood: complete golden path on mainnet via CLI using one-pager only (wallet create \u2192 fund \u2192 access request \u2192 store \u2192 search \u2192 feedback)",
-              "owner": ["Garric"],
-              "depends": ["L-22"],
+              "owner": [
+                "Garric"
+              ],
+              "depends": [
+                "L-22"
+              ],
               "status": "pending",
               "release": "v0"
             },
             {
               "id": "L-77",
               "description": "G4 Mainnet smoke test: write `scripts/smoke-mainnet.ts` \u2014 x402 settlement timing, spend limit enforcement, feedback_url error shape",
-              "owner": ["Garric"],
-              "depends": ["L-76"],
+              "owner": [
+                "Garric"
+              ],
+              "depends": [
+                "L-76"
+              ],
               "status": "pending",
               "release": "v0"
             },
             {
               "id": "L-78",
               "description": "G5 Build feedback.sh: `pnpm create-prim`, SQLite service logic, deploy to VPS, add feedback_url to x402-middleware errors",
-              "owner": ["Garric"],
-              "depends": ["L-76"],
+              "owner": [
+                "Garric"
+              ],
+              "depends": [
+                "L-76"
+              ],
               "status": "done",
               "release": "v0"
             },
             {
               "id": "L-79",
               "description": "G6 One-pager: write beta onboarding doc (<1 page) \u2014 install CLI, wallet create, access request, golden path, feedback loop",
-              "owner": ["Garric"],
-              "depends": ["L-77", "L-78"],
+              "owner": [
+                "Garric"
+              ],
+              "depends": [
+                "L-77",
+                "L-78"
+              ],
               "status": "pending",
               "release": "v0"
             },
             {
               "id": "L-80",
               "description": "G7 Private beta: send one-pager to 5 testers, 1-week observation, success = 3/5 complete golden path independently",
-              "owner": ["Garric"],
-              "depends": ["L-79"],
+              "owner": [
+                "Garric"
+              ],
+              "depends": [
+                "L-79"
+              ],
               "status": "pending",
               "release": "v0"
             }
@@ -1449,7 +1842,9 @@
             {
               "id": "L-54",
               "description": "Create Discord server: name \"Prim\", channels (#general, #bugs, #feature-requests, #announcements), permanent invite link",
-              "owner": ["Garric"],
+              "owner": [
+                "Garric"
+              ],
               "depends": [],
               "status": "pending",
               "release": null
@@ -1457,23 +1852,33 @@
             {
               "id": "L-38",
               "description": "Set brand assets on platforms: GitHub org avatar + repo social preview, X profile pic + banner, Discord icon",
-              "owner": ["Garric"],
-              "depends": ["L-54"],
+              "owner": [
+                "Garric"
+              ],
+              "depends": [
+                "L-54"
+              ],
               "status": "pending",
               "release": null
             },
             {
               "id": "L-55",
               "description": "Upload `final-logo.jpg` as GitHub org avatar, X @useprim profile pic, Discord server icon",
-              "owner": ["Garric"],
-              "depends": ["L-54"],
+              "owner": [
+                "Garric"
+              ],
+              "depends": [
+                "L-54"
+              ],
               "status": "pending",
               "release": null
             },
             {
               "id": "L-56",
               "description": "Upload `final-x-banner.jpg` as X @useprim header image",
-              "owner": ["Garric"],
+              "owner": [
+                "Garric"
+              ],
               "depends": [],
               "status": "pending",
               "release": null
@@ -1481,7 +1886,9 @@
             {
               "id": "L-57",
               "description": "Upload `final-social-preview.jpg` as GitHub repo social preview",
-              "owner": ["Garric"],
+              "owner": [
+                "Garric"
+              ],
               "depends": [],
               "status": "pending",
               "release": null
@@ -1489,7 +1896,9 @@
             {
               "id": "L-73",
               "description": "Compress favicon.png (1.2 MB \u2192 <50 KB) or regenerate optimized PNG from source artwork",
-              "owner": ["Claude"],
+              "owner": [
+                "Claude"
+              ],
               "depends": [],
               "status": "done",
               "release": null
@@ -1497,7 +1906,9 @@
             {
               "id": "L-74",
               "description": "Create SVG of >| logo mark for scalable use in badges, third-party integrations, and favicons",
-              "owner": ["Garric"],
+              "owner": [
+                "Garric"
+              ],
               "depends": [],
               "status": "pending",
               "release": null
@@ -1505,7 +1916,9 @@
             {
               "id": "L-75",
               "description": "Document GitHub repo URL convention (`primsh/prim` vs `primsh/prim.sh`) in BRAND.md handles section",
-              "owner": ["Claude"],
+              "owner": [
+                "Claude"
+              ],
               "depends": [],
               "status": "done",
               "release": null
@@ -1520,7 +1933,9 @@
             {
               "id": "L-72",
               "description": "README brand sync: `scripts/gen-readme.ts` reads `brand.ts` and rewrites tagline + one-liner sections in README.md",
-              "owner": ["Claude"],
+              "owner": [
+                "Claude"
+              ],
               "depends": [],
               "status": "pending",
               "release": null
@@ -1528,7 +1943,9 @@
             {
               "id": "L-41",
               "description": "Human docs: `prim.sh/docs` getting-started guide. Wallet setup, faucet, first API call, per-primitive examples",
-              "owner": ["Claude"],
+              "owner": [
+                "Claude"
+              ],
               "depends": [],
               "status": "pending",
               "release": null
@@ -1536,7 +1953,10 @@
             {
               "id": "L-42",
               "description": "Draft X launch content: tweet copy per teaser image, launch thread script, pin strategy",
-              "owner": ["Garric", "Claude"],
+              "owner": [
+                "Garric",
+                "Claude"
+              ],
               "depends": [],
               "status": "pending",
               "release": null
@@ -1544,7 +1964,9 @@
             {
               "id": "L-44",
               "description": "Access form: add optional X handle + GitHub handle fields. Store in D1 `access_requests` table",
-              "owner": ["Claude"],
+              "owner": [
+                "Claude"
+              ],
               "depends": [],
               "status": "pending",
               "release": null
@@ -1552,15 +1974,21 @@
             {
               "id": "L-45",
               "description": "Wallet ping on access approval: tiny USDC transfer with calldata `prim.sh:access:approved`",
-              "owner": ["Claude"],
-              "depends": ["L-44"],
+              "owner": [
+                "Claude"
+              ],
+              "depends": [
+                "L-44"
+              ],
               "status": "pending",
               "release": null
             },
             {
               "id": "L-46",
               "description": "Per-page hero color variation: accent-colored radial gradient behind hero",
-              "owner": ["Claude"],
+              "owner": [
+                "Claude"
+              ],
               "depends": [],
               "status": "pending",
               "release": null
@@ -1568,7 +1996,9 @@
             {
               "id": "COM-1",
               "description": "Add CHANGELOG.md tracking version history, breaking changes, new primitives, and security patches",
-              "owner": ["Claude"],
+              "owner": [
+                "Claude"
+              ],
               "depends": [],
               "status": "done",
               "release": null
@@ -1576,7 +2006,9 @@
             {
               "id": "COM-2",
               "description": "Add CODE_OF_CONDUCT.md (Contributor Covenant)",
-              "owner": ["Claude"],
+              "owner": [
+                "Claude"
+              ],
               "depends": [],
               "status": "done",
               "release": null
@@ -1584,7 +2016,9 @@
             {
               "id": "COM-9",
               "description": "llms.txt references `POST api.prim.sh/access/request` which returns 404. Remove or implement.",
-              "owner": ["Claude"],
+              "owner": [
+                "Claude"
+              ],
               "depends": [],
               "status": "pending",
               "release": null
@@ -1603,7 +2037,9 @@
                 {
                   "id": "SITE-3",
                   "description": "Fix site bugs: `.principles` missing mobile breakpoint, missing `.img-fade` on index banner, dead `.wordmark` CSS, dead `HTTP_METHODS` const, dead `.s2` class refs",
-                  "owner": ["Claude"],
+                  "owner": [
+                    "Claude"
+                  ],
                   "depends": [],
                   "status": "done",
                   "release": null
@@ -1611,7 +2047,9 @@
                 {
                   "id": "SITE-4",
                   "description": "OG + Twitter Card meta tags on all pages (`index.html` + `template.ts`): `og:title`, `og:description`, `og:image`, `twitter:card`",
-                  "owner": ["Claude"],
+                  "owner": [
+                    "Claude"
+                  ],
                   "depends": [],
                   "status": "done",
                   "release": null
@@ -1619,7 +2057,9 @@
                 {
                   "id": "SITE-5",
                   "description": "SEO baseline: `<meta name=\"description\">`, `theme-color`, `apple-touch-icon` on all pages",
-                  "owner": ["Claude"],
+                  "owner": [
+                    "Claude"
+                  ],
                   "depends": [],
                   "status": "done",
                   "release": null
@@ -1627,7 +2067,9 @@
                 {
                   "id": "SITE-6",
                   "description": "Custom 404 page: styled with prim.css, links home",
-                  "owner": ["Claude"],
+                  "owner": [
+                    "Claude"
+                  ],
                   "depends": [],
                   "status": "done",
                   "release": null
@@ -1635,7 +2077,9 @@
                 {
                   "id": "SITE-7",
                   "description": "Smooth scroll + scroll-hint anchors to first content section",
-                  "owner": ["Claude"],
+                  "owner": [
+                    "Claude"
+                  ],
                   "depends": [],
                   "status": "done",
                   "release": null
@@ -1643,7 +2087,9 @@
                 {
                   "id": "SITE-8",
                   "description": "Fix `.hero` structure: sections + footer render inside hero flexbox on sub-pages",
-                  "owner": ["Claude"],
+                  "owner": [
+                    "Claude"
+                  ],
                   "depends": [],
                   "status": "done",
                   "release": null
@@ -1651,7 +2097,9 @@
                 {
                   "id": "SITE-9",
                   "description": "Per-product install.sh: generator script (scripts/gen-install-scripts.ts), serve route (/<id>/install.sh), hero block replaced with install one-liner. Plan: tasks/active/site-9-per-product-install-2026-02-26.md",
-                  "owner": ["Claude"],
+                  "owner": [
+                    "Claude"
+                  ],
                   "depends": [],
                   "status": "done",
                   "release": null
@@ -1673,7 +2121,9 @@
                 {
                   "id": "COM-3",
                   "description": "Add JSDoc field annotations to all api.ts interfaces (10 prims), create faucet api.ts, add missing ERROR_CODES to search + track",
-                  "owner": ["Claude"],
+                  "owner": [
+                    "Claude"
+                  ],
                   "depends": [],
                   "status": "done",
                   "release": null
@@ -1681,7 +2131,9 @@
                 {
                   "id": "COM-4",
                   "description": "Add llms.txt fields to prim.yaml (quick_start, tips, limits, ownership, routes_map) + update Primitive type in primitives.ts",
-                  "owner": ["Claude"],
+                  "owner": [
+                    "Claude"
+                  ],
                   "depends": [],
                   "status": "done",
                   "release": null
@@ -1696,16 +2148,25 @@
                 {
                   "id": "COM-5",
                   "description": "Build scripts/lib/parse-api.ts \u2014 regex parser extracting interfaces, fields, JSDoc, ERROR_CODES from api.ts files",
-                  "owner": ["Claude"],
-                  "depends": ["COM-3"],
+                  "owner": [
+                    "Claude"
+                  ],
+                  "depends": [
+                    "COM-3"
+                  ],
                   "status": "done",
                   "release": null
                 },
                 {
                   "id": "COM-6",
                   "description": "Build scripts/lib/render-llms-txt.ts + wire into gen-prims.ts \u2014 render full llms.txt from Primitive + ParsedApi + route prices",
-                  "owner": ["Claude"],
-                  "depends": ["COM-4", "COM-5"],
+                  "owner": [
+                    "Claude"
+                  ],
+                  "depends": [
+                    "COM-4",
+                    "COM-5"
+                  ],
                   "status": "done",
                   "release": null
                 }
@@ -1719,16 +2180,24 @@
                 {
                   "id": "COM-7",
                   "description": "Add GET /llms.txt handler + freeRoutes to all prims; remove embedded LLMS_TXT consts from email/domain/token/mem index.ts",
-                  "owner": ["Claude"],
-                  "depends": ["COM-6"],
+                  "owner": [
+                    "Claude"
+                  ],
+                  "depends": [
+                    "COM-6"
+                  ],
                   "status": "done",
                   "release": null
                 },
                 {
                   "id": "COM-8",
                   "description": "Add llms.txt to gen-prims.ts --check mode; verify CI workflow runs gen:check",
-                  "owner": ["Claude"],
-                  "depends": ["COM-6"],
+                  "owner": [
+                    "Claude"
+                  ],
+                  "depends": [
+                    "COM-6"
+                  ],
                   "status": "done",
                   "release": null
                 }
@@ -1745,7 +2214,9 @@
             {
               "id": "SITE-10",
               "description": "Wire GHA \u2192 Cloudflare Pages: add deploy-site job (wrangler pages deploy), rename deploy\u2192deploy-vps, add verify smoke check, GitHub Environments (production). Plan: tasks/active/site-10-pages-gha-2026-02-27.md",
-              "owner": ["Claude"],
+              "owner": [
+                "Claude"
+              ],
               "depends": [],
               "status": "done",
               "release": null,
@@ -1754,8 +2225,12 @@
             {
               "id": "SITE-11",
               "description": "Remove prim-site from VPS: stop/disable systemd unit, remove Caddy prim.sh block, remove restart from deploy.sh, exclude site/ from rsync in deploy.yml + sync-vps.sh. Plan: tasks/active/site-11-prim-site-removal-2026-02-27.md",
-              "owner": ["Claude"],
-              "depends": ["SITE-10"],
+              "owner": [
+                "Claude"
+              ],
+              "depends": [
+                "SITE-10"
+              ],
               "status": "done",
               "release": null,
               "plan": "tasks/active/site-11-prim-site-removal-2026-02-27.md"
@@ -1770,7 +2245,9 @@
             {
               "id": "COM-10",
               "description": "Add metadata to root package.json: `description`, `homepage` (https://prim.sh), `keywords`, `author`",
-              "owner": ["Claude"],
+              "owner": [
+                "Claude"
+              ],
               "depends": [],
               "status": "done",
               "release": null
@@ -1778,7 +2255,9 @@
             {
               "id": "COM-14",
               "description": "Decide initial semver and bump all packages from 0.0.0 (recommend v0.1.0 for pre-stable OSS launch)",
-              "owner": ["Garric"],
+              "owner": [
+                "Garric"
+              ],
               "depends": [],
               "status": "pending",
               "release": null
@@ -1799,7 +2278,9 @@
             {
               "id": "L-50",
               "description": "deploy.sh: PaaS above spawn.sh \u2014 push container or repo URL, get live endpoint. Wraps Dokku/Coolify",
-              "owner": ["Claude"],
+              "owner": [
+                "Claude"
+              ],
               "depends": [],
               "status": "backlog",
               "release": null
@@ -1807,7 +2288,9 @@
             {
               "id": "I-22",
               "description": "Research: tap.sh \u2014 runtime adapter registry. Agents register external APIs as prims (upstream URL + routes + API key). Prim wraps in x402/MCP/CLI automatically. No code gen, no deploy. Key questions: where does adapter config live (DB? prim.yaml?), auth scoping (who can call?), key custody, abuse prevention, discovery via search.sh. Write spec in tasks/research/.",
-              "owner": ["Claude"],
+              "owner": [
+                "Claude"
+              ],
               "depends": [],
               "status": "backlog",
               "release": null
@@ -1815,7 +2298,9 @@
             {
               "id": "I-23",
               "description": "create.sh: implement service layer for POST /v1/scaffold (returns file manifest as JSON), POST /v1/validate, GET /v1/schema, GET /v1/ports. Package already scaffolded.",
-              "owner": ["Claude"],
+              "owner": [
+                "Claude"
+              ],
               "depends": [],
               "status": "done",
               "release": null
@@ -1823,15 +2308,21 @@
             {
               "id": "I-24",
               "description": "pr.sh: GitHub PR primitive. Wraps gh API. Create/update/status/comments. Scoped to prim repo. Plan: tasks/research/agent-contribution-pipeline.md",
-              "owner": ["Claude"],
-              "depends": ["I-23"],
+              "owner": [
+                "Claude"
+              ],
+              "depends": [
+                "I-23"
+              ],
               "status": "backlog",
               "release": null
             },
             {
               "id": "I-25",
               "description": "issue.sh: GitHub issue primitive. Create/list/comment. Dedup via mem.sh semantic search before creating.",
-              "owner": ["Claude"],
+              "owner": [
+                "Claude"
+              ],
               "depends": [],
               "status": "backlog",
               "release": null
@@ -1839,23 +2330,34 @@
             {
               "id": "I-26",
               "description": "Agent contribution GHA: auto-test PRs that add new prims (validate schema, run scaffolder, smoke tests, spawn agent to exercise endpoints). Auto-merge if green.",
-              "owner": ["Claude"],
-              "depends": ["I-23", "I-24"],
+              "owner": [
+                "Claude"
+              ],
+              "depends": [
+                "I-23",
+                "I-24"
+              ],
               "status": "backlog",
               "release": null
             },
             {
               "id": "I-27",
               "description": "Provider key donation system: agents contribute API keys to expand provider coverage. Encrypted custody, usage tracking, health validation, credit/karma incentives.",
-              "owner": ["Claude"],
-              "depends": ["I-22"],
+              "owner": [
+                "Claude"
+              ],
+              "depends": [
+                "I-22"
+              ],
               "status": "backlog",
               "release": null
             },
             {
               "id": "I-28",
               "description": "Provider scaffolder: `pnpm create-provider <prim> <vendor>` generates src/<vendor>.ts implementing the prim provider interface, registers in index.ts. Reads existing src/provider.ts for the interface shape.",
-              "owner": ["Claude"],
+              "owner": [
+                "Claude"
+              ],
               "depends": [],
               "status": "done",
               "release": null
@@ -1863,7 +2365,9 @@
             {
               "id": "I-29",
               "description": "gen:docs \u2014 generates CLAUDE.md factory section, README prim table, per-package READMEs, homepage fields in package.json, shields.io badges in root README, brand copy from brand.ts SOT. Code is canonical source.",
-              "owner": ["Claude"],
+              "owner": [
+                "Claude"
+              ],
               "depends": [],
               "status": "done",
               "release": null
