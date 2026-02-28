@@ -21,19 +21,27 @@ jobs:
       pull-requests: write
 
     steps:
+      - name: Generate app token
+        id: app-token
+        uses: actions/create-github-app-token@v1
+        with:
+          app-id: ${{ secrets.PRIM_CI_APP_ID }}
+          private-key: ${{ secrets.PRIM_CI_PRIVATE_KEY }}
+
       - uses: actions/checkout@v4
         with:
+          token: ${{ steps.app-token.outputs.token }}
           fetch-depth: 0
 
       - name: Configure git
         run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git config user.name "prim-ci[bot]"
+          git config user.email "prim-ci[bot]@users.noreply.github.com"
 
       - name: Find and triage conflicted PRs
         id: find
         env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_TOKEN: ${{ steps.app-token.outputs.token }}
         run: |
           # Give GitHub time to recalculate mergeability after main moved
           sleep 15
@@ -94,15 +102,23 @@ jobs:
     timeout-minutes: 10
 
     steps:
+      - name: Generate app token
+        id: app-token
+        uses: actions/create-github-app-token@v1
+        with:
+          app-id: ${{ secrets.PRIM_CI_APP_ID }}
+          private-key: ${{ secrets.PRIM_CI_PRIVATE_KEY }}
+
       - uses: actions/checkout@v4
         with:
           ref: ${{ matrix.pr.branch }}
+          token: ${{ steps.app-token.outputs.token }}
           fetch-depth: 0
 
       - name: Configure git
         run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git config user.name "prim-ci[bot]"
+          git config user.email "prim-ci[bot]@users.noreply.github.com"
 
       - name: Start merge (leave conflict markers)
         run: |
