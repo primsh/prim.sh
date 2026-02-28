@@ -179,7 +179,7 @@ function checkSpec(primId: string): CheckResult {
   try {
     spec = parseYaml(readFileSync(sp, "utf8")) as Record<string, unknown>;
   } catch (e) {
-    result.errors.push(`Failed to parse ${specFile}: ${e}`);
+    result.errors.push(`Failed to parse ${primId}: ${e}`);
     return result;
   }
 
