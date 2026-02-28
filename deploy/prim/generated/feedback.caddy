@@ -1,7 +1,15 @@
+# THIS FILE IS GENERATED — DO NOT EDIT
+# Source: packages/feedback/prim.yaml
+# Regenerate: pnpm gen:deploy
+
 feedback.prim.sh {
     import security_headers
     request_body {
         max_size 1MB
+    }
+    handle /install.sh {
+        root * /opt/prim/packages/feedback
+        file_server
     }
     handle {
         reverse_proxy localhost:3014

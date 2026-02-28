@@ -230,6 +230,10 @@ export function renderReadme(
 ): string {
   const sections: string[] = [];
 
+  sections.push(
+    `<!-- THIS FILE IS GENERATED — DO NOT EDIT\n     Source: packages/${p.id}/prim.yaml + packages/${p.id}/src/api.ts\n     Regenerate: pnpm gen:docs -->`,
+  );
+
   sections.push(renderTitle(p));
   sections.push(renderIntro());
   sections.push(renderRoutes(p, api, prices));

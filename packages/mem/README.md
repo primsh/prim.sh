@@ -1,3 +1,7 @@
+<!-- THIS FILE IS GENERATED — DO NOT EDIT
+     Source: packages/mem/prim.yaml + packages/mem/src/api.ts
+     Regenerate: pnpm gen:docs -->
+
 # mem.sh
 
 > Vector store and cache for agents. Persist long-term knowledge and session state.

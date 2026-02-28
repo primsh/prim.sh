@@ -1,3 +1,7 @@
+<!-- THIS FILE IS GENERATED — DO NOT EDIT
+     Source: packages/domain/prim.yaml + packages/domain/src/api.ts
+     Regenerate: pnpm gen:docs -->
+
 # domain.sh
 
 > Register domains, manage DNS, auto-TLS. Full domain lifecycle via API.

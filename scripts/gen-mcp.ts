@@ -2,7 +2,7 @@
 /**
  * gen-mcp.ts — MCP tool generator
  *
- * Reads specs/openapi/<id>.yaml and generates packages/mcp/src/tools/<id>.ts.
+ * Reads packages/<id>/openapi.yaml and generates packages/mcp/src/tools/<id>.ts.
  * OpenAPI is the single source of truth for tool names, descriptions, and schemas.
  *
  * Usage:
@@ -20,10 +20,9 @@
 import { existsSync, readFileSync, writeFileSync } from "node:fs";
 import { join, resolve } from "node:path";
 import { parse as parseYaml } from "yaml";
-import { primsForInterface } from "./lib/primitives.js";
+import { primsForInterface, specPath } from "./lib/primitives.js";
 
 const ROOT = resolve(import.meta.dir, "..");
-const SPECS_DIR = join(ROOT, "specs/openapi");
 const TOOLS_DIR = join(ROOT, "packages/mcp/src/tools");
 const CHECK_MODE = process.argv.includes("--check");
 
@@ -526,6 +525,10 @@ function generateSections(prim: string, spec: OpenApiSpec): GeneratedSection {
 
 function buildFullFile(prim: string, toolsDef: string, handlerDef: string): string {
   return [
+    `// THIS FILE IS GENERATED — DO NOT EDIT`,
+    `// Source: packages/${prim}/openapi.yaml`,
+    `// Regenerate: pnpm gen:mcp`,
+    ``,
     `import type { Tool } from "@modelcontextprotocol/sdk/types.js";`,
     `import type { CallToolResult } from "@modelcontextprotocol/sdk/types.js";`,
     "",
@@ -590,17 +593,17 @@ function applyOrCheck(filePath: string, content: string, label: string): void {
 console.log(CHECK_MODE ? "Mode: check\n" : "Mode: generate\n");
 
 for (const prim of PRIMS) {
-  const specPath = join(SPECS_DIR, `${prim}.yaml`);
+  const sp = specPath(prim);
   const outPath = join(TOOLS_DIR, `${prim}.ts`);
 
-  if (!existsSync(specPath)) {
+  if (!existsSync(sp)) {
     console.log(`  – ${prim}.ts (no OpenAPI spec, skipped)`);
     continue;
   }
 
   let spec: OpenApiSpec;
   try {
-    const raw = readFileSync(specPath, "utf8");
+    const raw = readFileSync(sp, "utf8");
     spec = parseYaml(raw) as OpenApiSpec;
   } catch (err) {
     console.error(`  ✗ ${prim}.yaml parse error: ${err}`);
@@ -613,9 +616,16 @@ for (const prim of PRIMS) {
   let finalContent: string;
   const existing = existsSync(outPath) ? readFileSync(outPath, "utf8") : null;
 
+  const GEN_HEADER = `// THIS FILE IS GENERATED — DO NOT EDIT\n// Source: packages/${prim}/openapi.yaml\n// Regenerate: pnpm gen:mcp\n\n`;
+
   if (existing?.includes("// BEGIN:GENERATED:TOOLS")) {
     // File already has markers — inject into existing file
-    finalContent = injectMarkers(existing, toolsDef, handlerDef);
+    let injected = injectMarkers(existing, toolsDef, handlerDef);
+    // Ensure generated header is present at top of file
+    if (!injected.startsWith("// THIS FILE IS GENERATED")) {
+      injected = GEN_HEADER + injected;
+    }
+    finalContent = injected;
   } else {
     // First run — write full file
     finalContent = buildFullFile(prim, toolsDef, handlerDef);

@@ -1,3 +1,7 @@
+<!-- THIS FILE IS GENERATED — DO NOT EDIT
+     Source: packages/token/prim.yaml + packages/token/src/api.ts
+     Regenerate: pnpm gen:docs -->
+
 # token.sh
 
 > Deploy ERC-20 tokens and Uniswap V3 pools. No wallet setup required.

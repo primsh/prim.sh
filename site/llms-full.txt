@@ -1,3 +1,9 @@
+# THIS FILE IS GENERATED — DO NOT EDIT
+# Source: packages/<id>/prim.yaml (all prims)
+# Regenerate: pnpm gen:prims
+
+---
+
 # Prim
 
 The agent-native stack. Infrastructure primitives for autonomous agents.
@@ -150,6 +156,10 @@ Run prim <command> --help for options.
 <!-- END:PRIM:STATUS -->
 
 ---
+
+# THIS FILE IS GENERATED — DO NOT EDIT
+# Source: packages/wallet/prim.yaml + packages/wallet/src/api.ts
+# Regenerate: pnpm gen:prims
 
 # wallet.prim.sh
 
@@ -558,6 +568,10 @@ All resources scoped to the wallet address extracted from the x402 payment signa
 
 ---
 
+# THIS FILE IS GENERATED — DO NOT EDIT
+# Source: packages/faucet/prim.yaml + packages/faucet/src/api.ts
+# Regenerate: pnpm gen:prims
+
 # faucet.prim.sh
 
 Free testnet USDC and ETH on demand. Fund your agent wallet and start building.
@@ -764,6 +778,10 @@ Errors:
 Rate-limited by wallet address. No wallet registration required — anyone can drip to any address.
 
 ---
+
+# THIS FILE IS GENERATED — DO NOT EDIT
+# Source: packages/store/prim.yaml + packages/store/src/api.ts
+# Regenerate: pnpm gen:prims
 
 # store.prim.sh
 
@@ -1121,6 +1139,10 @@ All buckets and objects are scoped to the wallet address extracted from the x402
 
 ---
 
+# THIS FILE IS GENERATED — DO NOT EDIT
+# Source: packages/search/prim.yaml + packages/search/src/api.ts
+# Regenerate: pnpm gen:prims
+
 # search.prim.sh
 
 Search for agents. No ads, no SEO spam. Just facts and clean markdown.
@@ -1307,6 +1329,10 @@ Errors:
 Stateless. No resources stored per wallet. Each request is independent.
 
 ---
+
+# THIS FILE IS GENERATED — DO NOT EDIT
+# Source: packages/spawn/prim.yaml + packages/spawn/src/api.ts
+# Regenerate: pnpm gen:prims
 
 # spawn.prim.sh
 
@@ -1689,6 +1715,10 @@ Errors:
 All servers and SSH keys are scoped to the wallet address extracted from the x402 payment.
 
 ---
+
+# THIS FILE IS GENERATED — DO NOT EDIT
+# Source: packages/email/prim.yaml + packages/email/src/api.ts
+# Regenerate: pnpm gen:prims
 
 # email.prim.sh
 
@@ -2185,6 +2215,10 @@ All mailboxes and domains are scoped to the wallet address extracted from the x4
 
 ---
 
+# THIS FILE IS GENERATED — DO NOT EDIT
+# Source: packages/token/prim.yaml + packages/token/src/api.ts
+# Regenerate: pnpm gen:prims
+
 # token.prim.sh
 
 Deploy ERC-20 tokens and Uniswap V3 pools. No wallet setup required.
@@ -2521,6 +2555,10 @@ Tokens are scoped to the wallet address extracted from the x402 payment. Only th
 
 ---
 
+# THIS FILE IS GENERATED — DO NOT EDIT
+# Source: packages/mem/prim.yaml + packages/mem/src/api.ts
+# Regenerate: pnpm gen:prims
+
 # mem.prim.sh
 
 Vector store and cache for agents. Persist long-term knowledge and session state.
@@ -2834,6 +2872,10 @@ Errors:
 All collections and cache entries are scoped to the wallet address extracted from the x402 payment.
 
 ---
+
+# THIS FILE IS GENERATED — DO NOT EDIT
+# Source: packages/domain/prim.yaml + packages/domain/src/api.ts
+# Regenerate: pnpm gen:prims
 
 # domain.prim.sh
 
@@ -3341,6 +3383,10 @@ Errors:
 All DNS zones and records are scoped to the wallet address extracted from the x402 payment.
 
 ---
+
+# THIS FILE IS GENERATED — DO NOT EDIT
+# Source: packages/track/prim.yaml + packages/track/src/api.ts
+# Regenerate: pnpm gen:prims
 
 # track.prim.sh
 
@@ -3973,6 +4019,10 @@ curl "https://pins.prim.sh/v1/places/nearby?lat=40.7128&lng=-74.0060&radius_m=10
 ```
 
 ---
+
+# THIS FILE IS GENERATED — DO NOT EDIT
+# Source: packages/infer/prim.yaml + packages/infer/src/api.ts
+# Regenerate: pnpm gen:prims
 
 # infer.prim.sh
 

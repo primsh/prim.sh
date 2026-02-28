@@ -1,3 +1,7 @@
+# THIS FILE IS GENERATED — DO NOT EDIT
+# Source: packages/<id>/prim.yaml (all deployed prims) + deploy/prim/Caddyfile.header
+# Regenerate: pnpm gen:deploy
+
 {
 	servers {
 		timeouts {
@@ -73,6 +77,10 @@ mail.prim.sh {
     reverse_proxy localhost:8080
 }
 
+# THIS FILE IS GENERATED — DO NOT EDIT
+# Source: packages/faucet/prim.yaml
+# Regenerate: pnpm gen:deploy
+
 faucet.prim.sh {
     import security_headers
     request_body {
@@ -87,15 +95,27 @@ faucet.prim.sh {
     }
 }
 
+# THIS FILE IS GENERATED — DO NOT EDIT
+# Source: packages/feedback/prim.yaml
+# Regenerate: pnpm gen:deploy
+
 feedback.prim.sh {
     import security_headers
     request_body {
         max_size 1MB
     }
+    handle /install.sh {
+        root * /opt/prim/packages/feedback
+        file_server
+    }
     handle {
         reverse_proxy localhost:3014
     }
 }
+
+# THIS FILE IS GENERATED — DO NOT EDIT
+# Source: packages/gate/prim.yaml
+# Regenerate: pnpm gen:deploy
 
 gate.prim.sh {
     import security_headers
@@ -153,6 +173,10 @@ mem.prim.sh {
     }
 }
 
+# THIS FILE IS GENERATED — DO NOT EDIT
+# Source: packages/search/prim.yaml
+# Regenerate: pnpm gen:deploy
+
 search.prim.sh {
     import security_headers
     log {
@@ -184,6 +208,10 @@ spawn.prim.sh {
         reverse_proxy localhost:3004
     }
 }
+
+# THIS FILE IS GENERATED — DO NOT EDIT
+# Source: packages/store/prim.yaml
+# Regenerate: pnpm gen:deploy
 
 store.prim.sh {
     import security_headers
@@ -230,6 +258,10 @@ track.prim.sh {
         reverse_proxy localhost:3010
     }
 }
+
+# THIS FILE IS GENERATED — DO NOT EDIT
+# Source: packages/wallet/prim.yaml
+# Regenerate: pnpm gen:deploy
 
 wallet.prim.sh {
     import security_headers

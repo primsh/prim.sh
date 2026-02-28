@@ -306,8 +306,9 @@ for (const p of primsWithRoutes) {
   }
   const parsedApi = parseApiFile(apiPath);
   const routePrices = parseRoutePrices(indexPath);
-  const content = renderLlmsTxt(p, parsedApi, routePrices);
-  applyFullFile(llmsPath, content);
+  const llmsBody = renderLlmsTxt(p, parsedApi, routePrices);
+  const llmsHeader = `# THIS FILE IS GENERATED — DO NOT EDIT\n# Source: packages/${p.id}/prim.yaml + packages/${p.id}/src/api.ts\n# Regenerate: pnpm gen:prims\n\n`;
+  applyFullFile(llmsPath, llmsHeader + llmsBody);
 }
 
 // 10. site/skills.json — machine-readable skill registry
@@ -340,8 +341,9 @@ for (const p of primsWithRoutes) {
 
 // 11. site/llms-full.txt — concatenation of root llms.txt + all per-prim llms.txt
 {
+  const llmsFullHeader = `# THIS FILE IS GENERATED — DO NOT EDIT\n# Source: packages/<id>/prim.yaml (all prims)\n# Regenerate: pnpm gen:prims`;
   const rootLlms = readFileSync(join(ROOT, "site/llms.txt"), "utf8");
-  const sections = [rootLlms.trimEnd()];
+  const sections = [llmsFullHeader, rootLlms.trimEnd()];
   for (const p of prims) {
     const primLlmsPath = join(ROOT, "site", p.id, "llms.txt");
     if (!existsSync(primLlmsPath)) continue;
@@ -392,6 +394,9 @@ for (const p of primsWithRoutes) {
   }
 
   const sitemap = `<?xml version="1.0" encoding="UTF-8"?>
+<!-- THIS FILE IS GENERATED — DO NOT EDIT
+     Source: packages/<id>/prim.yaml (all prims)
+     Regenerate: pnpm gen:prims -->
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
 ${urls.join("\n")}
 </urlset>
@@ -518,7 +523,7 @@ ${urls.join("\n")}
       entry.llms_txt = `https://prim.sh/${p.id}/llms.txt`;
     }
     // Only include openapi if the spec file exists
-    const openapiPath = join(ROOT, "specs/openapi", `${p.id}.yaml`);
+    const openapiPath = join(ROOT, "packages", p.id, "openapi.yaml");
     if (existsSync(openapiPath)) {
       entry.openapi = `https://prim.sh/openapi/${p.id}.yaml`;
     }

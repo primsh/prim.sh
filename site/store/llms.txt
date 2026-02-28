@@ -1,3 +1,7 @@
+# THIS FILE IS GENERATED — DO NOT EDIT
+# Source: packages/store/prim.yaml + packages/store/src/api.ts
+# Regenerate: pnpm gen:prims
+
 # store.prim.sh
 
 Object storage. Persist artifacts across ephemeral VMs. S3-compatible.

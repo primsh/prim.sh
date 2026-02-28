@@ -1,3 +1,7 @@
+// THIS FILE IS GENERATED — DO NOT EDIT
+// Source: specs/openapi/spawn.yaml
+// Regenerate: pnpm gen:mcp
+
 import type { Tool } from "@modelcontextprotocol/sdk/types.js";
 import type { CallToolResult } from "@modelcontextprotocol/sdk/types.js";
 
@@ -5,29 +9,24 @@ import type { CallToolResult } from "@modelcontextprotocol/sdk/types.js";
 export const spawnTools: Tool[] = [
   {
     name: "spawn_list_servers",
-    description: "List servers | Price: $0.001",
+    description: "List all servers owned by the calling wallet | Price: $0.001",
     inputSchema: {
         type: "object",
         properties: {
           "limit": {
             type: "integer",
-            minimum: 1,
-            maximum: 100,
-            default: 20,
-            description: "Number of servers to return. Max 100.",
+            description: "1-100, default 20",
           },
           "page": {
             type: "integer",
-            minimum: 1,
-            default: 1,
-            description: "Page number (1-indexed).",
+            description: "1-based page number, default 1",
           },
         },
       },
   },
   {
     name: "spawn_create_server",
-    description: "Create a server | Price: $0.01",
+    description: "Provision a new VPS. Returns immediately with status 'initializing'. | Price: $0.01",
     inputSchema: {
         type: "object",
         properties: {
@@ -37,30 +36,30 @@ export const spawnTools: Tool[] = [
           },
           "type": {
             type: "string",
-            description: "Server type slug. Only `small` is available in beta.",
+            description: "Server type slug. Only \"small\" (2 vCPU, 4 GB RAM) available in beta.",
           },
           "image": {
             type: "string",
-            description: "OS image slug.",
+            description: "OS image slug (e.g. \"ubuntu-24.04\", \"debian-12\").",
           },
           "location": {
             type: "string",
-            description: "Data center location slug.",
+            description: "Data center slug (e.g. \"nyc3\", \"sfo3\", \"lon1\").",
           },
           "provider": {
             type: "string",
-            description: "Cloud provider. Defaults to Hetzner.",
+            description: "Cloud provider. Default \"digitalocean\".",
           },
           "ssh_keys": {
             type: "array",
             items: {
               type: "string",
             },
-            description: "Array of SSH key IDs (from `POST /v1/ssh-keys`) to install.",
+            description: "SSH key IDs from POST /v1/ssh-keys to install on the server.",
           },
           "user_data": {
             type: "string",
-            description: "Cloud-init user data script to run on first boot.",
+            description: "Cloud-init script to run on first boot.",
           },
         },
         required: ["name","type","image","location"],
@@ -68,13 +67,13 @@ export const spawnTools: Tool[] = [
   },
   {
     name: "spawn_get_server",
-    description: "Get server | Price: $0.001",
+    description: "Get full details for a single server. Poll this until status='running'. | Price: $0.001",
     inputSchema: {
         type: "object",
         properties: {
           "id": {
             type: "string",
-            description: "Prim server ID.",
+            description: "id parameter",
           },
         },
         required: ["id"],
@@ -82,13 +81,13 @@ export const spawnTools: Tool[] = [
   },
   {
     name: "spawn_delete_server",
-    description: "Delete server | Price: $0.005",
+    description: "Destroy a server and release its resources. Unused deposit is refunded. | Price: $0.005",
     inputSchema: {
         type: "object",
         properties: {
           "id": {
             type: "string",
-            description: "Prim server ID.",
+            description: "id parameter",
           },
         },
         required: ["id"],
@@ -96,13 +95,13 @@ export const spawnTools: Tool[] = [
   },
   {
     name: "spawn_start_server",
-    description: "Start server | Price: $0.002",
+    description: "Start a stopped server | Price: $0.002",
     inputSchema: {
         type: "object",
         properties: {
           "id": {
             type: "string",
-            description: "Prim server ID.",
+            description: "id parameter",
           },
         },
         required: ["id"],
@@ -110,13 +109,13 @@ export const spawnTools: Tool[] = [
   },
   {
     name: "spawn_stop_server",
-    description: "Stop server | Price: $0.002",
+    description: "Stop a running server (graceful shutdown) | Price: $0.002",
     inputSchema: {
         type: "object",
         properties: {
           "id": {
             type: "string",
-            description: "Prim server ID.",
+            description: "id parameter",
           },
         },
         required: ["id"],
@@ -124,13 +123,13 @@ export const spawnTools: Tool[] = [
   },
   {
     name: "spawn_reboot_server",
-    description: "Reboot server | Price: $0.002",
+    description: "Reboot a running server | Price: $0.002",
     inputSchema: {
         type: "object",
         properties: {
           "id": {
             type: "string",
-            description: "Prim server ID.",
+            description: "id parameter",
           },
         },
         required: ["id"],
@@ -138,13 +137,13 @@ export const spawnTools: Tool[] = [
   },
   {
     name: "spawn_resize_server",
-    description: "Resize server | Price: $0.01",
+    description: "Change server type (CPU/RAM). Server must be stopped first. Deposit adjusted. | Price: $0.01",
     inputSchema: {
         type: "object",
         properties: {
           "id": {
             type: "string",
-            description: "Prim server ID.",
+            description: "id parameter",
           },
           "type": {
             type: "string",
@@ -152,8 +151,7 @@ export const spawnTools: Tool[] = [
           },
           "upgrade_disk": {
             type: "boolean",
-            description: "Whether to upgrade the disk alongside the CPU/RAM. Irreversible if true.",
-            default: false,
+            description: "Upgrade disk along with CPU/RAM. Irreversible if true. Default false.",
           },
         },
         required: ["id","type"],
@@ -161,17 +159,17 @@ export const spawnTools: Tool[] = [
   },
   {
     name: "spawn_rebuild_server",
-    description: "Rebuild server | Price: $0.005",
+    description: "Reinstall from a fresh OS image. All data on server is destroyed. | Price: $0.005",
     inputSchema: {
         type: "object",
         properties: {
           "id": {
             type: "string",
-            description: "Prim server ID.",
+            description: "id parameter",
           },
           "image": {
             type: "string",
-            description: "OS image slug to rebuild with.",
+            description: "OS image slug to rebuild with (e.g. \"debian-12\").",
           },
         },
         required: ["id","image"],
@@ -179,7 +177,7 @@ export const spawnTools: Tool[] = [
   },
   {
     name: "spawn_list_ssh_keys",
-    description: "List SSH keys | Price: $0.001",
+    description: "List all SSH keys registered by the calling wallet | Price: $0.001",
     inputSchema: {
         type: "object",
         properties: {},
@@ -187,17 +185,17 @@ export const spawnTools: Tool[] = [
   },
   {
     name: "spawn_create_ssh_key",
-    description: "Register SSH key | Price: $0.001",
+    description: "Register a public SSH key. Returned ID can be used in ssh_keys when creating a server. | Price: $0.001",
     inputSchema: {
         type: "object",
         properties: {
           "name": {
             type: "string",
-            description: "Human-readable label for this key.",
+            description: "Human-readable label for this SSH key.",
           },
           "public_key": {
             type: "string",
-            description: "The public key string (e.g. `ssh-ed25519 AAAA...`).",
+            description: "Public key string (e.g. \"ssh-ed25519 AAAA...\").",
           },
         },
         required: ["name","public_key"],
@@ -205,13 +203,13 @@ export const spawnTools: Tool[] = [
   },
   {
     name: "spawn_delete_ssh_key",
-    description: "Delete SSH key | Price: $0.001",
+    description: "Remove an SSH key. Keys in use by active servers remain until server is rebuilt. | Price: $0.001",
     inputSchema: {
         type: "object",
         properties: {
           "id": {
             type: "string",
-            description: "Prim SSH key ID.",
+            description: "id parameter",
           },
         },
         required: ["id"],

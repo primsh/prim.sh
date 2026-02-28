@@ -59,7 +59,11 @@ function writeIfChanged(filePath: string, content: string, label: string): void 
 
 function genSystemdUnit(id: string, name: string, systemdAfter: string[]): string {
   const afterUnits = ["network.target", ...systemdAfter].join(" ");
-  return `[Unit]
+  return `# THIS FILE IS GENERATED — DO NOT EDIT
+# Source: packages/${id}/prim.yaml
+# Regenerate: pnpm gen:deploy
+
+[Unit]
 Description=prim.sh ${name} service
 After=${afterUnits}
 
@@ -85,6 +89,10 @@ function genCaddyFragment(prim: Primitive, hasInstallSh: boolean): string {
   const port = prim.port!;
 
   const lines: string[] = [];
+  lines.push(`# THIS FILE IS GENERATED — DO NOT EDIT`);
+  lines.push(`# Source: packages/${prim.id}/prim.yaml`);
+  lines.push(`# Regenerate: pnpm gen:deploy`);
+  lines.push(``);
   lines.push(`${endpoint} {`);
   lines.push("    import security_headers");
 
@@ -151,6 +159,10 @@ const ENV_COMMENTS: Record<string, string> = {
 
 function genEnvTemplate(id: string, name: string, port: number, envVars: string[]): string {
   const lines: string[] = [
+    `# THIS FILE IS GENERATED — DO NOT EDIT`,
+    `# Source: packages/${id}/prim.yaml`,
+    `# Regenerate: pnpm gen:deploy`,
+    ``,
     `# Required env vars for prim-${id}.service`,
     `# Docs: packages/${id}/src/index.ts`,
     "",
@@ -192,6 +204,12 @@ function assembleCaddyfile(): void {
     process.exit(1);
   }
 
+  const caddyfileHeader = [
+    "# THIS FILE IS GENERATED — DO NOT EDIT",
+    "# Source: packages/<id>/prim.yaml (all deployed prims) + deploy/prim/Caddyfile.header",
+    "# Regenerate: pnpm gen:deploy",
+  ].join("\n");
+
   const header = readFileSync(CADDYFILE_HEADER, "utf-8").trimEnd();
 
   const fragmentFiles = existsSync(GENERATED_DIR)
@@ -204,7 +222,7 @@ function assembleCaddyfile(): void {
     readFileSync(join(GENERATED_DIR, f), "utf-8").trimEnd(),
   );
 
-  const assembled = `${[header, ...fragments, SITE_CADDY_BLOCK.trimEnd()].join("\n\n")}\n`;
+  const assembled = `${[caddyfileHeader, header, ...fragments, SITE_CADDY_BLOCK.trimEnd()].join("\n\n")}\n`;
   writeIfChanged(CADDYFILE_OUT, assembled, "deploy/prim/Caddyfile");
 }
 

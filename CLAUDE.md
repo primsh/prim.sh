@@ -32,13 +32,16 @@ prim/
 ├── packages/
 │   ├── x402-middleware/      # @primsh/x402-middleware (shared)
 │   ├── wallet/               # @primsh/wallet (wallet.sh)
+│   │   └── openapi.yaml     # Generated OpenAPI spec (colocated)
 │   ├── email/                # @primsh/email (email.sh)
-│   └── spawn/                # @primsh/spawn (spawn.sh)
+│   ├── spawn/                # @primsh/spawn (spawn.sh)
+│   ├── sdk/                  # @primsh/sdk (generated typed clients)
+│   ├── mcp/                  # @primsh/mcp (generated MCP tools)
+│   └── openai/               # @primsh/openai (generated OpenAI tool schemas)
 ├── site/                     # Landing pages (HTML, moved from root)
 │   ├── serve.ts              # Dev server (Bun)
 │   └── <primitive>/index.html
-├── specs/                    # Product specs
-├── tasks/                    # Plan docs (active/ and completed/)
+├── tasks/
 │   ├── tasks.json            # SOT for all task data
 │   └── tasks.schema.json     # JSON Schema draft 2020-12
 ├── package.json              # Workspace root
@@ -235,48 +238,21 @@ All bot workflows (auto-merge, rebase, review, ci-heal) use the `prim-ci` GitHub
 
 ## Task Management
 
-Full conventions: `tasks/README.md`. Key rules for this project:
+**GitHub Issues** is the sole source of truth for task tracking. The `tasks/` directory is gitignored.
 
-### Sections
+### Labels
 
-| Abbrev | Scope |
-|--------|-------|
-| HRD | Code quality, security, reliability |
-| PRIMS | Feature work on specific services |
-| INFRA | CI, tooling, observability, cross-cutting |
-| COMM | Docs, Discord, brand, marketing |
-| BKLG | Future primitives, deferred ideas |
+| Label | Scope |
+|-------|-------|
+| `hrd` | Code quality, security, reliability |
+| `prims` | Feature work on specific services |
+| `infra` | CI, tooling, observability, cross-cutting |
+| `comm` | Docs, Discord, brand, marketing |
+| `good-first-issue` | Contributor onramp |
 
-### ID Prefixes
+### Planning
 
-| Prefix | Scope | Prefix | Scope |
-|--------|-------|--------|-------|
-| L | Legacy launch (migrated) | HRD | Hardening |
-| W | wallet.sh | E | email.sh |
-| SP | spawn.sh | ST | store.sh |
-| TK | token.sh | D | domain.sh |
-| SE | search.sh | TR | track.sh |
-| M | mem.sh | FC | faucet.sh |
-| OPS | Operations | OBS | Observability |
-| BIZ | Business | SEC | Security |
-| I | Internal tooling | SITE | Marketing site |
-| COM | Community | X4 | x402 middleware |
-
-### Task SOT
-
-`tasks/tasks.json` is the sole source of truth. **TASKS.md does not exist and must never be generated or referenced.** All task reads and writes go through `tasks/tasks.json` directly.
-
-### Completion workflow
-
-1. Update `status` to `"done"` in `tasks/tasks.json`
-2. If plan doc exists: `git mv tasks/active/<plan>.md tasks/completed/`
-
-### What does NOT belong in tasks.json
-
-- Research notes (go to `tasks/research/`)
-- Milestone retrospectives (go to `tasks/completed/milestones.md`)
-- Plan doc indexes (live in `tasks/README.md`)
-- Generated markdown views (no TASKS.md — read tasks.json directly)
+Use Claude Code's **plan mode** for task planning. Plan docs are not stored in the repo. Use `gh issue create` and `gh issue list` to manage tasks.
 
 ## Landing Page Design System
 
