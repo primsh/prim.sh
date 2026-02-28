@@ -515,7 +515,62 @@ function agentSvg(a: Agent): string {
 `;
 }
 
+function agentsRosterSvg(): string {
+  const desc = "Ten AI systems from different labs. Each with its own personality, specialization, and way of thinking. They don't compete — they specialize.";
+  const descLines = wrap(desc, 38);
+  const descSvg = descLines.map((l, i) =>
+    `<text x="140" y="${82 + i * 16}" font-family="${LABEL_FONT}" font-size="10" fill="#333" text-anchor="middle" dominant-baseline="middle">${esc(l)}</text>`
+  ).join("\n  ");
+
+  const rosterY = 82 + descLines.length * 16 + 20;
+  const glyphSize = 36;
+  const glyphGap = 10;
+  const perRow = 4;
+  const rowH = glyphSize + 22;
+
+  const rows: Agent[][] = [];
+  for (let i = 0; i < agents.length; i += perRow) {
+    rows.push(agents.slice(i, i + perRow));
+  }
+
+  let rosterSvg = "";
+  let namesSvg = "";
+  for (let r = 0; r < rows.length; r++) {
+    const row = rows[r];
+    const rowTopY = rosterY + r * rowH;
+    const rowW = row.length * glyphSize + (row.length - 1) * glyphGap;
+    const rowStartX = 140 - rowW / 2;
+
+    for (let i = 0; i < row.length; i++) {
+      const a = row[i];
+      const gx = rowStartX + i * (glyphSize + glyphGap) + glyphSize / 2;
+      const vp: Viewport = { w: glyphSize, cx: gx, mt: rowTopY, mb: rowTopY + glyphSize, pad: 2 };
+      const d = extract(a.chars, vp);
+      rosterSvg += `  <path d="${d}" fill="${a.color}" stroke="${a.color}" stroke-width="2" stroke-linejoin="round" stroke-linecap="round" paint-order="stroke"/>\n`;
+      namesSvg += `  <text x="${gx}" y="${rowTopY + glyphSize + 14}" font-family="${LABEL_FONT}" font-size="7" fill="${MUTED}" text-anchor="middle" dominant-baseline="middle">${a.name}</text>\n`;
+    }
+  }
+
+  const countY = rosterY + rows.length * rowH + 8;
+
+  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 280 420">
+  <rect width="280" height="420" fill="${BG}"/>
+  <rect width="280" height="420" fill="none" stroke="#CC785C" stroke-width="1" rx="6" stroke-opacity="0.3"/>
+  <text x="140" y="42" font-family="${LABEL_FONT}" font-size="22" fill="#CC785C" text-anchor="middle" dominant-baseline="middle" letter-spacing="4">The Agents</text>
+  <line x1="60" y1="60" x2="220" y2="60" stroke="${DIM}" stroke-width="1"/>
+  ${descSvg}
+  ${rosterSvg}
+  ${namesSvg}
+  <text x="140" y="${countY}" font-family="${LABEL_FONT}" font-size="9" fill="${DIM}" text-anchor="middle" dominant-baseline="middle">${agents.length} agents</text>
+  <rect x="24" y="390" width="232" height="1" fill="${DIM}"/>
+  <text x="140" y="408" font-family="${LABEL_FONT}" font-size="9" fill="#2a2a2a" text-anchor="middle" dominant-baseline="middle" letter-spacing="2">AGENTS</text>
+</svg>
+`;
+}
+
 console.log("\n── Agents ──");
+writeFileSync(join(AGENT_OUT, "agents.svg"), agentsRosterSvg());
+console.log("  agents/agents.svg (roster)");
 for (const a of agents) {
   writeFileSync(join(AGENT_OUT, `${a.id}.svg`), agentSvg(a));
   console.log(`  agents/${a.id}.svg`);
@@ -580,7 +635,63 @@ function userSvg(u: UserArchetype): string {
 `;
 }
 
+function usersRosterSvg(): string {
+  const desc = "Six archetypes. Each one uses the same primitives, the same daemons, the same agents. The difference is intent.";
+  const descLines = wrap(desc, 38);
+  const descSvg = descLines.map((l, i) =>
+    `<text x="140" y="${82 + i * 16}" font-family="${LABEL_FONT}" font-size="10" fill="#333" text-anchor="middle" dominant-baseline="middle">${esc(l)}</text>`
+  ).join("\n  ");
+
+  const rosterY = 82 + descLines.length * 16 + 20;
+  const glyphSize = 36;
+  const glyphGap = 10;
+  const perRow = 3;
+  const rowH = glyphSize + 22;
+
+  const rows: UserArchetype[][] = [];
+  for (let i = 0; i < users.length; i += perRow) {
+    rows.push(users.slice(i, i + perRow));
+  }
+
+  let rosterSvg = "";
+  let namesSvg = "";
+  for (let r = 0; r < rows.length; r++) {
+    const row = rows[r];
+    const rowTopY = rosterY + r * rowH;
+    const rowW = row.length * glyphSize + (row.length - 1) * glyphGap;
+    const rowStartX = 140 - rowW / 2;
+
+    for (let i = 0; i < row.length; i++) {
+      const u = row[i];
+      const gx = rowStartX + i * (glyphSize + glyphGap) + glyphSize / 2;
+      const vp: Viewport = { w: glyphSize, cx: gx, mt: rowTopY, mb: rowTopY + glyphSize, pad: 2 };
+      const d = extract(u.chars, vp);
+      rosterSvg += `  <path d="${d}" fill="${u.color}" stroke="${u.color}" stroke-width="2" stroke-linejoin="round" stroke-linecap="round" paint-order="stroke"/>\n`;
+      const shortName = u.name.replace("The ", "");
+      namesSvg += `  <text x="${gx}" y="${rowTopY + glyphSize + 14}" font-family="${LABEL_FONT}" font-size="7" fill="${MUTED}" text-anchor="middle" dominant-baseline="middle">${shortName}</text>\n`;
+    }
+  }
+
+  const countY = rosterY + rows.length * rowH + 8;
+
+  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 280 420">
+  <rect width="280" height="420" fill="${BG}"/>
+  <rect width="280" height="420" fill="none" stroke="#F48FB1" stroke-width="1" rx="6" stroke-opacity="0.3"/>
+  <text x="140" y="42" font-family="${LABEL_FONT}" font-size="22" fill="#F48FB1" text-anchor="middle" dominant-baseline="middle" letter-spacing="4">The Users</text>
+  <line x1="60" y1="60" x2="220" y2="60" stroke="${DIM}" stroke-width="1"/>
+  ${descSvg}
+  ${rosterSvg}
+  ${namesSvg}
+  <text x="140" y="${countY}" font-family="${LABEL_FONT}" font-size="9" fill="${DIM}" text-anchor="middle" dominant-baseline="middle">${users.length} archetypes</text>
+  <rect x="24" y="390" width="232" height="1" fill="${DIM}"/>
+  <text x="140" y="408" font-family="${LABEL_FONT}" font-size="9" fill="#2a2a2a" text-anchor="middle" dominant-baseline="middle" letter-spacing="2">USERS</text>
+</svg>
+`;
+}
+
 console.log("\n── Users ──");
+writeFileSync(join(USER_OUT, "users.svg"), usersRosterSvg());
+console.log("  users/users.svg (roster)");
 for (const u of users) {
   writeFileSync(join(USER_OUT, `${u.id}.svg`), userSvg(u));
   console.log(`  users/${u.id}.svg`);
