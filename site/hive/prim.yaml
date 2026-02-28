@@ -1,7 +1,6 @@
 id: hive
 name: hive.sh
 endpoint: hive.prim.sh
-status: phantom
 type: coordination
 category: ops
 card_class: p24

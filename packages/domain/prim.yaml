@@ -1,7 +1,6 @@
 id: domain
 name: domain.sh
 endpoint: domain.prim.sh
-status: building
 type: domains
 category: identity
 card_class: p6

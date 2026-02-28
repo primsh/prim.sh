@@ -1,7 +1,6 @@
 id: trace
 name: trace.sh
 endpoint: trace.prim.sh
-status: phantom
 type: tracing
 category: ops
 card_class: p19

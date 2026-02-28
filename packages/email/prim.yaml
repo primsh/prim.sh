@@ -1,7 +1,8 @@
 id: email
 name: email.sh
 endpoint: email.prim.sh
-status: live
+status: hold
+note: "Delayed until after v0 private beta"
 type: email
 category: comms
 card_class: p2

@@ -1,7 +1,6 @@
 id: watch
 name: watch.sh
 endpoint: watch.prim.sh
-status: phantom
 type: observability
 category: ops
 card_class: p18

@@ -312,7 +312,7 @@ function buildPrimStatusMap(): Map<string, string> {
 }
 
 function getServiceStatus(service: string, statusMap: Map<string, string>): string {
-  return statusMap.get(service) ?? "building";
+  return statusMap.get(service) ?? "";
 }
 
 // ── Canary Helpers ─────────────────────────────────────────────────────────
@@ -1349,13 +1349,12 @@ async function main() {
       if (!testDef) continue;
 
       const status = getServiceStatus(testDef.service, primStatusMap);
-      if (status === "live" || status === "mainnet") {
+      if (status === "testnet" || status === "mainnet") {
         liveFailure = true;
-        console.log(c.red(`CI FAIL: ${r.id} (${testDef.service}) is live and failed`));
+        console.log(c.red(`CI FAIL: ${r.id} (${testDef.service}) is deployed and failed`));
       } else {
-        // building or testing — warn only
         console.log(
-          c.yellow(`CI WARN: ${r.id} (${testDef.service}) is ${status} — failure is non-blocking`),
+          c.yellow(`CI WARN: ${r.id} (${testDef.service}) is ${status ?? "undeployed"} — failure is non-blocking`),
         );
       }
     }

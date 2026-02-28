@@ -1,7 +1,6 @@
 id: mem
 name: mem.sh
 endpoint: mem.prim.sh
-status: building
 type: memory
 category: storage
 card_class: p21

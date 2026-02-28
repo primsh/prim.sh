@@ -1,7 +1,6 @@
 id: pins
 name: pins.sh
 endpoint: pins.prim.sh
-status: phantom
 type: location
 category: physical
 card_class: p25

@@ -1,7 +1,6 @@
 id: vault
 name: vault.sh
 endpoint: vault.prim.sh
-status: phantom
 type: secrets
 category: storage
 card_class: p7

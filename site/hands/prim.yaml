@@ -1,7 +1,6 @@
 id: hands
 name: hands.sh
 endpoint: hands.prim.sh
-status: phantom
 type: labor
 category: physical
 card_class: p28

@@ -1,7 +1,6 @@
 id: token
 name: token.sh
 endpoint: token.prim.sh
-status: building
 type: defi
 category: crypto
 card_class: p9

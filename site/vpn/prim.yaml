@@ -1,7 +1,6 @@
 id: vpn
 name: vpn.sh
 endpoint: vpn.prim.sh
-status: phantom
 type: networking
 category: comms
 card_class: p0

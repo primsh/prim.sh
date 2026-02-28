@@ -1,7 +1,6 @@
 id: track
 name: track.sh
 endpoint: track.prim.sh
-status: building
 type: logistics
 category: ops
 card_class: p13

@@ -56,33 +56,27 @@ No API keys. No signup. The wallet *is* the identity.
 | Primitive | What it does | Status |
 |-----------|-------------|--------|
 | [wallet.sh](https://wallet.prim.sh) | Agent wallets. Generate keys, hold USDC on Base, and pay any x402 invoice. | Live (mainnet) |
-| [faucet.sh](https://faucet.prim.sh) | Free testnet USDC and ETH on demand. Fund your agent wallet and start building. | Live |
-| [spawn.sh](https://spawn.prim.sh) | VPS in one API call. Deploy, scale, destroy. Per-second billing. | Live |
+| [faucet.sh](https://faucet.prim.sh) | Free testnet USDC and ETH on demand. Fund your agent wallet and start building. | Live (testnet) |
+| [spawn.sh](https://spawn.prim.sh) | VPS in one API call. Deploy, scale, destroy. Per-second billing. | Hold |
 | [store.sh](https://store.prim.sh) | Object storage. Persist artifacts across ephemeral VMs. S3-compatible. | Live (mainnet) |
-| [email.sh](https://email.prim.sh) | Mailboxes on demand. Send, receive, webhook. Disposable or permanent. | Live |
+| [email.sh](https://email.prim.sh) | Mailboxes on demand. Send, receive, webhook. Disposable or permanent. | Hold |
 | [search.sh](https://search.prim.sh) | Search for agents. No ads, no SEO spam. Just facts and clean markdown. | Live (mainnet) |
-| [token.sh](https://token.prim.sh) | Deploy ERC-20 tokens and Uniswap V3 pools. No wallet setup required. | Built |
-| [mem.sh](https://mem.prim.sh) | Vector store and cache for agents. Persist long-term knowledge and session state. | Built |
-| [domain.sh](https://domain.prim.sh) | Register domains, manage DNS, auto-TLS. Full domain lifecycle via API. | Built |
-| deploy.sh | Push code, get an endpoint. Container or repo URL to live service. No server config. | Phantom |
-| [track.sh](https://track.prim.sh) | Package tracking for agents. USPS, FedEx, UPS, DHL and 1000+ carriers. Status, ETA, full event history. | Built |
-| ring.sh | Phone numbers via API. SMS, voice, TTS. No Twilio account needed. | Phantom |
-| pipe.sh | Pub/sub channels, webhook relays, event queues. Agent-to-agent glue. | Phantom |
-| vault.sh | Store API keys, tokens, credentials. Scoped access. Ephemeral or persistent. | Phantom |
-| cron.sh | Run code on a schedule without a server. Cron, intervals, one-shots. | Phantom |
-| code.sh | Sandboxed code execution for agents. Short-lived jobs instead of long-lived servers. | Phantom |
-| browse.sh | Headless Chromium sessions for agents. Click, type, and capture pages via API. | Phantom |
-| watch.sh | Structured logs, metrics, and alerts so agents can observe and correct themselves. | Phantom |
-| trace.sh | Distributed tracing across services. Follow a request from wallet to spawn to store. | Phantom |
-| auth.sh | Managed OAuth broker. Connect to third-party APIs without giving agents passwords. | Phantom |
-| hive.sh | Discover peers. Share knowledge. Establish reputation. A social graph for software. | Phantom |
-| id.sh | Reputation scores. Know Your Agent. Verifiable credentials. Trust layer. | Phantom |
-| mart.sh | Buy physical goods via API. x402 to fiat proxy. Headless checkout. | Phantom |
-| corp.sh | Incorporation, tax, insurance. Legal entities for agents. The fiat bridge. | Phantom |
-| hands.sh | On-demand human labor. Physical tasks, verification, errands. Gig economy API. | Phantom |
-| pins.sh | Coordinates, places, and routing. No maps UI, just structured spatial data. | Phantom |
-| [create.sh](https://create.prim.sh) | Scaffold new prim.sh primitives. Write a prim.yaml spec, get a complete package with passing tests. | Built |
-| [imagine.sh](https://imagine.prim.sh) | Media generation for agents. Images, video, audio. Any model, one API. No API keys. | Built |
+| [token.sh](https://token.prim.sh) | Deploy ERC-20 tokens and Uniswap V3 pools. No wallet setup required. | Planned |
+| [mem.sh](https://mem.prim.sh) | Vector store and cache for agents. Persist long-term knowledge and session state. | Planned |
+| [domain.sh](https://domain.prim.sh) | Register domains, manage DNS, auto-TLS. Full domain lifecycle via API. | Planned |
+| deploy.sh | Push code, get an endpoint. Container or repo URL to live service. No server config. | Planned |
+| [track.sh](https://track.prim.sh) | Package tracking for agents. USPS, FedEx, UPS, DHL and 1000+ carriers. Status, ETA, full event history. | Planned |
+| ring.sh | Phone numbers via API. SMS, voice, TTS. No Twilio account needed. | Planned |
+| pipe.sh | Pub/sub channels, webhook relays, event queues. Agent-to-agent glue. | Planned |
+| vault.sh | Store API keys, tokens, credentials. Scoped access. Ephemeral or persistent. | Planned |
+| cron.sh | Run code on a schedule without a server. Cron, intervals, one-shots. | Planned |
+| code.sh | Sandboxed code execution for agents. Short-lived jobs instead of long-lived servers. | Planned |
+| browse.sh | Headless Chromium sessions for agents. Click, type, and capture pages via API. | Planned |
+| watch.sh | Structured logs, metrics, and alerts so agents can observe and correct themselves. | Planned |
+| trace.sh | Distributed tracing across services. Follow a request from wallet to spawn to store. | Planned |
+| auth.sh | Managed OAuth broker. Connect to third-party APIs without giving agents passwords. | Planned |
+| [create.sh](https://create.prim.sh) | Scaffold new prim.sh primitives. Write a prim.yaml spec, get a complete package with passing tests. | Planned |
+| [imagine.sh](https://imagine.prim.sh) | Media generation for agents. Images, video, audio. Any model, one API. No API keys. | Planned |
 <!-- END:PRIM:PRIMS -->
 
 See the full catalog at [prim.sh/llms.txt](https://prim.sh/llms.txt).

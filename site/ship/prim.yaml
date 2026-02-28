@@ -1,7 +1,6 @@
 id: ship
 name: ship.sh
 endpoint: ship.prim.sh
-status: phantom
 type: logistics
 category: ops
 card_class: p27
