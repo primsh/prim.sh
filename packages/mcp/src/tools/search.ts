@@ -7,149 +7,145 @@ export const searchTools: Tool[] = [
     name: "search_web",
     description: "Web search | Price: $0.01",
     inputSchema: {
-      type: "object",
-      properties: {
-        query: {
-          type: "string",
-          description: "Search query string.",
-        },
-        max_results: {
-          type: "integer",
-          description: "Maximum number of results to return. Range 1–20.",
-          minimum: 1,
-          maximum: 20,
-          default: 10,
-        },
-        search_depth: {
-          type: "string",
-          enum: ["basic", "advanced"],
-          description:
-            'Search depth. "advanced" uses more sources and costs more upstream compute.',
-          default: "basic",
-        },
-        country: {
-          type: "string",
-          description: "Two-letter ISO 3166-1 alpha-2 country code to bias results.",
-        },
-        time_range: {
-          type: "string",
-          enum: ["day", "week", "month", "year"],
-          description: "Restrict results to the given time range.",
-        },
-        include_answer: {
-          type: "boolean",
-          description:
-            "If true, the response includes an AI-generated answer summarizing the results.",
-          default: false,
-        },
-        include_domains: {
-          type: "array",
-          items: {
+        type: "object",
+        properties: {
+          "query": {
             type: "string",
+            description: "Search query string.",
           },
-          description: "Restrict results to these domains only.",
-        },
-        exclude_domains: {
-          type: "array",
-          items: {
+          "max_results": {
+            type: "integer",
+            description: "Maximum number of results to return. Range 1–20.",
+            minimum: 1,
+            maximum: 20,
+            default: 10,
+          },
+          "search_depth": {
             type: "string",
+            enum: ["basic","advanced"],
+            description: "Search depth. \"advanced\" uses more sources and costs more upstream compute.",
+            default: "basic",
           },
-          description: "Exclude results from these domains.",
+          "country": {
+            type: "string",
+            description: "Two-letter ISO 3166-1 alpha-2 country code to bias results.",
+          },
+          "time_range": {
+            type: "string",
+            enum: ["day","week","month","year"],
+            description: "Restrict results to the given time range.",
+          },
+          "include_answer": {
+            type: "boolean",
+            description: "If true, the response includes an AI-generated answer summarizing the results.",
+            default: false,
+          },
+          "include_domains": {
+            type: "array",
+            items: {
+              type: "string",
+            },
+            description: "Restrict results to these domains only.",
+          },
+          "exclude_domains": {
+            type: "array",
+            items: {
+              type: "string",
+            },
+            description: "Exclude results from these domains.",
+          },
         },
+        required: ["query"],
       },
-      required: ["query"],
-    },
   },
   {
     name: "search_news",
     description: "News search | Price: $0.01",
     inputSchema: {
-      type: "object",
-      properties: {
-        query: {
-          type: "string",
-          description: "Search query string.",
-        },
-        max_results: {
-          type: "integer",
-          description: "Maximum number of results to return. Range 1–20.",
-          minimum: 1,
-          maximum: 20,
-          default: 10,
-        },
-        search_depth: {
-          type: "string",
-          enum: ["basic", "advanced"],
-          description:
-            'Search depth. "advanced" uses more sources and costs more upstream compute.',
-          default: "basic",
-        },
-        country: {
-          type: "string",
-          description: "Two-letter ISO 3166-1 alpha-2 country code to bias results.",
-        },
-        time_range: {
-          type: "string",
-          enum: ["day", "week", "month", "year"],
-          description: "Restrict results to the given time range.",
-        },
-        include_answer: {
-          type: "boolean",
-          description:
-            "If true, the response includes an AI-generated answer summarizing the results.",
-          default: false,
-        },
-        include_domains: {
-          type: "array",
-          items: {
+        type: "object",
+        properties: {
+          "query": {
             type: "string",
+            description: "Search query string.",
           },
-          description: "Restrict results to these domains only.",
-        },
-        exclude_domains: {
-          type: "array",
-          items: {
+          "max_results": {
+            type: "integer",
+            description: "Maximum number of results to return. Range 1–20.",
+            minimum: 1,
+            maximum: 20,
+            default: 10,
+          },
+          "search_depth": {
             type: "string",
+            enum: ["basic","advanced"],
+            description: "Search depth. \"advanced\" uses more sources and costs more upstream compute.",
+            default: "basic",
           },
-          description: "Exclude results from these domains.",
+          "country": {
+            type: "string",
+            description: "Two-letter ISO 3166-1 alpha-2 country code to bias results.",
+          },
+          "time_range": {
+            type: "string",
+            enum: ["day","week","month","year"],
+            description: "Restrict results to the given time range.",
+          },
+          "include_answer": {
+            type: "boolean",
+            description: "If true, the response includes an AI-generated answer summarizing the results.",
+            default: false,
+          },
+          "include_domains": {
+            type: "array",
+            items: {
+              type: "string",
+            },
+            description: "Restrict results to these domains only.",
+          },
+          "exclude_domains": {
+            type: "array",
+            items: {
+              type: "string",
+            },
+            description: "Exclude results from these domains.",
+          },
         },
+        required: ["query"],
       },
-      required: ["query"],
-    },
   },
   {
     name: "search_extract_urls",
     description: "Extract URL content | Price: $0.005",
     inputSchema: {
-      type: "object",
-      properties: {
-        urls: {
-          oneOf: [
-            {
-              type: "string",
-              format: "uri",
-              description: "A single URL to extract content from.",
-            },
-            {
-              type: "array",
-              items: {
+        type: "object",
+        properties: {
+          "urls": {
+            oneOf: [
+              {
                 type: "string",
                 format: "uri",
+                description: "A single URL to extract content from.",
               },
-              description: "Multiple URLs to extract content from in one request.",
-            },
-          ],
-          description: "URL or array of URLs to extract content from.",
+              {
+                type: "array",
+                items: {
+                  type: "string",
+                  format: "uri",
+                },
+                description: "Multiple URLs to extract content from in one request.",
+              },
+            ],
+            description: "URL or array of URLs to extract content from.",
+          },
+          "format": {
+            type: "string",
+            enum: ["markdown","text"],
+            description: "Output format for extracted content.",
+            default: "markdown",
+          },
         },
-        format: {
-          type: "string",
-          enum: ["markdown", "text"],
-          description: "Output format for extracted content.",
-          default: "markdown",
-        },
+        required: ["urls"],
       },
-      required: ["urls"],
-    },
   },
 ];
 // END:GENERATED:TOOLS

@@ -4,14 +4,7 @@
 
 // ── Types ──────────────────────────────────────────────────────────────────
 
-export type ServerStatus =
-  | "initializing"
-  | "running"
-  | "off"
-  | "rebuilding"
-  | "migrating"
-  | "destroying"
-  | "deleted";
+export type ServerStatus = "initializing" | "running" | "off" | "rebuilding" | "migrating" | "destroying" | "deleted";
 
 export interface PublicNet {
   ipv4?: {
@@ -217,9 +210,7 @@ export type DeleteSshKeyResponse = Record<string, unknown>;
 
 // ── Client ─────────────────────────────────────────────────────────────────
 
-export function createSpawnClient(
-  primFetch: (input: RequestInfo | URL, init?: RequestInit) => Promise<Response>,
-) {
+export function createSpawnClient(primFetch: (input: RequestInfo | URL, init?: RequestInit) => Promise<Response>) {
   const baseUrl = "https://spawn.prim.sh";
   return {
     async createServer(req: CreateServerRequest): Promise<CreateServerResponse> {
@@ -273,10 +264,7 @@ export function createSpawnClient(
       });
       return res.json() as Promise<RebootServerResponse>;
     },
-    async resizeServer(
-      params: ResizeServerParams,
-      req: ResizeServerRequest,
-    ): Promise<ResizeServerResponse> {
+    async resizeServer(params: ResizeServerParams, req: ResizeServerRequest): Promise<ResizeServerResponse> {
       const url = `${baseUrl}/v1/servers/${encodeURIComponent(params.id)}/resize`;
       const res = await primFetch(url, {
         method: "POST",
@@ -285,10 +273,7 @@ export function createSpawnClient(
       });
       return res.json() as Promise<ResizeServerResponse>;
     },
-    async rebuildServer(
-      params: RebuildServerParams,
-      req: RebuildServerRequest,
-    ): Promise<RebuildServerResponse> {
+    async rebuildServer(params: RebuildServerParams, req: RebuildServerRequest): Promise<RebuildServerResponse> {
       const url = `${baseUrl}/v1/servers/${encodeURIComponent(params.id)}/rebuild`;
       const res = await primFetch(url, {
         method: "POST",

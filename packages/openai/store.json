@@ -16,7 +16,9 @@
             "description": "Storage region (optional). Defaults to primary region."
           }
         },
-        "required": ["name"]
+        "required": [
+          "name"
+        ]
       }
     }
   },
@@ -56,7 +58,9 @@
             "description": "Bucket ID."
           }
         },
-        "required": ["id"]
+        "required": [
+          "id"
+        ]
       }
     }
   },
@@ -73,7 +77,9 @@
             "description": "Bucket ID."
           }
         },
-        "required": ["id"]
+        "required": [
+          "id"
+        ]
       }
     }
   },
@@ -104,7 +110,9 @@
             "description": "Pagination cursor from the previous response's `next_cursor`."
           }
         },
-        "required": ["id"]
+        "required": [
+          "id"
+        ]
       }
     }
   },
@@ -125,7 +133,10 @@
             "description": "Object key (path). May include slashes (e.g. \"notes/2026/feb.txt\")."
           }
         },
-        "required": ["id", "key"]
+        "required": [
+          "id",
+          "key"
+        ]
       }
     }
   },
@@ -146,7 +157,10 @@
             "description": "Object key (path). May include slashes."
           }
         },
-        "required": ["id", "key"]
+        "required": [
+          "id",
+          "key"
+        ]
       }
     }
   },
@@ -167,7 +181,10 @@
             "description": "Object key (path). May include slashes."
           }
         },
-        "required": ["id", "key"]
+        "required": [
+          "id",
+          "key"
+        ]
       }
     }
   },
@@ -184,7 +201,9 @@
             "description": "Bucket ID."
           }
         },
-        "required": ["id"]
+        "required": [
+          "id"
+        ]
       }
     }
   },
@@ -205,7 +224,10 @@
             "description": "New quota in bytes, or null to reset to default (100 MB)."
           }
         },
-        "required": ["id", "quota_bytes"]
+        "required": [
+          "id",
+          "quota_bytes"
+        ]
       }
     }
   },
@@ -222,7 +244,9 @@
             "description": "Bucket ID."
           }
         },
-        "required": ["id"]
+        "required": [
+          "id"
+        ]
       }
     }
   }

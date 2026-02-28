@@ -323,9 +323,7 @@ export interface DeleteDomainResponse {
 
 // ── Client ─────────────────────────────────────────────────────────────────
 
-export function createEmailClient(
-  primFetch: (input: RequestInfo | URL, init?: RequestInit) => Promise<Response>,
-) {
+export function createEmailClient(primFetch: (input: RequestInfo | URL, init?: RequestInit) => Promise<Response>) {
   const baseUrl = "https://email.prim.sh";
   return {
     async createMailbox(req: CreateMailboxRequest): Promise<MailboxResponse> {
@@ -358,10 +356,7 @@ export function createEmailClient(
       });
       return res.json() as Promise<DeleteMailboxResponse>;
     },
-    async renewMailbox(
-      params: RenewMailboxParams,
-      req: RenewMailboxRequest,
-    ): Promise<MailboxResponse> {
+    async renewMailbox(params: RenewMailboxParams, req: RenewMailboxRequest): Promise<MailboxResponse> {
       const url = `${baseUrl}/v1/mailboxes/${encodeURIComponent(params.id)}/renew`;
       const res = await primFetch(url, {
         method: "POST",
@@ -384,10 +379,7 @@ export function createEmailClient(
       const res = await primFetch(url);
       return res.json() as Promise<EmailDetail>;
     },
-    async sendMessage(
-      params: SendMessageParams,
-      req: SendMessageRequest,
-    ): Promise<SendMessageResponse> {
+    async sendMessage(params: SendMessageParams, req: SendMessageRequest): Promise<SendMessageResponse> {
       const url = `${baseUrl}/v1/mailboxes/${encodeURIComponent(params.id)}/send`;
       const res = await primFetch(url, {
         method: "POST",
@@ -396,10 +388,7 @@ export function createEmailClient(
       });
       return res.json() as Promise<SendMessageResponse>;
     },
-    async registerWebhook(
-      params: RegisterWebhookParams,
-      req: RegisterWebhookRequest,
-    ): Promise<WebhookResponse> {
+    async registerWebhook(params: RegisterWebhookParams, req: RegisterWebhookRequest): Promise<WebhookResponse> {
       const url = `${baseUrl}/v1/mailboxes/${encodeURIComponent(params.id)}/webhooks`;
       const res = await primFetch(url, {
         method: "POST",

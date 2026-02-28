@@ -30,7 +30,11 @@
             "description": "Optional human-readable label for this wallet"
           }
         },
-        "required": ["address", "signature", "timestamp"]
+        "required": [
+          "address",
+          "signature",
+          "timestamp"
+        ]
       }
     }
   },
@@ -95,7 +99,10 @@
             "description": "Human-readable reason for the funding request"
           }
         },
-        "required": ["amount", "reason"]
+        "required": [
+          "amount",
+          "reason"
+        ]
       }
     }
   },
@@ -197,7 +204,11 @@
           "scope": {
             "type": "string",
             "description": "Which operations to pause (default: \"all\")",
-            "enum": ["all", "send", "swap"]
+            "enum": [
+              "all",
+              "send",
+              "swap"
+            ]
           }
         }
       }
@@ -214,7 +225,11 @@
           "scope": {
             "type": "string",
             "description": "Which operations to resume (default: \"all\")",
-            "enum": ["all", "send", "swap"]
+            "enum": [
+              "all",
+              "send",
+              "swap"
+            ]
           }
         }
       }

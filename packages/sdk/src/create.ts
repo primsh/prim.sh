@@ -14,9 +14,7 @@ export type GetPortsResponse = Record<string, unknown>;
 
 // ── Client ─────────────────────────────────────────────────────────────────
 
-export function createCreateClient(
-  primFetch: (input: RequestInfo | URL, init?: RequestInit) => Promise<Response>,
-) {
+export function createCreateClient(primFetch: (input: RequestInfo | URL, init?: RequestInit) => Promise<Response>) {
   const baseUrl = "https://create.prim.sh";
   return {
     async scaffold(): Promise<ScaffoldResponse> {

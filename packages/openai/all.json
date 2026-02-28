@@ -30,7 +30,11 @@
             "description": "Optional human-readable label for this wallet"
           }
         },
-        "required": ["address", "signature", "timestamp"]
+        "required": [
+          "address",
+          "signature",
+          "timestamp"
+        ]
       }
     }
   },
@@ -95,7 +99,10 @@
             "description": "Human-readable reason for the funding request"
           }
         },
-        "required": ["amount", "reason"]
+        "required": [
+          "amount",
+          "reason"
+        ]
       }
     }
   },
@@ -197,7 +204,11 @@
           "scope": {
             "type": "string",
             "description": "Which operations to pause (default: \"all\")",
-            "enum": ["all", "send", "swap"]
+            "enum": [
+              "all",
+              "send",
+              "swap"
+            ]
           }
         }
       }
@@ -214,7 +225,11 @@
           "scope": {
             "type": "string",
             "description": "Which operations to resume (default: \"all\")",
-            "enum": ["all", "send", "swap"]
+            "enum": [
+              "all",
+              "send",
+              "swap"
+            ]
           }
         }
       }
@@ -234,7 +249,9 @@
             "pattern": "^0x[0-9a-fA-F]{40}$"
           }
         },
-        "required": ["address"]
+        "required": [
+          "address"
+        ]
       }
     }
   },
@@ -252,7 +269,9 @@
             "pattern": "^0x[0-9a-fA-F]{40}$"
           }
         },
-        "required": ["address"]
+        "required": [
+          "address"
+        ]
       }
     }
   },
@@ -270,7 +289,9 @@
             "pattern": "^0x[0-9a-fA-F]{40}$"
           }
         },
-        "required": ["address"]
+        "required": [
+          "address"
+        ]
       }
     }
   },
@@ -314,7 +335,12 @@
             "description": "Cloud-init user data script to run on first boot."
           }
         },
-        "required": ["name", "type", "image", "location"]
+        "required": [
+          "name",
+          "type",
+          "image",
+          "location"
+        ]
       }
     }
   },
@@ -354,7 +380,9 @@
             "description": "Prim server ID."
           }
         },
-        "required": ["id"]
+        "required": [
+          "id"
+        ]
       }
     }
   },
@@ -371,7 +399,9 @@
             "description": "Prim server ID."
           }
         },
-        "required": ["id"]
+        "required": [
+          "id"
+        ]
       }
     }
   },
@@ -388,7 +418,9 @@
             "description": "Prim server ID."
           }
         },
-        "required": ["id"]
+        "required": [
+          "id"
+        ]
       }
     }
   },
@@ -405,7 +437,9 @@
             "description": "Prim server ID."
           }
         },
-        "required": ["id"]
+        "required": [
+          "id"
+        ]
       }
     }
   },
@@ -422,7 +456,9 @@
             "description": "Prim server ID."
           }
         },
-        "required": ["id"]
+        "required": [
+          "id"
+        ]
       }
     }
   },
@@ -447,7 +483,10 @@
             "description": "Whether to upgrade the disk alongside the CPU/RAM. Irreversible if true. (default: false)"
           }
         },
-        "required": ["id", "type"]
+        "required": [
+          "id",
+          "type"
+        ]
       }
     }
   },
@@ -468,7 +507,10 @@
             "description": "OS image slug to rebuild with."
           }
         },
-        "required": ["id", "image"]
+        "required": [
+          "id",
+          "image"
+        ]
       }
     }
   },
@@ -489,7 +531,10 @@
             "description": "The public key string (e.g. `ssh-ed25519 AAAA...`)."
           }
         },
-        "required": ["name", "public_key"]
+        "required": [
+          "name",
+          "public_key"
+        ]
       }
     }
   },
@@ -517,7 +562,9 @@
             "description": "Prim SSH key ID."
           }
         },
-        "required": ["id"]
+        "required": [
+          "id"
+        ]
       }
     }
   },
@@ -538,7 +585,9 @@
             "description": "Storage region (optional). Defaults to primary region."
           }
         },
-        "required": ["name"]
+        "required": [
+          "name"
+        ]
       }
     }
   },
@@ -578,7 +627,9 @@
             "description": "Bucket ID."
           }
         },
-        "required": ["id"]
+        "required": [
+          "id"
+        ]
       }
     }
   },
@@ -595,7 +646,9 @@
             "description": "Bucket ID."
           }
         },
-        "required": ["id"]
+        "required": [
+          "id"
+        ]
       }
     }
   },
@@ -626,7 +679,9 @@
             "description": "Pagination cursor from the previous response's `next_cursor`."
           }
         },
-        "required": ["id"]
+        "required": [
+          "id"
+        ]
       }
     }
   },
@@ -647,7 +702,10 @@
             "description": "Object key (path). May include slashes (e.g. \"notes/2026/feb.txt\")."
           }
         },
-        "required": ["id", "key"]
+        "required": [
+          "id",
+          "key"
+        ]
       }
     }
   },
@@ -668,7 +726,10 @@
             "description": "Object key (path). May include slashes."
           }
         },
-        "required": ["id", "key"]
+        "required": [
+          "id",
+          "key"
+        ]
       }
     }
   },
@@ -689,7 +750,10 @@
             "description": "Object key (path). May include slashes."
           }
         },
-        "required": ["id", "key"]
+        "required": [
+          "id",
+          "key"
+        ]
       }
     }
   },
@@ -706,7 +770,9 @@
             "description": "Bucket ID."
           }
         },
-        "required": ["id"]
+        "required": [
+          "id"
+        ]
       }
     }
   },
@@ -727,7 +793,10 @@
             "description": "New quota in bytes, or null to reset to default (100 MB)."
           }
         },
-        "required": ["id", "quota_bytes"]
+        "required": [
+          "id",
+          "quota_bytes"
+        ]
       }
     }
   },
@@ -744,7 +813,9 @@
             "description": "Bucket ID."
           }
         },
-        "required": ["id"]
+        "required": [
+          "id"
+        ]
       }
     }
   },
@@ -808,7 +879,9 @@
             "description": "Mailbox ID."
           }
         },
-        "required": ["id"]
+        "required": [
+          "id"
+        ]
       }
     }
   },
@@ -825,7 +898,9 @@
             "description": "Mailbox ID."
           }
         },
-        "required": ["id"]
+        "required": [
+          "id"
+        ]
       }
     }
   },
@@ -846,7 +921,9 @@
             "description": "Additional milliseconds to extend the mailbox TTL. Defaults to 7 days (604800000)."
           }
         },
-        "required": ["id"]
+        "required": [
+          "id"
+        ]
       }
     }
   },
@@ -874,7 +951,9 @@
             "minimum": 0
           }
         },
-        "required": ["id"]
+        "required": [
+          "id"
+        ]
       }
     }
   },
@@ -895,7 +974,10 @@
             "description": "Message ID."
           }
         },
-        "required": ["id", "msgId"]
+        "required": [
+          "id",
+          "msgId"
+        ]
       }
     }
   },
@@ -939,7 +1021,11 @@
             "format": "email"
           }
         },
-        "required": ["id", "to", "subject"]
+        "required": [
+          "id",
+          "to",
+          "subject"
+        ]
       }
     }
   },
@@ -972,7 +1058,10 @@
             }
           }
         },
-        "required": ["id", "url"]
+        "required": [
+          "id",
+          "url"
+        ]
       }
     }
   },
@@ -989,7 +1078,9 @@
             "description": "Mailbox ID."
           }
         },
-        "required": ["id"]
+        "required": [
+          "id"
+        ]
       }
     }
   },
@@ -1010,7 +1101,10 @@
             "description": "Webhook ID."
           }
         },
-        "required": ["id", "whId"]
+        "required": [
+          "id",
+          "whId"
+        ]
       }
     }
   },
@@ -1027,7 +1121,9 @@
             "description": "Domain name to register (e.g. \"example.com\")."
           }
         },
-        "required": ["domain"]
+        "required": [
+          "domain"
+        ]
       }
     }
   },
@@ -1067,7 +1163,9 @@
             "description": "Domain ID."
           }
         },
-        "required": ["id"]
+        "required": [
+          "id"
+        ]
       }
     }
   },
@@ -1084,7 +1182,9 @@
             "description": "Domain ID."
           }
         },
-        "required": ["id"]
+        "required": [
+          "id"
+        ]
       }
     }
   },
@@ -1101,7 +1201,9 @@
             "description": "Domain ID."
           }
         },
-        "required": ["id"]
+        "required": [
+          "id"
+        ]
       }
     }
   },
@@ -1126,7 +1228,10 @@
           "search_depth": {
             "type": "string",
             "description": "Search depth. \"advanced\" uses more sources and costs more upstream compute. (default: \"basic\")",
-            "enum": ["basic", "advanced"]
+            "enum": [
+              "basic",
+              "advanced"
+            ]
           },
           "country": {
             "type": "string",
@@ -1135,7 +1240,12 @@
           "time_range": {
             "type": "string",
             "description": "Restrict results to the given time range.",
-            "enum": ["day", "week", "month", "year"]
+            "enum": [
+              "day",
+              "week",
+              "month",
+              "year"
+            ]
           },
           "include_answer": {
             "type": "boolean",
@@ -1156,7 +1266,9 @@
             }
           }
         },
-        "required": ["query"]
+        "required": [
+          "query"
+        ]
       }
     }
   },
@@ -1181,7 +1293,10 @@
           "search_depth": {
             "type": "string",
             "description": "Search depth. \"advanced\" uses more sources and costs more upstream compute. (default: \"basic\")",
-            "enum": ["basic", "advanced"]
+            "enum": [
+              "basic",
+              "advanced"
+            ]
           },
           "country": {
             "type": "string",
@@ -1190,7 +1305,12 @@
           "time_range": {
             "type": "string",
             "description": "Restrict results to the given time range.",
-            "enum": ["day", "week", "month", "year"]
+            "enum": [
+              "day",
+              "week",
+              "month",
+              "year"
+            ]
           },
           "include_answer": {
             "type": "boolean",
@@ -1211,7 +1331,9 @@
             }
           }
         },
-        "required": ["query"]
+        "required": [
+          "query"
+        ]
       }
     }
   },
@@ -1234,10 +1356,15 @@
           "format": {
             "type": "string",
             "description": "Output format for extracted content. (default: \"markdown\")",
-            "enum": ["markdown", "text"]
+            "enum": [
+              "markdown",
+              "text"
+            ]
           }
         },
-        "required": ["urls"]
+        "required": [
+          "urls"
+        ]
       }
     }
   },
@@ -1277,7 +1404,11 @@
             "description": "Maximum mintable supply in raw units. null or omit for no cap. Only meaningful if mintable is true."
           }
         },
-        "required": ["name", "symbol", "initialSupply"]
+        "required": [
+          "name",
+          "symbol",
+          "initialSupply"
+        ]
       }
     }
   },
@@ -1317,7 +1448,9 @@
             "description": "Token ID."
           }
         },
-        "required": ["id"]
+        "required": [
+          "id"
+        ]
       }
     }
   },
@@ -1343,7 +1476,11 @@
             "description": "Amount to mint in raw token units."
           }
         },
-        "required": ["id", "to", "amount"]
+        "required": [
+          "id",
+          "to",
+          "amount"
+        ]
       }
     }
   },
@@ -1360,7 +1497,9 @@
             "description": "Token ID."
           }
         },
-        "required": ["id"]
+        "required": [
+          "id"
+        ]
       }
     }
   },
@@ -1383,10 +1522,17 @@
           "feeTier": {
             "type": "integer",
             "description": "Uniswap V3 fee tier in hundredths of a basis point. Valid values are 500 (0.05%), 3000 (0.3%), 10000 (1%). Default 3000.",
-            "enum": [500, 3000, 10000]
+            "enum": [
+              500,
+              3000,
+              10000
+            ]
           }
         },
-        "required": ["id", "pricePerToken"]
+        "required": [
+          "id",
+          "pricePerToken"
+        ]
       }
     }
   },
@@ -1403,7 +1549,9 @@
             "description": "Token ID."
           }
         },
-        "required": ["id"]
+        "required": [
+          "id"
+        ]
       }
     }
   },
@@ -1428,7 +1576,11 @@
             "description": "Amount of USDC to add as liquidity in raw units (USDC has 6 decimals, so $1 = \"1000000\")."
           }
         },
-        "required": ["id", "tokenAmount", "usdcAmount"]
+        "required": [
+          "id",
+          "tokenAmount",
+          "usdcAmount"
+        ]
       }
     }
   },
@@ -1447,14 +1599,20 @@
           "distance": {
             "type": "string",
             "description": "Distance metric (default Cosine).",
-            "enum": ["Cosine", "Euclid", "Dot"]
+            "enum": [
+              "Cosine",
+              "Euclid",
+              "Dot"
+            ]
           },
           "dimension": {
             "type": "integer",
             "description": "Vector dimension (default 1536 for text-embedding-3-small)."
           }
         },
-        "required": ["name"]
+        "required": [
+          "name"
+        ]
       }
     }
   },
@@ -1494,7 +1652,9 @@
             "description": "Collection ID (UUID)."
           }
         },
-        "required": ["id"]
+        "required": [
+          "id"
+        ]
       }
     }
   },
@@ -1511,7 +1671,9 @@
             "description": "Collection ID (UUID)."
           }
         },
-        "required": ["id"]
+        "required": [
+          "id"
+        ]
       }
     }
   },
@@ -1535,7 +1697,10 @@
             }
           }
         },
-        "required": ["id", "documents"]
+        "required": [
+          "id",
+          "documents"
+        ]
       }
     }
   },
@@ -1563,7 +1728,10 @@
             "description": "Qdrant-native filter passthrough for metadata filtering."
           }
         },
-        "required": ["id", "text"]
+        "required": [
+          "id",
+          "text"
+        ]
       }
     }
   },
@@ -1591,7 +1759,11 @@
             "description": "TTL in seconds. Omit or null for permanent."
           }
         },
-        "required": ["namespace", "key", "value"]
+        "required": [
+          "namespace",
+          "key",
+          "value"
+        ]
       }
     }
   },
@@ -1612,7 +1784,10 @@
             "description": "Cache key."
           }
         },
-        "required": ["namespace", "key"]
+        "required": [
+          "namespace",
+          "key"
+        ]
       }
     }
   },
@@ -1633,7 +1808,10 @@
             "description": "Cache key."
           }
         },
-        "required": ["namespace", "key"]
+        "required": [
+          "namespace",
+          "key"
+        ]
       }
     }
   },
@@ -1654,7 +1832,9 @@
             "description": "Comma-separated TLDs to check (e.g. \"com,xyz,io\"). Defaults to common TLDs."
           }
         },
-        "required": ["query"]
+        "required": [
+          "query"
+        ]
       }
     }
   },
@@ -1675,7 +1855,9 @@
             "description": "Registration period in years (default 1)."
           }
         },
-        "required": ["domain"]
+        "required": [
+          "domain"
+        ]
       }
     }
   },
@@ -1692,7 +1874,9 @@
             "description": "Quote ID from POST /v1/domains/quote. Valid for 15 minutes."
           }
         },
-        "required": ["quote_id"]
+        "required": [
+          "quote_id"
+        ]
       }
     }
   },
@@ -1709,7 +1893,9 @@
             "description": "Recovery token from the original RegisterResponse."
           }
         },
-        "required": ["recovery_token"]
+        "required": [
+          "recovery_token"
+        ]
       }
     }
   },
@@ -1726,7 +1912,9 @@
             "description": "Fully qualified domain name."
           }
         },
-        "required": ["domain"]
+        "required": [
+          "domain"
+        ]
       }
     }
   },
@@ -1743,7 +1931,9 @@
             "description": "Fully qualified domain name."
           }
         },
-        "required": ["domain"]
+        "required": [
+          "domain"
+        ]
       }
     }
   },
@@ -1760,7 +1950,9 @@
             "description": "Domain name for the zone."
           }
         },
-        "required": ["domain"]
+        "required": [
+          "domain"
+        ]
       }
     }
   },
@@ -1800,7 +1992,9 @@
             "description": "Zone ID."
           }
         },
-        "required": ["id"]
+        "required": [
+          "id"
+        ]
       }
     }
   },
@@ -1817,7 +2011,9 @@
             "description": "Zone ID."
           }
         },
-        "required": ["id"]
+        "required": [
+          "id"
+        ]
       }
     }
   },
@@ -1834,7 +2030,9 @@
             "description": "Zone ID."
           }
         },
-        "required": ["zone_id"]
+        "required": [
+          "zone_id"
+        ]
       }
     }
   },
@@ -1851,7 +2049,9 @@
             "description": "Zone ID."
           }
         },
-        "required": ["zone_id"]
+        "required": [
+          "zone_id"
+        ]
       }
     }
   },
@@ -1880,7 +2080,11 @@
             "description": "Optional DKIM public keys."
           }
         },
-        "required": ["zone_id", "mail_server", "mail_server_ip"]
+        "required": [
+          "zone_id",
+          "mail_server",
+          "mail_server_ip"
+        ]
       }
     }
   },
@@ -1915,7 +2119,9 @@
             }
           }
         },
-        "required": ["zone_id"]
+        "required": [
+          "zone_id"
+        ]
       }
     }
   },
@@ -1934,7 +2140,16 @@
           "type": {
             "type": "string",
             "description": "DNS record type.",
-            "enum": ["A", "AAAA", "CNAME", "MX", "TXT", "SRV", "CAA", "NS"]
+            "enum": [
+              "A",
+              "AAAA",
+              "CNAME",
+              "MX",
+              "TXT",
+              "SRV",
+              "CAA",
+              "NS"
+            ]
           },
           "name": {
             "type": "string",
@@ -1957,7 +2172,12 @@
             "description": "Priority for MX/SRV records."
           }
         },
-        "required": ["zone_id", "type", "name", "content"]
+        "required": [
+          "zone_id",
+          "type",
+          "name",
+          "content"
+        ]
       }
     }
   },
@@ -1974,7 +2194,9 @@
             "description": "Zone ID."
           }
         },
-        "required": ["zone_id"]
+        "required": [
+          "zone_id"
+        ]
       }
     }
   },
@@ -1995,7 +2217,10 @@
             "description": "Record ID."
           }
         },
-        "required": ["zone_id", "id"]
+        "required": [
+          "zone_id",
+          "id"
+        ]
       }
     }
   },
@@ -2017,7 +2242,16 @@
           },
           "type": {
             "type": "string",
-            "enum": ["A", "AAAA", "CNAME", "MX", "TXT", "SRV", "CAA", "NS"]
+            "enum": [
+              "A",
+              "AAAA",
+              "CNAME",
+              "MX",
+              "TXT",
+              "SRV",
+              "CAA",
+              "NS"
+            ]
           },
           "name": {
             "type": "string"
@@ -2035,7 +2269,10 @@
             "type": "integer"
           }
         },
-        "required": ["zone_id", "id"]
+        "required": [
+          "zone_id",
+          "id"
+        ]
       }
     }
   },
@@ -2056,7 +2293,10 @@
             "description": "Record ID."
           }
         },
-        "required": ["zone_id", "id"]
+        "required": [
+          "zone_id",
+          "id"
+        ]
       }
     }
   },
@@ -2077,7 +2317,9 @@
             "description": "Carrier slug (e.g. \"usps\", \"ups\", \"fedex\"). Omit to auto-detect."
           }
         },
-        "required": ["tracking_number"]
+        "required": [
+          "tracking_number"
+        ]
       }
     }
   },
@@ -2130,13 +2372,20 @@
           },
           "tool_choice": {
             "type": "string",
-            "enum": ["none", "auto", "required"]
+            "enum": [
+              "none",
+              "auto",
+              "required"
+            ]
           },
           "response_format": {
             "type": "object"
           }
         },
-        "required": ["model", "messages"]
+        "required": [
+          "model",
+          "messages"
+        ]
       }
     }
   },
@@ -2158,7 +2407,10 @@
             }
           }
         },
-        "required": ["model", "input"]
+        "required": [
+          "model",
+          "input"
+        ]
       }
     }
   },

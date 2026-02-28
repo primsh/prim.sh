@@ -197,9 +197,7 @@ export interface GetTokenResponse {
 
 // ── Client ─────────────────────────────────────────────────────────────────
 
-export function createTokenClient(
-  primFetch: (input: RequestInfo | URL, init?: RequestInit) => Promise<Response>,
-) {
+export function createTokenClient(primFetch: (input: RequestInfo | URL, init?: RequestInit) => Promise<Response>) {
   const baseUrl = "https://token.prim.sh";
   return {
     async deployToken(req: DeployTokenRequest): Promise<DeployTokenResponse> {

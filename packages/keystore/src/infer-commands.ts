@@ -48,9 +48,7 @@ export async function runInferCommand(sub: string, argv: string[]): Promise<void
   if (!sub || sub === "--help" || sub === "-h") {
     console.log("Usage: prim infer <chat|embed|ls> [args] [flags]");
     console.log("");
-    console.log(
-      "  Usage: prim infer chat --model MODEL --messages MESSAGES [--temperature VALUE] [--max-tokens VALUE] [--top-p VALUE]",
-    );
+    console.log("  Usage: prim infer chat --model MODEL --messages MESSAGES [--temperature VALUE] [--max-tokens VALUE] [--top-p VALUE]");
     console.log("  Usage: prim infer embed --model MODEL --input INPUT");
     console.log("  Usage: prim infer ls");
     process.exit(1);
@@ -108,7 +106,9 @@ export async function runInferCommand(sub: string, argv: string[]): Promise<void
       const model = getFlag("model", argv);
       const input = getFlag("input", argv);
       if (!model || !input) {
-        process.stderr.write("Usage: prim infer embed --model MODEL --input INPUT\n");
+        process.stderr.write(
+          "Usage: prim infer embed --model MODEL --input INPUT\n",
+        );
         process.exit(1);
       }
       const reqBody: Record<string, unknown> = {};

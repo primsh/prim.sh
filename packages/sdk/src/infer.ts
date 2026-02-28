@@ -101,9 +101,7 @@ export interface Usage {
 
 // ── Client ─────────────────────────────────────────────────────────────────
 
-export function createInferClient(
-  primFetch: (input: RequestInfo | URL, init?: RequestInit) => Promise<Response>,
-) {
+export function createInferClient(primFetch: (input: RequestInfo | URL, init?: RequestInit) => Promise<Response>) {
   const baseUrl = "https://infer.prim.sh";
   return {
     async chat(req: ChatRequest): Promise<ChatResponse> {

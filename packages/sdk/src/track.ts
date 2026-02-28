@@ -52,9 +52,7 @@ export interface TrackResponse {
 
 // ── Client ─────────────────────────────────────────────────────────────────
 
-export function createTrackClient(
-  primFetch: (input: RequestInfo | URL, init?: RequestInit) => Promise<Response>,
-) {
+export function createTrackClient(primFetch: (input: RequestInfo | URL, init?: RequestInit) => Promise<Response>) {
   const baseUrl = "https://track.prim.sh";
   return {
     async trackPackage(req: TrackRequest): Promise<TrackResponse> {
