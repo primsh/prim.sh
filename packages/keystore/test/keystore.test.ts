@@ -5,7 +5,7 @@
  * PRIM_SCRYPT_N=1024 keeps scrypt fast for test runs.
  */
 
-import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 // ── Mocks for balance tests ───────────────────────────────────────────────────
 
@@ -26,22 +26,22 @@ vi.mock("@primsh/x402-middleware", () => ({
     usdcAddress: "0x036CbD53842c5426634e7929541eC2318f3dCF7e",
   })),
 }));
-import { mkdirSync, rmSync, existsSync, statSync, readFileSync } from "node:fs";
-import { join } from "node:path";
+import { existsSync, mkdirSync, readFileSync, rmSync, statSync } from "node:fs";
 import { tmpdir } from "node:os";
+import { join } from "node:path";
+import { getUsdcBalance } from "../src/balance.ts";
+import { getConfig, getDefaultAddress, setDefaultAddress } from "../src/config.ts";
+import { decryptFromV3, encryptToV3 } from "../src/crypto.ts";
 import {
   createKey,
-  importKey,
-  loadKey,
-  loadAccount,
-  listKeys,
   exportKey,
+  importKey,
+  listKeys,
+  loadAccount,
+  loadKey,
   removeKey,
 } from "../src/keystore.ts";
-import { getUsdcBalance } from "../src/balance.ts";
-import { getDefaultAddress, setDefaultAddress, getConfig } from "../src/config.ts";
 import { getDeviceKeyPath } from "../src/paths.ts";
-import { encryptToV3, decryptFromV3 } from "../src/crypto.ts";
 
 // Known test key (Hardhat account #0)
 const TEST_PRIVATE_KEY =

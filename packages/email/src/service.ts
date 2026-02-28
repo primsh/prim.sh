@@ -1,73 +1,80 @@
-import { randomBytes, createHash } from "node:crypto";
+import { createHash, randomBytes } from "node:crypto";
 import { createLogger } from "@primsh/x402-middleware";
 
 const log = createLogger("email.sh", { module: "service" });
+import type {
+  CreateMailboxRequest,
+  DeleteDomainResponse,
+  DeleteMailboxResponse,
+  DeleteWebhookResponse,
+  DnsRecord,
+  DomainListResponse,
+  DomainResponse,
+  EmailAddress,
+  EmailDetail,
+  EmailListResponse,
+  EmailMessage,
+  MailboxListResponse,
+  MailboxResponse,
+  RegisterDomainRequest,
+  RegisterWebhookRequest,
+  RenewMailboxRequest,
+  SendMessageRequest,
+  SendMessageResponse,
+  ServiceResult,
+  VerificationResult,
+  VerifyDomainResponse,
+  WebhookListResponse,
+  WebhookPayload,
+  WebhookResponse,
+} from "./api.ts";
+import { getJmapContext } from "./context.ts";
+import { encryptPassword } from "./crypto.ts";
 import {
-  insertMailbox,
-  getMailboxById,
-  getMailboxByAddress,
-  getMailboxesByOwner,
-  getMailboxesByOwnerAll,
+  countDomainsByOwner,
+  countMailboxesByDomain,
   countMailboxesByOwner,
   countMailboxesByOwnerAll,
+  deleteDomainRow,
   deleteMailboxRow,
-  updateExpiresAt,
-  insertWebhook,
-  getWebhooksByMailbox,
-  getWebhookById,
   deleteWebhookRow,
-  insertDomain,
   getDomainById,
   getDomainByName,
   getDomainsByOwner,
-  countDomainsByOwner,
-  updateDomainVerification,
+  getMailboxByAddress,
+  getMailboxById,
+  getMailboxesByOwner,
+  getMailboxesByOwnerAll,
+  getWebhookById,
+  getWebhooksByMailbox,
+  insertDomain,
+  insertMailbox,
+  insertWebhook,
   updateDomainProvisioned,
-  deleteDomainRow,
-  countMailboxesByDomain,
+  updateDomainVerification,
+  updateExpiresAt,
 } from "./db.ts";
+import type { DomainRow, MailboxRow } from "./db.ts";
+import { verifyDns } from "./dns-check.ts";
+import { expireMailbox } from "./expiry.ts";
+import {
+  JmapError,
+  buildBasicAuth,
+  discoverSession,
+  getEmail,
+  queryEmails,
+  sendEmail,
+} from "./jmap.ts";
 import {
   StalwartError,
-  createPrincipal,
-  deletePrincipal,
   createDomainPrincipal,
+  createPrincipal,
   deleteDomainPrincipal,
+  deletePrincipal,
   generateDkim,
   getDnsRecords,
 } from "./stalwart.ts";
-import { encryptPassword } from "./crypto.ts";
-import { discoverSession, buildBasicAuth, JmapError, queryEmails, getEmail, sendEmail } from "./jmap.ts";
-import { getJmapContext } from "./context.ts";
-import { expireMailbox } from "./expiry.ts";
-import { verifySignature, dispatchWebhookDeliveries } from "./webhook-delivery.ts";
-import { verifyDns } from "./dns-check.ts";
-import type {
-  ServiceResult,
-  MailboxResponse,
-  MailboxListResponse,
-  CreateMailboxRequest,
-  RenewMailboxRequest,
-  DeleteMailboxResponse,
-  EmailMessage,
-  EmailDetail,
-  EmailListResponse,
-  EmailAddress,
-  SendMessageRequest,
-  SendMessageResponse,
-  RegisterWebhookRequest,
-  WebhookResponse,
-  WebhookListResponse,
-  DeleteWebhookResponse,
-  WebhookPayload,
-  RegisterDomainRequest,
-  DomainResponse,
-  DomainListResponse,
-  DeleteDomainResponse,
-  VerifyDomainResponse,
-  DnsRecord,
-  VerificationResult,
-} from "./api.ts";
-import type { MailboxRow, DomainRow } from "./db.ts";
+import { dispatchWebhookDeliveries, verifySignature } from "./webhook-delivery.ts";
 
 // ─── Constants ───────────────────────────────────────────────────────────
 
@@ -90,13 +97,29 @@ function generateUsername(): string {
 function validateUsername(username: string): ServiceResult<string> {
   const lower = username.toLowerCase();
   if (lower.length < 3 || lower.length > 32) {
-    return { ok: false, status: 400, code: "invalid_request", message: "Username must be 3-32 characters" };
+    return {
+      ok: false,
+      status: 400,
+      code: "invalid_request",
+      message: "Username must be 3-32 characters",
+    };
   }
   if (!USERNAME_RE.test(lower)) {
-    return { ok: false, status: 400, code: "invalid_request", message: "Username must be alphanumeric, dots, or hyphens, and cannot start/end with dot or hyphen" };
+    return {
+      ok: false,
+      status: 400,
+      code: "invalid_request",
+      message:
+        "Username must be alphanumeric, dots, or hyphens, and cannot start/end with dot or hyphen",
+    };
   }
   if (/[.\-]{2}/.test(lower)) {
-    return { ok: false, status: 400, code: "invalid_request", message: "Username cannot contain consecutive dots or hyphens" };
+    return {
+      ok: false,
+      status: 400,
+      code: "invalid_request",
+      message: "Username cannot contain consecutive dots or hyphens",
+    };
   }
   return { ok: true, data: lower };
 }
@@ -176,7 +199,12 @@ export async function createMailbox(
       return { ok: false, status: 400, code: "invalid_request", message: "Domain not found" };
     }
     if (domainRow.status !== "active") {
-      return { ok: false, status: 400, code: "domain_not_verified", message: "Domain not yet verified" };
+      return {
+        ok: false,
+        status: 400,
+        code: "domain_not_verified",
+        message: "Domain not yet verified",
+      };
     }
   }
 
@@ -212,14 +240,29 @@ export async function createMailbox(
     } catch (err) {
       if (err instanceof StalwartError) {
         if (err.code === "conflict") {
-          return { ok: false, status: 409, code: "username_taken", message: "Username is already taken" };
+          return {
+            ok: false,
+            status: 409,
+            code: "username_taken",
+            message: "Username is already taken",
+          };
         }
         return { ok: false, status: err.statusCode, code: err.code, message: err.message };
       }
       throw err;
     }
 
-    return finalizeMailbox(customUsername, address, domain, callerWallet, password, passwordHash, passwordEnc, now, expiresAt);
+    return finalizeMailbox(
+      customUsername,
+      address,
+      domain,
+      callerWallet,
+      password,
+      passwordHash,
+      passwordEnc,
+      now,
+      expiresAt,
+    );
   }
 
   // Random username path — retry loop on collision
@@ -251,7 +294,17 @@ export async function createMailbox(
       throw err;
     }
 
-    return finalizeMailbox(username, address, domain, callerWallet, password, passwordHash, passwordEnc, now, expiresAt);
+    return finalizeMailbox(
+      username,
+      address,
+      domain,
+      callerWallet,
+      password,
+      passwordHash,
+      passwordEnc,
+      now,
+      expiresAt,
+    );
   }
 
   return {
@@ -327,7 +380,13 @@ async function finalizeMailbox(
   }
 
   const row = getMailboxById(id);
-  if (!row) return { ok: false, status: 500, code: "provider_error", message: "Failed to retrieve mailbox after insert" };
+  if (!row)
+    return {
+      ok: false,
+      status: 500,
+      code: "provider_error",
+      message: "Failed to retrieve mailbox after insert",
+    };
 
   return { ok: true, data: rowToResponse(row) };
 }
@@ -641,7 +700,8 @@ export async function registerWebhook(
     return { ok: false, status: 400, code: "invalid_request", message: "url is required" };
   }
 
-  const allowHttp = process.env.NODE_ENV === "test" || process.env.EMAIL_ALLOW_HTTP_WEBHOOKS === "1";
+  const allowHttp =
+    process.env.NODE_ENV === "test" || process.env.EMAIL_ALLOW_HTTP_WEBHOOKS === "1";
   if (!request.url.startsWith("https://") && !(allowHttp && request.url.startsWith("http://"))) {
     return { ok: false, status: 400, code: "invalid_request", message: "url must use HTTPS" };
   }
@@ -650,7 +710,12 @@ export async function registerWebhook(
   const validEvents = ["message.received"];
   for (const e of events) {
     if (!validEvents.includes(e)) {
-      return { ok: false, status: 400, code: "invalid_request", message: `Unsupported event: ${e}` };
+      return {
+        ok: false,
+        status: 400,
+        code: "invalid_request",
+        message: `Unsupported event: ${e}`,
+      };
     }
   }
 
@@ -797,7 +862,11 @@ function buildRequiredRecords(domain: string): DnsRecord[] {
   return [
     { type: "MX", name: domain, content: MAIL_HOST, priority: 10 },
     { type: "TXT", name: domain, content: "v=spf1 include:email.prim.sh -all" },
-    { type: "TXT", name: `_dmarc.${domain}`, content: `v=DMARC1; p=quarantine; rua=mailto:dmarc@${domain}; pct=100` },
+    {
+      type: "TXT",
+      name: `_dmarc.${domain}`,
+      content: `v=DMARC1; p=quarantine; rua=mailto:dmarc@${domain}; pct=100`,
+    },
   ];
 }
 
@@ -814,10 +883,18 @@ function domainToResponse(row: DomainRow): DomainResponse {
   if (row.status === "active" && (row.dkim_rsa_record || row.dkim_ed_record)) {
     resp.dkim_records = [];
     if (row.dkim_rsa_record) {
-      resp.dkim_records.push({ type: "TXT", name: `rsa._domainkey.${row.domain}`, content: row.dkim_rsa_record });
+      resp.dkim_records.push({
+        type: "TXT",
+        name: `rsa._domainkey.${row.domain}`,
+        content: row.dkim_rsa_record,
+      });
     }
     if (row.dkim_ed_record) {
-      resp.dkim_records.push({ type: "TXT", name: `ed._domainkey.${row.domain}`, content: row.dkim_ed_record });
+      resp.dkim_records.push({
+        type: "TXT",
+        name: `ed._domainkey.${row.domain}`,
+        content: row.dkim_ed_record,
+      });
     }
   }
   return resp;
@@ -870,10 +947,7 @@ export function listDomains(
   };
 }
 
-export function getDomain(
-  id: string,
-  callerWallet: string,
-): ServiceResult<DomainResponse> {
+export function getDomain(id: string, callerWallet: string): ServiceResult<DomainResponse> {
   const row = getDomainById(id);
   if (!row || row.owner_wallet !== callerWallet) {
     return { ok: false, status: 404, code: "not_found", message: "Domain not found" };
@@ -903,9 +977,27 @@ export async function verifyDomain(
 
   if (!dnsResult.allPass) {
     const results: VerificationResult[] = [
-      { type: "MX", name: row.domain, expected: dnsResult.mx.expected, found: dnsResult.mx.found, pass: dnsResult.mx.pass },
-      { type: "TXT", name: row.domain, expected: dnsResult.spf.expected, found: dnsResult.spf.found, pass: dnsResult.spf.pass },
-      { type: "TXT", name: `_dmarc.${row.domain}`, expected: dnsResult.dmarc.expected, found: dnsResult.dmarc.found, pass: dnsResult.dmarc.pass },
+      {
+        type: "MX",
+        name: row.domain,
+        expected: dnsResult.mx.expected,
+        found: dnsResult.mx.found,
+        pass: dnsResult.mx.pass,
+      },
+      {
+        type: "TXT",
+        name: row.domain,
+        expected: dnsResult.spf.expected,
+        found: dnsResult.spf.found,
+        pass: dnsResult.spf.pass,
+      },
+      {
+        type: "TXT",
+        name: `_dmarc.${row.domain}`,
+        expected: dnsResult.dmarc.expected,
+        found: dnsResult.dmarc.found,
+        pass: dnsResult.dmarc.pass,
+      },
     ];
     return {
       ok: true,
@@ -939,8 +1031,17 @@ export async function verifyDomain(
   } catch (err) {
     if (err instanceof StalwartError) {
       // Rollback domain principal on DKIM failure
-      try { await deleteDomainPrincipal(row.domain); } catch { /* best effort */ }
-      return { ok: false, status: err.statusCode, code: err.code, message: `DKIM generation failed: ${err.message}` };
+      try {
+        await deleteDomainPrincipal(row.domain);
+      } catch {
+        /* best effort */
+      }
+      return {
+        ok: false,
+        status: err.statusCode,
+        code: err.code,
+        message: `DKIM generation failed: ${err.message}`,
+      };
     }
     throw err;
   }

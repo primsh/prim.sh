@@ -5,8 +5,8 @@
 
 import { beforeEach, describe, expect, it } from "vitest";
 import { ProviderError } from "../src/provider.ts";
-import { trackPackage, normalizeCarrier, resetClient } from "../src/service.ts";
 import type { TrackProvider, TrackProviderData } from "../src/provider.ts";
+import { normalizeCarrier, resetClient, trackPackage } from "../src/service.ts";
 
 // ─── Mock providers ───────────────────────────────────────────────────────────
 
@@ -151,7 +151,10 @@ describe("trackPackage", () => {
 
   it("returns TrackResponse on success", async () => {
     const provider = new MockTrackProvider();
-    const result = await trackPackage({ tracking_number: "9400111899223397910435", carrier: "usps" }, provider);
+    const result = await trackPackage(
+      { tracking_number: "9400111899223397910435", carrier: "usps" },
+      provider,
+    );
     expect(result.ok).toBe(true);
     if (result.ok) {
       expect(result.data.tracking_number).toBe("9400111899223397910435");
@@ -180,7 +183,10 @@ describe("trackPackage", () => {
   });
 
   it("returns 404 when provider throws not_found", async () => {
-    const result = await trackPackage({ tracking_number: "BADNUM", carrier: "usps" }, new NotFoundTrackProvider());
+    const result = await trackPackage(
+      { tracking_number: "BADNUM", carrier: "usps" },
+      new NotFoundTrackProvider(),
+    );
     expect(result.ok).toBe(false);
     if (!result.ok) {
       expect(result.status).toBe(404);
@@ -189,7 +195,10 @@ describe("trackPackage", () => {
   });
 
   it("returns 429 with retryAfter when provider throws rate_limited", async () => {
-    const result = await trackPackage({ tracking_number: "123", carrier: "usps" }, new RateLimitedTrackProvider());
+    const result = await trackPackage(
+      { tracking_number: "123", carrier: "usps" },
+      new RateLimitedTrackProvider(),
+    );
     expect(result.ok).toBe(false);
     if (!result.ok) {
       expect(result.status).toBe(429);
@@ -199,7 +208,10 @@ describe("trackPackage", () => {
   });
 
   it("returns 502 when provider throws provider_error", async () => {
-    const result = await trackPackage({ tracking_number: "123", carrier: "usps" }, new ErrorTrackProvider());
+    const result = await trackPackage(
+      { tracking_number: "123", carrier: "usps" },
+      new ErrorTrackProvider(),
+    );
     expect(result.ok).toBe(false);
     if (!result.ok) {
       expect(result.status).toBe(502);

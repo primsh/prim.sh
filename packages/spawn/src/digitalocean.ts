@@ -5,14 +5,14 @@
 
 import type {
   CloudProvider,
+  ProviderAction,
   ProviderCreateParams,
   ProviderCreateResult,
-  ProviderAction,
   ProviderRebuildResult,
   ProviderServer,
+  ProviderServerType,
   ProviderSshKey,
   ProviderSshKeyParams,
-  ProviderServerType,
 } from "./provider.ts";
 import { ProviderError } from "./provider.ts";
 
@@ -159,7 +159,10 @@ function labelsToTags(labels?: Record<string, string>): string[] {
 
 // ─── DO HTTP helpers ────────────────────────────────────────────────────
 
-async function postDropletAction(dropletId: string, body: Record<string, unknown>): Promise<DOAction> {
+async function postDropletAction(
+  dropletId: string,
+  body: Record<string, unknown>,
+): Promise<DOAction> {
   const res = await fetch(`${BASE_URL}/droplets/${dropletId}/actions`, {
     method: "POST",
     headers: headers(),
@@ -202,7 +205,10 @@ export function createDigitalOceanProvider(): CloudProvider {
           user_data: params.userData,
         }),
       });
-      const data = await handleResponse<{ droplet: DODroplet; links: { actions: { id: number }[] } }>(res);
+      const data = await handleResponse<{
+        droplet: DODroplet;
+        links: { actions: { id: number }[] };
+      }>(res);
 
       const actionId = data.links?.actions?.[0]?.id ?? 0;
 
@@ -249,7 +255,11 @@ export function createDigitalOceanProvider(): CloudProvider {
       return mapAction(action);
     },
 
-    async resizeServer(providerResourceId: string, type: string, upgradeDisk: boolean): Promise<ProviderAction> {
+    async resizeServer(
+      providerResourceId: string,
+      type: string,
+      upgradeDisk: boolean,
+    ): Promise<ProviderAction> {
       const action = await postDropletAction(providerResourceId, {
         type: "resize",
         size: type,

@@ -1,4 +1,4 @@
-import { existsSync, readFileSync, writeFileSync, mkdirSync } from "node:fs";
+import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { getConfigPath, getPrimDir } from "./paths.ts";
 import type { PrimConfig } from "./types.ts";
 

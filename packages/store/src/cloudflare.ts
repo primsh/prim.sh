@@ -56,7 +56,11 @@ async function handleResponse<T>(res: Response): Promise<CloudflareEnvelope<T>> 
   try {
     body = (await res.json()) as CloudflareEnvelope<T>;
   } catch {
-    throw new CloudflareError(res.status, mapStatusToCode(res.status), `R2 API error: ${res.status}`);
+    throw new CloudflareError(
+      res.status,
+      mapStatusToCode(res.status),
+      `R2 API error: ${res.status}`,
+    );
   }
 
   if (!res.ok || !body.success) {

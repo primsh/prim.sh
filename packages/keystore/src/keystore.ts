@@ -1,20 +1,20 @@
+import { randomUUID } from "node:crypto";
 import {
   existsSync,
-  readFileSync,
-  writeFileSync,
-  unlinkSync,
   mkdirSync,
+  readFileSync,
   readdirSync,
+  unlinkSync,
+  writeFileSync,
 } from "node:fs";
-import { randomUUID } from "node:crypto";
-import { generatePrivateKey, privateKeyToAccount } from "viem/accounts";
 import { getAddress } from "viem";
 import type { LocalAccount } from "viem";
-import { encryptToV3, decryptFromV3 } from "./crypto.ts";
+import { generatePrivateKey, privateKeyToAccount } from "viem/accounts";
+import { getDefaultAddress, setDefaultAddress } from "./config.ts";
+import { decryptFromV3, encryptToV3 } from "./crypto.ts";
 import { getOrCreateDeviceKey } from "./device.ts";
 import { getKeyPath, getKeysDir, getPrimDir } from "./paths.ts";
-import { getDefaultAddress, setDefaultAddress } from "./config.ts";
-import type { KeystoreFile, KeyInfo } from "./types.ts";
+import type { KeyInfo, KeystoreFile } from "./types.ts";
 
 /**
  * Resolve the V3 "password" for a keystore file based on prim.kdfInput.
@@ -87,7 +87,8 @@ export async function importKey(
   const address = account.address; // EIP-55 checksum
 
   const kdfInput = opts?.passphrase !== undefined ? "passphrase" : "device";
-  const password = kdfInput === "passphrase" ? (opts?.passphrase as string) : getOrCreateDeviceKey();
+  const password =
+    kdfInput === "passphrase" ? (opts?.passphrase as string) : getOrCreateDeviceKey();
   const cryptoParams = encryptToV3(privateKey, password);
 
   const keystoreFile: KeystoreFile = {
@@ -177,9 +178,7 @@ export async function listKeys(): Promise<KeyInfo[]> {
 
   return files.map((filename) => {
     const address = filename.slice(0, -5); // strip .json
-    const keystoreFile = JSON.parse(
-      readFileSync(getKeyPath(address), "utf-8"),
-    ) as KeystoreFile;
+    const keystoreFile = JSON.parse(readFileSync(getKeyPath(address), "utf-8")) as KeystoreFile;
 
     return {
       address,

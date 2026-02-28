@@ -186,10 +186,14 @@ try {
   if (bucketId) {
     try {
       await prim("store", "rm", bucketId, "smoke.txt", "--quiet");
-    } catch { /* object may not exist */ }
+    } catch {
+      /* object may not exist */
+    }
     try {
       await prim("store", "rm-bucket", bucketId, "--quiet");
-    } catch { /* bucket may not exist */ }
+    } catch {
+      /* bucket may not exist */
+    }
   }
 
   rmSync(PRIM_HOME, { recursive: true, force: true });

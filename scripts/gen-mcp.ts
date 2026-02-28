@@ -17,7 +17,7 @@
  *   Files without markers are fully written on first run.
  */
 
-import { readFileSync, writeFileSync, existsSync } from "node:fs";
+import { existsSync, readFileSync, writeFileSync } from "node:fs";
 import { join, resolve } from "node:path";
 import { parse as parseYaml } from "yaml";
 import { primsForInterface } from "./lib/primitives.js";
@@ -159,7 +159,9 @@ function serializeSchema(schema: OpenApiSchema, indent: number): string {
         entries.push(`${innerPad}properties: {}`);
       } else {
         const propLines = propEntries
-          .map(([pk, pv]) => `${innerPad}  ${JSON.stringify(pk)}: ${serializeSchema(pv, indent + 4)}`)
+          .map(
+            ([pk, pv]) => `${innerPad}  ${JSON.stringify(pk)}: ${serializeSchema(pv, indent + 4)}`,
+          )
           .join(",\n");
         entries.push(`${innerPad}properties: {\n${propLines},\n${innerPad}}`);
       }
@@ -173,7 +175,11 @@ function serializeSchema(schema: OpenApiSchema, indent: number): string {
       entries.push(`${innerPad}required: ${JSON.stringify(value)}`);
     } else if (key === "enum" && Array.isArray(value)) {
       entries.push(`${innerPad}enum: ${JSON.stringify(value)}`);
-    } else if (typeof value === "string" || typeof value === "number" || typeof value === "boolean") {
+    } else if (
+      typeof value === "string" ||
+      typeof value === "number" ||
+      typeof value === "boolean"
+    ) {
       entries.push(`${innerPad}${key}: ${JSON.stringify(value)}`);
     } else if (Array.isArray(value)) {
       entries.push(`${innerPad}${key}: ${JSON.stringify(value)}`);
@@ -251,7 +257,7 @@ function genCaseBody(op: Operation, prim: string, indent: string): string {
   const { method, pathParams, queryParams, hasBody } = op;
   const urlExpr = fillPathTemplate(op.path, pathParams);
   const lines: string[] = [];
-  const i = indent + "  ";
+  const i = `${indent}  `;
 
   // Determine non-path, non-query body params (for POST/PUT/PATCH)
   // Body params are everything that's not a path or query param
@@ -263,9 +269,13 @@ function genCaseBody(op: Operation, prim: string, indent: string): string {
       lines.push(`${i}const url = new URL(${urlExpr});`);
       for (const qp of queryParams) {
         if (qp.required) {
-          lines.push(`${i}url.searchParams.set(${JSON.stringify(qp.name)}, String(args.${qp.name}));`);
+          lines.push(
+            `${i}url.searchParams.set(${JSON.stringify(qp.name)}, String(args.${qp.name}));`,
+          );
         } else {
-          lines.push(`${i}if (args.${qp.name} !== undefined) url.searchParams.set(${JSON.stringify(qp.name)}, String(args.${qp.name}));`);
+          lines.push(
+            `${i}if (args.${qp.name} !== undefined) url.searchParams.set(${JSON.stringify(qp.name)}, String(args.${qp.name}));`,
+          );
         }
       }
       if (method === "GET") {
@@ -301,7 +311,9 @@ function genCaseBody(op: Operation, prim: string, indent: string): string {
       }
     } else {
       // No body (e.g., POST action with no request body)
-      lines.push(`${i}const res = await primFetch(${urlExpr}, { method: ${JSON.stringify(method)} });`);
+      lines.push(
+        `${i}const res = await primFetch(${urlExpr}, { method: ${JSON.stringify(method)} });`,
+      );
     }
   }
 
@@ -342,7 +354,9 @@ function buildInputSchema(
   // 1. Add path parameters
   for (const paramName of pathParams) {
     const paramDef = operation.parameters?.find((p) => p.name === paramName && p.in === "path");
-    const paramSchema = paramDef?.schema ? resolveSchema(paramDef.schema, spec) : { type: "string" };
+    const paramSchema = paramDef?.schema
+      ? resolveSchema(paramDef.schema, spec)
+      : { type: "string" };
     const desc = paramDef?.description;
     (schema.properties as Record<string, OpenApiSchema>)[paramName] = desc
       ? { ...paramSchema, description: desc }
@@ -390,7 +404,7 @@ function buildInputSchema(
 
   // Clean up empty required array
   if ((schema.required as string[]).length === 0) {
-    delete schema.required;
+    schema.required = undefined;
   }
 
   return schema;
@@ -419,10 +433,7 @@ function generateSections(prim: string, spec: OpenApiSpec): GeneratedSection {
       const queryParams = (op.parameters ?? []).filter((p) => p.in === "query");
       const hasBody = !!op.requestBody?.content?.["application/json"];
       const bodySchema = hasBody
-        ? resolveSchema(
-            op.requestBody!.content!["application/json"]!.schema ?? {},
-            spec,
-          )
+        ? resolveSchema(op.requestBody?.content?.["application/json"]?.schema ?? {}, spec)
         : null;
 
       const toolName = operationIdToToolName(op.operationId, prim);
@@ -447,19 +458,15 @@ function generateSections(prim: string, spec: OpenApiSpec): GeneratedSection {
   const toolLines: string[] = [];
   for (const { toolName, description, inputSchema } of toolDefs) {
     const schemaStr = serializeSchema(inputSchema, 6);
-    toolLines.push(`  {`);
+    toolLines.push("  {");
     toolLines.push(`    name: ${JSON.stringify(toolName)},`);
     toolLines.push(`    description: ${JSON.stringify(description)},`);
     toolLines.push(`    inputSchema: ${schemaStr},`);
-    toolLines.push(`  },`);
+    toolLines.push("  },");
   }
 
   const toolsName = toolsExportName(prim);
-  const toolsDef = [
-    `export const ${toolsName}: Tool[] = [`,
-    ...toolLines,
-    `];`,
-  ].join("\n");
+  const toolsDef = [`export const ${toolsName}: Tool[] = [`, ...toolLines, "];"].join("\n");
 
   // --- Handler section ---
   const handlerName = handlerFnName(prim);
@@ -477,41 +484,41 @@ function generateSections(prim: string, spec: OpenApiSpec): GeneratedSection {
     const caseBody = genCaseBody(op, prim, "      ");
     caseBlocks.push(`      case ${JSON.stringify(op.toolName)}: {`);
     caseBlocks.push(caseBody.replace(/primFetch/g, fetchArg));
-    caseBlocks.push(`      }`);
-    caseBlocks.push(``);
+    caseBlocks.push("      }");
+    caseBlocks.push("");
   }
 
   const handlerDef = [
     `export async function ${handlerName}(`,
-    `  name: string,`,
-    `  args: Record<string, unknown>,`,
+    "  name: string,",
+    "  args: Record<string, unknown>,",
     `  ${fetchParam}`,
-    `): Promise<CallToolResult> {`,
-    `  try {`,
-    `    switch (name) {`,
+    "): Promise<CallToolResult> {",
+    "  try {",
+    "    switch (name) {",
     ...caseBlocks,
-    `      default:`,
-    `        return {`,
+    "      default:",
+    "        return {",
     `          content: [{ type: "text", text: \`Unknown ${prim} tool: \${name}\` }],`,
-    `          isError: true,`,
-    `        };`,
-    `    }`,
-    `  } catch (err) {`,
-    `    return {`,
-    `      content: [`,
+    "          isError: true,",
+    "        };",
+    "    }",
+    "  } catch (err) {",
+    "    return {",
+    "      content: [",
     `        { type: "text", text: \`Error: \${err instanceof Error ? err.message : String(err)}\` },`,
-    `      ],`,
-    `      isError: true,`,
-    `    };`,
-    `  }`,
-    `}`,
-    ``,
-    `function errorResult(data: unknown): CallToolResult {`,
-    `  return {`,
+    "      ],",
+    "      isError: true,",
+    "    };",
+    "  }",
+    "}",
+    "",
+    "function errorResult(data: unknown): CallToolResult {",
+    "  return {",
     `    content: [{ type: "text", text: JSON.stringify(data, null, 2) }],`,
-    `    isError: true,`,
-    `  };`,
-    `}`,
+    "    isError: true,",
+    "  };",
+    "}",
   ].join("\n");
 
   return { toolsDef, handlerDef };
@@ -521,15 +528,15 @@ function buildFullFile(prim: string, toolsDef: string, handlerDef: string): stri
   return [
     `import type { Tool } from "@modelcontextprotocol/sdk/types.js";`,
     `import type { CallToolResult } from "@modelcontextprotocol/sdk/types.js";`,
-    ``,
-    `// BEGIN:GENERATED:TOOLS`,
+    "",
+    "// BEGIN:GENERATED:TOOLS",
     toolsDef,
-    `// END:GENERATED:TOOLS`,
-    ``,
-    `// BEGIN:GENERATED:HANDLER`,
+    "// END:GENERATED:TOOLS",
+    "",
+    "// BEGIN:GENERATED:HANDLER",
     handlerDef,
-    `// END:GENERATED:HANDLER`,
-    ``,
+    "// END:GENERATED:HANDLER",
+    "",
   ].join("\n");
 }
 
@@ -606,7 +613,7 @@ for (const prim of PRIMS) {
   let finalContent: string;
   const existing = existsSync(outPath) ? readFileSync(outPath, "utf8") : null;
 
-  if (existing && existing.includes("// BEGIN:GENERATED:TOOLS")) {
+  if (existing?.includes("// BEGIN:GENERATED:TOOLS")) {
     // File already has markers — inject into existing file
     finalContent = injectMarkers(existing, toolsDef, handlerDef);
   } else {

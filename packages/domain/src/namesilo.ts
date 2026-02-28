@@ -10,7 +10,13 @@
  * - Success codes: 300 = success, 301 = NS-fallback, 302 = contact-info-fallback
  */
 
-import type { DomainAvailability, DomainPrice, NameserverInfo, RegistrationResult, RegistrarProvider } from "./registrar.ts";
+import type {
+  DomainAvailability,
+  DomainPrice,
+  NameserverInfo,
+  RegistrarProvider,
+  RegistrationResult,
+} from "./registrar.ts";
 
 const BASE_URL = "https://www.namesilo.com/api";
 
@@ -83,7 +89,10 @@ interface GetNsReply {
 
 // ─── HTTP helper ──────────────────────────────────────────────────────────
 
-async function nsGet<T>(operation: string, params: Record<string, string>): Promise<NameSiloEnvelope<T>> {
+async function nsGet<T>(
+  operation: string,
+  params: Record<string, string>,
+): Promise<NameSiloEnvelope<T>> {
   const key = getApiKey();
   const url = new URL(`${BASE_URL}/${operation}`);
   url.searchParams.set("version", "1");
@@ -141,7 +150,9 @@ export class NameSiloClient implements RegistrarProvider {
     const reply = body.reply;
 
     // Build a set of available domains from the response
-    const available = toArray(reply.available as unknown as AvailabilityEntry | AvailabilityEntry[]);
+    const available = toArray(
+      reply.available as unknown as AvailabilityEntry | AvailabilityEntry[],
+    );
     const unavailableRaw = reply.unavailable;
 
     // NameSilo may return unavailable as { domain: "x" } or { domain: ["x","y"] }
@@ -154,9 +165,7 @@ export class NameSiloClient implements RegistrarProvider {
     for (const entry of available) {
       const registerPrice = parsePrice(entry.price ?? entry["regular-price"]);
       const price: DomainPrice | undefined =
-        registerPrice !== undefined
-          ? { register: registerPrice, currency: "USD" }
-          : undefined;
+        registerPrice !== undefined ? { register: registerPrice, currency: "USD" } : undefined;
 
       resultMap.set(entry.domain, {
         domain: entry.domain,

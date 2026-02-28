@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 
 vi.mock("node:fs", async (importOriginal) => {
   const actual = await importOriginal<typeof import("node:fs")>();
@@ -19,7 +19,7 @@ vi.mock("../src/config.ts", () => ({
   getDefaultAddress: vi.fn(),
 }));
 
-import { existsSync, readFileSync, writeFileSync, mkdirSync } from "node:fs";
+import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { getDefaultAddress } from "../src/config.ts";
 import {
   detectAgent,
@@ -27,9 +27,9 @@ import {
   mergeIntoConfigFile,
   removeFromConfigFile,
   runInstallCommand,
-  runUninstallCommand,
-  runSkillCommand,
   runListCommand,
+  runSkillCommand,
+  runUninstallCommand,
 } from "../src/install-commands.ts";
 
 const mockExistsSync = existsSync as ReturnType<typeof vi.fn>;
@@ -94,7 +94,19 @@ describe("generateMcpConfig", () => {
   });
 
   it("generates config for all primitives", () => {
-    expect(generateMcpConfig(["wallet", "store", "spawn", "faucet", "search", "email", "mem", "domain", "token"])).toEqual({
+    expect(
+      generateMcpConfig([
+        "wallet",
+        "store",
+        "spawn",
+        "faucet",
+        "search",
+        "email",
+        "mem",
+        "domain",
+        "token",
+      ]),
+    ).toEqual({
       mcpServers: {
         prim: { command: "prim", args: ["mcp"] },
       },
@@ -109,40 +121,59 @@ describe("generateMcpConfig", () => {
 describe("mergeIntoConfigFile", () => {
   it("creates new file when config does not exist", () => {
     mockExistsSync.mockReturnValue(false);
-    const config = { mcpServers: { "prim-store": { command: "prim", args: ["mcp", "--primitives", "store"] } } };
+    const config = {
+      mcpServers: { "prim-store": { command: "prim", args: ["mcp", "--primitives", "store"] } },
+    };
 
     mergeIntoConfigFile("/home/testuser/.claude/mcp.json", config);
 
     expect(mockMkdirSync).toHaveBeenCalledWith("/home/testuser/.claude", { recursive: true });
     const written = JSON.parse(mockWriteFileSync.mock.calls[0][1].replace(/\n$/, ""));
-    expect(written.mcpServers["prim-store"]).toEqual({ command: "prim", args: ["mcp", "--primitives", "store"] });
+    expect(written.mcpServers["prim-store"]).toEqual({
+      command: "prim",
+      args: ["mcp", "--primitives", "store"],
+    });
   });
 
   it("merges into existing config without removing other keys", () => {
     mockExistsSync.mockReturnValue(true);
-    mockReadFileSync.mockReturnValue(JSON.stringify({
-      mcpServers: { "other-tool": { command: "x" } },
-    }));
+    mockReadFileSync.mockReturnValue(
+      JSON.stringify({
+        mcpServers: { "other-tool": { command: "x" } },
+      }),
+    );
 
-    const config = { mcpServers: { "prim-store": { command: "prim", args: ["mcp", "--primitives", "store"] } } };
+    const config = {
+      mcpServers: { "prim-store": { command: "prim", args: ["mcp", "--primitives", "store"] } },
+    };
     mergeIntoConfigFile("/path/mcp.json", config);
 
     const written = JSON.parse(mockWriteFileSync.mock.calls[0][1].replace(/\n$/, ""));
     expect(written.mcpServers["other-tool"]).toEqual({ command: "x" });
-    expect(written.mcpServers["prim-store"]).toEqual({ command: "prim", args: ["mcp", "--primitives", "store"] });
+    expect(written.mcpServers["prim-store"]).toEqual({
+      command: "prim",
+      args: ["mcp", "--primitives", "store"],
+    });
   });
 
   it("overwrites existing prim key (idempotent)", () => {
     mockExistsSync.mockReturnValue(true);
-    mockReadFileSync.mockReturnValue(JSON.stringify({
-      mcpServers: { "prim-store": { command: "old", args: ["old"] } },
-    }));
+    mockReadFileSync.mockReturnValue(
+      JSON.stringify({
+        mcpServers: { "prim-store": { command: "old", args: ["old"] } },
+      }),
+    );
 
-    const config = { mcpServers: { "prim-store": { command: "prim", args: ["mcp", "--primitives", "store"] } } };
+    const config = {
+      mcpServers: { "prim-store": { command: "prim", args: ["mcp", "--primitives", "store"] } },
+    };
     mergeIntoConfigFile("/path/mcp.json", config);
 
     const written = JSON.parse(mockWriteFileSync.mock.calls[0][1].replace(/\n$/, ""));
-    expect(written.mcpServers["prim-store"]).toEqual({ command: "prim", args: ["mcp", "--primitives", "store"] });
+    expect(written.mcpServers["prim-store"]).toEqual({
+      command: "prim",
+      args: ["mcp", "--primitives", "store"],
+    });
   });
 
   it("throws on corrupt JSON", () => {
@@ -164,13 +195,15 @@ describe("mergeIntoConfigFile", () => {
 describe("removeFromConfigFile", () => {
   it("removes a specific prim key but leaves others", () => {
     mockExistsSync.mockReturnValue(true);
-    mockReadFileSync.mockReturnValue(JSON.stringify({
-      mcpServers: {
-        "other-tool": { command: "x" },
-        "prim-store": { command: "prim", args: ["mcp", "--primitives", "store"] },
-        "prim-wallet": { command: "prim", args: ["mcp", "--primitives", "wallet"] },
-      },
-    }));
+    mockReadFileSync.mockReturnValue(
+      JSON.stringify({
+        mcpServers: {
+          "other-tool": { command: "x" },
+          "prim-store": { command: "prim", args: ["mcp", "--primitives", "store"] },
+          "prim-wallet": { command: "prim", args: ["mcp", "--primitives", "wallet"] },
+        },
+      }),
+    );
 
     removeFromConfigFile("/path/mcp.json", ["store"]);
 
@@ -182,15 +215,27 @@ describe("removeFromConfigFile", () => {
 
   it("removes all prim keys when uninstalling all", () => {
     mockExistsSync.mockReturnValue(true);
-    mockReadFileSync.mockReturnValue(JSON.stringify({
-      mcpServers: {
-        "other-tool": { command: "x" },
-        prim: { command: "prim", args: ["mcp"] },
-        "prim-store": { command: "prim", args: ["mcp", "--primitives", "store"] },
-      },
-    }));
+    mockReadFileSync.mockReturnValue(
+      JSON.stringify({
+        mcpServers: {
+          "other-tool": { command: "x" },
+          prim: { command: "prim", args: ["mcp"] },
+          "prim-store": { command: "prim", args: ["mcp", "--primitives", "store"] },
+        },
+      }),
+    );
 
-    removeFromConfigFile("/path/mcp.json", ["wallet", "store", "spawn", "faucet", "search", "email", "mem", "domain", "token"]);
+    removeFromConfigFile("/path/mcp.json", [
+      "wallet",
+      "store",
+      "spawn",
+      "faucet",
+      "search",
+      "email",
+      "mem",
+      "domain",
+      "token",
+    ]);
 
     const written = JSON.parse(mockWriteFileSync.mock.calls[0][1].replace(/\n$/, ""));
     expect(written.mcpServers["other-tool"]).toEqual({ command: "x" });
@@ -251,7 +296,9 @@ describe("runInstallCommand", () => {
   it("rejects unknown primitive", async () => {
     await expect(
       runInstallCommand("bogus", ["install", "bogus", "--agent", "generic"]),
-    ).rejects.toThrow("Unknown primitive: bogus. Valid: wallet, store, spawn, faucet, search, email, mem, domain, token, all");
+    ).rejects.toThrow(
+      "Unknown primitive: bogus. Valid: wallet, store, spawn, faucet, search, email, mem, domain, token, all",
+    );
   });
 
   it("prints wallet warning when no default address", async () => {
@@ -330,13 +377,15 @@ describe("runListCommand", () => {
       if (p === "/home/testuser/.claude/mcp.json") return true;
       return false;
     });
-    mockReadFileSync.mockReturnValue(JSON.stringify({
-      mcpServers: {
-        "other-tool": { command: "x" },
-        prim: { command: "prim", args: ["mcp"] },
-        "prim-store": { command: "prim", args: ["mcp", "--primitives", "store"] },
-      },
-    }));
+    mockReadFileSync.mockReturnValue(
+      JSON.stringify({
+        mcpServers: {
+          "other-tool": { command: "x" },
+          prim: { command: "prim", args: ["mcp"] },
+          "prim-store": { command: "prim", args: ["mcp", "--primitives", "store"] },
+        },
+      }),
+    );
 
     const logs: string[] = [];
     const origLog = console.log;
@@ -357,9 +406,11 @@ describe("runListCommand", () => {
       if (p === "/home/testuser/.claude/mcp.json") return true;
       return false;
     });
-    mockReadFileSync.mockReturnValue(JSON.stringify({
-      mcpServers: { "other-tool": { command: "x" } },
-    }));
+    mockReadFileSync.mockReturnValue(
+      JSON.stringify({
+        mcpServers: { "other-tool": { command: "x" } },
+      }),
+    );
 
     const logs: string[] = [];
     const origLog = console.log;
@@ -395,12 +446,14 @@ describe("runUninstallCommand", () => {
       if (p === "/home/testuser/.claude/mcp.json") return true;
       return false;
     });
-    mockReadFileSync.mockReturnValue(JSON.stringify({
-      mcpServers: {
-        "prim-store": { command: "prim", args: ["mcp", "--primitives", "store"] },
-        "other-tool": { command: "x" },
-      },
-    }));
+    mockReadFileSync.mockReturnValue(
+      JSON.stringify({
+        mcpServers: {
+          "prim-store": { command: "prim", args: ["mcp", "--primitives", "store"] },
+          "other-tool": { command: "x" },
+        },
+      }),
+    );
 
     const logs: string[] = [];
     const origLog = console.log;
@@ -423,7 +476,9 @@ describe("runUninstallCommand", () => {
 
 describe("runSkillCommand", () => {
   it("rejects unknown primitive", async () => {
-    await expect(runSkillCommand("bogus", ["skill", "bogus"])).rejects.toThrow("Unknown primitive: bogus");
+    await expect(runSkillCommand("bogus", ["skill", "bogus"])).rejects.toThrow(
+      "Unknown primitive: bogus",
+    );
   });
 
   it("prints skill content when file exists", async () => {

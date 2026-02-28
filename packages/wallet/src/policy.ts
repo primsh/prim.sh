@@ -1,8 +1,4 @@
-import {
-  getPolicy,
-  resetDailySpentIfNeeded,
-  incrementDailySpent,
-} from "./db.ts";
+import { getPolicy, incrementDailySpent, resetDailySpentIfNeeded } from "./db.ts";
 
 type PolicyCheckOk = { ok: true };
 type PolicyCheckFail = { ok: false; code: string; message: string };

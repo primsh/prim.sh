@@ -10,22 +10,22 @@ process.env.MEM_DB_PATH = ":memory:";
 process.env.GOOGLE_API_KEY = "test-google-key";
 process.env.QDRANT_URL = "http://localhost:6333";
 
-import { describe, expect, it, beforeEach, afterEach, vi } from "vitest";
-import { resetDb, deleteExpiredEntries, getCacheEntry } from "../src/db.ts";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { deleteExpiredEntries, getCacheEntry, resetDb } from "../src/db.ts";
 import { resetEmbeddingProvider } from "../src/embeddings.ts";
 import {
-  createCollection,
-  listCollections,
-  getCollection,
-  deleteCollection,
-  upsertDocuments,
-  queryDocuments,
-  cacheSet,
-  cacheGet,
   cacheDelete,
-  isValidCollectionName,
+  cacheGet,
+  cacheSet,
+  createCollection,
+  deleteCollection,
+  getCollection,
   isValidCacheNamespace,
+  isValidCollectionName,
   isValidUuidV4,
+  listCollections,
+  queryDocuments,
+  upsertDocuments,
 } from "../src/service.ts";
 
 // ─── Mock fetch helpers ───────────────────────────────────────────────────
@@ -57,11 +57,7 @@ function qdrantErrorResponse(status: number, message = "error"): Response {
 /** Default mock: handles all success cases for Qdrant + Google. */
 const mockFetch = vi.fn(async (input: RequestInfo | URL, init?: RequestInit) => {
   const url =
-    typeof input === "string"
-      ? input
-      : input instanceof Request
-        ? input.url
-        : String(input);
+    typeof input === "string" ? input : input instanceof Request ? input.url : String(input);
   const method = (init?.method ?? (input instanceof Request ? input.method : "GET")).toUpperCase();
 
   // Google batchEmbedContents
@@ -238,7 +234,10 @@ describe("createCollection", () => {
   });
 
   it("creates collection with custom dimension and distance", async () => {
-    const result = await createCollection({ name: "custom", dimension: 1536, distance: "Dot" }, WALLET);
+    const result = await createCollection(
+      { name: "custom", dimension: 1536, distance: "Dot" },
+      WALLET,
+    );
     expect(result.ok).toBe(true);
     if (!result.ok) return;
     expect(result.data.dimension).toBe(1536);
@@ -437,7 +436,11 @@ describe("upsertDocuments", () => {
   it("upserts single document with valid UUID id", async () => {
     const id = await makeCollection();
     const docId = "a1b2c3d4-e5f6-4789-8901-234567890abc";
-    const result = await upsertDocuments(id, { documents: [{ id: docId, text: "explicit id" }] }, WALLET);
+    const result = await upsertDocuments(
+      id,
+      { documents: [{ id: docId, text: "explicit id" }] },
+      WALLET,
+    );
     expect(result.ok).toBe(true);
     if (!result.ok) return;
     expect(result.data.ids[0]).toBe(docId);
@@ -447,7 +450,9 @@ describe("upsertDocuments", () => {
     const id = await makeCollection();
     // Mock multiple embeddings
     mockFetch.mockResolvedValueOnce(googleEmbedResponse(3));
-    mockFetch.mockResolvedValueOnce(qdrantOkResponse({ result: { operation_id: 0, status: "completed" }, status: "ok" }));
+    mockFetch.mockResolvedValueOnce(
+      qdrantOkResponse({ result: { operation_id: 0, status: "completed" }, status: "ok" }),
+    );
     const result = await upsertDocuments(
       id,
       { documents: [{ text: "a" }, { text: "b" }, { text: "c" }] },
@@ -484,7 +489,11 @@ describe("upsertDocuments", () => {
 
   it("rejects document with non-UUID id", async () => {
     const id = await makeCollection();
-    const result = await upsertDocuments(id, { documents: [{ id: "not-a-uuid", text: "x" }] }, WALLET);
+    const result = await upsertDocuments(
+      id,
+      { documents: [{ id: "not-a-uuid", text: "x" }] },
+      WALLET,
+    );
     expect(result.ok).toBe(false);
     if (result.ok) return;
     expect(result.code).toBe("invalid_request");
@@ -525,9 +534,7 @@ describe("upsertDocuments", () => {
   it("returns embedding_error on Google 429", async () => {
     const id = await makeCollection();
     // First: Qdrant create was already done. Override next fetch = Google embed call
-    mockFetch.mockResolvedValueOnce(
-      new Response("rate limited", { status: 429 }),
-    );
+    mockFetch.mockResolvedValueOnce(new Response("rate limited", { status: 429 }));
     const result = await upsertDocuments(id, { documents: [{ text: "x" }] }, WALLET);
     expect(result.ok).toBe(false);
     if (result.ok) return;
@@ -563,7 +570,9 @@ describe("upsertDocuments", () => {
     const id = await makeCollection();
     const result = await upsertDocuments(
       id,
-      { documents: [{ text: "actual text", metadata: { text: "should be ignored", other: "ok" } }] },
+      {
+        documents: [{ text: "actual text", metadata: { text: "should be ignored", other: "ok" } }],
+      },
       WALLET,
     );
     expect(result.ok).toBe(true);
@@ -683,9 +692,7 @@ describe("queryDocuments", () => {
 
   it("returns embedding_error on Google 401", async () => {
     const id = await makeCollection();
-    mockFetch.mockResolvedValueOnce(
-      new Response("Unauthorized", { status: 401 }),
-    );
+    mockFetch.mockResolvedValueOnce(new Response("Unauthorized", { status: 401 }));
     const result = await queryDocuments(id, { text: "x" }, WALLET);
     expect(result.ok).toBe(false);
     if (result.ok) return;
@@ -862,7 +869,9 @@ describe("Cache TTL behavior", () => {
     // Directly check — at the moment of set, expires_at == Date.now() (not yet expired per `< now` check).
     // Wait at least 1ms to ensure expiry triggers
     const spin = Date.now() + 2;
-    while (Date.now() < spin) { /* busy wait */ }
+    while (Date.now() < spin) {
+      /* busy wait */
+    }
 
     const result = cacheGet("ns", "expired", WALLET);
     expect(result.ok).toBe(false);
@@ -894,7 +903,9 @@ describe("Cache TTL behavior", () => {
     cacheSet("ns", "will-expire", { value: "x", ttl: 0 }, WALLET);
     // Busy-wait 2ms
     const spin = Date.now() + 2;
-    while (Date.now() < spin) { /* busy wait */ }
+    while (Date.now() < spin) {
+      /* busy wait */
+    }
 
     deleteExpiredEntries(Date.now());
 
@@ -920,7 +931,9 @@ describe("Cache TTL behavior", () => {
     // Insert an entry that will expire
     cacheSet("ns", "soon-gone", { value: "x", ttl: 0 }, WALLET);
     const spin = Date.now() + 2;
-    while (Date.now() < spin) { /* busy wait 2ms so expires_at < Date.now() */ }
+    while (Date.now() < spin) {
+      /* busy wait 2ms so expires_at < Date.now() */
+    }
 
     // Directly invoke cleanup (same code path triggered at 10% probability in cacheSet)
     deleteExpiredEntries(Date.now());

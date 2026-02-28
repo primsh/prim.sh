@@ -1,13 +1,13 @@
+import type { ProviderHealth } from "@primsh/x402-middleware";
 import { ProviderError } from "./provider.ts";
 import type {
-  SearchProvider,
   ExtractProvider,
+  ExtractProviderResult,
+  SearchProvider,
   SearchProviderConfig,
   SearchProviderParams,
   SearchProviderResult,
-  ExtractProviderResult,
 } from "./provider.ts";
-import type { ProviderHealth } from "@primsh/x402-middleware";
 
 const TAVILY_BASE_URL = "https://api.tavily.com";
 

@@ -1,38 +1,38 @@
 import { resolve } from "node:path";
-import { bodyLimit } from "hono/body-limit";
 import {
   createAgentStackMiddleware,
   createWalletAllowlistChecker,
   forbidden,
-  notFound,
   invalidRequest,
+  notFound,
 } from "@primsh/x402-middleware";
 import type { ApiError } from "@primsh/x402-middleware";
 import { createPrimApp } from "@primsh/x402-middleware/create-prim-app";
+import { bodyLimit } from "hono/body-limit";
 import type {
+  BucketListResponse,
+  BucketResponse,
   CreateBucketRequest,
   CreateBucketResponse,
-  BucketResponse,
-  BucketListResponse,
-  PutObjectResponse,
-  ObjectListResponse,
   DeleteObjectResponse,
+  ObjectListResponse,
+  PutObjectResponse,
   QuotaResponse,
-  SetQuotaRequest,
   ReconcileResponse,
+  SetQuotaRequest,
 } from "./api.ts";
 import {
   createBucket,
-  listBuckets,
-  getBucket,
   deleteBucket,
-  putObject,
-  getObject,
   deleteObject,
-  listObjects,
+  getBucket,
+  getObject,
   getUsage,
-  setQuotaForBucket,
+  listBuckets,
+  listObjects,
+  putObject,
   reconcileUsage,
+  setQuotaForBucket,
 } from "./service.ts";
 
 const STORE_ROUTES = {
@@ -76,7 +76,9 @@ function extractObjectKey(c: { req: { path: string } }): string {
 const app = createPrimApp(
   {
     serviceName: "store.sh",
-    llmsTxtPath: import.meta.dir ? resolve(import.meta.dir, "../../../site/store/llms.txt") : undefined,
+    llmsTxtPath: import.meta.dir
+      ? resolve(import.meta.dir, "../../../site/store/llms.txt")
+      : undefined,
     routes: STORE_ROUTES,
     skipBodyLimit: true,
     metricsName: "store.prim.sh",
@@ -85,21 +87,63 @@ const app = createPrimApp(
         { method: "POST", path: "/v1/buckets", price_usdc: "0.05", description: "Create a bucket" },
         { method: "GET", path: "/v1/buckets", price_usdc: "0.001", description: "List buckets" },
         { method: "GET", path: "/v1/buckets/{id}", price_usdc: "0.001", description: "Get bucket" },
-        { method: "DELETE", path: "/v1/buckets/{id}", price_usdc: "0.01", description: "Delete bucket" },
-        { method: "PUT", path: "/v1/buckets/{id}/objects/*", price_usdc: "0.001", description: "Upload object" },
-        { method: "GET", path: "/v1/buckets/{id}/objects", price_usdc: "0.001", description: "List objects" },
-        { method: "GET", path: "/v1/buckets/{id}/objects/*", price_usdc: "0.001", description: "Download object" },
-        { method: "DELETE", path: "/v1/buckets/{id}/objects/*", price_usdc: "0.001", description: "Delete object" },
-        { method: "GET", path: "/v1/buckets/{id}/quota", price_usdc: "0.001", description: "Get quota and usage" },
-        { method: "PUT", path: "/v1/buckets/{id}/quota", price_usdc: "0.01", description: "Set quota" },
-        { method: "POST", path: "/v1/buckets/{id}/quota/reconcile", price_usdc: "0.05", description: "Reconcile usage" },
+        {
+          method: "DELETE",
+          path: "/v1/buckets/{id}",
+          price_usdc: "0.01",
+          description: "Delete bucket",
+        },
+        {
+          method: "PUT",
+          path: "/v1/buckets/{id}/objects/*",
+          price_usdc: "0.001",
+          description: "Upload object",
+        },
+        {
+          method: "GET",
+          path: "/v1/buckets/{id}/objects",
+          price_usdc: "0.001",
+          description: "List objects",
+        },
+        {
+          method: "GET",
+          path: "/v1/buckets/{id}/objects/*",
+          price_usdc: "0.001",
+          description: "Download object",
+        },
+        {
+          method: "DELETE",
+          path: "/v1/buckets/{id}/objects/*",
+          price_usdc: "0.001",
+          description: "Delete object",
+        },
+        {
+          method: "GET",
+          path: "/v1/buckets/{id}/quota",
+          price_usdc: "0.001",
+          description: "Get quota and usage",
+        },
+        {
+          method: "PUT",
+          path: "/v1/buckets/{id}/quota",
+          price_usdc: "0.01",
+          description: "Set quota",
+        },
+        {
+          method: "POST",
+          path: "/v1/buckets/{id}/quota/reconcile",
+          price_usdc: "0.05",
+          description: "Reconcile usage",
+        },
       ],
     },
   },
   { createAgentStackMiddleware, createWalletAllowlistChecker },
 );
 
-const logger = (app as typeof app & { logger: { warn: (msg: string, extra?: Record<string, unknown>) => void } }).logger;
+const logger = (
+  app as typeof app & { logger: { warn: (msg: string, extra?: Record<string, unknown>) => void } }
+).logger;
 
 // Body size limit — skip for object PUT (streaming uploads to R2 can exceed 1MB)
 app.use("*", async (c, next) => {
@@ -127,8 +171,10 @@ app.post("/v1/buckets", async (c) => {
 
   const result = await createBucket(body, caller);
   if (!result.ok) {
-    if (result.code === "invalid_request" || result.code === "bucket_name_taken") return c.json(invalidRequest(result.message), 400);
-    if (result.code === "bucket_limit_exceeded") return c.json(bucketLimitExceeded(result.message), 403);
+    if (result.code === "invalid_request" || result.code === "bucket_name_taken")
+      return c.json(invalidRequest(result.message), 400);
+    if (result.code === "bucket_limit_exceeded")
+      return c.json(bucketLimitExceeded(result.message), 403);
     if (result.status === 404) return c.json(notFound(result.message), 404);
     if (result.status === 403) return c.json(forbidden(result.message), 403);
     return c.json(r2Error(result.message), result.status as 502);
@@ -193,7 +239,8 @@ app.put("/v1/buckets/:id/objects/*", async (c) => {
   const result = await putObject(c.req.param("id"), key, body, contentType, caller, contentLength);
   if (!result.ok) {
     if (result.code === "quota_exceeded") return c.json(quotaExceeded(result.message), 413);
-    if (result.code === "storage_limit_exceeded") return c.json(storageLimitExceeded(result.message), 413);
+    if (result.code === "storage_limit_exceeded")
+      return c.json(storageLimitExceeded(result.message), 413);
     if (result.status === 411) return c.json(invalidRequest(result.message), 411);
     if (result.code === "invalid_request") return c.json(invalidRequest(result.message), 400);
     if (result.status === 404) return c.json(notFound(result.message), 404);

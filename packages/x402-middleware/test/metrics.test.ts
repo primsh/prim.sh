@@ -1,6 +1,6 @@
-import { describe, expect, it, beforeEach } from "vitest";
 import { Hono } from "hono";
-import { metricsMiddleware, metricsHandler, resetMetrics } from "../src/metrics.ts";
+import { beforeEach, describe, expect, it } from "vitest";
+import { metricsHandler, metricsMiddleware, resetMetrics } from "../src/metrics.ts";
 
 function createApp(serviceName = "test.prim.sh") {
   const app = new Hono();

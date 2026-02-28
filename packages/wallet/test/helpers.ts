@@ -1,4 +1,4 @@
-import { privateKeyToAccount, generatePrivateKey } from "viem/accounts";
+import { generatePrivateKey, privateKeyToAccount } from "viem/accounts";
 import { insertWallet } from "../src/db.ts";
 
 /**

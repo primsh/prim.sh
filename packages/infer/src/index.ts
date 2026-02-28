@@ -1,20 +1,20 @@
-import { Hono } from "hono";
-import { bodyLimit } from "hono/body-limit";
 import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
+import { Hono } from "hono";
+import { bodyLimit } from "hono/body-limit";
 
 const LLMS_TXT = import.meta.dir
   ? readFileSync(resolve(import.meta.dir, "../../../site/infer/llms.txt"), "utf-8")
   : "";
 import {
   createAgentStackMiddleware,
-  createWalletAllowlistChecker,
   createLogger,
+  createWalletAllowlistChecker,
   getNetworkConfig,
-  metricsMiddleware,
-  metricsHandler,
-  requestIdMiddleware,
   invalidRequest,
+  metricsHandler,
+  metricsMiddleware,
+  requestIdMiddleware,
 } from "@primsh/x402-middleware";
 import type { ApiError } from "@primsh/x402-middleware";
 import type { ChatRequest, EmbedRequest } from "./api.ts";
@@ -34,7 +34,7 @@ const checkAllowlist = createWalletAllowlistChecker(WALLET_INTERNAL_URL);
 const INFER_ROUTES = {
   "POST /v1/chat": "$0.01",
   "POST /v1/embed": "$0.001",
-  "GET /v1/models": "$0.01"
+  "GET /v1/models": "$0.01",
 } as const;
 
 function providerError(message: string): ApiError {
@@ -50,10 +50,13 @@ const app = new Hono<{ Variables: AppVariables }>();
 
 app.use("*", requestIdMiddleware());
 
-app.use("*", bodyLimit({
-  maxSize: 1024 * 1024,
-  onError: (c) => c.json({ error: "Request too large" }, 413),
-}));
+app.use(
+  "*",
+  bodyLimit({
+    maxSize: 1024 * 1024,
+    onError: (c) => c.json({ error: "Request too large" }, 413),
+  }),
+);
 
 app.use("*", metricsMiddleware());
 
@@ -91,9 +94,24 @@ app.get("/pricing", (c) => {
     currency: "USDC",
     network: "eip155:8453",
     routes: [
-      { method: "POST", path: "/v1/chat", price_usdc: "pass-through + 10%", description: "Chat completion. Supports streaming, tool use, structured output." },
-      { method: "POST", path: "/v1/embed", price_usdc: "0.001", description: "Generate embeddings for text input. Returns vector array." },
-      { method: "GET", path: "/v1/models", price_usdc: "0.01", description: "List available models with pricing and capabilities." }
+      {
+        method: "POST",
+        path: "/v1/chat",
+        price_usdc: "pass-through + 10%",
+        description: "Chat completion. Supports streaming, tool use, structured output.",
+      },
+      {
+        method: "POST",
+        path: "/v1/embed",
+        price_usdc: "0.001",
+        description: "Generate embeddings for text input. Returns vector array.",
+      },
+      {
+        method: "GET",
+        path: "/v1/models",
+        price_usdc: "0.01",
+        description: "List available models with pricing and capabilities.",
+      },
     ],
   });
 });

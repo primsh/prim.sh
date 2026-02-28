@@ -46,7 +46,12 @@ export async function runFaucetCommand(sub: string, argv: string[]): Promise<voi
         body: JSON.stringify({ address }),
       });
       if (!res.ok) return handleError(res);
-      const data = (await res.json()) as { tx_hash: string; amount: string; currency: string; chain: string };
+      const data = (await res.json()) as {
+        tx_hash: string;
+        amount: string;
+        currency: string;
+        chain: string;
+      };
       if (quiet) {
         console.log(data.tx_hash);
       } else {
@@ -63,7 +68,12 @@ export async function runFaucetCommand(sub: string, argv: string[]): Promise<voi
         body: JSON.stringify({ address }),
       });
       if (!res.ok) return handleError(res);
-      const data = (await res.json()) as { tx_hash: string; amount: string; currency: string; chain: string };
+      const data = (await res.json()) as {
+        tx_hash: string;
+        amount: string;
+        currency: string;
+        chain: string;
+      };
       if (quiet) {
         console.log(data.tx_hash);
       } else {

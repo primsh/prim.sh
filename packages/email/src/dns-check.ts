@@ -17,9 +17,7 @@ export async function checkMx(domain: string): Promise<DnsCheckResult> {
   const expected = MAIL_HOST;
   try {
     const records = await dns.resolveMx(domain);
-    const match = records.find(
-      (r) => r.exchange.toLowerCase() === expected.toLowerCase(),
-    );
+    const match = records.find((r) => r.exchange.toLowerCase() === expected.toLowerCase());
     return {
       pass: !!match,
       expected,

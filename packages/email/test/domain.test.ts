@@ -1,4 +1,4 @@
-import { describe, expect, it, vi, beforeEach } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 
 vi.mock("../src/stalwart", () => ({
   StalwartError: class StalwartError extends Error {
@@ -70,7 +70,12 @@ vi.mock("../src/db", () => {
   const webhooks = new Map<string, Record<string, unknown>>();
   return {
     insertMailbox: vi.fn((params: Record<string, unknown>) => {
-      rows.set(params.id as string, { ...params, status: "active", stalwart_cleanup_failed: 0, cleanup_attempts: 0 });
+      rows.set(params.id as string, {
+        ...params,
+        status: "active",
+        stalwart_cleanup_failed: 0,
+        cleanup_attempts: 0,
+      });
     }),
     getMailboxById: vi.fn((id: string) => rows.get(id) ?? null),
     getMailboxByAddress: vi.fn(),
@@ -78,7 +83,9 @@ vi.mock("../src/db", () => {
     getMailboxesByOwnerAll: vi.fn(() => []),
     countMailboxesByOwner: vi.fn(() => 0),
     countMailboxesByOwnerAll: vi.fn(() => 0),
-    deleteMailboxRow: vi.fn((id: string) => { rows.delete(id); }),
+    deleteMailboxRow: vi.fn((id: string) => {
+      rows.delete(id);
+    }),
     updateExpiresAt: vi.fn(),
     insertWebhook: vi.fn(),
     getWebhooksByMailbox: vi.fn(() => []),
@@ -125,7 +132,9 @@ vi.mock("../src/db", () => {
         d.verified_at = Date.now();
       }
     }),
-    deleteDomainRow: vi.fn((id: string) => { domains.delete(id); }),
+    deleteDomainRow: vi.fn((id: string) => {
+      domains.delete(id);
+    }),
     countMailboxesByDomain: vi.fn(() => 0),
     _rows: rows,
     _domains: domains,
@@ -133,18 +142,24 @@ vi.mock("../src/db", () => {
   };
 });
 
-import {
-  registerDomain,
-  listDomains,
-  getDomain,
-  verifyDomain,
-  deleteDomain,
-  createMailbox,
-} from "../src/service";
-import { createDomainPrincipal, deleteDomainPrincipal, generateDkim, getDnsRecords, StalwartError } from "../src/stalwart";
-import { verifyDns } from "../src/dns-check";
-import { createPrincipal } from "../src/stalwart";
 import * as dbMock from "../src/db";
+import { verifyDns } from "../src/dns-check";
+import {
+  createMailbox,
+  deleteDomain,
+  getDomain,
+  listDomains,
+  registerDomain,
+  verifyDomain,
+} from "../src/service";
+import {
+  StalwartError,
+  createDomainPrincipal,
+  deleteDomainPrincipal,
+  generateDkim,
+  getDnsRecords,
+} from "../src/stalwart";
+import { createPrincipal } from "../src/stalwart";
 
 const WALLET_A = "0xaaa";
 const WALLET_B = "0xbbb";
@@ -254,11 +269,20 @@ describe("custom domains (R-9)", () => {
       (verifyDns as ReturnType<typeof vi.fn>).mockResolvedValue({
         allPass: true,
         mx: { pass: true, expected: "mail.prim.sh", found: "mail.prim.sh" },
-        spf: { pass: true, expected: "include:email.prim.sh", found: "v=spf1 include:email.prim.sh -all" },
+        spf: {
+          pass: true,
+          expected: "include:email.prim.sh",
+          found: "v=spf1 include:email.prim.sh -all",
+        },
         dmarc: { pass: true, expected: "v=DMARC1", found: "v=DMARC1; p=quarantine" },
       });
       (createDomainPrincipal as ReturnType<typeof vi.fn>).mockResolvedValue(42);
-      (generateDkim as ReturnType<typeof vi.fn>).mockResolvedValue({ id: "dkim1", algorithm: "RSA", domain: "acme.com", selector: "rsa" });
+      (generateDkim as ReturnType<typeof vi.fn>).mockResolvedValue({
+        id: "dkim1",
+        algorithm: "RSA",
+        domain: "acme.com",
+        selector: "rsa",
+      });
       (getDnsRecords as ReturnType<typeof vi.fn>).mockResolvedValue([
         { type: "TXT", name: "rsa._domainkey.acme.com", content: "v=DKIM1; k=rsa; p=MIIBIjAN..." },
         { type: "TXT", name: "ed._domainkey.acme.com", content: "v=DKIM1; k=ed25519; p=HAa8..." },
@@ -281,7 +305,11 @@ describe("custom domains (R-9)", () => {
       (verifyDns as ReturnType<typeof vi.fn>).mockResolvedValue({
         allPass: false,
         mx: { pass: false, expected: "mail.prim.sh", found: null },
-        spf: { pass: true, expected: "include:email.prim.sh", found: "v=spf1 include:email.prim.sh -all" },
+        spf: {
+          pass: true,
+          expected: "include:email.prim.sh",
+          found: "v=spf1 include:email.prim.sh -all",
+        },
         dmarc: { pass: true, expected: "v=DMARC1", found: "v=DMARC1; p=quarantine" },
       });
 
@@ -320,7 +348,9 @@ describe("custom domains (R-9)", () => {
 
       // Manually set domain to active
       // biome-ignore lint/suspicious/noExplicitAny: accessing mock internals
-      const d = ((dbMock as any)._domains as Map<string, Record<string, unknown>>).get(created.data.id);
+      const d = ((dbMock as any)._domains as Map<string, Record<string, unknown>>).get(
+        created.data.id,
+      );
       if (d) d.status = "active";
 
       const result = await verifyDomain(created.data.id, WALLET_A);
@@ -346,7 +376,11 @@ describe("custom domains (R-9)", () => {
       (verifyDns as ReturnType<typeof vi.fn>).mockResolvedValue({
         allPass: true,
         mx: { pass: true, expected: "mail.prim.sh", found: "mail.prim.sh" },
-        spf: { pass: true, expected: "include:email.prim.sh", found: "v=spf1 include:email.prim.sh -all" },
+        spf: {
+          pass: true,
+          expected: "include:email.prim.sh",
+          found: "v=spf1 include:email.prim.sh -all",
+        },
         dmarc: { pass: true, expected: "v=DMARC1", found: "v=DMARC1; p=quarantine" },
       });
       (createDomainPrincipal as ReturnType<typeof vi.fn>).mockResolvedValue(42);
@@ -390,7 +424,9 @@ describe("custom domains (R-9)", () => {
 
       // Mark as provisioned
       // biome-ignore lint/suspicious/noExplicitAny: accessing mock internals
-      const d = ((dbMock as any)._domains as Map<string, Record<string, unknown>>).get(created.data.id);
+      const d = ((dbMock as any)._domains as Map<string, Record<string, unknown>>).get(
+        created.data.id,
+      );
       if (d) d.stalwart_provisioned = 1;
 
       (deleteDomainPrincipal as ReturnType<typeof vi.fn>).mockResolvedValue(undefined);
@@ -423,7 +459,9 @@ describe("custom domains (R-9)", () => {
 
       // Manually set domain to active
       // biome-ignore lint/suspicious/noExplicitAny: accessing mock internals
-      const d = ((dbMock as any)._domains as Map<string, Record<string, unknown>>).get(created.data.id);
+      const d = ((dbMock as any)._domains as Map<string, Record<string, unknown>>).get(
+        created.data.id,
+      );
       if (d) d.status = "active";
 
       (createPrincipal as ReturnType<typeof vi.fn>).mockResolvedValue(42);
@@ -450,7 +488,9 @@ describe("custom domains (R-9)", () => {
       if (!created.ok) return;
 
       // biome-ignore lint/suspicious/noExplicitAny: accessing mock internals
-      const d = ((dbMock as any)._domains as Map<string, Record<string, unknown>>).get(created.data.id);
+      const d = ((dbMock as any)._domains as Map<string, Record<string, unknown>>).get(
+        created.data.id,
+      );
       if (d) d.status = "active";
 
       const result = await createMailbox({ domain: "acme.com" }, WALLET_B);

@@ -92,7 +92,11 @@ export interface CloudProvider {
   startServer(providerResourceId: string): Promise<ProviderAction>;
   stopServer(providerResourceId: string): Promise<ProviderAction>;
   rebootServer(providerResourceId: string): Promise<ProviderAction>;
-  resizeServer(providerResourceId: string, type: string, upgradeDisk: boolean): Promise<ProviderAction>;
+  resizeServer(
+    providerResourceId: string,
+    type: string,
+    upgradeDisk: boolean,
+  ): Promise<ProviderAction>;
   rebuildServer(providerResourceId: string, image: string): Promise<ProviderRebuildResult>;
 
   // SSH keys

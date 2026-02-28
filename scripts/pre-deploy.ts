@@ -19,9 +19,9 @@
  */
 
 import { execSync } from "node:child_process";
+import { resolve4 } from "node:dns/promises";
 import { existsSync } from "node:fs";
 import { resolve } from "node:path";
-import { resolve4 } from "node:dns/promises";
 import { loadPrimitives } from "./lib/primitives.js";
 
 // ─── Config ──────────────────────────────────────────────────────────────────
@@ -35,7 +35,10 @@ if (!VPS_IP) {
 const _prims = loadPrimitives();
 const PRIMITIVES = _prims.filter((p) => p.port).map((p) => p.id);
 const PORTS: Record<string, number> = Object.fromEntries(
-  _prims.filter((p) => p.port).map((p) => [p.id, p.port!]),
+  _prims
+    .filter((p) => p.port)
+    // biome-ignore lint/style/noNonNullAssertion: filtered by p.port truthiness check
+    .map((p) => [p.id, p.port!]),
 );
 
 type Primitive = string;
@@ -131,10 +134,7 @@ function checkTests(primitive: Primitive) {
     const failMatch = stdout.match(/(\d+) failed/);
     const passMatch = stdout.match(/(\d+) passed/);
     if (failMatch) {
-      fail(
-        `${failMatch[1]} test(s) failed`,
-        passMatch ? `${passMatch[1]} passed` : undefined,
-      );
+      fail(`${failMatch[1]} test(s) failed`, passMatch ? `${passMatch[1]} passed` : undefined);
     } else {
       fail("pnpm test", stdout.slice(0, 120));
     }
@@ -321,7 +321,10 @@ async function checkDns(primitive: Primitive) {
     if (addrs.includes(VPS_IP)) {
       pass(host, VPS_IP);
     } else {
-      warn(host, `resolves to ${addrs.join(", ")} (expected ${VPS_IP}) — update DNS before going live`);
+      warn(
+        host,
+        `resolves to ${addrs.join(", ")} (expected ${VPS_IP}) — update DNS before going live`,
+      );
     }
   } catch (err) {
     const msg = err instanceof Error ? err.message : String(err);
@@ -335,7 +338,7 @@ async function main() {
   const primitive = process.argv[2] as Primitive | undefined;
 
   if (!primitive || !PRIMITIVES.includes(primitive)) {
-    console.error(`\nUsage: bun scripts/pre-deploy.ts <primitive>`);
+    console.error("\nUsage: bun scripts/pre-deploy.ts <primitive>");
     console.error(`\nKnown primitives: ${PRIMITIVES.join(", ")}\n`);
     process.exit(1);
   }
@@ -345,7 +348,7 @@ async function main() {
   const pkgOk = checkPackageExists(primitive);
   if (!pkgOk) {
     // No point running tests if the package doesn't exist
-    console.log("\n--- Result " + "─".repeat(47) + "\n");
+    console.log(`\n--- Result ${"─".repeat(47)}\n`);
     console.log("  Package not found — aborting remaining checks.\n");
     process.exit(1);
   }

@@ -17,8 +17,8 @@
  * Alias: pnpm gate <prim> <target-status>
  */
 
+import { type GateTarget, runGateCheck } from "./lib/gate-check.js";
 import { loadPrimitives } from "./lib/primitives.js";
-import { runGateCheck, type GateTarget } from "./lib/gate-check.js";
 
 const VALID_TARGETS: GateTarget[] = ["testing", "live"];
 
@@ -30,14 +30,14 @@ async function main() {
   const primIds = prims.map((p) => p.id);
 
   if (!primId || !primIds.includes(primId)) {
-    console.error(`\nUsage: bun scripts/gate-check.ts <prim> <target-status>`);
+    console.error("\nUsage: bun scripts/gate-check.ts <prim> <target-status>");
     console.error(`\nKnown primitives: ${primIds.join(", ")}`);
     console.error(`Target statuses:  ${VALID_TARGETS.join(", ")}\n`);
     process.exit(1);
   }
 
   if (!target || !VALID_TARGETS.includes(target)) {
-    console.error(`\nUsage: bun scripts/gate-check.ts <prim> <target-status>`);
+    console.error("\nUsage: bun scripts/gate-check.ts <prim> <target-status>");
     console.error(`\nTarget statuses: ${VALID_TARGETS.join(", ")}\n`);
     process.exit(1);
   }
@@ -59,7 +59,9 @@ async function main() {
     for (const f of result.failures) {
       console.log(`  ✗ ${f}`);
     }
-    console.log(`\n✗ Gate FAILED — ${result.failures.length} check(s) blocked transition to ${target}\n`);
+    console.log(
+      `\n✗ Gate FAILED — ${result.failures.length} check(s) blocked transition to ${target}\n`,
+    );
     process.exit(1);
   }
 

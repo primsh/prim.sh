@@ -1,4 +1,4 @@
-import { describe, it, expect, vi } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import { getNetworkConfig } from "../src/network-config";
 
 describe("network-config", () => {

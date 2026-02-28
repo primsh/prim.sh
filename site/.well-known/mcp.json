@@ -3,17 +3,7 @@
   "description": "MCP server for prim.sh infrastructure primitives. Provides agent tools for wallets, storage, compute, email, search, and more. All operations authenticated via x402 USDC payment.",
   "version": "0.1.0",
   "install": "npx @primsh/mcp",
-  "primitives": [
-    "wallet",
-    "store",
-    "spawn",
-    "faucet",
-    "search",
-    "email",
-    "mem",
-    "domain",
-    "token"
-  ],
+  "primitives": ["wallet", "store", "spawn", "faucet", "search", "email", "mem", "domain", "token"],
   "homepage": "https://prim.sh",
   "documentation": "https://prim.sh/llms.txt"
 }

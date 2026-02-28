@@ -210,17 +210,13 @@ export async function runTokenCommand(sub: string, argv: string[]): Promise<void
     case "mint": {
       const tokenId = argv[2];
       if (!tokenId) {
-        process.stderr.write(
-          "Usage: prim token mint TOKEN_ID --amount N --to ADDRESS\n",
-        );
+        process.stderr.write("Usage: prim token mint TOKEN_ID --amount N --to ADDRESS\n");
         process.exit(1);
       }
       const amount = getFlag("amount", argv);
       const to = getFlag("to", argv);
       if (!amount || !to) {
-        process.stderr.write(
-          "Usage: prim token mint TOKEN_ID --amount N --to ADDRESS\n",
-        );
+        process.stderr.write("Usage: prim token mint TOKEN_ID --amount N --to ADDRESS\n");
         process.exit(1);
       }
       const res = await primFetch(`${baseUrl}/v1/tokens/${tokenId}/mint`, {
@@ -256,9 +252,7 @@ export async function runTokenCommand(sub: string, argv: string[]): Promise<void
     }
 
     default:
-      console.log(
-        "Usage: prim token <deploy|ls|get|mint|supply|pool>",
-      );
+      console.log("Usage: prim token <deploy|ls|get|mint|supply|pool>");
       process.exit(1);
   }
 }

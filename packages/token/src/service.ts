@@ -1,37 +1,37 @@
 import { randomBytes } from "node:crypto";
-import { parseUnits, isAddress, formatUnits } from "viem";
+import { formatUnits, isAddress, parseUnits } from "viem";
 import type { Address } from "viem";
+import type {
+  CreatePoolRequest,
+  CreateTokenRequest,
+  LiquidityParamsResponse,
+  MintRequest,
+  MintResponse,
+  PoolResponse,
+  ServiceResult,
+  SupplyResponse,
+  TokenListResponse,
+  TokenResponse,
+} from "./api.ts";
+import { AGENT_TOKEN_ABI, AGENT_TOKEN_BYTECODE, ERC20_ABI } from "./contracts.ts";
 import {
-  insertDeployment,
   getDeploymentById,
   getDeploymentsByOwner,
-  updateDeploymentStatus,
-  incrementTotalMinted,
-  insertPool,
   getPoolByTokenId,
+  incrementTotalMinted,
+  insertDeployment,
+  insertPool,
+  updateDeploymentStatus,
 } from "./db.ts";
 import type { DeploymentRow, PoolRow } from "./db.ts";
-import { getDeployerClient, getPublicClient, assertChainId, getChain } from "./deployer.ts";
-import { AGENT_TOKEN_ABI, AGENT_TOKEN_BYTECODE, ERC20_ABI } from "./contracts.ts";
+import { assertChainId, getChain, getDeployerClient, getPublicClient } from "./deployer.ts";
 import {
   UNISWAP_V3_FACTORY_ABI,
   UNISWAP_V3_POOL_ABI,
-  getUniswapAddresses,
-  computeSqrtPriceX96,
   computeFullRangeTicks,
+  computeSqrtPriceX96,
+  getUniswapAddresses,
 } from "./uniswap.ts";
-import type {
-  CreateTokenRequest,
-  TokenResponse,
-  TokenListResponse,
-  MintRequest,
-  MintResponse,
-  SupplyResponse,
-  CreatePoolRequest,
-  PoolResponse,
-  LiquidityParamsResponse,
-  ServiceResult,
-} from "./api.ts";
 
 // ─── Helpers ─────────────────────────────────────────────────────────────
 
@@ -441,7 +441,12 @@ export async function createPool(
 
   const existing = getPoolByTokenId(tokenId);
   if (existing) {
-    return { ok: false, status: 409, code: "pool_exists", message: "Pool already exists for this token" };
+    return {
+      ok: false,
+      status: 409,
+      code: "pool_exists",
+      message: "Pool already exists for this token",
+    };
   }
 
   const feeTier = request.feeTier ?? 10000;
@@ -572,10 +577,7 @@ export async function createPool(
   }
 }
 
-export function getPool(
-  tokenId: string,
-  callerWallet: string,
-): ServiceResult<PoolResponse> {
+export function getPool(tokenId: string, callerWallet: string): ServiceResult<PoolResponse> {
   const token = getDeploymentById(tokenId);
   if (!token) {
     return { ok: false, status: 404, code: "not_found", message: "Token not found" };

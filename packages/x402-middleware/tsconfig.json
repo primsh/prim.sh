@@ -6,11 +6,6 @@
     "noEmit": false,
     "declaration": true
   },
-  "include": [
-    "src"
-  ],
-  "exclude": [
-    "src/allowlist-db.ts"
-  ]
+  "include": ["src"],
+  "exclude": ["src/allowlist-db.ts"]
 }
-

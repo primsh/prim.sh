@@ -57,7 +57,9 @@ export function getDb(): Database {
   `);
 
   _db.run("CREATE INDEX IF NOT EXISTS idx_servers_owner_wallet ON servers(owner_wallet)");
-  _db.run("CREATE INDEX IF NOT EXISTS idx_servers_provider_resource_id ON servers(provider_resource_id)");
+  _db.run(
+    "CREATE INDEX IF NOT EXISTS idx_servers_provider_resource_id ON servers(provider_resource_id)",
+  );
 
   _db.run(`
     CREATE TABLE IF NOT EXISTS ssh_keys (
@@ -138,7 +140,9 @@ export function getServersByOwner(owner: string, limit: number, offset: number):
 export function countServersByOwner(owner: string): number {
   const db = getDb();
   const row = db
-    .query<{ count: number }, [string]>("SELECT COUNT(*) as count FROM servers WHERE owner_wallet = ?")
+    .query<{ count: number }, [string]>(
+      "SELECT COUNT(*) as count FROM servers WHERE owner_wallet = ?",
+    )
     .get(owner) as { count: number } | null;
   return row?.count ?? 0;
 }
@@ -153,12 +157,7 @@ export function countActiveServersByOwner(owner: string): number {
   return row?.count ?? 0;
 }
 
-export function updateServerStatus(
-  id: string,
-  status: string,
-  ipv4?: string,
-  ipv6?: string,
-): void {
+export function updateServerStatus(id: string, status: string, ipv4?: string, ipv6?: string): void {
   const db = getDb();
   const now = Date.now();
   if (ipv4 !== undefined || ipv6 !== undefined) {
@@ -179,7 +178,12 @@ export function updateServerTypeAndImage(id: string, type?: string, image?: stri
   const db = getDb();
   const now = Date.now();
   if (type !== undefined && image !== undefined) {
-    db.query("UPDATE servers SET type = ?, image = ?, updated_at = ? WHERE id = ?").run(type, image, now, id);
+    db.query("UPDATE servers SET type = ?, image = ?, updated_at = ? WHERE id = ?").run(
+      type,
+      image,
+      now,
+      id,
+    );
   } else if (type !== undefined) {
     db.query("UPDATE servers SET type = ?, updated_at = ? WHERE id = ?").run(type, now, id);
   } else if (image !== undefined) {
@@ -199,7 +203,15 @@ export function insertSshKey(params: {
   const now = Date.now();
   db.query(
     "INSERT INTO ssh_keys (id, provider, provider_resource_id, owner_wallet, name, fingerprint, created_at) VALUES (?, ?, ?, ?, ?, ?, ?)",
-  ).run(params.id, params.provider, params.provider_resource_id, params.owner_wallet, params.name, params.fingerprint, now);
+  ).run(
+    params.id,
+    params.provider,
+    params.provider_resource_id,
+    params.owner_wallet,
+    params.name,
+    params.fingerprint,
+    now,
+  );
 }
 
 export function getSshKeyById(id: string): SshKeyRow | null {
@@ -210,7 +222,9 @@ export function getSshKeyById(id: string): SshKeyRow | null {
 export function getSshKeysByOwner(owner: string): SshKeyRow[] {
   const db = getDb();
   return db
-    .query<SshKeyRow, [string]>("SELECT * FROM ssh_keys WHERE owner_wallet = ? ORDER BY created_at DESC")
+    .query<SshKeyRow, [string]>(
+      "SELECT * FROM ssh_keys WHERE owner_wallet = ? ORDER BY created_at DESC",
+    )
     .all(owner);
 }
 

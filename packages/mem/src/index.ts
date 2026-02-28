@@ -3,32 +3,32 @@ import {
   createAgentStackMiddleware,
   createWalletAllowlistChecker,
   forbidden,
-  notFound,
   invalidRequest,
+  notFound,
 } from "@primsh/x402-middleware";
 import type { ApiError } from "@primsh/x402-middleware";
 import { createPrimApp } from "@primsh/x402-middleware/create-prim-app";
 import type {
-  CreateCollectionRequest,
-  CollectionResponse,
   CollectionListResponse,
-  UpsertRequest,
-  UpsertResponse,
+  CollectionResponse,
+  CreateCollectionRequest,
+  GetCacheResponse,
   QueryRequest,
   QueryResponse,
   SetCacheRequest,
-  GetCacheResponse,
+  UpsertRequest,
+  UpsertResponse,
 } from "./api.ts";
 import {
-  createCollection,
-  listCollections,
-  getCollection,
-  deleteCollection,
-  upsertDocuments,
-  queryDocuments,
-  cacheSet,
-  cacheGet,
   cacheDelete,
+  cacheGet,
+  cacheSet,
+  createCollection,
+  deleteCollection,
+  getCollection,
+  listCollections,
+  queryDocuments,
+  upsertDocuments,
 } from "./service.ts";
 
 const MEM_ROUTES = {
@@ -54,14 +54,18 @@ function backendError(code: string, message: string): ApiError {
 const app = createPrimApp(
   {
     serviceName: "mem.sh",
-    llmsTxtPath: import.meta.dir ? resolve(import.meta.dir, "../../../site/mem/llms.txt") : undefined,
+    llmsTxtPath: import.meta.dir
+      ? resolve(import.meta.dir, "../../../site/mem/llms.txt")
+      : undefined,
     routes: MEM_ROUTES,
     metricsName: "mem.prim.sh",
   },
   { createAgentStackMiddleware, createWalletAllowlistChecker },
 );
 
-const logger = (app as typeof app & { logger: { warn: (msg: string, extra?: Record<string, unknown>) => void } }).logger;
+const logger = (
+  app as typeof app & { logger: { warn: (msg: string, extra?: Record<string, unknown>) => void } }
+).logger;
 
 // ─── Collection routes ────────────────────────────────────────────────────
 
@@ -81,7 +85,8 @@ app.post("/v1/collections", async (c) => {
   const result = await createCollection(body, caller);
   if (!result.ok) {
     if (result.code === "invalid_request") return c.json(invalidRequest(result.message), 400);
-    if (result.code === "collection_name_taken") return c.json(backendError(result.code, result.message), 409);
+    if (result.code === "collection_name_taken")
+      return c.json(backendError(result.code, result.message), 409);
     if (result.status === 404) return c.json(notFound(result.message), 404);
     if (result.status === 403) return c.json(forbidden(result.message), 403);
     return c.json(backendError(result.code, result.message), result.status as 502);

@@ -36,8 +36,16 @@ export function getDb(): Database {
   _db.run("CREATE INDEX IF NOT EXISTS idx_buckets_cf_name ON buckets(cf_name)");
 
   // ST-3 migration: add quota + usage columns
-  try { _db.run("ALTER TABLE buckets ADD COLUMN quota_bytes INTEGER DEFAULT NULL"); } catch { /* column exists */ }
-  try { _db.run("ALTER TABLE buckets ADD COLUMN usage_bytes INTEGER NOT NULL DEFAULT 0"); } catch { /* column exists */ }
+  try {
+    _db.run("ALTER TABLE buckets ADD COLUMN quota_bytes INTEGER DEFAULT NULL");
+  } catch {
+    /* column exists */
+  }
+  try {
+    _db.run("ALTER TABLE buckets ADD COLUMN usage_bytes INTEGER NOT NULL DEFAULT 0");
+  } catch {
+    /* column exists */
+  }
 
   return _db;
 }
@@ -55,7 +63,9 @@ export function getBucketById(id: string): BucketRow | null {
 
 export function getBucketByCfName(cfName: string): BucketRow | null {
   const db = getDb();
-  return db.query<BucketRow, [string]>("SELECT * FROM buckets WHERE cf_name = ?").get(cfName) ?? null;
+  return (
+    db.query<BucketRow, [string]>("SELECT * FROM buckets WHERE cf_name = ?").get(cfName) ?? null
+  );
 }
 
 export function getBucketsByOwner(owner: string, limit: number, offset: number): BucketRow[] {
@@ -70,7 +80,9 @@ export function getBucketsByOwner(owner: string, limit: number, offset: number):
 export function countBucketsByOwner(owner: string): number {
   const db = getDb();
   const row = db
-    .query<{ count: number }, [string]>("SELECT COUNT(*) as count FROM buckets WHERE owner_wallet = ?")
+    .query<{ count: number }, [string]>(
+      "SELECT COUNT(*) as count FROM buckets WHERE owner_wallet = ?",
+    )
     .get(owner) as { count: number } | null;
   return row?.count ?? 0;
 }
@@ -78,7 +90,9 @@ export function countBucketsByOwner(owner: string): number {
 export function getTotalStorageByOwner(owner: string): number {
   const db = getDb();
   const row = db
-    .query<{ total: number }, [string]>("SELECT COALESCE(SUM(usage_bytes), 0) as total FROM buckets WHERE owner_wallet = ?")
+    .query<{ total: number }, [string]>(
+      "SELECT COALESCE(SUM(usage_bytes), 0) as total FROM buckets WHERE owner_wallet = ?",
+    )
     .get(owner) as { total: number } | null;
   return row?.total ?? 0;
 }
@@ -105,7 +119,9 @@ export function deleteBucketRow(id: string): void {
 
 // ─── Quota queries ────────────────────────────────────────────────────────
 
-export function getQuota(bucketId: string): { quota_bytes: number | null; usage_bytes: number } | null {
+export function getQuota(
+  bucketId: string,
+): { quota_bytes: number | null; usage_bytes: number } | null {
   const db = getDb();
   const row = db
     .query<{ quota_bytes: number | null; usage_bytes: number }, [string]>(
@@ -117,20 +133,34 @@ export function getQuota(bucketId: string): { quota_bytes: number | null; usage_
 
 export function setQuota(bucketId: string, quotaBytes: number | null): void {
   const db = getDb();
-  db.query("UPDATE buckets SET quota_bytes = ?, updated_at = ? WHERE id = ?").run(quotaBytes, Date.now(), bucketId);
+  db.query("UPDATE buckets SET quota_bytes = ?, updated_at = ? WHERE id = ?").run(
+    quotaBytes,
+    Date.now(),
+    bucketId,
+  );
 }
 
 export function incrementUsage(bucketId: string, deltaBytes: number): void {
   const db = getDb();
-  db.query("UPDATE buckets SET usage_bytes = usage_bytes + ?, updated_at = ? WHERE id = ?").run(deltaBytes, Date.now(), bucketId);
+  db.query("UPDATE buckets SET usage_bytes = usage_bytes + ?, updated_at = ? WHERE id = ?").run(
+    deltaBytes,
+    Date.now(),
+    bucketId,
+  );
 }
 
 export function decrementUsage(bucketId: string, deltaBytes: number): void {
   const db = getDb();
-  db.query("UPDATE buckets SET usage_bytes = MAX(0, usage_bytes - ?), updated_at = ? WHERE id = ?").run(deltaBytes, Date.now(), bucketId);
+  db.query(
+    "UPDATE buckets SET usage_bytes = MAX(0, usage_bytes - ?), updated_at = ? WHERE id = ?",
+  ).run(deltaBytes, Date.now(), bucketId);
 }
 
 export function setUsage(bucketId: string, usageBytes: number): void {
   const db = getDb();
-  db.query("UPDATE buckets SET usage_bytes = ?, updated_at = ? WHERE id = ?").run(usageBytes, Date.now(), bucketId);
+  db.query("UPDATE buckets SET usage_bytes = ?, updated_at = ? WHERE id = ?").run(
+    usageBytes,
+    Date.now(),
+    bucketId,
+  );
 }

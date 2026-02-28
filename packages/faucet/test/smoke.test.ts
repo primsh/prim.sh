@@ -1,4 +1,4 @@
-import { describe, expect, it, vi, beforeEach } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 
 vi.hoisted(() => {
   process.env.PRIM_NETWORK = "eip155:84532"; // testnet for free service
@@ -8,7 +8,9 @@ vi.hoisted(() => {
 vi.mock("bun:sqlite", () => {
   class MockDatabase {
     run() {}
-    query() { return { get: () => null, all: () => [], run: () => {} }; }
+    query() {
+      return { get: () => null, all: () => [], run: () => {} };
+    }
   }
   return { Database: MockDatabase };
 });

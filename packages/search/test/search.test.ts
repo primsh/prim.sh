@@ -5,8 +5,14 @@
 
 import { beforeEach, describe, expect, it } from "vitest";
 import { ProviderError } from "../src/provider.ts";
-import { searchWeb, searchNews, extractUrls } from "../src/service.ts";
-import type { SearchProvider, ExtractProvider, SearchProviderParams, SearchProviderResult, ExtractProviderResult } from "../src/provider.ts";
+import type {
+  ExtractProvider,
+  ExtractProviderResult,
+  SearchProvider,
+  SearchProviderParams,
+  SearchProviderResult,
+} from "../src/provider.ts";
+import { extractUrls, searchNews, searchWeb } from "../src/service.ts";
 
 // ─── Mock providers ───────────────────────────────────────────────────────────
 
@@ -21,7 +27,10 @@ function makeSearchResult(overrides: Partial<SearchProviderResult["results"][0]>
   };
 }
 
-function makeSearchResponse(query: string, overrides: Partial<SearchProviderResult> = {}): SearchProviderResult {
+function makeSearchResponse(
+  query: string,
+  overrides: Partial<SearchProviderResult> = {},
+): SearchProviderResult {
   return {
     query,
     answer: "A short LLM-generated answer",
@@ -37,7 +46,9 @@ class MockSearchProvider implements SearchProvider {
   capturedTopics: ("news" | undefined)[] = [];
 
   async init(_config: { apiKey: string }): Promise<void> {}
-  async healthCheck() { return { ok: true, latency_ms: 0 }; }
+  async healthCheck() {
+    return { ok: true, latency_ms: 0 };
+  }
 
   async search(params: SearchProviderParams): Promise<SearchProviderResult> {
     this.capturedParams.push(params);
@@ -57,7 +68,9 @@ class MockSearchProvider implements SearchProvider {
 class RateLimitedSearchProvider implements SearchProvider {
   readonly name = "rate-limited-search";
   async init(_config: { apiKey: string }): Promise<void> {}
-  async healthCheck() { return { ok: false, latency_ms: 0, message: "rate limited" }; }
+  async healthCheck() {
+    return { ok: false, latency_ms: 0, message: "rate limited" };
+  }
   async search(_params: SearchProviderParams): Promise<SearchProviderResult> {
     throw new ProviderError("Rate limit exceeded", "rate_limited", 30);
   }
@@ -69,7 +82,9 @@ class RateLimitedSearchProvider implements SearchProvider {
 class ErrorSearchProvider implements SearchProvider {
   readonly name = "error-search";
   async init(_config: { apiKey: string }): Promise<void> {}
-  async healthCheck() { return { ok: false, latency_ms: 0, message: "provider error" }; }
+  async healthCheck() {
+    return { ok: false, latency_ms: 0, message: "provider error" };
+  }
   async search(_params: SearchProviderParams): Promise<SearchProviderResult> {
     throw new ProviderError("Upstream error", "provider_error");
   }
@@ -83,7 +98,9 @@ class MockExtractProvider implements ExtractProvider {
   capturedUrls: string[][] = [];
 
   async init(_config: { apiKey: string }): Promise<void> {}
-  async healthCheck() { return { ok: true, latency_ms: 0 }; }
+  async healthCheck() {
+    return { ok: true, latency_ms: 0 };
+  }
 
   async extract(urls: string[], _format: "markdown" | "text"): Promise<ExtractProviderResult> {
     this.capturedUrls.push(urls);
@@ -98,7 +115,9 @@ class MockExtractProvider implements ExtractProvider {
 class FailedExtractProvider implements ExtractProvider {
   readonly name = "failed-extract";
   async init(_config: { apiKey: string }): Promise<void> {}
-  async healthCheck() { return { ok: false, latency_ms: 0, message: "failed" }; }
+  async healthCheck() {
+    return { ok: false, latency_ms: 0, message: "failed" };
+  }
   async extract(urls: string[], _format: "markdown" | "text"): Promise<ExtractProviderResult> {
     return {
       results: [],
@@ -111,7 +130,9 @@ class FailedExtractProvider implements ExtractProvider {
 class RateLimitedExtractProvider implements ExtractProvider {
   readonly name = "rate-limited-extract";
   async init(_config: { apiKey: string }): Promise<void> {}
-  async healthCheck() { return { ok: false, latency_ms: 0, message: "rate limited" }; }
+  async healthCheck() {
+    return { ok: false, latency_ms: 0, message: "rate limited" };
+  }
   async extract(_urls: string[], _format: "markdown" | "text"): Promise<ExtractProviderResult> {
     throw new ProviderError("Rate limit exceeded", "rate_limited", 45);
   }
@@ -120,7 +141,9 @@ class RateLimitedExtractProvider implements ExtractProvider {
 class ErrorExtractProvider implements ExtractProvider {
   readonly name = "error-extract";
   async init(_config: { apiKey: string }): Promise<void> {}
-  async healthCheck() { return { ok: false, latency_ms: 0, message: "provider error" }; }
+  async healthCheck() {
+    return { ok: false, latency_ms: 0, message: "provider error" };
+  }
   async extract(_urls: string[], _format: "markdown" | "text"): Promise<ExtractProviderResult> {
     throw new ProviderError("Upstream error", "provider_error");
   }
@@ -306,7 +329,10 @@ describe("extractUrls", () => {
 
   it("extracts content from an array of URLs", async () => {
     const provider = new MockExtractProvider();
-    const result = await extractUrls({ urls: ["https://a.com", "https://b.com", "https://c.com"] }, provider);
+    const result = await extractUrls(
+      { urls: ["https://a.com", "https://b.com", "https://c.com"] },
+      provider,
+    );
     expect(result.ok).toBe(true);
     if (!result.ok) return;
     expect(result.data.results).toHaveLength(3);
@@ -410,7 +436,10 @@ describe("extractUrls", () => {
   });
 
   it("returns 429 rate_limited when provider throws rate_limited", async () => {
-    const result = await extractUrls({ urls: "https://example.com" }, new RateLimitedExtractProvider());
+    const result = await extractUrls(
+      { urls: "https://example.com" },
+      new RateLimitedExtractProvider(),
+    );
     expect(result.ok).toBe(false);
     if (result.ok) return;
     expect(result.code).toBe("rate_limited");

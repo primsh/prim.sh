@@ -1,41 +1,41 @@
 import { randomBytes } from "node:crypto";
-import { isAddress, getAddress, verifyMessage } from "viem";
 import { createLogger, getNetworkConfig } from "@primsh/x402-middleware";
+import { getAddress, isAddress, verifyMessage } from "viem";
 
 const log = createLogger("wallet.sh", { module: "service" });
-import {
-  insertWallet,
-  getWalletByAddress,
-  getWalletsByOwner,
-  deactivateWallet as dbDeactivateWallet,
-  reactivateWallet,
-  insertFundRequest,
-  getFundRequestById,
-  getFundRequestsByWallet,
-  updateFundRequestStatus,
-  getPolicy,
-  upsertPolicy,
-  setPauseState,
-  resetDailySpentIfNeeded,
-} from "./db.ts";
 import type {
-  RegisterWalletRequest,
-  RegisterWalletResponse,
-  WalletListResponse,
-  WalletDetailResponse,
-  DeactivateWalletResponse,
-  CreateFundRequestRequest,
-  FundRequestResponse,
-  FundRequestListResponse,
   ApproveFundRequestResponse,
+  CreateFundRequestRequest,
+  DeactivateWalletResponse,
   DenyFundRequestResponse,
+  FundRequestListResponse,
+  FundRequestResponse,
+  PauseResponse,
+  PauseScope,
   PolicyResponse,
   PolicyUpdateRequest,
-  PauseScope,
-  PauseResponse,
+  RegisterWalletRequest,
+  RegisterWalletResponse,
   ResumeResponse,
+  WalletDetailResponse,
+  WalletListResponse,
 } from "./api.ts";
 import { getUsdcBalance } from "./balance.ts";
+import {
+  deactivateWallet as dbDeactivateWallet,
+  getFundRequestById,
+  getFundRequestsByWallet,
+  getPolicy,
+  getWalletByAddress,
+  getWalletsByOwner,
+  insertFundRequest,
+  insertWallet,
+  reactivateWallet,
+  resetDailySpentIfNeeded,
+  setPauseState,
+  updateFundRequestStatus,
+  upsertPolicy,
+} from "./db.ts";
 
 const DEFAULT_CHAIN = "eip155:8453";
 const SIGNATURE_MAX_AGE_MS = 5 * 60 * 1000; // 5 minutes
@@ -69,25 +69,44 @@ export async function registerWallet(request: RegisterWalletRequest): Promise<Re
   }
   const age = Date.now() - ts.getTime();
   if (age > SIGNATURE_MAX_AGE_MS || age < -SIGNATURE_MAX_AGE_MS) {
-    return { ok: false, status: 400, code: "signature_expired", message: "Signature timestamp expired (>5 minutes)" };
+    return {
+      ok: false,
+      status: 400,
+      code: "signature_expired",
+      message: "Signature timestamp expired (>5 minutes)",
+    };
   }
 
   // 3. Verify EIP-191 signature
   const message = buildRegistrationMessage(normalizedAddress, timestamp);
   let valid: boolean;
   try {
-    valid = await verifyMessage({ address: normalizedAddress, message, signature: signature as `0x${string}` });
+    valid = await verifyMessage({
+      address: normalizedAddress,
+      message,
+      signature: signature as `0x${string}`,
+    });
   } catch {
     valid = false;
   }
   if (!valid) {
-    return { ok: false, status: 403, code: "invalid_signature", message: "Signature verification failed" };
+    return {
+      ok: false,
+      status: 403,
+      code: "invalid_signature",
+      message: "Signature verification failed",
+    };
   }
 
   // 4. Check for existing registration
   const existing = getWalletByAddress(normalizedAddress);
   if (existing && !existing.deactivated_at) {
-    return { ok: false, status: 409, code: "already_registered", message: "Wallet already registered" };
+    return {
+      ok: false,
+      status: 409,
+      code: "already_registered",
+      message: "Wallet already registered",
+    };
   }
 
   // 5. Insert or reactivate wallet
@@ -106,7 +125,12 @@ export async function registerWallet(request: RegisterWalletRequest): Promise<Re
     };
   }
 
-  insertWallet({ address: normalizedAddress, chain: effectiveChain, createdBy: normalizedAddress, label });
+  insertWallet({
+    address: normalizedAddress,
+    chain: effectiveChain,
+    createdBy: normalizedAddress,
+    label,
+  });
 
   return {
     ok: true,
@@ -120,7 +144,11 @@ export async function registerWallet(request: RegisterWalletRequest): Promise<Re
   };
 }
 
-export async function listWallets(owner: string, limit: number, after?: string): Promise<WalletListResponse> {
+export async function listWallets(
+  owner: string,
+  limit: number,
+  after?: string,
+): Promise<WalletListResponse> {
   const rows = getWalletsByOwner(owner, limit, after);
   const activeRows = rows.filter((r) => !r.deactivated_at);
 
@@ -182,7 +210,10 @@ function checkOwnership(address: string, caller: string): OwnershipCheckResult {
 export async function getWallet(
   address: string,
   caller: string,
-): Promise<{ ok: true; data: WalletDetailResponse } | { ok: false; status: 403 | 404; code: string; message: string }> {
+): Promise<
+  | { ok: true; data: WalletDetailResponse }
+  | { ok: false; status: 403 | 404; code: string; message: string }
+> {
   const check = checkOwnership(address, caller);
   if (!check.ok) return check;
 
@@ -222,7 +253,9 @@ export async function getWallet(
 export function deactivateWallet(
   address: string,
   caller: string,
-): { ok: true; data: DeactivateWalletResponse } | { ok: false; status: 403 | 404; code: string; message: string } {
+):
+  | { ok: true; data: DeactivateWalletResponse }
+  | { ok: false; status: 403 | 404; code: string; message: string } {
   const check = checkOwnership(address, caller);
   if (!check.ok) return check;
 
@@ -266,18 +299,34 @@ export function createFundRequest(
 
   const amountNum = Number.parseFloat(request.amount);
   if (Number.isNaN(amountNum) || amountNum <= 0) {
-    return { ok: false, status: 400, code: "invalid_request", message: "amount must be a positive decimal string" };
+    return {
+      ok: false,
+      status: 400,
+      code: "invalid_request",
+      message: "amount must be a positive decimal string",
+    };
   }
   if (!request.reason || request.reason.trim() === "") {
     return { ok: false, status: 400, code: "invalid_request", message: "reason must be non-empty" };
   }
 
   const id = `fr_${randomBytes(4).toString("hex")}`;
-  insertFundRequest({ id, walletAddress, amount: request.amount, reason: request.reason, createdBy: caller });
+  insertFundRequest({
+    id,
+    walletAddress,
+    amount: request.amount,
+    reason: request.reason,
+    createdBy: caller,
+  });
 
   const row = getFundRequestById(id);
   if (!row) {
-    return { ok: false, status: 500, code: "internal_error", message: "Failed to create fund request" };
+    return {
+      ok: false,
+      status: 500,
+      code: "internal_error",
+      message: "Failed to create fund request",
+    };
   }
 
   return { ok: true, data: fundRequestToResponse(row) };
@@ -320,7 +369,12 @@ export function approveFundRequest(
     return { ok: false, status: 404, code: "not_found", message: "Fund request not found" };
   }
   if (req.status !== "pending") {
-    return { ok: false, status: 409, code: "conflict", message: `Fund request is already ${req.status}` };
+    return {
+      ok: false,
+      status: 409,
+      code: "conflict",
+      message: `Fund request is already ${req.status}`,
+    };
   }
 
   // Verify caller owns the wallet
@@ -355,7 +409,12 @@ export function denyFundRequest(
     return { ok: false, status: 404, code: "not_found", message: "Fund request not found" };
   }
   if (req.status !== "pending") {
-    return { ok: false, status: 409, code: "conflict", message: `Fund request is already ${req.status}` };
+    return {
+      ok: false,
+      status: 409,
+      code: "conflict",
+      message: `Fund request is already ${req.status}`,
+    };
   }
 
   // Verify caller owns the wallet
@@ -386,21 +445,23 @@ function parsePrimitivesList(walletAddress: string, raw: string): string[] | nul
   }
 }
 
-function policyRowToResponse(walletAddress: string, row: ReturnType<typeof getPolicy>): PolicyResponse {
+function policyRowToResponse(
+  walletAddress: string,
+  row: ReturnType<typeof getPolicy>,
+): PolicyResponse {
   return {
     wallet_address: walletAddress,
     max_per_tx: row?.max_per_tx ?? null,
     max_per_day: row?.max_per_day ?? null,
-    allowed_primitives: row?.allowed_primitives ? parsePrimitivesList(walletAddress, row.allowed_primitives) : null,
+    allowed_primitives: row?.allowed_primitives
+      ? parsePrimitivesList(walletAddress, row.allowed_primitives)
+      : null,
     daily_spent: row?.daily_spent ?? "0.00",
     daily_reset_at: row?.daily_reset_at ?? new Date(Date.now() + 86400000).toISOString(),
   };
 }
 
-export function getSpendingPolicy(
-  address: string,
-  caller: string,
-): PolicyResult<PolicyResponse> {
+export function getSpendingPolicy(address: string, caller: string): PolicyResult<PolicyResponse> {
   const check = checkOwnership(address, caller);
   if (!check.ok) return check;
 
@@ -420,13 +481,23 @@ export function updateSpendingPolicy(
   if (updates.maxPerTx !== undefined && updates.maxPerTx !== null) {
     const v = Number.parseFloat(updates.maxPerTx);
     if (Number.isNaN(v) || v <= 0) {
-      return { ok: false, status: 400, code: "invalid_request", message: "maxPerTx must be a positive decimal" };
+      return {
+        ok: false,
+        status: 400,
+        code: "invalid_request",
+        message: "maxPerTx must be a positive decimal",
+      };
     }
   }
   if (updates.maxPerDay !== undefined && updates.maxPerDay !== null) {
     const v = Number.parseFloat(updates.maxPerDay);
     if (Number.isNaN(v) || v <= 0) {
-      return { ok: false, status: 400, code: "invalid_request", message: "maxPerDay must be a positive decimal" };
+      return {
+        ok: false,
+        status: 400,
+        code: "invalid_request",
+        message: "maxPerDay must be a positive decimal",
+      };
     }
   }
 
@@ -434,7 +505,9 @@ export function updateSpendingPolicy(
   if ("maxPerTx" in updates) dbUpdates.max_per_tx = updates.maxPerTx ?? null;
   if ("maxPerDay" in updates) dbUpdates.max_per_day = updates.maxPerDay ?? null;
   if ("allowedPrimitives" in updates) {
-    dbUpdates.allowed_primitives = updates.allowedPrimitives ? JSON.stringify(updates.allowedPrimitives) : null;
+    dbUpdates.allowed_primitives = updates.allowedPrimitives
+      ? JSON.stringify(updates.allowedPrimitives)
+      : null;
   }
 
   upsertPolicy(address, dbUpdates);

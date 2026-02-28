@@ -3,60 +3,64 @@ import {
   createAgentStackMiddleware,
   createWalletAllowlistChecker,
   forbidden,
-  notFound,
   invalidRequest,
+  notFound,
 } from "@primsh/x402-middleware";
 import type { ApiError } from "@primsh/x402-middleware";
 import { getNetworkConfig } from "@primsh/x402-middleware";
 import { createPrimApp } from "@primsh/x402-middleware/create-prim-app";
-import { HTTPFacilitatorClient, encodePaymentRequiredHeader, decodePaymentSignatureHeader } from "@x402/core/http";
+import {
+  HTTPFacilitatorClient,
+  decodePaymentSignatureHeader,
+  encodePaymentRequiredHeader,
+} from "@x402/core/http";
 import type {
-  CreateZoneRequest,
-  CreateZoneResponse,
-  ZoneResponse,
-  ZoneListResponse,
-  CreateRecordRequest,
-  UpdateRecordRequest,
-  RecordResponse,
-  RecordListResponse,
-  DomainSearchResponse,
+  ActivateResponse,
   BatchRecordsRequest,
   BatchRecordsResponse,
+  ConfigureNsResponse,
+  CreateRecordRequest,
+  CreateZoneRequest,
+  CreateZoneResponse,
+  DomainSearchResponse,
   MailSetupRequest,
   MailSetupResponse,
-  VerifyResponse,
   QuoteRequest,
   QuoteResponse,
-  RegisterResponse,
+  RecordListResponse,
+  RecordResponse,
   RecoverRequest,
   RecoverResponse,
-  ConfigureNsResponse,
+  RegisterResponse,
   RegistrationStatusResponse,
-  ActivateResponse,
+  UpdateRecordRequest,
+  VerifyResponse,
+  ZoneListResponse,
+  ZoneResponse,
 } from "./api.ts";
-import {
-  createZone,
-  listZones,
-  getZone,
-  deleteZone,
-  createRecord,
-  listRecords,
-  getRecord,
-  updateRecord,
-  deleteRecord,
-  searchDomains,
-  batchRecords,
-  mailSetup,
-  verifyZone,
-  quoteDomain,
-  registerDomain,
-  recoverRegistration,
-  configureNs,
-  getRegistrationStatus,
-  activateZone,
-  centsToAtomicUsdc,
-} from "./service.ts";
 import { getQuoteById } from "./db.ts";
+import {
+  activateZone,
+  batchRecords,
+  centsToAtomicUsdc,
+  configureNs,
+  createRecord,
+  createZone,
+  deleteRecord,
+  deleteZone,
+  getRecord,
+  getRegistrationStatus,
+  getZone,
+  listRecords,
+  listZones,
+  mailSetup,
+  quoteDomain,
+  recoverRegistration,
+  registerDomain,
+  searchDomains,
+  updateRecord,
+  verifyZone,
+} from "./service.ts";
 
 const PAY_TO_ADDRESS = process.env.PRIM_PAY_TO;
 if (!PAY_TO_ADDRESS) {
@@ -97,18 +101,19 @@ function serviceUnavailable(message: string): ApiError {
 const app = createPrimApp(
   {
     serviceName: "domain.sh",
-    llmsTxtPath: import.meta.dir ? resolve(import.meta.dir, "../../../site/domain/llms.txt") : undefined,
+    llmsTxtPath: import.meta.dir
+      ? resolve(import.meta.dir, "../../../site/domain/llms.txt")
+      : undefined,
     routes: DOMAIN_ROUTES,
-    extraFreeRoutes: [
-      "POST /v1/domains/recover",
-      "POST /v1/domains/[domain]/configure-ns",
-    ],
+    extraFreeRoutes: ["POST /v1/domains/recover", "POST /v1/domains/[domain]/configure-ns"],
     metricsName: "domain.prim.sh",
   },
   { createAgentStackMiddleware, createWalletAllowlistChecker },
 );
 
-const logger = (app as typeof app & { logger: { warn: (msg: string, extra?: Record<string, unknown>) => void } }).logger;
+const logger = (
+  app as typeof app & { logger: { warn: (msg: string, extra?: Record<string, unknown>) => void } }
+).logger;
 
 // POST /v1/domains/quote — Get a time-limited price quote for domain registration
 app.post("/v1/domains/quote", async (c) => {
@@ -148,7 +153,8 @@ app.post("/v1/domains/register", async (c) => {
 
   const quote = getQuoteById(quoteId);
   if (!quote) return c.json({ error: { code: "not_found", message: "Quote not found" } }, 404);
-  if (quote.expires_at < Date.now()) return c.json({ error: { code: "quote_expired", message: "Quote has expired" } }, 410);
+  if (quote.expires_at < Date.now())
+    return c.json({ error: { code: "quote_expired", message: "Quote has expired" } }, 410);
 
   // Build expected payment amount from quote
   const amount = centsToAtomicUsdc(quote.total_cents);
@@ -159,29 +165,36 @@ app.post("/v1/domains/register", async (c) => {
   if (!paymentHeader) {
     const paymentRequired = {
       x402Version: 2,
-      accepts: [{
-        scheme: "exact" as const,
-        network: NETWORK,
-        amount,
-        payTo: PAY_TO_ADDRESS,
-        asset: networkConfig.usdcAddress,
-        maxTimeoutSeconds: 3600,
-        extra: {},
-      }],
+      accepts: [
+        {
+          scheme: "exact" as const,
+          network: NETWORK,
+          amount,
+          payTo: PAY_TO_ADDRESS,
+          asset: networkConfig.usdcAddress,
+          maxTimeoutSeconds: 3600,
+          extra: {},
+        },
+      ],
       resource: {
         url: `${c.req.url}`,
         description: `Domain registration: ${quote.domain}`,
         mimeType: "application/json",
       },
     };
-    const encoded = encodePaymentRequiredHeader(paymentRequired as Parameters<typeof encodePaymentRequiredHeader>[0]);
-    return new Response(JSON.stringify({ error: { code: "payment_required", message: "Payment required" } }), {
-      status: 402,
-      headers: {
-        "Content-Type": "application/json",
-        "payment-required": encoded,
+    const encoded = encodePaymentRequiredHeader(
+      paymentRequired as Parameters<typeof encodePaymentRequiredHeader>[0],
+    );
+    return new Response(
+      JSON.stringify({ error: { code: "payment_required", message: "Payment required" } }),
+      {
+        status: 402,
+        headers: {
+          "Content-Type": "application/json",
+          "payment-required": encoded,
+        },
       },
-    });
+    );
   }
 
   // Decode and verify payment amount
@@ -212,7 +225,10 @@ app.post("/v1/domains/register", async (c) => {
       paymentRequirements as Parameters<typeof facilitatorClient.settle>[1],
     );
   } catch (err) {
-    return c.json({ error: { code: "payment_failed", message: `Payment settlement failed: ${String(err)}` } }, 502);
+    return c.json(
+      { error: { code: "payment_failed", message: `Payment settlement failed: ${String(err)}` } },
+      502,
+    );
   }
 
   if (!settleResult.success) {
@@ -222,8 +238,13 @@ app.post("/v1/domains/register", async (c) => {
   // Extract payer wallet from payment header
   let callerWallet: string | undefined;
   try {
-    const decoded = paymentPayload as { payload?: { authorization?: { from?: string } }; authorization?: { from?: string }; from?: string };
-    callerWallet = decoded.payload?.authorization?.from ?? decoded.authorization?.from ?? decoded.from;
+    const decoded = paymentPayload as {
+      payload?: { authorization?: { from?: string } };
+      authorization?: { from?: string };
+      from?: string;
+    };
+    callerWallet =
+      decoded.payload?.authorization?.from ?? decoded.authorization?.from ?? decoded.from;
   } catch (err) {
     logger.warn("wallet extraction from payment header failed", { error: String(err) });
     callerWallet = undefined;
@@ -232,7 +253,10 @@ app.post("/v1/domains/register", async (c) => {
 
   const result = await registerDomain(quoteId, callerWallet);
   if (!result.ok) {
-    return c.json({ error: { code: result.code, message: result.message } }, result.status as 400 | 404 | 410 | 502 | 503);
+    return c.json(
+      { error: { code: result.code, message: result.message } },
+      result.status as 400 | 404 | 410 | 502 | 503,
+    );
   }
   return c.json(result.data as RegisterResponse, 201);
 });
@@ -252,13 +276,18 @@ app.post("/v1/domains/recover", async (c) => {
 
   // Wallet from payment-signature header (set by middleware's extractWalletAddress)
   const caller = c.get("walletAddress");
-  if (!caller) return c.json(forbidden("No wallet address — include payment-signature header"), 403);
+  if (!caller)
+    return c.json(forbidden("No wallet address — include payment-signature header"), 403);
 
   const result = await recoverRegistration(body.recovery_token, caller);
   if (!result.ok) {
-    if (result.status === 404) return c.json({ error: { code: result.code, message: result.message } }, 404);
+    if (result.status === 404)
+      return c.json({ error: { code: result.code, message: result.message } }, 404);
     if (result.status === 403) return c.json(forbidden(result.message), 403);
-    return c.json({ error: { code: result.code, message: result.message } }, result.status as 400 | 502);
+    return c.json(
+      { error: { code: result.code, message: result.message } },
+      result.status as 400 | 502,
+    );
   }
   return c.json(result.data as RecoverResponse, 200);
 });
@@ -267,15 +296,20 @@ app.post("/v1/domains/recover", async (c) => {
 // Free route — wallet ownership of registration required.
 app.post("/v1/domains/:domain/configure-ns", async (c) => {
   const caller = c.get("walletAddress");
-  if (!caller) return c.json(forbidden("No wallet address — include payment-signature header"), 403);
+  if (!caller)
+    return c.json(forbidden("No wallet address — include payment-signature header"), 403);
 
   const domain = c.req.param("domain");
   const result = await configureNs(domain, caller);
   if (!result.ok) {
-    if (result.status === 404) return c.json({ error: { code: result.code, message: result.message } }, 404);
+    if (result.status === 404)
+      return c.json({ error: { code: result.code, message: result.message } }, 404);
     if (result.status === 403) return c.json(forbidden(result.message), 403);
     if (result.status === 400) return c.json(invalidRequest(result.message), 400);
-    return c.json({ error: { code: result.code, message: result.message } }, result.status as 502 | 503);
+    return c.json(
+      { error: { code: result.code, message: result.message } },
+      result.status as 502 | 503,
+    );
   }
   return c.json(result.data as ConfigureNsResponse, 200);
 });
@@ -301,7 +335,12 @@ app.get("/v1/domains/search", async (c) => {
   if (!query) return c.json(invalidRequest("query parameter is required"), 400);
 
   const tldsParam = c.req.query("tlds");
-  const tlds = tldsParam ? tldsParam.split(",").map((t) => t.trim()).filter(Boolean) : [];
+  const tlds = tldsParam
+    ? tldsParam
+        .split(",")
+        .map((t) => t.trim())
+        .filter(Boolean)
+    : [];
 
   const result = await searchDomains(query, tlds);
   if (!result.ok) {
@@ -326,7 +365,8 @@ app.post("/v1/zones", async (c) => {
 
   const result = await createZone(body, caller);
   if (!result.ok) {
-    if (result.code === "invalid_request" || result.code === "domain_taken") return c.json(invalidRequest(result.message), 400);
+    if (result.code === "invalid_request" || result.code === "domain_taken")
+      return c.json(invalidRequest(result.message), 400);
     if (result.status === 404) return c.json(notFound(result.message), 404);
     if (result.status === 403) return c.json(forbidden(result.message), 403);
     return c.json(cloudflareError(result.message), result.status as 502);
@@ -395,7 +435,8 @@ app.put("/v1/zones/:zone_id/activate", async (c) => {
   if (!result.ok) {
     if (result.status === 404) return c.json(notFound(result.message), 404);
     if (result.status === 403) return c.json(forbidden(result.message), 403);
-    if (result.status === 429) return c.json({ error: { code: result.code, message: result.message } }, 429);
+    if (result.status === 429)
+      return c.json({ error: { code: result.code, message: result.message } }, 429);
     return c.json(cloudflareError(result.message), result.status as 502);
   }
   return c.json(result.data as ActivateResponse, 200);
@@ -433,7 +474,9 @@ app.post("/v1/zones/:zone_id/records/batch", async (c) => {
   try {
     body = await c.req.json<BatchRecordsRequest>();
   } catch (err) {
-    logger.warn("JSON parse failed on POST /v1/zones/:zone_id/records/batch", { error: String(err) });
+    logger.warn("JSON parse failed on POST /v1/zones/:zone_id/records/batch", {
+      error: String(err),
+    });
     return c.json(invalidRequest("Invalid JSON body"), 400);
   }
 
@@ -442,7 +485,8 @@ app.post("/v1/zones/:zone_id/records/batch", async (c) => {
     if (result.code === "invalid_request") return c.json(invalidRequest(result.message), 400);
     if (result.status === 404) return c.json(notFound(result.message), 404);
     if (result.status === 403) return c.json(forbidden(result.message), 403);
-    if (result.status === 500) return c.json({ error: { code: "internal_error", message: result.message } }, 500);
+    if (result.status === 500)
+      return c.json({ error: { code: "internal_error", message: result.message } }, 500);
     return c.json(cloudflareError(result.message), result.status as 502);
   }
   return c.json(result.data as BatchRecordsResponse, 200);

@@ -1,11 +1,11 @@
+import { getNetworkConfig } from "@primsh/x402-middleware";
 import { x402Client, x402HTTPClient } from "@x402/core/client";
 import { decodePaymentRequiredHeader } from "@x402/core/http";
 import { registerExactEvmScheme } from "@x402/evm/exact/client";
-import { createPublicClient, http } from "viem";
-import { base, baseSepolia } from "viem/chains";
-import { privateKeyToAccount } from "viem/accounts";
+import { http, createPublicClient } from "viem";
 import type { LocalAccount } from "viem";
-import { getNetworkConfig } from "@primsh/x402-middleware";
+import { privateKeyToAccount } from "viem/accounts";
+import { base, baseSepolia } from "viem/chains";
 import type { CreatePrimFetchConfig } from "./types.ts";
 
 function getViemChain(chainId: number) {

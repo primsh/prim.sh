@@ -7,7 +7,7 @@
  * IMPORTANT: env vars must be set before any module import that touches db/cloudflare.
  */
 
-import { describe, expect, it, beforeEach, afterEach, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 // Set env before imports
 process.env.DOMAIN_DB_PATH = ":memory:";
@@ -58,10 +58,10 @@ const mockFetch = vi.fn(async (input: RequestInfo | URL, _init?: RequestInit) =>
 
   // CF: GET /zones/:id/dns_records — list records (configurable per-test, default empty)
   if (url.match(/\/client\/v4\/zones\/[^/]+\/dns_records(\?.*)?$/) && method === "GET") {
-    return new Response(
-      JSON.stringify({ success: true, errors: [], result: cfDnsRecordsMock }),
-      { status: 200, headers: { "Content-Type": "application/json" } },
-    );
+    return new Response(JSON.stringify({ success: true, errors: [], result: cfDnsRecordsMock }), {
+      status: 200,
+      headers: { "Content-Type": "application/json" },
+    });
   }
 
   // CF: POST /zones — create zone
@@ -75,10 +75,10 @@ const mockFetch = vi.fn(async (input: RequestInfo | URL, _init?: RequestInit) =>
 
   // CF: GET /zones/:id — get zone (for status refresh)
   if (url.match(/\/client\/v4\/zones\/[^/]+$/) && method === "GET") {
-    return new Response(
-      JSON.stringify({ success: true, errors: [], result: makeCfZone() }),
-      { status: 200, headers: { "Content-Type": "application/json" } },
-    );
+    return new Response(JSON.stringify({ success: true, errors: [], result: makeCfZone() }), {
+      status: 200,
+      headers: { "Content-Type": "application/json" },
+    });
   }
 
   // CF: DELETE /zones/:id — delete zone
@@ -141,15 +141,46 @@ const mockFetch = vi.fn(async (input: RequestInfo | URL, _init?: RequestInit) =>
   // CF: POST /zones/:id/dns_records/batch — batch record operations
   if (url.match(/\/client\/v4\/zones\/[^/]+\/dns_records\/batch$/) && method === "POST") {
     const body = JSON.parse(_init?.body as string) as {
-      posts?: { type: string; name: string; content: string; ttl?: number; proxied?: boolean; priority?: number }[];
-      patches?: { id: string; content?: string; ttl?: number; type?: string; name?: string; proxied?: boolean; priority?: number }[];
+      posts?: {
+        type: string;
+        name: string;
+        content: string;
+        ttl?: number;
+        proxied?: boolean;
+        priority?: number;
+      }[];
+      patches?: {
+        id: string;
+        content?: string;
+        ttl?: number;
+        type?: string;
+        name?: string;
+        proxied?: boolean;
+        priority?: number;
+      }[];
       deletes?: { id: string }[];
     };
     const posts = (body.posts ?? []).map((p, i) =>
-      makeCfRecord({ id: `cf-record-batch-post-${i}`, type: p.type, name: p.name, content: p.content, ttl: p.ttl ?? 3600, proxied: p.proxied ?? false, priority: p.priority ?? null }),
+      makeCfRecord({
+        id: `cf-record-batch-post-${i}`,
+        type: p.type,
+        name: p.name,
+        content: p.content,
+        ttl: p.ttl ?? 3600,
+        proxied: p.proxied ?? false,
+        priority: p.priority ?? null,
+      }),
     );
     const patches = (body.patches ?? []).map((p) =>
-      makeCfRecord({ id: p.id, type: p.type ?? "A", name: p.name ?? "example.com", content: p.content ?? "patched", ttl: p.ttl ?? 3600, proxied: p.proxied ?? false, priority: p.priority ?? null }),
+      makeCfRecord({
+        id: p.id,
+        type: p.type ?? "A",
+        name: p.name ?? "example.com",
+        content: p.content ?? "patched",
+        ttl: p.ttl ?? 3600,
+        proxied: p.proxied ?? false,
+        priority: p.priority ?? null,
+      }),
     );
     const deletes = (body.deletes ?? []).map((d) => makeCfRecord({ id: d.id }));
     return new Response(
@@ -176,7 +207,12 @@ const mockFetch = vi.fn(async (input: RequestInfo | URL, _init?: RequestInit) =>
         reply: {
           code: 300,
           detail: "success",
-          available: domains.map((d) => ({ domain: d, available: "yes", price: "9.95", premium: "0" })),
+          available: domains.map((d) => ({
+            domain: d,
+            available: "yes",
+            price: "9.95",
+            premium: "0",
+          })),
           unavailable: { domain: [] },
         },
       }),
@@ -234,31 +270,40 @@ vi.mock("node:dns/promises", () => ({
 }));
 
 // Import after env + fetch stub
-import { resetDb, getZoneById, getRecordById, getRecordsByZone, getRegistrationByDomain, insertZone, insertRegistration, insertQuote } from "../src/db.ts";
 import {
-  createZone,
-  listZones,
-  getZone,
-  deleteZone,
-  refreshZoneStatus,
-  createRecord,
-  listRecords,
-  getRecord,
-  updateRecord,
-  deleteRecord,
-  searchDomains,
-  batchRecords,
-  mailSetup,
-  verifyZone,
-  quoteDomain,
-  registerDomain,
-  recoverRegistration,
-  configureNs,
-  getRegistrationStatus,
+  getRecordById,
+  getRecordsByZone,
+  getRegistrationByDomain,
+  getZoneById,
+  insertQuote,
+  insertRegistration,
+  insertZone,
+  resetDb,
+} from "../src/db.ts";
+import {
   activateZone,
-  usdToCents,
+  batchRecords,
   centsToAtomicUsdc,
   centsToUsd,
+  configureNs,
+  createRecord,
+  createZone,
+  deleteRecord,
+  deleteZone,
+  getRecord,
+  getRegistrationStatus,
+  getZone,
+  listRecords,
+  listZones,
+  mailSetup,
+  quoteDomain,
+  recoverRegistration,
+  refreshZoneStatus,
+  registerDomain,
+  searchDomains,
+  updateRecord,
+  usdToCents,
+  verifyZone,
 } from "../src/service.ts";
 
 // ─── Fixtures ────────────────────────────────────────────────────────────
@@ -433,7 +478,11 @@ describe("domain.sh", () => {
     });
 
     it("create record — returns record with id", async () => {
-      const result = await createRecord(zoneId, { type: "A", name: "example.com", content: "1.2.3.4" }, CALLER);
+      const result = await createRecord(
+        zoneId,
+        { type: "A", name: "example.com", content: "1.2.3.4" },
+        CALLER,
+      );
       expect(result.ok).toBe(true);
       if (!result.ok) return;
       expect(result.data.id).toMatch(/^r_/);
@@ -443,7 +492,11 @@ describe("domain.sh", () => {
     });
 
     it("create record — persists to DB", async () => {
-      const result = await createRecord(zoneId, { type: "A", name: "example.com", content: "1.2.3.4" }, CALLER);
+      const result = await createRecord(
+        zoneId,
+        { type: "A", name: "example.com", content: "1.2.3.4" },
+        CALLER,
+      );
       if (!result.ok) return;
       const row = getRecordById(result.data.id);
       expect(row).not.toBeNull();
@@ -451,28 +504,44 @@ describe("domain.sh", () => {
     });
 
     it("create record — invalid type returns error", async () => {
-      const result = await createRecord(zoneId, { type: "INVALID" as "A", name: "example.com", content: "1.2.3.4" }, CALLER);
+      const result = await createRecord(
+        zoneId,
+        { type: "INVALID" as "A", name: "example.com", content: "1.2.3.4" },
+        CALLER,
+      );
       expect(result.ok).toBe(false);
       if (result.ok) return;
       expect(result.status).toBe(400);
     });
 
     it("create record — missing name returns error", async () => {
-      const result = await createRecord(zoneId, { type: "A", name: "", content: "1.2.3.4" }, CALLER);
+      const result = await createRecord(
+        zoneId,
+        { type: "A", name: "", content: "1.2.3.4" },
+        CALLER,
+      );
       expect(result.ok).toBe(false);
       if (result.ok) return;
       expect(result.status).toBe(400);
     });
 
     it("create record — missing content returns error", async () => {
-      const result = await createRecord(zoneId, { type: "A", name: "example.com", content: "" }, CALLER);
+      const result = await createRecord(
+        zoneId,
+        { type: "A", name: "example.com", content: "" },
+        CALLER,
+      );
       expect(result.ok).toBe(false);
       if (result.ok) return;
       expect(result.status).toBe(400);
     });
 
     it("create MX record — missing priority returns error", async () => {
-      const result = await createRecord(zoneId, { type: "MX", name: "example.com", content: "mail.example.com" }, CALLER);
+      const result = await createRecord(
+        zoneId,
+        { type: "MX", name: "example.com", content: "mail.example.com" },
+        CALLER,
+      );
       expect(result.ok).toBe(false);
       if (result.ok) return;
       expect(result.status).toBe(400);
@@ -480,19 +549,31 @@ describe("domain.sh", () => {
     });
 
     it("create MX record — with priority succeeds", async () => {
-      const result = await createRecord(zoneId, { type: "MX", name: "example.com", content: "mail.example.com", priority: 10 }, CALLER);
+      const result = await createRecord(
+        zoneId,
+        { type: "MX", name: "example.com", content: "mail.example.com", priority: 10 },
+        CALLER,
+      );
       expect(result.ok).toBe(true);
     });
 
     it("create record — non-owner of zone gets 403", async () => {
-      const result = await createRecord(zoneId, { type: "A", name: "example.com", content: "1.2.3.4" }, OTHER);
+      const result = await createRecord(
+        zoneId,
+        { type: "A", name: "example.com", content: "1.2.3.4" },
+        OTHER,
+      );
       expect(result.ok).toBe(false);
       if (result.ok) return;
       expect(result.status).toBe(403);
     });
 
     it("create record — nonexistent zone returns 404", async () => {
-      const result = await createRecord("z_nonexist", { type: "A", name: "example.com", content: "1.2.3.4" }, CALLER);
+      const result = await createRecord(
+        "z_nonexist",
+        { type: "A", name: "example.com", content: "1.2.3.4" },
+        CALLER,
+      );
       expect(result.ok).toBe(false);
       if (result.ok) return;
       expect(result.status).toBe(404);
@@ -516,7 +597,11 @@ describe("domain.sh", () => {
     });
 
     it("get record — returns specific record", async () => {
-      const created = await createRecord(zoneId, { type: "A", name: "example.com", content: "1.2.3.4" }, CALLER);
+      const created = await createRecord(
+        zoneId,
+        { type: "A", name: "example.com", content: "1.2.3.4" },
+        CALLER,
+      );
       if (!created.ok) return;
 
       const result = getRecord(zoneId, created.data.id, CALLER);
@@ -533,7 +618,11 @@ describe("domain.sh", () => {
     });
 
     it("update record — changes content", async () => {
-      const created = await createRecord(zoneId, { type: "A", name: "example.com", content: "1.2.3.4" }, CALLER);
+      const created = await createRecord(
+        zoneId,
+        { type: "A", name: "example.com", content: "1.2.3.4" },
+        CALLER,
+      );
       if (!created.ok) return;
 
       const result = await updateRecord(zoneId, created.data.id, { content: "5.6.7.8" }, CALLER);
@@ -541,7 +630,11 @@ describe("domain.sh", () => {
     });
 
     it("update record — non-owner gets 403", async () => {
-      const created = await createRecord(zoneId, { type: "A", name: "example.com", content: "1.2.3.4" }, CALLER);
+      const created = await createRecord(
+        zoneId,
+        { type: "A", name: "example.com", content: "1.2.3.4" },
+        CALLER,
+      );
       if (!created.ok) return;
 
       const result = await updateRecord(zoneId, created.data.id, { content: "5.6.7.8" }, OTHER);
@@ -558,7 +651,11 @@ describe("domain.sh", () => {
     });
 
     it("delete record — owner can delete", async () => {
-      const created = await createRecord(zoneId, { type: "A", name: "example.com", content: "1.2.3.4" }, CALLER);
+      const created = await createRecord(
+        zoneId,
+        { type: "A", name: "example.com", content: "1.2.3.4" },
+        CALLER,
+      );
       if (!created.ok) return;
 
       const result = await deleteRecord(zoneId, created.data.id, CALLER);
@@ -572,7 +669,11 @@ describe("domain.sh", () => {
     });
 
     it("delete record — non-owner gets 403", async () => {
-      const created = await createRecord(zoneId, { type: "A", name: "example.com", content: "1.2.3.4" }, CALLER);
+      const created = await createRecord(
+        zoneId,
+        { type: "A", name: "example.com", content: "1.2.3.4" },
+        CALLER,
+      );
       if (!created.ok) return;
 
       const result = await deleteRecord(zoneId, created.data.id, OTHER);
@@ -700,15 +801,22 @@ describe("domain.sh", () => {
       expect(result.ok).toBe(true);
       if (!result.ok) return;
       const names = result.data.records.map((r) => r.name);
-      expect(names).toContain("mail.example.com");   // A record
-      expect(names).toContain("example.com");         // MX + SPF
-      expect(names).toContain("_dmarc.example.com");  // DMARC
+      expect(names).toContain("mail.example.com"); // A record
+      expect(names).toContain("example.com"); // MX + SPF
+      expect(names).toContain("_dmarc.example.com"); // DMARC
       expect(names).toContain("rsa._domainkey.example.com"); // DKIM
     });
 
     it("idempotent — updates existing A record instead of creating", async () => {
       // All GETs return an existing A record; only the A matchFn matches it
-      cfDnsRecordsMock = [makeCfRecord({ id: "cf-existing-a", type: "A", name: "mail.example.com", content: "9.9.9.9" })];
+      cfDnsRecordsMock = [
+        makeCfRecord({
+          id: "cf-existing-a",
+          type: "A",
+          name: "mail.example.com",
+          content: "9.9.9.9",
+        }),
+      ];
 
       const result = await mailSetup(
         zoneId,
@@ -727,8 +835,18 @@ describe("domain.sh", () => {
     it("idempotent — updates existing SPF without touching other TXT records", async () => {
       // All GETs return SPF + unrelated TXT; only the SPF matchFn matches
       cfDnsRecordsMock = [
-        makeCfRecord({ id: "cf-spf-01", type: "TXT", name: "example.com", content: "v=spf1 a:old.server.com -all" }),
-        makeCfRecord({ id: "cf-verify-01", type: "TXT", name: "example.com", content: "google-site-verification=abc123" }),
+        makeCfRecord({
+          id: "cf-spf-01",
+          type: "TXT",
+          name: "example.com",
+          content: "v=spf1 a:old.server.com -all",
+        }),
+        makeCfRecord({
+          id: "cf-verify-01",
+          type: "TXT",
+          name: "example.com",
+          content: "google-site-verification=abc123",
+        }),
       ];
 
       const result = await mailSetup(
@@ -744,16 +862,19 @@ describe("domain.sh", () => {
       expect(spf?.action).toBe("updated");
 
       // Only one PUT (for SPF); the unrelated TXT is left untouched
-      const putCalls = mockFetch.mock.calls.filter(
-        ([_url, init]) => init?.method === "PUT",
-      );
+      const putCalls = mockFetch.mock.calls.filter(([_url, init]) => init?.method === "PUT");
       expect(putCalls).toHaveLength(1);
     });
 
     it("idempotent — does not match unrelated TXT as SPF", async () => {
       // All GETs return only an unrelated TXT — SPF matchFn won't match it
       cfDnsRecordsMock = [
-        makeCfRecord({ id: "cf-verify-01", type: "TXT", name: "example.com", content: "google-site-verification=abc123" }),
+        makeCfRecord({
+          id: "cf-verify-01",
+          type: "TXT",
+          name: "example.com",
+          content: "google-site-verification=abc123",
+        }),
       ];
 
       const result = await mailSetup(
@@ -816,11 +937,15 @@ describe("domain.sh", () => {
     });
 
     it("CF error propagates", async () => {
-      mockFetch.mockImplementationOnce(async () =>
-        new Response(
-          JSON.stringify({ success: false, errors: [{ code: 9109, message: "Invalid record type" }] }),
-          { status: 400, headers: { "Content-Type": "application/json" } },
-        ),
+      mockFetch.mockImplementationOnce(
+        async () =>
+          new Response(
+            JSON.stringify({
+              success: false,
+              errors: [{ code: 9109, message: "Invalid record type" }],
+            }),
+            { status: 400, headers: { "Content-Type": "application/json" } },
+          ),
       );
 
       const result = await mailSetup(
@@ -887,7 +1012,9 @@ describe("domain.sh", () => {
     it("batch create — MX with priority succeeds", async () => {
       const result = await batchRecords(
         zoneId,
-        { create: [{ type: "MX", name: "example.com", content: "mail.example.com", priority: 10 }] },
+        {
+          create: [{ type: "MX", name: "example.com", content: "mail.example.com", priority: 10 }],
+        },
         CALLER,
       );
       expect(result.ok).toBe(true);
@@ -929,7 +1056,11 @@ describe("domain.sh", () => {
     });
 
     it("batch update — updates record content", async () => {
-      const created = await createRecord(zoneId, { type: "A", name: "example.com", content: "1.2.3.4" }, CALLER);
+      const created = await createRecord(
+        zoneId,
+        { type: "A", name: "example.com", content: "1.2.3.4" },
+        CALLER,
+      );
       if (!created.ok) return;
 
       const result = await batchRecords(
@@ -960,7 +1091,11 @@ describe("domain.sh", () => {
       // Create a second zone and a record in it
       const otherZone = await createZone({ domain: "other.com" }, CALLER);
       if (!otherZone.ok) return;
-      const otherRecord = await createRecord(otherZone.data.zone.id, { type: "A", name: "other.com", content: "1.2.3.4" }, CALLER);
+      const otherRecord = await createRecord(
+        otherZone.data.zone.id,
+        { type: "A", name: "other.com", content: "1.2.3.4" },
+        CALLER,
+      );
       if (!otherRecord.ok) return;
 
       // Try to update it via the first zone
@@ -975,15 +1110,15 @@ describe("domain.sh", () => {
     });
 
     it("batch delete — removes records and returns deleted IDs", async () => {
-      const created = await createRecord(zoneId, { type: "A", name: "example.com", content: "1.2.3.4" }, CALLER);
+      const created = await createRecord(
+        zoneId,
+        { type: "A", name: "example.com", content: "1.2.3.4" },
+        CALLER,
+      );
       if (!created.ok) return;
       const recordId = created.data.id;
 
-      const result = await batchRecords(
-        zoneId,
-        { delete: [{ id: recordId }] },
-        CALLER,
-      );
+      const result = await batchRecords(zoneId, { delete: [{ id: recordId }] }, CALLER);
       expect(result.ok).toBe(true);
       if (!result.ok) return;
       expect(result.data.deleted).toHaveLength(1);
@@ -994,18 +1129,18 @@ describe("domain.sh", () => {
     });
 
     it("batch delete — nonexistent record ID returns 404", async () => {
-      const result = await batchRecords(
-        zoneId,
-        { delete: [{ id: "r_nonexistent" }] },
-        CALLER,
-      );
+      const result = await batchRecords(zoneId, { delete: [{ id: "r_nonexistent" }] }, CALLER);
       expect(result.ok).toBe(false);
       if (result.ok) return;
       expect(result.status).toBe(404);
     });
 
     it("mixed batch — create + delete together", async () => {
-      const created = await createRecord(zoneId, { type: "A", name: "example.com", content: "1.2.3.4" }, CALLER);
+      const created = await createRecord(
+        zoneId,
+        { type: "A", name: "example.com", content: "1.2.3.4" },
+        CALLER,
+      );
       if (!created.ok) return;
 
       const result = await batchRecords(
@@ -1255,7 +1390,11 @@ describe("domain.sh", () => {
     });
 
     it("TXT chunks joined before comparison — propagated true", async () => {
-      await createRecord(zoneId, { type: "TXT", name: "example.com", content: "v=spf1 a:mail.example.com -all" }, CALLER);
+      await createRecord(
+        zoneId,
+        { type: "TXT", name: "example.com", content: "v=spf1 a:mail.example.com -all" },
+        CALLER,
+      );
       dnsResolverMock.resolve4
         .mockResolvedValueOnce(["1.1.1.1"])
         .mockResolvedValueOnce(["1.0.0.1"]);
@@ -1267,7 +1406,11 @@ describe("domain.sh", () => {
     });
 
     it("TXT different content → propagated false", async () => {
-      await createRecord(zoneId, { type: "TXT", name: "example.com", content: "v=spf1 a:mail.example.com -all" }, CALLER);
+      await createRecord(
+        zoneId,
+        { type: "TXT", name: "example.com", content: "v=spf1 a:mail.example.com -all" },
+        CALLER,
+      );
       dnsResolverMock.resolve4
         .mockResolvedValueOnce(["1.1.1.1"])
         .mockResolvedValueOnce(["1.0.0.1"]);
@@ -1279,7 +1422,11 @@ describe("domain.sh", () => {
     });
 
     it("MX exchange + priority match → propagated true", async () => {
-      await createRecord(zoneId, { type: "MX", name: "example.com", content: "mail.example.com", priority: 10 }, CALLER);
+      await createRecord(
+        zoneId,
+        { type: "MX", name: "example.com", content: "mail.example.com", priority: 10 },
+        CALLER,
+      );
       dnsResolverMock.resolve4
         .mockResolvedValueOnce(["1.1.1.1"])
         .mockResolvedValueOnce(["1.0.0.1"]);
@@ -1291,7 +1438,11 @@ describe("domain.sh", () => {
     });
 
     it("MX exchange matches but priority differs → propagated false", async () => {
-      await createRecord(zoneId, { type: "MX", name: "example.com", content: "mail.example.com", priority: 10 }, CALLER);
+      await createRecord(
+        zoneId,
+        { type: "MX", name: "example.com", content: "mail.example.com", priority: 10 },
+        CALLER,
+      );
       dnsResolverMock.resolve4
         .mockResolvedValueOnce(["1.1.1.1"])
         .mockResolvedValueOnce(["1.0.0.1"]);
@@ -1317,11 +1468,21 @@ describe("domain.sh", () => {
   // ─── Monetary conversions ─────────────────────────────────────────────
 
   describe("monetary conversions", () => {
-    it("usdToCents(34.98) === 3498", () => { expect(usdToCents(34.98)).toBe(3498); });
-    it("usdToCents(0.99) === 99", () => { expect(usdToCents(0.99)).toBe(99); });
-    it("centsToAtomicUsdc(3498) === '34980000'", () => { expect(centsToAtomicUsdc(3498)).toBe("34980000"); });
-    it("centsToAtomicUsdc(99) === '990000'", () => { expect(centsToAtomicUsdc(99)).toBe("990000"); });
-    it("centsToUsd(3498) === 34.98", () => { expect(centsToUsd(3498)).toBe(34.98); });
+    it("usdToCents(34.98) === 3498", () => {
+      expect(usdToCents(34.98)).toBe(3498);
+    });
+    it("usdToCents(0.99) === 99", () => {
+      expect(usdToCents(0.99)).toBe(99);
+    });
+    it("centsToAtomicUsdc(3498) === '34980000'", () => {
+      expect(centsToAtomicUsdc(3498)).toBe("34980000");
+    });
+    it("centsToAtomicUsdc(99) === '990000'", () => {
+      expect(centsToAtomicUsdc(99)).toBe("990000");
+    });
+    it("centsToUsd(3498) === 34.98", () => {
+      expect(centsToUsd(3498)).toBe(34.98);
+    });
   });
 
   // ─── NameSiloError code field ─────────────────────────────────────────
@@ -1389,19 +1550,20 @@ describe("domain.sh", () => {
 
     it("returns 400 for unavailable domain", async () => {
       // Mock NameSilo returning domain as unavailable
-      mockFetch.mockImplementationOnce(async () =>
-        new Response(
-          JSON.stringify({
-            request: { operation: "checkRegisterAvailability", ip: "1.2.3.4" },
-            reply: {
-              code: 300,
-              detail: "success",
-              available: [],
-              unavailable: { domain: ["taken.com"] },
-            },
-          }),
-          { status: 200, headers: { "Content-Type": "application/json" } },
-        ),
+      mockFetch.mockImplementationOnce(
+        async () =>
+          new Response(
+            JSON.stringify({
+              request: { operation: "checkRegisterAvailability", ip: "1.2.3.4" },
+              reply: {
+                code: 300,
+                detail: "success",
+                available: [],
+                unavailable: { domain: ["taken.com"] },
+              },
+            }),
+            { status: 200, headers: { "Content-Type": "application/json" } },
+          ),
       );
       const result = await quoteDomain({ domain: "taken.com" }, CALLER);
       expect(result.ok).toBe(false);
@@ -1474,14 +1636,15 @@ describe("domain.sh", () => {
     });
 
     it("returns 400 (domain_taken) when NameSilo returns code 261", async () => {
-      mockFetch.mockImplementationOnce(async () =>
-        new Response(
-          JSON.stringify({
-            request: { operation: "registerDomain", ip: "1.2.3.4" },
-            reply: { code: 261, detail: "Domain not available for registration" },
-          }),
-          { status: 200, headers: { "Content-Type": "application/json" } },
-        ),
+      mockFetch.mockImplementationOnce(
+        async () =>
+          new Response(
+            JSON.stringify({
+              request: { operation: "registerDomain", ip: "1.2.3.4" },
+              reply: { code: 261, detail: "Domain not available for registration" },
+            }),
+            { status: 200, headers: { "Content-Type": "application/json" } },
+          ),
       );
       const result = await registerDomain(quoteId, CALLER);
       expect(result.ok).toBe(false);
@@ -1492,19 +1655,26 @@ describe("domain.sh", () => {
 
     it("partial: CF fails after NameSilo success → 201 with recovery_token", async () => {
       // NameSilo register succeeds (default mock), CF zone creation fails
-      mockFetch.mockImplementationOnce(async () =>
-        // NameSilo register — success
-        new Response(
-          JSON.stringify({ request: { operation: "registerDomain", ip: "1.2.3.4" }, reply: { code: 300, detail: "success" } }),
-          { status: 200, headers: { "Content-Type": "application/json" } },
-        ),
-      ).mockImplementationOnce(async () =>
-        // CF POST /zones — error
-        new Response(
-          JSON.stringify({ success: false, errors: [{ code: 1000, message: "CF error" }] }),
-          { status: 500, headers: { "Content-Type": "application/json" } },
-        ),
-      );
+      mockFetch
+        .mockImplementationOnce(
+          async () =>
+            // NameSilo register — success
+            new Response(
+              JSON.stringify({
+                request: { operation: "registerDomain", ip: "1.2.3.4" },
+                reply: { code: 300, detail: "success" },
+              }),
+              { status: 200, headers: { "Content-Type": "application/json" } },
+            ),
+        )
+        .mockImplementationOnce(
+          async () =>
+            // CF POST /zones — error
+            new Response(
+              JSON.stringify({ success: false, errors: [{ code: 1000, message: "CF error" }] }),
+              { status: 500, headers: { "Content-Type": "application/json" } },
+            ),
+        );
       const result = await registerDomain(quoteId, CALLER);
       expect(result.ok).toBe(true);
       if (!result.ok) return;
@@ -1521,25 +1691,54 @@ describe("domain.sh", () => {
           const u = typeof input === "string" ? input : (input as URL).toString();
           if (u.includes("namesilo") && u.includes("registerDomain")) {
             return new Response(
-              JSON.stringify({ request: { operation: "registerDomain", ip: "1.2.3.4" }, reply: { code: 300, detail: "success" } }),
+              JSON.stringify({
+                request: { operation: "registerDomain", ip: "1.2.3.4" },
+                reply: { code: 300, detail: "success" },
+              }),
               { status: 200, headers: { "Content-Type": "application/json" } },
             );
           }
-          return new Response(JSON.stringify({ success: true, errors: [], result: { id: "cf-zone-001", name: "example.com", status: "pending", name_servers: ["ns1.cloudflare.com", "ns2.cloudflare.com"] } }), { status: 200, headers: { "Content-Type": "application/json" } });
+          return new Response(
+            JSON.stringify({
+              success: true,
+              errors: [],
+              result: {
+                id: "cf-zone-001",
+                name: "example.com",
+                status: "pending",
+                name_servers: ["ns1.cloudflare.com", "ns2.cloudflare.com"],
+              },
+            }),
+            { status: 200, headers: { "Content-Type": "application/json" } },
+          );
         })
-        .mockImplementationOnce(async () =>
-          // CF POST /zones — success
-          new Response(
-            JSON.stringify({ success: true, errors: [], result: { id: "cf-zone-001", name: "example.com", status: "pending", name_servers: ["ns1.cloudflare.com", "ns2.cloudflare.com"] } }),
-            { status: 200, headers: { "Content-Type": "application/json" } },
-          ),
+        .mockImplementationOnce(
+          async () =>
+            // CF POST /zones — success
+            new Response(
+              JSON.stringify({
+                success: true,
+                errors: [],
+                result: {
+                  id: "cf-zone-001",
+                  name: "example.com",
+                  status: "pending",
+                  name_servers: ["ns1.cloudflare.com", "ns2.cloudflare.com"],
+                },
+              }),
+              { status: 200, headers: { "Content-Type": "application/json" } },
+            ),
         )
-        .mockImplementationOnce(async () =>
-          // NameSilo changeNameServers — fails
-          new Response(
-            JSON.stringify({ request: { operation: "changeNameServers", ip: "1.2.3.4" }, reply: { code: 999, detail: "NS error" } }),
-            { status: 200, headers: { "Content-Type": "application/json" } },
-          ),
+        .mockImplementationOnce(
+          async () =>
+            // NameSilo changeNameServers — fails
+            new Response(
+              JSON.stringify({
+                request: { operation: "changeNameServers", ip: "1.2.3.4" },
+                reply: { code: 999, detail: "NS error" },
+              }),
+              { status: 200, headers: { "Content-Type": "application/json" } },
+            ),
         );
       const result = await registerDomain(quoteId, CALLER);
       expect(result.ok).toBe(true);
@@ -1562,17 +1761,24 @@ describe("domain.sh", () => {
       if (!q.ok) throw new Error("Failed to create quote");
       // Simulate NameSilo success + CF failure → leaves recovery_token
       const { NameSiloError } = await import("../src/namesilo.ts");
-      mockFetch.mockImplementationOnce(async () =>
-        new Response(
-          JSON.stringify({ request: { operation: "registerDomain", ip: "1.2.3.4" }, reply: { code: 300, detail: "success" } }),
-          { status: 200, headers: { "Content-Type": "application/json" } },
-        ),
-      ).mockImplementationOnce(async () =>
-        new Response(
-          JSON.stringify({ success: false, errors: [{ code: 1000, message: "CF down" }] }),
-          { status: 500, headers: { "Content-Type": "application/json" } },
-        ),
-      );
+      mockFetch
+        .mockImplementationOnce(
+          async () =>
+            new Response(
+              JSON.stringify({
+                request: { operation: "registerDomain", ip: "1.2.3.4" },
+                reply: { code: 300, detail: "success" },
+              }),
+              { status: 200, headers: { "Content-Type": "application/json" } },
+            ),
+        )
+        .mockImplementationOnce(
+          async () =>
+            new Response(
+              JSON.stringify({ success: false, errors: [{ code: 1000, message: "CF down" }] }),
+              { status: 500, headers: { "Content-Type": "application/json" } },
+            ),
+        );
       const reg = await registerDomain(q.data.quote_id, CALLER);
       if (!reg.ok) throw new Error("Failed to register");
       recoveryToken = reg.data.recovery_token ?? "";
@@ -1621,24 +1827,40 @@ describe("domain.sh", () => {
       if (!q.ok) throw new Error("Failed to create quote");
       // Intercept the NS change to fail
       const origMockImpl = mockFetch.getMockImplementation();
-      mockFetch.mockImplementationOnce(async () =>
-        new Response(
-          JSON.stringify({ request: { operation: "registerDomain", ip: "1.2.3.4" }, reply: { code: 300, detail: "success" } }),
-          { status: 200, headers: { "Content-Type": "application/json" } },
-        ),
-      ).mockImplementationOnce(async () =>
-        // CF zone — success
-        new Response(
-          JSON.stringify({ success: true, errors: [], result: makeCfZone({ name: "example.com" }) }),
-          { status: 200, headers: { "Content-Type": "application/json" } },
-        ),
-      ).mockImplementationOnce(async () =>
-        // NS change — fail
-        new Response(
-          JSON.stringify({ request: { operation: "changeNameServers", ip: "1.2.3.4" }, reply: { code: 999, detail: "NS error" } }),
-          { status: 200, headers: { "Content-Type": "application/json" } },
-        ),
-      );
+      mockFetch
+        .mockImplementationOnce(
+          async () =>
+            new Response(
+              JSON.stringify({
+                request: { operation: "registerDomain", ip: "1.2.3.4" },
+                reply: { code: 300, detail: "success" },
+              }),
+              { status: 200, headers: { "Content-Type": "application/json" } },
+            ),
+        )
+        .mockImplementationOnce(
+          async () =>
+            // CF zone — success
+            new Response(
+              JSON.stringify({
+                success: true,
+                errors: [],
+                result: makeCfZone({ name: "example.com" }),
+              }),
+              { status: 200, headers: { "Content-Type": "application/json" } },
+            ),
+        )
+        .mockImplementationOnce(
+          async () =>
+            // NS change — fail
+            new Response(
+              JSON.stringify({
+                request: { operation: "changeNameServers", ip: "1.2.3.4" },
+                reply: { code: 999, detail: "NS error" },
+              }),
+              { status: 200, headers: { "Content-Type": "application/json" } },
+            ),
+        );
       await registerDomain(q.data.quote_id, CALLER);
     });
 
@@ -1684,11 +1906,12 @@ describe("domain.sh", () => {
       const zoneId = created.data.zone.id;
 
       // Mock CF GET /zones/:id to return "active"
-      mockFetch.mockImplementationOnce(async () =>
-        new Response(
-          JSON.stringify({ success: true, errors: [], result: makeCfZone({ status: "active" }) }),
-          { status: 200, headers: { "Content-Type": "application/json" } },
-        ),
+      mockFetch.mockImplementationOnce(
+        async () =>
+          new Response(
+            JSON.stringify({ success: true, errors: [], result: makeCfZone({ status: "active" }) }),
+            { status: 200, headers: { "Content-Type": "application/json" } },
+          ),
       );
 
       const result = await getZone(zoneId, CALLER);
@@ -1720,12 +1943,10 @@ describe("domain.sh", () => {
       expect(result.data.status).toBe("active");
 
       // No new CF calls made (no GET /zones/:id)
-      const cfGetCalls = mockFetch.mock.calls
-        .slice(callsBefore)
-        .filter(([_url, init]) => {
-          const u = typeof _url === "string" ? _url : (_url as URL).toString();
-          return u.match(/\/client\/v4\/zones\/[^/]+$/) && (!init?.method || init.method === "GET");
-        });
+      const cfGetCalls = mockFetch.mock.calls.slice(callsBefore).filter(([_url, init]) => {
+        const u = typeof _url === "string" ? _url : (_url as URL).toString();
+        return u.match(/\/client\/v4\/zones\/[^/]+$/) && (!init?.method || init.method === "GET");
+      });
       expect(cfGetCalls).toHaveLength(0);
     });
 
@@ -1734,11 +1955,12 @@ describe("domain.sh", () => {
       if (!created.ok) throw new Error("setup failed");
       const zoneId = created.data.zone.id;
 
-      mockFetch.mockImplementationOnce(async () =>
-        new Response(
-          JSON.stringify({ success: true, errors: [], result: makeCfZone({ status: "active" }) }),
-          { status: 200, headers: { "Content-Type": "application/json" } },
-        ),
+      mockFetch.mockImplementationOnce(
+        async () =>
+          new Response(
+            JSON.stringify({ success: true, errors: [], result: makeCfZone({ status: "active" }) }),
+            { status: 200, headers: { "Content-Type": "application/json" } },
+          ),
       );
 
       const result = await refreshZoneStatus(zoneId, CALLER);
@@ -1801,11 +2023,12 @@ describe("domain.sh", () => {
     });
 
     it("zone_status is 'active' when CF returns active during verify", async () => {
-      mockFetch.mockImplementationOnce(async () =>
-        new Response(
-          JSON.stringify({ success: true, errors: [], result: makeCfZone({ status: "active" }) }),
-          { status: 200, headers: { "Content-Type": "application/json" } },
-        ),
+      mockFetch.mockImplementationOnce(
+        async () =>
+          new Response(
+            JSON.stringify({ success: true, errors: [], result: makeCfZone({ status: "active" }) }),
+            { status: 200, headers: { "Content-Type": "application/json" } },
+          ),
       );
 
       const result = await verifyZone(zoneId, CALLER);
@@ -1833,11 +2056,12 @@ describe("domain.sh", () => {
     });
 
     it("CF error during status refresh — verify still returns result with local zone_status", async () => {
-      mockFetch.mockImplementationOnce(async () =>
-        new Response(
-          JSON.stringify({ success: false, errors: [{ code: 1000, message: "CF down" }] }),
-          { status: 500, headers: { "Content-Type": "application/json" } },
-        ),
+      mockFetch.mockImplementationOnce(
+        async () =>
+          new Response(
+            JSON.stringify({ success: false, errors: [{ code: 1000, message: "CF down" }] }),
+            { status: 500, headers: { "Content-Type": "application/json" } },
+          ),
       );
 
       const result = await verifyZone(zoneId, CALLER);
@@ -1889,11 +2113,12 @@ describe("domain.sh", () => {
     });
 
     it("returns 429 when CF rate-limits the activation check", async () => {
-      mockFetch.mockImplementationOnce(async () =>
-        new Response(
-          JSON.stringify({ success: false, errors: [{ code: 429, message: "Rate limited" }] }),
-          { status: 429, headers: { "Content-Type": "application/json" } },
-        ),
+      mockFetch.mockImplementationOnce(
+        async () =>
+          new Response(
+            JSON.stringify({ success: false, errors: [{ code: 429, message: "Rate limited" }] }),
+            { status: 429, headers: { "Content-Type": "application/json" } },
+          ),
       );
 
       const result = await activateZone(zoneId, CALLER);
@@ -1980,26 +2205,39 @@ describe("domain.sh", () => {
       if (!q.ok) throw new Error("quote failed");
 
       mockFetch
-        .mockImplementationOnce(async () =>
-          // NameSilo register — success
-          new Response(
-            JSON.stringify({ request: { operation: "registerDomain", ip: "1.2.3.4" }, reply: { code: 300, detail: "success" } }),
-            { status: 200, headers: { "Content-Type": "application/json" } },
-          ),
+        .mockImplementationOnce(
+          async () =>
+            // NameSilo register — success
+            new Response(
+              JSON.stringify({
+                request: { operation: "registerDomain", ip: "1.2.3.4" },
+                reply: { code: 300, detail: "success" },
+              }),
+              { status: 200, headers: { "Content-Type": "application/json" } },
+            ),
         )
-        .mockImplementationOnce(async () =>
-          // CF zone — success
-          new Response(
-            JSON.stringify({ success: true, errors: [], result: makeCfZone({ name: "example.com" }) }),
-            { status: 200, headers: { "Content-Type": "application/json" } },
-          ),
+        .mockImplementationOnce(
+          async () =>
+            // CF zone — success
+            new Response(
+              JSON.stringify({
+                success: true,
+                errors: [],
+                result: makeCfZone({ name: "example.com" }),
+              }),
+              { status: 200, headers: { "Content-Type": "application/json" } },
+            ),
         )
-        .mockImplementationOnce(async () =>
-          // NS change — fail
-          new Response(
-            JSON.stringify({ request: { operation: "changeNameServers", ip: "1.2.3.4" }, reply: { code: 999, detail: "NS error" } }),
-            { status: 200, headers: { "Content-Type": "application/json" } },
-          ),
+        .mockImplementationOnce(
+          async () =>
+            // NS change — fail
+            new Response(
+              JSON.stringify({
+                request: { operation: "changeNameServers", ip: "1.2.3.4" },
+                reply: { code: 999, detail: "NS error" },
+              }),
+              { status: 200, headers: { "Content-Type": "application/json" } },
+            ),
         );
       await registerDomain(q.data.quote_id, CALLER);
 
@@ -2044,11 +2282,12 @@ describe("domain.sh", () => {
     it("zone active → all_ready=true, next_action=null", async () => {
       await createFullRegistration("example.com");
       // CF GET /zones/:id returns active
-      mockFetch.mockImplementationOnce(async () =>
-        new Response(
-          JSON.stringify({ success: true, errors: [], result: makeCfZone({ status: "active" }) }),
-          { status: 200, headers: { "Content-Type": "application/json" } },
-        ),
+      mockFetch.mockImplementationOnce(
+        async () =>
+          new Response(
+            JSON.stringify({ success: true, errors: [], result: makeCfZone({ status: "active" }) }),
+            { status: 200, headers: { "Content-Type": "application/json" } },
+          ),
       );
 
       const result = await getRegistrationStatus("example.com", CALLER);
@@ -2063,11 +2302,12 @@ describe("domain.sh", () => {
     it("zone active but NS not propagated → all_ready=true (CF authoritative)", async () => {
       await createFullRegistration("example.com");
       dnsResolverMock.resolveNs.mockResolvedValue(["ns1.registrar.com"]); // not propagated
-      mockFetch.mockImplementationOnce(async () =>
-        new Response(
-          JSON.stringify({ success: true, errors: [], result: makeCfZone({ status: "active" }) }),
-          { status: 200, headers: { "Content-Type": "application/json" } },
-        ),
+      mockFetch.mockImplementationOnce(
+        async () =>
+          new Response(
+            JSON.stringify({ success: true, errors: [], result: makeCfZone({ status: "active" }) }),
+            { status: 200, headers: { "Content-Type": "application/json" } },
+          ),
       );
 
       const result = await getRegistrationStatus("example.com", CALLER);
@@ -2125,9 +2365,7 @@ describe("domain.sh", () => {
             reply: {
               code: 300,
               detail: "success",
-              available: [
-                { domain: "prim.sh", available: "yes", price: "34.98", premium: "0" },
-              ],
+              available: [{ domain: "prim.sh", available: "yes", price: "34.98", premium: "0" }],
               unavailable: { domain: ["prim.com"] },
             },
           }),

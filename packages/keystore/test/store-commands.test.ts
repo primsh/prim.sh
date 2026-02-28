@@ -6,7 +6,7 @@
  * node:fs is partially mocked for statSync + readFileSync.
  */
 
-import { describe, it, expect, vi, beforeEach, afterEach, type MockInstance } from "vitest";
+import { type MockInstance, afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 vi.mock("@primsh/x402-client", () => ({
   createPrimFetch: vi.fn(),
@@ -33,11 +33,11 @@ vi.mock("node:fs/promises", async (importOriginal) => {
   };
 });
 
-import { createPrimFetch } from "@primsh/x402-client";
-import { statSync, readFileSync } from "node:fs";
+import { readFileSync, statSync } from "node:fs";
 import { writeFile } from "node:fs/promises";
+import { createPrimFetch } from "@primsh/x402-client";
 import { getConfig } from "../src/config.ts";
-import { runStoreCommand, resolveStoreUrl } from "../src/store-commands.ts";
+import { resolveStoreUrl, runStoreCommand } from "../src/store-commands.ts";
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -176,9 +176,9 @@ describe("create-bucket", () => {
   });
 
   it("exits 1 when --name is missing", async () => {
-    await expect(
-      runStoreCommand("create-bucket", ["store", "create-bucket"]),
-    ).rejects.toThrow("process.exit(1)");
+    await expect(runStoreCommand("create-bucket", ["store", "create-bucket"])).rejects.toThrow(
+      "process.exit(1)",
+    );
     expect(stderrSpy).toHaveBeenCalledWith(expect.stringContaining("--name NAME"));
   });
 });
@@ -219,7 +219,9 @@ describe("ls", () => {
 describe("put from file", () => {
   it("PUTs to /v1/buckets/:id/objects/:key with file body + Content-Length + Content-Type", async () => {
     const fileContents = Buffer.from("hello world!!");
-    vi.mocked(statSync).mockReturnValue({ size: fileContents.length } as ReturnType<typeof statSync>);
+    vi.mocked(statSync).mockReturnValue({ size: fileContents.length } as ReturnType<
+      typeof statSync
+    >);
     vi.mocked(readFileSync).mockReturnValue(fileContents as unknown as string);
     mockFetch.mockResolvedValue(okPut("docs/notes.txt"));
 
@@ -248,13 +250,7 @@ describe("put from file", () => {
     vi.mocked(readFileSync).mockReturnValue(Buffer.from("{}") as unknown as string);
     mockFetch.mockResolvedValue(okPut("data.json"));
 
-    await runStoreCommand("put", [
-      "store",
-      "put",
-      "bkt_123",
-      "data.json",
-      "--file=./data.json",
-    ]);
+    await runStoreCommand("put", ["store", "put", "bkt_123", "data.json", "--file=./data.json"]);
 
     expect(mockFetch).toHaveBeenCalledWith(
       expect.anything(),
@@ -352,9 +348,9 @@ describe("put from stdin", () => {
       configurable: true,
     });
 
-    await expect(
-      runStoreCommand("put", ["store", "put", "bkt_123", "key"]),
-    ).rejects.toThrow("process.exit(1)");
+    await expect(runStoreCommand("put", ["store", "put", "bkt_123", "key"])).rejects.toThrow(
+      "process.exit(1)",
+    );
     expect(stderrSpy).toHaveBeenCalledWith(expect.stringContaining("--file=PATH"));
   });
 });
@@ -409,9 +405,9 @@ describe("rm", () => {
   });
 
   it("exits 1 when bucket ID or key is missing", async () => {
-    await expect(
-      runStoreCommand("rm", ["store", "rm", "bkt_123"]),
-    ).rejects.toThrow("process.exit(1)");
+    await expect(runStoreCommand("rm", ["store", "rm", "bkt_123"])).rejects.toThrow(
+      "process.exit(1)",
+    );
   });
 });
 
@@ -431,9 +427,9 @@ describe("rm-bucket", () => {
   });
 
   it("exits 1 when bucket ID is missing", async () => {
-    await expect(
-      runStoreCommand("rm-bucket", ["store", "rm-bucket"]),
-    ).rejects.toThrow("process.exit(1)");
+    await expect(runStoreCommand("rm-bucket", ["store", "rm-bucket"])).rejects.toThrow(
+      "process.exit(1)",
+    );
   });
 });
 
@@ -458,9 +454,7 @@ describe("quota", () => {
   });
 
   it("exits 1 when bucket ID is missing", async () => {
-    await expect(
-      runStoreCommand("quota", ["store", "quota"]),
-    ).rejects.toThrow("process.exit(1)");
+    await expect(runStoreCommand("quota", ["store", "quota"])).rejects.toThrow("process.exit(1)");
   });
 });
 
@@ -489,9 +483,9 @@ describe("error handling", () => {
   it("non-ok response prints error message and code, exits 1", async () => {
     mockFetch.mockResolvedValue(errorResponse("not_found", "Bucket not found"));
 
-    await expect(
-      runStoreCommand("quota", ["store", "quota", "bkt_missing"]),
-    ).rejects.toThrow("process.exit(1)");
+    await expect(runStoreCommand("quota", ["store", "quota", "bkt_missing"])).rejects.toThrow(
+      "process.exit(1)",
+    );
 
     expect(stderrSpy).toHaveBeenCalledWith("Error: Bucket not found (not_found)\n");
     expect(exitSpy).toHaveBeenCalledWith(1);
@@ -500,9 +494,9 @@ describe("error handling", () => {
   it("403 forbidden error is reported correctly", async () => {
     mockFetch.mockResolvedValue(errorResponse("forbidden", "Access denied", 403));
 
-    await expect(
-      runStoreCommand("rm-bucket", ["store", "rm-bucket", "bkt_xyz"]),
-    ).rejects.toThrow("process.exit(1)");
+    await expect(runStoreCommand("rm-bucket", ["store", "rm-bucket", "bkt_xyz"])).rejects.toThrow(
+      "process.exit(1)",
+    );
 
     expect(stderrSpy).toHaveBeenCalledWith("Error: Access denied (forbidden)\n");
   });

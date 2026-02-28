@@ -4,7 +4,7 @@
  * Mocks viem's PublicClient.readContract to avoid hitting real Base RPC.
  */
 
-import { describe, expect, it, vi, beforeEach } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 
 // Set env before any module imports
 process.env.WALLET_DB_PATH = ":memory:";

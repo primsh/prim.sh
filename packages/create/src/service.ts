@@ -1,13 +1,8 @@
-import type {
-  ScaffoldResponse,
-  ValidateResponse,
-  SchemaResponse,
-  PortsResponse,
-} from "./api.ts";
-import { parse as parseYaml } from "yaml";
-import { readFileSync, existsSync, readdirSync } from "node:fs";
+import { existsSync, readFileSync, readdirSync } from "node:fs";
 import { join, resolve } from "node:path";
-import { scaffoldPure, type PrimYaml } from "../../../scripts/lib/scaffold.ts";
+import { parse as parseYaml } from "yaml";
+import { type PrimYaml, scaffoldPure } from "../../../scripts/lib/scaffold.ts";
+import type { PortsResponse, ScaffoldResponse, SchemaResponse, ValidateResponse } from "./api.ts";
 import primYamlSchema from "./prim-yaml-schema.json";
 
 // ─── ServiceResult ────────────────────────────────────────────────────────────
@@ -27,11 +22,16 @@ function getRoot(): string {
 /** Basic validation of required PrimYaml fields */
 function validateRequired(data: Record<string, unknown>): string[] {
   const errors: string[] = [];
-  if (typeof data.id !== "string" || !data.id) errors.push("'id' is required and must be a non-empty string");
-  if (typeof data.name !== "string" || !data.name) errors.push("'name' is required and must be a non-empty string");
-  if (typeof data.description !== "string" || !data.description) errors.push("'description' is required and must be a non-empty string");
-  if (typeof data.port !== "number" || !Number.isInteger(data.port)) errors.push("'port' is required and must be an integer");
-  else if (data.port < 1024 || data.port > 65535) errors.push("'port' must be between 1024 and 65535");
+  if (typeof data.id !== "string" || !data.id)
+    errors.push("'id' is required and must be a non-empty string");
+  if (typeof data.name !== "string" || !data.name)
+    errors.push("'name' is required and must be a non-empty string");
+  if (typeof data.description !== "string" || !data.description)
+    errors.push("'description' is required and must be a non-empty string");
+  if (typeof data.port !== "number" || !Number.isInteger(data.port))
+    errors.push("'port' is required and must be an integer");
+  else if (data.port < 1024 || data.port > 65535)
+    errors.push("'port' must be between 1024 and 65535");
 
   if (typeof data.id === "string" && !/^[a-z][a-z0-9-]*$/.test(data.id)) {
     errors.push("'id' must be lowercase letters, digits, and hyphens, starting with a letter");
@@ -47,18 +47,33 @@ export async function scaffold(
 ): Promise<ServiceResult<ScaffoldResponse>> {
   const spec = body.spec;
   if (typeof spec !== "string" || !spec.trim()) {
-    return { ok: false, status: 400, code: "invalid_request", message: "Missing or empty 'spec' field (YAML string)" };
+    return {
+      ok: false,
+      status: 400,
+      code: "invalid_request",
+      message: "Missing or empty 'spec' field (YAML string)",
+    };
   }
 
   let parsed: Record<string, unknown>;
   try {
     parsed = parseYaml(spec) as Record<string, unknown>;
   } catch (err) {
-    return { ok: false, status: 400, code: "invalid_request", message: `Invalid YAML: ${String(err)}` };
+    return {
+      ok: false,
+      status: 400,
+      code: "invalid_request",
+      message: `Invalid YAML: ${String(err)}`,
+    };
   }
 
   if (!parsed || typeof parsed !== "object") {
-    return { ok: false, status: 400, code: "invalid_request", message: "YAML must parse to an object" };
+    return {
+      ok: false,
+      status: 400,
+      code: "invalid_request",
+      message: "YAML must parse to an object",
+    };
   }
 
   const errors = validateRequired(parsed);
@@ -78,7 +93,12 @@ export async function scaffold(
       },
     };
   } catch (err) {
-    return { ok: false, status: 500, code: "provider_error", message: `Scaffold failed: ${String(err)}` };
+    return {
+      ok: false,
+      status: 500,
+      code: "provider_error",
+      message: `Scaffold failed: ${String(err)}`,
+    };
   }
 }
 
@@ -87,7 +107,12 @@ export async function validate(
 ): Promise<ServiceResult<ValidateResponse>> {
   const spec = body.spec;
   if (typeof spec !== "string" || !spec.trim()) {
-    return { ok: false, status: 400, code: "invalid_request", message: "Missing or empty 'spec' field (YAML string)" };
+    return {
+      ok: false,
+      status: 400,
+      code: "invalid_request",
+      message: "Missing or empty 'spec' field (YAML string)",
+    };
   }
 
   let parsed: Record<string, unknown>;
@@ -171,6 +196,11 @@ export async function ports(): Promise<ServiceResult<PortsResponse>> {
       data: { allocated, next_available: nextAvailable },
     };
   } catch (err) {
-    return { ok: false, status: 500, code: "provider_error", message: `Port scan failed: ${String(err)}` };
+    return {
+      ok: false,
+      status: 500,
+      code: "provider_error",
+      message: `Port scan failed: ${String(err)}`,
+    };
   }
 }

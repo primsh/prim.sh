@@ -1,15 +1,33 @@
-import { existsSync, readFileSync, writeFileSync, mkdirSync } from "node:fs";
+import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { homedir } from "node:os";
-import { join, dirname } from "node:path";
-import { getFlag } from "./flags.ts";
+import { dirname, join } from "node:path";
 import { getDefaultAddress } from "./config.ts";
+import { getFlag } from "./flags.ts";
 import { SKILL_CONTENT } from "./skill-content.ts";
 
-const PRIMITIVES = ["wallet", "store", "spawn", "faucet", "search", "email", "mem", "domain", "token"] as const;
+const PRIMITIVES = [
+  "wallet",
+  "store",
+  "spawn",
+  "faucet",
+  "search",
+  "email",
+  "mem",
+  "domain",
+  "token",
+] as const;
 type Primitive = (typeof PRIMITIVES)[number];
 
 /** Which primitives require wallet to be installed alongside them. */
-const REQUIRES_WALLET: ReadonlySet<string> = new Set(["store", "spawn", "search", "email", "mem", "domain", "token"]);
+const REQUIRES_WALLET: ReadonlySet<string> = new Set([
+  "store",
+  "spawn",
+  "search",
+  "email",
+  "mem",
+  "domain",
+  "token",
+]);
 
 // ---------------------------------------------------------------------------
 // Agent detection
@@ -23,8 +41,14 @@ export function detectAgent(argv: string[]): AgentEnv {
   let override = getFlag("agent", argv);
   if (!override) {
     for (let i = 1; i < argv.length; i++) {
-      if (argv[i].startsWith("--agent=")) { override = argv[i].slice("--agent=".length); break; }
-      if (argv[i] === "--agent" && i + 1 < argv.length && !argv[i + 1].startsWith("--")) { override = argv[i + 1]; break; }
+      if (argv[i].startsWith("--agent=")) {
+        override = argv[i].slice("--agent=".length);
+        break;
+      }
+      if (argv[i] === "--agent" && i + 1 < argv.length && !argv[i + 1].startsWith("--")) {
+        override = argv[i + 1];
+        break;
+      }
     }
   }
   if (override === "claude" || override === "cursor" || override === "generic") return override;
@@ -228,9 +252,12 @@ export async function runListCommand(argv: string[]): Promise<void> {
   }
 }
 
-export async function runInstallCommand(subcommand: string | undefined, argv: string[]): Promise<void> {
+export async function runInstallCommand(
+  subcommand: string | undefined,
+  argv: string[],
+): Promise<void> {
   // Handle `prim install --list`
-  if (subcommand === "--list" || subcommand === undefined && argv.includes("--list")) {
+  if (subcommand === "--list" || (subcommand === undefined && argv.includes("--list"))) {
     await runListCommand(argv);
     return;
   }
@@ -308,7 +335,10 @@ export async function runInstallCommand(subcommand: string | undefined, argv: st
 // Uninstall command
 // ---------------------------------------------------------------------------
 
-export async function runUninstallCommand(subcommand: string | undefined, argv: string[]): Promise<void> {
+export async function runUninstallCommand(
+  subcommand: string | undefined,
+  argv: string[],
+): Promise<void> {
   const primitives = parsePrimitives(subcommand);
   const isAll = primitives.length === PRIMITIVES.length;
   const agent = detectAgent(argv);
@@ -334,7 +364,10 @@ export async function runUninstallCommand(subcommand: string | undefined, argv: 
 // Skill command (bonus: `prim skill <name>`)
 // ---------------------------------------------------------------------------
 
-export async function runSkillCommand(subcommand: string | undefined, argv: string[]): Promise<void> {
+export async function runSkillCommand(
+  subcommand: string | undefined,
+  argv: string[],
+): Promise<void> {
   if (!subcommand) {
     console.log(`Usage: prim skill <name>\nAvailable: ${PRIMITIVES.join(", ")}`);
     return;
@@ -346,7 +379,9 @@ export async function runSkillCommand(subcommand: string | undefined, argv: stri
 
   const content = getSkillContent(subcommand);
   if (!content) {
-    throw new Error(`Skill file not found for ${subcommand}. Skills may not be bundled in this build.`);
+    throw new Error(
+      `Skill file not found for ${subcommand}. Skills may not be bundled in this build.`,
+    );
   }
   process.stdout.write(content);
 }

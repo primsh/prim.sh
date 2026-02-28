@@ -50,7 +50,10 @@ async function qdrantFetch(path: string, method: string, body?: unknown): Promis
   return res.json();
 }
 
-export async function createCollection(name: string, params: { size: number; distance: string }): Promise<void> {
+export async function createCollection(
+  name: string,
+  params: { size: number; distance: string },
+): Promise<void> {
   await qdrantFetch(`/collections/${name}`, "PUT", {
     vectors: { size: params.size, distance: params.distance },
   });

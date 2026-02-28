@@ -105,11 +105,7 @@ export interface PrimConfig {
 // ── helpers ──────────────────────────────────────────────────────────────────
 
 const esc = (s: string) =>
-  s
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
-    .replace(/"/g, "&quot;");
+  s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
 
 /** Convert **bold** markers → <strong>bold</strong> */
 function bold(s: string): string {
@@ -177,7 +173,7 @@ ${items}
       .map((p) =>
         p.url
           ? `<a href="${esc(p.url)}" class="provider-link">${esc(p.name)}</a>`
-          : `<span class="provider-link">${esc(p.name)}</span>`
+          : `<span class="provider-link">${esc(p.name)}</span>`,
       )
       .join("");
     parts.push(`<section>
@@ -209,10 +205,7 @@ function statusInfo(status: string): { cls: string; label: string } {
 /** Render a badge string preserving ** → bold */
 function renderBadgeStr(badge: string): string {
   // esc without touching ** (** is ASCII so esc won't mangle it)
-  const escaped = badge
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;");
+  const escaped = badge.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
   return `<div class="badge">${bold(escaped)}</div>`;
 }
 
@@ -260,15 +253,24 @@ function colorizeShellCmd(line: string): string {
 
   const re = /( +|https?:\/\/\S+|"[^"]*"|'[^']*'|-[\w-]+|\S+)/g;
   let m: RegExpExecArray | null;
+  // biome-ignore lint/suspicious/noAssignInExpressions: standard regex iteration
   while ((m = re.exec(rest)) !== null) {
     const tok = m[0];
-    if (/^ +$/.test(tok)) { out += tok; }
-    else if (tok === "curl") { out += `<span class="a">curl</span>`; }
-    else if (/^(POST|GET|PUT|DELETE|PATCH|HEAD)$/.test(tok)) { out += `<span class="a">${tok}</span>`; }
-    else if (/^https?:\/\//.test(tok)) { out += `<span class="w">${esc(tok)}</span>`; }
-    else if (/^-/.test(tok)) { out += `<span class="flag">${esc(tok)}</span>`; }
-    else if (/^["']/.test(tok)) { out += colorizeStr(tok); }
-    else { out += esc(tok); }
+    if (/^ +$/.test(tok)) {
+      out += tok;
+    } else if (tok === "curl") {
+      out += `<span class="a">curl</span>`;
+    } else if (/^(POST|GET|PUT|DELETE|PATCH|HEAD)$/.test(tok)) {
+      out += `<span class="a">${tok}</span>`;
+    } else if (/^https?:\/\//.test(tok)) {
+      out += `<span class="w">${esc(tok)}</span>`;
+    } else if (/^-/.test(tok)) {
+      out += `<span class="flag">${esc(tok)}</span>`;
+    } else if (/^["']/.test(tok)) {
+      out += colorizeStr(tok);
+    } else {
+      out += esc(tok);
+    }
   }
 
   if (hasCont) out += ` <span class="cont">\\</span>`;
@@ -289,11 +291,16 @@ function colorizeFlagArg(line: string): string {
   if (rest) {
     const re = /( +|"[^"]*"|'[^']*'|\S+)/g;
     let tm: RegExpExecArray | null;
+    // biome-ignore lint/suspicious/noAssignInExpressions: standard regex iteration
     while ((tm = re.exec(rest)) !== null) {
       const tok = tm[0];
-      if (/^ +$/.test(tok)) { out += tok; }
-      else if (/^["']/.test(tok)) { out += colorizeStr(tok); }
-      else { out += esc(tok); }
+      if (/^ +$/.test(tok)) {
+        out += tok;
+      } else if (/^["']/.test(tok)) {
+        out += colorizeStr(tok);
+      } else {
+        out += esc(tok);
+      }
     }
   }
 
@@ -306,12 +313,18 @@ function colorizeJsonValues(s: string): string {
   let out = "";
   const re = /("(?:[^"\\]|\\.)*"|\btrue\b|\bfalse\b|\bnull\b|\b\d+\.?\d*\b|[\s\S])/g;
   let m: RegExpExecArray | null;
+  // biome-ignore lint/suspicious/noAssignInExpressions: standard regex iteration
   while ((m = re.exec(s)) !== null) {
     const tok = m[0];
-    if (/^"/.test(tok)) { out += `<span class="w">${esc(tok)}</span>`; }
-    else if (/^(true|false|null)$/.test(tok)) { out += `<span class="a">${tok}</span>`; }
-    else if (/^\d/.test(tok)) { out += `<span class="a">${tok}</span>`; }
-    else { out += esc(tok); }
+    if (/^"/.test(tok)) {
+      out += `<span class="w">${esc(tok)}</span>`;
+    } else if (/^(true|false|null)$/.test(tok)) {
+      out += `<span class="a">${tok}</span>`;
+    } else if (/^\d/.test(tok)) {
+      out += `<span class="a">${tok}</span>`;
+    } else {
+      out += esc(tok);
+    }
   }
   return out;
 }
@@ -321,9 +334,7 @@ function colorizeJsonLine(line: string): string {
   const parts = line.split(/("(?:[^"\\]|\\.)*"\s*:)/);
   return parts
     .map((part, i) =>
-      i % 2 === 1
-        ? `<span class="mc">${esc(part)}</span>`
-        : colorizeJsonValues(part)
+      i % 2 === 1 ? `<span class="mc">${esc(part)}</span>` : colorizeJsonValues(part),
     )
     .join("");
 }
@@ -374,10 +385,7 @@ function renderCards(s: CardsSection): string {
     ? `${esc(s.title)} <span>${esc(s.highlight)}</span>`
     : `<span>${esc(s.title)}</span>`;
   const cards = s.items
-    .map(
-      (c) =>
-        `    <div class="card"><h3>${esc(c.title)}</h3><p>${esc(c.body)}</p></div>`
-    )
+    .map((c) => `    <div class="card"><h3>${esc(c.title)}</h3><p>${esc(c.body)}</p></div>`)
     .join("\n");
   return `<section>
   <h2>${title}</h2>
@@ -412,8 +420,7 @@ function renderFlow(s: FlowSection): string {
   const steps = s.steps
     .flatMap((step, i) => {
       const stepEl = `    <div class="flow-step"><div class="num">${i + 1}</div><div class="label">${esc(step)}</div></div>`;
-      if (i < s.steps.length - 1)
-        return [stepEl, '    <div class="flow-arrow">→</div>'];
+      if (i < s.steps.length - 1) return [stepEl, '    <div class="flow-arrow">→</div>'];
       return [stepEl];
     })
     .join("\n");
@@ -432,9 +439,7 @@ function renderManifesto(s: ManifestoSection): string {
   const title = s.highlight
     ? `${esc(s.title)} <span>${esc(s.highlight)}</span>`
     : `<span>${esc(s.title)}</span>`;
-  const paras = s.paragraphs
-    .map((p) => `    <p>${bold(esc(p))}</p>`)
-    .join("\n");
+  const paras = s.paragraphs.map((p) => `    <p>${bold(esc(p))}</p>`).join("\n");
   return `<section>
   <h2>${title}</h2>
   <div class="manifesto">
@@ -467,7 +472,9 @@ ${rows}
 
 function renderPricingFromTopLevel(rows: PricingRow[]): string {
   const rowsHtml = rows
-    .map((r) => `      <tr><td>${esc(r.op)}</td><td>${esc(r.price)}</td><td>${esc(r.note)}</td></tr>`)
+    .map(
+      (r) => `      <tr><td>${esc(r.op)}</td><td>${esc(r.price)}</td><td>${esc(r.note)}</td></tr>`,
+    )
     .join("\n");
   return `<section>
   <h2><span>Pricing</span></h2>
@@ -489,9 +496,7 @@ function renderCli(s: CliSection): string {
   const note = s.note
     ? `\n  <p style="color:var(--muted);margin-bottom:1rem">${esc(s.note)}</p>`
     : "";
-  const cmds = s.commands
-    .map((cmd) => `<span class="prompt">$</span> ${esc(cmd)}`)
-    .join("\n");
+  const cmds = s.commands.map((cmd) => `<span class="prompt">$</span> ${esc(cmd)}`).join("\n");
   return `<section>
   <h2>${title}</h2>${note}
   <pre><code>${cmds}</code></pre>
@@ -567,7 +572,8 @@ function inlineCSS(cfg: PrimConfig): string {
   const accent = cfg.accent ?? `var(--cat-${category})`;
   const isVar = accent.startsWith("var(");
   const dim = cfg.accent_dim ?? (isVar ? `color-mix(in srgb, ${accent} 80%, black)` : accent);
-  const glow = cfg.accent_glow ?? (isVar ? `color-mix(in srgb, ${accent} 8%, transparent)` : accent);
+  const glow =
+    cfg.accent_glow ?? (isVar ? `color-mix(in srgb, ${accent} 8%, transparent)` : accent);
   return `<link rel="stylesheet" href="/assets/prim.css?v=${_buildHash}">
 <style>:root{--accent:${accent};--accent-dim:${dim};--accent-glow:${glow}}</style>`;
 }
@@ -615,20 +621,13 @@ export function render(cfg: PrimConfig): string {
 
   // Hero install command
   const installUrl = `https://${cfg.endpoint}/install.sh`;
-  const heroBlock =
-    `  <div class="cmd-block glow-multi"><code>` +
-    `<span class="prompt">$</span> ` +
-    `<span class="a">curl</span> ` +
-    `<span class="flag">-fsSL</span> ` +
-    `<span class="w">${esc(installUrl)}</span> ` +
-    `<span class="flag">|</span> sh` +
-    `</code><button class="copy-btn" onclick="const b=this,c=this.closest('.cmd-block').querySelector('code');navigator.clipboard.writeText(c.textContent.trim()).then(()=>{b.textContent='copied';b.classList.add('copied');setTimeout(()=>{b.textContent='copy';b.classList.remove('copied')},2000)})">copy</button></div>`;
+  const heroBlock = `  <div class="cmd-block glow-multi"><code><span class="prompt">$</span> <span class="a">curl</span> <span class="flag">-fsSL</span> <span class="w">${esc(installUrl)}</span> <span class="flag">|</span> sh</code><button class="copy-btn" onclick="const b=this,c=this.closest('.cmd-block').querySelector('code');navigator.clipboard.writeText(c.textContent.trim()).then(()=>{b.textContent='copied';b.classList.add('copied');setTimeout(()=>{b.textContent='copy';b.classList.remove('copied')},2000)})">copy</button></div>`;
 
   // Sections
   const hasPricingSection = (cfg.sections ?? []).some((s) => s.type === "pricing");
   let sectionsHtml = (cfg.sections ?? []).map(renderSection).join("\n\n");
   if (!hasPricingSection && cfg.pricing && cfg.pricing.length > 0) {
-    sectionsHtml += "\n\n" + renderPricingFromTopLevel(cfg.pricing);
+    sectionsHtml += `\n\n${renderPricingFromTopLevel(cfg.pricing)}`;
   }
 
   // Enrichment (quick_start, tips, limits, ownership, providers)

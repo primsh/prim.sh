@@ -1,30 +1,57 @@
 import { resolve } from "node:path";
-import { isAddress, getAddress } from "viem";
 import {
-  getNetworkConfig,
-  createWalletAllowlistChecker,
   createAgentStackMiddleware,
   createLogger,
+  createWalletAllowlistChecker,
+  getNetworkConfig,
 } from "@primsh/x402-middleware";
 import { createPrimApp } from "@primsh/x402-middleware/create-prim-app";
+import { getAddress, isAddress } from "viem";
 import { RateLimiter } from "./rate-limit.ts";
-import { dripUsdc, dripEth, getTreasuryBalance, refillTreasury } from "./service.ts";
+import { dripEth, dripUsdc, getTreasuryBalance, refillTreasury } from "./service.ts";
 
 const app = createPrimApp(
   {
     serviceName: "faucet.sh",
-    llmsTxtPath: import.meta.dir ? resolve(import.meta.dir, "../../../site/faucet/llms.txt") : undefined,
+    llmsTxtPath: import.meta.dir
+      ? resolve(import.meta.dir, "../../../site/faucet/llms.txt")
+      : undefined,
     routes: {},
     metricsName: "faucet.prim.sh",
     freeService: true,
     skipHealthCheck: true,
     pricing: {
       routes: [
-        { method: "POST", path: "/v1/faucet/usdc", price_usdc: "0", description: "Dispense test USDC (free, rate-limited)" },
-        { method: "POST", path: "/v1/faucet/eth", price_usdc: "0", description: "Dispense test ETH (free, rate-limited)" },
-        { method: "GET", path: "/v1/faucet/status", price_usdc: "0", description: "Rate limit status" },
-        { method: "GET", path: "/v1/faucet/treasury", price_usdc: "0", description: "Treasury balance" },
-        { method: "POST", path: "/v1/faucet/refill", price_usdc: "0", description: "Refill treasury from CDP faucet" },
+        {
+          method: "POST",
+          path: "/v1/faucet/usdc",
+          price_usdc: "0",
+          description: "Dispense test USDC (free, rate-limited)",
+        },
+        {
+          method: "POST",
+          path: "/v1/faucet/eth",
+          price_usdc: "0",
+          description: "Dispense test ETH (free, rate-limited)",
+        },
+        {
+          method: "GET",
+          path: "/v1/faucet/status",
+          price_usdc: "0",
+          description: "Rate limit status",
+        },
+        {
+          method: "GET",
+          path: "/v1/faucet/treasury",
+          price_usdc: "0",
+          description: "Treasury balance",
+        },
+        {
+          method: "POST",
+          path: "/v1/faucet/refill",
+          price_usdc: "0",
+          description: "Refill treasury from CDP faucet",
+        },
       ],
     },
   },
@@ -41,7 +68,14 @@ const refillLimiter = new RateLimiter("refill", 10 * 60 * 1000); // 10 minutes
 // Testnet guard — refuse to serve on mainnet
 app.use("*", async (c, next) => {
   // Allow health check and pricing on any network
-  if (c.req.method === "GET" && (c.req.path === "/" || c.req.path === "/pricing" || c.req.path === "/llms.txt" || c.req.path === "/v1/metrics" || c.req.path === "/v1/faucet/treasury")) {
+  if (
+    c.req.method === "GET" &&
+    (c.req.path === "/" ||
+      c.req.path === "/pricing" ||
+      c.req.path === "/llms.txt" ||
+      c.req.path === "/v1/metrics" ||
+      c.req.path === "/v1/faucet/treasury")
+  ) {
     return next();
   }
 
@@ -72,10 +106,7 @@ app.post("/v1/faucet/usdc", async (c) => {
   try {
     const body = await c.req.json<{ address?: string }>();
     if (!body.address || !isAddress(body.address)) {
-      return c.json(
-        { error: { code: "invalid_request", message: "Valid address required" } },
-        400,
-      );
+      return c.json({ error: { code: "invalid_request", message: "Valid address required" } }, 400);
     }
     address = getAddress(body.address);
   } catch (err) {
@@ -120,10 +151,7 @@ app.post("/v1/faucet/eth", async (c) => {
   try {
     const body = await c.req.json<{ address?: string }>();
     if (!body.address || !isAddress(body.address)) {
-      return c.json(
-        { error: { code: "invalid_request", message: "Valid address required" } },
-        400,
-      );
+      return c.json({ error: { code: "invalid_request", message: "Valid address required" } }, 400);
     }
     address = getAddress(body.address);
   } catch (err) {

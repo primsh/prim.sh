@@ -17,14 +17,21 @@
  *       - If no markers: skip (do not overwrite manual tests without markers)
  */
 
-import { readFileSync, writeFileSync, existsSync } from "node:fs";
+import { existsSync, readFileSync, writeFileSync } from "node:fs";
 import { join, resolve } from "node:path";
-import { loadPrimitives, withPackage, type Primitive, type RouteMapping } from "./lib/primitives.js";
-import { parseApiFile, type ParsedField, type ParsedInterface } from "./lib/parse-api.js";
+import { type ParsedField, type ParsedInterface, parseApiFile } from "./lib/parse-api.js";
+import {
+  type Primitive,
+  type RouteMapping,
+  loadPrimitives,
+  withPackage,
+} from "./lib/primitives.js";
 
 const ROOT = resolve(import.meta.dir, "..");
 const CHECK_MODE = process.argv.includes("--check");
-const TARGET_ID = process.argv.find((a) => !a.startsWith("--") && a !== process.argv[0] && a !== process.argv[1]);
+const TARGET_ID = process.argv.find(
+  (a) => !a.startsWith("--") && a !== process.argv[0] && a !== process.argv[1],
+);
 
 let anyFailed = false;
 
@@ -42,12 +49,14 @@ function parseServiceExports(servicePath: string): string[] {
   // export function foo / export async function foo
   const fnRe = /^export\s+(?:async\s+)?function\s+([A-Za-z_$][A-Za-z0-9_$]*)/gm;
   let m: RegExpExecArray | null;
+  // biome-ignore lint/suspicious/noAssignInExpressions: standard regex iteration
   while ((m = fnRe.exec(src)) !== null) {
     fns.push(m[1]);
   }
 
   // export const foo = ... (arrow functions / values)
   const constRe = /^export\s+const\s+([A-Za-z_$][A-Za-z0-9_$]*)\s*=/gm;
+  // biome-ignore lint/suspicious/noAssignInExpressions: standard regex iteration
   while ((m = constRe.exec(src)) !== null) {
     fns.push(m[1]);
   }
@@ -92,7 +101,10 @@ function toCamelCase(s: string): string {
 /**
  * Given operation_id and service exports, find the best matching function name.
  */
-function matchServiceFn(operationId: string | undefined, serviceExports: string[]): string | undefined {
+function matchServiceFn(
+  operationId: string | undefined,
+  serviceExports: string[],
+): string | undefined {
   if (!operationId) return undefined;
   const camel = toCamelCase(operationId);
   if (serviceExports.includes(camel)) return camel;
@@ -166,6 +178,7 @@ function parseDbExports(dbPath: string): string[] {
   const fns: string[] = [];
   const fnRe = /^export\s+(?:async\s+)?function\s+([A-Za-z_$][A-Za-z0-9_$]*)/gm;
   let m: RegExpExecArray | null;
+  // biome-ignore lint/suspicious/noAssignInExpressions: standard regex iteration
   while ((m = fnRe.exec(src)) !== null) {
     fns.push(m[1]);
   }
@@ -178,7 +191,7 @@ function parseDbExports(dbPath: string): string[] {
 function dbUsesBunSqlite(dbPath: string): boolean {
   if (!existsSync(dbPath)) return false;
   const src = readFileSync(dbPath, "utf8");
-  return src.includes("bun:sqlite") || src.includes("from \"bun:sqlite\"");
+  return src.includes("bun:sqlite") || src.includes('from "bun:sqlite"');
 }
 
 interface GenContext {
@@ -255,77 +268,81 @@ function generateFullFile(ctx: GenContext): string {
   if (!ctx.isFreeService) {
     lines.push(`import type { Context, Next } from "hono";`);
   }
-  lines.push(``);
+  lines.push("");
 
   // Env setup — vi.hoisted ensures env vars are set before ES module imports
   if (!ctx.isFreeService) {
-    lines.push(`vi.hoisted(() => {`);
+    lines.push("vi.hoisted(() => {");
     lines.push(`  process.env.PRIM_NETWORK = "eip155:8453";`);
     lines.push(`  process.env.PRIM_PAY_TO = "0x0000000000000000000000000000000000000001";`);
-    lines.push(`});`);
+    lines.push("});");
   } else {
-    lines.push(`vi.hoisted(() => {`);
+    lines.push("vi.hoisted(() => {");
     lines.push(`  process.env.PRIM_NETWORK = "eip155:84532"; // testnet for free service`);
-    lines.push(`});`);
+    lines.push("});");
   }
-  lines.push(``);
+  lines.push("");
 
   // bun:sqlite mock — needed when db.ts uses bun:sqlite (for Node/vitest compat)
   if (ctx.needsBunSqliteMock) {
     lines.push(`// Stub bun:sqlite so db.ts doesn't fail in vitest (Node runtime)`);
     lines.push(`vi.mock("bun:sqlite", () => {`);
-    lines.push(`  class MockDatabase {`);
-    lines.push(`    run() {}`);
-    lines.push(`    query() { return { get: () => null, all: () => [], run: () => {} }; }`);
-    lines.push(`  }`);
-    lines.push(`  return { Database: MockDatabase };`);
-    lines.push(`});`);
-    lines.push(``);
+    lines.push("  class MockDatabase {");
+    lines.push("    run() {}");
+    lines.push("    query() { return { get: () => null, all: () => [], run: () => {} }; }");
+    lines.push("  }");
+    lines.push("  return { Database: MockDatabase };");
+    lines.push("});");
+    lines.push("");
   }
 
   // x402 middleware mock — always needed (even free services use createWalletAllowlistChecker)
-  lines.push(`// Bypass x402 middleware for unit tests.`);
+  lines.push("// Bypass x402 middleware for unit tests.");
   if (!ctx.isFreeService) {
-    lines.push(`// Middleware wiring is verified via check 3 (spy on createAgentStackMiddleware).`);
+    lines.push("// Middleware wiring is verified via check 3 (spy on createAgentStackMiddleware).");
   }
   lines.push(`vi.mock("@primsh/x402-middleware", async (importOriginal) => {`);
-  lines.push(`  const original = await importOriginal<typeof import("@primsh/x402-middleware")>();`);
-  lines.push(`  return {`);
-  lines.push(`    ...original,`);
+  lines.push(
+    `  const original = await importOriginal<typeof import("@primsh/x402-middleware")>();`,
+  );
+  lines.push("  return {");
+  lines.push("    ...original,");
 
   if (!ctx.isFreeService) {
     if (ctx.needsWalletAddress) {
-      lines.push(`    createAgentStackMiddleware: vi.fn(`);
-      lines.push(`      () => async (c: Context, next: Next) => {`);
-      lines.push(`        c.set("walletAddress" as never, "0x0000000000000000000000000000000000000001");`);
-      lines.push(`        await next();`);
-      lines.push(`      },`);
-      lines.push(`    ),`);
+      lines.push("    createAgentStackMiddleware: vi.fn(");
+      lines.push("      () => async (c: Context, next: Next) => {");
+      lines.push(
+        `        c.set("walletAddress" as never, "0x0000000000000000000000000000000000000001");`,
+      );
+      lines.push("        await next();");
+      lines.push("      },");
+      lines.push("    ),");
     } else {
-      lines.push(`    createAgentStackMiddleware: vi.fn(`);
-      lines.push(`      () => async (_c: Context, next: Next) => { await next(); },`);
-      lines.push(`    ),`);
+      lines.push("    createAgentStackMiddleware: vi.fn(");
+      lines.push("      () => async (_c: Context, next: Next) => { await next(); },");
+      lines.push("    ),");
     }
   }
 
-  lines.push(`    createWalletAllowlistChecker: vi.fn(() => () => Promise.resolve(true)),`);
-  lines.push(`  };`);
-  lines.push(`});`);
-  lines.push(``);
+  lines.push("    createWalletAllowlistChecker: vi.fn(() => () => Promise.resolve(true)),");
+  lines.push("  };");
+  lines.push("});");
+  lines.push("");
 
   // Service mock
   if (ctx.hasServiceFile && ctx.mockableServiceFns.length > 0) {
     lines.push(`// Mock the service so smoke tests don't need a real API key`);
     lines.push(`vi.mock("../src/service.ts", async (importOriginal) => {`);
     lines.push(`  const original = await importOriginal<typeof import("../src/service.ts")>();`);
-    lines.push(`  return {`);
-    lines.push(`    ...original,`);
+    lines.push("  return {");
+    lines.push("    ...original,");
     for (const fn of ctx.mockableServiceFns) {
       lines.push(`    ${fn}: vi.fn(),`);
     }
-    lines.push(`  };`);
-    lines.push(`});`);
-    lines.push(``);
+    lines.push("  };");
+    lines.push("});");
+    lines.push("");
   }
 
   // Imports
@@ -348,13 +365,13 @@ function generateFullFile(ctx: GenContext): string {
   // Response type import from primary route — intentionally omitted from mock
   // (mocks use `as any` since smoke tests only check HTTP status, not response shape)
 
-  lines.push(``);
+  lines.push("");
 
   // Marker open
   lines.push(MARKER_OPEN);
   lines.push(generateMarkedContent(ctx, primary, primaryServiceFn));
   lines.push(MARKER_CLOSE);
-  lines.push(``);
+  lines.push("");
 
   return lines.join("\n");
 }
@@ -375,48 +392,50 @@ function generateMarkedContent(
 
   // beforeEach to reset primary mock
   if (primaryServiceFn) {
-    lines.push(`  beforeEach(() => {`);
+    lines.push("  beforeEach(() => {");
     lines.push(`    vi.mocked(${primaryServiceFn}).mockReset();`);
-    lines.push(`  });`);
-    lines.push(``);
+    lines.push("  });");
+    lines.push("");
   }
 
   // Check 1
-  lines.push(`  // Check 1: default export defined`);
+  lines.push("  // Check 1: default export defined");
   lines.push(`  it("exposes a default export", () => {`);
-  lines.push(`    expect(app).toBeDefined();`);
-  lines.push(`  });`);
-  lines.push(``);
+  lines.push("    expect(app).toBeDefined();");
+  lines.push("  });");
+  lines.push("");
 
   // Check 2
-  lines.push(`  // Check 2: GET / returns health response`);
+  lines.push("  // Check 2: GET / returns health response");
   lines.push(`  it("GET / returns { service: '${p.name}', status: 'ok' }", async () => {`);
   lines.push(`    const res = await app.request("/");`);
-  lines.push(`    expect(res.status).toBe(200);`);
-  lines.push(`    const body = await res.json();`);
+  lines.push("    expect(res.status).toBe(200);");
+  lines.push("    const body = await res.json();");
   lines.push(`    expect(body).toMatchObject({ service: "${p.name}", status: "ok" });`);
-  lines.push(`  });`);
-  lines.push(``);
+  lines.push("  });");
+  lines.push("");
 
   // Check 3 (only for non-free services)
   if (!isFreeService) {
     const firstRoute = routes[0]?.route;
 
-    lines.push(`  // Check 3: x402 middleware is wired with the correct paid routes and payTo address`);
+    lines.push(
+      "  // Check 3: x402 middleware is wired with the correct paid routes and payTo address",
+    );
     lines.push(`  it("x402 middleware is registered with paid routes and payTo", () => {`);
-    lines.push(`    expect(vi.mocked(createAgentStackMiddleware)).toHaveBeenCalledWith(`);
-    lines.push(`      expect.objectContaining({`);
-    lines.push(`        payTo: expect.any(String),`);
+    lines.push("    expect(vi.mocked(createAgentStackMiddleware)).toHaveBeenCalledWith(");
+    lines.push("      expect.objectContaining({");
+    lines.push("        payTo: expect.any(String),");
     lines.push(`        freeRoutes: expect.arrayContaining(["GET /"]),`);
-    lines.push(`      }),`);
+    lines.push("      }),");
     if (firstRoute) {
       lines.push(`      expect.objectContaining({ "${firstRoute}": expect.any(String) }),`);
     } else {
-      lines.push(`      expect.any(Object),`);
+      lines.push("      expect.any(Object),");
     }
-    lines.push(`    );`);
-    lines.push(`  });`);
-    lines.push(``);
+    lines.push("    );");
+    lines.push("  });");
+    lines.push("");
   }
 
   // Check 4: happy path on primary route
@@ -426,23 +445,32 @@ function generateMarkedContent(
     const responseType = primary.response_type;
 
     // Build minimal valid body for Check 4 (not empty {} — include required fields)
-    const minimalBody = method !== "GET"
-      ? buildMinimalBody(primary.request_type, apiInterfaces)
-      : null;
+    const minimalBody =
+      method !== "GET" ? buildMinimalBody(primary.request_type, apiInterfaces) : null;
 
-    lines.push(`  // Check 4: happy path — handler returns ${expectedStatus} with mocked service response`);
-    lines.push(`  it("${method} ${path} returns ${expectedStatus} with valid response", async () => {`);
+    lines.push(
+      `  // Check 4: happy path — handler returns ${expectedStatus} with mocked service response`,
+    );
+    lines.push(
+      `  it("${method} ${path} returns ${expectedStatus} with valid response", async () => {`,
+    );
 
     if (primaryServiceFn) {
       if (serviceUsesOkWrapper) {
-        lines.push(`    // biome-ignore lint/suspicious/noExplicitAny: mock shape — smoke test only checks status code`);
-        lines.push(`    vi.mocked(${primaryServiceFn}).mockResolvedValueOnce({ ok: true, data: {} as any });`);
+        lines.push(
+          "    // biome-ignore lint/suspicious/noExplicitAny: mock shape — smoke test only checks status code",
+        );
+        lines.push(
+          `    vi.mocked(${primaryServiceFn}).mockResolvedValueOnce({ ok: true, data: {} as any });`,
+        );
       } else {
         // Throw-based service (e.g. faucet) — resolve with minimal shape
-        lines.push(`    // biome-ignore lint/suspicious/noExplicitAny: mock shape — smoke test only checks status code`);
+        lines.push(
+          "    // biome-ignore lint/suspicious/noExplicitAny: mock shape — smoke test only checks status code",
+        );
         lines.push(`    vi.mocked(${primaryServiceFn}).mockResolvedValueOnce({} as any);`);
       }
-      lines.push(``);
+      lines.push("");
     }
 
     if (method !== "GET") {
@@ -450,47 +478,49 @@ function generateMarkedContent(
       lines.push(`      method: "${method}",`);
       lines.push(`      headers: { "Content-Type": "application/json" },`);
       lines.push(`      body: JSON.stringify(${minimalBody}),`);
-      lines.push(`    });`);
+      lines.push("    });");
     } else {
       lines.push(`    const res = await app.request("${path}");`);
     }
 
-    lines.push(``);
+    lines.push("");
     lines.push(`    expect(res.status).toBe(${expectedStatus});`);
-    lines.push(`  });`);
-    lines.push(``);
+    lines.push("  });");
+    lines.push("");
 
     // Check 5: invalid input — send empty {} for POST routes (catches missing required fields)
     if (method !== "GET") {
-      lines.push(`  // Check 5: 400 on missing/invalid input — service returns invalid_request → handler maps to 400`);
+      lines.push(
+        "  // Check 5: 400 on missing/invalid input — service returns invalid_request → handler maps to 400",
+      );
       lines.push(`  it("${method} ${path} with missing/invalid input returns 400", async () => {`);
       if (primaryServiceFn && serviceUsesOkWrapper) {
         lines.push(`    vi.mocked(${primaryServiceFn}).mockResolvedValueOnce({`);
-        lines.push(`      ok: false,`);
-        lines.push(`      status: 400,`);
+        lines.push("      ok: false,");
+        lines.push("      status: 400,");
         lines.push(`      code: "invalid_request",`);
         lines.push(`      message: "Missing required fields",`);
-        lines.push(`    });`);
-        lines.push(``);
+        lines.push("    });");
+        lines.push("");
       }
       lines.push(`    const res = await app.request("${path}", {`);
       lines.push(`      method: "${method}",`);
       lines.push(`      headers: { "Content-Type": "application/json" },`);
       lines.push(`      body: "{}",`);
-      lines.push(`    });`);
-      lines.push(`    expect(res.status).toBe(400);`);
-      lines.push(`  });`);
+      lines.push("    });");
+      lines.push("    expect(res.status).toBe(400);");
+      lines.push("  });");
     } else {
       // GET route — check 5 sends missing required query params
-      lines.push(`  // Check 5: 400 on missing required query param`);
+      lines.push("  // Check 5: 400 on missing required query param");
       lines.push(`  it("${method} ${path} with missing params returns 400", async () => {`);
       lines.push(`    const res = await app.request("${path}");`);
-      lines.push(`    expect(res.status).toBe(400);`);
-      lines.push(`  });`);
+      lines.push("    expect(res.status).toBe(400);");
+      lines.push("  });");
     }
   }
 
-  lines.push(`});`);
+  lines.push("});");
 
   return lines.join("\n");
 }

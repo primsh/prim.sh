@@ -1,37 +1,37 @@
 import { createHash, randomBytes } from "node:crypto";
-import {
-  insertCollection,
-  getCollectionById,
-  getCollectionByOwnerAndName,
-  getCollectionsByOwner,
-  countCollectionsByOwner,
-  deleteCollectionRow,
-  upsertCacheEntry,
-  getCacheEntry,
-  deleteCacheEntry,
-  deleteExpiredEntries,
-} from "./db.ts";
-import type { CollectionRow, CacheEntryRow } from "./db.ts";
-import {
-  QdrantError,
-  createCollection as qdrantCreateCollection,
-  deleteCollection as qdrantDeleteCollection,
-  getCollectionInfo,
-  upsertPoints,
-  queryPoints,
-} from "./qdrant.ts";
-import { getEmbeddingProvider, EmbeddingError } from "./embeddings.ts";
 import type {
-  CollectionResponse,
   CollectionListResponse,
+  CollectionResponse,
   CreateCollectionRequest,
-  UpsertRequest,
-  UpsertResponse,
+  GetCacheResponse,
   QueryRequest,
   QueryResponse,
   SetCacheRequest,
-  GetCacheResponse,
+  UpsertRequest,
+  UpsertResponse,
 } from "./api.ts";
+import {
+  countCollectionsByOwner,
+  deleteCacheEntry,
+  deleteCollectionRow,
+  deleteExpiredEntries,
+  getCacheEntry,
+  getCollectionById,
+  getCollectionByOwnerAndName,
+  getCollectionsByOwner,
+  insertCollection,
+  upsertCacheEntry,
+} from "./db.ts";
+import type { CacheEntryRow, CollectionRow } from "./db.ts";
+import { EmbeddingError, getEmbeddingProvider } from "./embeddings.ts";
+import {
+  QdrantError,
+  getCollectionInfo,
+  createCollection as qdrantCreateCollection,
+  deleteCollection as qdrantDeleteCollection,
+  queryPoints,
+  upsertPoints,
+} from "./qdrant.ts";
 
 // ─── ServiceResult ────────────────────────────────────────────────────────
 
@@ -73,7 +73,10 @@ function generateId(): string {
   return `c_${randomBytes(4).toString("hex")}`;
 }
 
-function rowToCollectionResponse(row: CollectionRow, documentCount: number | null): CollectionResponse {
+function rowToCollectionResponse(
+  row: CollectionRow,
+  documentCount: number | null,
+): CollectionResponse {
   return {
     id: row.id,
     name: row.name,
@@ -122,7 +125,8 @@ export async function createCollection(
       ok: false,
       status: 400,
       code: "invalid_request",
-      message: "Invalid collection name. Must be 1-128 chars, alphanumeric/hyphens/underscores, start with alphanumeric.",
+      message:
+        "Invalid collection name. Must be 1-128 chars, alphanumeric/hyphens/underscores, start with alphanumeric.",
     };
   }
 
@@ -240,7 +244,12 @@ export async function upsertDocuments(
   if (!check.ok) return check;
 
   if (!request.documents || request.documents.length === 0) {
-    return { ok: false, status: 400, code: "invalid_request", message: "documents array must not be empty" };
+    return {
+      ok: false,
+      status: 400,
+      code: "invalid_request",
+      message: "documents array must not be empty",
+    };
   }
 
   if (request.documents.length > MAX_UPSERT_DOCS) {
@@ -357,7 +366,8 @@ export function cacheSet(
       ok: false,
       status: 400,
       code: "invalid_request",
-      message: "Invalid namespace. Must be 1-128 chars, alphanumeric/hyphens/underscores, start with alphanumeric.",
+      message:
+        "Invalid namespace. Must be 1-128 chars, alphanumeric/hyphens/underscores, start with alphanumeric.",
     };
   }
 
@@ -371,9 +381,7 @@ export function cacheSet(
   }
 
   const expiresAt =
-    request.ttl !== undefined && request.ttl !== null
-      ? Date.now() + request.ttl * 1000
-      : null;
+    request.ttl !== undefined && request.ttl !== null ? Date.now() + request.ttl * 1000 : null;
 
   upsertCacheEntry({
     namespace,

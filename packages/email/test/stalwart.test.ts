@@ -1,5 +1,5 @@
-import { describe, expect, it, vi, beforeEach, afterEach } from "vitest";
-import { createPrincipal, getPrincipal, deletePrincipal, StalwartError } from "../src/stalwart";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { StalwartError, createPrincipal, deletePrincipal, getPrincipal } from "../src/stalwart";
 
 const MOCK_URL = "http://localhost:8080";
 const MOCK_CREDS = "admin:secret";
@@ -69,7 +69,12 @@ describe("stalwart client", () => {
 
   describe("getPrincipal", () => {
     it("returns principal data", async () => {
-      const principal = { id: 42, type: "individual", name: "testuser", emails: ["[email protected]"] };
+      const principal = {
+        id: 42,
+        type: "individual",
+        name: "testuser",
+        emails: ["[email protected]"],
+      };
       globalThis.fetch = vi.fn().mockResolvedValue({
         ok: true,
         status: 200,

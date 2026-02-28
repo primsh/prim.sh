@@ -146,7 +146,9 @@ export async function runMemCommand(sub: string, argv: string[]): Promise<void> 
     case "create": {
       const name = getFlag("name", argv);
       if (!name) {
-        process.stderr.write("Usage: prim mem create --name NAME [--distance Cosine|Euclid|Dot] [--dimension N]\n");
+        process.stderr.write(
+          "Usage: prim mem create --name NAME [--distance Cosine|Euclid|Dot] [--dimension N]\n",
+        );
         process.exit(1);
       }
       const distance = getFlag("distance", argv);
@@ -261,16 +263,12 @@ export async function runMemCommand(sub: string, argv: string[]): Promise<void> 
     case "query": {
       const collectionId = argv[2];
       if (!collectionId) {
-        process.stderr.write(
-          "Usage: prim mem query COLLECTION_ID --query TEXT [--limit N]\n",
-        );
+        process.stderr.write("Usage: prim mem query COLLECTION_ID --query TEXT [--limit N]\n");
         process.exit(1);
       }
       const queryText = getFlag("query", argv);
       if (!queryText) {
-        process.stderr.write(
-          "Usage: prim mem query COLLECTION_ID --query TEXT [--limit N]\n",
-        );
+        process.stderr.write("Usage: prim mem query COLLECTION_ID --query TEXT [--limit N]\n");
         process.exit(1);
       }
       const limitFlag = getFlag("limit", argv);

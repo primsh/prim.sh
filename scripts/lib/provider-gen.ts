@@ -5,26 +5,26 @@
  * a vendor .ts file implementing that interface with singleton pattern.
  */
 
-import { readFileSync } from "node:fs"
+import { readFileSync } from "node:fs";
 
 // ── Naming helpers ──────────────────────────────────────────────────────────
 
 /** snake_case or kebab-case → camelCase */
 function toCamelCase(s: string): string {
-  return s.replace(/[-_](.)/g, (_, c) => c.toUpperCase())
+  return s.replace(/[-_](.)/g, (_, c) => c.toUpperCase());
 }
 
 /** snake_case or kebab-case → PascalCase */
 export function toPascalCase(s: string): string {
-  const c = toCamelCase(s)
-  return c.charAt(0).toUpperCase() + c.slice(1)
+  const c = toCamelCase(s);
+  return c.charAt(0).toUpperCase() + c.slice(1);
 }
 
 // ── Provider interface parser ───────────────────────────────────────────────
 
 export interface ProviderInterfaceInfo {
-  interfaceName: string
-  dataTypeName: string | null
+  interfaceName: string;
+  dataTypeName: string | null;
 }
 
 /**
@@ -35,12 +35,13 @@ export interface ProviderInterfaceInfo {
  * ProviderConfig, ProviderData, ProviderParams, ProviderResult).
  */
 export function parseProviderInterfaceFromSource(src: string): ProviderInterfaceInfo | null {
-  const interfaceRe = /export\s+interface\s+([A-Za-z_$][A-Za-z0-9_$]*Provider)\b/g
-  let match: RegExpExecArray | null
-  const candidates: string[] = []
+  const interfaceRe = /export\s+interface\s+([A-Za-z_$][A-Za-z0-9_$]*Provider)\b/g;
+  let match: RegExpExecArray | null;
+  const candidates: string[] = [];
 
+  // biome-ignore lint/suspicious/noAssignInExpressions: standard regex iteration
   while ((match = interfaceRe.exec(src)) !== null) {
-    const name = match[1]
+    const name = match[1];
     // Skip supporting types — we want the main provider interface
     if (
       name.endsWith("ProviderConfig") ||
@@ -49,30 +50,31 @@ export function parseProviderInterfaceFromSource(src: string): ProviderInterface
       name.endsWith("ProviderResult") ||
       name.endsWith("ProviderLocation") ||
       name.endsWith("ProviderEvent")
-    ) continue
-    candidates.push(name)
+    )
+      continue;
+    candidates.push(name);
   }
 
-  if (candidates.length === 0) return null
+  if (candidates.length === 0) return null;
 
   // Use the first matching provider interface
-  const interfaceName = candidates[0]
+  const interfaceName = candidates[0];
 
   // Try to find a data type: <Prefix>ProviderData
-  const prefix = interfaceName.replace(/Provider$/, "")
-  const dataRe = new RegExp(`export\\s+interface\\s+(${prefix}ProviderData)\\b`)
-  const dataMatch = src.match(dataRe)
-  const dataTypeName = dataMatch ? dataMatch[1] : null
+  const prefix = interfaceName.replace(/Provider$/, "");
+  const dataRe = new RegExp(`export\\s+interface\\s+(${prefix}ProviderData)\\b`);
+  const dataMatch = src.match(dataRe);
+  const dataTypeName = dataMatch ? dataMatch[1] : null;
 
-  return { interfaceName, dataTypeName }
+  return { interfaceName, dataTypeName };
 }
 
 /**
  * Read a provider.ts file and extract the provider interface info.
  */
 export function parseProviderInterface(providerTsPath: string): ProviderInterfaceInfo | null {
-  const src = readFileSync(providerTsPath, "utf8")
-  return parseProviderInterfaceFromSource(src)
+  const src = readFileSync(providerTsPath, "utf8");
+  return parseProviderInterfaceFromSource(src);
 }
 
 // ── Vendor file generator ───────────────────────────────────────────────────
@@ -87,11 +89,11 @@ export function genVendorTs(
   vendorName: string,
   envKey: string,
 ): string {
-  const className = toPascalCase(vendorName) + "Client"
+  const className = `${toPascalCase(vendorName)}Client`;
 
   // Build import list — always import the interface, optionally import data type
-  const prefix = providerInterfaceName.replace(/Provider$/, "")
-  const dataTypeName = prefix + "ProviderData"
+  const prefix = providerInterfaceName.replace(/Provider$/, "");
+  const dataTypeName = `${prefix}ProviderData`;
 
   // We import ProviderError as a value and the interface + data type as types.
   // The data type may not exist, but the generated file will reference it as a
@@ -128,5 +130,5 @@ export function getClient(): ${className} {
   }
   return _client
 }
-`
+`;
 }

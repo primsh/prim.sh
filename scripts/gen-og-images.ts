@@ -12,12 +12,12 @@
  *   bun scripts/gen-og-images.ts --check  # verify images are up to date
  */
 
-import { writeFileSync, readFileSync, mkdirSync, existsSync } from "node:fs";
+import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { join, resolve } from "node:path";
 import { Resvg } from "@resvg/resvg-js";
-import { loadPrimitives, CATEGORY_COLORS, TYPE_TO_CATEGORY } from "./lib/primitives.js";
-import type { PrimCategory } from "./lib/primitives.js";
 import { BRAND } from "../brand.js";
+import { CATEGORY_COLORS, TYPE_TO_CATEGORY, loadPrimitives } from "./lib/primitives.js";
+import type { PrimCategory } from "./lib/primitives.js";
 
 const ROOT = resolve(import.meta.dir, "..");
 const OUT_DIR = join(ROOT, "site/assets/og");
@@ -32,7 +32,11 @@ const FONT = `'SF Mono', SFMono-Regular, Menlo, Monaco, 'Cascadia Code', Consola
 const BG = "#0a0a0a";
 
 function esc(s: string): string {
-  return s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+  return s
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;");
 }
 
 /** Word-wrap text to fit within maxChars per line */
@@ -72,10 +76,7 @@ function primCard(cfg: {
 }): string {
   const descLines = wordWrap(cfg.description, 45).slice(0, 3);
   const descSvg = descLines
-    .map(
-      (line, i) =>
-        `<tspan x="420" dy="${i === 0 ? "0" : "36"}">${esc(line)}</tspan>`,
-    )
+    .map((line, i) => `<tspan x="420" dy="${i === 0 ? "0" : "36"}">${esc(line)}</tspan>`)
     .join("\n      ");
 
   return `<svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="${H}">
@@ -183,7 +184,9 @@ for (const p of prims) {
 
 if (CHECK_MODE) {
   if (anyFailed) {
-    console.error("\n[gen-og] Some OG images are stale or missing. Run: bun scripts/gen-og-images.ts");
+    console.error(
+      "\n[gen-og] Some OG images are stale or missing. Run: bun scripts/gen-og-images.ts",
+    );
     process.exit(1);
   } else {
     console.log("[gen-og] All OG images up to date.");

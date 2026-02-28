@@ -1,4 +1,4 @@
-import type { MiddlewareHandler, Handler } from "hono";
+import type { Handler, MiddlewareHandler } from "hono";
 
 const MAX_LATENCY_SAMPLES = 1000;
 const startTime = Date.now();
@@ -57,7 +57,8 @@ export function metricsMiddleware(): MiddlewareHandler {
       errorsByStatus.set(status, (errorsByStatus.get(status) ?? 0) + 1);
     }
 
-    const paid = c.res.headers.get("x-payment-verified") !== null ||
+    const paid =
+      c.res.headers.get("x-payment-verified") !== null ||
       (c.req.header("payment-signature") !== undefined && status >= 200 && status < 300);
     if (paid) {
       ep.payments++;
@@ -68,7 +69,10 @@ export function metricsMiddleware(): MiddlewareHandler {
 
 export function metricsHandler(serviceName: string): Handler {
   return (c) => {
-    const byEndpoint: Record<string, { count: number; errors: number; p50_ms: number; p99_ms: number }> = {};
+    const byEndpoint: Record<
+      string,
+      { count: number; errors: number; p50_ms: number; p99_ms: number }
+    > = {};
     const paymentsByEndpoint: Record<string, number> = {};
 
     for (const [key, ep] of endpoints) {

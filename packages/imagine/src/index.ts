@@ -1,24 +1,24 @@
-import { Hono } from "hono";
-import { bodyLimit } from "hono/body-limit";
 import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
+import { Hono } from "hono";
+import { bodyLimit } from "hono/body-limit";
 
 const LLMS_TXT = import.meta.dir
   ? readFileSync(resolve(import.meta.dir, "../../../site/imagine/llms.txt"), "utf-8")
   : "";
 import {
   createAgentStackMiddleware,
-  createWalletAllowlistChecker,
   createLogger,
+  createWalletAllowlistChecker,
   getNetworkConfig,
-  metricsMiddleware,
-  metricsHandler,
-  requestIdMiddleware,
   invalidRequest,
+  metricsHandler,
+  metricsMiddleware,
+  requestIdMiddleware,
 } from "@primsh/x402-middleware";
 import type { ApiError } from "@primsh/x402-middleware";
-import type { GenerateRequest, DescribeRequest, UpscaleRequest } from "./api.ts";
-import { generate, describe, upscale, models } from "./service.ts";
+import type { DescribeRequest, GenerateRequest, UpscaleRequest } from "./api.ts";
+import { describe, generate, models, upscale } from "./service.ts";
 
 const logger = createLogger("imagine.sh");
 
@@ -35,7 +35,7 @@ const IMAGINE_ROUTES = {
   "POST /v1/generate": "$0.02",
   "POST /v1/describe": "$0.005",
   "POST /v1/upscale": "$0.01",
-  "GET /v1/models": "$0.01"
+  "GET /v1/models": "$0.01",
 } as const;
 
 function providerError(message: string): ApiError {
@@ -51,10 +51,13 @@ const app = new Hono<{ Variables: AppVariables }>();
 
 app.use("*", requestIdMiddleware());
 
-app.use("*", bodyLimit({
-  maxSize: 1024 * 1024,
-  onError: (c) => c.json({ error: "Request too large" }, 413),
-}));
+app.use(
+  "*",
+  bodyLimit({
+    maxSize: 1024 * 1024,
+    onError: (c) => c.json({ error: "Request too large" }, 413),
+  }),
+);
 
 app.use("*", metricsMiddleware());
 
@@ -92,10 +95,30 @@ app.get("/pricing", (c) => {
     currency: "USDC",
     network: "eip155:8453",
     routes: [
-      { method: "POST", path: "/v1/generate", price_usdc: "0.02", description: "Generate an image from a text prompt. Returns base64 or URL." },
-      { method: "POST", path: "/v1/describe", price_usdc: "0.005", description: "Describe an image. Accepts base64 or URL. Returns text description." },
-      { method: "POST", path: "/v1/upscale", price_usdc: "0.01", description: "Upscale an image to higher resolution. Accepts base64 or URL." },
-      { method: "GET", path: "/v1/models", price_usdc: "0.01", description: "List available image models with capabilities and pricing." }
+      {
+        method: "POST",
+        path: "/v1/generate",
+        price_usdc: "0.02",
+        description: "Generate an image from a text prompt. Returns base64 or URL.",
+      },
+      {
+        method: "POST",
+        path: "/v1/describe",
+        price_usdc: "0.005",
+        description: "Describe an image. Accepts base64 or URL. Returns text description.",
+      },
+      {
+        method: "POST",
+        path: "/v1/upscale",
+        price_usdc: "0.01",
+        description: "Upscale an image to higher resolution. Accepts base64 or URL.",
+      },
+      {
+        method: "GET",
+        path: "/v1/models",
+        price_usdc: "0.01",
+        description: "List available image models with capabilities and pricing.",
+      },
     ],
   });
 });

@@ -1,24 +1,24 @@
-import { Hono } from "hono";
-import { bodyLimit } from "hono/body-limit";
 import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
+import { Hono } from "hono";
+import { bodyLimit } from "hono/body-limit";
 
 const LLMS_TXT = import.meta.dir
   ? readFileSync(resolve(import.meta.dir, "../../../site/create/llms.txt"), "utf-8")
   : "";
 import {
   createAgentStackMiddleware,
-  createWalletAllowlistChecker,
   createLogger,
+  createWalletAllowlistChecker,
   getNetworkConfig,
-  metricsMiddleware,
-  metricsHandler,
-  requestIdMiddleware,
   invalidRequest,
+  metricsHandler,
+  metricsMiddleware,
+  requestIdMiddleware,
 } from "@primsh/x402-middleware";
 import type { ApiError } from "@primsh/x402-middleware";
 
-import { scaffold, validate, schema, ports } from "./service.ts";
+import { ports, scaffold, schema, validate } from "./service.ts";
 
 const logger = createLogger("create.sh");
 
@@ -35,7 +35,7 @@ const CREATE_ROUTES = {
   "POST /v1/scaffold": "$0.01",
   "POST /v1/validate": "$0.01",
   "GET /v1/schema": "$0.01",
-  "GET /v1/ports": "$0.01"
+  "GET /v1/ports": "$0.01",
 } as const;
 
 function providerError(message: string): ApiError {
@@ -51,10 +51,13 @@ const app = new Hono<{ Variables: AppVariables }>();
 
 app.use("*", requestIdMiddleware());
 
-app.use("*", bodyLimit({
-  maxSize: 1024 * 1024,
-  onError: (c) => c.json({ error: "Request too large" }, 413),
-}));
+app.use(
+  "*",
+  bodyLimit({
+    maxSize: 1024 * 1024,
+    onError: (c) => c.json({ error: "Request too large" }, 413),
+  }),
+);
 
 app.use("*", metricsMiddleware());
 
@@ -92,10 +95,31 @@ app.get("/pricing", (c) => {
     currency: "USDC",
     network: "eip155:8453",
     routes: [
-      { method: "POST", path: "/v1/scaffold", price_usdc: "0.01", description: "Generate a complete prim package from a prim.yaml spec. Returns file manifest with contents." },
-      { method: "POST", path: "/v1/validate", price_usdc: "0.01", description: "Validate a prim.yaml spec against the schema without generating files." },
-      { method: "GET", path: "/v1/schema", price_usdc: "0.01", description: "Return the prim.yaml JSON schema for agents to reference when writing specs." },
-      { method: "GET", path: "/v1/ports", price_usdc: "0.01", description: "Return allocated ports and next available port number." }
+      {
+        method: "POST",
+        path: "/v1/scaffold",
+        price_usdc: "0.01",
+        description:
+          "Generate a complete prim package from a prim.yaml spec. Returns file manifest with contents.",
+      },
+      {
+        method: "POST",
+        path: "/v1/validate",
+        price_usdc: "0.01",
+        description: "Validate a prim.yaml spec against the schema without generating files.",
+      },
+      {
+        method: "GET",
+        path: "/v1/schema",
+        price_usdc: "0.01",
+        description: "Return the prim.yaml JSON schema for agents to reference when writing specs.",
+      },
+      {
+        method: "GET",
+        path: "/v1/ports",
+        price_usdc: "0.01",
+        description: "Return allocated ports and next available port number.",
+      },
     ],
   });
 });

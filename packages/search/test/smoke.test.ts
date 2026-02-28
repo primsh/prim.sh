@@ -1,5 +1,5 @@
-import { describe, expect, it, vi, beforeEach } from "vitest";
 import type { Context, Next } from "hono";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 
 vi.hoisted(() => {
   process.env.PRIM_NETWORK = "eip155:8453";
@@ -12,9 +12,9 @@ vi.mock("@primsh/x402-middleware", async (importOriginal) => {
   const original = await importOriginal<typeof import("@primsh/x402-middleware")>();
   return {
     ...original,
-    createAgentStackMiddleware: vi.fn(
-      () => async (_c: Context, next: Next) => { await next(); },
-    ),
+    createAgentStackMiddleware: vi.fn(() => async (_c: Context, next: Next) => {
+      await next();
+    }),
     createWalletAllowlistChecker: vi.fn(() => () => Promise.resolve(true)),
   };
 });
@@ -30,10 +30,10 @@ vi.mock("../src/service.ts", async (importOriginal) => {
   };
 });
 
-import app from "../src/index.ts";
-import { searchWeb } from "../src/service.ts";
 import { createAgentStackMiddleware } from "@primsh/x402-middleware";
 import type { SearchResponse } from "../src/api.ts";
+import app from "../src/index.ts";
+import { searchWeb } from "../src/service.ts";
 
 const MOCK_SEARCH_RESPONSE: SearchResponse = {
   query: "test query",

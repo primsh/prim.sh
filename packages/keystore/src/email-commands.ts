@@ -109,10 +109,9 @@ export async function runEmailCommand(sub: string, argv: string[]): Promise<void
           process.stderr.write("Usage: prim email webhook rm MAILBOX_ID WEBHOOK_ID\n");
           process.exit(1);
         }
-        const res = await primFetch(
-          `${baseUrl}/v1/mailboxes/${mailboxId}/webhooks/${webhookId}`,
-          { method: "DELETE" },
-        );
+        const res = await primFetch(`${baseUrl}/v1/mailboxes/${mailboxId}/webhooks/${webhookId}`, {
+          method: "DELETE",
+        });
         if (!res.ok) return handleError(res);
         if (!quiet) {
           const data = await res.json();
@@ -341,9 +340,7 @@ export async function runEmailCommand(sub: string, argv: string[]): Promise<void
         if (data.messages.length === 0) {
           console.log("No messages.");
         } else {
-          console.log(
-            `${"FROM".padEnd(30)} ${"SUBJECT".padEnd(40)} ${"DATE".padEnd(20)}`,
-          );
+          console.log(`${"FROM".padEnd(30)} ${"SUBJECT".padEnd(40)} ${"DATE".padEnd(20)}`);
           for (const m of data.messages) {
             const from = (m.from ?? "").slice(0, 28).padEnd(30);
             const subject = (m.subject ?? "").slice(0, 38).padEnd(40);
@@ -359,16 +356,12 @@ export async function runEmailCommand(sub: string, argv: string[]): Promise<void
       const mailboxId = argv[2];
       const messageId = argv[3];
       if (!mailboxId || !messageId) {
-        process.stderr.write(
-          "Usage: prim email read MAILBOX_ID MESSAGE_ID [--html] [--json]\n",
-        );
+        process.stderr.write("Usage: prim email read MAILBOX_ID MESSAGE_ID [--html] [--json]\n");
         process.exit(1);
       }
       const wantHtml = hasFlag("html", argv);
       const jsonOutput = hasFlag("json", argv);
-      const res = await primFetch(
-        `${baseUrl}/v1/mailboxes/${mailboxId}/messages/${messageId}`,
-      );
+      const res = await primFetch(`${baseUrl}/v1/mailboxes/${mailboxId}/messages/${messageId}`);
       if (!res.ok) return handleError(res);
       const data = (await res.json()) as {
         from: string;
@@ -449,9 +442,7 @@ export async function runEmailCommand(sub: string, argv: string[]): Promise<void
     }
 
     default:
-      console.log(
-        "Usage: prim email <create|ls|get|rm|renew|inbox|read|send|webhook|domain>",
-      );
+      console.log("Usage: prim email <create|ls|get|rm|renew|inbox|read|send|webhook|domain>");
       process.exit(1);
   }
 }

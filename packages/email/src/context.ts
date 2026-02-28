@@ -1,7 +1,7 @@
-import { getMailboxById, updateMailboxJmap } from "./db.ts";
-import { decryptPassword } from "./crypto.ts";
-import { JmapError, discoverSession, buildBasicAuth } from "./jmap.ts";
 import type { ServiceResult } from "./api.ts";
+import { decryptPassword } from "./crypto.ts";
+import { getMailboxById, updateMailboxJmap } from "./db.ts";
+import { JmapError, buildBasicAuth, discoverSession } from "./jmap.ts";
 
 export interface JmapContext {
   apiUrl: string;

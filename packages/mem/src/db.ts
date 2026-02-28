@@ -163,14 +163,18 @@ export function upsertCacheEntry(params: {
        value      = excluded.value,
        expires_at = excluded.expires_at,
        updated_at = excluded.updated_at`,
-  ).run(params.namespace, params.key, params.value, params.owner_wallet, params.expires_at, now, now);
+  ).run(
+    params.namespace,
+    params.key,
+    params.value,
+    params.owner_wallet,
+    params.expires_at,
+    now,
+    now,
+  );
 }
 
-export function getCacheEntry(
-  owner: string,
-  namespace: string,
-  key: string,
-): CacheEntryRow | null {
+export function getCacheEntry(owner: string, namespace: string, key: string): CacheEntryRow | null {
   const db = getDb();
   return (
     db
@@ -183,14 +187,14 @@ export function getCacheEntry(
 
 export function deleteCacheEntry(owner: string, namespace: string, key: string): void {
   const db = getDb();
-  db.query(
-    "DELETE FROM cache_entries WHERE owner_wallet = ? AND namespace = ? AND key = ?",
-  ).run(owner, namespace, key);
+  db.query("DELETE FROM cache_entries WHERE owner_wallet = ? AND namespace = ? AND key = ?").run(
+    owner,
+    namespace,
+    key,
+  );
 }
 
 export function deleteExpiredEntries(now: number): void {
   const db = getDb();
-  db.query(
-    "DELETE FROM cache_entries WHERE expires_at IS NOT NULL AND expires_at < ?",
-  ).run(now);
+  db.query("DELETE FROM cache_entries WHERE expires_at IS NOT NULL AND expires_at < ?").run(now);
 }

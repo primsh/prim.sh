@@ -12,7 +12,11 @@ export interface ServiceMetrics {
   service: string;
   uptime_s: number;
   requests: { total: number; by_endpoint?: Record<string, { count: number }> };
-  payments: { total: number; total_usdc: string; by_endpoint?: Record<string, { count: number; total_usdc: string }> };
+  payments: {
+    total: number;
+    total_usdc: string;
+    by_endpoint?: Record<string, { count: number; total_usdc: string }>;
+  };
   errors: { total: number };
   status: "ok" | "unreachable" | "error";
   error?: string;
@@ -35,14 +39,11 @@ export interface OnChainRevenue {
 const FETCH_TIMEOUT = 10_000;
 const USDC_CONTRACT = "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913";
 const USDC_DECIMALS = 6;
-const TRANSFER_TOPIC =
-  "0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef";
+const TRANSFER_TOPIC = "0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef";
 
 // ─── Data fetchers ──────────────────────────────────────────────────────────
 
-export async function fetchServiceMetrics(
-  host: string,
-): Promise<ServiceMetrics> {
+export async function fetchServiceMetrics(host: string): Promise<ServiceMetrics> {
   try {
     const res = await fetch(`https://${host}/v1/metrics`, {
       signal: AbortSignal.timeout(FETCH_TIMEOUT),
@@ -71,11 +72,12 @@ export async function fetchServiceMetrics(
       payments: {
         total: (payments?.total as number) ?? 0,
         total_usdc: (payments?.total_usdc as string) ?? "0",
-        by_endpoint: (payments?.by_endpoint as Record<string, { count: number; total_usdc: string }>) ?? undefined,
+        by_endpoint:
+          (payments?.by_endpoint as Record<string, { count: number; total_usdc: string }>) ??
+          undefined,
       },
       errors: {
-        total:
-          ((data.errors as Record<string, unknown>)?.total as number) ?? 0,
+        total: ((data.errors as Record<string, unknown>)?.total as number) ?? 0,
       },
       status: "ok",
     };
@@ -96,13 +98,10 @@ export async function fetchDOCosts(): Promise<InfraCost | null> {
   const token = process.env.DO_API_TOKEN;
   if (!token) return null;
   try {
-    const res = await fetch(
-      "https://api.digitalocean.com/v2/customers/my/balance",
-      {
-        headers: { Authorization: `Bearer ${token}` },
-        signal: AbortSignal.timeout(FETCH_TIMEOUT),
-      },
-    );
+    const res = await fetch("https://api.digitalocean.com/v2/customers/my/balance", {
+      headers: { Authorization: `Bearer ${token}` },
+      signal: AbortSignal.timeout(FETCH_TIMEOUT),
+    });
     if (!res.ok)
       return {
         item: "VPS (DigitalOcean)",
@@ -110,7 +109,7 @@ export async function fetchDOCosts(): Promise<InfraCost | null> {
         note: `API ${res.status}; using estimate`,
       };
     const data = (await res.json()) as { month_to_date_usage?: string };
-    const usage = parseFloat(data.month_to_date_usage ?? "0");
+    const usage = Number.parseFloat(data.month_to_date_usage ?? "0");
     return {
       item: "VPS (DigitalOcean)",
       monthly: usage || 24,
@@ -131,9 +130,7 @@ export async function fetchR2Costs(): Promise<InfraCost | null> {
   if (!token || !accountId) return null;
 
   const now = new Date();
-  const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1)
-    .toISOString()
-    .split("T")[0];
+  const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1).toISOString().split("T")[0];
   const today = now.toISOString().split("T")[0];
 
   const query = `query {
@@ -175,12 +172,10 @@ export async function fetchR2Costs(): Promise<InfraCost | null> {
     if (!accounts || !Array.isArray(accounts) || accounts.length === 0) {
       return { item: "R2 storage", monthly: 0, note: "no data" };
     }
-    const storageGroups = (accounts[0] as Record<string, unknown>)
-      .r2StorageAdaptiveGroups as
+    const storageGroups = (accounts[0] as Record<string, unknown>).r2StorageAdaptiveGroups as
       | { max?: { payloadSize?: number } }[]
       | undefined;
-    const opsGroups = (accounts[0] as Record<string, unknown>)
-      .r2OperationsAdaptiveGroups as
+    const opsGroups = (accounts[0] as Record<string, unknown>).r2OperationsAdaptiveGroups as
       | { sum?: { requests?: number } }[]
       | undefined;
     const storageBytes = storageGroups?.[0]?.max?.payloadSize ?? 0;
@@ -208,8 +203,7 @@ export async function fetchOnChainRevenue(): Promise<OnChainRevenue> {
     };
 
   const rpcUrl = process.env.BASE_RPC_URL || "https://mainnet.base.org";
-  const paddedAddr =
-    "0x" + payTo.slice(2).toLowerCase().padStart(64, "0");
+  const paddedAddr = `0x${payTo.slice(2).toLowerCase().padStart(64, "0")}`;
 
   try {
     // Get current USDC balance (balanceOf call)
@@ -223,9 +217,7 @@ export async function fetchOnChainRevenue(): Promise<OnChainRevenue> {
         params: [
           {
             to: USDC_CONTRACT,
-            data:
-              "0x70a08231" +
-              payTo.slice(2).toLowerCase().padStart(64, "0"),
+            data: `0x70a08231${payTo.slice(2).toLowerCase().padStart(64, "0")}`,
           },
           "latest",
         ],
@@ -249,7 +241,7 @@ export async function fetchOnChainRevenue(): Promise<OnChainRevenue> {
       signal: AbortSignal.timeout(FETCH_TIMEOUT),
     });
     const blockData = (await blockRes.json()) as { result?: string };
-    const latestBlock = parseInt(blockData.result ?? "0x0", 16);
+    const latestBlock = Number.parseInt(blockData.result ?? "0x0", 16);
     // Base: ~2s blocks, 30 days ~= 1_296_000 blocks
     const fromBlock = Math.max(0, latestBlock - 1_296_000);
 
@@ -265,7 +257,7 @@ export async function fetchOnChainRevenue(): Promise<OnChainRevenue> {
           {
             address: USDC_CONTRACT,
             topics: [TRANSFER_TOPIC, null, paddedAddr],
-            fromBlock: "0x" + fromBlock.toString(16),
+            fromBlock: `0x${fromBlock.toString(16)}`,
             toBlock: "latest",
           },
         ],
@@ -316,10 +308,7 @@ export async function fetchSpawnDroplets(): Promise<{
       droplets?: { size?: { price_monthly?: number } }[];
     };
     const droplets = data.droplets ?? [];
-    const monthly = droplets.reduce(
-      (sum, d) => sum + (d.size?.price_monthly ?? 0),
-      0,
-    );
+    const monthly = droplets.reduce((sum, d) => sum + (d.size?.price_monthly ?? 0), 0);
     return { count: droplets.length, monthly_cost: monthly };
   } catch (err) {
     return {

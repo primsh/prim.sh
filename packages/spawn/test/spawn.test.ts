@@ -5,7 +5,7 @@
  * IMPORTANT: env vars must be set before any module import that touches db/providers.
  */
 
-import { describe, expect, it, beforeEach, afterEach, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 // Set env before imports
 process.env.SPAWN_DB_PATH = ":memory:";
@@ -87,16 +87,25 @@ const mockFetch = vi.fn(async (input: RequestInfo | URL, _init?: RequestInit) =>
   }
 
   // DO: DELETE /v2/droplets/:id
-  if (url.match(/^https:\/\/api\.digitalocean\.com\/v2\/droplets\/\d+$/) && _init?.method === "DELETE") {
+  if (
+    url.match(/^https:\/\/api\.digitalocean\.com\/v2\/droplets\/\d+$/) &&
+    _init?.method === "DELETE"
+  ) {
     return new Response(null, { status: 204 });
   }
 
   // DO: POST /v2/droplets/:id/actions (lifecycle actions)
-  if (url.match(/^https:\/\/api\.digitalocean\.com\/v2\/droplets\/\d+\/actions$/) && _init?.method === "POST") {
+  if (
+    url.match(/^https:\/\/api\.digitalocean\.com\/v2\/droplets\/\d+\/actions$/) &&
+    _init?.method === "POST"
+  ) {
     const body = JSON.parse((_init?.body as string) ?? "{}") as Record<string, unknown>;
     return new Response(
       JSON.stringify({
-        action: makeDOAction({ type: body.type as string, id: body.type === "rebuild" ? 9998 : 9997 }),
+        action: makeDOAction({
+          type: body.type as string,
+          id: body.type === "rebuild" ? 9998 : 9997,
+        }),
       }),
       { status: 201, headers: { "Content-Type": "application/json" } },
     );
@@ -107,30 +116,36 @@ const mockFetch = vi.fn(async (input: RequestInfo | URL, _init?: RequestInit) =>
     url.match(/^https:\/\/api\.digitalocean\.com\/v2\/droplets\/\d+$/) &&
     (!_init?.method || _init.method === "GET")
   ) {
-    return new Response(
-      JSON.stringify({ droplet: makeDODroplet() }),
-      { status: 200, headers: { "Content-Type": "application/json" } },
-    );
+    return new Response(JSON.stringify({ droplet: makeDODroplet() }), {
+      status: 200,
+      headers: { "Content-Type": "application/json" },
+    });
   }
 
   // DO: POST /v2/account/keys — create SSH key
   if (url === "https://api.digitalocean.com/v2/account/keys" && _init?.method === "POST") {
-    return new Response(
-      JSON.stringify({ ssh_key: makeDOSshKey() }),
-      { status: 201, headers: { "Content-Type": "application/json" } },
-    );
+    return new Response(JSON.stringify({ ssh_key: makeDOSshKey() }), {
+      status: 201,
+      headers: { "Content-Type": "application/json" },
+    });
   }
 
   // DO: GET /v2/account/keys (list)
-  if (url.startsWith("https://api.digitalocean.com/v2/account/keys") && (!_init?.method || _init.method === "GET")) {
-    return new Response(
-      JSON.stringify({ ssh_keys: [makeDOSshKey()] }),
-      { status: 200, headers: { "Content-Type": "application/json" } },
-    );
+  if (
+    url.startsWith("https://api.digitalocean.com/v2/account/keys") &&
+    (!_init?.method || _init.method === "GET")
+  ) {
+    return new Response(JSON.stringify({ ssh_keys: [makeDOSshKey()] }), {
+      status: 200,
+      headers: { "Content-Type": "application/json" },
+    });
   }
 
   // DO: DELETE /v2/account/keys/:id
-  if (url.match(/^https:\/\/api\.digitalocean\.com\/v2\/account\/keys\/\d+$/) && _init?.method === "DELETE") {
+  if (
+    url.match(/^https:\/\/api\.digitalocean\.com\/v2\/account\/keys\/\d+$/) &&
+    _init?.method === "DELETE"
+  ) {
     return new Response(null, { status: 204 });
   }
 
@@ -142,23 +157,23 @@ const mockFetch = vi.fn(async (input: RequestInfo | URL, _init?: RequestInit) =>
 
 vi.stubGlobal("fetch", mockFetch);
 
+import type { CreateServerRequest } from "../src/api.ts";
 // Import after env + fetch stub
-import { resetDb, insertServer, getServerById, insertSshKey, getSshKeyById } from "../src/db.ts";
+import { getServerById, getSshKeyById, insertServer, insertSshKey, resetDb } from "../src/db.ts";
 import {
   createServer,
-  listServers,
-  getServer,
   deleteServer,
-  startServer,
-  stopServer,
+  deleteSshKey,
+  getServer,
+  listServers,
+  listSshKeys,
   rebootServer,
-  resizeServer,
   rebuildServer,
   registerSshKey,
-  listSshKeys,
-  deleteSshKey,
+  resizeServer,
+  startServer,
+  stopServer,
 } from "../src/service.ts";
-import type { CreateServerRequest } from "../src/api.ts";
 
 // ─── Fixtures ─────────────────────────────────────────────────────────────
 
@@ -251,11 +266,15 @@ describe("createServer", () => {
 
     const doCall = mockFetch.mock.calls.find(
       ([url, init]) =>
-        url === "https://api.digitalocean.com/v2/droplets" && (init as RequestInit)?.method === "POST",
+        url === "https://api.digitalocean.com/v2/droplets" &&
+        (init as RequestInit)?.method === "POST",
     );
     expect(doCall).toBeDefined();
 
-    const body = JSON.parse((doCall?.[1] as RequestInit)?.body as string) as Record<string, unknown>;
+    const body = JSON.parse((doCall?.[1] as RequestInit)?.body as string) as Record<
+      string,
+      unknown
+    >;
     expect(body.size).toBe("s-2vcpu-4gb"); // small → s-2vcpu-4gb
     expect(body.image).toBe("ubuntu-24-04-x64"); // translated to DO slug
     expect(body.region).toBe("nyc3");
@@ -363,14 +382,25 @@ describe("createServer", () => {
 
   it("DO API failure — returns 502 with provider_error code", async () => {
     mockFetch.mockImplementationOnce(async (input: RequestInfo | URL, init?: RequestInit) => {
-      const url = typeof input === "string" ? input : input instanceof Request ? input.url : (input as URL).toString();
-      if (url === "https://api.digitalocean.com/v2/droplets" && (init as RequestInit)?.method === "POST") {
+      const url =
+        typeof input === "string"
+          ? input
+          : input instanceof Request
+            ? input.url
+            : (input as URL).toString();
+      if (
+        url === "https://api.digitalocean.com/v2/droplets" &&
+        (init as RequestInit)?.method === "POST"
+      ) {
         return new Response(
           JSON.stringify({ id: "server_error", message: "Internal server error" }),
           { status: 500, headers: { "Content-Type": "application/json" } },
         );
       }
-      return new Response(JSON.stringify({ ok: true }), { status: 200, headers: { "Content-Type": "application/json" } });
+      return new Response(JSON.stringify({ ok: true }), {
+        status: 200,
+        headers: { "Content-Type": "application/json" },
+      });
     });
 
     const result = await createServer(VALID_REQUEST, CALLER);
@@ -497,12 +527,17 @@ describe("deleteServer", () => {
     const id = insertTestServer({ owner_wallet: CALLER, provider_resource_id: "99999" });
 
     mockFetch.mockImplementationOnce(async (input: RequestInfo | URL, init?: RequestInit) => {
-      const url = typeof input === "string" ? input : input instanceof Request ? input.url : (input as URL).toString();
+      const url =
+        typeof input === "string"
+          ? input
+          : input instanceof Request
+            ? input.url
+            : (input as URL).toString();
       if (url.includes("/droplets/99999") && (init as RequestInit)?.method === "DELETE") {
-        return new Response(
-          JSON.stringify({ id: "server_error", message: "Delete failed" }),
-          { status: 500, headers: { "Content-Type": "application/json" } },
-        );
+        return new Response(JSON.stringify({ id: "server_error", message: "Delete failed" }), {
+          status: 500,
+          headers: { "Content-Type": "application/json" },
+        });
       }
       return new Response(null, { status: 204 });
     });
@@ -535,9 +570,13 @@ describe("server type translation", () => {
 
       const doCall = mockFetch.mock.calls.find(
         ([url, init]) =>
-          url === "https://api.digitalocean.com/v2/droplets" && (init as RequestInit)?.method === "POST",
+          url === "https://api.digitalocean.com/v2/droplets" &&
+          (init as RequestInit)?.method === "POST",
       );
-      const body = JSON.parse((doCall?.[1] as RequestInit)?.body as string) as Record<string, unknown>;
+      const body = JSON.parse((doCall?.[1] as RequestInit)?.body as string) as Record<
+        string,
+        unknown
+      >;
       expect(body.size).toBe(doType);
 
       resetDb();
@@ -570,14 +609,22 @@ describe("startServer", () => {
   it("Provider action failure — returns 502", async () => {
     const id = insertTestServer({ owner_wallet: CALLER, provider_resource_id: "77777" });
     mockFetch.mockImplementationOnce(async (input: RequestInfo | URL, init?: RequestInit) => {
-      const url = typeof input === "string" ? input : input instanceof Request ? input.url : (input as URL).toString();
+      const url =
+        typeof input === "string"
+          ? input
+          : input instanceof Request
+            ? input.url
+            : (input as URL).toString();
       if (url.includes("/droplets/77777/actions") && (init as RequestInit)?.method === "POST") {
-        return new Response(
-          JSON.stringify({ id: "server_error", message: "Action failed" }),
-          { status: 500, headers: { "Content-Type": "application/json" } },
-        );
+        return new Response(JSON.stringify({ id: "server_error", message: "Action failed" }), {
+          status: 500,
+          headers: { "Content-Type": "application/json" },
+        });
       }
-      return new Response(JSON.stringify({ ok: true }), { status: 200, headers: { "Content-Type": "application/json" } });
+      return new Response(JSON.stringify({ ok: true }), {
+        status: 200,
+        headers: { "Content-Type": "application/json" },
+      });
     });
 
     const result = await startServer(id, CALLER);

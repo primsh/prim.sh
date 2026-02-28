@@ -7,8 +7,8 @@
  */
 
 import { Resolver } from "node:dns/promises";
+import type { NsVerifyResult, RecordType, RecordVerifyResult } from "./api.ts";
 import type { RecordRow } from "./db.ts";
-import type { NsVerifyResult, RecordVerifyResult, RecordType } from "./api.ts";
 
 const QUERY_TIMEOUT_MS = 5000;
 
@@ -70,10 +70,7 @@ async function resolveNsIps(nsHostnames: string[]): Promise<string[]> {
   return results.flatMap((r) => (r.status === "fulfilled" ? r.value : []));
 }
 
-async function resolveRecord(
-  resolver: Resolver,
-  row: RecordRow,
-): Promise<RecordVerifyResult> {
+async function resolveRecord(resolver: Resolver, row: RecordRow): Promise<RecordVerifyResult> {
   const type = row.type as RecordType;
   const name = row.name;
   const expected = row.content;
@@ -83,23 +80,43 @@ async function resolveRecord(
       case "A": {
         const addrs = await withTimeout(resolver.resolve4(name), QUERY_TIMEOUT_MS);
         const propagated = addrs.includes(expected);
-        return { type, name, expected, actual: propagated ? expected : (addrs[0] ?? null), propagated };
+        return {
+          type,
+          name,
+          expected,
+          actual: propagated ? expected : (addrs[0] ?? null),
+          propagated,
+        };
       }
       case "AAAA": {
         const addrs = await withTimeout(resolver.resolve6(name), QUERY_TIMEOUT_MS);
         const propagated = addrs.includes(expected);
-        return { type, name, expected, actual: propagated ? expected : (addrs[0] ?? null), propagated };
+        return {
+          type,
+          name,
+          expected,
+          actual: propagated ? expected : (addrs[0] ?? null),
+          propagated,
+        };
       }
       case "CNAME": {
         const targets = await withTimeout(resolver.resolveCname(name), QUERY_TIMEOUT_MS);
         const normalized = targets.map(normalizeHostname);
         const propagated = normalized.includes(normalizeHostname(expected));
-        return { type, name, expected, actual: propagated ? expected : (normalized[0] ?? null), propagated };
+        return {
+          type,
+          name,
+          expected,
+          actual: propagated ? expected : (normalized[0] ?? null),
+          propagated,
+        };
       }
       case "MX": {
         const records = await withTimeout(resolver.resolveMx(name), QUERY_TIMEOUT_MS);
         const propagated = records.some(
-          (r) => normalizeHostname(r.exchange) === normalizeHostname(expected) && r.priority === (row.priority ?? 10),
+          (r) =>
+            normalizeHostname(r.exchange) === normalizeHostname(expected) &&
+            r.priority === (row.priority ?? 10),
         );
         const first = records[0];
         const actual = first ? normalizeHostname(first.exchange) : null;
@@ -109,26 +126,46 @@ async function resolveRecord(
         const chunks = await withTimeout(resolver.resolveTxt(name), QUERY_TIMEOUT_MS);
         const joined = chunks.map((c) => c.join(""));
         const propagated = joined.includes(expected);
-        return { type, name, expected, actual: propagated ? expected : (joined[0] ?? null), propagated };
+        return {
+          type,
+          name,
+          expected,
+          actual: propagated ? expected : (joined[0] ?? null),
+          propagated,
+        };
       }
       case "NS": {
         const servers = await withTimeout(resolver.resolveNs(name), QUERY_TIMEOUT_MS);
         const normalized = servers.map(normalizeHostname);
         const propagated = normalized.includes(normalizeHostname(expected));
-        return { type, name, expected, actual: propagated ? expected : (normalized[0] ?? null), propagated };
+        return {
+          type,
+          name,
+          expected,
+          actual: propagated ? expected : (normalized[0] ?? null),
+          propagated,
+        };
       }
       case "SRV": {
         const records = await withTimeout(resolver.resolveSrv(name), QUERY_TIMEOUT_MS);
         // CF stores SRV content as a single string; check if any entry's name matches
-        const propagated = records.some((r) => normalizeHostname(r.name) === normalizeHostname(expected));
+        const propagated = records.some(
+          (r) => normalizeHostname(r.name) === normalizeHostname(expected),
+        );
         const first = records[0];
-        return { type, name, expected, actual: propagated ? expected : (first ? normalizeHostname(first.name) : null), propagated };
+        return {
+          type,
+          name,
+          expected,
+          actual: propagated ? expected : first ? normalizeHostname(first.name) : null,
+          propagated,
+        };
       }
       case "CAA": {
         const records = await withTimeout(resolver.resolveCaa(name), QUERY_TIMEOUT_MS);
         // CF stores CAA as `0 issue "letsencrypt.org"` — check substring match
         const propagated = records.some((r) => {
-          const tag = (r as unknown as Record<string, unknown>);
+          const tag = r as unknown as Record<string, unknown>;
           const issue = tag.issue as string | undefined;
           const issuewild = tag.issuewild as string | undefined;
           const iodef = tag.iodef as string | undefined;
@@ -166,9 +203,7 @@ export async function verifyRecords(
   const authResolver = new Resolver();
   authResolver.setServers(nsIps);
 
-  const results = await Promise.allSettled(
-    records.map((row) => resolveRecord(authResolver, row)),
-  );
+  const results = await Promise.allSettled(records.map((row) => resolveRecord(authResolver, row)));
 
   return results.map((r, i) => {
     if (r.status === "fulfilled") return r.value;

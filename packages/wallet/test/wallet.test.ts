@@ -4,9 +4,9 @@
  * IMPORTANT: env vars must be set before any module import that touches db.
  */
 
-import { describe, expect, it, beforeEach, afterEach, vi } from "vitest";
-import { privateKeyToAccount, generatePrivateKey } from "viem/accounts";
 import { getAddress } from "viem";
+import { generatePrivateKey, privateKeyToAccount } from "viem/accounts";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 // Set in-memory DB before any imports
 process.env.WALLET_DB_PATH = ":memory:";
@@ -39,7 +39,7 @@ vi.stubGlobal("fetch", mockFetch);
 
 // Import modules after env/mocks are set
 import { resetDb } from "../src/db.ts";
-import { registerWallet, getWallet, deactivateWallet, listWallets } from "../src/service.ts";
+import { deactivateWallet, getWallet, listWallets, registerWallet } from "../src/service.ts";
 import { registerTestWallet } from "./helpers.ts";
 
 const CALLER = "0xCa11e900000000000000000000000000000000001";
@@ -193,7 +193,11 @@ describe("registerWallet — invalid inputs", () => {
     const timestamp2 = new Date().toISOString();
     const message2 = `Register ${getAddress(account.address)} with prim.sh at ${timestamp2}`;
     const signature2 = await account.signMessage({ message: message2 });
-    const second = await registerWallet({ address: account.address, signature: signature2, timestamp: timestamp2 });
+    const second = await registerWallet({
+      address: account.address,
+      signature: signature2,
+      timestamp: timestamp2,
+    });
 
     expect(second.ok).toBe(false);
     if (!second.ok) {

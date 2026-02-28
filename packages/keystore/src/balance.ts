@@ -1,7 +1,7 @@
-import { createPublicClient, http, formatUnits } from "viem";
-import { base, baseSepolia } from "viem/chains";
-import type { Address } from "viem";
 import { getNetworkConfig } from "@primsh/x402-middleware";
+import { http, createPublicClient, formatUnits } from "viem";
+import type { Address } from "viem";
+import { base, baseSepolia } from "viem/chains";
 
 const USDC_DECIMALS = 6;
 

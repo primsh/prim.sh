@@ -2,71 +2,71 @@ import { randomBytes } from "node:crypto";
 import { createLogger } from "@primsh/x402-middleware";
 
 const log = createLogger("domain.sh");
-import {
-  insertZone,
-  getZoneById,
-  getZoneByDomain,
-  getZonesByOwner,
-  countZonesByOwner,
-  updateZoneStatus,
-  deleteZoneRow,
-  insertRecord,
-  getRecordById,
-  getRecordByCloudflareId,
-  getRecordsByZone,
-  updateRecordRow,
-  deleteRecordRow,
-  deleteRecordsByZone,
-  runInTransaction,
-  insertQuote,
-  getQuoteById,
-  insertRegistration,
-  getRegistrationByRecoveryToken,
-  getRegistrationByDomain,
-  updateRegistration,
-} from "./db.ts";
-import {
-  CloudflareError,
-  createZone as cfCreateZone,
-  getZone as cfGetZone,
-  deleteZone as cfDeleteZone,
-  triggerActivationCheck as cfTriggerActivationCheck,
-  createDnsRecord as cfCreateRecord,
-  updateDnsRecord as cfUpdateRecord,
-  deleteDnsRecord as cfDeleteRecord,
-  batchDnsRecords as cfBatchDnsRecords,
-  listDnsRecords as cfListDnsRecords,
-} from "./cloudflare.ts";
-import type { CfBatchResult, CfDnsRecord } from "./cloudflare.ts";
 import type {
-  ZoneStatus,
-  ZoneResponse,
-  ZoneListResponse,
-  CreateZoneRequest,
-  CreateZoneResponse,
-  RecordResponse,
-  RecordListResponse,
-  CreateRecordRequest,
-  UpdateRecordRequest,
-  RecordType,
-  DomainSearchResponse,
+  ActivateResponse,
   BatchRecordsRequest,
   BatchRecordsResponse,
+  ConfigureNsResponse,
+  CreateRecordRequest,
+  CreateZoneRequest,
+  CreateZoneResponse,
+  DomainSearchResponse,
+  MailSetupRecordResult,
   MailSetupRequest,
   MailSetupResponse,
-  MailSetupRecordResult,
-  VerifyResponse,
   QuoteRequest,
   QuoteResponse,
-  RegisterResponse,
+  RecordListResponse,
+  RecordResponse,
+  RecordType,
   RecoverResponse,
-  ConfigureNsResponse,
+  RegisterResponse,
   RegistrationStatusResponse,
-  ActivateResponse,
+  UpdateRecordRequest,
+  VerifyResponse,
+  ZoneListResponse,
+  ZoneResponse,
+  ZoneStatus,
 } from "./api.ts";
-import type { ZoneRow, RecordRow } from "./db.ts";
-import { getRegistrar, NameSiloError } from "./namesilo.ts";
+import {
+  CloudflareError,
+  batchDnsRecords as cfBatchDnsRecords,
+  createDnsRecord as cfCreateRecord,
+  createZone as cfCreateZone,
+  deleteDnsRecord as cfDeleteRecord,
+  deleteZone as cfDeleteZone,
+  getZone as cfGetZone,
+  listDnsRecords as cfListDnsRecords,
+  triggerActivationCheck as cfTriggerActivationCheck,
+  updateDnsRecord as cfUpdateRecord,
+} from "./cloudflare.ts";
+import type { CfBatchResult, CfDnsRecord } from "./cloudflare.ts";
+import {
+  countZonesByOwner,
+  deleteRecordRow,
+  deleteRecordsByZone,
+  deleteZoneRow,
+  getQuoteById,
+  getRecordByCloudflareId,
+  getRecordById,
+  getRecordsByZone,
+  getRegistrationByDomain,
+  getRegistrationByRecoveryToken,
+  getZoneByDomain,
+  getZoneById,
+  getZonesByOwner,
+  insertQuote,
+  insertRecord,
+  insertRegistration,
+  insertZone,
+  runInTransaction,
+  updateRecordRow,
+  updateRegistration,
+  updateZoneStatus,
+} from "./db.ts";
+import type { RecordRow, ZoneRow } from "./db.ts";
 import { verifyNameservers, verifyRecords } from "./dns-verify.ts";
+import { NameSiloError, getRegistrar } from "./namesilo.ts";
 
 // ─── Constants ───────────────────────────────────────────────────────────
 
@@ -138,7 +138,12 @@ function isValidDomain(domain: string): boolean {
   if (!domain.includes(".")) return false;
   const labels = domain.split(".");
   return labels.every(
-    (label) => label.length > 0 && label.length <= 63 && /^[a-zA-Z0-9-]+$/.test(label) && !label.startsWith("-") && !label.endsWith("-"),
+    (label) =>
+      label.length > 0 &&
+      label.length <= 63 &&
+      /^[a-zA-Z0-9-]+$/.test(label) &&
+      !label.startsWith("-") &&
+      !label.endsWith("-"),
   );
 }
 
@@ -192,11 +197,7 @@ export async function createZone(
   }
 }
 
-export function listZones(
-  callerWallet: string,
-  limit: number,
-  page: number,
-): ZoneListResponse {
+export function listZones(callerWallet: string, limit: number, page: number): ZoneListResponse {
   const offset = (page - 1) * limit;
   const rows = getZonesByOwner(callerWallet, limit, offset);
   const total = countZonesByOwner(callerWallet);
@@ -302,11 +303,21 @@ export async function createRecord(
   }
 
   if (!request.content) {
-    return { ok: false, status: 400, code: "invalid_request", message: "Record content is required" };
+    return {
+      ok: false,
+      status: 400,
+      code: "invalid_request",
+      message: "Record content is required",
+    };
   }
 
   if (request.type === "MX" && request.priority === undefined) {
-    return { ok: false, status: 400, code: "invalid_request", message: "MX records require a priority" };
+    return {
+      ok: false,
+      status: 400,
+      code: "invalid_request",
+      message: "MX records require a priority",
+    };
   }
 
   const ttl = request.ttl ?? 3600;
@@ -413,7 +424,7 @@ export async function updateRecord(
   const updatedName = request.name ?? row.name;
   const updatedContent = request.content ?? row.content;
   const updatedTtl = request.ttl ?? row.ttl;
-  const updatedProxied = request.proxied ?? (row.proxied === 1);
+  const updatedProxied = request.proxied ?? row.proxied === 1;
   const updatedPriority = request.priority ?? row.priority;
 
   try {
@@ -489,7 +500,12 @@ export async function mailSetup(
     return { ok: false, status: 400, code: "invalid_request", message: "mail_server is required" };
   }
   if (!request.mail_server_ip) {
-    return { ok: false, status: 400, code: "invalid_request", message: "mail_server_ip is required" };
+    return {
+      ok: false,
+      status: 400,
+      code: "invalid_request",
+      message: "mail_server_ip is required",
+    };
   }
 
   const domain = check.row.domain;
@@ -554,7 +570,8 @@ export async function mailSetup(
       name: `${dkim.ed25519.selector}._domainkey.${domain}`,
       content: `v=DKIM1; k=ed25519; p=${dkim.ed25519.public_key}`,
       ttl: 3600,
-      matchFn: (r) => r.type === "TXT" && r.name === `${dkim.ed25519?.selector}._domainkey.${domain}`,
+      matchFn: (r) =>
+        r.type === "TXT" && r.name === `${dkim.ed25519?.selector}._domainkey.${domain}`,
     });
   }
 
@@ -641,25 +658,55 @@ export async function batchRecords(
 
   const totalOps = creates.length + updates.length + deletes.length;
   if (totalOps === 0) {
-    return { ok: false, status: 400, code: "invalid_request", message: "Batch request must have at least one operation" };
+    return {
+      ok: false,
+      status: 400,
+      code: "invalid_request",
+      message: "Batch request must have at least one operation",
+    };
   }
   if (totalOps > MAX_BATCH_OPS) {
-    return { ok: false, status: 400, code: "invalid_request", message: `Batch request exceeds ${MAX_BATCH_OPS} operation limit` };
+    return {
+      ok: false,
+      status: 400,
+      code: "invalid_request",
+      message: `Batch request exceeds ${MAX_BATCH_OPS} operation limit`,
+    };
   }
 
   // Validate create entries
   for (const entry of creates) {
     if (!entry.type || !VALID_RECORD_TYPES.includes(entry.type)) {
-      return { ok: false, status: 400, code: "invalid_request", message: `Invalid record type: ${entry.type}. Must be one of: ${VALID_RECORD_TYPES.join(", ")}` };
+      return {
+        ok: false,
+        status: 400,
+        code: "invalid_request",
+        message: `Invalid record type: ${entry.type}. Must be one of: ${VALID_RECORD_TYPES.join(", ")}`,
+      };
     }
     if (!entry.name) {
-      return { ok: false, status: 400, code: "invalid_request", message: "Record name is required" };
+      return {
+        ok: false,
+        status: 400,
+        code: "invalid_request",
+        message: "Record name is required",
+      };
     }
     if (!entry.content) {
-      return { ok: false, status: 400, code: "invalid_request", message: "Record content is required" };
+      return {
+        ok: false,
+        status: 400,
+        code: "invalid_request",
+        message: "Record content is required",
+      };
     }
     if (entry.type === "MX" && entry.priority === undefined) {
-      return { ok: false, status: 400, code: "invalid_request", message: "MX records require a priority" };
+      return {
+        ok: false,
+        status: 400,
+        code: "invalid_request",
+        message: "MX records require a priority",
+      };
     }
   }
 
@@ -673,7 +720,12 @@ export async function batchRecords(
   for (const entry of updates) {
     const row = getRecordById(entry.id);
     if (!row || row.zone_id !== zoneId) {
-      return { ok: false, status: 404, code: "not_found", message: `Record not found: ${entry.id}` };
+      return {
+        ok: false,
+        status: 404,
+        code: "not_found",
+        message: `Record not found: ${entry.id}`,
+      };
     }
     updateRows.push({ primId: entry.id, cfId: row.cloudflare_id, entry });
   }
@@ -686,7 +738,12 @@ export async function batchRecords(
   for (const entry of deletes) {
     const row = getRecordById(entry.id);
     if (!row || row.zone_id !== zoneId) {
-      return { ok: false, status: 404, code: "not_found", message: `Record not found: ${entry.id}` };
+      return {
+        ok: false,
+        status: 404,
+        code: "not_found",
+        message: `Record not found: ${entry.id}`,
+      };
     }
     deleteRows.push({ primId: entry.id, cfId: row.cloudflare_id });
   }
@@ -765,12 +822,21 @@ export async function batchRecords(
     });
   } catch (err) {
     log.error("batch SQLite transaction failed after CF batch succeeded", { error: String(err) });
-    return { ok: false, status: 500, code: "internal_error", message: "Internal error applying batch — CF succeeded but local DB update failed" };
+    return {
+      ok: false,
+      status: 500,
+      code: "internal_error",
+      message: "Internal error applying batch — CF succeeded but local DB update failed",
+    };
   }
 
   // Read back rows for response
-  const createdRows = createPrimIds.map((id) => getRecordById(id)).filter((r): r is NonNullable<typeof r> => r !== null);
-  const updatedRows = updateRows.map(({ primId }) => getRecordById(primId)).filter((r): r is NonNullable<typeof r> => r !== null);
+  const createdRows = createPrimIds
+    .map((id) => getRecordById(id))
+    .filter((r): r is NonNullable<typeof r> => r !== null);
+  const updatedRows = updateRows
+    .map(({ primId }) => getRecordById(primId))
+    .filter((r): r is NonNullable<typeof r> => r !== null);
 
   return {
     ok: true,
@@ -824,7 +890,12 @@ export async function quoteDomain(
 
   const registrar = getRegistrar();
   if (!registrar) {
-    return { ok: false, status: 503, code: "registrar_unavailable" as string, message: "NAMESILO_API_KEY is not configured" };
+    return {
+      ok: false,
+      status: 503,
+      code: "registrar_unavailable" as string,
+      message: "NAMESILO_API_KEY is not configured",
+    };
   }
 
   const years = request.years ?? 1;
@@ -832,7 +903,12 @@ export async function quoteDomain(
   const info = results[0];
 
   if (!info?.available || !info.price) {
-    return { ok: false, status: 400, code: "domain_taken", message: "Domain is not available for registration" };
+    return {
+      ok: false,
+      status: 400,
+      code: "domain_taken",
+      message: "Domain is not available for registration",
+    };
   }
 
   const registrarCostCents = usdToCents(info.price.register);
@@ -879,17 +955,32 @@ export async function registerDomain(
     return { ok: false, status: 404, code: "not_found", message: "Quote not found" };
   }
   if (quote.expires_at < Date.now()) {
-    return { ok: false, status: 410, code: "quote_expired", message: "Quote has expired — request a new one" };
+    return {
+      ok: false,
+      status: 410,
+      code: "quote_expired",
+      message: "Quote has expired — request a new one",
+    };
   }
 
   const existing = getRegistrationByDomain(quote.domain);
   if (existing) {
-    return { ok: false, status: 409, code: "domain_taken" as string, message: "Domain is already registered" };
+    return {
+      ok: false,
+      status: 409,
+      code: "domain_taken" as string,
+      message: "Domain is already registered",
+    };
   }
 
   const registrar = getRegistrar();
   if (!registrar) {
-    return { ok: false, status: 503, code: "registrar_unavailable" as string, message: "NAMESILO_API_KEY is not configured" };
+    return {
+      ok: false,
+      status: 503,
+      code: "registrar_unavailable" as string,
+      message: "NAMESILO_API_KEY is not configured",
+    };
   }
 
   // Step 1: NameSilo purchase
@@ -954,7 +1045,9 @@ export async function registerDomain(
 
   // Get the zone we just created to fetch its prim ID and NS
   const zoneRow = getZoneByDomain(quote.domain);
-  const nameservers: string[] = zoneRow ? (JSON.parse(zoneRow.nameservers) as string[]) : (cfZone.name_servers ?? []);
+  const nameservers: string[] = zoneRow
+    ? (JSON.parse(zoneRow.nameservers) as string[])
+    : (cfZone.name_servers ?? []);
 
   // Step 4: Set Cloudflare nameservers at registrar
   let nsConfigured = false;
@@ -1067,7 +1160,12 @@ export async function configureNs(
   }
 
   if (!reg.zone_id) {
-    return { ok: false, status: 400, code: "invalid_request", message: "Zone not yet created — use /recover first" };
+    return {
+      ok: false,
+      status: 400,
+      code: "invalid_request",
+      message: "Zone not yet created — use /recover first",
+    };
   }
 
   const zoneRow = getZoneById(reg.zone_id);
@@ -1078,7 +1176,12 @@ export async function configureNs(
   const nameservers: string[] = JSON.parse(zoneRow.nameservers) as string[];
   const registrar = getRegistrar();
   if (!registrar) {
-    return { ok: false, status: 503, code: "registrar_unavailable" as string, message: "NAMESILO_API_KEY is not configured" };
+    return {
+      ok: false,
+      status: 503,
+      code: "registrar_unavailable" as string,
+      message: "NAMESILO_API_KEY is not configured",
+    };
   }
 
   try {
@@ -1115,8 +1218,7 @@ export async function verifyZone(
 
   const recordResults = await verifyRecords(records, expectedNs);
 
-  const allPropagated =
-    nsResult.propagated && recordResults.every((r) => r.propagated);
+  const allPropagated = nsResult.propagated && recordResults.every((r) => r.propagated);
 
   // Refresh zone status from CF if still pending
   let zoneStatus: ZoneStatus = check.row.status as ZoneStatus;
@@ -1259,7 +1361,7 @@ export async function activateZone(
       ok: true,
       data: {
         zone_id: zoneId,
-        status: ((updatedRow?.status ?? cfZone.status) as ZoneStatus),
+        status: (updatedRow?.status ?? cfZone.status) as ZoneStatus,
         activation_requested: true,
       },
     };

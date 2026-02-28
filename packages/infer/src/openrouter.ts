@@ -1,13 +1,13 @@
-import { ProviderError } from "./provider.ts";
-import type { InferProvider } from "./provider.ts";
 import type {
   ChatRequest,
   ChatResponse,
   EmbedRequest,
   EmbedResponse,
-  ModelsResponse,
   ModelInfo,
+  ModelsResponse,
 } from "./api.ts";
+import { ProviderError } from "./provider.ts";
+import type { InferProvider } from "./provider.ts";
 
 const BASE_URL = "https://openrouter.ai/api/v1";
 
@@ -94,7 +94,10 @@ export class OpenrouterClient implements InferProvider {
 
   async embed(req: EmbedRequest): Promise<EmbedResponse> {
     try {
-      return await this.post<EmbedResponse>("/embeddings", req as unknown as Record<string, unknown>);
+      return await this.post<EmbedResponse>(
+        "/embeddings",
+        req as unknown as Record<string, unknown>,
+      );
     } catch (err) {
       if (err instanceof ProviderError && err.code === "not_found") {
         throw new ProviderError("Embeddings not supported for this model", "not_found");

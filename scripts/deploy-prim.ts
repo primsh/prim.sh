@@ -16,10 +16,10 @@
  * Alias: pnpm deploy:prim <name>
  */
 
-import { readFileSync, writeFileSync, existsSync, readdirSync } from "node:fs";
+import { existsSync, readFileSync, readdirSync, writeFileSync } from "node:fs";
 import { join, resolve } from "node:path";
-import { loadPrimitives, getDeployConfig } from "./lib/primitives.js";
 import { runGateCheck } from "./lib/gate-check.js";
+import { getDeployConfig, loadPrimitives } from "./lib/primitives.js";
 
 const ROOT = resolve(import.meta.dir, "..");
 const CHECK_MODE = process.argv.includes("--check");
@@ -31,10 +31,15 @@ const PRIM_ROOT = process.env.PRIM_ROOT ?? "/opt/prim";
 const PRIM_ETC = process.env.PRIM_ETC ?? "/etc/prim";
 // BUN_PATH: default to `which bun` at runtime; override via env var for non-standard installs
 import { execSync } from "node:child_process";
-const BUN_PATH = process.env.BUN_PATH ?? (() => {
-  try { return execSync("which bun", { encoding: "utf-8" }).trim(); }
-  catch { return "/usr/local/bin/bun"; }
-})();
+const BUN_PATH =
+  process.env.BUN_PATH ??
+  (() => {
+    try {
+      return execSync("which bun", { encoding: "utf-8" }).trim();
+    } catch {
+      return "/usr/local/bin/bun";
+    }
+  })();
 
 // ── Helpers ────────────────────────────────────────────────────────────────
 
@@ -79,7 +84,7 @@ function assembleCaddyfile(): void {
     readFileSync(join(generatedDir, f), "utf-8").trimEnd(),
   );
 
-  const assembled = [header, ...fragments].join("\n\n") + "\n";
+  const assembled = `${[header, ...fragments].join("\n\n")}\n`;
   writeIfChanged(outPath, assembled, "deploy/prim/Caddyfile");
 }
 
@@ -107,7 +112,12 @@ WantedBy=multi-user.target
 
 // ── Caddy fragment generator ───────────────────────────────────────────────
 
-function genCaddyFragment(port: number, endpoint: string, maxBodySize: string, extraCaddy: string[]): string {
+function genCaddyFragment(
+  port: number,
+  endpoint: string,
+  maxBodySize: string,
+  extraCaddy: string[],
+): string {
   const main = `${endpoint} {
     import security_headers
     request_body {
@@ -118,7 +128,7 @@ function genCaddyFragment(port: number, endpoint: string, maxBodySize: string, e
 
   // Replace placeholder — actual port injected below
   const parts = [main, ...extraCaddy.map((b) => b.trim())];
-  return parts.join("\n\n") + "\n";
+  return `${parts.join("\n\n")}\n`;
 }
 
 // ── Env template generator ─────────────────────────────────────────────────
@@ -190,6 +200,7 @@ async function main() {
     process.exit(1);
   }
 
+  // biome-ignore lint/style/noNonNullAssertion: primId validated against primIds above
   const prim = prims.find((p) => p.id === primId)!;
 
   // Validate required fields
@@ -210,7 +221,7 @@ async function main() {
     if (!gate.pass) {
       console.log("\nGate FAILED:");
       for (const f of gate.failures) console.log(`  ✗ ${f}`);
-      console.log(`\nFix the above issues or re-run with --skip-gate\n`);
+      console.log("\nFix the above issues or re-run with --skip-gate\n");
       process.exit(1);
     }
     if (gate.warnings.length > 0) {
@@ -220,7 +231,9 @@ async function main() {
   }
 
   const deployConfig = getDeployConfig(prim);
+  // biome-ignore lint/style/noNonNullAssertion: validated by required fields check above
   const endpoint = prim.endpoint!;
+  // biome-ignore lint/style/noNonNullAssertion: validated by required fields check above
   const port = prim.port!;
   const name = prim.name;
 

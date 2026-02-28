@@ -11,7 +11,7 @@
  *   bun scripts/gen-sdk.ts store     # generate only store
  */
 
-import { readFileSync, writeFileSync, existsSync, mkdirSync } from "node:fs";
+import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { join, resolve } from "node:path";
 import { parse as parseYaml } from "yaml";
 import { primsForInterface } from "./lib/primitives.js";
@@ -24,7 +24,9 @@ const OUTPUT_DIR = join(ROOT, "packages", "sdk", "src");
 const CHECK_MODE = process.argv.includes("--check");
 
 // Optional positional arg: single prim filter
-const positionalArg = process.argv.find((a) => !a.startsWith("-") && a !== process.argv[0] && a !== process.argv[1]);
+const positionalArg = process.argv.find(
+  (a) => !a.startsWith("-") && a !== process.argv[0] && a !== process.argv[1],
+);
 
 let anyFailed = false;
 
@@ -54,12 +56,12 @@ if (!CHECK_MODE) {
 }
 
 const allPrims = primsForInterface("rest");
-const prims = positionalArg
-  ? allPrims.filter((p) => p.id === positionalArg)
-  : allPrims;
+const prims = positionalArg ? allPrims.filter((p) => p.id === positionalArg) : allPrims;
 
 if (positionalArg && prims.length === 0) {
-  console.error(`No prim found with id "${positionalArg}" (or missing OpenAPI spec / rest interface)`);
+  console.error(
+    `No prim found with id "${positionalArg}" (or missing OpenAPI spec / rest interface)`,
+  );
   process.exit(1);
 }
 
@@ -130,7 +132,7 @@ if (generatedIds.length > 0) {
   for (const [id, names] of exportsByModule) {
     for (const name of names) {
       if (!nameToModules.has(name)) nameToModules.set(name, []);
-      nameToModules.get(name)!.push(id);
+      nameToModules.get(name)?.push(id);
     }
   }
   const collisions = new Set<string>();
@@ -145,6 +147,7 @@ if (generatedIds.length > 0) {
   ];
 
   for (const id of allBarrelIds) {
+    // biome-ignore lint/style/noNonNullAssertion: id comes from allBarrelIds which is derived from exportsByModule keys
     const names = exportsByModule.get(id)!;
     const hasCollisions = names.some((n) => collisions.has(n));
     if (!hasCollisions) {
@@ -156,7 +159,7 @@ if (generatedIds.length > 0) {
       for (const name of names) {
         if (collisions.has(name)) {
           // First module to claim the name wins
-          const firstModule = nameToModules.get(name)![0];
+          const firstModule = nameToModules.get(name)?.[0];
           if (firstModule === id) {
             exported.push(name);
           } else {

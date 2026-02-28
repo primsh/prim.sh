@@ -68,11 +68,7 @@ export class ProviderRegistry<T extends PrimProvider> {
    * If `isDefault` is true, this provider is preferred when no env var override
    * is set. Only the first registered default is used.
    */
-  register(
-    name: string,
-    factory: () => T | Promise<T>,
-    opts: { default?: boolean } = {},
-  ): this {
+  register(name: string, factory: () => T | Promise<T>, opts: { default?: boolean } = {}): this {
     if (this.entries.has(name)) {
       throw new Error(`[ProviderRegistry] Provider "${name}" is already registered`);
     }

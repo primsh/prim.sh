@@ -11,8 +11,8 @@ import { readFileSync } from "node:fs";
 
 export interface ParsedField {
   name: string;
-  type: string;       // e.g. "string", "number", "string | null", "string[]"
-  optional: boolean;  // true when field name has "?"
+  type: string; // e.g. "string", "number", "string | null", "string[]"
+  optional: boolean; // true when field name has "?"
   description: string; // from JSDoc
 }
 
@@ -76,7 +76,10 @@ function parseFields(body: string): ParsedField[] {
 
   while (i < body.length) {
     // Skip whitespace
-    if (/\s/.test(body[i])) { i++; continue; }
+    if (/\s/.test(body[i])) {
+      i++;
+      continue;
+    }
 
     // JSDoc comment
     if (body.slice(i, i + 3) === "/**") {
@@ -126,7 +129,12 @@ function parseFields(body: string): ParsedField[] {
     let angleDepth = 0;
     while (i < body.length) {
       const ch = body[i];
-      if (ch === "{") { depth++; typeStr += ch; i++; continue; }
+      if (ch === "{") {
+        depth++;
+        typeStr += ch;
+        i++;
+        continue;
+      }
       if (ch === "}") {
         if (depth === 0) break; // end of interface body
         depth--;
@@ -134,8 +142,18 @@ function parseFields(body: string): ParsedField[] {
         i++;
         continue;
       }
-      if (ch === "<") { angleDepth++; typeStr += ch; i++; continue; }
-      if (ch === ">") { angleDepth--; typeStr += ch; i++; continue; }
+      if (ch === "<") {
+        angleDepth++;
+        typeStr += ch;
+        i++;
+        continue;
+      }
+      if (ch === ">") {
+        angleDepth--;
+        typeStr += ch;
+        i++;
+        continue;
+      }
       if (depth === 0 && angleDepth === 0 && (ch === ";" || ch === "\n")) {
         i++; // consume the separator
         break;
@@ -177,6 +195,7 @@ function parseErrorCodes(src: string): string[] {
   const codes: string[] = [];
   const re = /"([^"]+)"/g;
   let m: RegExpExecArray | null;
+  // biome-ignore lint/suspicious/noAssignInExpressions: standard regex iteration
   while ((m = re.exec(inner)) !== null) {
     codes.push(m[1]);
   }
@@ -190,9 +209,11 @@ function parseInterfaces(src: string): Map<string, ParsedInterface> {
   const interfaces = new Map<string, ParsedInterface>();
 
   // Match interface declarations
-  const re = /export\s+interface\s+([A-Za-z_$][A-Za-z0-9_$]*)\s*(?:extends\s+([A-Za-z_$][A-Za-z0-9_$<>, ]*))?\s*\{/g;
+  const re =
+    /export\s+interface\s+([A-Za-z_$][A-Za-z0-9_$]*)\s*(?:extends\s+([A-Za-z_$][A-Za-z0-9_$<>, ]*))?\s*\{/g;
 
   let m: RegExpExecArray | null;
+  // biome-ignore lint/suspicious/noAssignInExpressions: standard regex iteration
   while ((m = re.exec(src)) !== null) {
     const name = m[1];
     const extendsClause = m[2]?.trim();

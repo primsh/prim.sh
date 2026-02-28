@@ -1,19 +1,19 @@
-import { Hono } from "hono";
-import { bodyLimit } from "hono/body-limit";
 import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
+import { Hono } from "hono";
+import { bodyLimit } from "hono/body-limit";
 
 const LLMS_TXT = import.meta.dir
   ? readFileSync(resolve(import.meta.dir, "../../../site/track/llms.txt"), "utf-8")
   : "";
 import {
   createAgentStackMiddleware,
-  createWalletAllowlistChecker,
   createLogger,
+  createWalletAllowlistChecker,
   getNetworkConfig,
-  requestIdMiddleware,
   invalidRequest,
   notFound,
+  requestIdMiddleware,
 } from "@primsh/x402-middleware";
 import type { ApiError } from "@primsh/x402-middleware";
 import type { TrackRequest } from "./api.ts";

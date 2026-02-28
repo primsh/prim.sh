@@ -5,14 +5,14 @@
 
 import type {
   CloudProvider,
+  ProviderAction,
   ProviderCreateParams,
   ProviderCreateResult,
-  ProviderAction,
   ProviderRebuildResult,
   ProviderServer,
+  ProviderServerType,
   ProviderSshKey,
   ProviderSshKeyParams,
-  ProviderServerType,
 } from "./provider.ts";
 import { ProviderError } from "./provider.ts";
 
@@ -130,7 +130,11 @@ function mapSshKey(hk: HetznerSshKeyData): ProviderSshKey {
 
 // ─── Hetzner HTTP calls ──────────────────────────────────────────────────
 
-async function postServerAction<T>(hetznerServerId: string, action: string, body: Record<string, unknown> = {}): Promise<T> {
+async function postServerAction<T>(
+  hetznerServerId: string,
+  action: string,
+  body: Record<string, unknown> = {},
+): Promise<T> {
   const res = await fetch(`${BASE_URL}/servers/${hetznerServerId}/actions/${action}`, {
     method: "POST",
     headers: headers(),
@@ -197,7 +201,10 @@ export function createHetznerProvider(): CloudProvider {
     },
 
     async stopServer(providerResourceId: string): Promise<ProviderAction> {
-      const data = await postServerAction<{ action: HetznerAction }>(providerResourceId, "shutdown");
+      const data = await postServerAction<{ action: HetznerAction }>(
+        providerResourceId,
+        "shutdown",
+      );
       return mapAction(data.action);
     },
 
@@ -206,11 +213,19 @@ export function createHetznerProvider(): CloudProvider {
       return mapAction(data.action);
     },
 
-    async resizeServer(providerResourceId: string, type: string, upgradeDisk: boolean): Promise<ProviderAction> {
-      const data = await postServerAction<{ action: HetznerAction }>(providerResourceId, "change_type", {
-        server_type: type,
-        upgrade_disk: upgradeDisk,
-      });
+    async resizeServer(
+      providerResourceId: string,
+      type: string,
+      upgradeDisk: boolean,
+    ): Promise<ProviderAction> {
+      const data = await postServerAction<{ action: HetznerAction }>(
+        providerResourceId,
+        "change_type",
+        {
+          server_type: type,
+          upgrade_disk: upgradeDisk,
+        },
+      );
       return mapAction(data.action);
     },
 

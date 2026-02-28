@@ -81,7 +81,10 @@ function toPascalCase(s: string): string {
  */
 function routeToOperationId(route: string): string {
   const path = route.replace(/^[A-Z]+\s+\/v1\//, "").replace(/^\//, "");
-  return path.replace(/[-/]/g, "_").replace(/[^a-z0-9_]/gi, "").toLowerCase();
+  return path
+    .replace(/[-/]/g, "_")
+    .replace(/[^a-z0-9_]/gi, "")
+    .toLowerCase();
 }
 
 /** Uppercase const name for routes object, e.g. "search" → "SEARCH_ROUTES" */
@@ -288,9 +291,7 @@ function genIndexTs(prim: PrimYaml, routePrices: Record<string, string>): string
   const endpoint = prim.endpoint ?? `${prim.id}.prim.sh`;
 
   const serviceFns = routes.map((r) => toCamelCase(routeToOperationId(r.route)));
-  const requestTypes = routes
-    .filter((r) => r.request)
-    .map((r) => r.request as string);
+  const requestTypes = routes.filter((r) => r.request).map((r) => r.request as string);
   const uniqueRequestTypes = [...new Set(requestTypes)];
 
   const routeEntries = routes
@@ -507,7 +508,9 @@ import type { ${toPascalCase(prim.id)}Provider } from "./provider.ts";
 export { ProviderError } from "./provider.ts";`
     : "";
 
-  const requestTypes = [...new Set(routes.filter((r) => r.request).map((r) => r.request as string))];
+  const requestTypes = [
+    ...new Set(routes.filter((r) => r.request).map((r) => r.request as string)),
+  ];
   const responseTypes = [...new Set(routes.map((r) => r.response))];
   const typeImports = [...requestTypes, ...responseTypes];
 
@@ -525,7 +528,7 @@ export { ProviderError } from "./provider.ts";`
 }`;
   });
 
-  return `${providerImport ? providerImport + "\n" : ""}import type { ${typeImports.join(", ")} } from "./api.ts";
+  return `${providerImport ? `${providerImport}\n` : ""}import type { ${typeImports.join(", ")} } from "./api.ts";
 
 // ─── ServiceResult ────────────────────────────────────────────────────────────
 
@@ -541,8 +544,8 @@ function genProviderTs(prim: PrimYaml): string | null {
   const providers = prim.providers ?? [];
   if (providers.length === 0) return null;
 
-  const providerName = toPascalCase(prim.id) + "Provider";
-  const providerDataName = toPascalCase(prim.id) + "ProviderData";
+  const providerName = `${toPascalCase(prim.id)}Provider`;
+  const providerDataName = `${toPascalCase(prim.id)}ProviderData`;
 
   const routes = (prim.routes_map ?? []).map(normalizeRoute);
 
@@ -588,9 +591,9 @@ function genVendorTs(prim: PrimYaml): { filename: string; content: string } | nu
 
   const vendor = providers[0];
   const vendorName = vendor.name.toLowerCase().replace(/\s+/g, "");
-  const className = toPascalCase(vendorName) + "Client";
-  const providerName = toPascalCase(prim.id) + "Provider";
-  const providerDataName = toPascalCase(prim.id) + "ProviderData";
+  const className = `${toPascalCase(vendorName)}Client`;
+  const providerName = `${toPascalCase(prim.id)}Provider`;
+  const providerDataName = `${toPascalCase(prim.id)}ProviderData`;
 
   const envKey = vendor.env_key ?? `${prim.id.toUpperCase()}_API_KEY`;
 
@@ -799,10 +802,7 @@ function genReadme(prim: PrimYaml, routePrices: Record<string, string>): string 
   const endpoint = prim.endpoint ?? `${prim.id}.prim.sh`;
 
   const routeTable = routes
-    .map(
-      (r) =>
-        `| \`${r.route}\` | ${r.description} | ${routePrices[r.route] ?? "$0.01"} |`,
-    )
+    .map((r) => `| \`${r.route}\` | ${r.description} | ${routePrices[r.route] ?? "$0.01"} |`)
     .join("\n");
 
   const pricingTable = (prim.pricing ?? [])
@@ -881,7 +881,10 @@ export function scaffoldPure(prim: PrimYaml): FileManifest[] {
     { path: `packages/${prim.id}/src/index.ts`, content: genIndexTs(normalizedPrim, routePrices) },
     { path: `packages/${prim.id}/src/api.ts`, content: genApiTs(normalizedPrim) },
     { path: `packages/${prim.id}/src/service.ts`, content: genServiceTs(normalizedPrim) },
-    { path: `packages/${prim.id}/test/smoke.test.ts`, content: genSmokeTestTs(normalizedPrim, routePrices) },
+    {
+      path: `packages/${prim.id}/test/smoke.test.ts`,
+      content: genSmokeTestTs(normalizedPrim, routePrices),
+    },
     { path: `packages/${prim.id}/README.md`, content: genReadme(normalizedPrim, routePrices) },
   ];
 
@@ -892,7 +895,10 @@ export function scaffoldPure(prim: PrimYaml): FileManifest[] {
 
   const vendorFile = genVendorTs(normalizedPrim);
   if (vendorFile) {
-    files.push({ path: `packages/${prim.id}/src/${vendorFile.filename}`, content: vendorFile.content });
+    files.push({
+      path: `packages/${prim.id}/src/${vendorFile.filename}`,
+      content: vendorFile.content,
+    });
   }
 
   return files;

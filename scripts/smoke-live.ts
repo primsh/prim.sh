@@ -20,8 +20,8 @@
  *   DO_API_TOKEN        — enables spawn test (optional)
  */
 
-import { privateKeyToAccount } from "viem/accounts";
 import { getAddress } from "viem";
+import { privateKeyToAccount } from "viem/accounts";
 
 // ─── Config ──────────────────────────────────────────────────────────────
 
@@ -85,7 +85,9 @@ async function main() {
 
   const network = process.env.PRIM_NETWORK;
   if (network !== "eip155:84532") {
-    console.error(`\n✗ PRIM_NETWORK must be eip155:84532 (Base Sepolia). Got: ${network ?? "(unset)"}`);
+    console.error(
+      `\n✗ PRIM_NETWORK must be eip155:84532 (Base Sepolia). Got: ${network ?? "(unset)"}`,
+    );
     console.error("  This script refuses to run on mainnet.");
     process.exit(1);
   }
@@ -119,11 +121,11 @@ async function main() {
     });
 
     if (res.status === 409) {
-      console.log(`(already registered) `);
+      console.log("(already registered) ");
       return;
     }
     if (!res.ok) throw new Error(`${res.status}: ${await res.text()}`);
-    console.log(`(registered) `);
+    console.log("(registered) ");
   });
 
   // ─── Faucet ─────────────────────────────────────────────────────────
@@ -141,7 +143,7 @@ async function main() {
         const text = await res.text();
         // 429 = rate limited, not a service failure
         if (res.status === 429) {
-          console.log(`(rate limited — OK) `);
+          console.log("(rate limited — OK) ");
           return;
         }
         throw new Error(`${res.status}: ${text}`);
@@ -159,7 +161,7 @@ async function main() {
     const { balance, funded } = await getUsdcBalance(walletAddress as `0x${string}`);
     console.log(`(${balance} USDC, funded=${funded}) `);
     if (!funded) {
-      console.log(`\n    ⚠ Wallet not funded. Store x402 tests will fail.`);
+      console.log("\n    ⚠ Wallet not funded. Store x402 tests will fail.");
     }
   });
 
@@ -186,21 +188,16 @@ async function main() {
 
   if (bucketId) {
     await step("Upload object via x402", async () => {
-      const res = await primFetch(
-        `${STORE_URL}/v1/buckets/${bucketId}/objects/smoke.txt`,
-        {
-          method: "PUT",
-          headers: { "Content-Type": "text/plain", "Content-Length": "10" },
-          body: "smoke test",
-        },
-      );
+      const res = await primFetch(`${STORE_URL}/v1/buckets/${bucketId}/objects/smoke.txt`, {
+        method: "PUT",
+        headers: { "Content-Type": "text/plain", "Content-Length": "10" },
+        body: "smoke test",
+      });
       if (!res.ok) throw new Error(`${res.status}: ${await res.text()}`);
     });
 
     await step("Download object via x402", async () => {
-      const res = await primFetch(
-        `${STORE_URL}/v1/buckets/${bucketId}/objects/smoke.txt`,
-      );
+      const res = await primFetch(`${STORE_URL}/v1/buckets/${bucketId}/objects/smoke.txt`);
       if (!res.ok) throw new Error(`${res.status}: ${await res.text()}`);
       const body = await res.text();
       if (body !== "smoke test") throw new Error(`Expected "smoke test", got "${body}"`);
@@ -210,14 +207,14 @@ async function main() {
       const res = await primFetch(`${STORE_URL}/v1/buckets/${bucketId}/quota`);
       if (!res.ok) throw new Error(`${res.status}: ${await res.text()}`);
       const data = (await res.json()) as { usage_bytes: number };
-      if (data.usage_bytes !== 10) throw new Error(`Expected usage_bytes=10, got ${data.usage_bytes}`);
+      if (data.usage_bytes !== 10)
+        throw new Error(`Expected usage_bytes=10, got ${data.usage_bytes}`);
     });
 
     await step("Delete object via x402", async () => {
-      const res = await primFetch(
-        `${STORE_URL}/v1/buckets/${bucketId}/objects/smoke.txt`,
-        { method: "DELETE" },
-      );
+      const res = await primFetch(`${STORE_URL}/v1/buckets/${bucketId}/objects/smoke.txt`, {
+        method: "DELETE",
+      });
       if (!res.ok) throw new Error(`${res.status}: ${await res.text()}`);
     });
 
@@ -323,7 +320,9 @@ async function main() {
     try {
       await primFetch(`${EMAIL_URL}/v1/mailboxes/${mailboxId}`, { method: "DELETE" });
       console.log("  ✓ Cleaned up mailbox");
-    } catch { console.log("  ✗ Mailbox cleanup failed"); }
+    } catch {
+      console.log("  ✗ Mailbox cleanup failed");
+    }
   }
 
   // ─── Spawn (optional) ──────────────────────────────────────────────
@@ -383,7 +382,10 @@ async function main() {
         while (Date.now() < deadline) {
           const res = await primFetch(`${SPAWN_URL}/v1/servers/${serverId}`);
           if (!res.ok) throw new Error(`${res.status}: ${await res.text()}`);
-          const data = (await res.json()) as { status: string; public_net?: { ipv4?: { ip?: string } } };
+          const data = (await res.json()) as {
+            status: string;
+            public_net?: { ipv4?: { ip?: string } };
+          };
           if (data.status === "active") {
             console.log(`(ip: ${data.public_net?.ipv4?.ip}) `);
             return;
@@ -415,13 +417,17 @@ async function main() {
         try {
           await primFetch(`${SPAWN_URL}/v1/servers/${serverId}`, { method: "DELETE" });
           console.log("  ✓ Cleaned up server");
-        } catch { console.log("  ✗ Server cleanup failed"); }
+        } catch {
+          console.log("  ✗ Server cleanup failed");
+        }
       }
       if (sshKeyId) {
         try {
           await primFetch(`${SPAWN_URL}/v1/ssh-keys/${sshKeyId}`, { method: "DELETE" });
           console.log("  ✓ Cleaned up SSH key");
-        } catch { console.log("  ✗ SSH key cleanup failed"); }
+        } catch {
+          console.log("  ✗ SSH key cleanup failed");
+        }
       }
     }
   }

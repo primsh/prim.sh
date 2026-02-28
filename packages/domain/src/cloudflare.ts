@@ -60,7 +60,11 @@ async function handleResponse<T>(res: Response): Promise<CloudflareEnvelope<T>> 
   try {
     body = (await res.json()) as CloudflareEnvelope<T>;
   } catch {
-    throw new CloudflareError(res.status, mapStatusToCode(res.status), `Cloudflare API error: ${res.status}`);
+    throw new CloudflareError(
+      res.status,
+      mapStatusToCode(res.status),
+      `Cloudflare API error: ${res.status}`,
+    );
   }
 
   if (!res.ok || !body.success) {
@@ -140,7 +144,14 @@ export async function triggerActivationCheck(zoneId: string): Promise<CfZone> {
 
 export async function createDnsRecord(
   zoneId: string,
-  params: { type: string; name: string; content: string; ttl?: number; proxied?: boolean; priority?: number },
+  params: {
+    type: string;
+    name: string;
+    content: string;
+    ttl?: number;
+    proxied?: boolean;
+    priority?: number;
+  },
 ): Promise<CfDnsRecord> {
   const res = await fetch(`${BASE_URL}/zones/${zoneId}/dns_records`, {
     method: "POST",
@@ -175,7 +186,14 @@ export async function listDnsRecords(
 export async function updateDnsRecord(
   zoneId: string,
   recordId: string,
-  params: { type: string; name: string; content: string; ttl?: number; proxied?: boolean; priority?: number },
+  params: {
+    type: string;
+    name: string;
+    content: string;
+    ttl?: number;
+    proxied?: boolean;
+    priority?: number;
+  },
 ): Promise<CfDnsRecord> {
   const res = await fetch(`${BASE_URL}/zones/${zoneId}/dns_records/${recordId}`, {
     method: "PUT",

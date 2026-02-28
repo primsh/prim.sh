@@ -9,7 +9,7 @@
  * Usage: bun scripts/gen-install-scripts.ts
  */
 
-import { readFileSync, writeFileSync, existsSync, readdirSync } from "node:fs";
+import { existsSync, readFileSync, readdirSync, writeFileSync } from "node:fs";
 import { join, resolve } from "node:path";
 import { parse } from "yaml";
 
@@ -33,9 +33,9 @@ function loadYaml(p: string): PrimYaml | null {
 const BASE = readFileSync(join(ROOT, "site/install.sh"), "utf-8");
 const pkgDir = join(ROOT, "packages");
 
-const dirs = readdirSync(pkgDir).filter((d) =>
-  existsSync(join(pkgDir, d, "prim.yaml"))
-).sort();
+const dirs = readdirSync(pkgDir)
+  .filter((d) => existsSync(join(pkgDir, d, "prim.yaml")))
+  .sort();
 
 let written = 0;
 
@@ -48,19 +48,19 @@ for (const id of dirs) {
   // 1. Replace header comment block
   let script = BASE.replace(
     "# Install script for the prim CLI\n# Usage: curl -fsSL prim.sh/install | sh",
-    `# Install ${name} — prim.sh\n# Usage: curl -fsSL https://${endpoint}/install.sh | sh`
+    `# Install ${name} — prim.sh\n# Usage: curl -fsSL https://${endpoint}/install.sh | sh`,
   );
 
   // 2. Insert `prim install <id>` after `chmod +x "$BIN"`, before PATH_LINE block
   script = script.replace(
     'chmod +x "$BIN"',
-    `chmod +x "$BIN"\n\n# Install ${name} skills\n"$BIN" install ${id}`
+    `chmod +x "$BIN"\n\n# Install ${name} skills\n"$BIN" install ${id}`,
   );
 
   // 3. Replace the closing "Then try:" block with primitive-specific message
   script = script.replace(
     /echo "Then try:"\necho ".*"(\n)?$/,
-    `echo "  ${name} installed. Your agent can now use ${id} tools."\n`
+    `echo "  ${name} installed. Your agent can now use ${id} tools."\n`,
   );
 
   const outPath = join(pkgDir, id, "install.sh");

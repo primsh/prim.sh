@@ -1,7 +1,7 @@
-import { describe, expect, it, beforeEach, afterEach, vi } from "vitest";
 import { Hono } from "hono";
-import { createLogger, type Logger } from "../src/logger.ts";
-import { requestIdMiddleware, getRequestId } from "../src/request-id.ts";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { type Logger, createLogger } from "../src/logger.ts";
+import { getRequestId, requestIdMiddleware } from "../src/request-id.ts";
 
 // Capture stdout writes for assertions
 function captureStdout() {

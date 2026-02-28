@@ -1,22 +1,29 @@
 import { Server } from "@modelcontextprotocol/sdk/server/index.js";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
-import {
-  CallToolRequestSchema,
-  ListToolsRequestSchema,
-} from "@modelcontextprotocol/sdk/types.js";
-import { walletTools, handleWalletTool } from "./tools/wallet.js";
-import { storeTools, handleStoreTool } from "./tools/store.js";
-import { spawnTools, handleSpawnTool } from "./tools/spawn.js";
-import { faucetTools, handleFaucetTool } from "./tools/faucet.js";
-import { searchTools, handleSearchTool } from "./tools/search.js";
-import { emailTools, handleEmailTool } from "./tools/email.js";
-import { memTools, handleMemTool } from "./tools/mem.js";
+import { CallToolRequestSchema, ListToolsRequestSchema } from "@modelcontextprotocol/sdk/types.js";
 import { domainTools, handleDomainTool } from "./tools/domain.js";
-import { tokenTools, handleTokenTool } from "./tools/token.js";
-import { reportTools, handleReportTool } from "./tools/report.js";
+import { emailTools, handleEmailTool } from "./tools/email.js";
+import { faucetTools, handleFaucetTool } from "./tools/faucet.js";
+import { handleMemTool, memTools } from "./tools/mem.js";
+import { handleReportTool, reportTools } from "./tools/report.js";
+import { handleSearchTool, searchTools } from "./tools/search.js";
+import { handleSpawnTool, spawnTools } from "./tools/spawn.js";
+import { handleStoreTool, storeTools } from "./tools/store.js";
+import { handleTokenTool, tokenTools } from "./tools/token.js";
+import { handleWalletTool, walletTools } from "./tools/wallet.js";
 import { createMcpFetch, getBaseUrl } from "./x402.js";
 
-const PRIMITIVE_GROUPS = ["wallet", "store", "spawn", "faucet", "search", "email", "mem", "domain", "token"] as const;
+const PRIMITIVE_GROUPS = [
+  "wallet",
+  "store",
+  "spawn",
+  "faucet",
+  "search",
+  "email",
+  "mem",
+  "domain",
+  "token",
+] as const;
 type Primitive = (typeof PRIMITIVE_GROUPS)[number];
 
 function isPrimitive(s: string): s is Primitive {
@@ -45,8 +52,7 @@ export async function startMcpServer(options: ServerOptions = {}): Promise<void>
 
   // Eagerly create primFetch (will throw if no wallet configured and wallet-using tools are requested)
   let primFetch: typeof fetch;
-  const needsWallet =
-    enabledPrimitives.some((p) => p !== "faucet");
+  const needsWallet = enabledPrimitives.some((p) => p !== "faucet");
 
   if (needsWallet) {
     try {
@@ -75,10 +81,7 @@ export async function startMcpServer(options: ServerOptions = {}): Promise<void>
     ...reportTools,
   ];
 
-  const server = new Server(
-    { name: "prim", version: "0.1.0" },
-    { capabilities: { tools: {} } },
-  );
+  const server = new Server({ name: "prim", version: "0.1.0" }, { capabilities: { tools: {} } });
 
   server.setRequestHandler(ListToolsRequestSchema, async () => {
     return { tools: allTools };
@@ -127,9 +130,7 @@ export async function startMcpServer(options: ServerOptions = {}): Promise<void>
 
   const transport = new StdioServerTransport();
   await server.connect(transport);
-  process.stderr.write(
-    `prim MCP server started. Primitives: ${enabledPrimitives.join(", ")}\n`,
-  );
+  process.stderr.write(`prim MCP server started. Primitives: ${enabledPrimitives.join(", ")}\n`);
 }
 
 export { isPrimitive };

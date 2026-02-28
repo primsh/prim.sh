@@ -1,7 +1,7 @@
-import { ProviderError } from "./provider.ts";
-import { TrackingMoreClient } from "./trackingmore.ts";
-import type { TrackProvider } from "./provider.ts";
 import type { TrackRequest, TrackResponse } from "./api.ts";
+import { ProviderError } from "./provider.ts";
+import type { TrackProvider } from "./provider.ts";
+import { TrackingMoreClient } from "./trackingmore.ts";
 
 // Re-export for convenience
 export { ProviderError } from "./provider.ts";
@@ -63,10 +63,18 @@ function getClient(): TrackingMoreClient {
 
 function handleProviderError(err: unknown): ServiceResult<never> {
   if (err instanceof ProviderError) {
-    if (err.code === "not_found") return { ok: false, status: 404, code: "not_found", message: err.message };
-    if (err.code === "invalid_request") return { ok: false, status: 400, code: "invalid_request", message: err.message };
+    if (err.code === "not_found")
+      return { ok: false, status: 404, code: "not_found", message: err.message };
+    if (err.code === "invalid_request")
+      return { ok: false, status: 400, code: "invalid_request", message: err.message };
     if (err.code === "rate_limited") {
-      return { ok: false, status: 429, code: "rate_limited", message: err.message, retryAfter: err.retryAfter };
+      return {
+        ok: false,
+        status: 429,
+        code: "rate_limited",
+        message: err.message,
+        retryAfter: err.retryAfter,
+      };
     }
     return { ok: false, status: 502, code: "provider_error", message: err.message };
   }
@@ -80,7 +88,12 @@ export async function trackPackage(
   provider?: TrackProvider,
 ): Promise<ServiceResult<TrackResponse>> {
   if (!request.tracking_number?.trim()) {
-    return { ok: false, status: 400, code: "invalid_request", message: "tracking_number is required" };
+    return {
+      ok: false,
+      status: 400,
+      code: "invalid_request",
+      message: "tracking_number is required",
+    };
   }
 
   const carrier = normalizeCarrier(request.carrier?.trim() || "usps");

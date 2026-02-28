@@ -12,15 +12,23 @@
  *   bun scripts/gen-gate.ts wallet   # generate for a specific prim only
  */
 
-import { readFileSync, writeFileSync, existsSync } from "node:fs";
+import { existsSync, readFileSync, writeFileSync } from "node:fs";
 import { join, resolve } from "node:path";
-import { loadPrimitives, deployed, withPackage, type Primitive, type RouteMapping } from "./lib/primitives.js";
-import { parseApiFile, type ParsedInterface, type ParsedField } from "./lib/parse-api.js";
+import { type ParsedField, type ParsedInterface, parseApiFile } from "./lib/parse-api.js";
+import {
+  type Primitive,
+  type RouteMapping,
+  deployed,
+  loadPrimitives,
+  withPackage,
+} from "./lib/primitives.js";
 
 const ROOT = resolve(import.meta.dir, "..");
 const PLAN_PATH = join(ROOT, "tests", "smoke-test-plan.json");
 const CHECK_MODE = process.argv.includes("--check");
-const TARGET_ID = process.argv.find((a) => !a.startsWith("--") && a !== process.argv[0] && a !== process.argv[1]);
+const TARGET_ID = process.argv.find(
+  (a) => !a.startsWith("--") && a !== process.argv[0] && a !== process.argv[1],
+);
 
 // ── ID prefix mapping ──────────────────────────────────────────────────────
 
@@ -143,7 +151,10 @@ function paramToVar(primId: string, param: string, path: string): string {
   }
 
   // camelCase param → snake_case
-  return param.replace(/([A-Z])/g, "_$1").toLowerCase().replace(/^_/, "");
+  return param
+    .replace(/([A-Z])/g, "_$1")
+    .toLowerCase()
+    .replace(/^_/, "");
 }
 
 function singularize(word: string): string {
@@ -200,7 +211,10 @@ function buildExpectedShape(
 }
 
 function fieldToShape(field: ParsedField, interfaces: Map<string, ParsedInterface>): unknown {
-  const type = field.type.replace(/\s*\|\s*null\s*$/, "").replace(/^\s*null\s*\|\s*/, "").trim();
+  const type = field.type
+    .replace(/\s*\|\s*null\s*$/, "")
+    .replace(/^\s*null\s*\|\s*/, "")
+    .trim();
 
   if (type.endsWith("[]")) {
     return "array (non-empty)";
@@ -312,7 +326,7 @@ function inferDependsOn(
     const segments = path.split("/").filter(Boolean);
     const firstParamIdx = segments.findIndex((s) => s.startsWith(":"));
     if (firstParamIdx > 0) {
-      const parentPath = "/" + segments.slice(0, firstParamIdx).join("/");
+      const parentPath = `/${segments.slice(0, firstParamIdx).join("/")}`;
       const createKey = `POST ${parentPath}`;
       const createTestId = testIndex.get(createKey);
       if (createTestId) {
@@ -431,7 +445,9 @@ function main() {
 
     // Parse api.ts for response shapes
     const apiPath = join(ROOT, "packages", prim.id, "src", "api.ts");
-    const interfaces = existsSync(apiPath) ? parseApiFile(apiPath).interfaces : new Map<string, ParsedInterface>();
+    const interfaces = existsSync(apiPath)
+      ? parseApiFile(apiPath).interfaces
+      : new Map<string, ParsedInterface>();
 
     // Build route → test ID index for this prim (existing + new)
     const routeTestIndex = new Map<string, string>();
@@ -447,7 +463,11 @@ function main() {
     // Also check discovery group health checks
     if (!healthTestId) {
       for (const t of plan.tests) {
-        if (t.method === "GET" && t.endpoint === `https://${prim.endpoint}/` && t.test === "Health check") {
+        if (
+          t.method === "GET" &&
+          t.endpoint === `https://${prim.endpoint}/` &&
+          t.test === "Health check"
+        ) {
           healthTestId = t.id;
           break;
         }
@@ -475,7 +495,7 @@ function main() {
         generated: true,
       });
       if (!newGroupTests.has(prim.id)) newGroupTests.set(prim.id, []);
-      newGroupTests.get(prim.id)!.push(hId);
+      newGroupTests.get(prim.id)?.push(hId);
     }
 
     // Check each route
@@ -502,9 +522,8 @@ function main() {
 
       // Build synthetic input
       const reqType = route.request_type ?? route.request;
-      const input = (method === "POST" || method === "PUT")
-        ? buildSyntheticInput(reqType, interfaces)
-        : null;
+      const input =
+        method === "POST" || method === "PUT" ? buildSyntheticInput(reqType, interfaces) : null;
 
       // Infer dependencies
       const deps = inferDependsOn(prim, route, healthTestId, routeTestIndex);
@@ -541,7 +560,7 @@ function main() {
       existingRoutes.set(key, testId); // prevent duplicates within this run
 
       if (!newGroupTests.has(prim.id)) newGroupTests.set(prim.id, []);
-      newGroupTests.get(prim.id)!.push(testId);
+      newGroupTests.get(prim.id)?.push(testId);
     }
   }
 
@@ -575,6 +594,7 @@ function main() {
       }
     } else {
       // Create new group
+      // biome-ignore lint/style/noNonNullAssertion: primId validated from routes_map
       const prim = prims.find((p) => p.id === primId)!;
       plan.groups.push({
         id: primId,
@@ -586,7 +606,7 @@ function main() {
   }
 
   // Write
-  const output = JSON.stringify(plan, null, 2) + "\n";
+  const output = `${JSON.stringify(plan, null, 2)}\n`;
   writeFileSync(PLAN_PATH, output);
 
   console.log(`Generated ${newTests.length} new test(s):`);

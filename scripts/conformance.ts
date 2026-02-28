@@ -13,9 +13,9 @@
  * Exit 1 = one or more checks fail (details printed per prim)
  */
 
-import { readFileSync, existsSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
 import { join, resolve } from "node:path";
-import { loadPrimitives, deployed } from "./lib/primitives.js";
+import { deployed, loadPrimitives } from "./lib/primitives.js";
 
 const ROOT = resolve(import.meta.dir, "..");
 
@@ -37,10 +37,15 @@ function checkFileExists(path: string): CheckResult {
   if (existsSync(path)) {
     return { pass: true, message: "exists" };
   }
-  return { pass: false, message: `file not found: ${path.replace(ROOT + "/", "")}` };
+  return { pass: false, message: `file not found: ${path.replace(`${ROOT}/`, "")}` };
 }
 
-function checkPattern(content: string, pattern: RegExp | string, label: string, file = "smoke.test.ts"): CheckResult {
+function checkPattern(
+  content: string,
+  pattern: RegExp | string,
+  label: string,
+  file = "smoke.test.ts",
+): CheckResult {
   const re = typeof pattern === "string" ? new RegExp(pattern) : pattern;
   if (re.test(content)) {
     return { pass: true, message: `pattern found: ${label}` };
@@ -67,7 +72,10 @@ function checkYamlFields(content: string, fields: string[]): CheckResult {
 
 const REQUIRED_YAML_FIELDS = ["id", "name", "port", "routes_map", "pricing", "env"];
 
-function runChecks(primId: string, isFreeService: boolean): { label: string; result: CheckResult }[] {
+function runChecks(
+  primId: string,
+  isFreeService: boolean,
+): { label: string; result: CheckResult }[] {
   const pkgDir = join(ROOT, "packages", primId);
   const smokeTestPath = join(pkgDir, "test", "smoke.test.ts");
   const primYamlPath = join(pkgDir, "prim.yaml");
@@ -203,7 +211,8 @@ function main() {
     const failCount = checks.filter((c) => !c.result.pass).length;
     totalFails += failCount;
 
-    const status = failCount === 0 ? "PASS" : `FAIL (${failCount} check${failCount > 1 ? "s" : ""})`;
+    const status =
+      failCount === 0 ? "PASS" : `FAIL (${failCount} check${failCount > 1 ? "s" : ""})`;
     const statusIcon = failCount === 0 ? "✓" : "✗";
     console.log(`${statusIcon} ${prim.id}  [${status}]${isFreeService ? "  (free service)" : ""}`);
 

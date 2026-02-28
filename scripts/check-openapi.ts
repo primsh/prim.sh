@@ -11,7 +11,7 @@
  */
 
 import { readFileSync, readdirSync } from "node:fs";
-import { join, resolve, basename } from "node:path";
+import { basename, join, resolve } from "node:path";
 import { parse as parseYaml } from "yaml";
 
 const ROOT = resolve(import.meta.dir, "..");
@@ -29,9 +29,7 @@ function specToPackageName(specFile: string): string {
 
 // Extract ERROR_CODES from api.ts
 function extractErrorCodes(apiContent: string): string[] | null {
-  const match = apiContent.match(
-    /export\s+const\s+ERROR_CODES\s*=\s*\[([\s\S]*?)\]\s*as\s+const/
-  );
+  const match = apiContent.match(/export\s+const\s+ERROR_CODES\s*=\s*\[([\s\S]*?)\]\s*as\s+const/);
   if (!match) return null;
 
   const codes: string[] = [];
@@ -54,9 +52,7 @@ function extractSpecErrorCodes(spec: Record<string, unknown>): string[] {
   if (!props) return [];
   const errorProp = props.error as Record<string, unknown> | undefined;
   if (!errorProp) return [];
-  const errorProps = errorProp.properties as
-    | Record<string, unknown>
-    | undefined;
+  const errorProps = errorProp.properties as Record<string, unknown> | undefined;
   if (!errorProps) return [];
   const codeProp = errorProps.code as Record<string, unknown> | undefined;
   if (!codeProp) return [];
@@ -65,9 +61,7 @@ function extractSpecErrorCodes(spec: Record<string, unknown>): string[] {
 }
 
 // Extract all path+method combinations from spec
-function extractSpecPaths(
-  spec: Record<string, unknown>
-): { method: string; path: string }[] {
+function extractSpecPaths(spec: Record<string, unknown>): { method: string; path: string }[] {
   const paths = spec.paths as Record<string, unknown> | undefined;
   if (!paths) return [];
 
@@ -89,12 +83,11 @@ function specPathToHonoPattern(specPath: string): string {
 }
 
 // Extract registered routes from index.ts
-function extractIndexRoutes(
-  indexContent: string
-): { method: string; path: string }[] {
+function extractIndexRoutes(indexContent: string): { method: string; path: string }[] {
   const routes: { method: string; path: string }[] = [];
   const re = /app\.(get|post|put|delete|patch)\(\s*"([^"]+)"/g;
   let match: RegExpExecArray | null;
+  // biome-ignore lint/suspicious/noAssignInExpressions: standard regex iteration
   while ((match = re.exec(indexContent)) !== null) {
     routes.push({ method: match[1].toUpperCase(), path: match[2] });
   }
@@ -102,14 +95,11 @@ function extractIndexRoutes(
 }
 
 // Extract interface field names from api.ts for a given interface name
-function extractInterfaceFields(
-  apiContent: string,
-  interfaceName: string
-): string[] | null {
+function extractInterfaceFields(apiContent: string, interfaceName: string): string[] | null {
   // Match "export interface Name { ... }" — handles multiline
   const re = new RegExp(
     `export\\s+interface\\s+${interfaceName}\\s*(?:extends\\s+[\\w<>,\\s]+)?\\{([\\s\\S]*?)\\n\\}`,
-    "m"
+    "m",
   );
   const match = apiContent.match(re);
   if (!match) return null;
@@ -128,7 +118,7 @@ function extractInterfaceFields(
 // Extract schema field names from OpenAPI spec component schema
 function extractSpecSchemaFields(
   spec: Record<string, unknown>,
-  schemaName: string
+  schemaName: string,
 ): string[] | null {
   const components = spec.components as Record<string, unknown> | undefined;
   if (!components) return null;
@@ -145,21 +135,20 @@ function extractSpecSchemaFields(
 // The naming conventions differ between packages so we do a best-effort match
 function findMatchingSchemas(
   apiContent: string,
-  spec: Record<string, unknown>
+  spec: Record<string, unknown>,
 ): { apiInterface: string; specSchema: string }[] {
   const components = spec.components as Record<string, unknown> | undefined;
   if (!components) return [];
   const schemas = components.schemas as Record<string, unknown> | undefined;
   if (!schemas) return [];
 
-  const specSchemaNames = new Set(
-    Object.keys(schemas).filter((n) => n !== "Error")
-  );
+  const specSchemaNames = new Set(Object.keys(schemas).filter((n) => n !== "Error"));
   const pairs: { apiInterface: string; specSchema: string }[] = [];
 
   // Extract all exported interfaces from api.ts
   const interfaceRe = /export\s+interface\s+(\w+)/g;
   let m: RegExpExecArray | null;
+  // biome-ignore lint/suspicious/noAssignInExpressions: standard regex iteration
   while ((m = interfaceRe.exec(apiContent)) !== null) {
     const name = m[1];
     // Skip error/request/meta/list/pagination types
@@ -204,9 +193,7 @@ function checkSpec(specFile: string): CheckResult {
   try {
     apiContent = readFileSync(apiPath, "utf8");
   } catch {
-    result.warnings.push(
-      `No api.ts found for ${pkgName} — skipping error code and schema checks`
-    );
+    result.warnings.push(`No api.ts found for ${pkgName} — skipping error code and schema checks`);
     apiContent = "";
   }
 
@@ -215,9 +202,7 @@ function checkSpec(specFile: string): CheckResult {
   try {
     indexContent = readFileSync(indexPath, "utf8");
   } catch {
-    result.warnings.push(
-      `No index.ts found for ${pkgName} — skipping route checks`
-    );
+    result.warnings.push(`No index.ts found for ${pkgName} — skipping route checks`);
     indexContent = "";
   }
 
@@ -230,7 +215,7 @@ function checkSpec(specFile: string): CheckResult {
       for (const code of codeErrors) {
         if (!specCodes.includes(code)) {
           result.errors.push(
-            `[${pkgName}] Error code "${code}" is in api.ts ERROR_CODES but missing from spec`
+            `[${pkgName}] Error code "${code}" is in api.ts ERROR_CODES but missing from spec`,
           );
         }
       }
@@ -238,17 +223,15 @@ function checkSpec(specFile: string): CheckResult {
       for (const code of specCodes) {
         if (!codeErrors.includes(code)) {
           result.warnings.push(
-            `[${pkgName}] Error code "${code}" is in spec but missing from api.ts ERROR_CODES`
+            `[${pkgName}] Error code "${code}" is in spec but missing from api.ts ERROR_CODES`,
           );
         }
       }
     } else if (codeErrors && specCodes.length === 0) {
-      result.warnings.push(
-        `[${pkgName}] api.ts has ERROR_CODES but spec has no error code enum`
-      );
+      result.warnings.push(`[${pkgName}] api.ts has ERROR_CODES but spec has no error code enum`);
     } else if (!codeErrors && specCodes.length > 0) {
       result.warnings.push(
-        `[${pkgName}] Spec has error code enum but api.ts has no ERROR_CODES array`
+        `[${pkgName}] Spec has error code enum but api.ts has no ERROR_CODES array`,
       );
     }
   }
@@ -262,9 +245,7 @@ function checkSpec(specFile: string): CheckResult {
     const middlewareRoutes = new Set(["GET /", "GET /llms.txt"]);
 
     // Convert index routes to a set of "METHOD /path" for lookup
-    const indexRouteSet = new Set(
-      indexRoutes.map((r) => `${r.method} ${r.path}`)
-    );
+    const indexRouteSet = new Set(indexRoutes.map((r) => `${r.method} ${r.path}`));
 
     for (const specRoute of specPaths) {
       const honoPath = specPathToHonoPattern(specRoute.path);
@@ -275,13 +256,11 @@ function checkSpec(specFile: string): CheckResult {
       if (!indexRouteSet.has(key)) {
         // Check if any index route matches with param wildcards
         const found = indexRoutes.some(
-          (r) =>
-            r.method === specRoute.method &&
-            routeMatches(r.path, honoPath)
+          (r) => r.method === specRoute.method && routeMatches(r.path, honoPath),
         );
         if (!found) {
           result.errors.push(
-            `[${pkgName}] Spec endpoint ${specRoute.method} ${specRoute.path} has no matching route in index.ts`
+            `[${pkgName}] Spec endpoint ${specRoute.method} ${specRoute.path} has no matching route in index.ts`,
           );
         }
       }
@@ -302,14 +281,14 @@ function checkSpec(specFile: string): CheckResult {
         for (const f of apiFields) {
           if (!specSet.has(f)) {
             result.warnings.push(
-              `[${pkgName}] Field "${f}" in api.ts ${apiInterface} but missing from spec ${specSchema}`
+              `[${pkgName}] Field "${f}" in api.ts ${apiInterface} but missing from spec ${specSchema}`,
             );
           }
         }
         for (const f of specFields) {
           if (!apiSet.has(f)) {
             result.warnings.push(
-              `[${pkgName}] Field "${f}" in spec ${specSchema} but missing from api.ts ${apiInterface}`
+              `[${pkgName}] Field "${f}" in spec ${specSchema} but missing from api.ts ${apiInterface}`,
             );
           }
         }
@@ -327,15 +306,15 @@ function routeMatches(route: string, pattern: string): boolean {
   if (routeParts.length !== patternParts.length) return false;
   return routeParts.every(
     (part, i) =>
-      part === patternParts[i] ||
-      part.startsWith(":") ||
-      patternParts[i].startsWith(":")
+      part === patternParts[i] || part.startsWith(":") || patternParts[i].startsWith(":"),
   );
 }
 
 // ── Main ──────────────────────────────────────────────────────────────────
 
-const specFiles = readdirSync(SPECS_DIR).filter((f) => f.endsWith(".yaml")).sort();
+const specFiles = readdirSync(SPECS_DIR)
+  .filter((f) => f.endsWith(".yaml"))
+  .sort();
 let hasErrors = false;
 
 console.log(`Checking ${specFiles.length} OpenAPI specs...\n`);

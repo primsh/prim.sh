@@ -12,11 +12,7 @@
   },
   "license": "Apache-2.0",
   "author": "Prim (https://prim.sh)",
-  "keywords": [
-    "prim",
-    "x402",
-    "create"
-  ],
+  "keywords": ["prim", "x402", "create"],
   "scripts": {
     "dev": "bun run src/index.ts",
     "start": "bun run src/index.ts",
