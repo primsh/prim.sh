@@ -707,6 +707,7 @@ footer .links a {
   pre {
     font-size: 0.75rem;
   }
+  .grid,
   .principles {
     grid-template-columns: 1fr;
   }
