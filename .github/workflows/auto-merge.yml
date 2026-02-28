@@ -1,4 +1,4 @@
-name: Auto-merge Bot PRs
+name: Auto-merge PRs
 
 on:
   pull_request:
@@ -10,15 +10,14 @@ permissions:
 
 jobs:
   auto-merge:
-    name: Auto-merge patch/minor bot PRs
+    name: Enable auto-merge
     runs-on: ubuntu-latest
-    # Only run for known bots
-    if: |
-      github.event.pull_request.user.login == 'dependabot[bot]' ||
-      github.event.pull_request.user.login == 'renovate[bot]'
+    # Skip PRs labeled needs-review
+    if: >-
+      !contains(github.event.pull_request.labels.*.name, 'needs-review')
 
     steps:
-      - name: Check bump type and enable auto-merge
+      - name: Check for major bumps and enable auto-merge
         uses: actions/github-script@v7
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -26,31 +25,25 @@ jobs:
           script: |
             const pr = context.payload.pull_request;
             const title = pr.title;
-            const author = pr.user.login;
 
-            core.info(`Bot PR detected: "${title}" by ${author}`);
+            core.info(`PR #${pr.number}: "${title}" by ${pr.user.login}`);
 
-            // Detect major version bump from PR title.
+            // Detect major version bump from bot PR titles.
             // dependabot: "Bump <pkg> from X.Y.Z to A.B.C"
-            // renovate:   "Update dependency <pkg> to vA.B.C" or "chore(deps): update <pkg> to vA.B.C"
+            // renovate:   "Update dependency <pkg> to vA.B.C"
             function isMajorBump(title) {
-              // dependabot pattern: extract from/to versions
               const depBotMatch = title.match(/from\s+v?(\d+)\.\d+\.\d+\s+to\s+v?(\d+)\.\d+/i);
               if (depBotMatch) {
                 const fromMajor = parseInt(depBotMatch[1], 10);
                 const toMajor = parseInt(depBotMatch[2], 10);
                 return toMajor > fromMajor;
               }
-
-              // renovate pattern: look for major version in "to vX" where X is clearly a major jump
-              // Without a from-version we can't know, so default to safe (don't block).
               return false;
             }
 
             if (isMajorBump(title)) {
               core.info('Major version bump detected — adding needs-review label, skipping auto-merge.');
 
-              // Ensure the label exists
               try {
                 await github.rest.issues.getLabel({
                   owner: context.repo.owner,
@@ -77,9 +70,8 @@ jobs:
               return;
             }
 
-            core.info('Patch/minor bump — enabling auto-merge (squash).');
+            core.info('Enabling auto-merge (squash). PR will merge once all required checks pass.');
 
-            // Enable auto-merge via the GraphQL API (REST doesn't support it directly)
             await github.graphql(`
               mutation EnableAutoMerge($pullRequestId: ID!) {
                 enablePullRequestAutoMerge(input: {
@@ -96,5 +88,3 @@ jobs:
             `, {
               pullRequestId: pr.node_id,
             });
-
-            core.info('Auto-merge enabled. PR will merge once all required checks pass.');
