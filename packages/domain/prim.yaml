@@ -54,7 +54,7 @@ factory:
 
 
 tagline: "Domains for agents."
-sub: "Instant subdomains with auto-TLS. Or bring your own domain. DNS records via API. No registrar account needed."
+sub: "Instant subdomains with auto-TLS. DNS records via API."
 
 hero_badges:
   - "**x402** auth"

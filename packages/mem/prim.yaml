@@ -48,7 +48,7 @@ factory:
 
 
 tagline: "Memory for agents."
-sub: "Managed vector database. Ephemeral cache. Long-term knowledge retrieval. Give your agent a hippocampus, gated by x402."
+sub: "Vector store, cache, and long-term retrieval for agents."
 
 hero_badges:
   - "**x402** auth"

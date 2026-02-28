@@ -66,7 +66,7 @@ pricing:
 
 
 tagline: "Email for agents. No inbox required."
-sub: "Provision addresses, send and receive email, parse inbound messages — all via API. x402 auth. No signup."
+sub: "Send, receive, and parse email. All via API."
 
 hero_badges:
   - "**x402** auth + payment"

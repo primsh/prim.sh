@@ -126,7 +126,7 @@ function brandCard(): string {
 
   <line x1="80" y1="520" x2="1120" y2="520" stroke="#1a1a1a" stroke-width="1"/>
   <text x="80" y="565" font-family="${FONT}" font-size="22" fill="#666">prim.sh</text>
-  <text x="1120" y="565" font-family="${FONT}" font-size="18" fill="#444" text-anchor="end">27 primitives · x402 · USDC on Base</text>
+  <text x="1120" y="565" font-family="${FONT}" font-size="18" fill="#444" text-anchor="end">♾️ primitives · x402 · USDC on Base</text>
 </svg>`;
 }
 
