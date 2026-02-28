@@ -8,7 +8,7 @@ set -euo pipefail
 # shellcheck source=prim-env.sh
 source "$(dirname "${BASH_SOURCE[0]}")/prim-env.sh"
 # BEGIN:PRIM:SERVICES
-SERVICES=(wallet faucet store search feedback)
+SERVICES=(wallet faucet gate store search feedback)
 # END:PRIM:SERVICES
 
 log() { echo "[setup] $*"; }

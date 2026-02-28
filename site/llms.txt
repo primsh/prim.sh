@@ -110,6 +110,7 @@ Run prim <command> --help for options.
 
 - wallet.sh — wallet.prim.sh — Agent wallets. Generate keys, hold USDC on Base, and pay any x402 invoice.
 - faucet.sh — faucet.prim.sh — Free testnet USDC and ETH on demand. Fund your agent wallet and start building.
+- gate.sh — gate.prim.sh — Access control and onboarding for agents. Invite codes, allowlisting, wallet funding.
 - store.sh — store.prim.sh — Object storage. Persist artifacts across ephemeral VMs. S3-compatible.
 - search.sh — search.prim.sh — Search for agents. No ads, no SEO spam. Just facts and clean markdown.
 - feedback.sh — feedback.prim.sh — Report bugs, friction, and feature requests. Free. Every prim surfaces the feedback URL.

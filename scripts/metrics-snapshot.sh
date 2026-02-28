@@ -15,7 +15,7 @@ LOG_FILE="/var/log/prim-metrics.log"
 TIMEOUT=10
 
 # BEGIN:PRIM:SERVICES
-SERVICES=(wallet faucet store search feedback)
+SERVICES=(wallet faucet gate store search feedback)
 # END:PRIM:SERVICES
 
 ts=$(date -u '+%Y-%m-%dT%H:%M:%SZ')
