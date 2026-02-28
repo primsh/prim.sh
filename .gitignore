@@ -57,6 +57,9 @@ brand/terminal-world/generated/
 # Brand fonts (binary)
 brand/fonts/
 
+# Ops plan docs (contain infrastructure details)
+tasks/active/e-4-domain-warmup.md
+
 # D2 diagram generated output
 docs/d2/generated/
 
