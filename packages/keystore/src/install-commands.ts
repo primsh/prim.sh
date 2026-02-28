@@ -389,7 +389,8 @@ export async function runSkillCommand(
 
   if (subcommand === "onboard") {
     const code = getFlag("code", argv);
-    content = content.replace(/\{\{CODE\}\}/g, code || "<YOUR_INVITE_CODE>");
+    const replacement = code || "<YOUR_INVITE_CODE>";
+    content = content.replace(/\{\{CODE\}\}/g, () => replacement);
   }
 
   process.stdout.write(content);
