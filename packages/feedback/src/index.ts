@@ -1,6 +1,5 @@
 import { resolve } from "node:path";
 import type { Context } from "hono";
-import { createLogger } from "@primsh/x402-middleware";
 import { createPrimApp } from "@primsh/x402-middleware/create-prim-app";
 import { submit } from "./service.ts";
 import { listFeedback, countFeedback } from "./db.ts";
@@ -23,8 +22,6 @@ const app = createPrimApp(
   },
   {},
 );
-
-const logger = createLogger("feedback.sh");
 
 // ─── Internal auth guard ─────────────────────────────────────────────────────
 
