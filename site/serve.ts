@@ -15,6 +15,7 @@ const ROOT = resolve(import.meta.dir, "..");
 
 const INDEX_PATH = join(ROOT, "site/index.html");
 const INDEX_TEMPLATE = readFileSync(INDEX_PATH, "utf-8")
+  .replace("{{nounStyled}}", BRAND.nounStyled)
   .replace("{{tagline}}", BRAND.tagline)
   .replace("{{sub}}", BRAND.sub)
   .replace("{{closer}}", BRAND.closer)

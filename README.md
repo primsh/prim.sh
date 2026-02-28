@@ -3,11 +3,11 @@
 </p>
 
 <h3 align="center">prim.sh</h3>
+<h4 align="center">The agent-native stack.</h4>
 <h3 align="center">Zero install. One curl. Infinite primitives.</h3>
 
 <p align="center">
-  Infrastructure for autonomous agents.<br>
-  Add mcp.prim.sh, pay with USDC, use every service.
+  Just add mcp.prim.sh, pay with USDC, use every service.
 </p>
 
 <p align="center">
