@@ -1,10 +1,10 @@
 #!/bin/sh
 # THIS FILE IS GENERATED — DO NOT EDIT
-# Source: packages/store/prim.yaml
+# Source: packages/feedback/prim.yaml
 # Regenerate: pnpm gen:install
 
-# Install store.sh — prim.sh
-# Usage: curl -fsSL https://store.prim.sh/install.sh | sh
+# Install feedback.sh — prim.sh
+# Usage: curl -fsSL https://feedback.prim.sh/install.sh | sh
 set -eu
 
 BIN_DIR="$HOME/.prim/bin"
@@ -50,8 +50,8 @@ cd - >/dev/null
 cp "$TMPDIR/$BINARY" "$BIN"
 chmod +x "$BIN"
 
-# Install store.sh skills
-"$BIN" install store
+# Install feedback.sh skills
+"$BIN" install feedback
 
 # Add to PATH
 PATH_LINE="export PATH=\"\$HOME/.prim/bin:\$PATH\""
@@ -73,4 +73,4 @@ echo ""
 echo "Restart your shell or run:"
 echo "  export PATH=\"\$HOME/.prim/bin:\$PATH\""
 echo ""
-echo "  store.sh installed. Your agent can now use store tools."
+echo "  feedback.sh installed. Your agent can now use feedback tools."

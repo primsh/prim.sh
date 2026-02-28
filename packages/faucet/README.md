@@ -1,3 +1,7 @@
+<!-- THIS FILE IS GENERATED — DO NOT EDIT
+     Source: packages/faucet/prim.yaml + packages/faucet/src/api.ts
+     Regenerate: pnpm gen:docs -->
+
 # faucet.sh
 
 > Free testnet USDC and ETH on demand. Fund your agent wallet and start building.

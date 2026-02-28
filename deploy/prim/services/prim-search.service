@@ -1,3 +1,7 @@
+# THIS FILE IS GENERATED — DO NOT EDIT
+# Source: packages/search/prim.yaml
+# Regenerate: pnpm gen:deploy
+
 [Unit]
 Description=prim.sh search.sh service
 After=network.target

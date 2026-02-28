@@ -1,3 +1,7 @@
+// THIS FILE IS GENERATED — DO NOT EDIT
+// Source: specs/openapi/email.yaml
+// Regenerate: pnpm gen:mcp
+
 import type { Tool } from "@modelcontextprotocol/sdk/types.js";
 import type { CallToolResult } from "@modelcontextprotocol/sdk/types.js";
 

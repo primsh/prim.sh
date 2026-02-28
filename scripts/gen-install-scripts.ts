@@ -63,8 +63,13 @@ for (const id of dirs) {
     `echo "  ${name} installed. Your agent can now use ${id} tools."\n`,
   );
 
+  // Inject gen header after the shebang line
+  const shebangEnd = script.indexOf("\n") + 1;
+  const shebang = script.slice(0, shebangEnd);
+  const rest = script.slice(shebangEnd);
+  const genHeader = `# THIS FILE IS GENERATED — DO NOT EDIT\n# Source: packages/${id}/prim.yaml\n# Regenerate: pnpm gen:install\n\n`;
   const outPath = join(pkgDir, id, "install.sh");
-  writeFileSync(outPath, script, { mode: 0o755 });
+  writeFileSync(outPath, shebang + genHeader + rest, { mode: 0o755 });
   console.log(`  ✓ ${outPath}`);
   written++;
 }

@@ -1,3 +1,7 @@
+<!-- THIS FILE IS GENERATED — DO NOT EDIT
+     Source: packages/feedback/prim.yaml + packages/feedback/src/api.ts
+     Regenerate: pnpm gen:docs -->
+
 # feedback.sh
 
 > Report bugs, friction, and feature requests. Free. Every prim surfaces the feedback URL.

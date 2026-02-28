@@ -1,3 +1,7 @@
+<!-- THIS FILE IS GENERATED — DO NOT EDIT
+     Source: packages/search/prim.yaml + packages/search/src/api.ts
+     Regenerate: pnpm gen:docs -->
+
 # search.sh
 
 > Search for agents. No ads, no SEO spam. Just facts and clean markdown.

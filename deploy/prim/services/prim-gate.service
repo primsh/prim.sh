@@ -1,3 +1,7 @@
+# THIS FILE IS GENERATED — DO NOT EDIT
+# Source: packages/gate/prim.yaml
+# Regenerate: pnpm gen:deploy
+
 [Unit]
 Description=prim.sh gate.sh service
 After=network.target

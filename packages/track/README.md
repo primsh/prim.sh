@@ -1,3 +1,7 @@
+<!-- THIS FILE IS GENERATED — DO NOT EDIT
+     Source: packages/track/prim.yaml + packages/track/src/api.ts
+     Regenerate: pnpm gen:docs -->
+
 # track.sh
 
 > Package tracking for agents. USPS, FedEx, UPS, DHL and 1000+ carriers. Status, ETA, full event history.

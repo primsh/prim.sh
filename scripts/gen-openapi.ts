@@ -94,7 +94,7 @@ for (const p of eligible) {
   const prices = existsSync(indexPath) ? parseRoutePrices(indexPath) : new Map<string, string>();
 
   const specYaml = renderOpenApi(p, api, prices);
-  const header = `${GENERATED_MARKER} — do not edit by hand\n# Source: packages/${p.id}/prim.yaml + packages/${p.id}/src/api.ts\n# Regenerate: pnpm gen:openapi --force\n\n`;
+  const header = `${GENERATED_MARKER}\n# THIS FILE IS GENERATED — DO NOT EDIT\n# Source: packages/${p.id}/prim.yaml + packages/${p.id}/src/api.ts\n# Regenerate: pnpm gen:openapi\n\n`;
   applyFullFile(outPath, header + specYaml);
 }
 
