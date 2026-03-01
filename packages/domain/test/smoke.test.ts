@@ -1,4 +1,3 @@
-import type { Context, Next } from "hono";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 vi.hoisted(() => {
@@ -33,18 +32,18 @@ vi.mock("node:fs", async (importOriginal) => {
   };
 });
 
-// Bypass x402 so the handler is reachable in unit tests.
-// Middleware also sets walletAddress so route guards don't short-circuit.
-// Wiring is verified via check 3 (spy on createAgentStackMiddleware).
+import { mockX402Middleware } from "@primsh/x402-middleware/testing";
+
+const createAgentStackMiddlewareSpy = vi.hoisted(() => vi.fn());
+
 vi.mock("@primsh/x402-middleware", async (importOriginal) => {
   const original = await importOriginal<typeof import("@primsh/x402-middleware")>();
+  const mocks = mockX402Middleware();
+  createAgentStackMiddlewareSpy.mockImplementation(mocks.createAgentStackMiddleware);
   return {
     ...original,
-    createAgentStackMiddleware: vi.fn(() => async (c: Context, next: Next) => {
-      c.set("walletAddress", "0x0000000000000000000000000000000000000001");
-      await next();
-    }),
-    createWalletAllowlistChecker: vi.fn(() => () => Promise.resolve(true)),
+    createAgentStackMiddleware: createAgentStackMiddlewareSpy,
+    createWalletAllowlistChecker: vi.fn(mocks.createWalletAllowlistChecker),
   };
 });
 
@@ -93,7 +92,6 @@ vi.mock("@x402/core/http", () => ({
   decodePaymentSignatureHeader: vi.fn(() => ({})),
 }));
 
-import { createAgentStackMiddleware } from "@primsh/x402-middleware";
 import type { CreateZoneResponse } from "../src/api.ts";
 import app from "../src/index.ts";
 import { createZone } from "../src/service.ts";
@@ -129,7 +127,7 @@ describe("domain.sh app", () => {
 
   // Check 3: x402 middleware is wired with the correct paid routes and payTo address
   it("x402 middleware is registered with paid routes and payTo", () => {
-    expect(vi.mocked(createAgentStackMiddleware)).toHaveBeenCalledWith(
+    expect(createAgentStackMiddlewareSpy).toHaveBeenCalledWith(
       expect.objectContaining({
         payTo: expect.any(String),
         freeRoutes: expect.arrayContaining(["GET /"]),

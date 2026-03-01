@@ -1,11 +1,7 @@
-import type { ProviderRegistry } from "@primsh/x402-middleware";
+import type { ProviderRegistry, ServiceResult } from "@primsh/x402-middleware";
 import type { ExtractRequest, ExtractResponse, SearchRequest, SearchResponse } from "./api.ts";
 import { ProviderError } from "./provider.ts";
 import type { ExtractProvider, SearchProvider } from "./provider.ts";
-
-type ServiceResult<T> =
-  | { ok: true; data: T }
-  | { ok: false; status: number; code: string; message: string; retryAfter?: number };
 
 // ─── Registry injection ───────────────────────────────────────────────────────
 //

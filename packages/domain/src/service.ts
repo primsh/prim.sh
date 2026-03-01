@@ -1,6 +1,6 @@
 import { randomBytes } from "node:crypto";
 import { createLogger } from "@primsh/x402-middleware";
-import type { PaginatedList } from "@primsh/x402-middleware";
+import type { PaginatedList, ServiceResult } from "@primsh/x402-middleware";
 
 const log = createLogger("domain.sh");
 import type {
@@ -108,10 +108,6 @@ function rowToRecordResponse(row: RecordRow): RecordResponse {
 }
 
 // ─── Ownership ───────────────────────────────────────────────────────────
-
-type ServiceResult<T> =
-  | { ok: true; data: T }
-  | { ok: false; status: number; code: string; message: string };
 
 type ZoneCheck =
   | { ok: true; row: ZoneRow }

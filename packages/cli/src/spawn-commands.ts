@@ -22,8 +22,7 @@ async function handleError(res: Response): Promise<never> {
   } catch {
     // ignore parse error
   }
-  process.stderr.write(`Error: ${message} (${code})\n`);
-  process.exit(1);
+  throw new Error(`${message} (${code})`);
 }
 
 export async function runSpawnCommand(sub: string, argv: string[]): Promise<void> {
@@ -32,6 +31,7 @@ export async function runSpawnCommand(sub: string, argv: string[]): Promise<void
   const passphrase = await resolvePassphrase(argv);
   const maxPaymentFlag = getFlag("max-payment", argv);
   const quiet = hasFlag("quiet", argv);
+  const jsonOutput = hasFlag("json", argv);
   const config = await getConfig();
   const primFetch = createPrimFetch({
     keystore:
@@ -182,6 +182,8 @@ export async function runSpawnCommand(sub: string, argv: string[]): Promise<void
       };
       if (quiet) {
         console.log(data.public_net?.ipv4?.ip ?? "");
+      } else if (jsonOutput) {
+        console.log(JSON.stringify(data, null, 2));
       } else {
         const ip = data.public_net?.ipv4?.ip ?? "none";
         console.log(`Server ${data.id}`);

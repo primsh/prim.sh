@@ -5,6 +5,8 @@ import {
   forbidden,
   invalidRequest,
   notFound,
+  parseJsonBody,
+  requireCaller,
   serviceError,
 } from "@primsh/x402-middleware";
 import type { ApiError, PaginatedList } from "@primsh/x402-middleware";
@@ -128,18 +130,13 @@ const logger = app.logger;
 
 // POST /v1/servers — Create server
 app.post("/v1/servers", async (c) => {
-  const caller = c.get("walletAddress");
-  if (!caller) {
-    return c.json(forbidden("No wallet address in payment"), 403);
-  }
+  const callerOrRes = requireCaller(c);
+  if (callerOrRes instanceof Response) return callerOrRes;
+  const caller = callerOrRes;
 
-  let body: CreateServerRequest;
-  try {
-    body = await c.req.json<CreateServerRequest>();
-  } catch (err) {
-    logger.warn("JSON parse failed on POST /v1/servers", { error: String(err) });
-    return c.json(invalidRequest("Invalid JSON body"), 400);
-  }
+  const bodyOrRes = await parseJsonBody<CreateServerRequest>(c, logger, "POST /v1/servers");
+  if (bodyOrRes instanceof Response) return bodyOrRes;
+  const body = bodyOrRes;
 
   const result = await createServer(body, caller);
   if (!result.ok) {
@@ -153,10 +150,9 @@ app.post("/v1/servers", async (c) => {
 
 // GET /v1/servers — List servers
 app.get("/v1/servers", (c) => {
-  const caller = c.get("walletAddress");
-  if (!caller) {
-    return c.json(forbidden("No wallet address in payment"), 403);
-  }
+  const callerOrRes = requireCaller(c);
+  if (callerOrRes instanceof Response) return callerOrRes;
+  const caller = callerOrRes;
 
   const limitParam = c.req.query("limit");
   const pageParam = c.req.query("page");
@@ -169,10 +165,9 @@ app.get("/v1/servers", (c) => {
 
 // GET /v1/servers/:id — Get server
 app.get("/v1/servers/:id", async (c) => {
-  const caller = c.get("walletAddress");
-  if (!caller) {
-    return c.json(forbidden("No wallet address in payment"), 403);
-  }
+  const callerOrRes = requireCaller(c);
+  if (callerOrRes instanceof Response) return callerOrRes;
+  const caller = callerOrRes;
 
   const id = c.req.param("id");
   const result = await getServer(id, caller);
@@ -186,10 +181,9 @@ app.get("/v1/servers/:id", async (c) => {
 
 // DELETE /v1/servers/:id — Delete server
 app.delete("/v1/servers/:id", async (c) => {
-  const caller = c.get("walletAddress");
-  if (!caller) {
-    return c.json(forbidden("No wallet address in payment"), 403);
-  }
+  const callerOrRes = requireCaller(c);
+  if (callerOrRes instanceof Response) return callerOrRes;
+  const caller = callerOrRes;
 
   const id = c.req.param("id");
   const result = await deleteServer(id, caller);
@@ -204,8 +198,9 @@ app.delete("/v1/servers/:id", async (c) => {
 
 // POST /v1/servers/:id/start — Start server
 app.post("/v1/servers/:id/start", async (c) => {
-  const caller = c.get("walletAddress");
-  if (!caller) return c.json(forbidden("No wallet address in payment"), 403);
+  const callerOrRes = requireCaller(c);
+  if (callerOrRes instanceof Response) return callerOrRes;
+  const caller = callerOrRes;
 
   const result = await startServer(c.req.param("id"), caller);
   if (!result.ok) {
@@ -218,8 +213,9 @@ app.post("/v1/servers/:id/start", async (c) => {
 
 // POST /v1/servers/:id/stop — Stop server
 app.post("/v1/servers/:id/stop", async (c) => {
-  const caller = c.get("walletAddress");
-  if (!caller) return c.json(forbidden("No wallet address in payment"), 403);
+  const callerOrRes = requireCaller(c);
+  if (callerOrRes instanceof Response) return callerOrRes;
+  const caller = callerOrRes;
 
   const result = await stopServer(c.req.param("id"), caller);
   if (!result.ok) {
@@ -232,8 +228,9 @@ app.post("/v1/servers/:id/stop", async (c) => {
 
 // POST /v1/servers/:id/reboot — Reboot server
 app.post("/v1/servers/:id/reboot", async (c) => {
-  const caller = c.get("walletAddress");
-  if (!caller) return c.json(forbidden("No wallet address in payment"), 403);
+  const callerOrRes = requireCaller(c);
+  if (callerOrRes instanceof Response) return callerOrRes;
+  const caller = callerOrRes;
 
   const result = await rebootServer(c.req.param("id"), caller);
   if (!result.ok) {
@@ -246,16 +243,13 @@ app.post("/v1/servers/:id/reboot", async (c) => {
 
 // POST /v1/servers/:id/resize — Resize server
 app.post("/v1/servers/:id/resize", async (c) => {
-  const caller = c.get("walletAddress");
-  if (!caller) return c.json(forbidden("No wallet address in payment"), 403);
+  const callerOrRes = requireCaller(c);
+  if (callerOrRes instanceof Response) return callerOrRes;
+  const caller = callerOrRes;
 
-  let body: ResizeRequest;
-  try {
-    body = await c.req.json<ResizeRequest>();
-  } catch (err) {
-    logger.warn("JSON parse failed on POST /v1/servers/:id/resize", { error: String(err) });
-    return c.json(invalidRequest("Invalid JSON body"), 400);
-  }
+  const bodyOrRes = await parseJsonBody<ResizeRequest>(c, logger, "POST /v1/servers/:id/resize");
+  if (bodyOrRes instanceof Response) return bodyOrRes;
+  const body = bodyOrRes;
 
   const result = await resizeServer(c.req.param("id"), caller, body);
   if (!result.ok) {
@@ -269,16 +263,13 @@ app.post("/v1/servers/:id/resize", async (c) => {
 
 // POST /v1/servers/:id/rebuild — Rebuild server
 app.post("/v1/servers/:id/rebuild", async (c) => {
-  const caller = c.get("walletAddress");
-  if (!caller) return c.json(forbidden("No wallet address in payment"), 403);
+  const callerOrRes = requireCaller(c);
+  if (callerOrRes instanceof Response) return callerOrRes;
+  const caller = callerOrRes;
 
-  let body: RebuildRequest;
-  try {
-    body = await c.req.json<RebuildRequest>();
-  } catch (err) {
-    logger.warn("JSON parse failed on POST /v1/servers/:id/rebuild", { error: String(err) });
-    return c.json(invalidRequest("Invalid JSON body"), 400);
-  }
+  const bodyOrRes = await parseJsonBody<RebuildRequest>(c, logger, "POST /v1/servers/:id/rebuild");
+  if (bodyOrRes instanceof Response) return bodyOrRes;
+  const body = bodyOrRes;
 
   const result = await rebuildServer(c.req.param("id"), caller, body);
   if (!result.ok) {
@@ -292,16 +283,13 @@ app.post("/v1/servers/:id/rebuild", async (c) => {
 
 // POST /v1/ssh-keys — Register SSH key
 app.post("/v1/ssh-keys", async (c) => {
-  const caller = c.get("walletAddress");
-  if (!caller) return c.json(forbidden("No wallet address in payment"), 403);
+  const callerOrRes = requireCaller(c);
+  if (callerOrRes instanceof Response) return callerOrRes;
+  const caller = callerOrRes;
 
-  let body: CreateSshKeyRequest;
-  try {
-    body = await c.req.json<CreateSshKeyRequest>();
-  } catch (err) {
-    logger.warn("JSON parse failed on POST /v1/ssh-keys", { error: String(err) });
-    return c.json(invalidRequest("Invalid JSON body"), 400);
-  }
+  const bodyOrRes = await parseJsonBody<CreateSshKeyRequest>(c, logger, "POST /v1/ssh-keys");
+  if (bodyOrRes instanceof Response) return bodyOrRes;
+  const body = bodyOrRes;
 
   const result = await registerSshKey(body, caller);
   if (!result.ok) {
@@ -313,8 +301,9 @@ app.post("/v1/ssh-keys", async (c) => {
 
 // GET /v1/ssh-keys — List SSH keys
 app.get("/v1/ssh-keys", (c) => {
-  const caller = c.get("walletAddress");
-  if (!caller) return c.json(forbidden("No wallet address in payment"), 403);
+  const callerOrRes = requireCaller(c);
+  if (callerOrRes instanceof Response) return callerOrRes;
+  const caller = callerOrRes;
 
   const data = listSshKeys(caller);
   return c.json(data as PaginatedList<SshKeyResponse>, 200);
@@ -322,8 +311,9 @@ app.get("/v1/ssh-keys", (c) => {
 
 // DELETE /v1/ssh-keys/:id — Delete SSH key
 app.delete("/v1/ssh-keys/:id", async (c) => {
-  const caller = c.get("walletAddress");
-  if (!caller) return c.json(forbidden("No wallet address in payment"), 403);
+  const callerOrRes = requireCaller(c);
+  if (callerOrRes instanceof Response) return callerOrRes;
+  const caller = callerOrRes;
 
   const result = await deleteSshKey(c.req.param("id"), caller);
   if (!result.ok) {

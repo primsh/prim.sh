@@ -1,5 +1,5 @@
 import { createHash, randomBytes } from "node:crypto";
-import type { PaginatedList } from "@primsh/x402-middleware";
+import type { PaginatedList, ServiceResult } from "@primsh/x402-middleware";
 import type {
   CollectionResponse,
   CreateCollectionRequest,
@@ -32,12 +32,6 @@ import {
   queryPoints,
   upsertPoints,
 } from "./qdrant.ts";
-
-// ─── ServiceResult ────────────────────────────────────────────────────────
-
-type ServiceResult<T> =
-  | { ok: true; data: T }
-  | { ok: false; status: number; code: string; message: string };
 
 // ─── Validation ───────────────────────────────────────────────────────────
 

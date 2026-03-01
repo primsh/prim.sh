@@ -98,6 +98,18 @@ function okQuota(usageBytes = 512) {
   });
 }
 
+function okObjectList(keys = ["file1.txt", "file2.txt"]) {
+  return jsonResponse(200, {
+    objects: keys.map((key) => ({
+      key,
+      size: 100,
+      etag: "abc",
+      last_modified: "2026-01-01T00:00:00Z",
+    })),
+    meta: { page: 1, per_page: 20, total: keys.length },
+  });
+}
+
 function errorResponse(code: string, message: string, status = 404) {
   return jsonResponse(status, { error: { code, message } });
 }
@@ -211,6 +223,58 @@ describe("ls", () => {
     expect(consoleLogSpy).toHaveBeenCalledWith("bkt_1");
     expect(consoleLogSpy).toHaveBeenCalledWith("bkt_2");
     expect(consoleLogSpy).toHaveBeenCalledWith("bkt_3");
+  });
+});
+
+// ─── 2b. ls BUCKET_ID (objects) ──────────────────────────────────────────────
+
+describe("ls BUCKET_ID", () => {
+  it("GETs /v1/buckets/:id/objects and prints JSON", async () => {
+    mockFetch.mockResolvedValue(okObjectList(["a.txt", "b.txt"]));
+    await runStoreCommand("ls", ["store", "ls", "bkt_123"]);
+    const [url] = mockFetch.mock.calls[0] as [string];
+    expect(url).toContain("/v1/buckets/bkt_123/objects");
+    expect(url).toContain("page=1");
+    expect(url).toContain("per_page=20");
+    expect(consoleLogSpy).toHaveBeenCalledWith(expect.stringContaining("a.txt"));
+  });
+
+  it("--quiet prints one object key per line", async () => {
+    mockFetch.mockResolvedValue(okObjectList(["x.txt", "y.txt", "z.txt"]));
+    await runStoreCommand("ls", ["store", "ls", "bkt_123", "--quiet"]);
+    expect(consoleLogSpy).toHaveBeenCalledTimes(3);
+    expect(consoleLogSpy).toHaveBeenCalledWith("x.txt");
+    expect(consoleLogSpy).toHaveBeenCalledWith("y.txt");
+    expect(consoleLogSpy).toHaveBeenCalledWith("z.txt");
+  });
+
+  it("--prefix passes prefix param to query string", async () => {
+    mockFetch.mockResolvedValue(okObjectList(["docs/readme.md"]));
+    await runStoreCommand("ls", ["store", "ls", "bkt_123", "--prefix=docs/"]);
+    const [url] = mockFetch.mock.calls[0] as [string];
+    expect(url).toContain("prefix=docs%2F");
+  });
+
+  it("resolves bucket name to ID before listing objects", async () => {
+    // First call: resolveBucket fetches /v1/buckets to find name→id mapping
+    // okBucketList uses id as both id and name, so the bucket name "bkt_resolved" matches
+    mockFetch.mockResolvedValueOnce(
+      jsonResponse(200, {
+        data: [{ id: "bkt_resolved", name: "my-bucket", owner_wallet: "0xABC" }],
+        meta: { page: 1, per_page: 20, total: 1 },
+      }),
+    );
+    // Second call: actual objects list
+    mockFetch.mockResolvedValueOnce(okObjectList(["obj.txt"]));
+
+    await runStoreCommand("ls", ["store", "ls", "my-bucket"]);
+
+    // resolveBucket should have called /v1/buckets first
+    const [firstUrl] = mockFetch.mock.calls[0] as [string];
+    expect(firstUrl).toContain("/v1/buckets");
+    // Then objects list uses the resolved ID
+    const [secondUrl] = mockFetch.mock.calls[1] as [string];
+    expect(secondUrl).toContain("/v1/buckets/bkt_resolved/objects");
   });
 });
 
@@ -480,25 +544,20 @@ describe("--quiet flag", () => {
 // ─── 11. error handling ───────────────────────────────────────────────────────
 
 describe("error handling", () => {
-  it("non-ok response prints error message and code, exits 1", async () => {
+  it("non-ok response throws with error message and code", async () => {
     mockFetch.mockResolvedValue(errorResponse("not_found", "Bucket not found"));
 
     await expect(runStoreCommand("quota", ["store", "quota", "bkt_missing"])).rejects.toThrow(
-      "process.exit(1)",
+      "Bucket not found (not_found)",
     );
-
-    expect(stderrSpy).toHaveBeenCalledWith("Error: Bucket not found (not_found)\n");
-    expect(exitSpy).toHaveBeenCalledWith(1);
   });
 
   it("403 forbidden error is reported correctly", async () => {
     mockFetch.mockResolvedValue(errorResponse("forbidden", "Access denied", 403));
 
     await expect(runStoreCommand("rm-bucket", ["store", "rm-bucket", "bkt_xyz"])).rejects.toThrow(
-      "process.exit(1)",
+      "Access denied (forbidden)",
     );
-
-    expect(stderrSpy).toHaveBeenCalledWith("Error: Access denied (forbidden)\n");
   });
 });
 

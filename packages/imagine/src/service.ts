@@ -1,7 +1,4 @@
-import { ProviderError } from "./provider.ts";
-import type { ImagineProvider } from "./provider.ts";
-// Re-export for convenience
-export { ProviderError } from "./provider.ts";
+import type { ServiceResult } from "@primsh/x402-middleware";
 import type {
   DescribeRequest,
   DescribeResponse,
@@ -11,12 +8,10 @@ import type {
   UpscaleRequest,
   UpscaleResponse,
 } from "./api.ts";
-
-// ─── ServiceResult ────────────────────────────────────────────────────────────
-
-type ServiceResult<T> =
-  | { ok: true; data: T }
-  | { ok: false; status: number; code: string; message: string; retryAfter?: number };
+import { ProviderError } from "./provider.ts";
+import type { ImagineProvider } from "./provider.ts";
+// Re-export for convenience
+export { ProviderError } from "./provider.ts";
 
 // ─── Service functions ────────────────────────────────────────────────────────
 

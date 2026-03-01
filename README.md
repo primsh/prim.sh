@@ -11,6 +11,14 @@
 </p>
 
 <p align="center">
+  <a href="https://github.com/primsh/prim.sh/actions/workflows/ci.yml"><img src="https://github.com/primsh/prim.sh/actions/workflows/ci.yml/badge.svg" alt="CI"></a>
+  <a href="https://github.com/primsh/prim.sh/blob/main/LICENSE"><img src="https://img.shields.io/badge/license-Apache--2.0-blue" alt="License"></a>
+  <a href="https://discord.gg/VbFseNDZ"><img src="https://img.shields.io/badge/Discord-join-5865F2" alt="Discord"></a>
+  <a href="https://x.com/useprim"><img src="https://img.shields.io/twitter/follow/useprim?style=flat&label=@useprim" alt="X"></a>
+  <a href="https://github.com/primsh/prim.sh"><img src="https://img.shields.io/github/stars/primsh/prim.sh?style=flat" alt="Stars"></a>
+</p>
+
+<p align="center">
   <a href="https://prim.sh">Website</a> &middot;
   <a href="https://prim.sh/llms.txt">llms.txt</a> &middot;
   <a href="https://discord.gg/VbFseNDZ">Discord</a> &middot;

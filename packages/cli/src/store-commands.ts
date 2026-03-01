@@ -57,8 +57,7 @@ async function handleError(res: Response): Promise<never> {
   } catch {
     // ignore parse error
   }
-  process.stderr.write(`Error: ${message} (${code})\n`);
-  process.exit(1);
+  throw new Error(`${message} (${code})`);
 }
 
 async function resolveBucket(
@@ -117,18 +116,41 @@ export async function runStoreCommand(sub: string, argv: string[]): Promise<void
     }
 
     case "ls": {
-      const page = getFlag("page", argv) ?? "1";
-      const perPage = getFlag("per-page", argv) ?? "20";
-      const url = new URL(`${baseUrl}/v1/buckets`);
-      url.searchParams.set("page", page);
-      url.searchParams.set("per_page", perPage);
-      const res = await primFetch(url.toString());
-      if (!res.ok) return handleError(res);
-      const data = (await res.json()) as { data: Array<{ id: string }> };
-      if (quiet) {
-        for (const b of data.data) console.log(b.id);
+      const bucketArg = argv[2] && !argv[2].startsWith("--") ? argv[2] : undefined;
+
+      if (bucketArg) {
+        // List objects in a specific bucket
+        const bucketId = await resolveBucket(bucketArg, baseUrl, primFetch);
+        const page = getFlag("page", argv) ?? "1";
+        const perPage = getFlag("per-page", argv) ?? "20";
+        const prefix = getFlag("prefix", argv);
+        const url = new URL(`${baseUrl}/v1/buckets/${bucketId}/objects`);
+        url.searchParams.set("page", page);
+        url.searchParams.set("per_page", perPage);
+        if (prefix) url.searchParams.set("prefix", prefix);
+        const res = await primFetch(url.toString());
+        if (!res.ok) return handleError(res);
+        const data = (await res.json()) as { objects: Array<{ key: string }> };
+        if (quiet) {
+          for (const obj of data.objects) console.log(obj.key);
+        } else {
+          console.log(JSON.stringify(data, null, 2));
+        }
       } else {
-        console.log(JSON.stringify(data, null, 2));
+        // List all buckets
+        const page = getFlag("page", argv) ?? "1";
+        const perPage = getFlag("per-page", argv) ?? "20";
+        const url = new URL(`${baseUrl}/v1/buckets`);
+        url.searchParams.set("page", page);
+        url.searchParams.set("per_page", perPage);
+        const res = await primFetch(url.toString());
+        if (!res.ok) return handleError(res);
+        const data = (await res.json()) as { data: Array<{ id: string }> };
+        if (quiet) {
+          for (const b of data.data) console.log(b.id);
+        } else {
+          console.log(JSON.stringify(data, null, 2));
+        }
       }
       break;
     }

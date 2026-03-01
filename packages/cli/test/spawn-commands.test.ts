@@ -241,6 +241,39 @@ describe("create", () => {
     );
   });
 
+  it("--ssh-keys VALUE (space-separated) splits on commas", async () => {
+    mockFetch.mockResolvedValue(okCreateServer());
+    await runSpawnCommand("create", [
+      "spawn",
+      "create",
+      "--name=my-server",
+      "--ssh-keys",
+      "key_a,key_b",
+    ]);
+    expect(mockFetch).toHaveBeenCalledWith(
+      expect.anything(),
+      expect.objectContaining({
+        body: expect.stringContaining('"ssh_keys":["key_a","key_b"]'),
+      }),
+    );
+  });
+
+  it("--ssh-keys=SINGLE sends single-element array (not char-by-char)", async () => {
+    mockFetch.mockResolvedValue(okCreateServer());
+    await runSpawnCommand("create", [
+      "spawn",
+      "create",
+      "--name=my-server",
+      "--ssh-keys=sk_abc",
+    ]);
+    expect(mockFetch).toHaveBeenCalledWith(
+      expect.anything(),
+      expect.objectContaining({
+        body: expect.stringContaining('"ssh_keys":["sk_abc"]'),
+      }),
+    );
+  });
+
   it("exits 1 when --name is missing", async () => {
     await expect(runSpawnCommand("create", ["spawn", "create"])).rejects.toThrow("process.exit(1)");
     expect(stderrSpy).toHaveBeenCalledWith(expect.stringContaining("--name NAME"));
@@ -298,6 +331,17 @@ describe("get", () => {
     await runSpawnCommand("get", ["spawn", "get", "srv_123", "--quiet"]);
     expect(consoleLogSpy).toHaveBeenCalledWith("1.2.3.4");
     expect(consoleLogSpy).toHaveBeenCalledTimes(1);
+  });
+
+  it("--json flag outputs JSON", async () => {
+    mockFetch.mockResolvedValue(okGetServer("srv_json"));
+    await runSpawnCommand("get", ["spawn", "get", "srv_json", "--json"]);
+    expect(consoleLogSpy).toHaveBeenCalledTimes(1);
+    const output = consoleLogSpy.mock.calls[0][0] as string;
+    const parsed = JSON.parse(output);
+    expect(parsed.id).toBe("srv_json");
+    expect(parsed.status).toBe("running");
+    expect(parsed.public_net.ipv4.ip).toBe("1.2.3.4");
   });
 
   it("exits 1 when server ID is missing", async () => {
@@ -499,21 +543,18 @@ describe("ssh-key rm", () => {
 // ─── 11. error handling ──────────────────────────────────────────────────────
 
 describe("error handling", () => {
-  it("non-ok response prints error message and code, exits 1", async () => {
+  it("non-ok response throws error with message and code", async () => {
     mockFetch.mockResolvedValue(errorResponse("not_found", "Server not found"));
     await expect(runSpawnCommand("get", ["spawn", "get", "srv_missing"])).rejects.toThrow(
-      "process.exit(1)",
+      "Server not found (not_found)",
     );
-    expect(stderrSpy).toHaveBeenCalledWith("Error: Server not found (not_found)\n");
-    expect(exitSpy).toHaveBeenCalledWith(1);
   });
 
   it("403 forbidden error is reported correctly", async () => {
     mockFetch.mockResolvedValue(errorResponse("forbidden", "Access denied", 403));
     await expect(runSpawnCommand("rm", ["spawn", "rm", "srv_xyz"])).rejects.toThrow(
-      "process.exit(1)",
+      "Access denied (forbidden)",
     );
-    expect(stderrSpy).toHaveBeenCalledWith("Error: Access denied (forbidden)\n");
   });
 });
 

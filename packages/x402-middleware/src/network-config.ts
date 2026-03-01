@@ -23,7 +23,7 @@ const NETWORKS: Record<string, NetworkConfig> = {
   },
 };
 
-const DEFAULT_NETWORK = "eip155:8453";
+export const DEFAULT_NETWORK = "eip155:8453";
 
 /**
  * Known x402 facilitators that support Base + Base Sepolia.

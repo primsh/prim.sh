@@ -1,7 +1,7 @@
 import { randomBytes } from "node:crypto";
 import { formatUnits, isAddress, parseUnits } from "viem";
 import type { Address } from "viem";
-import type { PaginatedList } from "@primsh/x402-middleware";
+import type { PaginatedList, ServiceResult } from "@primsh/x402-middleware";
 import type {
   CreatePoolRequest,
   CreateTokenRequest,
@@ -9,7 +9,6 @@ import type {
   MintRequest,
   MintResponse,
   PoolResponse,
-  ServiceResult,
   SupplyResponse,
   TokenResponse,
 } from "./api.ts";

@@ -1,5 +1,5 @@
 import { randomBytes } from "node:crypto";
-import type { PaginatedList } from "@primsh/x402-middleware";
+import type { PaginatedList, ServiceResult } from "@primsh/x402-middleware";
 import type {
   ActionOnlyResponse,
   CreateServerRequest,
@@ -109,10 +109,6 @@ function checkServerOwnership(id: string, caller: string): OwnershipCheckResult 
 }
 
 // ─── Service functions ────────────────────────────────────────────────────
-
-type ServiceResult<T> =
-  | { ok: true; data: T }
-  | { ok: false; status: number; code: string; message: string };
 
 export async function createServer(
   request: CreateServerRequest,

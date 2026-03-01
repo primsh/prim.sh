@@ -35,6 +35,29 @@ async function main() {
     process.exit(0);
   }
 
+  if (argv[0] === "--help" || argv[0] === "-h" || !argv[0]) {
+    console.log("Usage: prim <command> <subcommand>");
+    console.log("       prim --version");
+    console.log("");
+    console.log("  prim wallet    <create|register|list|balance|import|export|default|remove>");
+    console.log("  prim store     <create-bucket|ls|put|get|rm|rm-bucket|quota>");
+    console.log("  prim spawn     <create|ls|get|rm|reboot|stop|start|ssh-key>");
+    console.log("  prim email     <create|ls|get|rm|renew|inbox|read|send|webhook|domain>");
+    console.log("  prim mem       <create|ls|get|rm|upsert|query|cache>");
+    console.log("  prim domain    <search|quote|register|recover|status|ns|zone|record>");
+    console.log("  prim token     <deploy|ls|get|mint|supply|pool>");
+    console.log("  prim faucet    <usdc|eth|status>");
+    console.log("  prim gate      <invite>");
+    console.log("  prim search    <web|news|extract>");
+    console.log("  prim mcp       [--primitives wallet,store,...] [--wallet 0x...]");
+    console.log("  prim admin     <list-requests|approve|deny|add-wallet|remove-wallet>");
+    console.log("  prim install   <primitive|all> [--agent claude|cursor|generic]");
+    console.log("  prim uninstall <primitive|all>");
+    console.log("  prim upgrade   [--check] [--force]");
+    console.log("  prim skill     <primitive|onboard>");
+    process.exit(0);
+  }
+
   const group = argv[0];
   const subcommand = argv[1];
 
@@ -182,25 +205,8 @@ async function main() {
   }
 
   if (group !== "wallet") {
-    console.log("Usage: prim <command> <subcommand>");
-    console.log("       prim --version");
-    console.log("");
-    console.log("  prim wallet    <create|register|list|balance|import|export|default|remove>");
-    console.log("  prim store     <create-bucket|ls|put|get|rm|rm-bucket|quota>");
-    console.log("  prim spawn     <create|ls|get|rm|reboot|stop|start|ssh-key>");
-    console.log("  prim email     <create|ls|get|rm|renew|inbox|read|send|webhook|domain>");
-    console.log("  prim mem       <create|ls|get|rm|upsert|query|cache>");
-    console.log("  prim domain    <search|quote|register|recover|status|ns|zone|record>");
-    console.log("  prim token     <deploy|ls|get|mint|supply|pool>");
-    console.log("  prim faucet    <usdc|eth|status>");
-    console.log("  prim gate      <invite>");
-    console.log("  prim search    <web|news|extract>");
-    console.log("  prim mcp       [--primitives wallet,store,...] [--wallet 0x...]");
-    console.log("  prim admin     <list-requests|approve|deny|add-wallet|remove-wallet>");
-    console.log("  prim install   <primitive|all> [--agent claude|cursor|generic]");
-    console.log("  prim uninstall <primitive|all>");
-    console.log("  prim upgrade   [--check] [--force]");
-    console.log("  prim skill     <primitive|onboard>");
+    console.error(`Unknown command: ${group}`);
+    console.error("Run 'prim --help' for usage.");
     process.exit(1);
   }
 
@@ -252,6 +258,11 @@ async function main() {
         console.log(
           `${resolvedAddress}  ${balance} USDC  [${network}]${funded ? "" : "  (unfunded)"}`,
         );
+        if (!funded && !resolvedNetwork) {
+          console.log(
+            "Hint: showing mainnet balance. Use --network eip155:84532 or set PRIM_NETWORK for testnet.",
+          );
+        }
         break;
       }
 
@@ -344,11 +355,18 @@ async function main() {
         break;
       }
 
-      default:
-        console.log(
-          "Usage: prim wallet <create|register|list|balance|import|export|default|remove>",
-        );
+      default: {
+        const isHelp = subcommand === "--help" || subcommand === "-h";
+        if (isHelp) {
+          console.log(
+            "Usage: prim wallet <create|register|list|balance|import|export|default|remove>",
+          );
+          process.exit(0);
+        }
+        console.error(`Unknown wallet command: ${subcommand}`);
+        console.error("Run 'prim wallet --help' for usage.");
         process.exit(1);
+      }
     }
   });
 }

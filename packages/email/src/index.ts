@@ -2,9 +2,10 @@ import { resolve } from "node:path";
 import {
   createAgentStackMiddleware,
   createWalletAllowlistChecker,
-  forbidden,
   invalidRequest,
   notFound,
+  parseJsonBody,
+  requireCaller,
   serviceError,
 } from "@primsh/x402-middleware";
 import type { ApiError, PaginatedList } from "@primsh/x402-middleware";
@@ -176,8 +177,9 @@ const logger = app.logger;
 
 // POST /v1/mailboxes — Create mailbox
 app.post("/v1/mailboxes", async (c) => {
-  const caller = c.get("walletAddress");
-  if (!caller) return c.json(forbidden("No wallet address in payment"), 403);
+  const callerOrRes = requireCaller(c);
+  if (callerOrRes instanceof Response) return callerOrRes;
+  const caller = callerOrRes;
 
   let body: CreateMailboxRequest;
   try {
@@ -201,8 +203,9 @@ app.post("/v1/mailboxes", async (c) => {
 
 // GET /v1/mailboxes — List mailboxes
 app.get("/v1/mailboxes", (c) => {
-  const caller = c.get("walletAddress");
-  if (!caller) return c.json(forbidden("No wallet address in payment"), 403);
+  const callerOrRes = requireCaller(c);
+  if (callerOrRes instanceof Response) return callerOrRes;
+  const caller = callerOrRes;
 
   const perPage = Math.min(Number(c.req.query("per_page")) || 25, 100);
   const page = Math.max(Number(c.req.query("page")) || 1, 1);
@@ -214,8 +217,9 @@ app.get("/v1/mailboxes", (c) => {
 
 // GET /v1/mailboxes/:id — Get mailbox
 app.get("/v1/mailboxes/:id", async (c) => {
-  const caller = c.get("walletAddress");
-  if (!caller) return c.json(forbidden("No wallet address in payment"), 403);
+  const callerOrRes = requireCaller(c);
+  if (callerOrRes instanceof Response) return callerOrRes;
+  const caller = callerOrRes;
 
   const result = await getMailbox(c.req.param("id"), caller);
   if (!result.ok) return c.json(notFound(result.message), 404);
@@ -224,8 +228,9 @@ app.get("/v1/mailboxes/:id", async (c) => {
 
 // DELETE /v1/mailboxes/:id — Delete mailbox
 app.delete("/v1/mailboxes/:id", async (c) => {
-  const caller = c.get("walletAddress");
-  if (!caller) return c.json(forbidden("No wallet address in payment"), 403);
+  const callerOrRes = requireCaller(c);
+  if (callerOrRes instanceof Response) return callerOrRes;
+  const caller = callerOrRes;
 
   const result = await deleteMailbox(c.req.param("id"), caller);
   if (!result.ok) {
@@ -237,8 +242,9 @@ app.delete("/v1/mailboxes/:id", async (c) => {
 
 // POST /v1/mailboxes/:id/renew — Renew mailbox TTL
 app.post("/v1/mailboxes/:id/renew", async (c) => {
-  const caller = c.get("walletAddress");
-  if (!caller) return c.json(forbidden("No wallet address in payment"), 403);
+  const callerOrRes = requireCaller(c);
+  if (callerOrRes instanceof Response) return callerOrRes;
+  const caller = callerOrRes;
 
   let body: RenewMailboxRequest;
   try {
@@ -260,8 +266,9 @@ app.post("/v1/mailboxes/:id/renew", async (c) => {
 
 // GET /v1/mailboxes/:id/messages — List messages
 app.get("/v1/mailboxes/:id/messages", async (c) => {
-  const caller = c.get("walletAddress");
-  if (!caller) return c.json(forbidden("No wallet address in payment"), 403);
+  const callerOrRes = requireCaller(c);
+  if (callerOrRes instanceof Response) return callerOrRes;
+  const caller = callerOrRes;
 
   const limit = Math.min(Math.max(Number(c.req.query("limit")) || 20, 1), 100);
   const position = Math.max(Number(c.req.query("position")) || 0, 0);
@@ -281,8 +288,9 @@ app.get("/v1/mailboxes/:id/messages", async (c) => {
 
 // GET /v1/mailboxes/:id/messages/:msgId — Get single message
 app.get("/v1/mailboxes/:id/messages/:msgId", async (c) => {
-  const caller = c.get("walletAddress");
-  if (!caller) return c.json(forbidden("No wallet address in payment"), 403);
+  const callerOrRes = requireCaller(c);
+  if (callerOrRes instanceof Response) return callerOrRes;
+  const caller = callerOrRes;
 
   const result = await getMessage(c.req.param("id"), caller, c.req.param("msgId"));
   if (!result.ok) {
@@ -295,16 +303,13 @@ app.get("/v1/mailboxes/:id/messages/:msgId", async (c) => {
 
 // POST /v1/mailboxes/:id/send — Send message
 app.post("/v1/mailboxes/:id/send", async (c) => {
-  const caller = c.get("walletAddress");
-  if (!caller) return c.json(forbidden("No wallet address in payment"), 403);
+  const callerOrRes = requireCaller(c);
+  if (callerOrRes instanceof Response) return callerOrRes;
+  const caller = callerOrRes;
 
-  let body: SendMessageRequest;
-  try {
-    body = await c.req.json<SendMessageRequest>();
-  } catch (err) {
-    logger.warn("JSON parse failed on POST /v1/mailboxes/:id/send", { error: String(err) });
-    return c.json(invalidRequest("Invalid JSON body"), 400);
-  }
+  const bodyOrRes = await parseJsonBody<SendMessageRequest>(c, logger, "POST /v1/mailboxes/:id/send");
+  if (bodyOrRes instanceof Response) return bodyOrRes;
+  const body = bodyOrRes;
 
   const result = await sendMessage(c.req.param("id"), caller, body);
   if (!result.ok) {
@@ -318,16 +323,13 @@ app.post("/v1/mailboxes/:id/send", async (c) => {
 
 // POST /v1/mailboxes/:id/webhooks — Register webhook
 app.post("/v1/mailboxes/:id/webhooks", async (c) => {
-  const caller = c.get("walletAddress");
-  if (!caller) return c.json(forbidden("No wallet address in payment"), 403);
+  const callerOrRes = requireCaller(c);
+  if (callerOrRes instanceof Response) return callerOrRes;
+  const caller = callerOrRes;
 
-  let body: RegisterWebhookRequest;
-  try {
-    body = await c.req.json<RegisterWebhookRequest>();
-  } catch (err) {
-    logger.warn("JSON parse failed on POST /v1/mailboxes/:id/webhooks", { error: String(err) });
-    return c.json(invalidRequest("Invalid JSON body"), 400);
-  }
+  const bodyOrRes = await parseJsonBody<RegisterWebhookRequest>(c, logger, "POST /v1/mailboxes/:id/webhooks");
+  if (bodyOrRes instanceof Response) return bodyOrRes;
+  const body = bodyOrRes;
 
   const result = await registerWebhook(c.req.param("id"), caller, body);
   if (!result.ok) {
@@ -340,8 +342,9 @@ app.post("/v1/mailboxes/:id/webhooks", async (c) => {
 
 // GET /v1/mailboxes/:id/webhooks — List webhooks
 app.get("/v1/mailboxes/:id/webhooks", (c) => {
-  const caller = c.get("walletAddress");
-  if (!caller) return c.json(forbidden("No wallet address in payment"), 403);
+  const callerOrRes = requireCaller(c);
+  if (callerOrRes instanceof Response) return callerOrRes;
+  const caller = callerOrRes;
 
   const result = listWebhooks(c.req.param("id"), caller);
   if (!result.ok) {
@@ -353,8 +356,9 @@ app.get("/v1/mailboxes/:id/webhooks", (c) => {
 
 // DELETE /v1/mailboxes/:id/webhooks/:whId — Delete webhook
 app.delete("/v1/mailboxes/:id/webhooks/:whId", (c) => {
-  const caller = c.get("walletAddress");
-  if (!caller) return c.json(forbidden("No wallet address in payment"), 403);
+  const callerOrRes = requireCaller(c);
+  if (callerOrRes instanceof Response) return callerOrRes;
+  const caller = callerOrRes;
 
   const result = deleteWebhook(c.req.param("id"), caller, c.req.param("whId"));
   if (!result.ok) {
@@ -366,16 +370,13 @@ app.delete("/v1/mailboxes/:id/webhooks/:whId", (c) => {
 
 // POST /v1/domains — Register custom domain
 app.post("/v1/domains", async (c) => {
-  const caller = c.get("walletAddress");
-  if (!caller) return c.json(forbidden("No wallet address in payment"), 403);
+  const callerOrRes = requireCaller(c);
+  if (callerOrRes instanceof Response) return callerOrRes;
+  const caller = callerOrRes;
 
-  let body: RegisterDomainRequest;
-  try {
-    body = await c.req.json<RegisterDomainRequest>();
-  } catch (err) {
-    logger.warn("JSON parse failed on POST /v1/domains", { error: String(err) });
-    return c.json(invalidRequest("Invalid JSON body"), 400);
-  }
+  const bodyOrRes = await parseJsonBody<RegisterDomainRequest>(c, logger, "POST /v1/domains");
+  if (bodyOrRes instanceof Response) return bodyOrRes;
+  const body = bodyOrRes;
 
   const result = await registerDomain(body, caller);
   if (!result.ok) {
@@ -389,8 +390,9 @@ app.post("/v1/domains", async (c) => {
 
 // GET /v1/domains — List caller's domains
 app.get("/v1/domains", (c) => {
-  const caller = c.get("walletAddress");
-  if (!caller) return c.json(forbidden("No wallet address in payment"), 403);
+  const callerOrRes = requireCaller(c);
+  if (callerOrRes instanceof Response) return callerOrRes;
+  const caller = callerOrRes;
 
   const perPage = Math.min(Number(c.req.query("per_page")) || 25, 100);
   const page = Math.max(Number(c.req.query("page")) || 1, 1);
@@ -401,8 +403,9 @@ app.get("/v1/domains", (c) => {
 
 // GET /v1/domains/:id — Get domain details
 app.get("/v1/domains/:id", (c) => {
-  const caller = c.get("walletAddress");
-  if (!caller) return c.json(forbidden("No wallet address in payment"), 403);
+  const callerOrRes = requireCaller(c);
+  if (callerOrRes instanceof Response) return callerOrRes;
+  const caller = callerOrRes;
 
   const result = getDomain(c.req.param("id"), caller);
   if (!result.ok) return c.json(notFound(result.message), 404);
@@ -411,8 +414,9 @@ app.get("/v1/domains/:id", (c) => {
 
 // POST /v1/domains/:id/verify — Verify DNS and provision
 app.post("/v1/domains/:id/verify", async (c) => {
-  const caller = c.get("walletAddress");
-  if (!caller) return c.json(forbidden("No wallet address in payment"), 403);
+  const callerOrRes = requireCaller(c);
+  if (callerOrRes instanceof Response) return callerOrRes;
+  const caller = callerOrRes;
 
   const result = await verifyDomain(c.req.param("id"), caller);
   if (!result.ok) {
@@ -425,8 +429,9 @@ app.post("/v1/domains/:id/verify", async (c) => {
 
 // DELETE /v1/domains/:id — Delete custom domain
 app.delete("/v1/domains/:id", async (c) => {
-  const caller = c.get("walletAddress");
-  if (!caller) return c.json(forbidden("No wallet address in payment"), 403);
+  const callerOrRes = requireCaller(c);
+  if (callerOrRes instanceof Response) return callerOrRes;
+  const caller = callerOrRes;
 
   const result = await deleteDomain(c.req.param("id"), caller);
   if (!result.ok) {

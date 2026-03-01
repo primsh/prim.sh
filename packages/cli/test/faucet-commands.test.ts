@@ -217,21 +217,18 @@ describe("address resolution", () => {
 // --- 5. error handling ------------------------------------------------------
 
 describe("error handling", () => {
-  it("non-ok response prints error message and code, exits 1", async () => {
+  it("non-ok response throws error with message and code", async () => {
     fetchSpy.mockResolvedValue(errorResponse("rate_limited", "Next drip in 30 minutes", 429));
     await expect(runFaucetCommand("usdc", ["faucet", "usdc", "0xABC"])).rejects.toThrow(
-      "process.exit(1)",
+      "Next drip in 30 minutes (rate_limited)",
     );
-    expect(stderrSpy).toHaveBeenCalledWith("Error: Next drip in 30 minutes (rate_limited)\n");
-    expect(exitSpy).toHaveBeenCalledWith(1);
   });
 
   it("400 invalid request error is reported correctly", async () => {
     fetchSpy.mockResolvedValue(errorResponse("invalid_request", "Valid address required", 400));
     await expect(runFaucetCommand("eth", ["faucet", "eth", "0xBAD"])).rejects.toThrow(
-      "process.exit(1)",
+      "Valid address required (invalid_request)",
     );
-    expect(stderrSpy).toHaveBeenCalledWith("Error: Valid address required (invalid_request)\n");
   });
 });
 

@@ -26,12 +26,6 @@ export const ERROR_CODES = [
 
 export type ErrorCode = (typeof ERROR_CODES)[number];
 
-// ─── Service result ─────────────────────────────────────────────────────
-
-export type ServiceResult<T> =
-  | { ok: true; data: T }
-  | { ok: false; status: number; code: string; message: string };
-
 // ─── Mailbox types ──────────────────────────────────────────────────────
 
 export type MailboxStatus = "active" | "expired" | "deleted";

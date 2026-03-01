@@ -1,6 +1,6 @@
 import { createHash, randomBytes } from "node:crypto";
 import { createLogger } from "@primsh/x402-middleware";
-import type { PaginatedList } from "@primsh/x402-middleware";
+import type { PaginatedList, ServiceResult } from "@primsh/x402-middleware";
 
 const log = createLogger("email.sh", { module: "service" });
 import type {
@@ -19,7 +19,6 @@ import type {
   RenewMailboxRequest,
   SendMessageRequest,
   SendMessageResponse,
-  ServiceResult,
   VerificationResult,
   VerifyDomainResponse,
   WebhookPayload,
