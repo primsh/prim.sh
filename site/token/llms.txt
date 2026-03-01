@@ -4,7 +4,7 @@
 
 # token.prim.sh
 
-Deploy ERC-20 tokens and Uniswap V3 pools. No wallet setup required.
+Deploy ERC-20 tokens and Uniswap V3 pools. Zero wallet setup.
 
 Base URL: https://token.prim.sh
 Auth: x402 (USDC on Base Sepolia). GET /, GET /pricing, GET /v1/metrics are free.

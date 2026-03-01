@@ -236,7 +236,7 @@ ${rows}
 <div class="hero">
   <img class="logomark" src="/assets/hero.jpg" alt=">|">
   <div class="hero-hd"><a href="/" class="pill"><span class="parent">${BRAND.name}</span><span class="sep">/</span><span class="child">costs</span></a></div>
-  <h1 class="logo"><span>costs</span></h1>
+  <h1 class="logo"><span>costs</span>.sh</h1>
   <div class="tagline" style="color:var(--muted);font-size:1.1rem;margin-bottom:0.5rem">Agent-native pricing.</div>
   <div class="tagline">Zero markup. One mill ($0.001) floor. Infinite primitives.</div>
 </div>

@@ -7,7 +7,7 @@ openapi: 3.1.0
 info:
   title: token.prim.sh API
   version: 1.0.0
-  description: Deploy ERC-20 tokens and Uniswap V3 pools. No wallet setup required.
+  description: Deploy ERC-20 tokens and Uniswap V3 pools. Zero wallet setup.
 servers:
   - url: https://token.prim.sh
 security:

@@ -7,4 +7,4 @@ card_class: p14
 description: "LLM inference for agents. OpenRouter or direct provider APIs. x402 auth."
 nounStyled: "The agent-native inference."
 tagline: "Zero API keys. One prompt. Infinite models."
-sub: "Call any model — GPT, Claude, Gemini — through a single x402-gated endpoint. Per-token pricing. No API keys."
+sub: "Call any model — GPT, Claude, Gemini — through a single x402-gated endpoint. Per-token pricing. Zero API keys."

@@ -53,6 +53,7 @@ interfaces:
   cli: true
   tools: true
   rest: true
+  sdk: true
 
 factory:
   max_body_size: "1MB"

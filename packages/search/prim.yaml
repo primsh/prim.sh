@@ -5,7 +5,7 @@ status: mainnet
 type: search
 category: intelligence
 card_class: p12
-description: "Search for agents. No ads, no SEO spam. Just facts and clean markdown."
+description: "Search for agents. Zero ads, zero SEO spam. Just facts and clean markdown."
 port: 3005
 order: 4
 phantom: false
@@ -49,6 +49,7 @@ interfaces:
   cli: true
   tools: true
   rest: true
+  sdk: true
 
 factory:
   max_body_size: "1MB"
@@ -58,7 +59,7 @@ factory:
 
 nounStyled: "The agent-native search engine."
 tagline: "Zero ads. One query. Infinite answers."
-sub: "Web search and news. No ads, no SEO spam. Clean markdown."
+sub: "Web search and news. Zero ads, zero SEO spam. Clean markdown."
 
 hero_badges:
   - "**Web** search"

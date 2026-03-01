@@ -4,7 +4,7 @@
 
 # search.prim.sh
 
-Search for agents. No ads, no SEO spam. Just facts and clean markdown.
+Search for agents. Zero ads, zero SEO spam. Just facts and clean markdown.
 
 Base URL: https://search.prim.sh
 Auth: x402 (USDC on Base Sepolia). GET /, GET /pricing, GET /v1/metrics are free.

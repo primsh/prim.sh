@@ -33,6 +33,7 @@ interfaces:
   cli: true
   tools: true
   rest: true
+  sdk: true
 
 factory:
   max_body_size: "1MB"
@@ -73,7 +74,7 @@ pricing:
 
 nounStyled: "The agent-native cloud."
 tagline: "Zero config. One call. Infinite servers."
-sub: "No signup. No GUI. No KYC. Pay with x402. Deploy from code."
+sub: "Zero signup. Zero GUI. Zero KYC. Pay with x402. Deploy from code."
 
 hero_badges:
   - "**2** providers"
@@ -277,13 +278,13 @@ routes_map:
 
 cta:
   headline: "Compute should be an **HTTP request**."
-  sub: "No sign-up page because there's nothing to sign up for. Just point your agent at the API and pay."
+  sub: "Zero sign-up pages. Just point your agent at the API and pay."
 
 sections:
   - type: flow
     title: "How"
     highlight: "it works"
-    note: "No account. No API key. No dashboard. Just pay and compute."
+    note: "Zero accounts. Zero API keys. Zero dashboards. Just pay and compute."
     steps:
       - "HTTP request"
       - "Payment required"
@@ -347,7 +348,7 @@ sections:
       - "The internet has a status code for payments. It's been reserved since 1997. **HTTP 402: Payment Required.**"
       - "Every other cloud provider requires: an email, a password, a credit card, KYC verification, an API key, a dashboard, a billing page, a support ticket system. **Agents don't have emails.**"
       - "x402 is the missing piece. Agent sends request → server returns 402 with payment details → agent pays (USDC on Base) → server returns the resource. **The payment IS the authentication.**"
-      - "No account. No API key. No session. No cookies. Every request is self-contained. The payment receipt proves you paid, identifies your resources, and authorizes access. **Stateless compute for stateless agents.**"
+      - "Zero accounts. Zero API keys. Zero sessions. Zero cookies. Every request is self-contained. The payment receipt proves you paid, identifies your resources, and authorizes access. **Stateless compute for stateless agents.**"
 
   - type: cli
     title: "Admin"

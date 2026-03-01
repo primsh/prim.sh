@@ -7,7 +7,7 @@ openapi: 3.1.0
 info:
   title: infer.prim.sh API
   version: 1.0.0
-  description: LLM inference for agents. Any model, any provider, one API. Per-token pricing. No API keys.
+  description: LLM inference for agents. Any model, any provider, one API. Per-token pricing. Zero API keys.
 servers:
   - url: https://infer.prim.sh
 security:

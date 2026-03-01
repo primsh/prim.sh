@@ -77,16 +77,17 @@
   <div class="cmd-block glow-multi"><code><span class="prompt">$</span> curl -fsSL prim.sh/install.sh | sh</code><button class="copy-btn" onclick="const b=this,c=this.closest('.cmd-block').querySelector('code');navigator.clipboard.writeText(c.textContent.trim()).then(()=>{b.textContent='copied';b.classList.add('copied');setTimeout(()=>{b.textContent='copy';b.classList.remove('copied')},2000)})">copy</button></div>
   <div class="badges">
     <div class="badge glow-multi"><strong>x402</strong> · USDC on Base</div>
-    <div class="badge glow-multi"><strong>No</strong> signup</div>
+    <div class="badge glow-multi"><strong>Zero</strong> signup</div>
     <div class="badge glow-multi"><strong>Pay</strong> per call</div>
     <a href="/llms.txt" class="badge glow-multi" style="text-decoration:none;border-color:var(--accent);color:var(--accent)">llms.txt</a>
     <span class="badge glow-multi status-mainnet">● Live</span>
   </div>
   <div class="ifaces">
-    <span class="iface">REST</span>
-    <span class="iface">CLI</span>
     <span class="iface">MCP</span>
-    <span class="iface">OpenAI</span>
+    <span class="iface">Tools</span>
+    <span class="iface">CLI</span>
+    <span class="iface">REST</span>
+    <span class="iface">SDK</span>
   </div>
 
   <div id="products" class="products">
@@ -112,7 +113,7 @@
     <div class="product cat-intelligence">
       <div class="product-name">search.sh</div>
       <div class="product-type">search</div>
-      <div class="product-desc">Search for agents. No ads, no SEO spam. Just facts and clean markdown.</div>
+      <div class="product-desc">Search for agents. Zero ads, zero SEO spam. Just facts and clean markdown.</div>
       <a href="/search" class="product-link">→ search.sh</a>
     </div>
     <div class="product cat-compute phantom">
@@ -130,7 +131,7 @@
     <div class="product cat-crypto phantom">
       <div class="product-name">token.sh</div>
       <div class="product-type">defi</div>
-      <div class="product-desc">Deploy ERC-20 tokens and Uniswap V3 pools. No wallet setup required.</div>
+      <div class="product-desc">Deploy ERC-20 tokens and Uniswap V3 pools. Zero wallet setup.</div>
       <span class="phantom-label">phantom</span>
     </div>
     <div class="product cat-storage phantom">
@@ -220,7 +221,7 @@
     <div class="product cat-intelligence phantom">
       <div class="product-name">imagine.sh</div>
       <div class="product-type">intelligence</div>
-      <div class="product-desc">Media generation for agents. Images, video, audio. Any model, one API. No API keys.</div>
+      <div class="product-desc">Media generation for agents. Images, video, audio. Any model, one API. Zero API keys.</div>
       <span class="phantom-label">phantom</span>
     </div>
 <!-- END:PRIM:CARDS -->
@@ -265,10 +266,10 @@
   <div class="principles">
     <div class="principle glow-multi"><div class="num">01</div><h3>Built for agents</h3><p>The agent is the customer, not the developer. No human in the loop at runtime. Every primitive is designed for autonomous use.</p></div>
     <div class="principle glow-multi"><div class="num">02</div><h3>Pain points are primitives</h3><p>If a feature requires a human to operate, that's a primitive pain point. We build the prim for it.</p></div>
-    <div class="principle glow-multi"><div class="num">03</div><h3>No GUI</h3><p>Every action is an API call. REST, MCP, or OpenAI function spec. There is no dashboard.</p></div>
-    <div class="principle glow-multi"><div class="num">04</div><h3>No signup</h3><p>x402 payment is the entire auth flow. First request creates the resource. No accounts, no sessions, no cookies.</p></div>
+    <div class="principle glow-multi"><div class="num">03</div><h3>Zero GUI</h3><p>Every action is an API call. MCP, Tools, CLI, REST, or SDK. There is no dashboard.</p></div>
+    <div class="principle glow-multi"><div class="num">04</div><h3>Zero signup</h3><p>x402 payment is the entire auth flow. First request creates the resource. No accounts, no sessions, no cookies.</p></div>
     <div class="principle glow-multi"><div class="num">05</div><h3>Pay, don't prove</h3><p>Agents don't have passports. Payment proves intent. Identity is a wallet, not a person.</p></div>
-    <div class="principle glow-multi"><div class="num">06</div><h3>No lock-in</h3><p>Use what you need, leave when you're done. No contracts, no minimums, no vendor coupling.</p></div>
+    <div class="principle glow-multi"><div class="num">06</div><h3>Zero lock-in</h3><p>Use what you need, leave when you're done. No contracts, no minimums, no vendor coupling.</p></div>
     <div class="principle glow-multi"><div class="num">07</div><h3>Composable</h3><p>Use one prim or all twenty-seven. No coupling, no bundling. Each primitive is independent.</p></div>
     <div class="principle glow-multi"><div class="num">08</div><h3>Pay per call</h3><p>Micropayments via x402. Every request is priced individually. No subscriptions, no metering.</p></div>
   </div>

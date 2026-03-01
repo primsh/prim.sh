@@ -35,6 +35,7 @@ interfaces:
   cli: true
   tools: true
   rest: true
+  sdk: true
 
 factory:
   max_body_size: "1MB"
@@ -44,7 +45,7 @@ factory:
 
 nounStyled: "The agent-native faucet."
 tagline: "Zero cost. One drip. Infinite testing."
-sub: "Free testnet USDC and ETH. No signup, no captcha."
+sub: "Free testnet USDC and ETH. Zero signup, zero captcha."
 
 hero_badges:
   - "**Free** service"
@@ -156,7 +157,7 @@ routes_map:
 
 cta:
   headline: "Testnet funds are a **POST request**."
-  sub: "No captcha. No browser. Just an address."
+  sub: "Zero captcha. Zero browser. Just an address."
 
 sections:
   - type: cards

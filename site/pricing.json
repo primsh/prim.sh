@@ -203,7 +203,7 @@
     },
     {
       "service": "search.prim.sh",
-      "description": "Search for agents. No ads, no SEO spam. Just facts and clean markdown.",
+      "description": "Search for agents. Zero ads, zero SEO spam. Just facts and clean markdown.",
       "routes": [
         {
           "method": "POST",
