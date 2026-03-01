@@ -12,7 +12,7 @@
 #   5. Restarts services
 #
 # Usage:
-#   ssh root@157.230.187.207
+#   ssh root@<VPS_IP>
 #   bash /opt/prim/scripts/migrate-db-paths.sh --dry-run   # review first
 #   bash /opt/prim/scripts/migrate-db-paths.sh              # execute
 

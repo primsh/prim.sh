@@ -60,9 +60,7 @@ const app = createPrimApp(
   { createAgentStackMiddleware, createWalletAllowlistChecker },
 );
 
-const logger = (
-  app as typeof app & { logger: { warn: (msg: string, extra?: Record<string, unknown>) => void } }
-).logger;
+const logger = app.logger;
 
 // POST /v1/tokens — Deploy new ERC-20
 app.post("/v1/tokens", async (c) => {

@@ -63,9 +63,7 @@ const app = createPrimApp(
   { createAgentStackMiddleware, createWalletAllowlistChecker },
 );
 
-const logger = (
-  app as typeof app & { logger: { warn: (msg: string, extra?: Record<string, unknown>) => void } }
-).logger;
+const logger = app.logger;
 
 // ─── Collection routes ────────────────────────────────────────────────────
 

@@ -16,6 +16,7 @@ import { existsSync, readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { Hono } from "hono";
 import { bodyLimit } from "hono/body-limit";
+import type { Logger } from "./logger.js";
 import { createLogger } from "./logger.js";
 import { feedbackUrlMiddleware } from "./feedback-url.js";
 import { metricsHandler, metricsMiddleware } from "./metrics.js";
@@ -25,6 +26,8 @@ import { requestIdMiddleware } from "./request-id.js";
 import type { AgentStackRouteConfig } from "./types.js";
 
 export type AppVariables = { walletAddress: string | undefined };
+
+export type PrimApp = Hono<{ Variables: AppVariables }> & { logger: Logger };
 
 export interface PrimAppDeps {
   createAgentStackMiddleware?: typeof createAgentStackMiddleware;
@@ -78,6 +81,8 @@ export interface PrimAppConfig {
   skipHealthCheck?: boolean;
   /** URL for feedback submission. Defaults to PRIM_FEEDBACK_URL env var. */
   feedbackUrl?: string;
+  /** Custom body size limit in bytes. Defaults to 1 MB. Ignored when skipBodyLimit is true. */
+  bodyLimitBytes?: number;
 }
 
 /**
@@ -99,7 +104,7 @@ export interface PrimAppConfig {
 export function createPrimApp(
   config: PrimAppConfig,
   deps: PrimAppDeps = {},
-): Hono<{ Variables: AppVariables }> {
+): PrimApp {
   const {
     serviceName,
     llmsTxtPath,
@@ -112,6 +117,7 @@ export function createPrimApp(
     skipBodyLimit = false,
     skipHealthCheck = false,
     feedbackUrl,
+    bodyLimitBytes,
   } = config;
 
   const _createAgentStackMiddleware = deps.createAgentStackMiddleware ?? createAgentStackMiddleware;
@@ -145,7 +151,7 @@ export function createPrimApp(
     app.use(
       "*",
       bodyLimit({
-        maxSize: 1024 * 1024,
+        maxSize: bodyLimitBytes ?? 1024 * 1024,
         onError: (c) => c.json({ error: "Request too large" }, 413),
       }),
     );
@@ -209,8 +215,8 @@ export function createPrimApp(
   }
 
   // Expose logger so callers can use the same logger instance
-  (app as Hono<{ Variables: AppVariables }> & { logger: ReturnType<typeof createLogger> }).logger =
-    logger;
+  const primApp = app as PrimApp;
+  primApp.logger = logger;
 
-  return app;
+  return primApp;
 }

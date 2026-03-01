@@ -141,9 +141,7 @@ const app = createPrimApp(
   { createAgentStackMiddleware, createWalletAllowlistChecker },
 );
 
-const logger = (
-  app as typeof app & { logger: { warn: (msg: string, extra?: Record<string, unknown>) => void } }
-).logger;
+const logger = app.logger;
 
 // Body size limit — skip for object PUT (streaming uploads to R2 can exceed 1MB)
 app.use("*", async (c, next) => {
