@@ -229,7 +229,6 @@ All bot workflows (auto-merge, rebase, review, ci-heal) use the `prim-ci` GitHub
 
 - **App ID**: stored as `PRIM_CI_APP_ID` repo secret
 - **Private key**: stored as `PRIM_CI_PRIVATE_KEY` repo secret
-- **Local key backup**: `~/.config/prim/prim-ci.pem`
 
 ### Constraints
 

@@ -117,7 +117,7 @@ Each primitive wraps a real provider. We manage the accounts and credentials. Th
 
 The provider layer is abstracted — spawn.sh defines a `CloudProvider` interface, making it straightforward to add new providers. More providers per primitive over time.
 
-See our full cost breakdown at [docs/costs.md](docs/costs.md).
+See pricing details at [prim.sh/docs/costs](https://prim.sh/docs/costs).
 
 ## Architecture
 
@@ -158,7 +158,7 @@ Each primitive is independent. Run only what you need.
 
 ## Contributing
 
-See [CONTRIBUTING.md](CONTRIBUTING.md).
+See [CONTRIBUTING.md](.github/CONTRIBUTING.md).
 
 ## License
 
