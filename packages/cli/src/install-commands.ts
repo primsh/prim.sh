@@ -1,8 +1,9 @@
-import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
+import { createHash } from "node:crypto";
+import { chmodSync, existsSync, mkdirSync, readFileSync, renameSync, writeFileSync } from "node:fs";
 import { homedir } from "node:os";
 import { dirname, join } from "node:path";
 import { getDefaultAddress } from "@primsh/keystore";
-import { getFlag } from "./flags.ts";
+import { getFlag, hasFlag } from "./flags.ts";
 import { SKILL_CONTENT } from "./skill-content.ts";
 
 const PRIMITIVES = [
@@ -258,11 +259,27 @@ export async function runListCommand(argv: string[]): Promise<void> {
 export async function runInstallCommand(
   subcommand: string | undefined,
   argv: string[],
+  localVersion?: string,
 ): Promise<void> {
   // Handle `prim install --list`
   if (subcommand === "--list" || (subcommand === undefined && argv.includes("--list"))) {
     await runListCommand(argv);
     return;
+  }
+
+  // Advisory upgrade notice (non-blocking)
+  if (localVersion) {
+    try {
+      const res = await fetch("https://dl.prim.sh/latest/VERSION");
+      if (res.ok) {
+        const remote = (await res.text()).trim();
+        if (remote !== localVersion) {
+          console.log(`Update available: v${localVersion} → v${remote}. Run \`prim upgrade\` to update.\n`);
+        }
+      }
+    } catch {
+      /* ignore — don't let fetch failure break install */
+    }
   }
 
   const primitives = parsePrimitives(subcommand);
@@ -361,6 +378,92 @@ export async function runUninstallCommand(
   const keyName = isAll ? "all prim entries" : `prim-${primitives[0]}`;
   console.log(`Removed ${keyName} from ${configPath}`);
   console.log(`Restart ${agentLabel} to unload the MCP server.`);
+}
+
+// ---------------------------------------------------------------------------
+// Skill command (bonus: `prim skill <name>`)
+// ---------------------------------------------------------------------------
+
+// ---------------------------------------------------------------------------
+// Platform detection
+// ---------------------------------------------------------------------------
+
+function detectPlatform(): string {
+  const os = process.platform === "darwin" ? "darwin" : "linux";
+  const arch = process.arch === "arm64" ? "arm64" : "x64";
+  return `prim-${os}-${arch}`;
+}
+
+// ---------------------------------------------------------------------------
+// Upgrade command
+// ---------------------------------------------------------------------------
+
+export async function runUpgradeCommand(argv: string[], localVersion: string): Promise<void> {
+  const force = hasFlag("force", argv);
+  const checkOnly = hasFlag("check", argv);
+
+  const res = await fetch("https://dl.prim.sh/latest/VERSION");
+  if (!res.ok) throw new Error(`Failed to fetch remote version: ${res.status}`);
+  const remoteVersion = (await res.text()).trim();
+
+  if (localVersion === remoteVersion && !force) {
+    console.log(`Already up to date (v${localVersion})`);
+    return;
+  }
+
+  if (checkOnly) {
+    if (localVersion === remoteVersion) {
+      console.log(`Up to date (v${localVersion})`);
+    } else {
+      console.log(`Update available: v${localVersion} → v${remoteVersion}`);
+      process.exit(1);
+    }
+    return;
+  }
+
+  const platform = detectPlatform();
+  console.log(`Downloading ${platform} v${remoteVersion}...`);
+
+  const binaryRes = await fetch(`https://dl.prim.sh/latest/${platform}`);
+  if (!binaryRes.ok) throw new Error(`Failed to download binary: ${binaryRes.status}`);
+  const binaryData = Buffer.from(await binaryRes.arrayBuffer());
+
+  const checksumsRes = await fetch("https://dl.prim.sh/latest/checksums.sha256");
+  if (!checksumsRes.ok) throw new Error(`Failed to download checksums: ${checksumsRes.status}`);
+  const checksumsText = await checksumsRes.text();
+
+  // Parse checksums file: each line is "hash  filename"
+  const expectedHash = checksumsText
+    .split("\n")
+    .map((line) => line.trim())
+    .filter((line) => line.endsWith(platform))
+    .map((line) => line.split(/\s+/)[0])[0];
+
+  if (!expectedHash) throw new Error(`No checksum found for ${platform}`);
+
+  const actualHash = createHash("sha256").update(binaryData).digest("hex");
+  if (actualHash !== expectedHash) {
+    throw new Error(`Checksum verification failed.\n  Expected: ${expectedHash}\n  Got:      ${actualHash}`);
+  }
+
+  const installPath = process.execPath.endsWith("bun") || process.execPath.endsWith("node")
+    ? join(homedir(), ".prim", "bin", "prim")
+    : process.execPath;
+  const installDir = dirname(installPath);
+
+  if (!existsSync(installDir)) {
+    mkdirSync(installDir, { recursive: true });
+  }
+
+  // Backup existing binary
+  if (existsSync(installPath)) {
+    renameSync(installPath, join(installDir, "prim.backup"));
+  }
+
+  writeFileSync(installPath, binaryData);
+  chmodSync(installPath, 0o755);
+
+  console.log(`Updated prim: v${localVersion} → v${remoteVersion}`);
 }
 
 // ---------------------------------------------------------------------------

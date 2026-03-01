@@ -143,7 +143,7 @@ async function main() {
   if (group === "install") {
     await wrapCommand(async () => {
       const { runInstallCommand } = await import("./install-commands.ts");
-      await runInstallCommand(subcommand, argv);
+      await runInstallCommand(subcommand, argv, pkg.version);
     });
     return;
   }
@@ -152,6 +152,14 @@ async function main() {
     await wrapCommand(async () => {
       const { runUninstallCommand } = await import("./install-commands.ts");
       await runUninstallCommand(subcommand, argv);
+    });
+    return;
+  }
+
+  if (group === "upgrade") {
+    await wrapCommand(async () => {
+      const { runUpgradeCommand } = await import("./install-commands.ts");
+      await runUpgradeCommand(argv, pkg.version);
     });
     return;
   }
@@ -190,6 +198,7 @@ async function main() {
     console.log("  prim admin     <list-requests|approve|deny|add-wallet|remove-wallet>");
     console.log("  prim install   <primitive|all> [--agent claude|cursor|generic]");
     console.log("  prim uninstall <primitive|all>");
+    console.log("  prim upgrade   [--check] [--force]");
     console.log("  prim skill     <primitive|onboard>");
     process.exit(1);
   }
