@@ -17,4 +17,6 @@ export interface CreatePrimFetchConfig {
   network?: string;
   /** Retry once on facilitator settlement failure. Default: true. */
   retrySettlement?: boolean;
+  /** Callback invoked after a successful x402 payment, before the retry request. */
+  onPayment?: (info: { amount: string; route: string }) => void;
 }

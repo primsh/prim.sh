@@ -880,8 +880,7 @@ function generateCommandFile(spec: OpenAPISpec, id: string): string {
   lines.push("  } catch {");
   lines.push("    // ignore parse error");
   lines.push("  }");
-  lines.push("  process.stderr.write(`Error: ${message} (${code})\\n`);");
-  lines.push("  process.exit(1);");
+  lines.push("  throw new Error(`${message} (${code})`);");
   lines.push("}");
   lines.push("");
 

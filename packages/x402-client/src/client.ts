@@ -1,4 +1,4 @@
-import { getNetworkConfig } from "@primsh/x402-middleware";
+import { DEFAULT_NETWORK, getNetworkConfig } from "@primsh/x402-middleware";
 import { x402Client, x402HTTPClient } from "@x402/core/client";
 import { decodePaymentRequiredHeader } from "@x402/core/http";
 import { registerExactEvmScheme } from "@x402/evm/exact/client";
@@ -94,9 +94,10 @@ function buildHttpClient(account: LocalAccount, network?: string): x402HTTPClien
  * 3. Parse Payment-Required header
  * 4. Check price against maxPayment cap
  * 5. Sign EIP-3009 payment via x402 client
- * 6. Retry with Payment-Signature header
- * 7. If settlement failed, wait 2s and re-sign once (configurable via retrySettlement)
- * 8. Return final response
+ * 6. Invoke onPayment callback with amount + route (if configured)
+ * 7. Retry with Payment-Signature header
+ * 8. If settlement failed, wait 2s and re-sign once (configurable via retrySettlement)
+ * 9. Return final response
  */
 export function createPrimFetch(config: CreatePrimFetchConfig): typeof fetch {
   const maxPayment = config.maxPayment ?? "1.00";
@@ -166,7 +167,20 @@ export function createPrimFetch(config: CreatePrimFetchConfig): typeof fetch {
     const httpClient = await getHttpClient();
     const paymentPayload = await httpClient.createPaymentPayload(paymentRequired);
 
-    // Step 5: Encode and retry
+    // Step 5: Notify caller of payment amount
+    if (config.onPayment && requirements) {
+      const priceAtomic = BigInt(requirements.amount);
+      const priceHuman = formatUsdc(priceAtomic);
+      const route =
+        typeof input === "string"
+          ? input
+          : input instanceof URL
+            ? input.toString()
+            : input.url;
+      config.onPayment({ amount: priceHuman, route });
+    }
+
+    // Step 6: Encode and retry
     const paymentHeaders = httpClient.encodePaymentSignatureHeader(paymentPayload);
 
     const existingHeaders = init?.headers
@@ -182,7 +196,19 @@ export function createPrimFetch(config: CreatePrimFetchConfig): typeof fetch {
       headers: existingHeaders,
     });
 
-    // Step 6: Detect settlement failure and retry once
+    // Step 7: Detect server error after payment — likely network mismatch
+    if (retryResponse.status >= 500) {
+      const netKey = config.network ?? process.env.PRIM_NETWORK ?? DEFAULT_NETWORK;
+      const netConfig = getNetworkConfig(netKey);
+      if (!config.network && netConfig.network === DEFAULT_NETWORK) {
+        console.error(
+          `Hint: payment signed for ${DEFAULT_NETWORK} (mainnet default). If the server runs on testnet, set PRIM_NETWORK=eip155:84532 or pass --network.`,
+        );
+      }
+      return retryResponse;
+    }
+
+    // Step 8: Detect settlement failure and retry once
     if (retryResponse.status !== 402) {
       return retryResponse;
     }

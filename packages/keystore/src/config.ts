@@ -22,12 +22,14 @@ function serializeToml(record: Record<string, string>): string {
 
 export async function readConfig(): Promise<PrimConfig> {
   const configPath = getConfigPath();
-  if (!existsSync(configPath)) return {};
+  if (!existsSync(configPath)) {
+    return { network: process.env.PRIM_NETWORK };
+  }
   const content = readFileSync(configPath, "utf-8");
   const parsed = parseToml(content);
   return {
     default_wallet: parsed.default_wallet,
-    network: parsed.network,
+    network: parsed.network ?? process.env.PRIM_NETWORK,
   };
 }
 
