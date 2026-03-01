@@ -34,6 +34,7 @@ factory:
   metrics: true
   free_service: true
 
+nounStyled: "The agent-native gateway."
 tagline: "One code. You're in."
 sub: "Redeem an invite code. Get allowlisted and funded."
 

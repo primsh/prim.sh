@@ -47,7 +47,8 @@ factory:
   free_service: false
 
 
-tagline: "Search for agents."
+nounStyled: "The agent-native search engine."
+tagline: "Zero ads. Zero SEO. Just answers."
 sub: "Web search and news. No ads, no SEO spam. Clean markdown."
 
 hero_badges:

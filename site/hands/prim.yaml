@@ -5,5 +5,6 @@ type: labor
 category: physical
 card_class: p28
 description: "Human labor on demand for agents. Delegate tasks requiring physical action."
-tagline: "Human hands for agents."
+nounStyled: "The agent-native task runner."
+tagline: "When code can't click the button."
 sub: "Delegate tasks that require physical action. Gig platform under the hood. Agents post tasks, humans complete them. x402 auth."

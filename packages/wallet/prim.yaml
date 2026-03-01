@@ -28,7 +28,8 @@ pricing:
     note: ""
 
 
-tagline: "Wallets for agents."
+nounStyled: "The agent-native wallet."
+tagline: "Payment is the password."
 sub: "On-chain wallets for agents. Base USDC. x402 identity."
 
 hero_badges:

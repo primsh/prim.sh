@@ -5,5 +5,6 @@ type: payments
 category: crypto
 card_class: p29
 description: "Fiat payment bridge for agents. Stripe + x402. Accept credit cards, pay out."
-tagline: "Fiat payments for agents."
+nounStyled: "The agent-native payment processor."
+tagline: "Zero merchant accounts. Instant payments."
 sub: "Accept credit cards, send bank transfers. Stripe under the hood. x402 for agent-to-agent, Stripe for agent-to-human. x402 auth."

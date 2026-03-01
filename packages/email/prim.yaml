@@ -65,7 +65,8 @@ pricing:
     note: "DNS verification required"
 
 
-tagline: "Email for agents. No inbox required."
+nounStyled: "The agent-native mailbox."
+tagline: "Zero setup. Infinite mailboxes."
 sub: "Send, receive, and parse email. All via API."
 
 hero_badges:

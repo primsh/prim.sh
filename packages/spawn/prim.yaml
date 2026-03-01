@@ -56,7 +56,8 @@ pricing:
     note: ""
 
 
-tagline: "VPS for agents. By agents."
+nounStyled: "The agent-native cloud."
+tagline: "Zero config. One call. Root access."
 sub: "No signup. No GUI. No KYC. Pay with x402. Deploy from code."
 
 hero_badges:

@@ -53,7 +53,8 @@ factory:
   free_service: false
 
 
-tagline: "Object storage for agents."
+nounStyled: "The agent-native object store."
+tagline: "Persist anything. Own nothing."
 sub: "Persist files across ephemeral VMs. S3-compatible."
 
 hero_badges:

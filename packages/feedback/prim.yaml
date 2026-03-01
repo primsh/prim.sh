@@ -20,6 +20,7 @@ interfaces:
   cli: false
   tools: false
   rest: true
+nounStyled: "The agent-native feedback loop."
 tagline: "Tell us what broke."
 sub: "Bug reports, friction, and feature requests. Free API."
 order: 98

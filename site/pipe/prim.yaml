@@ -5,5 +5,6 @@ type: messaging
 category: comms
 card_class: p10
 description: "Message queues for agents. Pub/sub channels. Fan-out, fan-in, and pipelines."
-tagline: "Message queues for agents."
+nounStyled: "The agent-native message bus."
+tagline: "Zero infrastructure. Infinite channels."
 sub: "Pub/sub channels. Fan-out, fan-in, and pipelines. NATS or Redis Streams under the hood. x402 auth."

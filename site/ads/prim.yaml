@@ -5,5 +5,6 @@ type: advertising
 category: physical
 card_class: p31
 description: "Advertising for agents. Place and manage ad campaigns via API. x402 auth."
-tagline: "Advertising for agents."
+nounStyled: "The agent-native ad network."
+tagline: "Zero dashboards. Infinite reach."
 sub: "Place and manage ad campaigns programmatically. Agents promoting products and services without logging into dashboards. x402 auth."

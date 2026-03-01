@@ -86,6 +86,7 @@ export interface PrimConfig {
   accent_dim?: string;
   accent_glow?: string;
   category?: string;
+  nounStyled?: string;
   tagline: string;
   sub: string;
   hero_badges?: string[];
@@ -539,9 +540,8 @@ ${inlineCSS(cfg)}
 <div class="hero">
   <img class="logomark" src="/assets/hero.jpg" alt=">|">
   <div class="hero-hd"><a href="/" class="pill"><span class="parent">${BRAND.name}</span><span class="sep">/</span><span class="child">${esc(cfg.name)}</span></a></div>
-  <div class="logo"><span>${esc(namePart)}</span>.${ext ?? "sh"}</div>
+  <div class="logo"><span>${esc(namePart)}</span>.${ext ?? "sh"}</div>${cfg.nounStyled ? `\n  <div class="tagline" style="color:var(--muted);font-size:1.1rem;margin-bottom:0.5rem">${esc(cfg.nounStyled)}</div>` : ""}
   <div class="tagline">${esc(cfg.tagline)}</div>
-  <div class="sub">${esc(cfg.sub)}</div>
   <div class="badges">
     <div class="badge">Part of <strong>${BRAND.name}</strong></div>
     <span class="badge ${cls}">${label}</span>
@@ -653,9 +653,8 @@ ${inlineCSS(cfg)}
 <div class="hero">
   <img class="logomark" src="/assets/hero.jpg" alt=">|">
   <div class="hero-hd"><a href="/" class="pill"><span class="parent">${BRAND.name}</span><span class="sep">/</span><span class="child">${esc(cfg.name)}</span></a></div>
-  <div class="logo"><span>${esc(namePart ?? cfg.id)}</span>.${esc(ext ?? "sh")}</div>
+  <div class="logo"><span>${esc(namePart ?? cfg.id)}</span>.${esc(ext ?? "sh")}</div>${cfg.nounStyled ? `\n  <div class="tagline" style="color:var(--muted);font-size:1.1rem;margin-bottom:0.5rem">${esc(cfg.nounStyled)}</div>` : ""}
   <div class="tagline">${esc(cfg.tagline)}</div>
-  <div class="sub">${esc(cfg.sub)}</div>
 ${heroBlock}
   <div class="badges">
     ${badgesHtml}
