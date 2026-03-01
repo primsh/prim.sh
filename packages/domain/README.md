@@ -15,10 +15,10 @@ Part of [prim.sh](https://prim.sh) — zero signup, one payment token, infinite 
 | `GET /v1/domains/search` | Check availability and pricing for a domain query | $0.001 | `—` | `DomainSearchResponse` |
 | `POST /v1/domains/quote` | Get a 15-minute price quote for a domain | $0.001 | `QuoteRequest` | `QuoteResponse` |
 | `GET /v1/domains/:domain/status` | Full post-registration pipeline status (ns_propagated, zone_active, all_ready) | $0.001 | `—` | `RegistrationStatusResponse` |
-| `POST /v1/zones` | Create a Cloudflare DNS zone. Returns nameservers to set at your registrar. | $0.05 | `CreateZoneRequest` | `CreateZoneResponse` |
+| `POST /v1/zones` | Create a Cloudflare DNS zone. Returns nameservers to set at your registrar. | $0.001 | `CreateZoneRequest` | `CreateZoneResponse` |
 | `GET /v1/zones` | List DNS zones owned by the calling wallet (paginated) | $0.001 | `—` | `ZoneListResponse` |
 | `GET /v1/zones/:id` | Get zone details | $0.001 | `—` | `ZoneResponse` |
-| `DELETE /v1/zones/:id` | Delete zone and all records. Irreversible. | $0.01 | `—` | `—` |
+| `DELETE /v1/zones/:id` | Delete zone and all records. Irreversible. | $0.001 | `—` | `—` |
 | `PUT /v1/zones/:zone_id/activate` | Request Cloudflare NS re-check for faster activation | $0.001 | `—` | `ActivateResponse` |
 | `GET /v1/zones/:zone_id/verify` | Check DNS propagation for all zone records | $0.001 | `—` | `VerifyResponse` |
 | `POST /v1/zones/:zone_id/mail-setup` | Configure MX, SPF, DMARC, DKIM in one call. Idempotent. | $0.005 | `MailSetupRequest` | `MailSetupResponse` |
@@ -33,10 +33,10 @@ Part of [prim.sh](https://prim.sh) — zero signup, one payment token, infinite 
 
 | Operation | Price | Notes |
 |-----------|-------|-------|
-| Domain registration | dynamic | Quoted via /quote |
-| DNS zone | $0.05 | Unlimited records |
-| DNS record | $0.001 | Per operation |
-| DNS queries | free | First 1M/mo |
+| Domain registration | dynamic | NameSilo wholesale |
+| DNS zone | $0.001 | x402 floor (Cloudflare free plan) |
+| DNS record | $0.001 | x402 floor (Cloudflare free plan) |
+| DNS queries | free | Cloudflare free plan (first 1M/mo) |
 
 ## Request / Response Types
 

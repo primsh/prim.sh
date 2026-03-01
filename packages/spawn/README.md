@@ -29,11 +29,11 @@ Part of [prim.sh](https://prim.sh) — zero signup, one payment token, infinite 
 
 | Operation | Price | Notes |
 |-----------|-------|-------|
-| Create server | $0.01 | One-time provisioning |
-| s-1vcpu-1gb | $0.012/hr |  |
-| s-2vcpu-4gb | $0.036/hr |  |
-| s-4vcpu-8gb | $0.071/hr |  |
-| Bandwidth | $0.01/GB |  |
+| Create server | $0.01 | One-time vs ongoing DO cost (needs recurring billing, I-55) |
+| s-1vcpu-1gb | $0.009/hr | DO $6/mo amortized |
+| s-2vcpu-4gb | $0.033/hr | DO $24/mo amortized |
+| s-4vcpu-8gb | $0.065/hr | DO $48/mo amortized |
+| Bandwidth | $0.01/GB | DO bandwidth at cost |
 
 ## Request / Response Types
 

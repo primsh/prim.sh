@@ -69,7 +69,7 @@
     "type": "function",
     "function": {
       "name": "infer_embed",
-      "description": "Generate embeddings for text input. Returns vector array. Price: $0.001 via x402 (USDC on Base).",
+      "description": "Generate embeddings for text input. Returns vector array. Price: $0.0001 via x402 (USDC on Base).",
       "parameters": {
         "type": "object",
         "properties": {
@@ -94,7 +94,7 @@
     "type": "function",
     "function": {
       "name": "infer_list_models",
-      "description": "List available models with pricing and capabilities. Price: $0.01 via x402 (USDC on Base).",
+      "description": "List available models with pricing and capabilities. Price: $0.001 via x402 (USDC on Base).",
       "parameters": {
         "type": "object",
         "properties": {}

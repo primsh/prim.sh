@@ -18,7 +18,7 @@ export const tokenTools: Tool[] = [
   },
   {
     name: "token_deploy_token",
-    description: "Deploy a new ERC-20 token. Returns immediately with deployStatus: 'pending'. | Price: $1.00",
+    description: "Deploy a new ERC-20 token. Returns immediately with deployStatus: 'pending'. | Price: $0.10",
     inputSchema: {
         type: "object",
         properties: {
@@ -66,7 +66,7 @@ export const tokenTools: Tool[] = [
   },
   {
     name: "token_mint_tokens",
-    description: "Mint additional tokens to an address. Requires mintable=true at deploy time. | Price: $0.10",
+    description: "Mint additional tokens to an address. Requires mintable=true at deploy time. | Price: $0.01",
     inputSchema: {
         type: "object",
         properties: {
@@ -116,7 +116,7 @@ export const tokenTools: Tool[] = [
   },
   {
     name: "token_create_pool",
-    description: "Create and initialize a Uniswap V3 pool paired with USDC. One pool per token. | Price: $0.50",
+    description: "Create and initialize a Uniswap V3 pool paired with USDC. One pool per token. | Price: $0.05",
     inputSchema: {
         type: "object",
         properties: {

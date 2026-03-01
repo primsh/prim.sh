@@ -1,0 +1,48 @@
+# Infrastructure & business costs — not attributable to any single prim
+# Per-route provider costs live in each packages/*/prim.yaml
+#
+# Updated: 2026-02-28
+
+infrastructure:
+  - item: vps
+    provider: digitalocean
+    monthly_usd: 12.00
+    billing: fixed
+    reason: "Shared VPS for all prims (s-1vcpu-2gb)"
+    as_of: "2026-02"
+  - item: prim.sh
+    provider: namecheap
+    monthly_usd: 2.92
+    billing: fixed
+    reason: "Primary domain, all API endpoints at *.prim.sh ($34.98/yr)"
+    as_of: "2026-02"
+  - item: primitiveshell.com
+    provider: namecheap
+    monthly_usd: 0.96
+    billing: fixed
+    reason: "Brand protection ($11.48/yr)"
+    as_of: "2026-02"
+  - item: primitiveshell.org
+    provider: namecheap
+    monthly_usd: 0.61
+    billing: fixed
+    reason: "Brand protection ($7.28/yr)"
+    as_of: "2026-02"
+  - item: x_premium
+    provider: x.com
+    monthly_usd: 8.00
+    billing: fixed
+    reason: "@useprim verified account, marketing (X Premium web)"
+    as_of: "2026-02"
+  - item: github
+    provider: github
+    monthly_usd: 0.00
+    billing: fixed
+    reason: "CI/CD and source hosting (free plan, public repo)"
+    as_of: "2026-02"
+  - item: cloudflare
+    provider: cloudflare
+    monthly_usd: 0.00
+    billing: fixed
+    reason: "DNS, CDN, R2 storage, Pages hosting (free plan)"
+    as_of: "2026-02"

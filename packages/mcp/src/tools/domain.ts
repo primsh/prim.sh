@@ -76,7 +76,7 @@ export const domainTools: Tool[] = [
   },
   {
     name: "domain_create_zone",
-    description: "Create a Cloudflare DNS zone. Returns nameservers to set at your registrar. | Price: $0.05",
+    description: "Create a Cloudflare DNS zone. Returns nameservers to set at your registrar. | Price: $0.001",
     inputSchema: {
         type: "object",
         properties: {
@@ -104,7 +104,7 @@ export const domainTools: Tool[] = [
   },
   {
     name: "domain_delete_zone",
-    description: "Delete zone and all records. Irreversible. | Price: $0.01",
+    description: "Delete zone and all records. Irreversible. | Price: $0.001",
     inputSchema: {
         type: "object",
         properties: {

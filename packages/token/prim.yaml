@@ -18,17 +18,32 @@ env:
   - WALLET_INTERNAL_URL
 pricing:
   - op: "Deploy token"
-    price: "$1.00"
-    note: "Covers on-chain gas"
-  - op: "Mint"
     price: "$0.10"
-    note: "Covers on-chain gas"
+    provider_cost: "$0.10"
+    pricing_type: dynamic
+    as_of: "2026-02"
+    estimate: "~$0.05-0.50 (gas varies)"
+    note: "Base L2 gas estimate (needs gas oracle)"
+  - op: "Mint"
+    price: "$0.01"
+    provider_cost: "$0.01"
+    pricing_type: dynamic
+    as_of: "2026-02"
+    estimate: "~$0.005-0.05 (gas varies)"
+    note: "Base L2 gas estimate"
   - op: "Create pool"
-    price: "$0.50"
-    note: "Uniswap V3 + gas"
+    price: "$0.05"
+    provider_cost: "$0.05"
+    pricing_type: dynamic
+    as_of: "2026-02"
+    estimate: "~$0.03-0.20 (gas varies)"
+    note: "Uniswap V3 createPool + initialize gas"
   - op: "Read"
     price: "$0.001"
-    note: "Per request"
+    provider_cost: "$0.00"
+    pricing_type: static
+    as_of: "2026-02"
+    note: "x402 floor (free RPC call)"
 
 providers:
   - name: viem

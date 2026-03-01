@@ -10,7 +10,7 @@ import type { CallToolResult } from "@modelcontextprotocol/sdk/types.js";
 export const trackTools: Tool[] = [
   {
     name: "track_package",
-    description: "Track a package by tracking number and carrier. Returns status, ETA, and full event history. | Price: $0.05",
+    description: "Track a package by tracking number and carrier. Returns status, ETA, and full event history. | Price: $0.04",
     inputSchema: {
         type: "object",
         properties: {

@@ -13,16 +13,16 @@ Part of [prim.sh](https://prim.sh) — zero signup, one payment token, infinite 
 | Route | Description | Price | Request | Response |
 |-------|-------------|-------|---------|----------|
 | `POST /v1/chat` | Chat completion. Supports streaming, tool use, structured output. | $0.01 | `ChatRequest` | `ChatResponse` |
-| `POST /v1/embed` | Generate embeddings for text input. Returns vector array. | $0.001 | `EmbedRequest` | `EmbedResponse` |
-| `GET /v1/models` | List available models with pricing and capabilities. | $0.01 | `—` | `ModelsResponse` |
+| `POST /v1/embed` | Generate embeddings for text input. Returns vector array. | $0.0001 | `EmbedRequest` | `EmbedResponse` |
+| `GET /v1/models` | List available models with pricing and capabilities. | $0.001 | `—` | `ModelsResponse` |
 
 ## Pricing
 
 | Operation | Price | Notes |
 |-----------|-------|-------|
-| Chat completion | pass-through + 10% | Per-token, varies by model |
-| Embeddings | $0.001 | Per 1K tokens |
-| List models | free |  |
+| Chat completion | $0.01 | OpenRouter pass-through (needs dynamic pricing) |
+| Embeddings | $0.0001 | Embedding API at-cost |
+| List models | $0.001 | x402 floor (free read) |
 
 ## Request / Response Types
 

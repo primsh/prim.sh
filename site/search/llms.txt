@@ -102,7 +102,7 @@ Response (200):
 
 Search the web and return ranked results with optional AI-generated answer
 
-Price: $0.01
+Price: $0.005
 
 Request:
   query            string                             required  Search query string.
@@ -132,7 +132,7 @@ Errors:
 
 Search for recent news articles, ordered by recency
 
-Price: $0.01
+Price: $0.005
 
 Request:
   query            string                             required  Search query string.

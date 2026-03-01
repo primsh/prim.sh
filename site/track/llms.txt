@@ -21,7 +21,7 @@ Limits:
 
 ## Quick Start
 
-  1. POST /v1/track with {tracking_number, carrier} → get package status, ETA, events ($0.05)
+  1. POST /v1/track with {tracking_number, carrier} → get package status, ETA, events ($0.04)
 
 ## Tips
 
@@ -100,7 +100,7 @@ Response (200):
 
 Track a package by tracking number and carrier. Returns status, ETA, and full event history.
 
-Price: $0.05
+Price: $0.04
 
 Request:
   tracking_number  string  required  Shipment tracking number.

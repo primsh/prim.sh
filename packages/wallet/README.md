@@ -29,9 +29,9 @@ Part of [prim.sh](https://prim.sh) — zero signup, one payment token, infinite 
 
 | Operation | Price | Notes |
 |-----------|-------|-------|
-| Wallet registration | free |  |
-| API call | $0.001 | Per request |
-| Policy update | $0.005 |  |
+| Wallet registration | free | Self-hosted keystore |
+| API call | $0.001 | x402 floor (self-hosted) |
+| Policy update | $0.005 | x402 floor (self-hosted) |
 
 ## Request / Response Types
 

@@ -17,6 +17,12 @@ Part of [prim.sh](https://prim.sh) — zero signup, one payment token, infinite 
 | `GET /v1/schema` | Return the prim.yaml JSON schema for agents to reference when writing specs. | $0.01 | `—` | `SchemaResponse` |
 | `GET /v1/ports` | Return allocated ports and next available port number. | $0.01 | `—` | `PortsResponse` |
 
+## Pricing
+
+| Operation | Price | Notes |
+|-----------|-------|-------|
+| Scaffold | free | Meta scaffolder, no external API |
+
 ## Request / Response Types
 
 ### `ScaffoldRequest`

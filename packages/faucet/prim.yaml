@@ -19,10 +19,16 @@ env:
 pricing:
   - op: "USDC drip"
     price: "free"
-    note: "Rate-limited per address"
+    provider_cost: "$0.00"
+    pricing_type: static
+    as_of: "2026-02"
+    note: "Testnet tokens free"
   - op: "ETH drip"
     price: "free"
-    note: "Testnet only"
+    provider_cost: "$0.00"
+    pricing_type: static
+    as_of: "2026-02"
+    note: "Testnet tokens free"
 
 interfaces:
   mcp: true

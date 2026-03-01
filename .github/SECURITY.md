@@ -14,7 +14,7 @@ Use GitHub's private vulnerability reporting:
 2. Click "Report a vulnerability"
 3. Provide a clear description, reproduction steps, and impact assessment
 
-If you cannot use GitHub's reporting, email security concerns to the repository maintainers directly.
+If you cannot use GitHub's reporting, email hello@prim.sh.
 
 ## Response Timeline
 

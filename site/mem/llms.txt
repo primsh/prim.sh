@@ -22,7 +22,7 @@ Limits:
 
 ## Quick Start
 
-  1. POST /v1/collections with {"name": "my-brain"} → create vector collection ($0.01)
+  1. POST /v1/collections with {"name": "my-brain"} → create vector collection ($0.001)
   2. POST /v1/collections/:id/upsert with documents array → embed and store text
   3. POST /v1/collections/:id/query with {"text": "..."} → semantic search
   4. PUT /v1/cache/:namespace/:key with {"value": ..., "ttl": 3600} → store in KV cache
@@ -108,7 +108,7 @@ Response (200):
 
 Create a vector collection
 
-Price: $0.01
+Price: $0.001
 
 Request:
   name       string                       required  Collection name. Unique per wallet.
@@ -180,7 +180,7 @@ Errors:
 
 Delete collection and all documents. Irreversible.
 
-Price: $0.01
+Price: $0.001
 
 Path params:
   id  string  required  id parameter
@@ -199,7 +199,7 @@ Errors:
 
 Embed and store documents. Each document: {id?, text, metadata?}. Existing IDs are replaced.
 
-Price: $0.001
+Price: $0.0001
 
 Path params:
   id  string  required  id parameter
@@ -225,7 +225,7 @@ Errors:
 
 Semantic search. Fields: text (required), top_k, filter (Qdrant native format).
 
-Price: $0.001
+Price: $0.0001
 
 Path params:
   id  string  required  id parameter

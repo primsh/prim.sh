@@ -151,7 +151,7 @@ paths:
       summary: Track a package by tracking number and carrier. Returns status, ETA, and full event history.
       security:
         - x402: []
-      x-price: $0.05
+      x-price: $0.04
       requestBody:
         required: true
         content:

@@ -168,7 +168,7 @@ paths:
       summary: Upscale an image to higher resolution. Accepts base64 or URL.
       security:
         - x402: []
-      x-price: $0.01
+      x-price: $0.02
       requestBody:
         required: true
         content:
@@ -208,7 +208,7 @@ paths:
       summary: List available image models with capabilities and pricing.
       security:
         - x402: []
-      x-price: $0.01
+      x-price: $0.001
       responses:
         "200":
           description: List available image models with capabilities and pricing.

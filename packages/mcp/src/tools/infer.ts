@@ -151,7 +151,7 @@ export const inferTools: Tool[] = [
   },
   {
     name: "infer_embed",
-    description: "Generate embeddings for text input. Returns vector array. | Price: $0.001",
+    description: "Generate embeddings for text input. Returns vector array. | Price: $0.0001",
     inputSchema: {
         type: "object",
         properties: {
@@ -177,7 +177,7 @@ export const inferTools: Tool[] = [
   },
   {
     name: "infer_list_models",
-    description: "List available models with pricing and capabilities. | Price: $0.01",
+    description: "List available models with pricing and capabilities. | Price: $0.001",
     inputSchema: {
         type: "object",
         properties: {},
