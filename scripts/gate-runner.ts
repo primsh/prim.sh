@@ -1429,7 +1429,7 @@ async function main() {
       console.log(`\n${c.bold("Gate Runner — Canary Dry Run")}`);
       console.log(`Plan: ${plan.plan}`);
       console.log(`Network: ${plan.network}`);
-      console.log(`Backend: ${execEnv}`);
+      console.log(`Backend: ${execEnv}${execEnv === "remote" ? " (spawn.sh / DigitalOcean)" : execEnv === "docker" ? " (Docker)" : ""}`);
       console.log(`Mode: ${c.cyan("canary")} — agent drives LLM inference via infer.prim.sh\n`);
 
       for (const group of groups) {
@@ -1505,7 +1505,7 @@ async function main() {
     console.log(`Plan: ${plan.plan}`);
     console.log(`Network: ${plan.network}`);
     console.log(`Infer: ${inferEndpoint}`);
-    console.log(`Backend: ${execEnv}`);
+    console.log(`Backend: ${execEnv}${execEnv === "remote" ? " (spawn.sh / DigitalOcean)" : execEnv === "docker" ? " (Docker)" : ""}`);
     console.log(`Mode: ${args.ci ? "CI" : "local"}\n`);
 
     const canaryResults: CanaryGroupResult[] = [];
