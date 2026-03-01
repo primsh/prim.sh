@@ -1,21 +1,12 @@
 // ─── Provider result types ────────────────────────────────────────────────────
 
-// TODO: Define the data shape returned by the provider
-// biome-ignore lint/suspicious/noEmptyInterface: scaffold placeholder — add fields before implementing
-export interface ImagineProviderData {
-  // Add provider data fields here
-}
+// biome-ignore lint/suspicious/noEmptyInterface: scaffold — fields added when provider is implemented
+export interface ImagineProviderData {}
 
 // ─── Provider interface ───────────────────────────────────────────────────────
 
-// biome-ignore lint/suspicious/noEmptyInterface: scaffold placeholder — add methods before implementing
-export interface ImagineProvider {
-  // TODO: Add provider method signatures matching your routes
-  // generate(...): Promise<ImagineProviderData>;
-  // describe(...): Promise<ImagineProviderData>;
-  // upscale(...): Promise<ImagineProviderData>;
-  // models(...): Promise<ImagineProviderData>;
-}
+// biome-ignore lint/suspicious/noEmptyInterface: scaffold — methods added when provider is implemented
+export interface ImagineProvider {}
 
 // ─── Error ────────────────────────────────────────────────────────────────────
 

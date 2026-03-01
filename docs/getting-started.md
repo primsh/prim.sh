@@ -40,7 +40,7 @@ During private beta, wallets must be approved before using paid primitives.
 prim wallet create
 # note your wallet address from the output
 
-curl -X POST https://api.prim.sh/access/request \
+curl -X POST https://gate.prim.sh/v1/access/request \
   -H "Content-Type: application/json" \
   -d '{"wallet": "0xYourAddress", "reason": "testing storage for my agent"}'
 ```

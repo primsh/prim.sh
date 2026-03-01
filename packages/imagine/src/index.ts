@@ -212,15 +212,7 @@ app.post("/v1/upscale", async (c) => {
 
 // GET /v1/models — List available image models with capabilities and pricing.
 app.get("/v1/models", async (c) => {
-  let body: Record<string, unknown>;
-  try {
-    body = await c.req.json<Record<string, unknown>>();
-  } catch (err) {
-    logger.warn("JSON parse failed on GET /v1/models", { error: String(err) });
-    return c.json(invalidRequest("Invalid JSON body"), 400);
-  }
-
-  const result = await models(body);
+  const result = await models();
 
   if (!result.ok) {
     if (result.code === "invalid_request") return c.json(invalidRequest(result.message), 400);
