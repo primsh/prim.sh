@@ -117,7 +117,7 @@ export interface PrimConfig {
   sections?: Section[];
 
   // Enrichment fields
-  interfaces?: { mcp?: boolean; cli?: boolean; tools?: boolean; rest?: boolean };
+  interfaces?: { mcp?: boolean; cli?: boolean; tools?: boolean; rest?: boolean; sdk?: boolean };
   quick_start?: string[];
   tips?: string[];
   limits?: string[];
@@ -135,13 +135,14 @@ function bold(s: string): string {
   return s.replace(/\*\*([^*]+)\*\*/g, "<strong>$1</strong>");
 }
 
-/** Render interface badges row (REST · CLI · MCP · Tools) */
+/** Render interface badges row (MCP · Tools · CLI · REST · SDK) */
 function renderInterfaces(ifaces: NonNullable<PrimConfig["interfaces"]>): string {
   const items: string[] = [];
-  if (ifaces.rest) items.push("REST");
-  if (ifaces.cli) items.push("CLI");
   if (ifaces.mcp) items.push("MCP");
   if (ifaces.tools) items.push("Tools");
+  if (ifaces.cli) items.push("CLI");
+  if (ifaces.rest) items.push("REST");
+  if (ifaces.sdk) items.push("SDK");
   if (items.length === 0) return "";
   return `<div class="ifaces">${items.map((i) => `<span class="iface">${i}</span>`).join("")}</div>`;
 }
@@ -568,7 +569,7 @@ ${inlineCSS(cfg)}
   <h1 class="logo"><span>${esc(namePart)}</span>.${ext ?? "sh"}</h1>${cfg.nounStyled ? `\n  <div class="tagline" style="color:var(--muted);font-size:1.1rem;margin-bottom:0.5rem">${esc(cfg.nounStyled)}</div>` : ""}
   <div class="tagline">${esc(cfg.tagline)}</div>
   <div class="badges">
-    <div class="badge">Part of <strong>${BRAND.name}</strong></div>
+    <a href="/${primId}/llms.txt" class="badge" style="text-decoration:none;border-color:var(--accent);color:var(--accent)">llms.txt</a>
     <span class="badge ${cls}">${label}</span>
   </div>
 </div>
@@ -747,7 +748,7 @@ export function render(cfg: PrimConfig): string {
   // Hero badges
   const badgesHtml = [
     ...(cfg.hero_badges ?? []).map(renderBadgeStr),
-    `<div class="badge">Part of <strong>${BRAND.name}</strong></div>`,
+    `<a href="/${cfg.id}/llms.txt" class="badge" style="text-decoration:none;border-color:var(--accent);color:var(--accent)">llms.txt</a>`,
     `<span class="badge ${cls}">${label}</span>`,
   ].join("\n    ");
 

@@ -5,7 +5,7 @@ status: hold
 note: "Delayed until after v0 private beta"
 type: intelligence
 category: intelligence
-description: "LLM inference for agents. Any model, any provider, one API. Per-token pricing. No API keys."
+description: "LLM inference for agents. Any model, any provider, one API. Per-token pricing. Zero API keys."
 nounStyled: "The agent-native inference."
 tagline: "Zero API keys. One prompt. Infinite models."
 port: 3012
@@ -49,6 +49,7 @@ interfaces:
   cli: true
   tools: true
   rest: true
+  sdk: true
 
 factory:
   max_body_size: "1MB"

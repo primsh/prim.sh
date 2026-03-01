@@ -4,7 +4,7 @@
 
 # infer.prim.sh
 
-LLM inference for agents. Any model, any provider, one API. Per-token pricing. No API keys.
+LLM inference for agents. Any model, any provider, one API. Per-token pricing. Zero API keys.
 
 Base URL: https://infer.prim.sh
 Auth: x402 (USDC on Base Sepolia). GET /, GET /pricing, GET /v1/metrics are free.

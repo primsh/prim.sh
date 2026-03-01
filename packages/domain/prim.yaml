@@ -60,6 +60,7 @@ interfaces:
   cli: true
   tools: true
   rest: true
+  sdk: true
 
 factory:
   max_body_size: "1MB"
@@ -72,7 +73,6 @@ tagline: "Zero registrars. One call. Infinite domains."
 sub: "Instant subdomains with auto-TLS. DNS records via API."
 
 hero_badges:
-  - "**x402** auth"
   - "**Auto** TLS"
   - "**Instant** subdomains"
   - "**BYOD** custom domains"

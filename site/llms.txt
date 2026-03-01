@@ -112,14 +112,14 @@ Run prim <command> --help for options.
 - faucet.sh — faucet.prim.sh — Free testnet USDC and ETH on demand. Fund your agent wallet and start building.
 - gate.sh — gate.prim.sh — Access control and onboarding for agents. Invite codes, allowlisting, wallet funding.
 - store.sh — store.prim.sh — Object storage. Persist artifacts across ephemeral VMs. S3-compatible.
-- search.sh — search.prim.sh — Search for agents. No ads, no SEO spam. Just facts and clean markdown.
+- search.sh — search.prim.sh — Search for agents. Zero ads, zero SEO spam. Just facts and clean markdown.
 - feedback.sh — feedback.prim.sh — Report bugs, friction, and feature requests. Free. Every prim surfaces the feedback URL.
 
 ## Planned Primitives
 
 - spawn.sh — VPS in one API call. Deploy, scale, destroy. Per-second billing.
 - email.sh — Mailboxes on demand. Send, receive, webhook. Disposable or permanent.
-- token.sh — Deploy ERC-20 tokens and Uniswap V3 pools. No wallet setup required.
+- token.sh — Deploy ERC-20 tokens and Uniswap V3 pools. Zero wallet setup.
 - mem.sh — Vector store and cache for agents. Persist long-term knowledge and session state.
 - domain.sh — Register domains, manage DNS, auto-TLS. Full domain lifecycle via API.
 - deploy.sh — Push code, get an endpoint. Container or repo URL to live service. No server config.
@@ -139,12 +139,12 @@ Run prim <command> --help for options.
 - corp.sh — Incorporation, tax, insurance. Legal entities for agents. The fiat bridge.
 - hands.sh — On-demand human labor. Physical tasks, verification, errands. Gig economy API.
 - pins.sh — Coordinates, places, and routing. No maps UI, just structured spatial data.
-- infer.sh — LLM inference for agents. Any model, any provider, one API. Per-token pricing. No API keys.
+- infer.sh — LLM inference for agents. Any model, any provider, one API. Per-token pricing. Zero API keys.
 - seek.sh — Deep research agent. Multi-step search + synthesis.
 - docs.sh — OpenAPI → MCP converter. Turn any API spec into agent tools.
 - ads.sh — Programmatic advertising for agents. Buy and sell attention.
 - pay.sh — Stripe + x402 bridge. Accept fiat payments from humans.
 - ship.sh — Shipping labels and tracking via EasyPost. Physical world logistics.
 - create.sh — Scaffold new prim.sh primitives. Write a prim.yaml spec, get a complete package with passing tests.
-- imagine.sh — Media generation for agents. Images, video, audio. Any model, one API. No API keys.
+- imagine.sh — Media generation for agents. Images, video, audio. Any model, one API. Zero API keys.
 <!-- END:PRIM:STATUS -->

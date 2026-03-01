@@ -54,6 +54,7 @@ interfaces:
   mcp: true
   cli: true
   tools: true
+  sdk: true
 factory:
   free_service: true
   skip_x402: false

@@ -208,6 +208,18 @@ a:hover {
   color: var(--muted);
   box-shadow: 0 0 30px color-mix(in srgb, var(--accent) 25%, transparent);
 }
+a.badge {
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+  cursor: pointer;
+}
+a.badge:hover, a.badge:focus {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 20px color-mix(in srgb, var(--accent) 40%, transparent);
+}
+a.badge:active {
+  transform: translateY(1px);
+  box-shadow: 0 0 10px color-mix(in srgb, var(--accent) 15%, transparent);
+}
 .badge strong {
   color: var(--accent);
 }

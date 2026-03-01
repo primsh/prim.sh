@@ -58,6 +58,7 @@ interfaces:
   cli: true
   tools: true
   rest: true
+  sdk: true
 
 factory:
   max_body_size: "128MB"
@@ -70,7 +71,6 @@ tagline: "Zero servers. One bucket. Infinite objects."
 sub: "Persist files across ephemeral VMs. S3-compatible."
 
 hero_badges:
-  - "**x402** auth"
   - "**S3** compatible"
   - "**CDN** edge delivery"
   - "**Signed** URLs"

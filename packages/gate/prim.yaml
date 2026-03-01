@@ -31,6 +31,7 @@ interfaces:
   cli: true
   tools: false
   rest: true
+  sdk: true
 
 factory:
   max_body_size: "1MB"
@@ -42,10 +43,9 @@ tagline: "Zero friction. One code. Infinite access."
 sub: "Redeem an invite code. Get allowlisted and funded."
 
 hero_badges:
-  - "**Free** no payment needed"
+  - "**Free** service"
   - "**Invite** code"
-  - "**Base** mainnet"
-  - "**USDC** + ETH"
+  - "**USDC** + ETH funding"
 
 hero_example: |
   # Redeem an invite code
@@ -90,7 +90,7 @@ routes_map:
 
 cta:
   headline: "Access is a **POST request**."
-  sub: "No form. No waitlist. One code, you're in."
+  sub: "Zero forms. Zero waitlists. One code, you're in."
 
 sections:
   - type: code

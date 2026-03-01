@@ -1,6 +1,6 @@
 {
   "version": "1.0.0",
-  "generated": "2026-03-01T08:35:17.008Z",
+  "generated": "2026-03-01T17:17:20.971Z",
   "primitives": [
     {
       "id": "auth",
@@ -186,7 +186,7 @@
       "id": "imagine",
       "name": "imagine.sh",
       "endpoint": "imagine.prim.sh",
-      "description": "Media generation for agents. Images, video, audio. Any model, one API. No API keys.",
+      "description": "Media generation for agents. Images, video, audio. Any model, one API. Zero API keys.",
       "status": "planned",
       "interfaces": {
         "mcp": true,
@@ -260,7 +260,7 @@
       "id": "search",
       "name": "search.sh",
       "endpoint": "search.prim.sh",
-      "description": "Search for agents. No ads, no SEO spam. Just facts and clean markdown.",
+      "description": "Search for agents. Zero ads, zero SEO spam. Just facts and clean markdown.",
       "status": "live",
       "interfaces": {
         "mcp": true,
@@ -410,7 +410,7 @@
       "id": "token",
       "name": "token.sh",
       "endpoint": "token.prim.sh",
-      "description": "Deploy ERC-20 tokens and Uniswap V3 pools. No wallet setup required.",
+      "description": "Deploy ERC-20 tokens and Uniswap V3 pools. Zero wallet setup.",
       "status": "planned",
       "interfaces": {
         "mcp": true,

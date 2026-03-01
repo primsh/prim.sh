@@ -79,6 +79,7 @@ export interface Interfaces {
   cli: boolean;
   tools: boolean;
   rest: boolean;
+  sdk: boolean;
 }
 
 export interface FactoryConfig {

@@ -5,7 +5,7 @@ endpoint: token.prim.sh
 type: defi
 category: crypto
 card_class: p9
-description: "Deploy ERC-20 tokens and Uniswap V3 pools. No wallet setup required."
+description: "Deploy ERC-20 tokens and Uniswap V3 pools. Zero wallet setup."
 port: 3007
 order: 7
 phantom: false
@@ -57,6 +57,7 @@ interfaces:
   cli: true
   tools: true
   rest: true
+  sdk: true
 
 factory:
   max_body_size: "1MB"
@@ -71,7 +72,6 @@ sub: "Deploy ERC-20 tokens and Uniswap pools via API."
 hero_badges:
   - "**ERC-20** deploy"
   - "**Uniswap V3** pools"
-  - "**x402** auth"
   - "**Base** + Sepolia"
 
 hero_example: |

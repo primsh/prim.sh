@@ -4,7 +4,7 @@
 
 # search.sh
 
-> Search for agents. No ads, no SEO spam. Just facts and clean markdown.
+> Search for agents. Zero ads, zero SEO spam. Just facts and clean markdown.
 
 Part of [prim.sh](https://prim.sh) — zero signup, one payment token, infinite primitives. x402 payment (USDC on Base) is the sole auth.
 

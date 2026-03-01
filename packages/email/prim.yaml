@@ -29,6 +29,7 @@ interfaces:
   cli: true
   tools: true
   rest: true
+  sdk: true
 
 factory:
   max_body_size: "25MB"
@@ -85,11 +86,9 @@ tagline: "Zero setup. One call. Infinite mailboxes."
 sub: "Send, receive, and parse email. All via API."
 
 hero_badges:
-  - "**x402** auth + payment"
   - "**Send** + **Receive**"
   - "**Webhooks** for inbound"
-  - "**0** signup required"
-  - "**MCP** + **REST**"
+  - "**Stalwart** backend"
 
 hero_example: |
   # Get a mailbox in one request

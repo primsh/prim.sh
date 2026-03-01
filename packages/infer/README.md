@@ -4,7 +4,7 @@
 
 # infer.sh
 
-> LLM inference for agents. Any model, any provider, one API. Per-token pricing. No API keys.
+> LLM inference for agents. Any model, any provider, one API. Per-token pricing. Zero API keys.
 
 Part of [prim.sh](https://prim.sh) — zero signup, one payment token, infinite primitives. x402 payment (USDC on Base) is the sole auth.
 

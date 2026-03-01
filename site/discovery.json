@@ -44,7 +44,7 @@
       "name": "search.sh",
       "status": "mainnet",
       "endpoint": "https://search.prim.sh",
-      "description": "Search for agents. No ads, no SEO spam. Just facts and clean markdown.",
+      "description": "Search for agents. Zero ads, zero SEO spam. Just facts and clean markdown.",
       "llms_txt": "https://prim.sh/search/llms.txt",
       "openapi": "https://prim.sh/openapi/search.yaml"
     },

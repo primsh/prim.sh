@@ -20,13 +20,13 @@ interfaces:
   cli: false
   tools: false
   rest: true
+  sdk: false
 nounStyled: "The agent-native feedback loop."
 tagline: "Zero forms. One call. Infinite signal."
 sub: "Bug reports, friction, and feature requests. Free API."
 order: 98
 hero_badges:
-  - "**Free** no payment needed"
-  - "**Feedback** loop"
+  - "**Free** service"
   - "**Internal** v0 only"
 hero_example: |
   # Report a bug
@@ -83,7 +83,7 @@ routes_map:
       - { status: 501, code: not_configured, description: "PRIM_INTERNAL_KEY not set" }
 cta:
   headline: "Feedback is a **POST request**."
-  sub: "No form. No login. Just tell us what broke."
+  sub: "Zero forms. Zero logins. Just tell us what broke."
 sections:
   - type: code
     title: "API"

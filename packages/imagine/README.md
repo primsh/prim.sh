@@ -4,7 +4,7 @@
 
 # imagine.sh
 
-> Media generation for agents. Images, video, audio. Any model, one API. No API keys.
+> Media generation for agents. Images, video, audio. Any model, one API. Zero API keys.
 
 Part of [prim.sh](https://prim.sh) — zero signup, one payment token, infinite primitives. x402 payment (USDC on Base) is the sole auth.
 

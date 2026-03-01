@@ -7,7 +7,7 @@ openapi: 3.1.0
 info:
   title: imagine.prim.sh API
   version: 1.0.0
-  description: Media generation for agents. Images, video, audio. Any model, one API. No API keys.
+  description: Media generation for agents. Images, video, audio. Any model, one API. Zero API keys.
 servers:
   - url: https://imagine.prim.sh
 security:

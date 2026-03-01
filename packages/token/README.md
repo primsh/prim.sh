@@ -4,7 +4,7 @@
 
 # token.sh
 
-> Deploy ERC-20 tokens and Uniswap V3 pools. No wallet setup required.
+> Deploy ERC-20 tokens and Uniswap V3 pools. Zero wallet setup.
 
 Part of [prim.sh](https://prim.sh) — zero signup, one payment token, infinite primitives. x402 payment (USDC on Base) is the sole auth.
 

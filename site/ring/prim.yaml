@@ -4,7 +4,7 @@ endpoint: ring.prim.sh
 type: voice
 category: comms
 card_class: p3
-description: "Phone calls and SMS for agents. No carrier account needed."
+description: "Phone calls and SMS for agents. Zero carrier accounts."
 nounStyled: "The agent-native phone."
 tagline: "Zero carriers. One number. Infinite channels."
-sub: "Make calls, send SMS, receive inbound. Telnyx under the hood. x402 auth. No carrier account needed."
+sub: "Make calls, send SMS, receive inbound. Telnyx under the hood. x402 auth. Zero carrier accounts."
