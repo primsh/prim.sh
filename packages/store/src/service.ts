@@ -1,11 +1,11 @@
-import { randomBytes } from "node:crypto";
+import { randomBytes, randomUUID } from "node:crypto";
 import {
   countBucketsByOwner,
   getQuota as dbGetQuota,
   setQuota as dbSetQuota,
   decrementUsage,
   deleteBucketRow,
-  getBucketByCfName,
+  getBucketByNameAndOwner,
   getBucketById,
   getBucketsByOwner,
   getTotalStorageByOwner,
@@ -122,23 +122,26 @@ export async function createBucket(
     };
   }
 
-  const existing = getBucketByCfName(request.name);
+  const existing = getBucketByNameAndOwner(request.name, callerWallet);
   if (existing) {
     return {
       ok: false,
       status: 400,
       code: "bucket_name_taken",
-      message: "Bucket name already taken",
+      message: "You already have a bucket with this name",
     };
   }
 
+  // R2 bucket name is a UUID — user-facing name is scoped per wallet
+  const cfName = randomUUID();
+
   try {
-    const cfBucket = await cfCreateBucket(request.name, request.location);
+    const cfBucket = await cfCreateBucket(cfName, request.location);
     const bucketId = generateBucketId();
 
     insertBucket({
       id: bucketId,
-      cf_name: request.name,
+      cf_name: cfName,
       name: request.name,
       owner_wallet: callerWallet,
       location: cfBucket.location ?? request.location ?? null,
