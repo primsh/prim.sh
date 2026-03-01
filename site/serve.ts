@@ -47,6 +47,7 @@ const ACCESS_TEMPLATE = readFileSync(ACCESS_PATH, "utf-8").replace(
 
 const STATIC_ROUTES: Record<string, string> = {
   "/costs": join(ROOT, "site/costs/index.html"),
+  "/status": join(ROOT, "site/status/index.html"),
   "/install": join(ROOT, "site/install.sh"),
   "/install.sh": join(ROOT, "site/install.sh"),
 };

@@ -60,8 +60,15 @@ Libraries that handle this automatically:
 Chain: eip155:84532 (Base Sepolia) during beta.
 Token: USDC (6 decimals).
 
+Discovery endpoints (no auth required):
+  GET https://prim.sh/discovery.json  All primitives: id, status, endpoint, llms.txt, openapi URLs
+  GET https://prim.sh/pricing.json    All routes with USDC prices per service
+  GET https://prim.sh/status          Human-readable status page
+  GET https://prim.sh/costs           Full cost breakdown (infrastructure + per-primitive)
+  GET https://prim.sh/llms.txt        This file
+
 Free routes available on every primitive:
-  GET /          Health check
+  GET /          Health check (JSON: { service, status })
   GET /pricing   Machine-readable pricing for all endpoints (JSON)
   GET /v1/metrics  Operational metrics (uptime, request counts, latencies)
 
