@@ -67,6 +67,28 @@ export type Section =
   | PricingSection
   | CliSection;
 
+// ── Legal page types ──────────────────────────────────────────────────────────
+
+export interface LegalSection {
+  heading: string;
+  content?: string[];
+  content_after?: string[];
+  items?: string[];
+  highlight?: string;
+}
+
+export interface LegalConfig {
+  id: string;
+  title: string;
+  title_highlight: string;
+  description: string;
+  date: string;
+  intro?: string;
+  intro2?: string;
+  highlight_box?: string;
+  sections: LegalSection[];
+}
+
 export interface PrimConfig {
   id: string;
   name: string;
@@ -369,6 +391,11 @@ export function renderFooter(crumb: string): string {
     <a href="/access">access</a>
     <a href="/llms.txt">llms.txt</a>
   </div>
+  <div class="links">
+    <a href="/terms">terms</a>
+    <a href="/privacy">privacy</a>
+    <a href="/docs/costs">costs</a>
+  </div>
   <div class="copyright">${BRAND.copyright}</div>
 </footer>`;
 }
@@ -588,8 +615,121 @@ function headMeta(cfg: PrimConfig): string {
 <meta name="twitter:description" content="${desc}">
 <meta name="twitter:image" content="https://prim.sh/assets/og/${esc(cfg.id)}.png">
 <link rel="canonical" href="https://prim.sh/${esc(cfg.id)}">
-<link rel="icon" type="image/png" href="/assets/favicon.png">
-<link rel="apple-touch-icon" href="/assets/logo.png">`;
+<link rel="icon" type="image/svg+xml" href="/assets/favicon.svg">
+<link rel="icon" type="image/png" href="/assets/favicon-192.png">
+<link rel="apple-touch-icon" href="/assets/favicon-180.png">`;
+}
+
+// ── legal page render ─────────────────────────────────────────────────────────
+
+/** Convert [text](url) markdown links → <a href="url">text</a> */
+function mdLinks(s: string): string {
+  return s.replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2">$1</a>');
+}
+
+/** Render a legal page (terms, privacy) from LegalConfig */
+export function renderLegal(cfg: LegalConfig): string {
+  const titleHtml = `${esc(cfg.title)} <span>${esc(cfg.title_highlight)}</span>`;
+  const fullTitle = `${cfg.title} ${cfg.title_highlight} — ${BRAND.name}`;
+  const desc = esc(cfg.description);
+
+  const headHtml = `<meta name="description" content="${desc}">
+<meta name="theme-color" content="#0a0a0a">
+<meta property="og:type" content="website">
+<meta property="og:title" content="${esc(fullTitle)}">
+<meta property="og:description" content="${desc}">
+<meta property="og:url" content="https://prim.sh/${esc(cfg.id)}">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:site" content="@useprim">
+<link rel="canonical" href="https://prim.sh/${esc(cfg.id)}">
+<link rel="icon" type="image/svg+xml" href="/assets/favicon.svg">
+<link rel="icon" type="image/png" href="/assets/favicon-192.png">
+<link rel="apple-touch-icon" href="/assets/favicon-180.png">`;
+
+  // Highlight box (privacy "short version")
+  const highlightBoxHtml = cfg.highlight_box
+    ? `\n<div class="legal-highlight">\n<p>${bold(esc(cfg.highlight_box))}</p>\n</div>`
+    : "";
+
+  // Intro paragraphs
+  let introHtml = "";
+  if (cfg.intro) introHtml += `\n<p>${bold(esc(cfg.intro))}</p>`;
+  if (cfg.intro2) introHtml += `\n<p>${bold(esc(cfg.intro2))}</p>`;
+
+  // Sections
+  const sectionsHtml = cfg.sections
+    .map((s) => {
+      let html = `\n<h2>${esc(s.heading)}</h2>`;
+
+      if (s.content) {
+        for (const p of s.content) {
+          html += `\n<p>${mdLinks(bold(esc(p)))}</p>`;
+        }
+      }
+
+      if (s.items) {
+        html += "\n<ul>";
+        for (const item of s.items) {
+          html += `\n<li>${mdLinks(bold(esc(item)))}</li>`;
+        }
+        html += "\n</ul>";
+      }
+
+      if (s.content_after) {
+        for (const p of s.content_after) {
+          html += `\n<p>${mdLinks(bold(esc(p)))}</p>`;
+        }
+      }
+
+      if (s.highlight) {
+        html += `\n<div class="legal-highlight">\n<p>${bold(esc(s.highlight))}</p>\n</div>`;
+      }
+
+      return html;
+    })
+    .join("");
+
+  return `<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>${esc(fullTitle)}</title>
+${headHtml}
+<link rel="stylesheet" href="/assets/prim.css?v=${_buildHash}">
+<style>
+.legal-wrap{max-width:720px;margin:0 auto;padding:4rem 2rem}
+.legal-wrap h1{font-size:2rem;font-weight:700;margin-bottom:0.5rem}
+.legal-wrap h1 span{color:var(--accent)}
+.legal-wrap .date{color:var(--muted);font-size:0.85rem;margin-bottom:3rem;display:block}
+.legal-wrap h2{font-size:1.2rem;font-weight:600;margin-top:2.5rem;margin-bottom:1rem;color:var(--accent)}
+.legal-wrap p,.legal-wrap li{font-size:0.9rem;margin-bottom:0.75rem;color:var(--muted)}
+.legal-wrap ul{padding-left:1.5rem;margin-bottom:1rem}
+.legal-wrap li{margin-bottom:0.5rem}
+.legal-wrap strong{color:var(--text)}
+.legal-wrap a{color:var(--accent);text-decoration:none}
+.legal-wrap a:hover{text-decoration:underline}
+.legal-highlight{background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:1.5rem;margin:1.5rem 0}
+.legal-highlight p{margin-bottom:0}
+</style>
+</head>
+<body>
+<div class="hero">
+  <img class="logomark" src="/assets/hero.jpg" alt=">|">
+  <div class="hero-hd"><a href="/" class="pill"><span class="parent">${BRAND.name}</span><span class="sep">/</span><span class="child">${esc(cfg.id)}</span></a></div>
+  <h1 class="logo">${titleHtml}</h1>
+  <span class="date">Last updated: ${esc(cfg.date)}</span>
+</div>
+
+<div class="legal-wrap">
+${highlightBoxHtml}${introHtml}
+${sectionsHtml}
+</div>
+
+${renderFooter(`<a href="/">${BRAND.name}</a> / ${esc(cfg.id)}`)}
+<img src="/assets/banner.jpg" alt="" class="img-fade" style="width:100%;display:block;margin:0;padding:0">
+</body>
+</html>`;
 }
 
 // ── main render ───────────────────────────────────────────────────────────────

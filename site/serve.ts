@@ -6,7 +6,7 @@ import { existsSync, readFileSync, readdirSync } from "node:fs";
 import { join, resolve } from "node:path";
 import { parse } from "yaml";
 import { BRAND } from "./brand.ts";
-import { type PrimConfig, render, renderFooter } from "./template.ts";
+import { type LegalConfig, type PrimConfig, render, renderFooter, renderLegal } from "./template.ts";
 
 const PORT = Number(process.env.PORT ?? 3000);
 const ROOT = resolve(import.meta.dir, "..");
@@ -27,7 +27,7 @@ const NOT_FOUND_HTML = `<!DOCTYPE html>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>404 — ${BRAND.name}</title>
-<link rel="icon" type="image/png" href="/assets/favicon.png">
+<link rel="icon" type="image/png" href="/assets/favicon-192.png">
 <link rel="stylesheet" href="/assets/prim.css">
 </head>
 <body>
@@ -46,8 +46,6 @@ const ACCESS_TEMPLATE = readFileSync(ACCESS_PATH, "utf-8").replace(
 );
 
 const STATIC_ROUTES: Record<string, string> = {
-  "/terms": join(ROOT, "site/terms/index.html"),
-  "/privacy": join(ROOT, "site/privacy/index.html"),
   "/docs/costs": join(ROOT, "site/docs/costs/index.html"),
   "/install": join(ROOT, "site/install.sh"),
   "/install.sh": join(ROOT, "site/install.sh"),
@@ -99,7 +97,23 @@ for (const id of primIds) {
     console.log(`[serve] loaded ${id} (${cfg.status})`);
   }
 }
-console.log(`[serve] ${primCache.size} prims loaded, listening on :${PORT}`);
+// ── Legal page loading (page.yaml) ───────────────────────────────────────────
+
+const legalCache = new Map<string, LegalConfig>();
+for (const dir of readdirSync(join(ROOT, "site"))) {
+  const yamlPath = join(ROOT, `site/${dir}/page.yaml`);
+  if (existsSync(yamlPath)) {
+    try {
+      const cfg = parse(readFileSync(yamlPath, "utf-8")) as LegalConfig;
+      legalCache.set(cfg.id, cfg);
+      console.log(`[serve] loaded legal page: ${cfg.id}`);
+    } catch (e) {
+      console.error(`[serve] Failed to parse ${yamlPath}:`, e);
+    }
+  }
+}
+
+console.log(`[serve] ${primCache.size} prims, ${legalCache.size} legal pages loaded, listening on :${PORT}`);
 
 // ── MIME types ────────────────────────────────────────────────────────────────
 
@@ -185,10 +199,23 @@ const server = Bun.serve({
       return serveFile(existsSync(pkgPath) ? pkgPath : sitePath);
     }
 
-    // /<prim-id> → render from YAML
-    const primMatch = pathname.match(/^\/([^/]+)\/?$/);
-    if (primMatch) {
-      const [, id] = primMatch;
+    // /<id> → render from YAML (prim or legal page)
+    const pageMatch = pathname.match(/^\/([^/]+)\/?$/);
+    if (pageMatch) {
+      const [, id] = pageMatch;
+
+      // Legal pages (terms, privacy)
+      const legal = legalCache.get(id);
+      if (legal) {
+        return new Response(renderLegal(legal), {
+          headers: {
+            "Content-Type": "text/html; charset=utf-8",
+            "Cache-Control": "public, max-age=300, s-maxage=300",
+          },
+        });
+      }
+
+      // Prim pages
       const cfg = primCache.get(id);
       if (cfg) {
         const html = render(cfg);

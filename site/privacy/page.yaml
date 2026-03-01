@@ -1,0 +1,68 @@
+id: privacy
+title: "Privacy"
+title_highlight: "Policy"
+description: "Prim privacy policy. We collect the minimum data needed to operate — wallet addresses, request logs, stored content. No tracking, no profiling, no data sales."
+date: "February 25, 2026"
+highlight_box: "**The short version:** Prim is designed for agents, not humans. We collect the minimum data needed to operate the Service. We don't track you, profile you, or sell your data. Your wallet address is your identity — we don't ask for anything else."
+intro: "This Privacy Policy describes how Primitive Shell LLC (\"we\", \"us\", \"our\"), operating Prim at prim.sh, handles information when you use the Service."
+sections:
+  - heading: "1. What We Collect"
+    content:
+      - "**Wallet addresses.** When you register a wallet, we store your Ethereum address and EIP-191 signature. This is a public blockchain address, not personal information in the traditional sense."
+      - "**API request data.** We log request metadata (IP address, timestamp, endpoint, wallet address) for rate limiting, abuse prevention, and debugging. Logs are retained for 30 days."
+      - "**Content you store.** If you use store.sh, email.sh, or mem.sh, we store the content you upload. This content is associated with your wallet address. We do not inspect, analyze, or share your stored content."
+      - "**On-chain payment data.** x402 payments are settled on the Base blockchain. Transaction hashes, amounts, and addresses are publicly visible on-chain. We do not control or store this data — it's inherent to blockchain."
+
+  - heading: "2. What We Don't Collect"
+    items:
+      - "Names, emails, phone numbers, or any personally identifying information."
+      - "Cookies, tracking pixels, or browser fingerprints."
+      - "Analytics or telemetry beyond basic request logs."
+      - "Private keys. We never have access to your private keys."
+
+  - heading: "3. How We Use Data"
+    items:
+      - "**Operate the Service:** route requests, enforce quotas, process payments."
+      - "**Prevent abuse:** rate limiting, allowlist enforcement, detecting violations of Terms of Service."
+      - "**Debug issues:** request logs help us fix bugs and investigate failures."
+    content_after:
+      - "We do not use your data for advertising, profiling, or any purpose unrelated to operating the Service."
+
+  - heading: "4. Data Sharing"
+    content:
+      - "We do not sell, rent, or share your data with third parties, except:"
+    items:
+      - "**Infrastructure providers:** Your data passes through our infrastructure providers (DigitalOcean, Cloudflare, Qdrant) as necessary to operate the Service. These providers process data under their own privacy policies."
+      - "**Legal requirements:** We may disclose data if required by law, legal process, or government request."
+      - "**Blockchain:** Payment data is publicly visible on Base (Ethereum L2). This is inherent to the protocol."
+
+  - heading: "5. Data Retention"
+    items:
+      - "**Wallet registrations:** Retained as long as the Service operates."
+      - "**Request logs:** 30 days."
+      - "**Stored content (store.sh, email.sh, mem.sh):** Retained until you delete it or your access is revoked. We may delete data after extended inactivity (90+ days)."
+      - "**Provisioned servers (spawn.sh):** Server metadata retained while the server exists. Servers may be terminated after 30 days of inactivity."
+
+  - heading: "6. Data Security"
+    content:
+      - "We use TLS for all API traffic. Data at rest is stored on encrypted volumes. Access to production infrastructure is restricted. However, no system is perfectly secure — we cannot guarantee absolute security."
+
+  - heading: "7. Your Rights"
+    content:
+      - "Since we identify you only by wallet address, traditional data subject rights (access, deletion, portability) apply to data associated with that address. To request data deletion, contact us from a signed message proving wallet ownership."
+
+  - heading: "8. International Users"
+    content:
+      - "The Service is operated from the United States. By using the Service, you consent to the transfer of data to the United States. We do not specifically target users in any jurisdiction."
+
+  - heading: "9. Children"
+    content:
+      - "The Service is not directed at children under 18. We do not knowingly collect data from minors."
+
+  - heading: "10. Changes"
+    content:
+      - "We may update this policy. Changes take effect when posted. The \"Last updated\" date above reflects the most recent revision."
+
+  - heading: "11. Contact"
+    content:
+      - "Privacy questions: [hello@prim.sh](mailto:hello@prim.sh)"

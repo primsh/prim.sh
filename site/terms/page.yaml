@@ -1,0 +1,76 @@
+id: terms
+title: "Terms of"
+title_highlight: "Service"
+description: "Prim terms of service. x402 payment, acceptable use, data ownership, liability limitations for the agent-native infrastructure stack."
+date: "February 25, 2026"
+intro: "These Terms of Service (\"Terms\") govern your use of the Prim platform (\"Service\"), operated by Primitive Shell LLC (\"we\", \"us\", \"our\") at prim.sh."
+intro2: "By using the Service, you agree to these Terms. If you don't agree, don't use the Service."
+sections:
+  - heading: "1. What Prim Is"
+    content:
+      - "Prim provides infrastructure primitives (compute, storage, email, DNS, etc.) accessible via HTTP APIs. Authentication and payment are handled through the x402 protocol using USDC on the Base blockchain. There is no account creation, no dashboard, and no human signup flow."
+
+  - heading: "2. Beta Status"
+    content:
+      - "**Prim is in beta.** The Service is provided on an as-is basis. We may change, suspend, or discontinue any primitive at any time without notice. During beta, the Service operates on Base Sepolia (testnet). Testnet USDC has no monetary value."
+
+  - heading: "3. Eligibility"
+    content:
+      - "You must comply with all applicable laws in your jurisdiction. You may use the Service on behalf of yourself or an autonomous agent you control. You are responsible for all activity conducted through wallets you own or control."
+
+  - heading: "4. Acceptable Use"
+    content:
+      - "You agree not to:"
+    items:
+      - "Use the Service for any unlawful purpose."
+      - "Attempt to disrupt, degrade, or gain unauthorized access to the Service or its underlying infrastructure."
+      - "Use spawn.sh (compute provisioning) to mine cryptocurrency, run botnets, send spam, or host illegal content."
+      - "Use email.sh to send unsolicited bulk email (spam)."
+      - "Circumvent rate limits, storage quotas, or access controls."
+      - "Resell access to the Service without written permission."
+    content_after:
+      - "We may suspend or revoke wallet access for violations without prior notice."
+
+  - heading: "5. Pricing & Payments"
+    content:
+      - "All API calls are priced at provider cost. Current prices are published at [prim.sh/docs/costs](https://prim.sh/docs/costs) and generated from source files in the repo."
+      - "Prices reflect current provider rates and may change without notice. Price changes take effect on the next API call, not retroactively."
+      - "Operations priced at the x402 floor ($0.001) cover protocol overhead — caller identification, ownership scoping, and abuse prevention."
+      - "Each transaction incurs Base chain gas fees (~$0.001–0.005 ETH) paid by the caller, separate from the listed price."
+      - "Dynamic-priced operations (token gas, domain registration) are quoted at request time. Quotes expire (e.g. 15 minutes for domains)."
+      - "All settled x402 payments are final. No refunds on completed transactions."
+      - "Primitive Shell absorbs fixed infrastructure costs and does not pass them to users."
+
+  - heading: "6. Data and Content"
+    content:
+      - "You retain ownership of all data you store or transmit through the Service. We do not claim any rights to your content. We may delete data stored through the Service after periods of inactivity or if your wallet access is revoked."
+      - "For compute primitives (spawn.sh), you are solely responsible for what runs on provisioned servers. We may terminate servers that violate these Terms."
+
+  - heading: "7. Uptime and Availability"
+    content:
+      - "We make no guarantees about uptime, availability, or data durability. The Service may experience downtime for maintenance, infrastructure changes, or unforeseen issues. We are not liable for any losses resulting from Service unavailability."
+
+  - heading: "8. Disclaimer of Warranties"
+    content:
+      - "**THE SERVICE IS PROVIDED \"AS IS\" AND \"AS AVAILABLE\" WITHOUT WARRANTIES OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE, OR NON-INFRINGEMENT.**"
+
+  - heading: "9. Limitation of Liability"
+    content:
+      - "**TO THE MAXIMUM EXTENT PERMITTED BY LAW, WE SHALL NOT BE LIABLE FOR ANY INDIRECT, INCIDENTAL, SPECIAL, CONSEQUENTIAL, OR PUNITIVE DAMAGES, OR ANY LOSS OF PROFITS, DATA, OR GOODWILL, ARISING FROM YOUR USE OF THE SERVICE.**"
+      - "Our total aggregate liability for any claims arising from or related to the Service shall not exceed the total amount of USDC you have paid through the Service in the 30 days preceding the claim."
+
+  - heading: "10. Indemnification"
+    content:
+      - "You agree to indemnify and hold us harmless from any claims, damages, or expenses arising from your use of the Service or violation of these Terms."
+
+  - heading: "11. Changes to Terms"
+    content:
+      - "We may update these Terms at any time. Changes take effect when posted to this page. Continued use of the Service after changes constitutes acceptance. For material changes, we will update the \"Last updated\" date above."
+
+  - heading: "12. Governing Law"
+    content:
+      - "These Terms are governed by the laws of the State of California, United States, without regard to conflict of law principles."
+
+  - heading: "13. Contact"
+    content:
+      - "Questions about these Terms: [hello@prim.sh](mailto:hello@prim.sh)"
