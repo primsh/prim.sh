@@ -11,7 +11,7 @@
     "type": "openapi",
     "url": "https://prim.sh/openapi/wallet.yaml"
   },
-  "logo_url": "https://prim.sh/assets/logo.png",
+  "logo_url": "https://prim.sh/assets/favicon-192.png",
   "contact_email": "hello@prim.sh",
   "legal_info_url": "https://prim.sh/terms"
 }
