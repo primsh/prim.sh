@@ -13,7 +13,7 @@
 <p align="center">
   <a href="https://prim.sh">Website</a> &middot;
   <a href="https://prim.sh/llms.txt">llms.txt</a> &middot;
-  <a href="https://discord.gg/Cy3UQt2z">Discord</a> &middot;
+  <a href="https://discord.gg/VbFseNDZ">Discord</a> &middot;
   <a href="https://x.com/useprim">@useprim</a> &middot;
   <a href="https://prim.sh/docs/costs">Costs</a>
 </p>
