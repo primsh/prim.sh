@@ -1,10 +1,8 @@
 // SPDX-License-Identifier: Apache-2.0
-// THIS FILE IS GENERATED — DO NOT EDIT
-// Source: packages/gate/openapi.yaml
-// Regenerate: pnpm gen:cli
+// Manually maintained — gen-cli skips files without the generated marker.
 
 import { createPrimFetch } from "@primsh/x402-client";
-import { getConfig } from "@primsh/keystore";
+import { getConfig, writeConfig } from "@primsh/keystore";
 import { createGateClient } from "@primsh/sdk";
 import { getFlag, hasFlag, resolvePassphrase } from "./flags.ts";
 
@@ -53,6 +51,13 @@ export async function runGateCommand(sub: string, argv: string[]): Promise<void>
       reqBody.code = code;
       reqBody.wallet = wallet;
       const data = await client.redeemInvite(reqBody as never);
+
+      // gate.sh is testnet-only — save network so balance/store/search default correctly
+      if (!config.network) {
+        config.network = "eip155:84532";
+        await writeConfig(config);
+      }
+
       if (quiet) {
         console.log(JSON.stringify(data));
       } else {
@@ -66,5 +71,3 @@ export async function runGateCommand(sub: string, argv: string[]): Promise<void>
       process.exit(1);
   }
 }
-
-// END:PRIM:CLI

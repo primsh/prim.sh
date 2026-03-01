@@ -359,9 +359,7 @@ export function renderFooter(crumb: string): string {
   <div class="links">
     <a href="/wallet" style="color:var(--cat-crypto)">wallet</a>
     <a href="/faucet" style="color:var(--cat-crypto)">faucet</a>
-    <a href="/spawn" style="color:var(--cat-compute)">spawn</a>
     <a href="/store" style="color:var(--cat-storage)">store</a>
-    <a href="/email" style="color:var(--cat-comms)">email</a>
     <a href="/search" style="color:var(--cat-intelligence)">search</a>
   </div>
   <div class="links">
@@ -540,7 +538,7 @@ ${inlineCSS(cfg)}
 <div class="hero">
   <img class="logomark" src="/assets/hero.jpg" alt=">|">
   <div class="hero-hd"><a href="/" class="pill"><span class="parent">${BRAND.name}</span><span class="sep">/</span><span class="child">${esc(cfg.name)}</span></a></div>
-  <div class="logo"><span>${esc(namePart)}</span>.${ext ?? "sh"}</div>${cfg.nounStyled ? `\n  <div class="tagline" style="color:var(--muted);font-size:1.1rem;margin-bottom:0.5rem">${esc(cfg.nounStyled)}</div>` : ""}
+  <h1 class="logo"><span>${esc(namePart)}</span>.${ext ?? "sh"}</h1>${cfg.nounStyled ? `\n  <div class="tagline" style="color:var(--muted);font-size:1.1rem;margin-bottom:0.5rem">${esc(cfg.nounStyled)}</div>` : ""}
   <div class="tagline">${esc(cfg.tagline)}</div>
   <div class="badges">
     <div class="badge">Part of <strong>${BRAND.name}</strong></div>
@@ -589,6 +587,7 @@ function headMeta(cfg: PrimConfig): string {
 <meta name="twitter:title" content="${title}">
 <meta name="twitter:description" content="${desc}">
 <meta name="twitter:image" content="https://prim.sh/assets/og/${esc(cfg.id)}.png">
+<link rel="canonical" href="https://prim.sh/${esc(cfg.id)}">
 <link rel="icon" type="image/png" href="/assets/favicon.png">
 <link rel="apple-touch-icon" href="/assets/logo.png">`;
 }
@@ -653,7 +652,7 @@ ${inlineCSS(cfg)}
 <div class="hero">
   <img class="logomark" src="/assets/hero.jpg" alt=">|">
   <div class="hero-hd"><a href="/" class="pill"><span class="parent">${BRAND.name}</span><span class="sep">/</span><span class="child">${esc(cfg.name)}</span></a></div>
-  <div class="logo"><span>${esc(namePart ?? cfg.id)}</span>.${esc(ext ?? "sh")}</div>${cfg.nounStyled ? `\n  <div class="tagline" style="color:var(--muted);font-size:1.1rem;margin-bottom:0.5rem">${esc(cfg.nounStyled)}</div>` : ""}
+  <h1 class="logo"><span>${esc(namePart ?? cfg.id)}</span>.${esc(ext ?? "sh")}</h1>${cfg.nounStyled ? `\n  <div class="tagline" style="color:var(--muted);font-size:1.1rem;margin-bottom:0.5rem">${esc(cfg.nounStyled)}</div>` : ""}
   <div class="tagline">${esc(cfg.tagline)}</div>
 ${heroBlock}
   <div class="badges">
