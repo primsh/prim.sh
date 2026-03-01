@@ -4,6 +4,7 @@ import {
   createAgentStackMiddleware,
   createWalletAllowlistChecker,
   invalidRequest,
+  parseJsonBody,
 } from "@primsh/x402-middleware";
 import type { ApiError } from "@primsh/x402-middleware";
 import { createPrimApp } from "@primsh/x402-middleware/create-prim-app";
@@ -105,13 +106,9 @@ app.get("/health/providers", async (c) => {
 
 // POST /v1/search — Web search
 app.post("/v1/search", async (c) => {
-  let body: SearchRequest;
-  try {
-    body = await c.req.json<SearchRequest>();
-  } catch (err) {
-    logger.warn("JSON parse failed on POST /v1/search", { error: String(err) });
-    return c.json(invalidRequest("Invalid JSON body"), 400);
-  }
+  const bodyOrRes = await parseJsonBody<SearchRequest>(c, logger, "POST /v1/search");
+  if (bodyOrRes instanceof Response) return bodyOrRes;
+  const body = bodyOrRes;
 
   const result = await searchWeb(body);
   if (!result.ok) {
@@ -132,13 +129,9 @@ app.post("/v1/search", async (c) => {
 
 // POST /v1/search/news — News search
 app.post("/v1/search/news", async (c) => {
-  let body: SearchRequest;
-  try {
-    body = await c.req.json<SearchRequest>();
-  } catch (err) {
-    logger.warn("JSON parse failed on POST /v1/search/news", { error: String(err) });
-    return c.json(invalidRequest("Invalid JSON body"), 400);
-  }
+  const bodyOrRes = await parseJsonBody<SearchRequest>(c, logger, "POST /v1/search/news");
+  if (bodyOrRes instanceof Response) return bodyOrRes;
+  const body = bodyOrRes;
 
   const result = await searchNews(body);
   if (!result.ok) {
@@ -159,13 +152,9 @@ app.post("/v1/search/news", async (c) => {
 
 // POST /v1/extract — URL content extraction
 app.post("/v1/extract", async (c) => {
-  let body: ExtractRequest;
-  try {
-    body = await c.req.json<ExtractRequest>();
-  } catch (err) {
-    logger.warn("JSON parse failed on POST /v1/extract", { error: String(err) });
-    return c.json(invalidRequest("Invalid JSON body"), 400);
-  }
+  const bodyOrRes = await parseJsonBody<ExtractRequest>(c, logger, "POST /v1/extract");
+  if (bodyOrRes instanceof Response) return bodyOrRes;
+  const body = bodyOrRes;
 
   const result = await extractUrls(body);
   if (!result.ok) {

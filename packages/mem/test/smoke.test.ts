@@ -1,4 +1,3 @@
-import type { Context, Next } from "hono";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 vi.hoisted(() => {
@@ -7,27 +6,19 @@ vi.hoisted(() => {
 });
 
 // Stub bun:sqlite so db.ts doesn't fail in vitest (Node runtime)
-vi.mock("bun:sqlite", () => {
-  class MockDatabase {
-    run() {}
-    query() {
-      return { get: () => null, all: () => [], run: () => {} };
-    }
-  }
-  return { Database: MockDatabase };
-});
+import { mockBunSqlite, mockX402Middleware } from "@primsh/x402-middleware/testing";
+vi.mock("bun:sqlite", () => mockBunSqlite());
 
-// Bypass x402 middleware for unit tests.
-// Middleware wiring is verified via check 3 (spy on createAgentStackMiddleware).
+const createAgentStackMiddlewareSpy = vi.hoisted(() => vi.fn());
+
 vi.mock("@primsh/x402-middleware", async (importOriginal) => {
   const original = await importOriginal<typeof import("@primsh/x402-middleware")>();
+  const mocks = mockX402Middleware();
+  createAgentStackMiddlewareSpy.mockImplementation(mocks.createAgentStackMiddleware);
   return {
     ...original,
-    createAgentStackMiddleware: vi.fn(() => async (c: Context, next: Next) => {
-      c.set("walletAddress" as never, "0x0000000000000000000000000000000000000001");
-      await next();
-    }),
-    createWalletAllowlistChecker: vi.fn(() => () => Promise.resolve(true)),
+    createAgentStackMiddleware: createAgentStackMiddlewareSpy,
+    createWalletAllowlistChecker: vi.fn(mocks.createWalletAllowlistChecker),
   };
 });
 
@@ -48,7 +39,6 @@ vi.mock("../src/service.ts", async (importOriginal) => {
   };
 });
 
-import { createAgentStackMiddleware } from "@primsh/x402-middleware";
 import type { CollectionResponse } from "../src/api.ts";
 import app from "../src/index.ts";
 import { createCollection } from "../src/service.ts";
@@ -74,7 +64,7 @@ describe("mem.sh app", () => {
 
   // Check 3: x402 middleware is wired with the correct paid routes and payTo address
   it("x402 middleware is registered with paid routes and payTo", () => {
-    expect(vi.mocked(createAgentStackMiddleware)).toHaveBeenCalledWith(
+    expect(createAgentStackMiddlewareSpy).toHaveBeenCalledWith(
       expect.objectContaining({
         payTo: expect.any(String),
         freeRoutes: expect.arrayContaining(["GET /"]),

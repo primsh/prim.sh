@@ -5,6 +5,8 @@ import {
   forbidden,
   invalidRequest,
   notFound,
+  parseJsonBody,
+  requireCaller,
 } from "@primsh/x402-middleware";
 import type { ApiError, PaginatedList } from "@primsh/x402-middleware";
 import { createPrimApp } from "@primsh/x402-middleware/create-prim-app";
@@ -68,16 +70,13 @@ const logger = app.logger;
 
 // POST /v1/collections — Create collection
 app.post("/v1/collections", async (c) => {
-  const caller = c.get("walletAddress");
-  if (!caller) return c.json(forbidden("No wallet address in payment"), 403);
+  const callerOrRes = requireCaller(c);
+  if (callerOrRes instanceof Response) return callerOrRes;
+  const caller = callerOrRes;
 
-  let body: CreateCollectionRequest;
-  try {
-    body = await c.req.json<CreateCollectionRequest>();
-  } catch (err) {
-    logger.warn("JSON parse failed on POST /v1/collections", { error: String(err) });
-    return c.json(invalidRequest("Invalid JSON body"), 400);
-  }
+  const bodyOrRes = await parseJsonBody<CreateCollectionRequest>(c, logger, "POST /v1/collections");
+  if (bodyOrRes instanceof Response) return bodyOrRes;
+  const body = bodyOrRes;
 
   const result = await createCollection(body, caller);
   if (!result.ok) {
@@ -93,8 +92,9 @@ app.post("/v1/collections", async (c) => {
 
 // GET /v1/collections — List collections
 app.get("/v1/collections", (c) => {
-  const caller = c.get("walletAddress");
-  if (!caller) return c.json(forbidden("No wallet address in payment"), 403);
+  const callerOrRes = requireCaller(c);
+  if (callerOrRes instanceof Response) return callerOrRes;
+  const caller = callerOrRes;
 
   const limit = Math.min(Number(c.req.query("limit")) || 20, 100);
   const page = Math.max(Number(c.req.query("page")) || 1, 1);
@@ -105,8 +105,9 @@ app.get("/v1/collections", (c) => {
 
 // GET /v1/collections/:id — Get collection (live document_count)
 app.get("/v1/collections/:id", async (c) => {
-  const caller = c.get("walletAddress");
-  if (!caller) return c.json(forbidden("No wallet address in payment"), 403);
+  const callerOrRes = requireCaller(c);
+  if (callerOrRes instanceof Response) return callerOrRes;
+  const caller = callerOrRes;
 
   const result = await getCollection(c.req.param("id"), caller);
   if (!result.ok) {
@@ -118,8 +119,9 @@ app.get("/v1/collections/:id", async (c) => {
 
 // DELETE /v1/collections/:id — Delete collection
 app.delete("/v1/collections/:id", async (c) => {
-  const caller = c.get("walletAddress");
-  if (!caller) return c.json(forbidden("No wallet address in payment"), 403);
+  const callerOrRes = requireCaller(c);
+  if (callerOrRes instanceof Response) return callerOrRes;
+  const caller = callerOrRes;
 
   const result = await deleteCollection(c.req.param("id"), caller);
   if (!result.ok) {
@@ -134,16 +136,13 @@ app.delete("/v1/collections/:id", async (c) => {
 
 // POST /v1/collections/:id/upsert — Embed + store documents
 app.post("/v1/collections/:id/upsert", async (c) => {
-  const caller = c.get("walletAddress");
-  if (!caller) return c.json(forbidden("No wallet address in payment"), 403);
+  const callerOrRes = requireCaller(c);
+  if (callerOrRes instanceof Response) return callerOrRes;
+  const caller = callerOrRes;
 
-  let body: UpsertRequest;
-  try {
-    body = await c.req.json<UpsertRequest>();
-  } catch (err) {
-    logger.warn("JSON parse failed on POST /v1/collections/:id/upsert", { error: String(err) });
-    return c.json(invalidRequest("Invalid JSON body"), 400);
-  }
+  const bodyOrRes = await parseJsonBody<UpsertRequest>(c, logger, "POST /v1/collections/:id/upsert");
+  if (bodyOrRes instanceof Response) return bodyOrRes;
+  const body = bodyOrRes;
 
   const result = await upsertDocuments(c.req.param("id"), body, caller);
   if (!result.ok) {
@@ -157,16 +156,13 @@ app.post("/v1/collections/:id/upsert", async (c) => {
 
 // POST /v1/collections/:id/query — Semantic search
 app.post("/v1/collections/:id/query", async (c) => {
-  const caller = c.get("walletAddress");
-  if (!caller) return c.json(forbidden("No wallet address in payment"), 403);
+  const callerOrRes = requireCaller(c);
+  if (callerOrRes instanceof Response) return callerOrRes;
+  const caller = callerOrRes;
 
-  let body: QueryRequest;
-  try {
-    body = await c.req.json<QueryRequest>();
-  } catch (err) {
-    logger.warn("JSON parse failed on POST /v1/collections/:id/query", { error: String(err) });
-    return c.json(invalidRequest("Invalid JSON body"), 400);
-  }
+  const bodyOrRes = await parseJsonBody<QueryRequest>(c, logger, "POST /v1/collections/:id/query");
+  if (bodyOrRes instanceof Response) return bodyOrRes;
+  const body = bodyOrRes;
 
   const result = await queryDocuments(c.req.param("id"), body, caller);
   if (!result.ok) {
@@ -182,16 +178,13 @@ app.post("/v1/collections/:id/query", async (c) => {
 
 // PUT /v1/cache/:namespace/:key — Set cache entry
 app.put("/v1/cache/:namespace/:key", async (c) => {
-  const caller = c.get("walletAddress");
-  if (!caller) return c.json(forbidden("No wallet address in payment"), 403);
+  const callerOrRes = requireCaller(c);
+  if (callerOrRes instanceof Response) return callerOrRes;
+  const caller = callerOrRes;
 
-  let body: SetCacheRequest;
-  try {
-    body = await c.req.json<SetCacheRequest>();
-  } catch (err) {
-    logger.warn("JSON parse failed on PUT /v1/cache/:namespace/:key", { error: String(err) });
-    return c.json(invalidRequest("Invalid JSON body"), 400);
-  }
+  const bodyOrRes = await parseJsonBody<SetCacheRequest>(c, logger, "PUT /v1/cache/:namespace/:key");
+  if (bodyOrRes instanceof Response) return bodyOrRes;
+  const body = bodyOrRes;
 
   const result = cacheSet(c.req.param("namespace"), c.req.param("key"), body, caller);
   if (!result.ok) {
@@ -202,8 +195,9 @@ app.put("/v1/cache/:namespace/:key", async (c) => {
 
 // GET /v1/cache/:namespace/:key — Get cache entry
 app.get("/v1/cache/:namespace/:key", (c) => {
-  const caller = c.get("walletAddress");
-  if (!caller) return c.json(forbidden("No wallet address in payment"), 403);
+  const callerOrRes = requireCaller(c);
+  if (callerOrRes instanceof Response) return callerOrRes;
+  const caller = callerOrRes;
 
   const result = cacheGet(c.req.param("namespace"), c.req.param("key"), caller);
   if (!result.ok) {
@@ -215,8 +209,9 @@ app.get("/v1/cache/:namespace/:key", (c) => {
 
 // DELETE /v1/cache/:namespace/:key — Delete cache entry
 app.delete("/v1/cache/:namespace/:key", (c) => {
-  const caller = c.get("walletAddress");
-  if (!caller) return c.json(forbidden("No wallet address in payment"), 403);
+  const callerOrRes = requireCaller(c);
+  if (callerOrRes instanceof Response) return callerOrRes;
+  const caller = callerOrRes;
 
   const result = cacheDelete(c.req.param("namespace"), c.req.param("key"), caller);
   if (!result.ok) {

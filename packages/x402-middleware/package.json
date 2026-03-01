@@ -31,6 +31,10 @@
     "./create-prim-app": {
       "import": "./src/create-prim-app.ts",
       "types": "./src/create-prim-app.ts"
+    },
+    "./testing": {
+      "import": "./src/testing.ts",
+      "types": "./src/testing.ts"
     }
   },
   "scripts": {

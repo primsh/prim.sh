@@ -9,25 +9,49 @@ vi.hoisted(() => {
 
 // Mock x402-middleware — gate uses freeService so no x402, but createPrimApp still imports it.
 // Simple factory (no importOriginal) to avoid pulling in @x402/* deps that vitest can't resolve.
-vi.mock("@primsh/x402-middleware", () => ({
-  createAgentStackMiddleware: vi.fn(
-    () =>
-      async (
-        _c: import("hono").Context,
-        next: import("hono").Next,
-      ) => {
-        await next();
-      },
-  ),
-  createWalletAllowlistChecker: vi.fn(() => () => Promise.resolve(true)),
-  createLogger: vi.fn(() => ({ info: vi.fn(), warn: vi.fn(), error: vi.fn() })),
-  getNetworkConfig: vi.fn(() => ({
-    chainId: 84532,
-    chain: { id: 84532, name: "Base Sepolia" },
-    facilitatorUrl: "https://facilitator.example.com",
-    usdcAddress: "0x036CbD53842c5426634e7929541eC2318f3dCF7e",
-  })),
-}));
+vi.mock("@primsh/x402-middleware", () => {
+  const forbidden = (message: string) => ({ error: { code: "forbidden", message } });
+  const invalidRequest = (message: string) => ({ error: { code: "invalid_request", message } });
+  const notFound = (message: string) => ({ error: { code: "not_found", message } });
+  const serviceError = (code: string, message: string) => ({ error: { code, message } });
+
+  return {
+    createAgentStackMiddleware: vi.fn(
+      () =>
+        async (
+          _c: import("hono").Context,
+          next: import("hono").Next,
+        ) => {
+          await next();
+        },
+    ),
+    createWalletAllowlistChecker: vi.fn(() => () => Promise.resolve(true)),
+    createLogger: vi.fn(() => ({ info: vi.fn(), warn: vi.fn(), error: vi.fn() })),
+    getNetworkConfig: vi.fn(() => ({
+      chainId: 84532,
+      chain: { id: 84532, name: "Base Sepolia" },
+      facilitatorUrl: "https://facilitator.example.com",
+      usdcAddress: "0x036CbD53842c5426634e7929541eC2318f3dCF7e",
+    })),
+    requireCaller: (c: import("hono").Context) => {
+      const caller = c.get("walletAddress");
+      if (!caller) return c.json(forbidden("No wallet address in payment"), 403);
+      return caller;
+    },
+    parseJsonBody: async (c: import("hono").Context, logger: { warn: (...a: unknown[]) => void }, label: string) => {
+      try {
+        return await c.req.json();
+      } catch (err) {
+        logger.warn(`JSON parse failed on ${label}`, { error: String(err) });
+        return c.json(invalidRequest("Invalid JSON body"), 400);
+      }
+    },
+    forbidden,
+    invalidRequest,
+    notFound,
+    serviceError,
+  };
+});
 
 // Mock create-prim-app subpath — gate imports it directly.
 // Use vi.hoisted to make Hono available inside the hoisted mock factory.

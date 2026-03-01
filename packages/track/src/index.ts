@@ -4,6 +4,7 @@ import {
   createWalletAllowlistChecker,
   invalidRequest,
   notFound,
+  parseJsonBody,
 } from "@primsh/x402-middleware";
 import type { ApiError } from "@primsh/x402-middleware";
 import { createPrimApp } from "@primsh/x402-middleware/create-prim-app";
@@ -38,13 +39,9 @@ const logger = app.logger;
 
 // POST /v1/track — look up a tracking number
 app.post("/v1/track", async (c) => {
-  let body: TrackRequest;
-  try {
-    body = await c.req.json<TrackRequest>();
-  } catch (err) {
-    logger.warn("JSON parse failed on POST /v1/track", { error: String(err) });
-    return c.json(invalidRequest("Invalid JSON body"), 400);
-  }
+  const bodyOrRes = await parseJsonBody<TrackRequest>(c, logger, "POST /v1/track");
+  if (bodyOrRes instanceof Response) return bodyOrRes;
+  const body = bodyOrRes;
 
   const result = await trackPackage(body);
 

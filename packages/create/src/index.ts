@@ -14,6 +14,7 @@ import {
   invalidRequest,
   metricsHandler,
   metricsMiddleware,
+  parseJsonBody,
   requestIdMiddleware,
 } from "@primsh/x402-middleware";
 import type { ApiError } from "@primsh/x402-middleware";
@@ -126,13 +127,9 @@ app.get("/pricing", (c) => {
 
 // POST /v1/scaffold — Generate a complete prim package from a prim.yaml spec. Returns file manifest with contents.
 app.post("/v1/scaffold", async (c) => {
-  let body: Record<string, unknown>;
-  try {
-    body = await c.req.json<Record<string, unknown>>();
-  } catch (err) {
-    logger.warn("JSON parse failed on POST /v1/scaffold", { error: String(err) });
-    return c.json(invalidRequest("Invalid JSON body"), 400);
-  }
+  const bodyOrRes = await parseJsonBody<Record<string, unknown>>(c, logger, "POST /v1/scaffold");
+  if (bodyOrRes instanceof Response) return bodyOrRes;
+  const body = bodyOrRes;
 
   const result = await scaffold(body);
 
@@ -155,13 +152,9 @@ app.post("/v1/scaffold", async (c) => {
 
 // POST /v1/validate — Validate a prim.yaml spec against the schema without generating files.
 app.post("/v1/validate", async (c) => {
-  let body: Record<string, unknown>;
-  try {
-    body = await c.req.json<Record<string, unknown>>();
-  } catch (err) {
-    logger.warn("JSON parse failed on POST /v1/validate", { error: String(err) });
-    return c.json(invalidRequest("Invalid JSON body"), 400);
-  }
+  const bodyOrRes = await parseJsonBody<Record<string, unknown>>(c, logger, "POST /v1/validate");
+  if (bodyOrRes instanceof Response) return bodyOrRes;
+  const body = bodyOrRes;
 
   const result = await validate(body);
 

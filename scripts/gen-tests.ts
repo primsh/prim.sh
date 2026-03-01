@@ -264,10 +264,7 @@ function generateFullFile(ctx: GenContext): string {
   const primary = primaryRoute(ctx.routes);
 
   // Preamble
-  lines.push(`import { describe, expect, it, vi, beforeEach } from "vitest";`);
-  if (!ctx.isFreeService) {
-    lines.push(`import type { Context, Next } from "hono";`);
-  }
+  lines.push(`import { beforeEach, describe, expect, it, vi } from "vitest";`);
   lines.push("");
 
   // Env setup — vi.hoisted ensures env vars are set before ES module imports
@@ -286,48 +283,49 @@ function generateFullFile(ctx: GenContext): string {
   // bun:sqlite mock — needed when db.ts uses bun:sqlite (for Node/vitest compat)
   if (ctx.needsBunSqliteMock) {
     lines.push(`// Stub bun:sqlite so db.ts doesn't fail in vitest (Node runtime)`);
-    lines.push(`vi.mock("bun:sqlite", () => {`);
-    lines.push("  class MockDatabase {");
-    lines.push("    run() {}");
-    lines.push("    query() { return { get: () => null, all: () => [], run: () => {} }; }");
-    lines.push("  }");
-    lines.push("  return { Database: MockDatabase };");
-    lines.push("});");
+    lines.push(
+      `import { mockBunSqlite, mockX402Middleware } from "@primsh/x402-middleware/testing";`,
+    );
+    lines.push(`vi.mock("bun:sqlite", () => mockBunSqlite());`);
+  } else {
+    lines.push(`import { mockX402Middleware } from "@primsh/x402-middleware/testing";`);
+  }
+  lines.push("");
+
+  if (!ctx.isFreeService) {
+    lines.push("const createAgentStackMiddlewareSpy = vi.hoisted(() => vi.fn());");
     lines.push("");
+    lines.push(`vi.mock("@primsh/x402-middleware", async (importOriginal) => {`);
+    lines.push(
+      `  const original = await importOriginal<typeof import("@primsh/x402-middleware")>();`,
+    );
+    lines.push("  const mocks = mockX402Middleware();");
+    lines.push(
+      "  createAgentStackMiddlewareSpy.mockImplementation(mocks.createAgentStackMiddleware);",
+    );
+    lines.push("  return {");
+    lines.push("    ...original,");
+    lines.push("    createAgentStackMiddleware: createAgentStackMiddlewareSpy,");
+    lines.push(
+      "    createWalletAllowlistChecker: vi.fn(mocks.createWalletAllowlistChecker),",
+    );
+    lines.push("  };");
+    lines.push("});");
+  } else {
+    lines.push(`vi.mock("@primsh/x402-middleware", async (importOriginal) => {`);
+    lines.push(
+      `  const original = await importOriginal<typeof import("@primsh/x402-middleware")>();`,
+    );
+    lines.push("  const mocks = mockX402Middleware();");
+    lines.push("  return {");
+    lines.push("    ...original,");
+    lines.push("    createAgentStackMiddleware: vi.fn(mocks.createAgentStackMiddleware),");
+    lines.push(
+      "    createWalletAllowlistChecker: vi.fn(mocks.createWalletAllowlistChecker),",
+    );
+    lines.push("  };");
+    lines.push("});");
   }
-
-  // x402 middleware mock — always needed (even free services use createWalletAllowlistChecker)
-  lines.push("// Bypass x402 middleware for unit tests.");
-  if (!ctx.isFreeService) {
-    lines.push("// Middleware wiring is verified via check 3 (spy on createAgentStackMiddleware).");
-  }
-  lines.push(`vi.mock("@primsh/x402-middleware", async (importOriginal) => {`);
-  lines.push(
-    `  const original = await importOriginal<typeof import("@primsh/x402-middleware")>();`,
-  );
-  lines.push("  return {");
-  lines.push("    ...original,");
-
-  if (!ctx.isFreeService) {
-    if (ctx.needsWalletAddress) {
-      lines.push("    createAgentStackMiddleware: vi.fn(");
-      lines.push("      () => async (c: Context, next: Next) => {");
-      lines.push(
-        `        c.set("walletAddress" as never, "0x0000000000000000000000000000000000000001");`,
-      );
-      lines.push("        await next();");
-      lines.push("      },");
-      lines.push("    ),");
-    } else {
-      lines.push("    createAgentStackMiddleware: vi.fn(");
-      lines.push("      () => async (_c: Context, next: Next) => { await next(); },");
-      lines.push("    ),");
-    }
-  }
-
-  lines.push("    createWalletAllowlistChecker: vi.fn(() => () => Promise.resolve(true)),");
-  lines.push("  };");
-  lines.push("});");
   lines.push("");
 
   // Service mock
@@ -358,9 +356,7 @@ function generateFullFile(ctx: GenContext): string {
     }
   }
 
-  if (!ctx.isFreeService) {
-    lines.push(`import { createAgentStackMiddleware } from "@primsh/x402-middleware";`);
-  }
+  // createAgentStackMiddleware spy is defined in the preamble (no import needed)
 
   // Response type import from primary route — intentionally omitted from mock
   // (mocks use `as any` since smoke tests only check HTTP status, not response shape)
@@ -423,7 +419,7 @@ function generateMarkedContent(
       "  // Check 3: x402 middleware is wired with the correct paid routes and payTo address",
     );
     lines.push(`  it("x402 middleware is registered with paid routes and payTo", () => {`);
-    lines.push("    expect(vi.mocked(createAgentStackMiddleware)).toHaveBeenCalledWith(");
+    lines.push("    expect(createAgentStackMiddlewareSpy).toHaveBeenCalledWith(");
     lines.push("      expect.objectContaining({");
     lines.push("        payTo: expect.any(String),");
     lines.push(`        freeRoutes: expect.arrayContaining(["GET /"]),`);

@@ -1,3 +1,4 @@
+import type { ServiceResult } from "@primsh/x402-middleware";
 import type { TrackRequest, TrackResponse } from "./api.ts";
 import { ProviderError } from "./provider.ts";
 import type { TrackProvider } from "./provider.ts";
@@ -5,10 +6,6 @@ import { TrackingMoreClient } from "./trackingmore.ts";
 
 // Re-export for convenience
 export { ProviderError } from "./provider.ts";
-
-type ServiceResult<T> =
-  | { ok: true; data: T }
-  | { ok: false; status: number; code: string; message: string; retryAfter?: number };
 
 // ─── Carrier normalization ────────────────────────────────────────────────────
 

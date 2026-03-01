@@ -5,6 +5,8 @@ import {
   forbidden,
   invalidRequest,
   notFound,
+  parseJsonBody,
+  requireCaller,
 } from "@primsh/x402-middleware";
 import type { ApiError, PaginatedList } from "@primsh/x402-middleware";
 import { getNetworkConfig } from "@primsh/x402-middleware";
@@ -113,16 +115,13 @@ const logger = app.logger;
 
 // POST /v1/domains/quote — Get a time-limited price quote for domain registration
 app.post("/v1/domains/quote", async (c) => {
-  const caller = c.get("walletAddress");
-  if (!caller) return c.json(forbidden("No wallet address in payment"), 403);
+  const callerOrRes = requireCaller(c);
+  if (callerOrRes instanceof Response) return callerOrRes;
+  const caller = callerOrRes;
 
-  let body: QuoteRequest;
-  try {
-    body = await c.req.json<QuoteRequest>();
-  } catch (err) {
-    logger.warn("JSON parse failed on POST /v1/domains/quote", { error: String(err) });
-    return c.json(invalidRequest("Invalid JSON body"), 400);
-  }
+  const bodyOrRes = await parseJsonBody<QuoteRequest>(c, logger, "POST /v1/domains/quote");
+  if (bodyOrRes instanceof Response) return bodyOrRes;
+  const body = bodyOrRes;
 
   const result = await quoteDomain(body, caller);
   if (!result.ok) {
@@ -136,13 +135,9 @@ app.post("/v1/domains/quote", async (c) => {
 // POST /v1/domains/register — Register a domain (dynamic x402 pricing from quote)
 // Bypasses x402 middleware — implements payment protocol directly.
 app.post("/v1/domains/register", async (c) => {
-  let body: { quote_id?: string };
-  try {
-    body = await c.req.json<{ quote_id?: string }>();
-  } catch (err) {
-    logger.warn("JSON parse failed on POST /v1/domains/register", { error: String(err) });
-    return c.json(invalidRequest("Invalid JSON body"), 400);
-  }
+  const bodyOrRes = await parseJsonBody<{ quote_id?: string }>(c, logger, "POST /v1/domains/register");
+  if (bodyOrRes instanceof Response) return bodyOrRes;
+  const body = bodyOrRes;
 
   const quoteId = body.quote_id;
   if (!quoteId) return c.json(invalidRequest("quote_id is required"), 400);
@@ -260,20 +255,16 @@ app.post("/v1/domains/register", async (c) => {
 // POST /v1/domains/recover — Retry Cloudflare setup after NameSilo succeeded
 // Free route — recovery_token is sufficient auth.
 app.post("/v1/domains/recover", async (c) => {
-  let body: RecoverRequest;
-  try {
-    body = await c.req.json<RecoverRequest>();
-  } catch (err) {
-    logger.warn("JSON parse failed on POST /v1/domains/recover", { error: String(err) });
-    return c.json(invalidRequest("Invalid JSON body"), 400);
-  }
+  const bodyOrRes = await parseJsonBody<RecoverRequest>(c, logger, "POST /v1/domains/recover");
+  if (bodyOrRes instanceof Response) return bodyOrRes;
+  const body = bodyOrRes;
 
   if (!body.recovery_token) return c.json(invalidRequest("recovery_token is required"), 400);
 
   // Wallet from payment-signature header (set by middleware's extractWalletAddress)
-  const caller = c.get("walletAddress");
-  if (!caller)
-    return c.json(forbidden("No wallet address — include payment-signature header"), 403);
+  const callerOrRes = requireCaller(c);
+  if (callerOrRes instanceof Response) return callerOrRes;
+  const caller = callerOrRes;
 
   const result = await recoverRegistration(body.recovery_token, caller);
   if (!result.ok) {
@@ -291,9 +282,9 @@ app.post("/v1/domains/recover", async (c) => {
 // POST /v1/domains/:domain/configure-ns — Retry nameserver change at registrar
 // Free route — wallet ownership of registration required.
 app.post("/v1/domains/:domain/configure-ns", async (c) => {
-  const caller = c.get("walletAddress");
-  if (!caller)
-    return c.json(forbidden("No wallet address — include payment-signature header"), 403);
+  const callerOrRes = requireCaller(c);
+  if (callerOrRes instanceof Response) return callerOrRes;
+  const caller = callerOrRes;
 
   const domain = c.req.param("domain");
   const result = await configureNs(domain, caller);
@@ -312,8 +303,9 @@ app.post("/v1/domains/:domain/configure-ns", async (c) => {
 
 // GET /v1/domains/:domain/status — Registration status (post-registration pipeline)
 app.get("/v1/domains/:domain/status", async (c) => {
-  const caller = c.get("walletAddress");
-  if (!caller) return c.json(forbidden("No wallet address in payment"), 403);
+  const callerOrRes = requireCaller(c);
+  if (callerOrRes instanceof Response) return callerOrRes;
+  const caller = callerOrRes;
 
   const domain = c.req.param("domain");
   const result = await getRegistrationStatus(domain, caller);
@@ -348,16 +340,13 @@ app.get("/v1/domains/search", async (c) => {
 
 // POST /v1/zones — Create zone
 app.post("/v1/zones", async (c) => {
-  const caller = c.get("walletAddress");
-  if (!caller) return c.json(forbidden("No wallet address in payment"), 403);
+  const callerOrRes = requireCaller(c);
+  if (callerOrRes instanceof Response) return callerOrRes;
+  const caller = callerOrRes;
 
-  let body: CreateZoneRequest;
-  try {
-    body = await c.req.json<CreateZoneRequest>();
-  } catch (err) {
-    logger.warn("JSON parse failed on POST /v1/zones", { error: String(err) });
-    return c.json(invalidRequest("Invalid JSON body"), 400);
-  }
+  const bodyOrRes = await parseJsonBody<CreateZoneRequest>(c, logger, "POST /v1/zones");
+  if (bodyOrRes instanceof Response) return bodyOrRes;
+  const body = bodyOrRes;
 
   const result = await createZone(body, caller);
   if (!result.ok) {
@@ -372,8 +361,9 @@ app.post("/v1/zones", async (c) => {
 
 // GET /v1/zones — List zones
 app.get("/v1/zones", (c) => {
-  const caller = c.get("walletAddress");
-  if (!caller) return c.json(forbidden("No wallet address in payment"), 403);
+  const callerOrRes = requireCaller(c);
+  if (callerOrRes instanceof Response) return callerOrRes;
+  const caller = callerOrRes;
 
   const limit = Math.min(Number(c.req.query("limit")) || 20, 100);
   const page = Math.max(Number(c.req.query("page")) || 1, 1);
@@ -384,8 +374,9 @@ app.get("/v1/zones", (c) => {
 
 // GET /v1/zones/:id — Get zone
 app.get("/v1/zones/:id", async (c) => {
-  const caller = c.get("walletAddress");
-  if (!caller) return c.json(forbidden("No wallet address in payment"), 403);
+  const callerOrRes = requireCaller(c);
+  if (callerOrRes instanceof Response) return callerOrRes;
+  const caller = callerOrRes;
 
   const result = await getZone(c.req.param("id"), caller);
   if (!result.ok) {
@@ -397,8 +388,9 @@ app.get("/v1/zones/:id", async (c) => {
 
 // DELETE /v1/zones/:id — Delete zone
 app.delete("/v1/zones/:id", async (c) => {
-  const caller = c.get("walletAddress");
-  if (!caller) return c.json(forbidden("No wallet address in payment"), 403);
+  const callerOrRes = requireCaller(c);
+  if (callerOrRes instanceof Response) return callerOrRes;
+  const caller = callerOrRes;
 
   const result = await deleteZone(c.req.param("id"), caller);
   if (!result.ok) {
@@ -411,8 +403,9 @@ app.delete("/v1/zones/:id", async (c) => {
 
 // GET /v1/zones/:zone_id/verify — Check DNS propagation (NS + all records)
 app.get("/v1/zones/:zone_id/verify", async (c) => {
-  const caller = c.get("walletAddress");
-  if (!caller) return c.json(forbidden("No wallet address in payment"), 403);
+  const callerOrRes = requireCaller(c);
+  if (callerOrRes instanceof Response) return callerOrRes;
+  const caller = callerOrRes;
 
   const result = await verifyZone(c.req.param("zone_id"), caller);
   if (!result.ok) {
@@ -424,8 +417,9 @@ app.get("/v1/zones/:zone_id/verify", async (c) => {
 
 // PUT /v1/zones/:zone_id/activate — Request CF to immediately re-check NS activation
 app.put("/v1/zones/:zone_id/activate", async (c) => {
-  const caller = c.get("walletAddress");
-  if (!caller) return c.json(forbidden("No wallet address in payment"), 403);
+  const callerOrRes = requireCaller(c);
+  if (callerOrRes instanceof Response) return callerOrRes;
+  const caller = callerOrRes;
 
   const result = await activateZone(c.req.param("zone_id"), caller);
   if (!result.ok) {
@@ -440,16 +434,13 @@ app.put("/v1/zones/:zone_id/activate", async (c) => {
 
 // POST /v1/zones/:zone_id/mail-setup — Configure mail DNS records (MX+SPF+DMARC+DKIM)
 app.post("/v1/zones/:zone_id/mail-setup", async (c) => {
-  const caller = c.get("walletAddress");
-  if (!caller) return c.json(forbidden("No wallet address in payment"), 403);
+  const callerOrRes = requireCaller(c);
+  if (callerOrRes instanceof Response) return callerOrRes;
+  const caller = callerOrRes;
 
-  let body: MailSetupRequest;
-  try {
-    body = await c.req.json<MailSetupRequest>();
-  } catch (err) {
-    logger.warn("JSON parse failed on POST /v1/zones/:zone_id/mail-setup", { error: String(err) });
-    return c.json(invalidRequest("Invalid JSON body"), 400);
-  }
+  const bodyOrRes = await parseJsonBody<MailSetupRequest>(c, logger, "POST /v1/zones/:zone_id/mail-setup");
+  if (bodyOrRes instanceof Response) return bodyOrRes;
+  const body = bodyOrRes;
 
   const result = await mailSetup(c.req.param("zone_id"), body, caller);
   if (!result.ok) {
@@ -463,18 +454,13 @@ app.post("/v1/zones/:zone_id/mail-setup", async (c) => {
 
 // POST /v1/zones/:zone_id/records/batch — Batch create/update/delete records
 app.post("/v1/zones/:zone_id/records/batch", async (c) => {
-  const caller = c.get("walletAddress");
-  if (!caller) return c.json(forbidden("No wallet address in payment"), 403);
+  const callerOrRes = requireCaller(c);
+  if (callerOrRes instanceof Response) return callerOrRes;
+  const caller = callerOrRes;
 
-  let body: BatchRecordsRequest;
-  try {
-    body = await c.req.json<BatchRecordsRequest>();
-  } catch (err) {
-    logger.warn("JSON parse failed on POST /v1/zones/:zone_id/records/batch", {
-      error: String(err),
-    });
-    return c.json(invalidRequest("Invalid JSON body"), 400);
-  }
+  const bodyOrRes = await parseJsonBody<BatchRecordsRequest>(c, logger, "POST /v1/zones/:zone_id/records/batch");
+  if (bodyOrRes instanceof Response) return bodyOrRes;
+  const body = bodyOrRes;
 
   const result = await batchRecords(c.req.param("zone_id"), body, caller);
   if (!result.ok) {
@@ -490,16 +476,13 @@ app.post("/v1/zones/:zone_id/records/batch", async (c) => {
 
 // POST /v1/zones/:zone_id/records — Create record
 app.post("/v1/zones/:zone_id/records", async (c) => {
-  const caller = c.get("walletAddress");
-  if (!caller) return c.json(forbidden("No wallet address in payment"), 403);
+  const callerOrRes = requireCaller(c);
+  if (callerOrRes instanceof Response) return callerOrRes;
+  const caller = callerOrRes;
 
-  let body: CreateRecordRequest;
-  try {
-    body = await c.req.json<CreateRecordRequest>();
-  } catch (err) {
-    logger.warn("JSON parse failed on POST /v1/zones/:zone_id/records", { error: String(err) });
-    return c.json(invalidRequest("Invalid JSON body"), 400);
-  }
+  const bodyOrRes = await parseJsonBody<CreateRecordRequest>(c, logger, "POST /v1/zones/:zone_id/records");
+  if (bodyOrRes instanceof Response) return bodyOrRes;
+  const body = bodyOrRes;
 
   const result = await createRecord(c.req.param("zone_id"), body, caller);
   if (!result.ok) {
@@ -513,8 +496,9 @@ app.post("/v1/zones/:zone_id/records", async (c) => {
 
 // GET /v1/zones/:zone_id/records — List records
 app.get("/v1/zones/:zone_id/records", (c) => {
-  const caller = c.get("walletAddress");
-  if (!caller) return c.json(forbidden("No wallet address in payment"), 403);
+  const callerOrRes = requireCaller(c);
+  if (callerOrRes instanceof Response) return callerOrRes;
+  const caller = callerOrRes;
 
   const result = listRecords(c.req.param("zone_id"), caller);
   if (!result.ok) {
@@ -526,8 +510,9 @@ app.get("/v1/zones/:zone_id/records", (c) => {
 
 // GET /v1/zones/:zone_id/records/:id — Get record
 app.get("/v1/zones/:zone_id/records/:id", (c) => {
-  const caller = c.get("walletAddress");
-  if (!caller) return c.json(forbidden("No wallet address in payment"), 403);
+  const callerOrRes = requireCaller(c);
+  if (callerOrRes instanceof Response) return callerOrRes;
+  const caller = callerOrRes;
 
   const result = getRecord(c.req.param("zone_id"), c.req.param("id"), caller);
   if (!result.ok) {
@@ -539,16 +524,13 @@ app.get("/v1/zones/:zone_id/records/:id", (c) => {
 
 // PUT /v1/zones/:zone_id/records/:id — Update record
 app.put("/v1/zones/:zone_id/records/:id", async (c) => {
-  const caller = c.get("walletAddress");
-  if (!caller) return c.json(forbidden("No wallet address in payment"), 403);
+  const callerOrRes = requireCaller(c);
+  if (callerOrRes instanceof Response) return callerOrRes;
+  const caller = callerOrRes;
 
-  let body: UpdateRecordRequest;
-  try {
-    body = await c.req.json<UpdateRecordRequest>();
-  } catch (err) {
-    logger.warn("JSON parse failed on PUT /v1/zones/:zone_id/records/:id", { error: String(err) });
-    return c.json(invalidRequest("Invalid JSON body"), 400);
-  }
+  const bodyOrRes = await parseJsonBody<UpdateRecordRequest>(c, logger, "PUT /v1/zones/:zone_id/records/:id");
+  if (bodyOrRes instanceof Response) return bodyOrRes;
+  const body = bodyOrRes;
 
   const result = await updateRecord(c.req.param("zone_id"), c.req.param("id"), body, caller);
   if (!result.ok) {
@@ -562,8 +544,9 @@ app.put("/v1/zones/:zone_id/records/:id", async (c) => {
 
 // DELETE /v1/zones/:zone_id/records/:id — Delete record
 app.delete("/v1/zones/:zone_id/records/:id", async (c) => {
-  const caller = c.get("walletAddress");
-  if (!caller) return c.json(forbidden("No wallet address in payment"), 403);
+  const callerOrRes = requireCaller(c);
+  if (callerOrRes instanceof Response) return callerOrRes;
+  const caller = callerOrRes;
 
   const result = await deleteRecord(c.req.param("zone_id"), c.req.param("id"), caller);
   if (!result.ok) {
