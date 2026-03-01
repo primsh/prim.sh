@@ -1,22 +1,28 @@
 {
   "name": "@primsh/mcp",
   "version": "0.1.0",
-  "private": true,
   "type": "module",
-  "main": "src/index.ts",
-  "description": "MCP server for Prim primitives",
+  "description": "MCP server for prim.sh — agent infrastructure primitives with x402 payment",
   "repository": {
     "type": "git",
-    "url": "https://github.com/primsh/prim",
+    "url": "https://github.com/primsh/prim.sh",
     "directory": "packages/mcp"
   },
   "license": "Apache-2.0",
   "author": "Prim (https://prim.sh)",
-  "keywords": ["prim", "x402", "mcp", "model-context-protocol"],
-  "exports": {
-    ".": "./src/server.ts"
+  "keywords": ["prim", "x402", "mcp", "model-context-protocol", "agent", "usdc"],
+  "bin": {
+    "prim-mcp": "dist/index.js"
   },
+  "main": "dist/index.js",
+  "exports": {
+    ".": "./dist/index.js"
+  },
+  "files": [
+    "dist"
+  ],
   "scripts": {
+    "build": "bun build src/index.ts --bundle --target=node --outdir=dist --external @modelcontextprotocol/sdk --external viem --external @x402/evm --external @x402/core --external @x402/hono",
     "dev": "bun run src/index.ts",
     "start": "bun run src/index.ts",
     "lint": "biome lint .",
@@ -27,10 +33,14 @@
   },
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.0.0",
-    "@primsh/keystore": "workspace:*",
-    "@primsh/x402-client": "workspace:*"
+    "@x402/core": "^2.4.0",
+    "@x402/evm": "^2.4.0",
+    "@x402/hono": "^2.4.0",
+    "viem": "^2.21.0"
   },
   "devDependencies": {
+    "@primsh/keystore": "workspace:*",
+    "@primsh/x402-client": "workspace:*",
     "@types/node": "^25.3.0",
     "typescript": "^5.6.3",
     "vitest": "^1.6.1"

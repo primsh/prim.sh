@@ -1,4 +1,4 @@
-#!/usr/bin/env bun
+#!/usr/bin/env node
 import { isPrimitive, startMcpServer } from "./server.js";
 import type { Primitive } from "./server.js";
 
