@@ -35,10 +35,10 @@ if [ -z "$EXPECTED" ]; then
   echo "No checksum found for $BINARY" >&2
   exit 1
 fi
-if command -v sha256sum >/dev/null 2>&1; then
-  echo "$EXPECTED" | sha256sum -c >/dev/null
-elif command -v shasum >/dev/null 2>&1; then
+if command -v shasum >/dev/null 2>&1; then
   echo "$EXPECTED" | shasum -a 256 -c >/dev/null
+elif command -v sha256sum >/dev/null 2>&1; then
+  echo "$EXPECTED" | sha256sum -c >/dev/null
 fi
 cd - >/dev/null
 
