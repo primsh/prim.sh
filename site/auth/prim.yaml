@@ -5,7 +5,8 @@ type: auth
 category: identity
 card_class: p17
 description: "OAuth broker for agents. Get access tokens for external services without managing flows."
-tagline: "OAuth for agents."
+nounStyled: "The agent-native OAuth broker."
+tagline: "Zero passwords. One redirect. Infinite providers."
 sub: "Get access tokens for GitHub, Google, Slack, and more. Agent-initiated OAuth flows without a browser. x402 auth."
 
 providers:

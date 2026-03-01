@@ -34,7 +34,8 @@ factory:
   metrics: true
   free_service: true
 
-tagline: "One code. You're in."
+nounStyled: "The agent-native gateway."
+tagline: "Zero friction. One code. Infinite access."
 sub: "Redeem an invite code. Get allowlisted and funded."
 
 hero_badges:

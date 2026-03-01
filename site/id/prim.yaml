@@ -5,5 +5,6 @@ type: identity
 category: identity
 card_class: p22
 description: "On-chain identity for agents. DID-based reputation and verification."
-tagline: "Identity for agents."
+nounStyled: "The agent-native identity."
+tagline: "Zero KYC. One wallet. Infinite identities."
 sub: "On-chain DID-based identity and reputation. CAIP-10 wallet addresses as root identity. x402 auth."

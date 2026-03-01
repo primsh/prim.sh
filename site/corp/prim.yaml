@@ -5,5 +5,6 @@ type: legal
 category: physical
 card_class: p30
 description: "Business formation for agents. Incorporate LLCs and corporations via API."
-tagline: "Business formation for agents."
+nounStyled: "The agent-native incorporator."
+tagline: "Zero paperwork. One call. Infinite entities."
 sub: "Incorporate an LLC or corporation. Stripe Atlas API under the hood. Agents forming legal entities. x402 auth."

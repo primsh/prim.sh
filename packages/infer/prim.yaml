@@ -6,6 +6,8 @@ note: "Delayed until after v0 private beta"
 type: intelligence
 category: intelligence
 description: "LLM inference for agents. Any model, any provider, one API. Per-token pricing. No API keys."
+nounStyled: "The agent-native inference."
+tagline: "Zero API keys. One prompt. Infinite models."
 port: 3012
 wraps: OpenRouter API
 env:

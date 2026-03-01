@@ -5,5 +5,6 @@ type: logistics
 category: ops
 card_class: p27
 description: "Shipping labels for agents. EasyPost or Shippo. USPS, FedEx, UPS, DHL."
-tagline: "Shipping labels for agents."
+nounStyled: "The agent-native shipping desk."
+tagline: "Zero accounts. One label. Infinite carriers."
 sub: "Create shipping labels for USPS, FedEx, UPS, DHL. Get rates, print labels, track packages. x402 auth."

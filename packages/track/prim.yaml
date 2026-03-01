@@ -37,7 +37,8 @@ factory:
   metrics: true
   free_service: false
 
-tagline: "Package tracking for agents."
+nounStyled: "The agent-native tracker."
+tagline: "Zero logins. One number. Infinite carriers."
 sub: "Real-time status across 1000+ carriers via x402."
 
 hero_badges:

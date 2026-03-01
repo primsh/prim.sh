@@ -5,5 +5,6 @@ type: documentation
 category: intelligence
 card_class: p23
 description: "OpenAPI-to-MCP converter for agents. Turn any OpenAPI spec into an MCP server."
-tagline: "API docs for agents."
+nounStyled: "The agent-native docs engine."
+tagline: "Zero setup. One spec. Infinite tools."
 sub: "Turn any OpenAPI spec into an MCP server automatically. Upload a spec, get back a callable tool set. x402 auth."

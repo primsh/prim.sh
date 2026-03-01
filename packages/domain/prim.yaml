@@ -53,7 +53,8 @@ factory:
   free_service: false
 
 
-tagline: "Domains for agents."
+nounStyled: "The agent-native registrar."
+tagline: "Zero registrars. One call. Infinite domains."
 sub: "Instant subdomains with auto-TLS. DNS records via API."
 
 hero_badges:

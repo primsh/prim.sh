@@ -48,7 +48,8 @@ factory:
   free_service: false
 
 
-tagline: "Tokens for agents."
+nounStyled: "The agent-native token factory."
+tagline: "Zero solidity. One call. Infinite tokens."
 sub: "Deploy ERC-20 tokens and Uniswap pools via API."
 
 hero_badges:

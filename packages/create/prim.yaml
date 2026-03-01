@@ -1,7 +1,8 @@
 id: create
 name: create.sh
 endpoint: create.prim.sh
-tagline: "Agents building agents"
+nounStyled: "The agent-native scaffolder."
+tagline: "Zero boilerplate. One spec. Infinite prims."
 description: "Scaffold new prim.sh primitives. Write a prim.yaml spec, get a complete package with passing tests."
 type: meta
 category: meta

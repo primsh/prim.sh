@@ -5,5 +5,6 @@ type: commerce
 category: physical
 card_class: p26
 description: "E-commerce for agents. Search, buy, and track products via Amazon or eBay API."
-tagline: "E-commerce for agents."
+nounStyled: "The agent-native marketplace."
+tagline: "Zero accounts. One query. Infinite products."
 sub: "Search products, place orders, track shipments. Amazon and eBay API under the hood. x402 auth."

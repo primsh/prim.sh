@@ -4,6 +4,8 @@ endpoint: imagine.prim.sh
 type: intelligence
 category: intelligence
 description: "Media generation for agents. Images, video, audio. Any model, one API. No API keys."
+nounStyled: "The agent-native media engine."
+tagline: "Zero API keys. One call. Infinite media."
 port: 3013
 wraps: Google Gemini Imagen API
 env:

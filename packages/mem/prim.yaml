@@ -47,7 +47,8 @@ factory:
   free_service: false
 
 
-tagline: "Memory for agents."
+nounStyled: "The agent-native memory."
+tagline: "Zero drift. One store. Infinite recall."
 sub: "Vector store, cache, and long-term retrieval for agents."
 
 hero_badges:
