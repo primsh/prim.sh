@@ -47,10 +47,9 @@ tagline: "Zero cost. One drip. Infinite testing."
 sub: "Free testnet USDC and ETH. No signup, no captcha."
 
 hero_badges:
-  - "**Free** no payment needed"
+  - "**Free** service"
   - "**USDC** + ETH"
   - "**Base** Sepolia"
-  - "**Rate** limited"
 
 hero_example: |
   # Get 10 test USDC (2hr cooldown)

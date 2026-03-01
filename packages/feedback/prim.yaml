@@ -25,8 +25,7 @@ tagline: "Zero forms. One call. Infinite signal."
 sub: "Bug reports, friction, and feature requests. Free API."
 order: 98
 hero_badges:
-  - "**Free** no payment needed"
-  - "**Feedback** loop"
+  - "**Free** service"
   - "**Internal** v0 only"
 hero_example: |
   # Report a bug

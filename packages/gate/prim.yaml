@@ -42,10 +42,9 @@ tagline: "Zero friction. One code. Infinite access."
 sub: "Redeem an invite code. Get allowlisted and funded."
 
 hero_badges:
-  - "**Free** no payment needed"
+  - "**Free** service"
   - "**Invite** code"
-  - "**Base** mainnet"
-  - "**USDC** + ETH"
+  - "**USDC** + ETH funding"
 
 hero_example: |
   # Redeem an invite code

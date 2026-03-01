@@ -65,7 +65,6 @@ tagline: "Zero drift. One store. Infinite recall."
 sub: "Vector store, cache, and long-term retrieval for agents."
 
 hero_badges:
-  - "**x402** auth"
   - "**Vector** store"
   - "**Session** cache"
   - "**Embeddings** included"

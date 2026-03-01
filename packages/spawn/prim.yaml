@@ -76,9 +76,7 @@ tagline: "Zero config. One call. Infinite servers."
 sub: "No signup. No GUI. No KYC. Pay with x402. Deploy from code."
 
 hero_badges:
-  - "**x402** auth + payment"
-  - "**REST** + **MCP** API"
-  - "**0** signup required"
+  - "**2** providers"
   - "**CLI** admin only"
   - "**OpenAI** compatible"
 
