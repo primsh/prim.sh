@@ -53,11 +53,6 @@ export interface CreateCollectionRequest {
   dimension?: number;
 }
 
-import type { PaginatedList } from "@primsh/x402-middleware";
-
-/** @deprecated Use PaginatedList<CollectionResponse> */
-export type CollectionListResponse = PaginatedList<CollectionResponse>;
-
 // ─── Vector types ─────────────────────────────────────────────────────────
 
 export interface UpsertDocument {

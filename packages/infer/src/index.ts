@@ -1,35 +1,13 @@
-import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
-import { Hono } from "hono";
-import { bodyLimit } from "hono/body-limit";
-
-const LLMS_TXT = import.meta.dir
-  ? readFileSync(resolve(import.meta.dir, "../../../site/infer/llms.txt"), "utf-8")
-  : "";
 import {
   createAgentStackMiddleware,
-  createLogger,
   createWalletAllowlistChecker,
-  getNetworkConfig,
   invalidRequest,
-  metricsHandler,
-  metricsMiddleware,
-  requestIdMiddleware,
 } from "@primsh/x402-middleware";
 import type { ApiError } from "@primsh/x402-middleware";
+import { createPrimApp } from "@primsh/x402-middleware/create-prim-app";
 import type { ChatRequest, EmbedRequest } from "./api.ts";
 import { chat, embed, models } from "./service.ts";
-
-const logger = createLogger("infer.sh");
-
-const networkConfig = getNetworkConfig();
-const PAY_TO_ADDRESS = process.env.PRIM_PAY_TO;
-if (!PAY_TO_ADDRESS) {
-  throw new Error("[infer.sh] PRIM_PAY_TO environment variable is required");
-}
-const NETWORK = networkConfig.network;
-const WALLET_INTERNAL_URL = process.env.WALLET_INTERNAL_URL ?? "http://127.0.0.1:3001";
-const checkAllowlist = createWalletAllowlistChecker(WALLET_INTERNAL_URL);
 
 const INFER_ROUTES = {
   "POST /v1/chat": "$0.01",
@@ -45,76 +23,41 @@ function rateLimited(message: string): ApiError {
   return { error: { code: "rate_limited", message } };
 }
 
-type AppVariables = { walletAddress: string | undefined };
-const app = new Hono<{ Variables: AppVariables }>();
-
-app.use("*", requestIdMiddleware());
-
-app.use(
-  "*",
-  bodyLimit({
-    maxSize: 1024 * 1024,
-    onError: (c) => c.json({ error: "Request too large" }, 413),
-  }),
-);
-
-app.use("*", metricsMiddleware());
-
-app.use(
-  "*",
-  createAgentStackMiddleware(
-    {
-      payTo: PAY_TO_ADDRESS,
-      network: NETWORK,
-      freeRoutes: ["GET /", "GET /pricing", "GET /llms.txt", "GET /v1/metrics"],
-      checkAllowlist,
+const app = createPrimApp(
+  {
+    serviceName: "infer.sh",
+    llmsTxtPath: import.meta.dir
+      ? resolve(import.meta.dir, "../../../site/infer/llms.txt")
+      : undefined,
+    routes: INFER_ROUTES,
+    metricsName: "infer.prim.sh",
+    pricing: {
+      routes: [
+        {
+          method: "POST",
+          path: "/v1/chat",
+          price_usdc: "pass-through + 10%",
+          description: "Chat completion. Supports streaming, tool use, structured output.",
+        },
+        {
+          method: "POST",
+          path: "/v1/embed",
+          price_usdc: "0.001",
+          description: "Generate embeddings for text input. Returns vector array.",
+        },
+        {
+          method: "GET",
+          path: "/v1/models",
+          price_usdc: "0.01",
+          description: "List available models with pricing and capabilities.",
+        },
+      ],
     },
-    { ...INFER_ROUTES },
-  ),
+  },
+  { createAgentStackMiddleware, createWalletAllowlistChecker },
 );
 
-// GET / — health check (free)
-app.get("/", (c) => {
-  return c.json({ service: "infer.sh", status: "ok" });
-});
-
-// GET /llms.txt — machine-readable API reference (free)
-app.get("/llms.txt", (c) => {
-  c.header("Content-Type", "text/plain; charset=utf-8");
-  return c.body(LLMS_TXT);
-});
-
-// GET /v1/metrics — operational metrics (free)
-app.get("/v1/metrics", metricsHandler("infer.prim.sh"));
-
-// GET /pricing — machine-readable pricing (free)
-app.get("/pricing", (c) => {
-  return c.json({
-    service: "infer.prim.sh",
-    currency: "USDC",
-    network: "eip155:8453",
-    routes: [
-      {
-        method: "POST",
-        path: "/v1/chat",
-        price_usdc: "pass-through + 10%",
-        description: "Chat completion. Supports streaming, tool use, structured output.",
-      },
-      {
-        method: "POST",
-        path: "/v1/embed",
-        price_usdc: "0.001",
-        description: "Generate embeddings for text input. Returns vector array.",
-      },
-      {
-        method: "GET",
-        path: "/v1/models",
-        price_usdc: "0.01",
-        description: "List available models with pricing and capabilities.",
-      },
-    ],
-  });
-});
+const logger = app.logger;
 
 // POST /v1/chat — Chat completion. Supports streaming, tool use, structured output.
 app.post("/v1/chat", async (c) => {

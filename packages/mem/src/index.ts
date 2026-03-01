@@ -6,10 +6,9 @@ import {
   invalidRequest,
   notFound,
 } from "@primsh/x402-middleware";
-import type { ApiError } from "@primsh/x402-middleware";
+import type { ApiError, PaginatedList } from "@primsh/x402-middleware";
 import { createPrimApp } from "@primsh/x402-middleware/create-prim-app";
 import type {
-  CollectionListResponse,
   CollectionResponse,
   CreateCollectionRequest,
   GetCacheResponse,
@@ -101,7 +100,7 @@ app.get("/v1/collections", (c) => {
   const page = Math.max(Number(c.req.query("page")) || 1, 1);
 
   const data = listCollections(caller, limit, page);
-  return c.json(data as CollectionListResponse, 200);
+  return c.json(data as PaginatedList<CollectionResponse>, 200);
 });
 
 // GET /v1/collections/:id — Get collection (live document_count)

@@ -6,7 +6,7 @@ import {
   invalidRequest,
   notFound,
 } from "@primsh/x402-middleware";
-import type { ApiError } from "@primsh/x402-middleware";
+import type { ApiError, PaginatedList } from "@primsh/x402-middleware";
 import { getNetworkConfig } from "@primsh/x402-middleware";
 import { createPrimApp } from "@primsh/x402-middleware/create-prim-app";
 import {
@@ -27,7 +27,6 @@ import type {
   MailSetupResponse,
   QuoteRequest,
   QuoteResponse,
-  RecordListResponse,
   RecordResponse,
   RecoverRequest,
   RecoverResponse,
@@ -35,7 +34,6 @@ import type {
   RegistrationStatusResponse,
   UpdateRecordRequest,
   VerifyResponse,
-  ZoneListResponse,
   ZoneResponse,
 } from "./api.ts";
 import { getQuoteById } from "./db.ts";
@@ -381,7 +379,7 @@ app.get("/v1/zones", (c) => {
   const page = Math.max(Number(c.req.query("page")) || 1, 1);
 
   const data = listZones(caller, limit, page);
-  return c.json(data as ZoneListResponse, 200);
+  return c.json(data as PaginatedList<ZoneResponse>, 200);
 });
 
 // GET /v1/zones/:id — Get zone
@@ -523,7 +521,7 @@ app.get("/v1/zones/:zone_id/records", (c) => {
     if (result.status === 404) return c.json(notFound(result.message), 404);
     return c.json(forbidden(result.message), 403);
   }
-  return c.json(result.data as RecordListResponse, 200);
+  return c.json(result.data as PaginatedList<RecordResponse>, 200);
 });
 
 // GET /v1/zones/:zone_id/records/:id — Get record

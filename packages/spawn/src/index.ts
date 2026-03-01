@@ -7,7 +7,7 @@ import {
   notFound,
   serviceError,
 } from "@primsh/x402-middleware";
-import type { ApiError } from "@primsh/x402-middleware";
+import type { ApiError, PaginatedList } from "@primsh/x402-middleware";
 import { createPrimApp } from "@primsh/x402-middleware/create-prim-app";
 import type {
   ActionOnlyResponse,
@@ -19,9 +19,7 @@ import type {
   RebuildResponse,
   ResizeRequest,
   ResizeResponse,
-  ServerListResponse,
   ServerResponse,
-  SshKeyListResponse,
   SshKeyResponse,
 } from "./api.ts";
 import {
@@ -166,7 +164,7 @@ app.get("/v1/servers", (c) => {
   const page = Math.max(Number(pageParam) || 1, 1);
 
   const data = listServers(caller, limit, page);
-  return c.json(data as ServerListResponse, 200);
+  return c.json(data as PaginatedList<ServerResponse>, 200);
 });
 
 // GET /v1/servers/:id — Get server
@@ -319,7 +317,7 @@ app.get("/v1/ssh-keys", (c) => {
   if (!caller) return c.json(forbidden("No wallet address in payment"), 403);
 
   const data = listSshKeys(caller);
-  return c.json(data as SshKeyListResponse, 200);
+  return c.json(data as PaginatedList<SshKeyResponse>, 200);
 });
 
 // DELETE /v1/ssh-keys/:id — Delete SSH key

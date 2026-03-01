@@ -56,11 +56,6 @@ export interface CreateBucketResponse {
   bucket: BucketResponse;
 }
 
-import type { PaginatedList } from "@primsh/x402-middleware";
-
-/** @deprecated Use PaginatedList<BucketResponse> */
-export type BucketListResponse = PaginatedList<BucketResponse>;
-
 // ─── Object types ─────────────────────────────────────────────────────────
 
 export interface ObjectResponse {
@@ -73,9 +68,6 @@ export interface ObjectResponse {
   /** ISO 8601 timestamp of last modification. */
   last_modified: string;
 }
-
-/** @deprecated Use PaginatedList<ObjectResponse> */
-export type ObjectListResponse = PaginatedList<ObjectResponse>;
 
 export interface PutObjectResponse {
   /** Object key as stored. */

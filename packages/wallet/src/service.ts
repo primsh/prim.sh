@@ -1,5 +1,6 @@
 import { randomBytes } from "node:crypto";
 import { createLogger, getNetworkConfig } from "@primsh/x402-middleware";
+import type { PaginatedList } from "@primsh/x402-middleware";
 import { getAddress, isAddress, verifyMessage } from "viem";
 
 const log = createLogger("wallet.sh", { module: "service" });
@@ -8,7 +9,6 @@ import type {
   CreateFundRequestRequest,
   DeactivateWalletResponse,
   DenyFundRequestResponse,
-  FundRequestListResponse,
   FundRequestResponse,
   PauseResponse,
   PauseScope,
@@ -18,7 +18,7 @@ import type {
   RegisterWalletResponse,
   ResumeResponse,
   WalletDetailResponse,
-  WalletListResponse,
+  WalletListItem,
 } from "./api.ts";
 import { getUsdcBalance } from "./balance.ts";
 import {
@@ -148,7 +148,7 @@ export async function listWallets(
   owner: string,
   limit: number,
   after?: string,
-): Promise<WalletListResponse> {
+): Promise<PaginatedList<WalletListItem>> {
   const rows = getWalletsByOwner(owner, limit, after);
   const activeRows = rows.filter((r) => !r.deactivated_at);
 
@@ -337,7 +337,7 @@ export function listFundRequests(
   caller: string,
   limit: number,
   after?: string,
-): FundRequestResult<FundRequestListResponse> {
+): FundRequestResult<PaginatedList<FundRequestResponse>> {
   const check = checkOwnership(walletAddress, caller);
   if (!check.ok) return check;
 

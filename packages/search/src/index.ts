@@ -1,38 +1,64 @@
-import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
-import { Hono } from "hono";
-import { bodyLimit } from "hono/body-limit";
-
-const LLMS_TXT = import.meta.dir
-  ? readFileSync(resolve(import.meta.dir, "../../../site/search/llms.txt"), "utf-8")
-  : "";
 import {
   ProviderRegistry,
   createAgentStackMiddleware,
-  createLogger,
   createWalletAllowlistChecker,
-  getNetworkConfig,
   invalidRequest,
-  metricsHandler,
-  metricsMiddleware,
-  requestIdMiddleware,
 } from "@primsh/x402-middleware";
 import type { ApiError } from "@primsh/x402-middleware";
+import { createPrimApp } from "@primsh/x402-middleware/create-prim-app";
 import type { ExtractRequest, SearchRequest } from "./api.ts";
 import type { ExtractProvider, SearchProvider } from "./provider.ts";
 import { extractUrls, searchNews, searchWeb, setRegistry } from "./service.ts";
 import { TavilyClient } from "./tavily.ts";
 
-const logger = createLogger("search.sh");
+// ─── App ──────────────────────────────────────────────────────────────────────
 
-const networkConfig = getNetworkConfig();
-const PAY_TO_ADDRESS = process.env.PRIM_PAY_TO;
-if (!PAY_TO_ADDRESS) {
-  throw new Error("[search.sh] PRIM_PAY_TO environment variable is required");
+const SEARCH_ROUTES = {
+  "POST /v1/search": "$0.01",
+  "POST /v1/search/news": "$0.01",
+  "POST /v1/extract": "$0.005",
+} as const;
+
+function providerError(message: string): ApiError {
+  return { error: { code: "provider_error", message } };
 }
-const NETWORK = networkConfig.network;
-const WALLET_INTERNAL_URL = process.env.WALLET_INTERNAL_URL ?? "http://127.0.0.1:3001";
-const checkAllowlist = createWalletAllowlistChecker(WALLET_INTERNAL_URL);
+
+function rateLimited(message: string): ApiError {
+  return { error: { code: "rate_limited", message } };
+}
+
+const app = createPrimApp(
+  {
+    serviceName: "search.sh",
+    llmsTxtPath: import.meta.dir
+      ? resolve(import.meta.dir, "../../../site/search/llms.txt")
+      : undefined,
+    routes: SEARCH_ROUTES,
+    metricsName: "search.prim.sh",
+    extraFreeRoutes: ["GET /health/providers"],
+    pricing: {
+      routes: [
+        { method: "POST", path: "/v1/search", price_usdc: "0.01", description: "Web search" },
+        {
+          method: "POST",
+          path: "/v1/search/news",
+          price_usdc: "0.01",
+          description: "News search",
+        },
+        {
+          method: "POST",
+          path: "/v1/extract",
+          price_usdc: "0.005",
+          description: "URL content extraction",
+        },
+      ],
+    },
+  },
+  { createAgentStackMiddleware, createWalletAllowlistChecker },
+);
+
+const logger = app.logger;
 
 // ─── Provider registry ────────────────────────────────────────────────────────
 
@@ -60,88 +86,7 @@ searchRegistry.startup("search.sh").catch((err: unknown) => {
   logger.warn("Provider startup health check failed", { error: String(err) });
 });
 
-// ─── App ──────────────────────────────────────────────────────────────────────
-
-const SEARCH_ROUTES = {
-  "POST /v1/search": "$0.01",
-  "POST /v1/search/news": "$0.01",
-  "POST /v1/extract": "$0.005",
-} as const;
-
-function providerError(message: string): ApiError {
-  return { error: { code: "provider_error", message } };
-}
-
-function rateLimited(message: string): ApiError {
-  return { error: { code: "rate_limited", message } };
-}
-
-type AppVariables = { walletAddress: string | undefined };
-const app = new Hono<{ Variables: AppVariables }>();
-
-app.use("*", requestIdMiddleware());
-
-app.use(
-  "*",
-  bodyLimit({
-    maxSize: 1024 * 1024,
-    onError: (c) => c.json({ error: "Request too large" }, 413),
-  }),
-);
-
-app.use("*", metricsMiddleware());
-
-app.use(
-  "*",
-  createAgentStackMiddleware(
-    {
-      payTo: PAY_TO_ADDRESS,
-      network: NETWORK,
-      freeRoutes: [
-        "GET /",
-        "GET /pricing",
-        "GET /llms.txt",
-        "GET /v1/metrics",
-        "GET /health/providers",
-      ],
-      checkAllowlist,
-    },
-    { ...SEARCH_ROUTES },
-  ),
-);
-
-// GET / — health check (free)
-app.get("/", (c) => {
-  return c.json({ service: "search.sh", status: "ok" });
-});
-
-// GET /llms.txt — machine-readable API reference (free)
-app.get("/llms.txt", (c) => {
-  c.header("Content-Type", "text/plain; charset=utf-8");
-  return c.body(LLMS_TXT);
-});
-
-// GET /v1/metrics — operational metrics (free)
-app.get("/v1/metrics", metricsHandler("search.prim.sh"));
-
-// GET /pricing — machine-readable pricing (free)
-app.get("/pricing", (c) => {
-  return c.json({
-    service: "search.prim.sh",
-    currency: "USDC",
-    network: "eip155:8453",
-    routes: [
-      { method: "POST", path: "/v1/search", price_usdc: "0.01", description: "Web search" },
-      { method: "POST", path: "/v1/search/news", price_usdc: "0.01", description: "News search" },
-      {
-        method: "POST",
-        path: "/v1/extract",
-        price_usdc: "0.005",
-        description: "URL content extraction",
-      },
-    ],
-  });
-});
+// ─── Routes ───────────────────────────────────────────────────────────────────
 
 // GET /health/providers — provider health status (free)
 app.get("/health/providers", async (c) => {

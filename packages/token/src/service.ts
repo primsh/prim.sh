@@ -1,6 +1,7 @@
 import { randomBytes } from "node:crypto";
 import { formatUnits, isAddress, parseUnits } from "viem";
 import type { Address } from "viem";
+import type { PaginatedList } from "@primsh/x402-middleware";
 import type {
   CreatePoolRequest,
   CreateTokenRequest,
@@ -10,7 +11,6 @@ import type {
   PoolResponse,
   ServiceResult,
   SupplyResponse,
-  TokenListResponse,
   TokenResponse,
 } from "./api.ts";
 import { AGENT_TOKEN_ABI, AGENT_TOKEN_BYTECODE, ERC20_ABI } from "./contracts.ts";
@@ -220,7 +220,7 @@ export async function deployToken(
   return { ok: true, data: { token: rowToTokenResponse(row) } };
 }
 
-export function listTokens(callerWallet: string): ServiceResult<TokenListResponse> {
+export function listTokens(callerWallet: string): ServiceResult<PaginatedList<TokenResponse>> {
   const rows = getDeploymentsByOwner(callerWallet);
   return {
     ok: true,
