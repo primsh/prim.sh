@@ -21,6 +21,7 @@ const ROOT = resolve(import.meta.dir, "..");
 
 const src = readFileSync(resolve(ROOT, "site/index.html"), "utf-8");
 const out = src
+  .replace("{{nounStyled}}", BRAND.nounStyled)
   .replace("{{tagline}}", BRAND.tagline)
   .replace("{{sub}}", BRAND.sub)
   .replace("{{closer}}", BRAND.closer)

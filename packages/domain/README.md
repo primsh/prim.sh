@@ -6,7 +6,7 @@
 
 > Register domains, manage DNS, auto-TLS. Full domain lifecycle via API.
 
-Part of [prim.sh](https://prim.sh) — zero install, one curl, infinite primitives. x402 payment (USDC on Base) is the sole auth.
+Part of [prim.sh](https://prim.sh) — zero signup, one payment token, infinite primitives. x402 payment (USDC on Base) is the sole auth.
 
 ## Routes
 

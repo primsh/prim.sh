@@ -4,7 +4,7 @@
 
 <h3 align="center">prim.sh</h3>
 <h4 align="center">The agent-native stack.</h4>
-<h3 align="center">Zero install. One curl. Infinite primitives.</h3>
+<h3 align="center">Zero signup. One payment token. Infinite primitives.</h3>
 
 <p align="center">
   Just add mcp.prim.sh, pay with USDC, use every service.

@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## What This Is
 
-**Prim** (`prim.sh`) — zero install, one curl, infinite primitives. A simple shell around existing services that require human signup flows, made accessible to agents through a single payment protocol. x402 payment (USDC on Base) is the sole auth. See `docs/brand.md` for naming conventions.
+**Prim** (`prim.sh`) — zero signup, one payment token, infinite primitives. A simple shell around existing services that require human signup flows, made accessible to agents through a single payment protocol. x402 payment (USDC on Base) is the sole auth. See `docs/brand.md` for naming conventions.
 
 The project has two layers:
 1. **Marketing site** — Static HTML landing pages (current state, `site/` equivalent)
