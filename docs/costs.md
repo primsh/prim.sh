@@ -16,7 +16,7 @@ Fixed infrastructure ($24.49/mo) is absorbed by Primitive Shell.
 | prim.sh | namecheap | $2.92 | Primary domain, all API endpoints at *.prim.sh ($34.98/yr) |
 | primitiveshell.com | namecheap | $0.96 | Brand protection ($11.48/yr) |
 | primitiveshell.org | namecheap | $0.61 | Brand protection ($7.28/yr) |
-| x_premium | x | $8.00 | @useprim verified account, marketing (X Premium web) |
+| x_premium | x.com | $8.00 | @useprim verified account, marketing (X Premium web) |
 | github | github | $0.00 | CI/CD and source hosting (free plan, public repo) |
 | cloudflare | cloudflare | $0.00 | DNS, CDN, R2 storage, Pages hosting (free plan) |
 | **Total fixed** | | **$24.49/mo** | |
