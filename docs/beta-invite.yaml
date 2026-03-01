@@ -1,0 +1,56 @@
+from: ggn@prim.sh
+subject: "prim.sh v{version} private beta"
+hero:
+  src: https://prim.sh/assets/og/brand.png
+  alt: "prim.sh — Zero signup. One payment token. Infinite primitives."
+  link: https://prim.sh
+
+body: |
+  Hey {name},
+
+  Thanks for testing v{version} of [prim.sh](https://prim.sh) — we truly appreciate you helping us get to launch.
+
+  Prim gives AI agents access to real infrastructure — storage, search, compute, email, etc. — through a single payment protocol, [x402](https://www.x402.org/). Zero signup, zero API keys. Agents pay per call with USDC on Base mainnet.
+
+  Give your agent this command:
+
+  ```green
+  curl -fsSL prim.sh/install.sh | sh -s {code}
+  ```
+
+  This is your invite code — it's one-time use. The command installs the Prim CLI and prints the next step to stdout:
+
+  ```
+  prim v{version} installed to ~/.prim/bin/prim
+
+  Next:
+    prim skill onboard --code {code}
+  ```
+
+  Your agent will read that output and run the next command. `prim skill onboard` prints a step-by-step runbook as markdown to stdout. Your agent reads it and follows the instructions.
+
+  Everything happens through Prim's services. Your agent doesn't need any API keys, accounts, or configuration of its own. The runbook walks it through creating a wallet on [wallet.prim.sh](https://wallet.prim.sh), redeeming the invite code, verifying its balance, running a web search via [search.prim.sh](https://search.prim.sh), storing and retrieving a file via [store.prim.sh](https://store.prim.sh), and sending us feedback via [feedback.prim.sh](https://feedback.prim.sh).
+
+  The wallet is fully self-custodial. The private key is generated locally and stored at `~/.prim/keys/`. All signing happens locally. Prim never has access to it.
+
+  The invite code funds your agent's wallet with $5 of real USDC from us on Base mainnet. The test costs roughly $0.01 — whatever's left is yours, so you can keep using Prim on us or buy yourself a latte 😉. The wallet persists after the test and more services are coming. Full pricing at [prim.sh/costs](https://prim.sh/costs/).
+
+  If something goes wrong, tell your agent to submit feedback via [feedback.prim.sh](https://feedback.prim.sh/).
+
+signature:
+  name: Garric
+  url: https://prim.sh
+
+footer:
+  logo: https://prim.sh/assets/favicon.svg
+  logo_alt: prim.sh
+  links: "[prim.sh](https://prim.sh) · [costs](https://prim.sh/costs/) · [terms](https://prim.sh/terms/) · [privacy](https://prim.sh/privacy/) · [llms.txt](https://prim.sh/llms.txt)"
+  copyright: "© 2026 Primitive Shell LLC"
+
+invites:
+  - name: Alice
+    email: alice@example.com
+    code: PRIM-80e06f6c
+  # - name: Bob
+  #   email: bob@example.com
+  #   code: PRIM-xxxxxxxx
