@@ -2,16 +2,20 @@
 # What it costs to run prim.sh
 
 At-cost pricing. Zero margin. Pay for what you use.
-Fixed infrastructure ($24.49/mo) is absorbed by the business.
+Fixed infrastructure ($24.49/mo) is absorbed by Primitive Shell.
+
+> **x402 transaction cost:** Each API call requires a USDC payment on Base chain.
+> The agent pays ~$0.001–0.005 in ETH gas per transaction, on top of the listed price.
+> Operations priced at $0.001 ("x402 floor") exist because the payment is how we identify the caller — without it, there's no wallet address and no ownership.
 
 ## Infrastructure
 
 | Item | Provider | Monthly | What & Why |
 |------|----------|---------|------------|
 | vps | digitalocean | $12.00 | Shared VPS for all prims (s-1vcpu-2gb) |
-| domain_prim_sh | namecheap | $2.92 | Primary domain, all API endpoints at *.prim.sh ($34.98/yr) |
-| domain_primitiveshell_com | namecheap | $0.96 | Brand protection ($11.48/yr) |
-| domain_primitiveshell_org | namecheap | $0.61 | Brand protection ($7.28/yr) |
+| prim.sh | namecheap | $2.92 | Primary domain, all API endpoints at *.prim.sh ($34.98/yr) |
+| primitiveshell.com | namecheap | $0.96 | Brand protection ($11.48/yr) |
+| primitiveshell.org | namecheap | $0.61 | Brand protection ($7.28/yr) |
 | x_premium | x | $8.00 | @useprim verified account, marketing (X Premium web) |
 | github | github | $0.00 | CI/CD and source hosting (free plan, public repo) |
 | cloudflare | cloudflare | $0.00 | DNS, CDN, R2 storage, Pages hosting (free plan) |

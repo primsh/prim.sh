@@ -118,7 +118,11 @@ function renderMarkdown(): string {
 	lines.push("# What it costs to run prim.sh");
 	lines.push("");
 	lines.push("At-cost pricing. Zero margin. Pay for what you use.");
-	lines.push("Fixed infrastructure ($24.49/mo) is absorbed by the business.");
+	lines.push(`Fixed infrastructure ($${fixedTotal.toFixed(2)}/mo) is absorbed by Primitive Shell.`);
+	lines.push("");
+	lines.push("> **x402 transaction cost:** Each API call requires a USDC payment on Base chain.");
+	lines.push("> The agent pays ~$0.001–0.005 in ETH gas per transaction, on top of the listed price.");
+	lines.push("> Operations priced at $0.001 (\"x402 floor\") exist because the payment is how we identify the caller — without it, there's no wallet address and no ownership.");
 	lines.push("");
 
 	// Infrastructure
@@ -215,13 +219,19 @@ ${rows}
     .badge-dynamic { background: #2e2a1a; color: #ffcc00; }
     .back { display: inline-block; margin-bottom: 1.5rem; color: var(--muted); font-size: 13px; }
     .back:hover { color: var(--accent); }
+    .callout { background: #111; border-left: 3px solid var(--accent); padding: 0.75rem 1rem; margin: 1rem 0; font-size: 13px; line-height: 1.5; }
+    .callout strong { color: var(--text); }
     .updated { color: var(--muted); font-size: 12px; margin-top: 2rem; }
   </style>
 </head>
 <body>
   <a href="/" class="back">← prim.sh</a>
   <h1>What it costs to run prim.sh</h1>
-  <p>At-cost pricing. Zero margin. Pay for what you use. Fixed infrastructure ($${fixedTotal.toFixed(2)}/mo) is absorbed by the business.</p>
+  <p>At-cost pricing. Zero margin. Pay for what you use. Fixed infrastructure ($${fixedTotal.toFixed(2)}/mo) is absorbed by Primitive Shell.</p>
+
+  <div class="callout">
+    <strong>x402 transaction cost:</strong> Each API call requires a USDC payment on Base chain. The agent pays ~$0.001&ndash;0.005 in ETH gas per transaction, on top of the listed price. Operations priced at $0.001 (&ldquo;x402 floor&rdquo;) exist because the payment is how we identify the caller &mdash; without it, there&rsquo;s no wallet address and no ownership.
+  </div>
 
   <h2>Infrastructure</h2>
   <table>
