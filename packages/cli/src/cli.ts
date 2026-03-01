@@ -4,6 +4,7 @@ import {
   createKey,
   decryptFromV3,
   exportKey,
+  getConfig,
   getDefaultAddress,
   getUsdcBalance,
   importKey,
@@ -234,8 +235,10 @@ async function main() {
 
       case "balance": {
         // prim wallet balance [address] — optional address, defaults to default wallet
-        const address = argv[2];
+        const address = argv[2] && !argv[2].startsWith("--") ? argv[2] : undefined;
         const networkFlag = getFlag("network", argv);
+        const config = await getConfig();
+        const resolvedNetwork = networkFlag || config.network || undefined;
         let resolvedAddress: string;
         if (address) {
           resolvedAddress = address;
@@ -245,7 +248,7 @@ async function main() {
           const { privateKeyToAccount } = await import("viem/accounts");
           resolvedAddress = privateKeyToAccount(key).address;
         }
-        const { balance, funded, network } = await getUsdcBalance(resolvedAddress, networkFlag);
+        const { balance, funded, network } = await getUsdcBalance(resolvedAddress, resolvedNetwork);
         console.log(
           `${resolvedAddress}  ${balance} USDC  [${network}]${funded ? "" : "  (unfunded)"}`,
         );

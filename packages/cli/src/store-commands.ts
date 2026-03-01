@@ -69,8 +69,8 @@ async function resolveBucket(
   if (/^b[a-z]*_/.test(bucketArg)) return bucketArg;
   const res = await primFetch(`${baseUrl}/v1/buckets`);
   if (!res.ok) return handleError(res);
-  const data = (await res.json()) as { buckets: Array<{ id: string; name: string }> };
-  const match = data.buckets.find((b) => b.name === bucketArg);
+  const data = (await res.json()) as { data: Array<{ id: string; name: string }> };
+  const match = data.data.find((b) => b.name === bucketArg);
   if (!match) throw new Error(`Bucket not found: ${bucketArg}`);
   return match.id;
 }
@@ -124,9 +124,9 @@ export async function runStoreCommand(sub: string, argv: string[]): Promise<void
       url.searchParams.set("per_page", perPage);
       const res = await primFetch(url.toString());
       if (!res.ok) return handleError(res);
-      const data = (await res.json()) as { buckets: Array<{ id: string }> };
+      const data = (await res.json()) as { data: Array<{ id: string }> };
       if (quiet) {
-        for (const b of data.buckets) console.log(b.id);
+        for (const b of data.data) console.log(b.id);
       } else {
         console.log(JSON.stringify(data, null, 2));
       }
