@@ -30,19 +30,13 @@
     .badge-dynamic { background: #2e2a1a; color: #ffcc00; }
     .back { display: inline-block; margin-bottom: 1.5rem; color: var(--muted); font-size: 13px; }
     .back:hover { color: var(--accent); }
-    .callout { background: #111; border-left: 3px solid var(--accent); padding: 0.75rem 1rem; margin: 1rem 0; font-size: 13px; line-height: 1.5; }
-    .callout strong { color: var(--text); }
     .updated { color: var(--muted); font-size: 12px; margin-top: 2rem; }
   </style>
 </head>
 <body>
   <a href="/" class="back">← prim.sh</a>
   <h1>What it costs to run prim.sh</h1>
-  <p>At-cost pricing. Zero margin. Pay for what you use. Fixed infrastructure ($24.49/mo) is absorbed by Primitive Shell.</p>
-
-  <div class="callout">
-    <strong>x402 transaction cost:</strong> Each API call requires a USDC payment on Base chain. The agent pays ~$0.001&ndash;0.005 in ETH gas per transaction, on top of the listed price. Operations priced at $0.001 (&ldquo;x402 floor&rdquo;) exist because the payment is how we identify the caller &mdash; without it, there&rsquo;s no wallet address and no ownership.
-  </div>
+  <p>At-cost<a href="#footnote">*</a> pricing. Zero margin. Pay for what you use. Fixed infrastructure ($24.49/mo) is absorbed by Primitive Shell.</p>
 
   <h2>Infrastructure</h2>
   <table>
@@ -261,6 +255,7 @@
         </tbody>
       </table>
 
-  <p class="updated">Generated from <a href="https://github.com/primsh/prim.sh/blob/main/docs/costs.yaml">docs/costs.yaml</a> + prim.yaml files.</p>
+  <p class="updated" id="footnote">* Agents pay only the listed USDC price &mdash; no gas fees. x402 uses EIP-3009 meta-transactions: the agent signs off-chain, the facilitator submits the transaction and pays Base chain gas. Primitive Shell absorbs the facilitator settlement fee ($0.001/tx after the first 1,000/month). Operations priced at $0.001 (&ldquo;x402 floor&rdquo;) are the minimum the protocol needs to identify the caller&rsquo;s wallet. This revenue covers protocol overhead (caller identification, ownership scoping, abuse prevention) &mdash; it is not a provider pass-through cost.</p>
+  <p class="updated">Generated from <a href="https://github.com/primsh/prim.sh/blob/main/docs/costs.yaml">docs/costs.yaml</a> + prim.yaml files. Prices reflect current provider rates and may change. See <a href="/terms">Terms of Service</a> for details.</p>
 </body>
 </html>
