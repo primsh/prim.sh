@@ -1121,6 +1121,7 @@ ${groupPrompt}`;
     }
 
     const chatResponse = (await inferResponse.json()) as {
+      model?: string;
       choices: Array<{
         message: {
           role: string;
@@ -1134,6 +1135,11 @@ ${groupPrompt}`;
         finish_reason: string;
       }>;
     };
+
+    // Log the actual model on first response
+    if (round === 0 && chatResponse.model) {
+      console.log(c.dim(`  Model: ${chatResponse.model}`));
+    }
 
     const choice = chatResponse.choices?.[0];
     if (!choice) {
