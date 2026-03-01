@@ -105,7 +105,7 @@ export async function fetchDOCosts(): Promise<InfraCost | null> {
     if (!res.ok)
       return {
         item: "VPS (DigitalOcean)",
-        monthly: 24,
+        monthly: 12,
         note: `API ${res.status}; using estimate`,
       };
     const data = (await res.json()) as { month_to_date_usage?: string };
@@ -118,7 +118,7 @@ export async function fetchDOCosts(): Promise<InfraCost | null> {
   } catch {
     return {
       item: "VPS (DigitalOcean)",
-      monthly: 24,
+      monthly: 12,
       note: "API unreachable; using estimate",
     };
   }

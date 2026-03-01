@@ -19,16 +19,20 @@ env:
 pricing:
   - op: "Deploy token"
     price: "$1.00"
-    note: "Covers on-chain gas"
+    provider_cost: "$0.10"
+    note: "Base L2 gas (~$0.10 normal, spikes possible)"
   - op: "Mint"
     price: "$0.10"
-    note: "Covers on-chain gas"
+    provider_cost: "$0.01"
+    note: "Base L2 gas"
   - op: "Create pool"
     price: "$0.50"
-    note: "Uniswap V3 + gas"
+    provider_cost: "$0.05"
+    note: "Uniswap V3 createPool + initialize gas"
   - op: "Read"
     price: "$0.001"
-    note: "Per request"
+    provider_cost: "$0.00"
+    note: "Free RPC call"
 
 providers:
   - name: viem

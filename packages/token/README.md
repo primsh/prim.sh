@@ -25,10 +25,10 @@ Part of [prim.sh](https://prim.sh) — zero signup, one payment token, infinite 
 
 | Operation | Price | Notes |
 |-----------|-------|-------|
-| Deploy token | $1.00 | Covers on-chain gas |
-| Mint | $0.10 | Covers on-chain gas |
-| Create pool | $0.50 | Uniswap V3 + gas |
-| Read | $0.001 | Per request |
+| Deploy token | $1.00 | Base L2 gas (~$0.10 normal, spikes possible) |
+| Mint | $0.10 | Base L2 gas |
+| Create pool | $0.50 | Uniswap V3 createPool + initialize gas |
+| Read | $0.001 | Free RPC call |
 
 ## Request / Response Types
 

@@ -19,16 +19,20 @@ env:
 pricing:
   - op: "Domain registration"
     price: "dynamic"
-    note: "Quoted via /quote"
+    provider_cost: "varies"
+    note: "NameSilo wholesale ($8-40/yr depending on TLD)"
   - op: "DNS zone"
     price: "$0.05"
-    note: "Unlimited records"
+    provider_cost: "$0.00"
+    note: "Cloudflare free plan"
   - op: "DNS record"
     price: "$0.001"
-    note: "Per operation"
+    provider_cost: "$0.00"
+    note: "Cloudflare free plan"
   - op: "DNS queries"
     price: "free"
-    note: "First 1M/mo"
+    provider_cost: "$0.00"
+    note: "Cloudflare free plan (first 1M/mo)"
 
 providers:
   - name: cloudflare

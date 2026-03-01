@@ -16,6 +16,7 @@ export type PrimStatus = "testnet" | "mainnet" | "hold";
 export interface PricingRow {
   op: string;
   price: string;
+  provider_cost?: string;
   note?: string;
 }
 

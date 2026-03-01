@@ -26,10 +26,10 @@ Part of [prim.sh](https://prim.sh) — zero signup, one payment token, infinite 
 
 | Operation | Price | Notes |
 |-----------|-------|-------|
-| Create collection | $0.01 |  |
-| Upsert (embed) | $0.001 | Per 1k tokens |
-| Query | $0.001 | Per search |
-| KV cache | $0.0001 | Per operation |
+| Create collection | $0.01 | Qdrant (self-hosted) |
+| Upsert (embed) | $0.001 | Google embedding API (~$0.10/M chars) |
+| Query | $0.001 | Google embedding API + Qdrant search |
+| KV cache | $0.0001 | SQLite (self-hosted) |
 
 ## Request / Response Types
 

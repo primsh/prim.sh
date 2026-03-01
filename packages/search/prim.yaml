@@ -17,13 +17,16 @@ env:
 pricing:
   - op: "Web search"
     price: "$0.01"
-    note: "Per query"
+    provider_cost: "$0.005"
+    note: "Tavily ($5/1K calls)"
   - op: "News search"
     price: "$0.01"
-    note: "Per query"
+    provider_cost: "$0.005"
+    note: "Tavily ($5/1K calls)"
   - op: "URL extract"
     price: "$0.005"
-    note: "Per URL"
+    provider_cost: "$0.005"
+    note: "Tavily extract (at cost)"
 
 deploy:
   access_log: true

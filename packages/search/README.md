@@ -20,9 +20,9 @@ Part of [prim.sh](https://prim.sh) — zero signup, one payment token, infinite 
 
 | Operation | Price | Notes |
 |-----------|-------|-------|
-| Web search | $0.01 | Per query |
-| News search | $0.01 | Per query |
-| URL extract | $0.005 | Per URL |
+| Web search | $0.01 | Tavily ($5/1K calls) |
+| News search | $0.01 | Tavily ($5/1K calls) |
+| URL extract | $0.005 | Tavily extract (at cost) |
 
 ## Request / Response Types
 

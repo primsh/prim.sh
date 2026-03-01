@@ -28,10 +28,10 @@ Part of [prim.sh](https://prim.sh) — zero signup, one payment token, infinite 
 
 | Operation | Price | Notes |
 |-----------|-------|-------|
-| Storage | $0.02/GB/mo | Prorated daily |
-| Upload | free | Up to 5GB per object |
-| Download | $0.01/GB | CDN edge delivery |
-| API calls | $0.001/call | PUT, GET, LIST, DELETE |
+| Storage | $0.02/GB/mo | R2 storage pricing |
+| Upload | free | R2 Class A op ($4.50/M). Free to encourage adoption |
+| Download | $0.01/GB | R2 Class B op ($0.36/M) |
+| API calls | $0.001/call | R2 Class B op ($0.36/M) |
 
 ## Request / Response Types
 

@@ -33,10 +33,10 @@ Part of [prim.sh](https://prim.sh) — zero signup, one payment token, infinite 
 
 | Operation | Price | Notes |
 |-----------|-------|-------|
-| Domain registration | dynamic | Quoted via /quote |
-| DNS zone | $0.05 | Unlimited records |
-| DNS record | $0.001 | Per operation |
-| DNS queries | free | First 1M/mo |
+| Domain registration | dynamic | NameSilo wholesale ($8-40/yr depending on TLD) |
+| DNS zone | $0.05 | Cloudflare free plan |
+| DNS record | $0.001 | Cloudflare free plan |
+| DNS queries | free | Cloudflare free plan (first 1M/mo) |
 
 ## Request / Response Types
 
