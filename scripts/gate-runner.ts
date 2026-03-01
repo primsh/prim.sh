@@ -1093,7 +1093,7 @@ ${groupPrompt}`;
 
   for (let round = 0; round < MAX_ROUNDS; round++) {
     const chatRequest = {
-      model: process.env.CANARY_MODEL ?? "anthropic/claude-sonnet-4-5",
+      model: process.env.CANARY_MODEL ?? "openrouter/auto",
       messages,
       tools,
       tool_choice: "auto",
