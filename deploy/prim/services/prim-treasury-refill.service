@@ -1,0 +1,10 @@
+[Unit]
+Description=prim.sh treasury refill (Circle faucet drip)
+After=network.target
+
+[Service]
+Type=oneshot
+User=prim
+WorkingDirectory=/opt/prim
+EnvironmentFile=/etc/prim/faucet.env
+ExecStart=/home/prim/.bun/bin/bun run scripts/treasury-refill.ts

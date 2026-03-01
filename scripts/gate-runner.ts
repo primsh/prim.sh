@@ -14,17 +14,21 @@
  *   bun scripts/gate-runner.ts --canary         # Agent canary mode
  *   bun scripts/gate-runner.ts --canary --group infer  # Canary for one group
  *   bun scripts/gate-runner.ts --dry-run --canary      # Dry-run canary
+ *   bun scripts/gate-runner.ts --canary --group onboarding_e2e --env docker   # Docker backend
+ *   bun scripts/gate-runner.ts --canary --group onboarding_e2e --env remote   # DO VPS backend
  */
 
-import { existsSync, mkdirSync, readdirSync, readFileSync, rmSync } from "node:fs";
+import { generateKeyPairSync } from "node:crypto";
+import { existsSync, mkdirSync, readFileSync, readdirSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
 import { parseArgs } from "node:util";
 import { getAddress } from "viem";
 import { privateKeyToAccount } from "viem/accounts";
-import { createPrimFetch } from "../packages/x402-client/src/index.ts";
 import { decryptFromV3 } from "../packages/keystore/src/crypto.ts";
 import type { KeystoreFile } from "../packages/keystore/src/types.ts";
+import { createDigitalOceanProvider } from "../packages/spawn/src/digitalocean.ts";
+import { createPrimFetch } from "../packages/x402-client/src/index.ts";
 import { loadPrimitives } from "./lib/primitives.js";
 
 // ── Types ──────────────────────────────────────────────────────────────────
@@ -161,9 +165,16 @@ const { values: args } = parseArgs({
     ci: { type: "boolean", default: false },
     "dry-run": { type: "boolean", default: false },
     canary: { type: "boolean", default: false },
+    env: { type: "string", default: "local" },
   },
   strict: true,
 });
+
+const execEnv = (args.env ?? "local") as "local" | "docker" | "remote";
+if (!["local", "docker", "remote"].includes(execEnv)) {
+  console.error(`Invalid --env value: ${args.env}. Must be local, docker, or remote.`);
+  process.exit(1);
+}
 
 // ── Paths ──────────────────────────────────────────────────────────────────
 
@@ -399,6 +410,244 @@ ${llmsTxt}`;
 interface SetupContext {
   invite_code?: string;
   prim_home?: string;
+  backend?: ExecBackend;
+}
+
+// ── ExecBackend ─────────────────────────────────────────────────────────
+
+interface ExecBackend {
+  exec(command: string): Promise<{ stdout: string; stderr: string; exit_code: number }>;
+  readFile(path: string): Promise<string>;
+  readDir(path: string): Promise<string[]>;
+  readFileHex(path: string): Promise<string>;
+  cleanup(): Promise<void>;
+  primHome: string;
+}
+
+function createLocalBackend(primHome: string): ExecBackend {
+  return {
+    primHome,
+    async exec(command: string) {
+      return executeShellExec(command, primHome);
+    },
+    async readFile(path: string) {
+      return readFileSync(path, "utf-8");
+    },
+    async readDir(path: string) {
+      return readdirSync(path);
+    },
+    async readFileHex(path: string) {
+      return readFileSync(path).toString("hex");
+    },
+    async cleanup() {
+      rmSync(primHome, { recursive: true, force: true });
+    },
+  };
+}
+
+async function spawnCollect(
+  cmd: string[],
+  timeoutMs = 60_000,
+): Promise<{ stdout: string; stderr: string; exit_code: number }> {
+  const proc = Bun.spawn(cmd, { stdout: "pipe", stderr: "pipe" });
+  const timeout = setTimeout(() => proc.kill(), timeoutMs);
+  const [stdout, stderr] = await Promise.all([
+    new Response(proc.stdout).text(),
+    new Response(proc.stderr).text(),
+  ]);
+  const exitCode = await proc.exited;
+  clearTimeout(timeout);
+  return { stdout, stderr, exit_code: exitCode };
+}
+
+async function createDockerBackend(): Promise<ExecBackend> {
+  const cid = `prim-e2e-${Date.now()}`;
+  const primHome = "/root/.prim";
+
+  // Start container
+  const run = await spawnCollect([
+    "docker",
+    "run",
+    "-d",
+    "--name",
+    cid,
+    "ubuntu:24.04",
+    "sleep",
+    "infinity",
+  ]);
+  if (run.exit_code !== 0) throw new Error(`docker run failed: ${run.stderr}`);
+
+  // Bootstrap: install curl + unzip (bun installer requires unzip)
+  const bootstrap = await spawnCollect(
+    ["docker", "exec", cid, "sh", "-c", "apt-get update && apt-get install -y curl unzip"],
+    120_000,
+  );
+  if (bootstrap.exit_code !== 0) throw new Error(`docker bootstrap failed: ${bootstrap.stderr}`);
+
+  return {
+    primHome,
+    async exec(command: string) {
+      return spawnCollect([
+        "docker",
+        "exec",
+        cid,
+        "sh",
+        "-c",
+        `PRIM_HOME=${primHome} PATH=${primHome}/bin:$HOME/.bun/bin:$PATH${process.env.PRIM_NETWORK ? ` PRIM_NETWORK=${process.env.PRIM_NETWORK}` : ""} ${command}`,
+      ]);
+    },
+    async readFile(path: string) {
+      const r = await spawnCollect(["docker", "exec", cid, "cat", path]);
+      if (r.exit_code !== 0) throw new Error(`docker cat ${path}: ${r.stderr}`);
+      return r.stdout;
+    },
+    async readDir(path: string) {
+      const r = await spawnCollect(["docker", "exec", cid, "ls", path]);
+      if (r.exit_code !== 0) throw new Error(`docker ls ${path}: ${r.stderr}`);
+      return r.stdout.trim().split("\n").filter(Boolean);
+    },
+    async readFileHex(path: string) {
+      const r = await spawnCollect([
+        "docker",
+        "exec",
+        cid,
+        "sh",
+        "-c",
+        `xxd -p ${path} | tr -d '\\n'`,
+      ]);
+      if (r.exit_code !== 0) throw new Error(`docker xxd ${path}: ${r.stderr}`);
+      return r.stdout.trim();
+    },
+    async cleanup() {
+      await spawnCollect(["docker", "rm", "-f", cid]);
+    },
+  };
+}
+
+async function createRemoteBackend(): Promise<ExecBackend> {
+  const primHome = "/root/.prim";
+  const provider = createDigitalOceanProvider();
+
+  // Generate ephemeral SSH key pair
+  const tmpDir = join(tmpdir(), `prim-e2e-remote-${Date.now()}`);
+  mkdirSync(tmpDir, { recursive: true });
+  const keyPath = join(tmpDir, "id_ed25519");
+
+  const { publicKey, privateKey } = generateKeyPairSync("ed25519", {
+    publicKeyEncoding: { type: "spki", format: "pem" },
+    privateKeyEncoding: { type: "pkcs8", format: "pem" },
+  });
+
+  // Convert PEM to OpenSSH format for DO
+  const pubKeyProc = await spawnCollect([
+    "sh",
+    "-c",
+    `echo '${publicKey}' | ssh-keygen -i -m PKCS8 -f /dev/stdin`,
+  ]);
+  if (pubKeyProc.exit_code !== 0) {
+    // Fallback: generate via ssh-keygen directly
+    const genProc = await spawnCollect([
+      "ssh-keygen",
+      "-t",
+      "ed25519",
+      "-f",
+      keyPath,
+      "-N",
+      "",
+      "-q",
+    ]);
+    if (genProc.exit_code !== 0) throw new Error(`ssh-keygen failed: ${genProc.stderr}`);
+  } else {
+    writeFileSync(keyPath, privateKey, { mode: 0o600 });
+    writeFileSync(`${keyPath}.pub`, pubKeyProc.stdout.trim());
+  }
+
+  // Read the public key in OpenSSH format
+  const sshPubKey = readFileSync(`${keyPath}.pub`, "utf-8").trim();
+
+  // Upload SSH key to DO
+  const keyName = `prim-e2e-${Date.now()}`;
+  const sshKey = await provider.createSshKey({ name: keyName, publicKey: sshPubKey });
+  const sshKeyId = sshKey.providerResourceId;
+
+  // Create droplet
+  const dropletName = `prim-e2e-${Date.now()}`;
+  const { server } = await provider.createServer({
+    name: dropletName,
+    type: "s-1vcpu-512mb-10gb",
+    image: "ubuntu-24.04",
+    location: "nyc3",
+    sshKeyIds: [sshKeyId],
+    userData: "#!/bin/bash\napt-get update && apt-get install -y curl unzip",
+  });
+  const dropletId = server.providerResourceId;
+
+  // Poll until active + IP assigned (max 120s)
+  let ip: string | null = null;
+  const pollStart = Date.now();
+  while (Date.now() - pollStart < 120_000) {
+    const s = await provider.getServer(dropletId);
+    if (s.status === "active" && s.ipv4) {
+      ip = s.ipv4;
+      break;
+    }
+    await new Promise((r) => setTimeout(r, 5_000));
+  }
+  if (!ip) {
+    await provider.deleteServer(dropletId);
+    await provider.deleteSshKey(sshKeyId);
+    throw new Error("Droplet did not become active within 120s");
+  }
+
+  // Wait for SSH readiness (max 60s)
+  const sshOpts = ["-i", keyPath, "-o", "StrictHostKeyChecking=no", "-o", "ConnectTimeout=5"];
+  const sshStart = Date.now();
+  let sshReady = false;
+  while (Date.now() - sshStart < 60_000) {
+    const probe = await spawnCollect(["ssh", ...sshOpts, `root@${ip}`, "echo", "ok"], 10_000);
+    if (probe.exit_code === 0 && probe.stdout.trim() === "ok") {
+      sshReady = true;
+      break;
+    }
+    await new Promise((r) => setTimeout(r, 5_000));
+  }
+  if (!sshReady) {
+    await provider.deleteServer(dropletId);
+    await provider.deleteSshKey(sshKeyId);
+    throw new Error(`SSH not ready on ${ip} within 60s`);
+  }
+
+  const sshExec = (command: string, timeout = 60_000) =>
+    spawnCollect(["ssh", ...sshOpts, `root@${ip}`, command], timeout);
+
+  return {
+    primHome,
+    async exec(command: string) {
+      return sshExec(
+        `PRIM_HOME=${primHome} PATH=${primHome}/bin:\\$HOME/.bun/bin:\\$PATH${process.env.PRIM_NETWORK ? ` PRIM_NETWORK=${process.env.PRIM_NETWORK}` : ""} ${command}`,
+      );
+    },
+    async readFile(path: string) {
+      const r = await sshExec(`cat ${path}`);
+      if (r.exit_code !== 0) throw new Error(`ssh cat ${path}: ${r.stderr}`);
+      return r.stdout;
+    },
+    async readDir(path: string) {
+      const r = await sshExec(`ls ${path}`);
+      if (r.exit_code !== 0) throw new Error(`ssh ls ${path}: ${r.stderr}`);
+      return r.stdout.trim().split("\n").filter(Boolean);
+    },
+    async readFileHex(path: string) {
+      const r = await sshExec(`xxd -p ${path} | tr -d '\\n'`);
+      if (r.exit_code !== 0) throw new Error(`ssh xxd ${path}: ${r.stderr}`);
+      return r.stdout.trim();
+    },
+    async cleanup() {
+      await provider.deleteServer(dropletId);
+      await provider.deleteSshKey(sshKeyId);
+      rmSync(tmpDir, { recursive: true, force: true });
+    },
+  };
 }
 
 /**
@@ -447,14 +696,27 @@ async function removeFromAllowlist(address: string): Promise<void> {
 }
 
 /**
- * Onboarding setup: generate invite code + create isolated PRIM_HOME temp dir.
- * The agent does everything else (install CLI, create wallet, redeem code, test services).
+ * Onboarding setup: generate invite code + create execution backend.
+ * For local: temp dir with PRIM_HOME isolation.
+ * For docker/remote: isolated container/VPS.
  */
 async function setupOnboardingE2e(): Promise<SetupContext> {
   const inviteCode = await generateInviteCode();
-  const primHome = join(tmpdir(), `prim-e2e-${Date.now()}`);
-  mkdirSync(primHome, { recursive: true });
-  return { invite_code: inviteCode, prim_home: primHome };
+
+  let backend: ExecBackend;
+  if (execEnv === "docker") {
+    console.log(c.dim("  Creating Docker container…"));
+    backend = await createDockerBackend();
+  } else if (execEnv === "remote") {
+    console.log(c.dim("  Creating DO droplet…"));
+    backend = await createRemoteBackend();
+  } else {
+    const primHome = join(tmpdir(), `prim-e2e-${Date.now()}`);
+    mkdirSync(primHome, { recursive: true });
+    backend = createLocalBackend(primHome);
+  }
+
+  return { invite_code: inviteCode, prim_home: backend.primHome, backend };
 }
 
 /**
@@ -473,39 +735,46 @@ async function runGroupSetup(group: GroupDef): Promise<SetupContext> {
 }
 
 /**
- * Discover the wallet address from a PRIM_HOME directory.
+ * Discover the wallet address from a PRIM_HOME directory via backend.
  * Reads filenames from keys/*.json — filename is the checksum address.
  */
-function discoverWalletAddress(primHome: string): string | null {
-  const keysDir = join(primHome, "keys");
-  if (!existsSync(keysDir)) return null;
-  const files = readdirSync(keysDir).filter((f) => f.endsWith(".json"));
-  if (files.length === 0) return null;
-  return files[0].slice(0, -5); // strip .json → address
+async function discoverWalletAddress(backend: ExecBackend): Promise<string | null> {
+  const keysDir = `${backend.primHome}/keys`;
+  try {
+    const files = await backend.readDir(keysDir);
+    const jsonFiles = files.filter((f) => f.endsWith(".json"));
+    if (jsonFiles.length === 0) return null;
+    return jsonFiles[0].slice(0, -5); // strip .json → address
+  } catch {
+    return null;
+  }
 }
 
 /**
  * Delete store buckets owned by a wallet. Best-effort — logs warnings, never throws.
  */
-async function cleanupStoreBuckets(
-  primHome: string,
-  address: string,
-): Promise<void> {
-  // Decrypt the wallet's private key from the keystore
-  const keyPath = join(primHome, "keys", `${address}.json`);
-  if (!existsSync(keyPath)) {
+async function cleanupStoreBuckets(backend: ExecBackend, address: string): Promise<void> {
+  // Decrypt the wallet's private key from the keystore via backend
+  const keyPath = `${backend.primHome}/keys/${address}.json`;
+  const deviceKeyPath = `${backend.primHome}/device.key`;
+
+  let keystoreRaw: string;
+  try {
+    keystoreRaw = await backend.readFile(keyPath);
+  } catch {
     console.warn(`  Cleanup: keystore file not found at ${keyPath}`);
     return;
   }
 
-  const deviceKeyPath = join(primHome, "device.key");
-  if (!existsSync(deviceKeyPath)) {
+  let deviceKey: string;
+  try {
+    deviceKey = await backend.readFileHex(deviceKeyPath);
+  } catch {
     console.warn("  Cleanup: device.key not found, cannot decrypt wallet for store cleanup");
     return;
   }
 
-  const keystoreFile = JSON.parse(readFileSync(keyPath, "utf-8")) as KeystoreFile;
-  const deviceKey = readFileSync(deviceKeyPath).toString("hex");
+  const keystoreFile = JSON.parse(keystoreRaw) as KeystoreFile;
   const privateKey = decryptFromV3(keystoreFile.crypto, deviceKey);
 
   const storeFetch = createPrimFetch({ privateKey, maxPayment: "1.00" });
@@ -543,29 +812,31 @@ async function cleanupStoreBuckets(
 
 /**
  * Onboarding E2E cleanup:
- * 1. Find wallet address from PRIM_HOME/keys/
+ * 1. Find wallet address from backend keys/
  * 2. Delete store buckets (best-effort)
  * 3. Remove from allowlist
- * 4. Delete temp dir
+ * 4. Tear down backend (container/droplet/tempdir)
  */
 async function cleanupOnboardingE2e(ctx: SetupContext): Promise<void> {
-  const primHome = ctx.prim_home;
-  if (!primHome) return;
+  const backend = ctx.backend;
+  if (!backend) return;
 
-  const address = discoverWalletAddress(primHome);
+  const address = await discoverWalletAddress(backend);
   if (address) {
     // Clean store buckets before revoking access
     try {
-      await cleanupStoreBuckets(primHome, address);
+      await cleanupStoreBuckets(backend, address);
     } catch (err) {
-      console.warn(`  Cleanup: store bucket cleanup failed: ${err instanceof Error ? err.message : String(err)}`);
+      console.warn(
+        `  Cleanup: store bucket cleanup failed: ${err instanceof Error ? err.message : String(err)}`,
+      );
     }
     await removeFromAllowlist(address);
     console.log(c.dim(`  Cleanup: removed ${address} from allowlist`));
   }
 
-  rmSync(primHome, { recursive: true, force: true });
-  console.log(c.dim(`  Cleanup: deleted ${primHome}`));
+  await backend.cleanup();
+  console.log(c.dim(`  Cleanup: backend torn down (${execEnv})`));
 }
 
 /**
@@ -755,6 +1026,16 @@ async function runCanaryGroup(
     if (setupCtx?.invite_code) {
       groupPrompt = groupPrompt.replace(/\{\{invite_code\}\}/g, setupCtx.invite_code);
     }
+    // For docker/remote backends, prepend install instructions
+    if (execEnv !== "local" && setupCtx?.invite_code) {
+      groupPrompt = `The prim CLI is NOT installed yet. First install it:
+  curl -fsSL prim.sh/install.sh | sh -s ${setupCtx.invite_code}
+  export PATH="$HOME/.prim/bin:$PATH"
+
+Then follow the onboarding runbook that was printed.
+
+${groupPrompt}`;
+    }
     promptText = groupPrompt;
   } else {
     const primIds = getGroupPrimIds(group, testIndex);
@@ -812,7 +1093,7 @@ async function runCanaryGroup(
 
   for (let round = 0; round < MAX_ROUNDS; round++) {
     const chatRequest = {
-      model: process.env.CANARY_MODEL ?? "anthropic/claude-sonnet-4-5",
+      model: process.env.CANARY_MODEL ?? "openrouter/auto",
       messages,
       tools,
       tool_choice: "auto",
@@ -840,6 +1121,7 @@ async function runCanaryGroup(
     }
 
     const chatResponse = (await inferResponse.json()) as {
+      model?: string;
       choices: Array<{
         message: {
           role: string;
@@ -853,6 +1135,11 @@ async function runCanaryGroup(
         finish_reason: string;
       }>;
     };
+
+    // Log the actual model on first response
+    if (round === 0 && chatResponse.model) {
+      console.log(c.dim(`  Model: ${chatResponse.model}`));
+    }
 
     const choice = chatResponse.choices?.[0];
     if (!choice) {
@@ -899,10 +1186,13 @@ async function runCanaryGroup(
       if (isCli && tc.function.name === "shell_exec") {
         // ── CLI mode: execute shell command ──
         const command = String(parsedArgs.command ?? "");
-        const primHome = setupCtx?.prim_home ?? "/tmp/prim-e2e-fallback";
+        const backend = setupCtx?.backend;
+        const primHome = backend?.primHome ?? setupCtx?.prim_home ?? "/tmp/prim-e2e-fallback";
 
         try {
-          const result = await executeShellExec(command, primHome);
+          const result = backend
+            ? await backend.exec(command)
+            : await executeShellExec(command, primHome);
           const ok = result.exit_code === 0;
           stepResult = {
             tool_call_id: tc.id,
@@ -1145,6 +1435,7 @@ async function main() {
       console.log(`\n${c.bold("Gate Runner — Canary Dry Run")}`);
       console.log(`Plan: ${plan.plan}`);
       console.log(`Network: ${plan.network}`);
+      console.log(`Backend: ${execEnv}${execEnv === "remote" ? " (spawn.sh / DigitalOcean)" : execEnv === "docker" ? " (Docker)" : ""}`);
       console.log(`Mode: ${c.cyan("canary")} — agent drives LLM inference via infer.prim.sh\n`);
 
       for (const group of groups) {
@@ -1220,6 +1511,7 @@ async function main() {
     console.log(`Plan: ${plan.plan}`);
     console.log(`Network: ${plan.network}`);
     console.log(`Infer: ${inferEndpoint}`);
+    console.log(`Backend: ${execEnv}${execEnv === "remote" ? " (spawn.sh / DigitalOcean)" : execEnv === "docker" ? " (Docker)" : ""}`);
     console.log(`Mode: ${args.ci ? "CI" : "local"}\n`);
 
     const canaryResults: CanaryGroupResult[] = [];
@@ -1292,8 +1584,12 @@ async function main() {
         const note = step.note ? c.dim(` (${step.note})`) : "";
         if (step.command !== undefined) {
           // CLI step
-          const exitStr = step.exit_code !== null && step.exit_code !== undefined ? String(step.exit_code) : "err";
-          const cmdPreview = step.command.length > 60 ? `${step.command.slice(0, 57)}…` : step.command;
+          const exitStr =
+            step.exit_code !== null && step.exit_code !== undefined
+              ? String(step.exit_code)
+              : "err";
+          const cmdPreview =
+            step.command.length > 60 ? `${step.command.slice(0, 57)}…` : step.command;
           console.log(`  ${icon} ${c.dim("$")} ${cmdPreview}  exit=${exitStr}${note}`);
         } else {
           // API step
@@ -1726,7 +2022,9 @@ async function main() {
         console.log(c.red(`CI FAIL: ${r.id} (${testDef.service}) is deployed and failed`));
       } else {
         console.log(
-          c.yellow(`CI WARN: ${r.id} (${testDef.service}) is ${status ?? "undeployed"} — failure is non-blocking`),
+          c.yellow(
+            `CI WARN: ${r.id} (${testDef.service}) is ${status ?? "undeployed"} — failure is non-blocking`,
+          ),
         );
       }
     }
