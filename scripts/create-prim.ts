@@ -850,7 +850,7 @@ function genReadme(prim: PrimYaml, routePrices: Record<string, string>): string 
 
 > ${prim.description}
 
-Part of [prim.sh](https://prim.sh) — zero install, one curl, infinite primitives. x402 payment (USDC on Base) is the sole auth.
+Part of [prim.sh](https://prim.sh) — zero signup, one payment token, infinite primitives. x402 payment (USDC on Base) is the sole auth.
 
 ## Routes
 

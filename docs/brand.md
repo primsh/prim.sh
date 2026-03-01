@@ -24,7 +24,7 @@ A **prim** (lowercase) is also the atomic product unit — a single infrastructu
 ## Tagline
 *The hook. Makes you stop scrolling.*
 
-**Zero install. One curl. Infinite primitives.**
+**Zero signup. One payment token. Infinite primitives.**
 
 ## Sub
 *The explanation. What this actually is.*

@@ -13,7 +13,7 @@ tools:
 
 Complete onboarding sequence. Start here if you have never used prim before.
 
-Prim — the agent-native stack. Zero install, one curl, infinite primitives. Just add mcp.prim.sh, pay with USDC, use every service.
+Prim — the agent-native stack. Zero signup, one payment token, infinite primitives. Just add mcp.prim.sh, pay with USDC, use every service.
 
 ## The onboarding sequence
 

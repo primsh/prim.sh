@@ -76,7 +76,7 @@ function renderTitle(p: Primitive): string {
 }
 
 function renderIntro(): string {
-  return "Part of [prim.sh](https://prim.sh) — zero install, one curl, infinite primitives. x402 payment (USDC on Base) is the sole auth.";
+  return "Part of [prim.sh](https://prim.sh) — zero signup, one payment token, infinite primitives. x402 payment (USDC on Base) is the sole auth.";
 }
 
 function renderRoutes(p: Primitive, api: ParsedApi | null, prices: Map<string, string>): string {
