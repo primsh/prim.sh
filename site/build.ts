@@ -9,7 +9,7 @@ import { cpSync, existsSync, mkdirSync, readFileSync, readdirSync, writeFileSync
 import { join, resolve } from "node:path";
 import { parse } from "yaml";
 import { BRAND } from "./brand.ts";
-import { type PrimConfig, render, renderFooter, setBuildHash } from "./template.ts";
+import { type LegalConfig, type PrimConfig, render, renderFooter, renderLegal, setBuildHash } from "./template.ts";
 
 // Set cache-bust hash for template CSS references
 const buildHash = process.env.GITHUB_SHA?.slice(0, 8) ?? Date.now().toString(36);
@@ -145,16 +145,24 @@ if (existsSync(openapiDir)) {
   console.log(`[build] ${specCount} OpenAPI specs copied to site-dist/openapi/`);
 }
 
-// ── terms / privacy ─────────────────────────────────────────────────────────
+// ── legal pages (terms, privacy) from page.yaml ─────────────────────────────
 
-for (const page of ["terms", "privacy"]) {
-  const pagePath = resolve(ROOT, `site/${page}/index.html`);
-  if (existsSync(pagePath)) {
-    mkdirSync(resolve(ROOT, `site-dist/${page}`), { recursive: true });
-    cpSync(pagePath, resolve(ROOT, `site-dist/${page}/index.html`));
-    console.log(`[build] site-dist/${page}/index.html copied`);
+let legalCount = 0;
+for (const dir of readdirSync(join(ROOT, "site"))) {
+  const yamlPath = join(ROOT, `site/${dir}/page.yaml`);
+  if (existsSync(yamlPath)) {
+    try {
+      const cfg = parse(readFileSync(yamlPath, "utf-8")) as LegalConfig;
+      const html = renderLegal(cfg);
+      mkdirSync(resolve(ROOT, `site-dist/${cfg.id}`), { recursive: true });
+      writeFileSync(resolve(ROOT, `site-dist/${cfg.id}/index.html`), html);
+      legalCount++;
+    } catch (e) {
+      console.error(`[build] Failed to parse ${yamlPath}:`, e);
+    }
   }
 }
+console.log(`[build] ${legalCount} legal pages written`);
 
 // ── assets ──────────────────────────────────────────────────────────────────
 
