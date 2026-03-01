@@ -5,11 +5,11 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Costs — prim.sh</title>
-<meta name="description" content="At-cost pricing. Zero margin. Pay for what you use. Full cost breakdown for every prim.sh primitive.">
+<meta name="description" content="Zero markup. One mill ($0.001) floor. Infinite primitives. Full cost breakdown for every prim.sh primitive.">
 <meta name="theme-color" content="#0a0a0a">
 <meta property="og:type" content="website">
 <meta property="og:title" content="Costs — prim.sh">
-<meta property="og:description" content="At-cost pricing. Zero margin. Pay for what you use. Full cost breakdown for every prim.sh primitive.">
+<meta property="og:description" content="Zero markup. One mill ($0.001) floor. Infinite primitives. Full cost breakdown for every prim.sh primitive.">
 <meta property="og:url" content="https://prim.sh/costs">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:site" content="@useprim">
@@ -40,8 +40,9 @@
 <div class="hero">
   <img class="logomark" src="/assets/hero.jpg" alt=">|">
   <div class="hero-hd"><a href="/" class="pill"><span class="parent">prim.sh</span><span class="sep">/</span><span class="child">costs</span></a></div>
-  <h1 class="logo">What it <span>costs</span></h1>
-  <div class="tagline">At-cost<a href="#footnote">*</a> pricing. Zero margin. Pay for what you use.</div>
+  <h1 class="logo"><span>costs</span></h1>
+  <div class="tagline" style="color:var(--muted);font-size:1.1rem;margin-bottom:0.5rem">Agent-native pricing.</div>
+  <div class="tagline">Zero markup. One mill ($0.001) floor. Infinite primitives.</div>
 </div>
 
 <div class="costs-wrap">
@@ -265,7 +266,7 @@
   </tbody>
 </table>
 
-<p class="updated" id="footnote">* Agents pay only the listed USDC price &mdash; no gas fees. x402 uses EIP-3009 meta-transactions: the agent signs off-chain, the facilitator submits the transaction and pays Base chain gas. Primitive Shell absorbs the facilitator settlement fee ($0.001/tx after the first 1,000/month). Operations priced at $0.001 (&ldquo;x402 floor&rdquo;) are the minimum the protocol needs to identify the caller&rsquo;s wallet. This revenue covers protocol overhead (caller identification, ownership scoping, abuse prevention) &mdash; it is not a provider pass-through cost.</p>
+<p class="updated">Agents pay only the listed USDC price &mdash; no gas fees. x402 uses EIP-3009 meta-transactions: the agent signs off-chain, the facilitator submits the transaction and pays Base chain gas. Primitive Shell absorbs the facilitator settlement fee ($0.001/tx after the first 1,000/month). Operations priced at $0.001 (&ldquo;x402 floor&rdquo;) are the minimum the protocol needs to identify the caller&rsquo;s wallet. This revenue covers protocol overhead (caller identification, ownership scoping, abuse prevention) &mdash; it is not a provider pass-through cost.</p>
 <p class="updated">Generated from <a href="https://github.com/primsh/prim.sh/blob/main/docs/costs.yaml">docs/costs.yaml</a> + prim.yaml files. Prices reflect current provider rates and may change. See <a href="/terms">Terms of Service</a> for details.</p>
 
 </div>
