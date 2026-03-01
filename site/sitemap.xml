@@ -10,15 +10,26 @@
   <url><loc>https://prim.sh/llms.txt</loc></url>
   <url><loc>https://prim.sh/pricing.json</loc></url>
   <url><loc>https://prim.sh/discovery.json</loc></url>
+  <url><loc>https://prim.sh/wallet/</loc></url>
   <url><loc>https://prim.sh/wallet/llms.txt</loc></url>
+  <url><loc>https://prim.sh/faucet/</loc></url>
   <url><loc>https://prim.sh/faucet/llms.txt</loc></url>
+  <url><loc>https://prim.sh/gate/</loc></url>
+  <url><loc>https://prim.sh/store/</loc></url>
   <url><loc>https://prim.sh/store/llms.txt</loc></url>
+  <url><loc>https://prim.sh/search/</loc></url>
   <url><loc>https://prim.sh/search/llms.txt</loc></url>
+  <url><loc>https://prim.sh/spawn/</loc></url>
   <url><loc>https://prim.sh/spawn/llms.txt</loc></url>
+  <url><loc>https://prim.sh/email/</loc></url>
   <url><loc>https://prim.sh/email/llms.txt</loc></url>
+  <url><loc>https://prim.sh/token/</loc></url>
   <url><loc>https://prim.sh/token/llms.txt</loc></url>
+  <url><loc>https://prim.sh/mem/</loc></url>
   <url><loc>https://prim.sh/mem/llms.txt</loc></url>
+  <url><loc>https://prim.sh/domain/</loc></url>
   <url><loc>https://prim.sh/domain/llms.txt</loc></url>
+  <url><loc>https://prim.sh/track/</loc></url>
   <url><loc>https://prim.sh/track/llms.txt</loc></url>
   <url><loc>https://prim.sh/ring/llms.txt</loc></url>
   <url><loc>https://prim.sh/pipe/llms.txt</loc></url>
@@ -35,6 +46,7 @@
   <url><loc>https://prim.sh/corp/llms.txt</loc></url>
   <url><loc>https://prim.sh/hands/llms.txt</loc></url>
   <url><loc>https://prim.sh/pins/llms.txt</loc></url>
+  <url><loc>https://prim.sh/feedback/</loc></url>
   <url><loc>https://prim.sh/infer/llms.txt</loc></url>
   <url><loc>https://prim.sh/seek/llms.txt</loc></url>
   <url><loc>https://prim.sh/docs/llms.txt</loc></url>

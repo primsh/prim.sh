@@ -359,19 +359,12 @@ for (const p of primsWithRoutes) {
   }
 
   for (const p of prims) {
-    const pagePath = join(ROOT, "site", p.id, "index.html");
-    if (!existsSync(pagePath)) continue;
-    urls.push(`  <url><loc>${BASE_URL}/${p.id}/</loc></url>`);
-    const llmsPath = join(ROOT, "site", p.id, "llms.txt");
-    if (existsSync(llmsPath)) {
-      urls.push(`  <url><loc>${BASE_URL}/${p.id}/llms.txt</loc></url>`);
+    // Prim pages are SSR'd from prim.yaml at build time — any prim with
+    // tagline + sub gets an HTML page (mirrors build.ts logic)
+    const hasPage = !!(p.tagline && p.sub);
+    if (hasPage) {
+      urls.push(`  <url><loc>${BASE_URL}/${p.id}/</loc></url>`);
     }
-  }
-
-  // Also include per-prim llms.txt even without an index.html page
-  for (const p of prims) {
-    const pagePath = join(ROOT, "site", p.id, "index.html");
-    if (existsSync(pagePath)) continue; // already handled above
     const llmsPath = join(ROOT, "site", p.id, "llms.txt");
     if (existsSync(llmsPath)) {
       urls.push(`  <url><loc>${BASE_URL}/${p.id}/llms.txt</loc></url>`);
