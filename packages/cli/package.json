@@ -29,6 +29,7 @@
   },
   "dependencies": {
     "@primsh/keystore": "workspace:*",
+    "@primsh/sdk": "workspace:*",
     "@primsh/x402-client": "workspace:*",
     "@primsh/x402-middleware": "workspace:*",
     "viem": "^2.21.0"

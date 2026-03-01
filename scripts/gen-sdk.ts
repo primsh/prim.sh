@@ -146,6 +146,7 @@ if (generatedIds.length > 0) {
     "// Source: packages/<id>/openapi.yaml (all prims with rest interface)",
     "// Regenerate: pnpm gen:sdk",
     "",
+    'export { unwrap } from "./shared.js";',
   ];
 
   for (const id of allBarrelIds) {

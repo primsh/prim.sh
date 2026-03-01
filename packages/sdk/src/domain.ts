@@ -3,6 +3,8 @@
 // Source: packages/domain/openapi.yaml
 // Regenerate: pnpm gen:sdk
 
+import { unwrap } from "./shared.js";
+
 // ── Types ──────────────────────────────────────────────────────────────────
 
 export interface ActivateResponse {
@@ -371,8 +373,10 @@ export type DeleteRecordResponse = Record<string, unknown>;
 
 // ── Client ─────────────────────────────────────────────────────────────────
 
-export function createDomainClient(primFetch: (input: RequestInfo | URL, init?: RequestInit) => Promise<Response>) {
-  const baseUrl = "https://domain.prim.sh";
+export function createDomainClient(
+  primFetch: (input: RequestInfo | URL, init?: RequestInit) => Promise<Response>,
+  baseUrl = "https://domain.prim.sh",
+) {
   return {
     async searchDomains(params: SearchDomainsParams): Promise<DomainSearchResponse> {
       const qs = new URLSearchParams();
@@ -381,7 +385,7 @@ export function createDomainClient(primFetch: (input: RequestInfo | URL, init?: 
       const query = qs.toString();
       const url = `${baseUrl}/v1/domains/search${query ? `?${query}` : ""}`;
       const res = await primFetch(url);
-      return res.json() as Promise<DomainSearchResponse>;
+      return unwrap<DomainSearchResponse>(res);
     },
     async quoteDomain(req: QuoteRequest): Promise<QuoteResponse> {
       const url = `${baseUrl}/v1/domains/quote`;
@@ -390,12 +394,12 @@ export function createDomainClient(primFetch: (input: RequestInfo | URL, init?: 
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(req),
       });
-      return res.json() as Promise<QuoteResponse>;
+      return unwrap<QuoteResponse>(res);
     },
     async getDomainStatus(params: GetDomainStatusParams): Promise<RegistrationStatusResponse> {
       const url = `${baseUrl}/v1/domains/${encodeURIComponent(params.domain)}/status`;
       const res = await primFetch(url);
-      return res.json() as Promise<RegistrationStatusResponse>;
+      return unwrap<RegistrationStatusResponse>(res);
     },
     async createZone(req: CreateZoneRequest): Promise<CreateZoneResponse> {
       const url = `${baseUrl}/v1/zones`;
@@ -404,7 +408,7 @@ export function createDomainClient(primFetch: (input: RequestInfo | URL, init?: 
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(req),
       });
-      return res.json() as Promise<CreateZoneResponse>;
+      return unwrap<CreateZoneResponse>(res);
     },
     async listZones(params: ListZonesParams): Promise<ListZonesResponse> {
       const qs = new URLSearchParams();
@@ -413,31 +417,31 @@ export function createDomainClient(primFetch: (input: RequestInfo | URL, init?: 
       const query = qs.toString();
       const url = `${baseUrl}/v1/zones${query ? `?${query}` : ""}`;
       const res = await primFetch(url);
-      return res.json() as Promise<ListZonesResponse>;
+      return unwrap<ListZonesResponse>(res);
     },
     async getZone(params: GetZoneParams): Promise<ZoneResponse> {
       const url = `${baseUrl}/v1/zones/${encodeURIComponent(params.id)}`;
       const res = await primFetch(url);
-      return res.json() as Promise<ZoneResponse>;
+      return unwrap<ZoneResponse>(res);
     },
     async deleteZone(params: DeleteZoneParams): Promise<DeleteZoneResponse> {
       const url = `${baseUrl}/v1/zones/${encodeURIComponent(params.id)}`;
       const res = await primFetch(url, {
         method: "DELETE",
       });
-      return res.json() as Promise<DeleteZoneResponse>;
+      return unwrap<DeleteZoneResponse>(res);
     },
     async activateZone(params: ActivateZoneParams): Promise<ActivateResponse> {
       const url = `${baseUrl}/v1/zones/${encodeURIComponent(params.zone_id)}/activate`;
       const res = await primFetch(url, {
         method: "PUT",
       });
-      return res.json() as Promise<ActivateResponse>;
+      return unwrap<ActivateResponse>(res);
     },
     async verifyZone(params: VerifyZoneParams): Promise<VerifyResponse> {
       const url = `${baseUrl}/v1/zones/${encodeURIComponent(params.zone_id)}/verify`;
       const res = await primFetch(url);
-      return res.json() as Promise<VerifyResponse>;
+      return unwrap<VerifyResponse>(res);
     },
     async setupMail(params: SetupMailParams, req: MailSetupRequest): Promise<MailSetupResponse> {
       const url = `${baseUrl}/v1/zones/${encodeURIComponent(params.zone_id)}/mail-setup`;
@@ -446,7 +450,7 @@ export function createDomainClient(primFetch: (input: RequestInfo | URL, init?: 
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(req),
       });
-      return res.json() as Promise<MailSetupResponse>;
+      return unwrap<MailSetupResponse>(res);
     },
     async batchRecords(params: BatchRecordsParams, req: BatchRecordsRequest): Promise<BatchRecordsResponse> {
       const url = `${baseUrl}/v1/zones/${encodeURIComponent(params.zone_id)}/records/batch`;
@@ -455,7 +459,7 @@ export function createDomainClient(primFetch: (input: RequestInfo | URL, init?: 
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(req),
       });
-      return res.json() as Promise<BatchRecordsResponse>;
+      return unwrap<BatchRecordsResponse>(res);
     },
     async createRecord(params: CreateRecordParams, req: CreateRecordRequest): Promise<RecordResponse> {
       const url = `${baseUrl}/v1/zones/${encodeURIComponent(params.zone_id)}/records`;
@@ -464,17 +468,17 @@ export function createDomainClient(primFetch: (input: RequestInfo | URL, init?: 
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(req),
       });
-      return res.json() as Promise<RecordResponse>;
+      return unwrap<RecordResponse>(res);
     },
     async listRecords(params: ListRecordsParams): Promise<ListRecordsResponse> {
       const url = `${baseUrl}/v1/zones/${encodeURIComponent(params.zone_id)}/records`;
       const res = await primFetch(url);
-      return res.json() as Promise<ListRecordsResponse>;
+      return unwrap<ListRecordsResponse>(res);
     },
     async getRecord(params: GetRecordParams): Promise<RecordResponse> {
       const url = `${baseUrl}/v1/zones/${encodeURIComponent(params.zone_id)}/records/${encodeURIComponent(params.id)}`;
       const res = await primFetch(url);
-      return res.json() as Promise<RecordResponse>;
+      return unwrap<RecordResponse>(res);
     },
     async updateRecord(params: UpdateRecordParams, req: UpdateRecordRequest): Promise<RecordResponse> {
       const url = `${baseUrl}/v1/zones/${encodeURIComponent(params.zone_id)}/records/${encodeURIComponent(params.id)}`;
@@ -483,14 +487,14 @@ export function createDomainClient(primFetch: (input: RequestInfo | URL, init?: 
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(req),
       });
-      return res.json() as Promise<RecordResponse>;
+      return unwrap<RecordResponse>(res);
     },
     async deleteRecord(params: DeleteRecordParams): Promise<DeleteRecordResponse> {
       const url = `${baseUrl}/v1/zones/${encodeURIComponent(params.zone_id)}/records/${encodeURIComponent(params.id)}`;
       const res = await primFetch(url, {
         method: "DELETE",
       });
-      return res.json() as Promise<DeleteRecordResponse>;
+      return unwrap<DeleteRecordResponse>(res);
     },
   };
 }

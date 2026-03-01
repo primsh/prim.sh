@@ -3,6 +3,7 @@
 
 import { createPrimFetch } from "@primsh/x402-client";
 import { getConfig, writeConfig } from "@primsh/keystore";
+import { createGateClient } from "@primsh/sdk";
 import { getFlag, hasFlag, resolvePassphrase } from "./flags.ts";
 
 export function resolveGateUrl(argv: string[]): string {
@@ -10,21 +11,6 @@ export function resolveGateUrl(argv: string[]): string {
   if (flag) return flag;
   if (process.env.PRIM_GATE_URL) return process.env.PRIM_GATE_URL;
   return "https://gate.prim.sh";
-}
-
-async function handleError(res: Response): Promise<never> {
-  let message = `HTTP ${res.status}`;
-  let code = "unknown";
-  try {
-    const body = (await res.json()) as { error?: { code: string; message: string } };
-    if (body.error) {
-      message = body.error.message;
-      code = body.error.code;
-    }
-  } catch {
-    // ignore parse error
-  }
-  throw new Error(`${message} (${code})`);
 }
 
 export async function runGateCommand(sub: string, argv: string[]): Promise<void> {
@@ -42,6 +28,7 @@ export async function runGateCommand(sub: string, argv: string[]): Promise<void>
     maxPayment: maxPaymentFlag ?? process.env.PRIM_MAX_PAYMENT ?? "1.00",
     network: config.network,
   });
+  const client = createGateClient(primFetch, baseUrl);
 
   if (!sub || sub === "--help" || sub === "-h") {
     console.log("Usage: prim gate <invite> [args] [flags]");
@@ -63,13 +50,7 @@ export async function runGateCommand(sub: string, argv: string[]): Promise<void>
       const reqBody: Record<string, unknown> = {};
       reqBody.code = code;
       reqBody.wallet = wallet;
-      const res = await primFetch(`${baseUrl}/v1/redeem`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(reqBody),
-      });
-      if (!res.ok) return handleError(res);
-      const data = await res.json();
+      const data = await client.redeemInvite(reqBody as never);
 
       // gate.sh is testnet-only — save network so balance/store/search default correctly
       if (!config.network) {
@@ -90,4 +71,3 @@ export async function runGateCommand(sub: string, argv: string[]): Promise<void>
       process.exit(1);
   }
 }
-

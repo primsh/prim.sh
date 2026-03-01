@@ -5,6 +5,7 @@
 
 import { createPrimFetch } from "@primsh/x402-client";
 import { getConfig } from "@primsh/keystore";
+import { createInferClient } from "@primsh/sdk";
 import { getFlag, hasFlag, resolvePassphrase } from "./flags.ts";
 
 export function resolveInferUrl(argv: string[]): string {
@@ -12,21 +13,6 @@ export function resolveInferUrl(argv: string[]): string {
   if (flag) return flag;
   if (process.env.PRIM_INFER_URL) return process.env.PRIM_INFER_URL;
   return "https://infer.prim.sh";
-}
-
-async function handleError(res: Response): Promise<never> {
-  let message = `HTTP ${res.status}`;
-  let code = "unknown";
-  try {
-    const body = (await res.json()) as { error?: { code: string; message: string } };
-    if (body.error) {
-      message = body.error.message;
-      code = body.error.code;
-    }
-  } catch {
-    // ignore parse error
-  }
-  throw new Error(`${message} (${code})`);
 }
 
 export async function runInferCommand(sub: string, argv: string[]): Promise<void> {
@@ -44,6 +30,7 @@ export async function runInferCommand(sub: string, argv: string[]): Promise<void
     maxPayment: maxPaymentFlag ?? process.env.PRIM_MAX_PAYMENT ?? "1.00",
     network: config.network,
   });
+  const client = createInferClient(primFetch, baseUrl);
 
   if (!sub || sub === "--help" || sub === "-h") {
     console.log("Usage: prim infer <chat|embed|ls> [args] [flags]");
@@ -87,13 +74,7 @@ export async function runInferCommand(sub: string, argv: string[]): Promise<void
       if (tools) reqBody.tools = tools;
       if (toolChoice) reqBody.tool_choice = toolChoice;
       if (responseFormat) reqBody.response_format = responseFormat;
-      const res = await primFetch(`${baseUrl}/v1/chat`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(reqBody),
-      });
-      if (!res.ok) return handleError(res);
-      const data = await res.json();
+      const data = await client.chat(reqBody as never);
       if (quiet) {
         console.log(JSON.stringify(data));
       } else {
@@ -114,13 +95,7 @@ export async function runInferCommand(sub: string, argv: string[]): Promise<void
       const reqBody: Record<string, unknown> = {};
       reqBody.model = model;
       reqBody.input = input;
-      const res = await primFetch(`${baseUrl}/v1/embed`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(reqBody),
-      });
-      if (!res.ok) return handleError(res);
-      const data = await res.json();
+      const data = await client.embed(reqBody as never);
       if (quiet) {
         console.log(JSON.stringify(data));
       } else {
@@ -130,9 +105,7 @@ export async function runInferCommand(sub: string, argv: string[]): Promise<void
     }
 
     case "ls": {
-      const res = await primFetch(`${baseUrl}/v1/models`);
-      if (!res.ok) return handleError(res);
-      const data = await res.json();
+      const data = await client.listModels();
       if (quiet) {
         console.log(JSON.stringify(data));
       } else {

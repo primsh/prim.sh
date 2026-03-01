@@ -54,6 +54,9 @@ importers:
       '@primsh/keystore':
         specifier: workspace:*
         version: link:../keystore
+      '@primsh/sdk':
+        specifier: workspace:*
+        version: link:../sdk
       '@primsh/x402-client':
         specifier: workspace:*
         version: link:../x402-client

@@ -3,6 +3,8 @@
 // Source: packages/search/openapi.yaml
 // Regenerate: pnpm gen:sdk
 
+import { unwrap } from "./shared.js";
+
 // ── Types ──────────────────────────────────────────────────────────────────
 
 export interface ExtractRequest {
@@ -82,8 +84,10 @@ export interface SearchResult {
 
 // ── Client ─────────────────────────────────────────────────────────────────
 
-export function createSearchClient(primFetch: (input: RequestInfo | URL, init?: RequestInit) => Promise<Response>) {
-  const baseUrl = "https://search.prim.sh";
+export function createSearchClient(
+  primFetch: (input: RequestInfo | URL, init?: RequestInit) => Promise<Response>,
+  baseUrl = "https://search.prim.sh",
+) {
   return {
     async searchWeb(req: SearchRequest): Promise<SearchResponse> {
       const url = `${baseUrl}/v1/search`;
@@ -92,7 +96,7 @@ export function createSearchClient(primFetch: (input: RequestInfo | URL, init?: 
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(req),
       });
-      return res.json() as Promise<SearchResponse>;
+      return unwrap<SearchResponse>(res);
     },
     async searchNews(req: SearchRequest): Promise<SearchResponse> {
       const url = `${baseUrl}/v1/search/news`;
@@ -101,7 +105,7 @@ export function createSearchClient(primFetch: (input: RequestInfo | URL, init?: 
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(req),
       });
-      return res.json() as Promise<SearchResponse>;
+      return unwrap<SearchResponse>(res);
     },
     async extractUrl(req: ExtractRequest): Promise<ExtractResponse> {
       const url = `${baseUrl}/v1/extract`;
@@ -110,7 +114,7 @@ export function createSearchClient(primFetch: (input: RequestInfo | URL, init?: 
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(req),
       });
-      return res.json() as Promise<ExtractResponse>;
+      return unwrap<ExtractResponse>(res);
     },
   };
 }
