@@ -33,7 +33,7 @@ sections:
 
   - heading: "5. Pricing & Payments"
     content:
-      - "All API calls are priced at provider cost. Current prices are published at [prim.sh/docs/costs](https://prim.sh/docs/costs) and generated from source files in the repo."
+      - "All API calls are priced at provider cost. Current prices are published at [prim.sh/costs](https://prim.sh/costs) and generated from source files in the repo."
       - "Prices reflect current provider rates and may change without notice. Price changes take effect on the next API call, not retroactively."
       - "Operations priced at the x402 floor ($0.001) cover protocol overhead — caller identification, ownership scoping, and abuse prevention."
       - "Each transaction incurs Base chain gas fees (~$0.001–0.005 ETH) paid by the caller, separate from the listed price."

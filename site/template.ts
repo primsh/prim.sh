@@ -394,7 +394,7 @@ export function renderFooter(crumb: string): string {
   <div class="links">
     <a href="/terms">terms</a>
     <a href="/privacy">privacy</a>
-    <a href="/docs/costs">costs</a>
+    <a href="/costs">costs</a>
   </div>
   <div class="copyright">${BRAND.copyright}</div>
 </footer>`;
