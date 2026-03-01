@@ -1,13 +1,3 @@
-# Python
-__pycache__/
-*.py[cod]
-*$py.class
-.Python
-*.so
-.venv/
-venv/
-env/
-
 # Node / Bun
 node_modules/
 .pnpm-store/
@@ -18,7 +8,6 @@ coverage/
 # Env / data
 .env
 .env.*
-!.env.example
 scripts/.env.*
 !scripts/.env.example
 *.db
@@ -32,7 +21,6 @@ brand/
 
 # Logs
 *.log
-server.log
 
 # Security scan output (never commit — may contain secret values)
 gitleaks-report.json
