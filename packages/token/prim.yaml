@@ -71,7 +71,6 @@ sub: "Deploy ERC-20 tokens and Uniswap pools via API."
 hero_badges:
   - "**ERC-20** deploy"
   - "**Uniswap V3** pools"
-  - "**x402** auth"
   - "**Base** + Sepolia"
 
 hero_example: |

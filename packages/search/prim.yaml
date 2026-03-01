@@ -61,7 +61,6 @@ tagline: "Zero ads. One query. Infinite answers."
 sub: "Web search and news. No ads, no SEO spam. Clean markdown."
 
 hero_badges:
-  - "**x402** auth"
   - "**Web** search"
   - "**News** search"
   - "**URL** extract"

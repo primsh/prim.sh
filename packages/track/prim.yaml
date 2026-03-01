@@ -47,7 +47,6 @@ sub: "Real-time status across 1000+ carriers via x402."
 
 hero_badges:
   - "**1000+** carriers"
-  - "**x402** auth"
   - "**Stateless** lookup"
   - "**Real-time** status"
 

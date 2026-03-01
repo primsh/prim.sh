@@ -70,7 +70,6 @@ tagline: "Zero servers. One bucket. Infinite objects."
 sub: "Persist files across ephemeral VMs. S3-compatible."
 
 hero_badges:
-  - "**x402** auth"
   - "**S3** compatible"
   - "**CDN** edge delivery"
   - "**Signed** URLs"

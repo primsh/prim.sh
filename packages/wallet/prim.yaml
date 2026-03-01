@@ -43,7 +43,6 @@ sub: "On-chain wallets for agents. Base USDC. x402 identity."
 
 hero_badges:
   - "**Base** USDC"
-  - "**x402** native"
   - "**Multi**-wallet"
   - "**Owner** funding"
 
