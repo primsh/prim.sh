@@ -17,6 +17,7 @@ import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { join, resolve } from "node:path";
 import { Resvg } from "@resvg/resvg-js";
 import { BRAND } from "../site/brand.js";
+import { loadSFMono, extractGlyphs } from "./lib/font.js";
 import { CATEGORY_COLORS, TYPE_TO_CATEGORY, loadPrimitives } from "./lib/primitives.js";
 import type { PrimCategory } from "./lib/primitives.js";
 
@@ -59,12 +60,14 @@ function wordWrap(text: string, maxChars: number): string[] {
 
 // ── SVG Templates ────────────────────────────────────────────────────────────
 
-/** The >| bar mark (scaled to fit the card) */
-function logoMark(accent: string, secondary?: string): string {
-  const s = secondary ?? accent;
-  return `<g transform="translate(80, 140) scale(2.8)">
-    <path d="M 25 30 L 65 60 L 25 90" fill="none" stroke="${accent}" stroke-width="10" stroke-linecap="round" stroke-linejoin="round"/>
-    <line x1="85" y1="28" x2="85" y2="92" stroke="${s}" stroke-width="8" stroke-linecap="round"/>
+const font = loadSFMono();
+
+/** The >| bar mark (scaled to fit the card, SF Mono extraction) */
+function logoMark(accent: string): string {
+  const markSize = 120;
+  const d = extractGlyphs(font, ">|", { w: markSize, h: markSize, pad: 10 });
+  return `<g transform="translate(80, 140) scale(2.2)">
+    <path d="${d}" fill="${accent}" stroke="${accent}" stroke-width="6" stroke-linejoin="round" stroke-linecap="round" stroke-miterlimit="1" paint-order="stroke"/>
   </g>`;
 }
 
@@ -119,7 +122,7 @@ function brandCard(): string {
   </defs>
   <rect width="${W}" height="${H}" fill="url(#glow)"/>
 
-  ${logoMark(green, cyan)}
+  ${logoMark(green)}
 
   <text x="420" y="210" font-family="${FONT}" font-size="72" font-weight="700" fill="${green}">prim<tspan fill="#e0e0e0">.sh</tspan></text>
   <text x="420" y="270" font-family="${FONT}" font-size="28" fill="#999">${esc(BRAND.tagline)}</text>
