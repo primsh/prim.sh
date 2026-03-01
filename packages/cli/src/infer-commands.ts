@@ -26,8 +26,7 @@ async function handleError(res: Response): Promise<never> {
   } catch {
     // ignore parse error
   }
-  process.stderr.write(`Error: ${message} (${code})\n`);
-  process.exit(1);
+  throw new Error(`${message} (${code})`);
 }
 
 export async function runInferCommand(sub: string, argv: string[]): Promise<void> {
