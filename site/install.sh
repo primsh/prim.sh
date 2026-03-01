@@ -46,25 +46,30 @@ cd - >/dev/null
 cp "$TMPDIR/$BINARY" "$BIN"
 chmod +x "$BIN"
 
-# Add to PATH
+# Add to PATH in shell profile
 PATH_LINE="export PATH=\"\$HOME/.prim/bin:\$PATH\""
 add_to_rc() {
   rc_file="$1"
-  if [ -f "$rc_file" ]; then
-    if ! grep -qF '.prim/bin' "$rc_file"; then
-      printf '\n# prim CLI\n%s\n' "$PATH_LINE" >> "$rc_file"
-    fi
+  if ! grep -qF '.prim/bin' "$rc_file" 2>/dev/null; then
+    printf '\n# prim CLI\n%s\n' "$PATH_LINE" >> "$rc_file"
   fi
 }
-add_to_rc "$HOME/.bashrc"
-add_to_rc "$HOME/.zshrc"
+case "${SHELL:-/bin/sh}" in
+  */zsh)  add_to_rc "$HOME/.zshrc" ;;
+  */bash) add_to_rc "$HOME/.bashrc" ;;
+  *)      add_to_rc "$HOME/.bashrc"; add_to_rc "$HOME/.zshrc" ;;
+esac
 
 VERSION=$("$BIN" --version 2>/dev/null || echo "unknown")
 echo ""
 echo "prim v${VERSION} installed to $BIN"
-echo ""
-echo "Restart your shell or run:"
-echo "  export PATH=\"\$HOME/.prim/bin:\$PATH\""
-echo ""
-echo "Then try:"
-echo "  prim wallet create"
+
+if [ -n "${1:-}" ]; then
+  echo ""
+  echo "Next:"
+  echo "  $BIN skill onboard --code $1"
+else
+  echo ""
+  echo "Open a new terminal, then:"
+  echo "  prim wallet create"
+fi
