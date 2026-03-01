@@ -1,14 +1,24 @@
 import { addToAllowlist } from "@primsh/x402-middleware/allowlist-db";
 import { createLogger } from "@primsh/x402-middleware";
-import type { RedeemResponse } from "./api.ts";
+import type {
+  CodeDetail,
+  CreateCodesRequest,
+  CreateCodesResponse,
+  ListCodesResponse,
+  RedeemResponse,
+} from "./api.ts";
+import { generateCode, insertCodes, listCodes, revokeCode } from "./db.ts";
+import type { CodeRow } from "./db.ts";
 import { validateAndBurn } from "./db.ts";
 import { fundWallet } from "./fund.ts";
 
 const log = createLogger("gate.sh", { module: "service" });
 
-type RedeemResult =
-  | { ok: true; data: RedeemResponse }
+type ServiceResult<T> =
+  | { ok: true; data: T }
   | { ok: false; status: number; code: string; message: string };
+
+type RedeemResult = ServiceResult<RedeemResponse>;
 
 /**
  * Redeem an invite code: validate → allowlist → fund.
@@ -60,4 +70,84 @@ export async function redeemInvite(
     log.error("Funding failed (wallet is allowlisted but unfunded)", { wallet, error: message });
     return { ok: false, status: 502, code: "fund_error", message: `Funding failed: ${message}` };
   }
+}
+
+// ─── Code management ─────────────────────────────────────────────────────────
+
+function toCodeDetail(row: CodeRow): CodeDetail {
+  return {
+    code: row.code,
+    status: row.redeemed_at ? "redeemed" : "available",
+    created_at: row.created_at,
+    label: row.label,
+    wallet: row.wallet,
+    redeemed_at: row.redeemed_at,
+  };
+}
+
+/** Create codes — either generate random ones, accept specific ones, or both. */
+export function createCodes(
+  req: CreateCodesRequest,
+): ServiceResult<CreateCodesResponse> {
+  if (!req.count && (!req.codes || req.codes.length === 0)) {
+    return {
+      ok: false,
+      status: 400,
+      code: "invalid_request",
+      message: "At least one of count or codes is required",
+    };
+  }
+
+  if (req.count !== undefined && (req.count < 1 || req.count > 100)) {
+    return {
+      ok: false,
+      status: 400,
+      code: "invalid_request",
+      message: "count must be between 1 and 100",
+    };
+  }
+
+  const generated: string[] = [];
+  if (req.count) {
+    for (let i = 0; i < req.count; i++) {
+      generated.push(generateCode());
+    }
+  }
+
+  const allCodes = [...generated, ...(req.codes ?? [])];
+  const created = insertCodes(allCodes, req.label);
+
+  return { ok: true, data: { codes: allCodes, created } };
+}
+
+/** List codes, optionally filtered by status. */
+export function getCodes(
+  status?: string,
+): ServiceResult<ListCodesResponse> {
+  if (status && status !== "available" && status !== "redeemed") {
+    return {
+      ok: false,
+      status: 400,
+      code: "invalid_request",
+      message: "status must be 'available' or 'redeemed'",
+    };
+  }
+
+  const rows = listCodes(status as "available" | "redeemed" | undefined);
+  const codes = rows.map(toCodeDetail);
+  return { ok: true, data: { codes, total: codes.length } };
+}
+
+/** Revoke (delete) an available code. */
+export function deleteCode(
+  code: string,
+): ServiceResult<{ status: "revoked" }> {
+  const result = revokeCode(code);
+  if (!result.ok) {
+    if (result.reason === "not_found") {
+      return { ok: false, status: 404, code: "not_found", message: "Code not found" };
+    }
+    return { ok: false, status: 409, code: "code_redeemed", message: "Cannot revoke a redeemed code" };
+  }
+  return { ok: true, data: { status: "revoked" } };
 }
