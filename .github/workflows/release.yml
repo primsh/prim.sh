@@ -7,10 +7,72 @@ on:
 
 permissions:
   contents: write
+  id-token: write
 
 jobs:
-  publish:
-    name: Build and publish CLI bundle
+  ci-gate:
+    name: CI gate
+    runs-on: ubuntu-latest
+    outputs:
+      sha: ${{ steps.resolve.outputs.sha }}
+      version: ${{ steps.resolve.outputs.version }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Resolve tag to commit
+        id: resolve
+        run: |
+          # Dereference annotated tags to their commit
+          SHA=$(git rev-parse "${GITHUB_REF_NAME}^{commit}" 2>/dev/null || echo "${GITHUB_SHA}")
+          VERSION="${GITHUB_REF_NAME#v}"
+          echo "sha=${SHA}" >> "$GITHUB_OUTPUT"
+          echo "version=${VERSION}" >> "$GITHUB_OUTPUT"
+          echo "${GITHUB_REF_NAME} → ${SHA} (version ${VERSION})"
+
+      - name: Verify CI checks passed
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          SHA="${{ steps.resolve.outputs.sha }}"
+          echo "Checking CI status for ${SHA}..."
+
+          CHECKS=$(gh api "repos/${{ github.repository }}/commits/${SHA}/check-runs" \
+            --paginate --jq '.check_runs[] | "\(.name)\t\(.status)\t\(.conclusion)"')
+
+          REQUIRED=("Lint" "Typecheck" "Test" "Gen check" "Audit" "Safeguards" "Secret scan")
+          FAILED=0
+
+          for check in "${REQUIRED[@]}"; do
+            line=$(echo "$CHECKS" | awk -F'\t' -v name="$check" '$1 == name' | head -1)
+            if [[ -z "$line" ]]; then
+              echo "::error::Required check '${check}' not found on ${SHA}"
+              FAILED=1
+            else
+              status=$(echo "$line" | cut -f2)
+              conclusion=$(echo "$line" | cut -f3)
+              if [[ "$status" != "completed" ]]; then
+                echo "::error::Check '${check}' is still ${status}"
+                FAILED=1
+              elif [[ "$conclusion" != "success" ]]; then
+                echo "::error::Check '${check}' ${conclusion}"
+                FAILED=1
+              else
+                echo "✓ ${check}"
+              fi
+            fi
+          done
+
+          if [[ $FAILED -ne 0 ]]; then
+            echo ""
+            echo "::error::CI must pass before releasing. Ensure the commit is on main and CI has completed."
+            exit 1
+          fi
+          echo "All required checks passed."
+
+  release:
+    name: Build and release
+    needs: ci-gate
     runs-on: ubuntu-latest
 
     steps:
@@ -19,6 +81,11 @@ jobs:
       - uses: oven-sh/setup-bun@v2
         with:
           bun-version: "1.3.8"
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          registry-url: https://registry.npmjs.org
 
       - uses: pnpm/action-setup@v4
 
@@ -34,13 +101,29 @@ jobs:
       - name: Build MCP package
         run: pnpm --filter @primsh/mcp build
 
+      - name: Sync version from tag
+        run: |
+          VERSION="${{ needs.ci-gate.outputs.version }}"
+          cd packages/mcp
+          npm version "${VERSION}" --no-git-tag-version --allow-same-version
+          echo "Set @primsh/mcp version to ${VERSION}"
+
       - name: Publish @primsh/mcp to npm
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
         run: |
-          echo "//registry.npmjs.org/:_authToken=\${NODE_AUTH_TOKEN}" > ~/.npmrc
           cd packages/mcp
-          npm publish --access public || echo "Publish skipped (version may already exist)"
+          OUTPUT=$(npm publish --access public --provenance 2>&1) && {
+            echo "Published @primsh/mcp@${{ needs.ci-gate.outputs.version }}"
+          } || {
+            if echo "$OUTPUT" | grep -qE "EPUBLISHCONFLICT|You cannot publish over the previously published versions|Cannot publish over"; then
+              echo "::notice::@primsh/mcp@${{ needs.ci-gate.outputs.version }} already published, skipping"
+            else
+              echo "$OUTPUT"
+              echo "::error::npm publish failed"
+              exit 1
+            fi
+          }
 
       - name: Bundle CLI
         run: |
