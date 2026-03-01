@@ -1,5 +1,6 @@
 id: create
 name: create.sh
+status: hold
 endpoint: create.prim.sh
 nounStyled: "The agent-native scaffolder."
 tagline: "Zero boilerplate. One spec. Infinite prims."

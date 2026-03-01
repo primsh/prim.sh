@@ -1,5 +1,6 @@
 id: domain
 name: domain.sh
+status: hold
 endpoint: domain.prim.sh
 type: domains
 category: identity
