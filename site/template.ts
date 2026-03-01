@@ -568,7 +568,7 @@ ${inlineCSS(cfg)}
   <h1 class="logo"><span>${esc(namePart)}</span>.${ext ?? "sh"}</h1>${cfg.nounStyled ? `\n  <div class="tagline" style="color:var(--muted);font-size:1.1rem;margin-bottom:0.5rem">${esc(cfg.nounStyled)}</div>` : ""}
   <div class="tagline">${esc(cfg.tagline)}</div>
   <div class="badges">
-    <div class="badge">Part of <strong>${BRAND.name}</strong></div>
+    <a href="/${primId}/llms.txt" class="badge" style="text-decoration:none;border-color:var(--accent);color:var(--accent)">llms.txt</a>
     <span class="badge ${cls}">${label}</span>
   </div>
 </div>
@@ -747,7 +747,7 @@ export function render(cfg: PrimConfig): string {
   // Hero badges
   const badgesHtml = [
     ...(cfg.hero_badges ?? []).map(renderBadgeStr),
-    `<div class="badge">Part of <strong>${BRAND.name}</strong></div>`,
+    `<a href="/${cfg.id}/llms.txt" class="badge" style="text-decoration:none;border-color:var(--accent);color:var(--accent)">llms.txt</a>`,
     `<span class="badge ${cls}">${label}</span>`,
   ].join("\n    ");
 
