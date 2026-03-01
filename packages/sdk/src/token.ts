@@ -176,8 +176,10 @@ export type ListTokensResponse = Record<string, unknown>;
 
 // ── Client ─────────────────────────────────────────────────────────────────
 
-export function createTokenClient(primFetch: (input: RequestInfo | URL, init?: RequestInit) => Promise<Response>) {
-  const baseUrl = "https://token.prim.sh";
+export function createTokenClient(
+  primFetch: (input: RequestInfo | URL, init?: RequestInit) => Promise<Response>,
+  baseUrl = "https://token.prim.sh",
+) {
   return {
     async deployToken(req: CreateTokenRequest): Promise<TokenResponse> {
       const url = `${baseUrl}/v1/tokens`;
@@ -186,16 +188,43 @@ export function createTokenClient(primFetch: (input: RequestInfo | URL, init?: R
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(req),
       });
+      if (!res.ok) {
+        let msg = `HTTP ${res.status}`;
+        let code = "unknown";
+        try {
+          const body = await res.json() as { error?: { code: string; message: string } };
+          if (body.error) { msg = body.error.message; code = body.error.code; }
+        } catch {}
+        throw new Error(`${msg} (${code})`);
+      }
       return res.json() as Promise<TokenResponse>;
     },
     async listTokens(): Promise<ListTokensResponse> {
       const url = `${baseUrl}/v1/tokens`;
       const res = await primFetch(url);
+      if (!res.ok) {
+        let msg = `HTTP ${res.status}`;
+        let code = "unknown";
+        try {
+          const body = await res.json() as { error?: { code: string; message: string } };
+          if (body.error) { msg = body.error.message; code = body.error.code; }
+        } catch {}
+        throw new Error(`${msg} (${code})`);
+      }
       return res.json() as Promise<ListTokensResponse>;
     },
     async getToken(params: GetTokenParams): Promise<TokenResponse> {
       const url = `${baseUrl}/v1/tokens/${encodeURIComponent(params.id)}`;
       const res = await primFetch(url);
+      if (!res.ok) {
+        let msg = `HTTP ${res.status}`;
+        let code = "unknown";
+        try {
+          const body = await res.json() as { error?: { code: string; message: string } };
+          if (body.error) { msg = body.error.message; code = body.error.code; }
+        } catch {}
+        throw new Error(`${msg} (${code})`);
+      }
       return res.json() as Promise<TokenResponse>;
     },
     async mintTokens(params: MintTokensParams, req: MintRequest): Promise<MintResponse> {
@@ -205,11 +234,29 @@ export function createTokenClient(primFetch: (input: RequestInfo | URL, init?: R
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(req),
       });
+      if (!res.ok) {
+        let msg = `HTTP ${res.status}`;
+        let code = "unknown";
+        try {
+          const body = await res.json() as { error?: { code: string; message: string } };
+          if (body.error) { msg = body.error.message; code = body.error.code; }
+        } catch {}
+        throw new Error(`${msg} (${code})`);
+      }
       return res.json() as Promise<MintResponse>;
     },
     async getTokenSupply(params: GetTokenSupplyParams): Promise<SupplyResponse> {
       const url = `${baseUrl}/v1/tokens/${encodeURIComponent(params.id)}/supply`;
       const res = await primFetch(url);
+      if (!res.ok) {
+        let msg = `HTTP ${res.status}`;
+        let code = "unknown";
+        try {
+          const body = await res.json() as { error?: { code: string; message: string } };
+          if (body.error) { msg = body.error.message; code = body.error.code; }
+        } catch {}
+        throw new Error(`${msg} (${code})`);
+      }
       return res.json() as Promise<SupplyResponse>;
     },
     async createPool(params: CreatePoolParams, req: CreatePoolRequest): Promise<PoolResponse> {
@@ -219,11 +266,29 @@ export function createTokenClient(primFetch: (input: RequestInfo | URL, init?: R
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(req),
       });
+      if (!res.ok) {
+        let msg = `HTTP ${res.status}`;
+        let code = "unknown";
+        try {
+          const body = await res.json() as { error?: { code: string; message: string } };
+          if (body.error) { msg = body.error.message; code = body.error.code; }
+        } catch {}
+        throw new Error(`${msg} (${code})`);
+      }
       return res.json() as Promise<PoolResponse>;
     },
     async getPool(params: GetPoolParams): Promise<PoolResponse> {
       const url = `${baseUrl}/v1/tokens/${encodeURIComponent(params.id)}/pool`;
       const res = await primFetch(url);
+      if (!res.ok) {
+        let msg = `HTTP ${res.status}`;
+        let code = "unknown";
+        try {
+          const body = await res.json() as { error?: { code: string; message: string } };
+          if (body.error) { msg = body.error.message; code = body.error.code; }
+        } catch {}
+        throw new Error(`${msg} (${code})`);
+      }
       return res.json() as Promise<PoolResponse>;
     },
     async getLiquidityParams(params: GetLiquidityParamsParams): Promise<LiquidityParamsResponse> {
@@ -233,6 +298,15 @@ export function createTokenClient(primFetch: (input: RequestInfo | URL, init?: R
       const query = qs.toString();
       const url = `${baseUrl}/v1/tokens/${encodeURIComponent(params.id)}/pool/liquidity-params${query ? `?${query}` : ""}`;
       const res = await primFetch(url);
+      if (!res.ok) {
+        let msg = `HTTP ${res.status}`;
+        let code = "unknown";
+        try {
+          const body = await res.json() as { error?: { code: string; message: string } };
+          if (body.error) { msg = body.error.message; code = body.error.code; }
+        } catch {}
+        throw new Error(`${msg} (${code})`);
+      }
       return res.json() as Promise<LiquidityParamsResponse>;
     },
   };

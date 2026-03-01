@@ -197,8 +197,10 @@ export type DeleteSshKeyResponse = Record<string, unknown>;
 
 // ── Client ─────────────────────────────────────────────────────────────────
 
-export function createSpawnClient(primFetch: (input: RequestInfo | URL, init?: RequestInit) => Promise<Response>) {
-  const baseUrl = "https://spawn.prim.sh";
+export function createSpawnClient(
+  primFetch: (input: RequestInfo | URL, init?: RequestInit) => Promise<Response>,
+  baseUrl = "https://spawn.prim.sh",
+) {
   return {
     async createServer(req: CreateServerRequest): Promise<CreateServerResponse> {
       const url = `${baseUrl}/v1/servers`;
@@ -207,6 +209,15 @@ export function createSpawnClient(primFetch: (input: RequestInfo | URL, init?: R
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(req),
       });
+      if (!res.ok) {
+        let msg = `HTTP ${res.status}`;
+        let code = "unknown";
+        try {
+          const body = await res.json() as { error?: { code: string; message: string } };
+          if (body.error) { msg = body.error.message; code = body.error.code; }
+        } catch {}
+        throw new Error(`${msg} (${code})`);
+      }
       return res.json() as Promise<CreateServerResponse>;
     },
     async listServers(params: ListServersParams): Promise<ListServersResponse> {
@@ -216,11 +227,29 @@ export function createSpawnClient(primFetch: (input: RequestInfo | URL, init?: R
       const query = qs.toString();
       const url = `${baseUrl}/v1/servers${query ? `?${query}` : ""}`;
       const res = await primFetch(url);
+      if (!res.ok) {
+        let msg = `HTTP ${res.status}`;
+        let code = "unknown";
+        try {
+          const body = await res.json() as { error?: { code: string; message: string } };
+          if (body.error) { msg = body.error.message; code = body.error.code; }
+        } catch {}
+        throw new Error(`${msg} (${code})`);
+      }
       return res.json() as Promise<ListServersResponse>;
     },
     async getServer(params: GetServerParams): Promise<ServerResponse> {
       const url = `${baseUrl}/v1/servers/${encodeURIComponent(params.id)}`;
       const res = await primFetch(url);
+      if (!res.ok) {
+        let msg = `HTTP ${res.status}`;
+        let code = "unknown";
+        try {
+          const body = await res.json() as { error?: { code: string; message: string } };
+          if (body.error) { msg = body.error.message; code = body.error.code; }
+        } catch {}
+        throw new Error(`${msg} (${code})`);
+      }
       return res.json() as Promise<ServerResponse>;
     },
     async deleteServer(params: DeleteServerParams): Promise<DeleteServerResponse> {
@@ -228,6 +257,15 @@ export function createSpawnClient(primFetch: (input: RequestInfo | URL, init?: R
       const res = await primFetch(url, {
         method: "DELETE",
       });
+      if (!res.ok) {
+        let msg = `HTTP ${res.status}`;
+        let code = "unknown";
+        try {
+          const body = await res.json() as { error?: { code: string; message: string } };
+          if (body.error) { msg = body.error.message; code = body.error.code; }
+        } catch {}
+        throw new Error(`${msg} (${code})`);
+      }
       return res.json() as Promise<DeleteServerResponse>;
     },
     async startServer(params: StartServerParams): Promise<ActionOnlyResponse> {
@@ -235,6 +273,15 @@ export function createSpawnClient(primFetch: (input: RequestInfo | URL, init?: R
       const res = await primFetch(url, {
         method: "POST",
       });
+      if (!res.ok) {
+        let msg = `HTTP ${res.status}`;
+        let code = "unknown";
+        try {
+          const body = await res.json() as { error?: { code: string; message: string } };
+          if (body.error) { msg = body.error.message; code = body.error.code; }
+        } catch {}
+        throw new Error(`${msg} (${code})`);
+      }
       return res.json() as Promise<ActionOnlyResponse>;
     },
     async stopServer(params: StopServerParams): Promise<ActionOnlyResponse> {
@@ -242,6 +289,15 @@ export function createSpawnClient(primFetch: (input: RequestInfo | URL, init?: R
       const res = await primFetch(url, {
         method: "POST",
       });
+      if (!res.ok) {
+        let msg = `HTTP ${res.status}`;
+        let code = "unknown";
+        try {
+          const body = await res.json() as { error?: { code: string; message: string } };
+          if (body.error) { msg = body.error.message; code = body.error.code; }
+        } catch {}
+        throw new Error(`${msg} (${code})`);
+      }
       return res.json() as Promise<ActionOnlyResponse>;
     },
     async rebootServer(params: RebootServerParams): Promise<ActionOnlyResponse> {
@@ -249,6 +305,15 @@ export function createSpawnClient(primFetch: (input: RequestInfo | URL, init?: R
       const res = await primFetch(url, {
         method: "POST",
       });
+      if (!res.ok) {
+        let msg = `HTTP ${res.status}`;
+        let code = "unknown";
+        try {
+          const body = await res.json() as { error?: { code: string; message: string } };
+          if (body.error) { msg = body.error.message; code = body.error.code; }
+        } catch {}
+        throw new Error(`${msg} (${code})`);
+      }
       return res.json() as Promise<ActionOnlyResponse>;
     },
     async resizeServer(params: ResizeServerParams, req: ResizeRequest): Promise<ResizeResponse> {
@@ -258,6 +323,15 @@ export function createSpawnClient(primFetch: (input: RequestInfo | URL, init?: R
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(req),
       });
+      if (!res.ok) {
+        let msg = `HTTP ${res.status}`;
+        let code = "unknown";
+        try {
+          const body = await res.json() as { error?: { code: string; message: string } };
+          if (body.error) { msg = body.error.message; code = body.error.code; }
+        } catch {}
+        throw new Error(`${msg} (${code})`);
+      }
       return res.json() as Promise<ResizeResponse>;
     },
     async rebuildServer(params: RebuildServerParams, req: RebuildRequest): Promise<RebuildResponse> {
@@ -267,6 +341,15 @@ export function createSpawnClient(primFetch: (input: RequestInfo | URL, init?: R
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(req),
       });
+      if (!res.ok) {
+        let msg = `HTTP ${res.status}`;
+        let code = "unknown";
+        try {
+          const body = await res.json() as { error?: { code: string; message: string } };
+          if (body.error) { msg = body.error.message; code = body.error.code; }
+        } catch {}
+        throw new Error(`${msg} (${code})`);
+      }
       return res.json() as Promise<RebuildResponse>;
     },
     async createSshKey(req: CreateSshKeyRequest): Promise<SshKeyResponse> {
@@ -276,11 +359,29 @@ export function createSpawnClient(primFetch: (input: RequestInfo | URL, init?: R
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(req),
       });
+      if (!res.ok) {
+        let msg = `HTTP ${res.status}`;
+        let code = "unknown";
+        try {
+          const body = await res.json() as { error?: { code: string; message: string } };
+          if (body.error) { msg = body.error.message; code = body.error.code; }
+        } catch {}
+        throw new Error(`${msg} (${code})`);
+      }
       return res.json() as Promise<SshKeyResponse>;
     },
     async listSshKeys(): Promise<ListSshKeysResponse> {
       const url = `${baseUrl}/v1/ssh-keys`;
       const res = await primFetch(url);
+      if (!res.ok) {
+        let msg = `HTTP ${res.status}`;
+        let code = "unknown";
+        try {
+          const body = await res.json() as { error?: { code: string; message: string } };
+          if (body.error) { msg = body.error.message; code = body.error.code; }
+        } catch {}
+        throw new Error(`${msg} (${code})`);
+      }
       return res.json() as Promise<ListSshKeysResponse>;
     },
     async deleteSshKey(params: DeleteSshKeyParams): Promise<DeleteSshKeyResponse> {
@@ -288,6 +389,15 @@ export function createSpawnClient(primFetch: (input: RequestInfo | URL, init?: R
       const res = await primFetch(url, {
         method: "DELETE",
       });
+      if (!res.ok) {
+        let msg = `HTTP ${res.status}`;
+        let code = "unknown";
+        try {
+          const body = await res.json() as { error?: { code: string; message: string } };
+          if (body.error) { msg = body.error.message; code = body.error.code; }
+        } catch {}
+        throw new Error(`${msg} (${code})`);
+      }
       return res.json() as Promise<DeleteSshKeyResponse>;
     },
   };

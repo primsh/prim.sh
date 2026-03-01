@@ -149,8 +149,10 @@ export type ListObjectsResponse = Record<string, unknown>;
 
 // ── Client ─────────────────────────────────────────────────────────────────
 
-export function createStoreClient(primFetch: (input: RequestInfo | URL, init?: RequestInit) => Promise<Response>) {
-  const baseUrl = "https://store.prim.sh";
+export function createStoreClient(
+  primFetch: (input: RequestInfo | URL, init?: RequestInit) => Promise<Response>,
+  baseUrl = "https://store.prim.sh",
+) {
   return {
     async createBucket(req: CreateBucketRequest): Promise<CreateBucketResponse> {
       const url = `${baseUrl}/v1/buckets`;
@@ -159,6 +161,15 @@ export function createStoreClient(primFetch: (input: RequestInfo | URL, init?: R
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(req),
       });
+      if (!res.ok) {
+        let msg = `HTTP ${res.status}`;
+        let code = "unknown";
+        try {
+          const body = await res.json() as { error?: { code: string; message: string } };
+          if (body.error) { msg = body.error.message; code = body.error.code; }
+        } catch {}
+        throw new Error(`${msg} (${code})`);
+      }
       return res.json() as Promise<CreateBucketResponse>;
     },
     async listBuckets(params: ListBucketsParams): Promise<ListBucketsResponse> {
@@ -168,11 +179,29 @@ export function createStoreClient(primFetch: (input: RequestInfo | URL, init?: R
       const query = qs.toString();
       const url = `${baseUrl}/v1/buckets${query ? `?${query}` : ""}`;
       const res = await primFetch(url);
+      if (!res.ok) {
+        let msg = `HTTP ${res.status}`;
+        let code = "unknown";
+        try {
+          const body = await res.json() as { error?: { code: string; message: string } };
+          if (body.error) { msg = body.error.message; code = body.error.code; }
+        } catch {}
+        throw new Error(`${msg} (${code})`);
+      }
       return res.json() as Promise<ListBucketsResponse>;
     },
     async getBucket(params: GetBucketParams): Promise<BucketResponse> {
       const url = `${baseUrl}/v1/buckets/${encodeURIComponent(params.id)}`;
       const res = await primFetch(url);
+      if (!res.ok) {
+        let msg = `HTTP ${res.status}`;
+        let code = "unknown";
+        try {
+          const body = await res.json() as { error?: { code: string; message: string } };
+          if (body.error) { msg = body.error.message; code = body.error.code; }
+        } catch {}
+        throw new Error(`${msg} (${code})`);
+      }
       return res.json() as Promise<BucketResponse>;
     },
     async deleteBucket(params: DeleteBucketParams): Promise<DeleteBucketResponse> {
@@ -180,6 +209,15 @@ export function createStoreClient(primFetch: (input: RequestInfo | URL, init?: R
       const res = await primFetch(url, {
         method: "DELETE",
       });
+      if (!res.ok) {
+        let msg = `HTTP ${res.status}`;
+        let code = "unknown";
+        try {
+          const body = await res.json() as { error?: { code: string; message: string } };
+          if (body.error) { msg = body.error.message; code = body.error.code; }
+        } catch {}
+        throw new Error(`${msg} (${code})`);
+      }
       return res.json() as Promise<DeleteBucketResponse>;
     },
     async putObject(params: PutObjectParams): Promise<PutObjectResponse> {
@@ -187,11 +225,29 @@ export function createStoreClient(primFetch: (input: RequestInfo | URL, init?: R
       const res = await primFetch(url, {
         method: "PUT",
       });
+      if (!res.ok) {
+        let msg = `HTTP ${res.status}`;
+        let code = "unknown";
+        try {
+          const body = await res.json() as { error?: { code: string; message: string } };
+          if (body.error) { msg = body.error.message; code = body.error.code; }
+        } catch {}
+        throw new Error(`${msg} (${code})`);
+      }
       return res.json() as Promise<PutObjectResponse>;
     },
     async getObject(params: GetObjectParams): Promise<GetObjectResponse> {
       const url = `${baseUrl}/v1/buckets/${encodeURIComponent(params.id)}/objects/${encodeURIComponent(params.key)}`;
       const res = await primFetch(url);
+      if (!res.ok) {
+        let msg = `HTTP ${res.status}`;
+        let code = "unknown";
+        try {
+          const body = await res.json() as { error?: { code: string; message: string } };
+          if (body.error) { msg = body.error.message; code = body.error.code; }
+        } catch {}
+        throw new Error(`${msg} (${code})`);
+      }
       return res.json() as Promise<GetObjectResponse>;
     },
     async deleteObject(params: DeleteObjectParams): Promise<DeleteObjectResponse> {
@@ -199,6 +255,15 @@ export function createStoreClient(primFetch: (input: RequestInfo | URL, init?: R
       const res = await primFetch(url, {
         method: "DELETE",
       });
+      if (!res.ok) {
+        let msg = `HTTP ${res.status}`;
+        let code = "unknown";
+        try {
+          const body = await res.json() as { error?: { code: string; message: string } };
+          if (body.error) { msg = body.error.message; code = body.error.code; }
+        } catch {}
+        throw new Error(`${msg} (${code})`);
+      }
       return res.json() as Promise<DeleteObjectResponse>;
     },
     async listObjects(params: ListObjectsParams): Promise<ListObjectsResponse> {
@@ -209,11 +274,29 @@ export function createStoreClient(primFetch: (input: RequestInfo | URL, init?: R
       const query = qs.toString();
       const url = `${baseUrl}/v1/buckets/${encodeURIComponent(params.id)}/objects${query ? `?${query}` : ""}`;
       const res = await primFetch(url);
+      if (!res.ok) {
+        let msg = `HTTP ${res.status}`;
+        let code = "unknown";
+        try {
+          const body = await res.json() as { error?: { code: string; message: string } };
+          if (body.error) { msg = body.error.message; code = body.error.code; }
+        } catch {}
+        throw new Error(`${msg} (${code})`);
+      }
       return res.json() as Promise<ListObjectsResponse>;
     },
     async getQuota(params: GetQuotaParams): Promise<QuotaResponse> {
       const url = `${baseUrl}/v1/buckets/${encodeURIComponent(params.id)}/quota`;
       const res = await primFetch(url);
+      if (!res.ok) {
+        let msg = `HTTP ${res.status}`;
+        let code = "unknown";
+        try {
+          const body = await res.json() as { error?: { code: string; message: string } };
+          if (body.error) { msg = body.error.message; code = body.error.code; }
+        } catch {}
+        throw new Error(`${msg} (${code})`);
+      }
       return res.json() as Promise<QuotaResponse>;
     },
     async setQuota(params: SetQuotaParams, req: SetQuotaRequest): Promise<QuotaResponse> {
@@ -223,6 +306,15 @@ export function createStoreClient(primFetch: (input: RequestInfo | URL, init?: R
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(req),
       });
+      if (!res.ok) {
+        let msg = `HTTP ${res.status}`;
+        let code = "unknown";
+        try {
+          const body = await res.json() as { error?: { code: string; message: string } };
+          if (body.error) { msg = body.error.message; code = body.error.code; }
+        } catch {}
+        throw new Error(`${msg} (${code})`);
+      }
       return res.json() as Promise<QuotaResponse>;
     },
     async reconcileQuota(params: ReconcileQuotaParams): Promise<ReconcileResponse> {
@@ -230,6 +322,15 @@ export function createStoreClient(primFetch: (input: RequestInfo | URL, init?: R
       const res = await primFetch(url, {
         method: "POST",
       });
+      if (!res.ok) {
+        let msg = `HTTP ${res.status}`;
+        let code = "unknown";
+        try {
+          const body = await res.json() as { error?: { code: string; message: string } };
+          if (body.error) { msg = body.error.message; code = body.error.code; }
+        } catch {}
+        throw new Error(`${msg} (${code})`);
+      }
       return res.json() as Promise<ReconcileResponse>;
     },
   };

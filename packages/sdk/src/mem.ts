@@ -153,8 +153,10 @@ export type DeleteCacheResponse = Record<string, unknown>;
 
 // ── Client ─────────────────────────────────────────────────────────────────
 
-export function createMemClient(primFetch: (input: RequestInfo | URL, init?: RequestInit) => Promise<Response>) {
-  const baseUrl = "https://mem.prim.sh";
+export function createMemClient(
+  primFetch: (input: RequestInfo | URL, init?: RequestInit) => Promise<Response>,
+  baseUrl = "https://mem.prim.sh",
+) {
   return {
     async createCollection(req: CreateCollectionRequest): Promise<CollectionResponse> {
       const url = `${baseUrl}/v1/collections`;
@@ -163,6 +165,15 @@ export function createMemClient(primFetch: (input: RequestInfo | URL, init?: Req
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(req),
       });
+      if (!res.ok) {
+        let msg = `HTTP ${res.status}`;
+        let code = "unknown";
+        try {
+          const body = await res.json() as { error?: { code: string; message: string } };
+          if (body.error) { msg = body.error.message; code = body.error.code; }
+        } catch {}
+        throw new Error(`${msg} (${code})`);
+      }
       return res.json() as Promise<CollectionResponse>;
     },
     async listCollections(params: ListCollectionsParams): Promise<ListCollectionsResponse> {
@@ -172,11 +183,29 @@ export function createMemClient(primFetch: (input: RequestInfo | URL, init?: Req
       const query = qs.toString();
       const url = `${baseUrl}/v1/collections${query ? `?${query}` : ""}`;
       const res = await primFetch(url);
+      if (!res.ok) {
+        let msg = `HTTP ${res.status}`;
+        let code = "unknown";
+        try {
+          const body = await res.json() as { error?: { code: string; message: string } };
+          if (body.error) { msg = body.error.message; code = body.error.code; }
+        } catch {}
+        throw new Error(`${msg} (${code})`);
+      }
       return res.json() as Promise<ListCollectionsResponse>;
     },
     async getCollection(params: GetCollectionParams): Promise<CollectionResponse> {
       const url = `${baseUrl}/v1/collections/${encodeURIComponent(params.id)}`;
       const res = await primFetch(url);
+      if (!res.ok) {
+        let msg = `HTTP ${res.status}`;
+        let code = "unknown";
+        try {
+          const body = await res.json() as { error?: { code: string; message: string } };
+          if (body.error) { msg = body.error.message; code = body.error.code; }
+        } catch {}
+        throw new Error(`${msg} (${code})`);
+      }
       return res.json() as Promise<CollectionResponse>;
     },
     async deleteCollection(params: DeleteCollectionParams): Promise<DeleteCollectionResponse> {
@@ -184,6 +213,15 @@ export function createMemClient(primFetch: (input: RequestInfo | URL, init?: Req
       const res = await primFetch(url, {
         method: "DELETE",
       });
+      if (!res.ok) {
+        let msg = `HTTP ${res.status}`;
+        let code = "unknown";
+        try {
+          const body = await res.json() as { error?: { code: string; message: string } };
+          if (body.error) { msg = body.error.message; code = body.error.code; }
+        } catch {}
+        throw new Error(`${msg} (${code})`);
+      }
       return res.json() as Promise<DeleteCollectionResponse>;
     },
     async upsertDocuments(params: UpsertDocumentsParams, req: UpsertRequest): Promise<UpsertResponse> {
@@ -193,6 +231,15 @@ export function createMemClient(primFetch: (input: RequestInfo | URL, init?: Req
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(req),
       });
+      if (!res.ok) {
+        let msg = `HTTP ${res.status}`;
+        let code = "unknown";
+        try {
+          const body = await res.json() as { error?: { code: string; message: string } };
+          if (body.error) { msg = body.error.message; code = body.error.code; }
+        } catch {}
+        throw new Error(`${msg} (${code})`);
+      }
       return res.json() as Promise<UpsertResponse>;
     },
     async queryCollection(params: QueryCollectionParams, req: QueryRequest): Promise<QueryResponse> {
@@ -202,6 +249,15 @@ export function createMemClient(primFetch: (input: RequestInfo | URL, init?: Req
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(req),
       });
+      if (!res.ok) {
+        let msg = `HTTP ${res.status}`;
+        let code = "unknown";
+        try {
+          const body = await res.json() as { error?: { code: string; message: string } };
+          if (body.error) { msg = body.error.message; code = body.error.code; }
+        } catch {}
+        throw new Error(`${msg} (${code})`);
+      }
       return res.json() as Promise<QueryResponse>;
     },
     async setCache(params: SetCacheParams, req: SetCacheRequest): Promise<SetCacheResponse> {
@@ -211,11 +267,29 @@ export function createMemClient(primFetch: (input: RequestInfo | URL, init?: Req
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(req),
       });
+      if (!res.ok) {
+        let msg = `HTTP ${res.status}`;
+        let code = "unknown";
+        try {
+          const body = await res.json() as { error?: { code: string; message: string } };
+          if (body.error) { msg = body.error.message; code = body.error.code; }
+        } catch {}
+        throw new Error(`${msg} (${code})`);
+      }
       return res.json() as Promise<SetCacheResponse>;
     },
     async getCache(params: GetCacheParams): Promise<GetCacheResponse> {
       const url = `${baseUrl}/v1/cache/${encodeURIComponent(params.namespace)}/${encodeURIComponent(params.key)}`;
       const res = await primFetch(url);
+      if (!res.ok) {
+        let msg = `HTTP ${res.status}`;
+        let code = "unknown";
+        try {
+          const body = await res.json() as { error?: { code: string; message: string } };
+          if (body.error) { msg = body.error.message; code = body.error.code; }
+        } catch {}
+        throw new Error(`${msg} (${code})`);
+      }
       return res.json() as Promise<GetCacheResponse>;
     },
     async deleteCache(params: DeleteCacheParams): Promise<DeleteCacheResponse> {
@@ -223,6 +297,15 @@ export function createMemClient(primFetch: (input: RequestInfo | URL, init?: Req
       const res = await primFetch(url, {
         method: "DELETE",
       });
+      if (!res.ok) {
+        let msg = `HTTP ${res.status}`;
+        let code = "unknown";
+        try {
+          const body = await res.json() as { error?: { code: string; message: string } };
+          if (body.error) { msg = body.error.message; code = body.error.code; }
+        } catch {}
+        throw new Error(`${msg} (${code})`);
+      }
       return res.json() as Promise<DeleteCacheResponse>;
     },
   };

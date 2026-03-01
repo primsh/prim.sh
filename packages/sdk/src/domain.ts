@@ -371,8 +371,10 @@ export type DeleteRecordResponse = Record<string, unknown>;
 
 // ── Client ─────────────────────────────────────────────────────────────────
 
-export function createDomainClient(primFetch: (input: RequestInfo | URL, init?: RequestInit) => Promise<Response>) {
-  const baseUrl = "https://domain.prim.sh";
+export function createDomainClient(
+  primFetch: (input: RequestInfo | URL, init?: RequestInit) => Promise<Response>,
+  baseUrl = "https://domain.prim.sh",
+) {
   return {
     async searchDomains(params: SearchDomainsParams): Promise<DomainSearchResponse> {
       const qs = new URLSearchParams();
@@ -381,6 +383,15 @@ export function createDomainClient(primFetch: (input: RequestInfo | URL, init?: 
       const query = qs.toString();
       const url = `${baseUrl}/v1/domains/search${query ? `?${query}` : ""}`;
       const res = await primFetch(url);
+      if (!res.ok) {
+        let msg = `HTTP ${res.status}`;
+        let code = "unknown";
+        try {
+          const body = await res.json() as { error?: { code: string; message: string } };
+          if (body.error) { msg = body.error.message; code = body.error.code; }
+        } catch {}
+        throw new Error(`${msg} (${code})`);
+      }
       return res.json() as Promise<DomainSearchResponse>;
     },
     async quoteDomain(req: QuoteRequest): Promise<QuoteResponse> {
@@ -390,11 +401,29 @@ export function createDomainClient(primFetch: (input: RequestInfo | URL, init?: 
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(req),
       });
+      if (!res.ok) {
+        let msg = `HTTP ${res.status}`;
+        let code = "unknown";
+        try {
+          const body = await res.json() as { error?: { code: string; message: string } };
+          if (body.error) { msg = body.error.message; code = body.error.code; }
+        } catch {}
+        throw new Error(`${msg} (${code})`);
+      }
       return res.json() as Promise<QuoteResponse>;
     },
     async getDomainStatus(params: GetDomainStatusParams): Promise<RegistrationStatusResponse> {
       const url = `${baseUrl}/v1/domains/${encodeURIComponent(params.domain)}/status`;
       const res = await primFetch(url);
+      if (!res.ok) {
+        let msg = `HTTP ${res.status}`;
+        let code = "unknown";
+        try {
+          const body = await res.json() as { error?: { code: string; message: string } };
+          if (body.error) { msg = body.error.message; code = body.error.code; }
+        } catch {}
+        throw new Error(`${msg} (${code})`);
+      }
       return res.json() as Promise<RegistrationStatusResponse>;
     },
     async createZone(req: CreateZoneRequest): Promise<CreateZoneResponse> {
@@ -404,6 +433,15 @@ export function createDomainClient(primFetch: (input: RequestInfo | URL, init?: 
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(req),
       });
+      if (!res.ok) {
+        let msg = `HTTP ${res.status}`;
+        let code = "unknown";
+        try {
+          const body = await res.json() as { error?: { code: string; message: string } };
+          if (body.error) { msg = body.error.message; code = body.error.code; }
+        } catch {}
+        throw new Error(`${msg} (${code})`);
+      }
       return res.json() as Promise<CreateZoneResponse>;
     },
     async listZones(params: ListZonesParams): Promise<ListZonesResponse> {
@@ -413,11 +451,29 @@ export function createDomainClient(primFetch: (input: RequestInfo | URL, init?: 
       const query = qs.toString();
       const url = `${baseUrl}/v1/zones${query ? `?${query}` : ""}`;
       const res = await primFetch(url);
+      if (!res.ok) {
+        let msg = `HTTP ${res.status}`;
+        let code = "unknown";
+        try {
+          const body = await res.json() as { error?: { code: string; message: string } };
+          if (body.error) { msg = body.error.message; code = body.error.code; }
+        } catch {}
+        throw new Error(`${msg} (${code})`);
+      }
       return res.json() as Promise<ListZonesResponse>;
     },
     async getZone(params: GetZoneParams): Promise<ZoneResponse> {
       const url = `${baseUrl}/v1/zones/${encodeURIComponent(params.id)}`;
       const res = await primFetch(url);
+      if (!res.ok) {
+        let msg = `HTTP ${res.status}`;
+        let code = "unknown";
+        try {
+          const body = await res.json() as { error?: { code: string; message: string } };
+          if (body.error) { msg = body.error.message; code = body.error.code; }
+        } catch {}
+        throw new Error(`${msg} (${code})`);
+      }
       return res.json() as Promise<ZoneResponse>;
     },
     async deleteZone(params: DeleteZoneParams): Promise<DeleteZoneResponse> {
@@ -425,6 +481,15 @@ export function createDomainClient(primFetch: (input: RequestInfo | URL, init?: 
       const res = await primFetch(url, {
         method: "DELETE",
       });
+      if (!res.ok) {
+        let msg = `HTTP ${res.status}`;
+        let code = "unknown";
+        try {
+          const body = await res.json() as { error?: { code: string; message: string } };
+          if (body.error) { msg = body.error.message; code = body.error.code; }
+        } catch {}
+        throw new Error(`${msg} (${code})`);
+      }
       return res.json() as Promise<DeleteZoneResponse>;
     },
     async activateZone(params: ActivateZoneParams): Promise<ActivateResponse> {
@@ -432,11 +497,29 @@ export function createDomainClient(primFetch: (input: RequestInfo | URL, init?: 
       const res = await primFetch(url, {
         method: "PUT",
       });
+      if (!res.ok) {
+        let msg = `HTTP ${res.status}`;
+        let code = "unknown";
+        try {
+          const body = await res.json() as { error?: { code: string; message: string } };
+          if (body.error) { msg = body.error.message; code = body.error.code; }
+        } catch {}
+        throw new Error(`${msg} (${code})`);
+      }
       return res.json() as Promise<ActivateResponse>;
     },
     async verifyZone(params: VerifyZoneParams): Promise<VerifyResponse> {
       const url = `${baseUrl}/v1/zones/${encodeURIComponent(params.zone_id)}/verify`;
       const res = await primFetch(url);
+      if (!res.ok) {
+        let msg = `HTTP ${res.status}`;
+        let code = "unknown";
+        try {
+          const body = await res.json() as { error?: { code: string; message: string } };
+          if (body.error) { msg = body.error.message; code = body.error.code; }
+        } catch {}
+        throw new Error(`${msg} (${code})`);
+      }
       return res.json() as Promise<VerifyResponse>;
     },
     async setupMail(params: SetupMailParams, req: MailSetupRequest): Promise<MailSetupResponse> {
@@ -446,6 +529,15 @@ export function createDomainClient(primFetch: (input: RequestInfo | URL, init?: 
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(req),
       });
+      if (!res.ok) {
+        let msg = `HTTP ${res.status}`;
+        let code = "unknown";
+        try {
+          const body = await res.json() as { error?: { code: string; message: string } };
+          if (body.error) { msg = body.error.message; code = body.error.code; }
+        } catch {}
+        throw new Error(`${msg} (${code})`);
+      }
       return res.json() as Promise<MailSetupResponse>;
     },
     async batchRecords(params: BatchRecordsParams, req: BatchRecordsRequest): Promise<BatchRecordsResponse> {
@@ -455,6 +547,15 @@ export function createDomainClient(primFetch: (input: RequestInfo | URL, init?: 
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(req),
       });
+      if (!res.ok) {
+        let msg = `HTTP ${res.status}`;
+        let code = "unknown";
+        try {
+          const body = await res.json() as { error?: { code: string; message: string } };
+          if (body.error) { msg = body.error.message; code = body.error.code; }
+        } catch {}
+        throw new Error(`${msg} (${code})`);
+      }
       return res.json() as Promise<BatchRecordsResponse>;
     },
     async createRecord(params: CreateRecordParams, req: CreateRecordRequest): Promise<RecordResponse> {
@@ -464,16 +565,43 @@ export function createDomainClient(primFetch: (input: RequestInfo | URL, init?: 
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(req),
       });
+      if (!res.ok) {
+        let msg = `HTTP ${res.status}`;
+        let code = "unknown";
+        try {
+          const body = await res.json() as { error?: { code: string; message: string } };
+          if (body.error) { msg = body.error.message; code = body.error.code; }
+        } catch {}
+        throw new Error(`${msg} (${code})`);
+      }
       return res.json() as Promise<RecordResponse>;
     },
     async listRecords(params: ListRecordsParams): Promise<ListRecordsResponse> {
       const url = `${baseUrl}/v1/zones/${encodeURIComponent(params.zone_id)}/records`;
       const res = await primFetch(url);
+      if (!res.ok) {
+        let msg = `HTTP ${res.status}`;
+        let code = "unknown";
+        try {
+          const body = await res.json() as { error?: { code: string; message: string } };
+          if (body.error) { msg = body.error.message; code = body.error.code; }
+        } catch {}
+        throw new Error(`${msg} (${code})`);
+      }
       return res.json() as Promise<ListRecordsResponse>;
     },
     async getRecord(params: GetRecordParams): Promise<RecordResponse> {
       const url = `${baseUrl}/v1/zones/${encodeURIComponent(params.zone_id)}/records/${encodeURIComponent(params.id)}`;
       const res = await primFetch(url);
+      if (!res.ok) {
+        let msg = `HTTP ${res.status}`;
+        let code = "unknown";
+        try {
+          const body = await res.json() as { error?: { code: string; message: string } };
+          if (body.error) { msg = body.error.message; code = body.error.code; }
+        } catch {}
+        throw new Error(`${msg} (${code})`);
+      }
       return res.json() as Promise<RecordResponse>;
     },
     async updateRecord(params: UpdateRecordParams, req: UpdateRecordRequest): Promise<RecordResponse> {
@@ -483,6 +611,15 @@ export function createDomainClient(primFetch: (input: RequestInfo | URL, init?: 
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(req),
       });
+      if (!res.ok) {
+        let msg = `HTTP ${res.status}`;
+        let code = "unknown";
+        try {
+          const body = await res.json() as { error?: { code: string; message: string } };
+          if (body.error) { msg = body.error.message; code = body.error.code; }
+        } catch {}
+        throw new Error(`${msg} (${code})`);
+      }
       return res.json() as Promise<RecordResponse>;
     },
     async deleteRecord(params: DeleteRecordParams): Promise<DeleteRecordResponse> {
@@ -490,6 +627,15 @@ export function createDomainClient(primFetch: (input: RequestInfo | URL, init?: 
       const res = await primFetch(url, {
         method: "DELETE",
       });
+      if (!res.ok) {
+        let msg = `HTTP ${res.status}`;
+        let code = "unknown";
+        try {
+          const body = await res.json() as { error?: { code: string; message: string } };
+          if (body.error) { msg = body.error.message; code = body.error.code; }
+        } catch {}
+        throw new Error(`${msg} (${code})`);
+      }
       return res.json() as Promise<DeleteRecordResponse>;
     },
   };

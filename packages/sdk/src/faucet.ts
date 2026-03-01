@@ -59,8 +59,10 @@ export interface GetFaucetStatusParams {
 
 // ── Client ─────────────────────────────────────────────────────────────────
 
-export function createFaucetClient(primFetch: (input: RequestInfo | URL, init?: RequestInit) => Promise<Response>) {
-  const baseUrl = "https://faucet.prim.sh";
+export function createFaucetClient(
+  primFetch: (input: RequestInfo | URL, init?: RequestInit) => Promise<Response>,
+  baseUrl = "https://faucet.prim.sh",
+) {
   return {
     async dripUsdc(req: DripRequest): Promise<DripResponse> {
       const url = `${baseUrl}/v1/faucet/usdc`;
@@ -69,6 +71,15 @@ export function createFaucetClient(primFetch: (input: RequestInfo | URL, init?: 
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(req),
       });
+      if (!res.ok) {
+        let msg = `HTTP ${res.status}`;
+        let code = "unknown";
+        try {
+          const body = await res.json() as { error?: { code: string; message: string } };
+          if (body.error) { msg = body.error.message; code = body.error.code; }
+        } catch {}
+        throw new Error(`${msg} (${code})`);
+      }
       return res.json() as Promise<DripResponse>;
     },
     async dripEth(req: DripRequest): Promise<DripResponse> {
@@ -78,6 +89,15 @@ export function createFaucetClient(primFetch: (input: RequestInfo | URL, init?: 
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(req),
       });
+      if (!res.ok) {
+        let msg = `HTTP ${res.status}`;
+        let code = "unknown";
+        try {
+          const body = await res.json() as { error?: { code: string; message: string } };
+          if (body.error) { msg = body.error.message; code = body.error.code; }
+        } catch {}
+        throw new Error(`${msg} (${code})`);
+      }
       return res.json() as Promise<DripResponse>;
     },
     async getFaucetStatus(params: GetFaucetStatusParams): Promise<FaucetStatusResponse> {
@@ -86,11 +106,29 @@ export function createFaucetClient(primFetch: (input: RequestInfo | URL, init?: 
       const query = qs.toString();
       const url = `${baseUrl}/v1/faucet/status${query ? `?${query}` : ""}`;
       const res = await primFetch(url);
+      if (!res.ok) {
+        let msg = `HTTP ${res.status}`;
+        let code = "unknown";
+        try {
+          const body = await res.json() as { error?: { code: string; message: string } };
+          if (body.error) { msg = body.error.message; code = body.error.code; }
+        } catch {}
+        throw new Error(`${msg} (${code})`);
+      }
       return res.json() as Promise<FaucetStatusResponse>;
     },
     async getTreasuryStatus(): Promise<TreasuryStatus> {
       const url = `${baseUrl}/v1/faucet/treasury`;
       const res = await primFetch(url);
+      if (!res.ok) {
+        let msg = `HTTP ${res.status}`;
+        let code = "unknown";
+        try {
+          const body = await res.json() as { error?: { code: string; message: string } };
+          if (body.error) { msg = body.error.message; code = body.error.code; }
+        } catch {}
+        throw new Error(`${msg} (${code})`);
+      }
       return res.json() as Promise<TreasuryStatus>;
     },
     async refillTreasury(): Promise<RefillResult> {
@@ -98,6 +136,15 @@ export function createFaucetClient(primFetch: (input: RequestInfo | URL, init?: 
       const res = await primFetch(url, {
         method: "POST",
       });
+      if (!res.ok) {
+        let msg = `HTTP ${res.status}`;
+        let code = "unknown";
+        try {
+          const body = await res.json() as { error?: { code: string; message: string } };
+          if (body.error) { msg = body.error.message; code = body.error.code; }
+        } catch {}
+        throw new Error(`${msg} (${code})`);
+      }
       return res.json() as Promise<RefillResult>;
     },
   };

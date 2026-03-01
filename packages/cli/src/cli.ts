@@ -16,6 +16,7 @@ import {
   setDefaultAddress,
 } from "@primsh/keystore";
 import type { KeystoreFile } from "@primsh/keystore";
+import { createWalletClient } from "@primsh/sdk";
 import { createPrimFetch } from "@primsh/x402-client";
 import pkg from "../package.json";
 import { getFlag, hasFlag, resolvePassphrase } from "./flags.ts";
@@ -387,31 +388,8 @@ async function main() {
           network: config.network,
         });
 
-        const res = await primFetch(`${walletUrl}/v1/wallets/${resolvedAddress}`);
-        if (!res.ok) {
-          const body = (await res.json().catch(() => null)) as {
-            error?: { code: string; message: string };
-          } | null;
-          throw new Error(
-            body?.error ? `${body.error.message} (${body.error.code})` : `HTTP ${res.status}`,
-          );
-        }
-
-        const data = (await res.json()) as {
-          address: string;
-          chain: string;
-          balance: string;
-          funded: boolean;
-          paused: boolean;
-          created_by: string;
-          policy: {
-            max_per_tx: string | null;
-            max_per_day: string | null;
-            daily_spent: string;
-            daily_reset_at: string;
-          } | null;
-          created_at: string;
-        };
+        const client = createWalletClient(primFetch, walletUrl);
+        const data = await client.getWallet({ address: resolvedAddress });
 
         if (quiet) {
           console.log(data.address);
@@ -467,24 +445,8 @@ async function main() {
           network: config.network,
         });
 
-        const res = await primFetch(`${walletUrl}/v1/wallets/${resolvedAddress}/policy`);
-        if (!res.ok) {
-          const body = (await res.json().catch(() => null)) as {
-            error?: { code: string; message: string };
-          } | null;
-          throw new Error(
-            body?.error ? `${body.error.message} (${body.error.code})` : `HTTP ${res.status}`,
-          );
-        }
-
-        const data = (await res.json()) as {
-          wallet_address: string;
-          max_per_tx: string | null;
-          max_per_day: string | null;
-          allowed_primitives: string[] | null;
-          daily_spent: string;
-          daily_reset_at: string;
-        };
+        const client = createWalletClient(primFetch, walletUrl);
+        const data = await client.getPolicy({ address: resolvedAddress });
 
         if (quiet) {
           console.log(`max_per_tx:${data.max_per_tx ?? "none"} max_per_day:${data.max_per_day ?? "none"}`);
@@ -496,9 +458,8 @@ async function main() {
           console.log(`  Max per day:   ${data.max_per_day ?? "no limit"}`);
           console.log(`  Daily spent:   ${data.daily_spent} USDC`);
           console.log(`  Daily reset:   ${data.daily_reset_at}`);
-          console.log(
-            `  Allowed prims: ${data.allowed_primitives ? data.allowed_primitives.join(", ") : "all"}`,
-          );
+          const prims = Array.isArray(data.allowed_primitives) ? data.allowed_primitives : null;
+          console.log(`  Allowed prims: ${prims ? prims.join(", ") : "all"}`);
         }
         break;
       }

@@ -246,8 +246,10 @@ export type ListFundRequestsResponse = Record<string, unknown>;
 
 // ── Client ─────────────────────────────────────────────────────────────────
 
-export function createWalletClient(primFetch: (input: RequestInfo | URL, init?: RequestInit) => Promise<Response>) {
-  const baseUrl = "https://wallet.prim.sh";
+export function createWalletClient(
+  primFetch: (input: RequestInfo | URL, init?: RequestInit) => Promise<Response>,
+  baseUrl = "https://wallet.prim.sh",
+) {
   return {
     async registerWallet(req: RegisterWalletRequest): Promise<RegisterWalletResponse> {
       const url = `${baseUrl}/v1/wallets`;
@@ -256,6 +258,15 @@ export function createWalletClient(primFetch: (input: RequestInfo | URL, init?: 
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(req),
       });
+      if (!res.ok) {
+        let msg = `HTTP ${res.status}`;
+        let code = "unknown";
+        try {
+          const body = await res.json() as { error?: { code: string; message: string } };
+          if (body.error) { msg = body.error.message; code = body.error.code; }
+        } catch {}
+        throw new Error(`${msg} (${code})`);
+      }
       return res.json() as Promise<RegisterWalletResponse>;
     },
     async listWallets(params: ListWalletsParams): Promise<ListWalletsResponse> {
@@ -265,11 +276,29 @@ export function createWalletClient(primFetch: (input: RequestInfo | URL, init?: 
       const query = qs.toString();
       const url = `${baseUrl}/v1/wallets${query ? `?${query}` : ""}`;
       const res = await primFetch(url);
+      if (!res.ok) {
+        let msg = `HTTP ${res.status}`;
+        let code = "unknown";
+        try {
+          const body = await res.json() as { error?: { code: string; message: string } };
+          if (body.error) { msg = body.error.message; code = body.error.code; }
+        } catch {}
+        throw new Error(`${msg} (${code})`);
+      }
       return res.json() as Promise<ListWalletsResponse>;
     },
     async getWallet(params: GetWalletParams): Promise<WalletDetailResponse> {
       const url = `${baseUrl}/v1/wallets/${encodeURIComponent(params.address)}`;
       const res = await primFetch(url);
+      if (!res.ok) {
+        let msg = `HTTP ${res.status}`;
+        let code = "unknown";
+        try {
+          const body = await res.json() as { error?: { code: string; message: string } };
+          if (body.error) { msg = body.error.message; code = body.error.code; }
+        } catch {}
+        throw new Error(`${msg} (${code})`);
+      }
       return res.json() as Promise<WalletDetailResponse>;
     },
     async deactivateWallet(params: DeactivateWalletParams): Promise<DeactivateWalletResponse> {
@@ -277,6 +306,15 @@ export function createWalletClient(primFetch: (input: RequestInfo | URL, init?: 
       const res = await primFetch(url, {
         method: "DELETE",
       });
+      if (!res.ok) {
+        let msg = `HTTP ${res.status}`;
+        let code = "unknown";
+        try {
+          const body = await res.json() as { error?: { code: string; message: string } };
+          if (body.error) { msg = body.error.message; code = body.error.code; }
+        } catch {}
+        throw new Error(`${msg} (${code})`);
+      }
       return res.json() as Promise<DeactivateWalletResponse>;
     },
     async createFundRequest(params: CreateFundRequestParams, req: CreateFundRequestRequest): Promise<FundRequestResponse> {
@@ -286,6 +324,15 @@ export function createWalletClient(primFetch: (input: RequestInfo | URL, init?: 
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(req),
       });
+      if (!res.ok) {
+        let msg = `HTTP ${res.status}`;
+        let code = "unknown";
+        try {
+          const body = await res.json() as { error?: { code: string; message: string } };
+          if (body.error) { msg = body.error.message; code = body.error.code; }
+        } catch {}
+        throw new Error(`${msg} (${code})`);
+      }
       return res.json() as Promise<FundRequestResponse>;
     },
     async listFundRequests(params: ListFundRequestsParams): Promise<ListFundRequestsResponse> {
@@ -295,6 +342,15 @@ export function createWalletClient(primFetch: (input: RequestInfo | URL, init?: 
       const query = qs.toString();
       const url = `${baseUrl}/v1/wallets/${encodeURIComponent(params.address)}/fund-requests${query ? `?${query}` : ""}`;
       const res = await primFetch(url);
+      if (!res.ok) {
+        let msg = `HTTP ${res.status}`;
+        let code = "unknown";
+        try {
+          const body = await res.json() as { error?: { code: string; message: string } };
+          if (body.error) { msg = body.error.message; code = body.error.code; }
+        } catch {}
+        throw new Error(`${msg} (${code})`);
+      }
       return res.json() as Promise<ListFundRequestsResponse>;
     },
     async approveFundRequest(params: ApproveFundRequestParams): Promise<ApproveFundRequestResponse> {
@@ -302,6 +358,15 @@ export function createWalletClient(primFetch: (input: RequestInfo | URL, init?: 
       const res = await primFetch(url, {
         method: "POST",
       });
+      if (!res.ok) {
+        let msg = `HTTP ${res.status}`;
+        let code = "unknown";
+        try {
+          const body = await res.json() as { error?: { code: string; message: string } };
+          if (body.error) { msg = body.error.message; code = body.error.code; }
+        } catch {}
+        throw new Error(`${msg} (${code})`);
+      }
       return res.json() as Promise<ApproveFundRequestResponse>;
     },
     async denyFundRequest(params: DenyFundRequestParams, req: DenyFundRequestRequest): Promise<DenyFundRequestResponse> {
@@ -311,11 +376,29 @@ export function createWalletClient(primFetch: (input: RequestInfo | URL, init?: 
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(req),
       });
+      if (!res.ok) {
+        let msg = `HTTP ${res.status}`;
+        let code = "unknown";
+        try {
+          const body = await res.json() as { error?: { code: string; message: string } };
+          if (body.error) { msg = body.error.message; code = body.error.code; }
+        } catch {}
+        throw new Error(`${msg} (${code})`);
+      }
       return res.json() as Promise<DenyFundRequestResponse>;
     },
     async getPolicy(params: GetPolicyParams): Promise<PolicyResponse> {
       const url = `${baseUrl}/v1/wallets/${encodeURIComponent(params.address)}/policy`;
       const res = await primFetch(url);
+      if (!res.ok) {
+        let msg = `HTTP ${res.status}`;
+        let code = "unknown";
+        try {
+          const body = await res.json() as { error?: { code: string; message: string } };
+          if (body.error) { msg = body.error.message; code = body.error.code; }
+        } catch {}
+        throw new Error(`${msg} (${code})`);
+      }
       return res.json() as Promise<PolicyResponse>;
     },
     async updatePolicy(params: UpdatePolicyParams, req: PolicyUpdateRequest): Promise<PolicyResponse> {
@@ -325,6 +408,15 @@ export function createWalletClient(primFetch: (input: RequestInfo | URL, init?: 
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(req),
       });
+      if (!res.ok) {
+        let msg = `HTTP ${res.status}`;
+        let code = "unknown";
+        try {
+          const body = await res.json() as { error?: { code: string; message: string } };
+          if (body.error) { msg = body.error.message; code = body.error.code; }
+        } catch {}
+        throw new Error(`${msg} (${code})`);
+      }
       return res.json() as Promise<PolicyResponse>;
     },
     async pauseWallet(params: PauseWalletParams, req: PauseRequest): Promise<PauseResponse> {
@@ -334,6 +426,15 @@ export function createWalletClient(primFetch: (input: RequestInfo | URL, init?: 
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(req),
       });
+      if (!res.ok) {
+        let msg = `HTTP ${res.status}`;
+        let code = "unknown";
+        try {
+          const body = await res.json() as { error?: { code: string; message: string } };
+          if (body.error) { msg = body.error.message; code = body.error.code; }
+        } catch {}
+        throw new Error(`${msg} (${code})`);
+      }
       return res.json() as Promise<PauseResponse>;
     },
     async resumeWallet(params: ResumeWalletParams, req: ResumeRequest): Promise<ResumeResponse> {
@@ -343,6 +444,15 @@ export function createWalletClient(primFetch: (input: RequestInfo | URL, init?: 
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(req),
       });
+      if (!res.ok) {
+        let msg = `HTTP ${res.status}`;
+        let code = "unknown";
+        try {
+          const body = await res.json() as { error?: { code: string; message: string } };
+          if (body.error) { msg = body.error.message; code = body.error.code; }
+        } catch {}
+        throw new Error(`${msg} (${code})`);
+      }
       return res.json() as Promise<ResumeResponse>;
     },
   };

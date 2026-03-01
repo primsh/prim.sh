@@ -82,8 +82,10 @@ export interface SearchResult {
 
 // ── Client ─────────────────────────────────────────────────────────────────
 
-export function createSearchClient(primFetch: (input: RequestInfo | URL, init?: RequestInit) => Promise<Response>) {
-  const baseUrl = "https://search.prim.sh";
+export function createSearchClient(
+  primFetch: (input: RequestInfo | URL, init?: RequestInit) => Promise<Response>,
+  baseUrl = "https://search.prim.sh",
+) {
   return {
     async searchWeb(req: SearchRequest): Promise<SearchResponse> {
       const url = `${baseUrl}/v1/search`;
@@ -92,6 +94,15 @@ export function createSearchClient(primFetch: (input: RequestInfo | URL, init?: 
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(req),
       });
+      if (!res.ok) {
+        let msg = `HTTP ${res.status}`;
+        let code = "unknown";
+        try {
+          const body = await res.json() as { error?: { code: string; message: string } };
+          if (body.error) { msg = body.error.message; code = body.error.code; }
+        } catch {}
+        throw new Error(`${msg} (${code})`);
+      }
       return res.json() as Promise<SearchResponse>;
     },
     async searchNews(req: SearchRequest): Promise<SearchResponse> {
@@ -101,6 +112,15 @@ export function createSearchClient(primFetch: (input: RequestInfo | URL, init?: 
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(req),
       });
+      if (!res.ok) {
+        let msg = `HTTP ${res.status}`;
+        let code = "unknown";
+        try {
+          const body = await res.json() as { error?: { code: string; message: string } };
+          if (body.error) { msg = body.error.message; code = body.error.code; }
+        } catch {}
+        throw new Error(`${msg} (${code})`);
+      }
       return res.json() as Promise<SearchResponse>;
     },
     async extractUrl(req: ExtractRequest): Promise<ExtractResponse> {
@@ -110,6 +130,15 @@ export function createSearchClient(primFetch: (input: RequestInfo | URL, init?: 
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(req),
       });
+      if (!res.ok) {
+        let msg = `HTTP ${res.status}`;
+        let code = "unknown";
+        try {
+          const body = await res.json() as { error?: { code: string; message: string } };
+          if (body.error) { msg = body.error.message; code = body.error.code; }
+        } catch {}
+        throw new Error(`${msg} (${code})`);
+      }
       return res.json() as Promise<ExtractResponse>;
     },
   };

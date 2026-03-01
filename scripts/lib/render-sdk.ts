@@ -478,6 +478,19 @@ function renderMethod(m: MethodInfo): string {
   if (isRawResponse) {
     lines.push("      return res;");
   } else {
+    lines.push("      if (!res.ok) {");
+    lines.push("        let msg = `HTTP ${res.status}`;");
+    lines.push('        let code = "unknown";');
+    lines.push("        try {");
+    lines.push(
+      "          const body = await res.json() as { error?: { code: string; message: string } };",
+    );
+    lines.push(
+      "          if (body.error) { msg = body.error.message; code = body.error.code; }",
+    );
+    lines.push("        } catch {}");
+    lines.push("        throw new Error(`${msg} (${code})`);");
+    lines.push("      }");
     lines.push(`      return res.json() as Promise<${returnType}>;`);
   }
 
@@ -565,10 +578,12 @@ export function renderSdkClient(primId: string, spec: OpenApiSpec): string {
   out.push("");
 
   const clientName = `create${pascalCase(primId)}Client`;
+  out.push(`export function ${clientName}(`);
   out.push(
-    `export function ${clientName}(primFetch: (input: RequestInfo | URL, init?: RequestInit) => Promise<Response>) {`,
+    `  primFetch: (input: RequestInfo | URL, init?: RequestInit) => Promise<Response>,`,
   );
-  out.push(`  const baseUrl = "${baseUrl}";`);
+  out.push(`  baseUrl = "${baseUrl}",`);
+  out.push(`) {`);
   out.push("  return {");
 
   for (const m of methods) {

@@ -53,8 +53,10 @@ export interface TrackResponse {
 
 // ── Client ─────────────────────────────────────────────────────────────────
 
-export function createTrackClient(primFetch: (input: RequestInfo | URL, init?: RequestInit) => Promise<Response>) {
-  const baseUrl = "https://track.prim.sh";
+export function createTrackClient(
+  primFetch: (input: RequestInfo | URL, init?: RequestInit) => Promise<Response>,
+  baseUrl = "https://track.prim.sh",
+) {
   return {
     async trackPackage(req: TrackRequest): Promise<TrackResponse> {
       const url = `${baseUrl}/v1/track`;
@@ -63,6 +65,15 @@ export function createTrackClient(primFetch: (input: RequestInfo | URL, init?: R
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(req),
       });
+      if (!res.ok) {
+        let msg = `HTTP ${res.status}`;
+        let code = "unknown";
+        try {
+          const body = await res.json() as { error?: { code: string; message: string } };
+          if (body.error) { msg = body.error.message; code = body.error.code; }
+        } catch {}
+        throw new Error(`${msg} (${code})`);
+      }
       return res.json() as Promise<TrackResponse>;
     },
   };
