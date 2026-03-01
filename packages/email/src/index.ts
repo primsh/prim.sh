@@ -175,9 +175,7 @@ const app = createPrimApp(
   { createAgentStackMiddleware, createWalletAllowlistChecker },
 );
 
-const logger = (
-  app as typeof app & { logger: { warn: (msg: string, extra?: Record<string, unknown>) => void } }
-).logger;
+const logger = app.logger;
 
 // POST /v1/mailboxes — Create mailbox
 app.post("/v1/mailboxes", async (c) => {

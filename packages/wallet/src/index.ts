@@ -154,9 +154,7 @@ const app = createPrimApp(
   { createAgentStackMiddleware, createWalletAllowlistChecker },
 );
 
-const logger = (
-  app as typeof app & { logger: { warn: (msg: string, extra?: Record<string, unknown>) => void } }
-).logger;
+const logger = app.logger;
 
 // Register x402 manually — wallet uses local SQLite allowlist checker
 app.get("/v1/metrics", () => new Response()); // placeholder registered by factory; metrics route already registered above
