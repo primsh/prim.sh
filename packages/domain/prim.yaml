@@ -25,7 +25,7 @@ pricing:
     estimate: "~$8-40/yr (TLD dependent)"
     note: "NameSilo wholesale"
   - op: "DNS zone"
-    price: "$0.05"
+    price: "$0.001"
     provider_cost: "$0.00"
     pricing_type: static
     as_of: "2026-02"
@@ -94,7 +94,7 @@ hero_example: |
 quick_start:
   - "GET /v1/domains/search?query=myagent&tlds=com,xyz → check availability"
   - "POST /v1/domains/quote with {domain, years} → get price quote (15-min validity)"
-  - "POST /v1/zones with {domain} → create Cloudflare DNS zone ($0.05)"
+  - "POST /v1/zones with {domain} → create Cloudflare DNS zone ($0.001)"
   - "POST /v1/zones/:zoneId/records → add DNS records"
 
 tips:

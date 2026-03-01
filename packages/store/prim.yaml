@@ -18,7 +18,7 @@ env:
   - WALLET_INTERNAL_URL
 pricing:
   - op: "Storage"
-    price: "$0.02/GB/mo"
+    price: "$0.015/GB/mo"
     provider_cost: "$0.015/GB/mo"
     pricing_type: static
     as_of: "2026-02"
@@ -30,17 +30,17 @@ pricing:
     as_of: "2026-02"
     note: "R2 Class A op ($4.50/M). Free to encourage adoption"
   - op: "Download"
-    price: "$0.01/GB"
-    provider_cost: "$0.00000036"
+    price: "$0.001"
+    provider_cost: "$0.00"
     pricing_type: static
     as_of: "2026-02"
-    note: "R2 Class B op ($0.36/M)"
+    note: "R2 egress is free, x402 floor"
   - op: "API calls"
-    price: "$0.001/call"
-    provider_cost: "$0.00000036"
+    price: "$0.001"
+    provider_cost: "$0.00"
     pricing_type: static
     as_of: "2026-02"
-    note: "R2 Class B op ($0.36/M)"
+    note: "R2 ops are ~$0, x402 floor"
 
 deploy:
   max_body_size: "128MB"
@@ -95,7 +95,7 @@ hero_example: |
       -d '{"expires": 3600}'
 
 quick_start:
-  - "POST /v1/buckets → create a bucket ($0.05)"
+  - "POST /v1/buckets → create a bucket ($0.001)"
   - "PUT /v1/buckets/:id/objects/:key with raw bytes body → upload object"
   - "GET /v1/buckets/:id/objects/:key → download object"
 

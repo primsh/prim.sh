@@ -23,7 +23,7 @@ Limits:
 
   1. GET /v1/domains/search?query=myagent&tlds=com,xyz → check availability
   2. POST /v1/domains/quote with {domain, years} → get price quote (15-min validity)
-  3. POST /v1/zones with {domain} → create Cloudflare DNS zone ($0.05)
+  3. POST /v1/zones with {domain} → create Cloudflare DNS zone ($0.001)
   4. POST /v1/zones/:zoneId/records → add DNS records
 
 ## Tips
@@ -183,7 +183,7 @@ Errors:
 
 Create a Cloudflare DNS zone. Returns nameservers to set at your registrar.
 
-Price: $0.05
+Price: $0.001
 
 Request:
   domain  string  required  Domain name to create a zone for (e.g. "example.com").
@@ -245,7 +245,7 @@ Errors:
 
 Delete zone and all records. Irreversible.
 
-Price: $0.01
+Price: $0.001
 
 Path params:
   id  string  required  id parameter

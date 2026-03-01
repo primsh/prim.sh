@@ -368,7 +368,7 @@
     "type": "function",
     "function": {
       "name": "store_bucket_create",
-      "description": "Create a new storage bucket. Price: $0.05 via x402 (USDC on Base).",
+      "description": "Create a new storage bucket. Price: $0.001 via x402 (USDC on Base).",
       "parameters": {
         "type": "object",
         "properties": {
@@ -430,7 +430,7 @@
     "type": "function",
     "function": {
       "name": "store_bucket_delete",
-      "description": "Delete a bucket. Bucket must be empty first. Price: $0.01 via x402 (USDC on Base).",
+      "description": "Delete a bucket. Bucket must be empty first. Price: $0.001 via x402 (USDC on Base).",
       "parameters": {
         "type": "object",
         "properties": {
@@ -571,7 +571,7 @@
     "type": "function",
     "function": {
       "name": "store_quota_set",
-      "description": "Set the storage quota for a bucket. Pass null to reset to default (100 MB). Price: $0.01 via x402 (USDC on Base).",
+      "description": "Set the storage quota for a bucket. Pass null to reset to default (100 MB). Price: $0.001 via x402 (USDC on Base).",
       "parameters": {
         "type": "object",
         "properties": {
@@ -595,7 +595,7 @@
     "type": "function",
     "function": {
       "name": "store_quota_reconcile",
-      "description": "Recompute bucket usage by scanning actual R2 storage. Use when usage_bytes appears incorrect. Price: $0.05 via x402 (USDC on Base).",
+      "description": "Recompute bucket usage by scanning actual R2 storage. Use when usage_bytes appears incorrect. Price: $0.001 via x402 (USDC on Base).",
       "parameters": {
         "type": "object",
         "properties": {
@@ -1900,7 +1900,7 @@
     "type": "function",
     "function": {
       "name": "domain_zone_create",
-      "description": "Create a Cloudflare DNS zone. Returns nameservers to set at your registrar. Price: $0.05 via x402 (USDC on Base).",
+      "description": "Create a Cloudflare DNS zone. Returns nameservers to set at your registrar. Price: $0.001 via x402 (USDC on Base).",
       "parameters": {
         "type": "object",
         "properties": {
@@ -1958,7 +1958,7 @@
     "type": "function",
     "function": {
       "name": "domain_zone_delete",
-      "description": "Delete zone and all records. Irreversible. Price: $0.01 via x402 (USDC on Base).",
+      "description": "Delete zone and all records. Irreversible. Price: $0.001 via x402 (USDC on Base).",
       "parameters": {
         "type": "object",
         "properties": {

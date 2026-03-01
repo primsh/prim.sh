@@ -38,17 +38,17 @@ import {
 } from "./service.ts";
 
 const STORE_ROUTES = {
-  "POST /v1/buckets": "$0.05",
+  "POST /v1/buckets": "$0.001",
   "GET /v1/buckets": "$0.001",
   "GET /v1/buckets/[id]": "$0.001",
-  "DELETE /v1/buckets/[id]": "$0.01",
+  "DELETE /v1/buckets/[id]": "$0.001",
   "PUT /v1/buckets/[id]/objects/*": "$0.001",
   "GET /v1/buckets/[id]/objects": "$0.001",
   "GET /v1/buckets/[id]/objects/*": "$0.001",
   "DELETE /v1/buckets/[id]/objects/*": "$0.001",
   "GET /v1/buckets/[id]/quota": "$0.001",
-  "PUT /v1/buckets/[id]/quota": "$0.01",
-  "POST /v1/buckets/[id]/quota/reconcile": "$0.05",
+  "PUT /v1/buckets/[id]/quota": "$0.001",
+  "POST /v1/buckets/[id]/quota/reconcile": "$0.001",
 } as const;
 
 function r2Error(message: string): ApiError {
@@ -86,13 +86,13 @@ const app = createPrimApp(
     metricsName: "store.prim.sh",
     pricing: {
       routes: [
-        { method: "POST", path: "/v1/buckets", price_usdc: "0.05", description: "Create a bucket" },
+        { method: "POST", path: "/v1/buckets", price_usdc: "0.001", description: "Create a bucket" },
         { method: "GET", path: "/v1/buckets", price_usdc: "0.001", description: "List buckets" },
         { method: "GET", path: "/v1/buckets/{id}", price_usdc: "0.001", description: "Get bucket" },
         {
           method: "DELETE",
           path: "/v1/buckets/{id}",
-          price_usdc: "0.01",
+          price_usdc: "0.001",
           description: "Delete bucket",
         },
         {
@@ -128,13 +128,13 @@ const app = createPrimApp(
         {
           method: "PUT",
           path: "/v1/buckets/{id}/quota",
-          price_usdc: "0.01",
+          price_usdc: "0.001",
           description: "Set quota",
         },
         {
           method: "POST",
           path: "/v1/buckets/{id}/quota/reconcile",
-          price_usdc: "0.05",
+          price_usdc: "0.001",
           description: "Reconcile usage",
         },
       ],

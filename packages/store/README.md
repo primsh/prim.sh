@@ -12,26 +12,26 @@ Part of [prim.sh](https://prim.sh) — zero signup, one payment token, infinite 
 
 | Route | Description | Price | Request | Response |
 |-------|-------------|-------|---------|----------|
-| `POST /v1/buckets` | Create a new storage bucket | $0.05 | `CreateBucketRequest` | `CreateBucketResponse` |
+| `POST /v1/buckets` | Create a new storage bucket | $0.001 | `CreateBucketRequest` | `CreateBucketResponse` |
 | `GET /v1/buckets` | List all buckets owned by the calling wallet | $0.001 | `—` | `BucketListResponse` |
 | `GET /v1/buckets/:id` | Get details for a single bucket. Caller must own the bucket. | $0.001 | `—` | `BucketResponse` |
-| `DELETE /v1/buckets/:id` | Delete a bucket. Bucket must be empty first. | $0.01 | `—` | `—` |
+| `DELETE /v1/buckets/:id` | Delete a bucket. Bucket must be empty first. | $0.001 | `—` | `—` |
 | `PUT /v1/buckets/:id/objects/:key` | Upload an object. Key may include slashes. Content-Length header required. | $0.001 | `—` | `PutObjectResponse` |
 | `GET /v1/buckets/:id/objects` | List objects in a bucket. Cursor-based pagination. | $0.001 | `—` | `ObjectListResponse` |
 | `GET /v1/buckets/:id/objects/:key` | Download an object. Response body is streamed directly. | $0.001 | `—` | `Raw bytes (application/octet-stream)` |
 | `DELETE /v1/buckets/:id/objects/:key` | Delete an object from a bucket | $0.001 | `—` | `DeleteObjectResponse` |
 | `GET /v1/buckets/:id/quota` | Get quota and usage for a bucket | $0.001 | `—` | `QuotaResponse` |
-| `PUT /v1/buckets/:id/quota` | Set the storage quota for a bucket. Pass null to reset to default (100 MB). | $0.01 | `SetQuotaRequest` | `QuotaResponse` |
-| `POST /v1/buckets/:id/quota/reconcile` | Recompute bucket usage by scanning actual R2 storage. Use when usage_bytes appears incorrect. | $0.05 | `—` | `ReconcileResponse` |
+| `PUT /v1/buckets/:id/quota` | Set the storage quota for a bucket. Pass null to reset to default (100 MB). | $0.001 | `SetQuotaRequest` | `QuotaResponse` |
+| `POST /v1/buckets/:id/quota/reconcile` | Recompute bucket usage by scanning actual R2 storage. Use when usage_bytes appears incorrect. | $0.001 | `—` | `ReconcileResponse` |
 
 ## Pricing
 
 | Operation | Price | Notes |
 |-----------|-------|-------|
-| Storage | $0.02/GB/mo | R2 storage pricing |
+| Storage | $0.015/GB/mo | R2 storage pricing |
 | Upload | free | R2 Class A op ($4.50/M). Free to encourage adoption |
-| Download | $0.01/GB | R2 Class B op ($0.36/M) |
-| API calls | $0.001/call | R2 Class B op ($0.36/M) |
+| Download | $0.001 | R2 egress is free, x402 floor |
+| API calls | $0.001 | R2 ops are ~$0, x402 floor |
 
 ## Request / Response Types
 

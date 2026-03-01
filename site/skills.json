@@ -1,6 +1,6 @@
 {
   "version": "1.0.0",
-  "generated": "2026-03-01T07:03:17.555Z",
+  "generated": "2026-03-01T07:19:14.701Z",
   "primitives": [
     {
       "id": "auth",
@@ -336,7 +336,7 @@
           "id": "create_bucket",
           "route": "POST /v1/buckets",
           "description": "Create a new storage bucket",
-          "price": "$0.02/GB/mo"
+          "price": "$0.015/GB/mo"
         },
         {
           "id": "list_buckets",
@@ -348,13 +348,13 @@
           "id": "get_bucket",
           "route": "GET /v1/buckets/:id",
           "description": "Get details for a single bucket. Caller must own the bucket.",
-          "price": "$0.01/GB"
+          "price": "$0.001"
         },
         {
           "id": "delete_bucket",
           "route": "DELETE /v1/buckets/:id",
           "description": "Delete a bucket. Bucket must be empty first.",
-          "price": "$0.001/call"
+          "price": "$0.001"
         },
         {
           "id": "put_object",

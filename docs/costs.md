@@ -44,10 +44,10 @@ Fixed infrastructure ($24.49/mo) is absorbed by the business.
 
 | Operation | Price | Provider Cost | Type | Verified |
 |-----------|-------|---------------|------|----------|
-| Storage | $0.02/GB/mo | $0.015/GB/mo | static | 2026-02 |
+| Storage | $0.015/GB/mo | $0.015/GB/mo | static | 2026-02 |
 | Upload | free | $0.0000045 | static | 2026-02 |
-| Download | $0.01/GB | $0.00000036 | static | 2026-02 |
-| API calls | $0.001/call | $0.00000036 | static | 2026-02 |
+| Download | $0.001 | $0.00 | static | 2026-02 |
+| API calls | $0.001 | $0.00 | static | 2026-02 |
 
 ### search.sh (mainnet)
 
@@ -62,9 +62,9 @@ Fixed infrastructure ($24.49/mo) is absorbed by the business.
 | Operation | Price | Provider Cost | Type | Verified |
 |-----------|-------|---------------|------|----------|
 | Create server | $0.01 | $4.00/mo | static | 2026-02 |
-| s-1vcpu-1gb | $0.012/hr | $0.009/hr | static | 2026-02 |
-| s-2vcpu-4gb | $0.036/hr | $0.033/hr | static | 2026-02 |
-| s-4vcpu-8gb | $0.071/hr | $0.065/hr | static | 2026-02 |
+| s-1vcpu-1gb | $0.009/hr | $0.009/hr | static | 2026-02 |
+| s-2vcpu-4gb | $0.033/hr | $0.033/hr | static | 2026-02 |
+| s-4vcpu-8gb | $0.065/hr | $0.065/hr | static | 2026-02 |
 | Bandwidth | $0.01/GB | $0.01/GB | static | 2026-02 |
 
 ### email.sh (hold)
@@ -100,7 +100,7 @@ Fixed infrastructure ($24.49/mo) is absorbed by the business.
 | Operation | Price | Provider Cost | Type | Verified |
 |-----------|-------|---------------|------|----------|
 | Domain registration | ~~$8-40/yr (TLD dependent) | varies | dynamic | 2026-02 |
-| DNS zone | $0.05 | $0.00 | static | 2026-02 |
+| DNS zone | $0.001 | $0.00 | static | 2026-02 |
 | DNS record | $0.001 | $0.00 | static | 2026-02 |
 | DNS queries | free | $0.00 | static | 2026-02 |
 
