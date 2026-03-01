@@ -1029,7 +1029,7 @@ async function runCanaryGroup(
     // For docker/remote backends, prepend install instructions
     if (execEnv !== "local" && setupCtx?.invite_code) {
       groupPrompt = `The prim CLI is NOT installed yet. First install it:
-  curl -fsSL prim.sh/install | sh -s ${setupCtx.invite_code}
+  curl -fsSL prim.sh/install.sh | sh -s ${setupCtx.invite_code}
   export PATH="$HOME/.prim/bin:$PATH"
 
 Then follow the onboarding runbook that was printed.
