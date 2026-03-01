@@ -88,9 +88,11 @@ done < <(find "$REPO_DIR" -name "*.db" -not -path "*/node_modules/*" -not -path 
 
 # ── 2. Stop services ─────────────────────────────────────────────────────────
 log "Stopping services..."
+STOPPED_SERVICES=()
 for svc in "${SERVICES_WITH_DB[@]}"; do
   if systemctl is-active "prim-$svc" &>/dev/null; then
     run systemctl stop "prim-$svc"
+    STOPPED_SERVICES+=("$svc")
     log "  stopped prim-$svc"
   fi
 done
@@ -101,6 +103,10 @@ run mkdir -p "$BACKUP_DIR"
 for entry in "${FOUND_DBS[@]}"; do
   src="${entry%%:*}"
   name="${entry##*:}"
+  if [[ -f "$BACKUP_DIR/$name" ]]; then
+    log "  WARNING: backup collision — $BACKUP_DIR/$name already exists, skipping $src"
+    continue
+  fi
   run cp "$src" "$BACKUP_DIR/$name"
   log "  backed up: $src → $BACKUP_DIR/$name"
 done
@@ -136,11 +142,9 @@ done
 
 # ── 6. Restart services ──────────────────────────────────────────────────────
 log "Restarting services..."
-for svc in "${SERVICES_WITH_DB[@]}"; do
-  if systemctl is-enabled "prim-$svc" &>/dev/null; then
-    run systemctl start "prim-$svc"
-    log "  started prim-$svc"
-  fi
+for svc in "${STOPPED_SERVICES[@]}"; do
+  run systemctl start "prim-$svc"
+  log "  started prim-$svc"
 done
 
 log ""
