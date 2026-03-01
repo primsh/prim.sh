@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: Apache-2.0
 /**
  * DNS verification for custom domains (R-9).
  * Uses Node.js dns.promises — works with any DNS provider.

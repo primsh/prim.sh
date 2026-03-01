@@ -1,4 +1,5 @@
 #!/usr/bin/env bun
+// SPDX-License-Identifier: Apache-2.0
 /**
  * gate-runner.ts — Deterministic smoke test runner for prim.sh
  *
@@ -15,12 +16,15 @@
  *   bun scripts/gate-runner.ts --dry-run --canary      # Dry-run canary
  */
 
-import { existsSync, mkdirSync } from "node:fs";
+import { existsSync, mkdirSync, readdirSync, readFileSync, rmSync } from "node:fs";
+import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
 import { parseArgs } from "node:util";
 import { getAddress } from "viem";
 import { privateKeyToAccount } from "viem/accounts";
 import { createPrimFetch } from "../packages/x402-client/src/index.ts";
+import { decryptFromV3 } from "../packages/keystore/src/crypto.ts";
+import type { KeystoreFile } from "../packages/keystore/src/types.ts";
 import { loadPrimitives } from "./lib/primitives.js";
 
 // ── Types ──────────────────────────────────────────────────────────────────
@@ -39,6 +43,10 @@ interface GroupDef {
   name: string;
   prompt: string;
   tests: string[];
+  canary_only?: boolean;
+  setup?: string;
+  cleanup?: string;
+  interface?: "api" | "cli";
 }
 
 interface TestDef {
@@ -95,6 +103,7 @@ interface CanaryToolCall {
 
 interface CanaryStepResult {
   tool_call_id: string;
+  // API mode fields
   method: string;
   url: string;
   status: number | null;
@@ -102,6 +111,11 @@ interface CanaryStepResult {
   note: string | null;
   request_body: unknown;
   response_body: unknown;
+  // CLI mode fields
+  command?: string;
+  exit_code?: number | null;
+  stdout?: string;
+  stderr?: string;
 }
 
 interface CanaryGroupResult {
@@ -380,6 +394,195 @@ When you have completed all tasks, provide a final structured report with:
 ${llmsTxt}`;
 }
 
+// ── Group Setup/Cleanup Hooks ─────────────────────────────────────────────
+
+interface SetupContext {
+  invite_code?: string;
+  prim_home?: string;
+}
+
+/**
+ * Generate a single-use invite code via gate.sh internal API.
+ * Requires PRIM_INTERNAL_KEY env var.
+ */
+async function generateInviteCode(): Promise<string> {
+  const internalKey = process.env.PRIM_INTERNAL_KEY;
+  if (!internalKey) {
+    throw new Error("PRIM_INTERNAL_KEY is required for onboarding_e2e group");
+  }
+  const gateUrl = process.env.PRIM_GATE_URL ?? "https://gate.prim.sh";
+  const res = await fetch(`${gateUrl}/internal/codes`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "x-internal-key": internalKey,
+    },
+    body: JSON.stringify({ count: 1, label: "gate-runner-onboarding-e2e" }),
+  });
+  if (!res.ok) {
+    const body = await res.text().catch(() => "(unreadable)");
+    throw new Error(`Failed to generate invite code: HTTP ${res.status} — ${body}`);
+  }
+  const data = (await res.json()) as { codes: string[]; created: number };
+  if (!data.codes?.[0]) throw new Error("No invite code returned from gate internal API");
+  return data.codes[0];
+}
+
+/**
+ * Remove a wallet address from the gate.sh allowlist.
+ * Best-effort — does not throw on failure.
+ */
+async function removeFromAllowlist(address: string): Promise<void> {
+  const internalKey = process.env.PRIM_INTERNAL_KEY;
+  if (!internalKey) return;
+  const gateUrl = process.env.PRIM_GATE_URL ?? "https://gate.prim.sh";
+  try {
+    await fetch(`${gateUrl}/internal/allowlist/${address}`, {
+      method: "DELETE",
+      headers: { "x-internal-key": internalKey },
+    });
+  } catch {
+    // best-effort cleanup
+  }
+}
+
+/**
+ * Onboarding setup: generate invite code + create isolated PRIM_HOME temp dir.
+ * The agent does everything else (install CLI, create wallet, redeem code, test services).
+ */
+async function setupOnboardingE2e(): Promise<SetupContext> {
+  const inviteCode = await generateInviteCode();
+  const primHome = join(tmpdir(), `prim-e2e-${Date.now()}`);
+  mkdirSync(primHome, { recursive: true });
+  return { invite_code: inviteCode, prim_home: primHome };
+}
+
+/**
+ * Run the setup hook for a group. Returns context variables to inject into the prompt.
+ */
+async function runGroupSetup(group: GroupDef): Promise<SetupContext> {
+  if (!group.setup) return {};
+
+  switch (group.setup) {
+    case "onboarding_e2e":
+      return await setupOnboardingE2e();
+    default:
+      console.warn(`Unknown setup hook: ${group.setup}`);
+      return {};
+  }
+}
+
+/**
+ * Discover the wallet address from a PRIM_HOME directory.
+ * Reads filenames from keys/*.json — filename is the checksum address.
+ */
+function discoverWalletAddress(primHome: string): string | null {
+  const keysDir = join(primHome, "keys");
+  if (!existsSync(keysDir)) return null;
+  const files = readdirSync(keysDir).filter((f) => f.endsWith(".json"));
+  if (files.length === 0) return null;
+  return files[0].slice(0, -5); // strip .json → address
+}
+
+/**
+ * Delete store buckets owned by a wallet. Best-effort — logs warnings, never throws.
+ */
+async function cleanupStoreBuckets(
+  primHome: string,
+  address: string,
+): Promise<void> {
+  // Decrypt the wallet's private key from the keystore
+  const keyPath = join(primHome, "keys", `${address}.json`);
+  if (!existsSync(keyPath)) {
+    console.warn(`  Cleanup: keystore file not found at ${keyPath}`);
+    return;
+  }
+
+  const deviceKeyPath = join(primHome, "device.key");
+  if (!existsSync(deviceKeyPath)) {
+    console.warn("  Cleanup: device.key not found, cannot decrypt wallet for store cleanup");
+    return;
+  }
+
+  const keystoreFile = JSON.parse(readFileSync(keyPath, "utf-8")) as KeystoreFile;
+  const deviceKey = readFileSync(deviceKeyPath).toString("hex");
+  const privateKey = decryptFromV3(keystoreFile.crypto, deviceKey);
+
+  const storeFetch = createPrimFetch({ privateKey, maxPayment: "1.00" });
+  const storeUrl = process.env.PRIM_STORE_URL ?? "https://store.prim.sh";
+
+  // List buckets
+  const bucketsRes = await storeFetch(`${storeUrl}/v1/buckets`);
+  if (!bucketsRes.ok) return;
+  const bucketsData = (await bucketsRes.json()) as { buckets: Array<{ id: string }> };
+  if (!bucketsData.buckets?.length) return;
+
+  for (const bucket of bucketsData.buckets) {
+    // List objects in bucket
+    try {
+      const objsRes = await storeFetch(`${storeUrl}/v1/buckets/${bucket.id}/objects`);
+      if (objsRes.ok) {
+        const objsData = (await objsRes.json()) as { objects: Array<{ key: string }> };
+        for (const obj of objsData.objects ?? []) {
+          await storeFetch(`${storeUrl}/v1/buckets/${bucket.id}/objects/${obj.key}`, {
+            method: "DELETE",
+          });
+        }
+      }
+    } catch {
+      // best-effort
+    }
+    // Delete bucket
+    try {
+      await storeFetch(`${storeUrl}/v1/buckets/${bucket.id}`, { method: "DELETE" });
+    } catch {
+      // best-effort
+    }
+  }
+}
+
+/**
+ * Onboarding E2E cleanup:
+ * 1. Find wallet address from PRIM_HOME/keys/
+ * 2. Delete store buckets (best-effort)
+ * 3. Remove from allowlist
+ * 4. Delete temp dir
+ */
+async function cleanupOnboardingE2e(ctx: SetupContext): Promise<void> {
+  const primHome = ctx.prim_home;
+  if (!primHome) return;
+
+  const address = discoverWalletAddress(primHome);
+  if (address) {
+    // Clean store buckets before revoking access
+    try {
+      await cleanupStoreBuckets(primHome, address);
+    } catch (err) {
+      console.warn(`  Cleanup: store bucket cleanup failed: ${err instanceof Error ? err.message : String(err)}`);
+    }
+    await removeFromAllowlist(address);
+    console.log(c.dim(`  Cleanup: removed ${address} from allowlist`));
+  }
+
+  rmSync(primHome, { recursive: true, force: true });
+  console.log(c.dim(`  Cleanup: deleted ${primHome}`));
+}
+
+/**
+ * Run the cleanup hook for a group.
+ */
+async function runGroupCleanup(group: GroupDef, ctx: SetupContext): Promise<void> {
+  if (!group.cleanup) return;
+
+  switch (group.cleanup) {
+    case "onboarding_e2e":
+      await cleanupOnboardingE2e(ctx);
+      break;
+    default:
+      console.warn(`Unknown cleanup hook: ${group.cleanup}`);
+  }
+}
+
 /**
  * Tool definitions for the canary agent.
  * The agent calls these to make HTTP requests; gate runner executes them.
@@ -418,6 +621,62 @@ const CANARY_TOOLS = [
     },
   },
 ];
+
+/**
+ * Tool definitions for CLI-mode canary groups.
+ * The agent runs shell commands; gate runner executes them in an isolated PRIM_HOME.
+ */
+const CLI_CANARY_TOOLS = [
+  {
+    type: "function",
+    function: {
+      name: "shell_exec",
+      description: "Execute a shell command locally. Returns stdout, stderr, exit code.",
+      parameters: {
+        type: "object",
+        properties: {
+          command: {
+            type: "string",
+            description: "The shell command to execute",
+          },
+        },
+        required: ["command"],
+      },
+    },
+  },
+];
+
+/**
+ * Execute a shell command in an isolated PRIM_HOME environment.
+ * Used by CLI-mode canary groups.
+ */
+async function executeShellExec(
+  command: string,
+  primHome: string,
+): Promise<{ stdout: string; stderr: string; exit_code: number }> {
+  const env = {
+    ...process.env,
+    PRIM_HOME: primHome,
+    PATH: `${primHome}/bin:${process.env.HOME}/.prim/bin:${process.env.PATH}`,
+  };
+
+  const proc = Bun.spawn(["sh", "-c", command], {
+    env,
+    stdout: "pipe",
+    stderr: "pipe",
+    cwd: primHome,
+  });
+
+  const timeout = setTimeout(() => proc.kill(), 30_000);
+  const [stdout, stderr] = await Promise.all([
+    new Response(proc.stdout).text(),
+    new Response(proc.stderr).text(),
+  ]);
+  const exitCode = await proc.exited;
+  clearTimeout(timeout);
+
+  return { stdout, stderr, exit_code: exitCode };
+}
 
 /**
  * Execute a single tool call from the agent.
@@ -485,28 +744,47 @@ async function runCanaryGroup(
   testIndex: Map<string, TestDef>,
   primFetch: typeof fetch,
   inferEndpoint: string,
+  setupCtx?: SetupContext,
 ): Promise<CanaryGroupResult> {
-  const primIds = getGroupPrimIds(group, testIndex);
+  const isCli = group.interface === "cli";
 
-  // Gather llms.txt content — use group-specific if single prim, else root
-  let llmsTxt: string | null = null;
-  if (primIds.length === 1) {
-    llmsTxt = await loadLlmsTxt(primIds[0]);
-  }
-  if (!llmsTxt) {
-    // Multi-prim group or missing per-prim llms.txt — fall back to root
-    llmsTxt = await loadRootLlmsTxt();
-  }
-  if (!llmsTxt) {
-    llmsTxt = "(API documentation not found. Proceed based on your knowledge of the service.)";
+  // CLI groups use the prompt directly; API groups build it from llms.txt
+  let promptText: string;
+  if (isCli) {
+    let groupPrompt = group.prompt;
+    if (setupCtx?.invite_code) {
+      groupPrompt = groupPrompt.replace(/\{\{invite_code\}\}/g, setupCtx.invite_code);
+    }
+    promptText = groupPrompt;
+  } else {
+    const primIds = getGroupPrimIds(group, testIndex);
+    let llmsTxt: string | null = null;
+    if (primIds.length === 1) {
+      llmsTxt = await loadLlmsTxt(primIds[0]);
+    }
+    if (!llmsTxt) {
+      llmsTxt = await loadRootLlmsTxt();
+    }
+    if (!llmsTxt) {
+      llmsTxt = "(API documentation not found. Proceed based on your knowledge of the service.)";
+    }
+
+    const firstPrimId = primIds[0] ?? group.id;
+    const serviceName = `${firstPrimId}.sh`;
+    const endpoint = `${firstPrimId}.prim.sh`;
+
+    let groupPrompt = group.prompt;
+    if (setupCtx?.invite_code) {
+      groupPrompt = groupPrompt.replace(/\{\{invite_code\}\}/g, setupCtx.invite_code);
+    }
+
+    promptText = buildCanaryPrompt(groupPrompt, serviceName, endpoint, llmsTxt);
   }
 
-  // Determine service display name and endpoint from first prim
-  const firstPrimId = primIds[0] ?? group.id;
-  const serviceName = `${firstPrimId}.sh`;
-  const endpoint = `${firstPrimId}.prim.sh`;
-
-  const promptText = buildCanaryPrompt(group.prompt, serviceName, endpoint, llmsTxt);
+  const tools = isCli ? CLI_CANARY_TOOLS : CANARY_TOOLS;
+  const systemPrompt = isCli
+    ? "You have a shell_exec tool. Run the commands you are given. Report results."
+    : "You are an API tester for prim.sh. Use the http_request tool to make API calls. Be concise and structured in your final report.";
 
   // OpenAI-compatible messages
   type ChatMessage = {
@@ -521,30 +799,22 @@ async function runCanaryGroup(
   };
 
   const messages: ChatMessage[] = [
-    {
-      role: "system",
-      content:
-        "You are an API tester for prim.sh. Use the http_request tool to make API calls. Be concise and structured in your final report.",
-    },
-    {
-      role: "user",
-      content: promptText,
-    },
+    { role: "system", content: systemPrompt },
+    { role: "user", content: promptText },
   ];
 
   const steps: CanaryStepResult[] = [];
   const uxNotes: string[] = [];
   let agentSummary: string | null = null;
-  const MAX_ROUNDS = 10;
-  const failCounts = new Map<string, number>(); // "METHOD url" → consecutive fail count
+  const MAX_ROUNDS = isCli ? 20 : 10; // CLI onboarding has more steps
+  const failCounts = new Map<string, number>();
   const MAX_RETRIES_PER_ENDPOINT = 2;
 
   for (let round = 0; round < MAX_ROUNDS; round++) {
-    // Call infer.sh /v1/chat
     const chatRequest = {
       model: process.env.CANARY_MODEL ?? "anthropic/claude-sonnet-4-5",
       messages,
-      tools: CANARY_TOOLS,
+      tools,
       tool_choice: "auto",
       max_tokens: 2048,
       temperature: 0.1,
@@ -599,7 +869,6 @@ async function runCanaryGroup(
 
     const assistantMsg = choice.message;
 
-    // Add assistant message to conversation
     messages.push({
       role: "assistant",
       content: assistantMsg.content ?? null,
@@ -610,13 +879,11 @@ async function runCanaryGroup(
       })),
     });
 
-    // If no tool calls, agent is done
     if (!assistantMsg.tool_calls || assistantMsg.tool_calls.length === 0) {
       agentSummary = assistantMsg.content ?? null;
       break;
     }
 
-    // Execute each tool call
     const toolResults: ChatMessage[] = [];
 
     for (const tc of assistantMsg.tool_calls) {
@@ -627,96 +894,150 @@ async function runCanaryGroup(
         parsedArgs = {};
       }
 
-      const toolCall: CanaryToolCall = {
-        id: tc.id,
-        name: tc.function.name,
-        arguments: parsedArgs,
-      };
-
-      const method = String(parsedArgs.method ?? "GET");
-      const url = String(parsedArgs.url ?? "");
-      const reqBody = parsedArgs.body ?? null;
-      const endpointKey = `${method} ${url}`;
       let stepResult: CanaryStepResult;
 
-      // Check retry limit — if this endpoint already failed MAX_RETRIES_PER_ENDPOINT times, skip
-      const priorFails = failCounts.get(endpointKey) ?? 0;
-      if (priorFails >= MAX_RETRIES_PER_ENDPOINT) {
-        stepResult = {
-          tool_call_id: tc.id,
-          method,
-          url,
-          status: null,
-          ok: false,
-          note: `skipped: failed ${priorFails} times already`,
-          request_body: reqBody,
-          response_body: null,
-        };
-        toolResults.push({
-          role: "tool",
-          tool_call_id: tc.id,
-          content: JSON.stringify({
-            error: `This endpoint has failed ${priorFails} times. Stop retrying and move to the next task.`,
-          }),
-        });
-        steps.push(stepResult);
-        continue;
-      }
+      if (isCli && tc.function.name === "shell_exec") {
+        // ── CLI mode: execute shell command ──
+        const command = String(parsedArgs.command ?? "");
+        const primHome = setupCtx?.prim_home ?? "/tmp/prim-e2e-fallback";
 
-      try {
-        const result = await executeToolCall(toolCall, primFetch);
-        stepResult = {
-          tool_call_id: tc.id,
-          method,
-          url,
-          status: result.status,
-          ok: result.ok,
-          note: null,
-          request_body: reqBody,
-          response_body: result.body,
+        try {
+          const result = await executeShellExec(command, primHome);
+          const ok = result.exit_code === 0;
+          stepResult = {
+            tool_call_id: tc.id,
+            method: "EXEC",
+            url: command,
+            status: result.exit_code,
+            ok,
+            note: null,
+            request_body: null,
+            response_body: null,
+            command,
+            exit_code: result.exit_code,
+            stdout: result.stdout,
+            stderr: result.stderr,
+          };
+
+          toolResults.push({
+            role: "tool",
+            tool_call_id: tc.id,
+            content: JSON.stringify({
+              exit_code: result.exit_code,
+              stdout: result.stdout.slice(0, 4000),
+              stderr: result.stderr.slice(0, 2000),
+            }),
+          });
+        } catch (err) {
+          const errMsg = err instanceof Error ? err.message : String(err);
+          stepResult = {
+            tool_call_id: tc.id,
+            method: "EXEC",
+            url: command,
+            status: null,
+            ok: false,
+            note: `exec failed: ${errMsg}`,
+            request_body: null,
+            response_body: null,
+            command,
+            exit_code: null,
+          };
+
+          toolResults.push({
+            role: "tool",
+            tool_call_id: tc.id,
+            content: JSON.stringify({ error: errMsg }),
+          });
+        }
+      } else {
+        // ── API mode: execute HTTP request ──
+        const toolCall: CanaryToolCall = {
+          id: tc.id,
+          name: tc.function.name,
+          arguments: parsedArgs,
         };
 
-        if (!result.ok) {
-          failCounts.set(endpointKey, priorFails + 1);
-        } else {
-          failCounts.set(endpointKey, 0); // reset on success
+        const method = String(parsedArgs.method ?? "GET");
+        const url = String(parsedArgs.url ?? "");
+        const reqBody = parsedArgs.body ?? null;
+        const endpointKey = `${method} ${url}`;
+
+        const priorFails = failCounts.get(endpointKey) ?? 0;
+        if (priorFails >= MAX_RETRIES_PER_ENDPOINT) {
+          stepResult = {
+            tool_call_id: tc.id,
+            method,
+            url,
+            status: null,
+            ok: false,
+            note: `skipped: failed ${priorFails} times already`,
+            request_body: reqBody,
+            response_body: null,
+          };
+          toolResults.push({
+            role: "tool",
+            tool_call_id: tc.id,
+            content: JSON.stringify({
+              error: `This endpoint has failed ${priorFails} times. Stop retrying and move to the next task.`,
+            }),
+          });
+          steps.push(stepResult);
+          continue;
         }
 
-        toolResults.push({
-          role: "tool",
-          tool_call_id: tc.id,
-          content: JSON.stringify({ status: result.status, body: result.body }),
-        });
-      } catch (err) {
-        const errMsg = err instanceof Error ? err.message : String(err);
-        failCounts.set(endpointKey, priorFails + 1);
-        stepResult = {
-          tool_call_id: tc.id,
-          method,
-          url,
-          status: null,
-          ok: false,
-          note: `request failed: ${errMsg}`,
-          request_body: reqBody,
-          response_body: null,
-        };
+        try {
+          const result = await executeToolCall(toolCall, primFetch);
+          stepResult = {
+            tool_call_id: tc.id,
+            method,
+            url,
+            status: result.status,
+            ok: result.ok,
+            note: null,
+            request_body: reqBody,
+            response_body: result.body,
+          };
 
-        toolResults.push({
-          role: "tool",
-          tool_call_id: tc.id,
-          content: JSON.stringify({ error: errMsg }),
-        });
+          if (!result.ok) {
+            failCounts.set(endpointKey, priorFails + 1);
+          } else {
+            failCounts.set(endpointKey, 0);
+          }
+
+          toolResults.push({
+            role: "tool",
+            tool_call_id: tc.id,
+            content: JSON.stringify({ status: result.status, body: result.body }),
+          });
+        } catch (err) {
+          const errMsg = err instanceof Error ? err.message : String(err);
+          failCounts.set(endpointKey, priorFails + 1);
+          stepResult = {
+            tool_call_id: tc.id,
+            method,
+            url,
+            status: null,
+            ok: false,
+            note: `request failed: ${errMsg}`,
+            request_body: reqBody,
+            response_body: null,
+          };
+
+          toolResults.push({
+            role: "tool",
+            tool_call_id: tc.id,
+            content: JSON.stringify({ error: errMsg }),
+          });
+        }
       }
 
       steps.push(stepResult);
     }
 
-    // Add tool results to conversation
     for (const tr of toolResults) {
       messages.push(tr);
     }
 
-    // If finish_reason is "stop" (no tool calls to process), we're done
     if (choice.finish_reason === "stop") {
       agentSummary = assistantMsg.content ?? null;
       break;
@@ -725,7 +1046,6 @@ async function runCanaryGroup(
 
   // Extract UX notes from agent summary
   if (agentSummary) {
-    // Look for lines that mention confusion, issues, or observations
     const notePatterns = [
       /ux[:\s]+(.+)/gi,
       /observation[s]?[:\s]+(.+)/gi,
@@ -748,16 +1068,13 @@ async function runCanaryGroup(
     }
   }
 
-  // Determine verdict
+  // Determine verdict — CLI steps use exit_code, API steps use status
   const totalSteps = steps.length;
-  const failedSteps = steps.filter((s) => !s.ok && s.status !== null).length;
-  const errorSteps = steps.filter((s) => s.status === null).length;
+  const failedSteps = steps.filter((s) => !s.ok).length;
 
   let verdict: CanaryGroupResult["verdict"];
   if (totalSteps === 0) {
-    verdict = "warn"; // Agent made no calls — something went wrong
-  } else if (errorSteps > 0) {
-    verdict = "error";
+    verdict = "warn";
   } else if (failedSteps === 0) {
     verdict = "pass";
   } else if (failedSteps < totalSteps) {
@@ -794,8 +1111,8 @@ async function main() {
     testIndex.set(t.id, t);
   }
 
-  // Filter groups
-  let groups = plan.groups;
+  // Filter groups — exclude canary_only groups from deterministic runs
+  let groups = args.canary ? plan.groups : plan.groups.filter((g) => !g.canary_only);
   if (args.group) {
     groups = groups.filter((g) => g.id === args.group);
     if (groups.length === 0) {
@@ -831,14 +1148,21 @@ async function main() {
       console.log(`Mode: ${c.cyan("canary")} — agent drives LLM inference via infer.prim.sh\n`);
 
       for (const group of groups) {
-        const primIds = getGroupPrimIds(group, testIndex);
-        const llmsPath =
-          primIds.length === 1
-            ? `site/${primIds[0]}/llms.txt`
-            : "site/llms.txt (multi-prim fallback)";
+        const iface = group.interface ?? "api";
         console.log(`${c.bold(`Group: ${group.id}`)} (${group.name})`);
-        console.log(`  ${c.dim("prims:")}     ${primIds.join(", ")}`);
-        console.log(`  ${c.dim("llms.txt:")}  ${llmsPath}`);
+        console.log(`  ${c.dim("interface:")} ${iface}`);
+        if (iface === "cli") {
+          if (group.setup) console.log(`  ${c.dim("setup:")}     ${group.setup}`);
+          if (group.cleanup) console.log(`  ${c.dim("cleanup:")}   ${group.cleanup}`);
+        } else {
+          const primIds = getGroupPrimIds(group, testIndex);
+          const llmsPath =
+            primIds.length === 1
+              ? `site/${primIds[0]}/llms.txt`
+              : "site/llms.txt (multi-prim fallback)";
+          console.log(`  ${c.dim("prims:")}     ${primIds.join(", ")}`);
+          console.log(`  ${c.dim("llms.txt:")}  ${llmsPath}`);
+        }
         console.log(`  ${c.dim("prompt:")}    ${group.prompt.slice(0, 100)}…`);
         console.log();
       }
@@ -902,11 +1226,40 @@ async function main() {
 
     for (const group of groups) {
       console.log(c.bold(`\n── ${group.name} (${group.id}) ──`));
+
+      // Run setup hook (e.g. generate invite code + temp dir)
+      let setupCtx: SetupContext = {};
+      if (group.setup) {
+        try {
+          console.log(c.dim(`  Running setup: ${group.setup}…`));
+          setupCtx = await runGroupSetup(group);
+          if (setupCtx.invite_code) {
+            console.log(c.dim(`  Setup: invite code ${setupCtx.invite_code}`));
+          }
+          if (setupCtx.prim_home) {
+            console.log(c.dim(`  Setup: PRIM_HOME ${setupCtx.prim_home}`));
+          }
+        } catch (err) {
+          const errMsg = err instanceof Error ? err.message : String(err);
+          console.log(c.red(`  Setup failed: ${errMsg}`));
+          canaryResults.push({
+            group_id: group.id,
+            group_name: group.name,
+            verdict: "error",
+            steps: [],
+            ux_notes: [],
+            agent_summary: null,
+            error: `setup failed: ${errMsg}`,
+          });
+          continue;
+        }
+      }
+
       console.log(c.dim("  Running agent canary…"));
 
       let result: CanaryGroupResult;
       try {
-        result = await runCanaryGroup(group, testIndex, primFetch, inferEndpoint);
+        result = await runCanaryGroup(group, testIndex, primFetch, inferEndpoint, setupCtx);
       } catch (err) {
         const errMsg = err instanceof Error ? err.message : String(err);
         result = {
@@ -920,14 +1273,33 @@ async function main() {
         };
       }
 
+      // Run cleanup hook
+      if (group.cleanup) {
+        try {
+          console.log(c.dim(`  Running cleanup: ${group.cleanup}…`));
+          await runGroupCleanup(group, setupCtx);
+        } catch (err) {
+          const errMsg = err instanceof Error ? err.message : String(err);
+          console.log(c.yellow(`  Cleanup warning: ${errMsg}`));
+        }
+      }
+
       canaryResults.push(result);
 
       // Print step results
       for (const step of result.steps) {
-        const statusStr = step.status !== null ? String(step.status) : "err";
         const icon = step.ok ? c.green("●") : c.red("✗");
         const note = step.note ? c.dim(` (${step.note})`) : "";
-        console.log(`  ${icon} ${step.method.padEnd(6)} ${step.url}  ${statusStr}${note}`);
+        if (step.command !== undefined) {
+          // CLI step
+          const exitStr = step.exit_code !== null && step.exit_code !== undefined ? String(step.exit_code) : "err";
+          const cmdPreview = step.command.length > 60 ? `${step.command.slice(0, 57)}…` : step.command;
+          console.log(`  ${icon} ${c.dim("$")} ${cmdPreview}  exit=${exitStr}${note}`);
+        } else {
+          // API step
+          const statusStr = step.status !== null ? String(step.status) : "err";
+          console.log(`  ${icon} ${step.method.padEnd(6)} ${step.url}  ${statusStr}${note}`);
+        }
       }
 
       // Print verdict

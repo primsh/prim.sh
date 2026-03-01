@@ -1,4 +1,5 @@
 #!/usr/bin/env bun
+// SPDX-License-Identifier: Apache-2.0
 /**
  * gen-tests.ts — Smoke test generator
  *
@@ -264,6 +265,7 @@ function generateFullFile(ctx: GenContext): string {
   const primary = primaryRoute(ctx.routes);
 
   // Preamble
+  lines.push("// SPDX-License-Identifier: Apache-2.0");
   lines.push(`import { beforeEach, describe, expect, it, vi } from "vitest";`);
   lines.push("");
 

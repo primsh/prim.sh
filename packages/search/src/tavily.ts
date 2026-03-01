@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: Apache-2.0
 import type { ProviderHealth } from "@primsh/x402-middleware";
 import { ProviderError } from "./provider.ts";
 import type {

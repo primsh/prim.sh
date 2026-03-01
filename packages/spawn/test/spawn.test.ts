@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: Apache-2.0
 /**
  * SP-2/SP-6/SP-7 spawn.sh tests: server CRUD with provider abstraction and ownership enforcement.
  * Tests use DigitalOcean as the default provider.

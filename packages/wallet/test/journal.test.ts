@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: Apache-2.0
 /**
  * W-8 execution journal tests: tryClaim atomicity, events, dead letters, getExecutionsByWallet.
  *

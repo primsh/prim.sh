@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: Apache-2.0
 /**
  * W-10 fund request tests: create, list, approve (non-custodial), deny.
  */

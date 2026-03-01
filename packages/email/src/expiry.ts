@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: Apache-2.0
 /**
  * Mailbox expiry enforcement (R-8).
  * Dual strategy: lazy checks on read + interval sweep as safety net.

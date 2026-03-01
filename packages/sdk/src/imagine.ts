@@ -1,6 +1,9 @@
+// SPDX-License-Identifier: Apache-2.0
 // THIS FILE IS GENERATED — DO NOT EDIT
 // Source: packages/imagine/openapi.yaml
 // Regenerate: pnpm gen:sdk
+
+import { unwrap } from "./shared.js";
 
 // ── Types ──────────────────────────────────────────────────────────────────
 
@@ -20,8 +23,10 @@ export type UpscaleResponse = Record<string, unknown>;
 
 // ── Client ─────────────────────────────────────────────────────────────────
 
-export function createImagineClient(primFetch: (input: RequestInfo | URL, init?: RequestInit) => Promise<Response>) {
-  const baseUrl = "https://imagine.prim.sh";
+export function createImagineClient(
+  primFetch: (input: RequestInfo | URL, init?: RequestInit) => Promise<Response>,
+  baseUrl = "https://imagine.prim.sh",
+) {
   return {
     async generate(req: GenerateRequest): Promise<GenerateResponse> {
       const url = `${baseUrl}/v1/generate`;
@@ -30,7 +35,7 @@ export function createImagineClient(primFetch: (input: RequestInfo | URL, init?:
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(req),
       });
-      return res.json() as Promise<GenerateResponse>;
+      return unwrap<GenerateResponse>(res);
     },
     async describe(req: DescribeRequest): Promise<DescribeResponse> {
       const url = `${baseUrl}/v1/describe`;
@@ -39,7 +44,7 @@ export function createImagineClient(primFetch: (input: RequestInfo | URL, init?:
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(req),
       });
-      return res.json() as Promise<DescribeResponse>;
+      return unwrap<DescribeResponse>(res);
     },
     async upscale(req: UpscaleRequest): Promise<UpscaleResponse> {
       const url = `${baseUrl}/v1/upscale`;
@@ -48,12 +53,12 @@ export function createImagineClient(primFetch: (input: RequestInfo | URL, init?:
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(req),
       });
-      return res.json() as Promise<UpscaleResponse>;
+      return unwrap<UpscaleResponse>(res);
     },
     async listModels(): Promise<ModelsResponse> {
       const url = `${baseUrl}/v1/models`;
       const res = await primFetch(url);
-      return res.json() as Promise<ModelsResponse>;
+      return unwrap<ModelsResponse>(res);
     },
   };
 }

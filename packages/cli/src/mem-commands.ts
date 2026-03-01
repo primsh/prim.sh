@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: Apache-2.0
 import { readFileSync } from "node:fs";
 import { createPrimFetch } from "@primsh/x402-client";
 import { getConfig } from "@primsh/keystore";

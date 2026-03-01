@@ -1,4 +1,5 @@
 #!/usr/bin/env bun
+// SPDX-License-Identifier: Apache-2.0
 import { existsSync, readFileSync } from "node:fs";
 import {
   createKey,
@@ -15,6 +16,8 @@ import {
   setDefaultAddress,
 } from "@primsh/keystore";
 import type { KeystoreFile } from "@primsh/keystore";
+import { createWalletClient } from "@primsh/sdk";
+import { createPrimFetch } from "@primsh/x402-client";
 import pkg from "../package.json";
 import { getFlag, hasFlag, resolvePassphrase } from "./flags.ts";
 
@@ -39,7 +42,7 @@ async function main() {
     console.log("Usage: prim <command> <subcommand>");
     console.log("       prim --version");
     console.log("");
-    console.log("  prim wallet    <create|register|list|balance|import|export|default|remove>");
+    console.log("  prim wallet    <create|register|list|balance|info|policy|import|export|default|remove>");
     console.log("  prim store     <create-bucket|ls|put|get|rm|rm-bucket|quota>");
     console.log("  prim spawn     <create|ls|get|rm|reboot|stop|start|ssh-key>");
     console.log("  prim email     <create|ls|get|rm|renew|inbox|read|send|webhook|domain>");
@@ -355,11 +358,117 @@ async function main() {
         break;
       }
 
+      case "info": {
+        // prim wallet info [address] — paid API call to GET /v1/wallets/{address}
+        const walletUrl =
+          getFlag("url", argv) ?? process.env.PRIM_WALLET_URL ?? "https://wallet.prim.sh";
+        const targetAddress = argv[2] && !argv[2].startsWith("--") ? argv[2] : undefined;
+        const walletFlag = getFlag("wallet", argv);
+        const passphrase = await resolvePassphrase(argv);
+        const maxPaymentFlag = getFlag("max-payment", argv);
+        const quiet = hasFlag("quiet", argv);
+        const jsonOutput = hasFlag("json", argv);
+        const config = await getConfig();
+
+        let resolvedAddress: string;
+        if (targetAddress) {
+          resolvedAddress = targetAddress;
+        } else {
+          const key = await loadKey();
+          const { privateKeyToAccount } = await import("viem/accounts");
+          resolvedAddress = privateKeyToAccount(key).address;
+        }
+
+        const primFetch = createPrimFetch({
+          keystore:
+            walletFlag !== undefined || passphrase !== undefined
+              ? { address: walletFlag, passphrase }
+              : true,
+          maxPayment: maxPaymentFlag ?? process.env.PRIM_MAX_PAYMENT ?? "1.00",
+          network: config.network,
+        });
+
+        const client = createWalletClient(primFetch, walletUrl);
+        const data = await client.getWallet({ address: resolvedAddress });
+
+        if (quiet) {
+          console.log(data.address);
+        } else if (jsonOutput) {
+          console.log(JSON.stringify(data, null, 2));
+        } else {
+          console.log(`Wallet ${data.address}`);
+          console.log(`  Chain:   ${data.chain}`);
+          console.log(`  Balance: ${data.balance} USDC`);
+          console.log(`  Funded:  ${data.funded}`);
+          console.log(`  Paused:  ${data.paused}`);
+          if (data.policy) {
+            console.log("  Policy:");
+            console.log(`    Max/tx:  ${data.policy.max_per_tx ?? "none"}`);
+            console.log(`    Max/day: ${data.policy.max_per_day ?? "none"}`);
+            console.log(`    Spent:   ${data.policy.daily_spent}`);
+            console.log(`    Resets:  ${data.policy.daily_reset_at}`);
+          } else {
+            console.log("  Policy:  none");
+          }
+          console.log(`  Created: ${data.created_at}`);
+        }
+        break;
+      }
+
+      case "policy": {
+        // prim wallet policy [address] — paid API call to GET /v1/wallets/{address}/policy
+        const walletUrl =
+          getFlag("url", argv) ?? process.env.PRIM_WALLET_URL ?? "https://wallet.prim.sh";
+        const targetAddress = argv[2] && !argv[2].startsWith("--") ? argv[2] : undefined;
+        const walletFlag = getFlag("wallet", argv);
+        const passphrase = await resolvePassphrase(argv);
+        const maxPaymentFlag = getFlag("max-payment", argv);
+        const quiet = hasFlag("quiet", argv);
+        const jsonOutput = hasFlag("json", argv);
+        const config = await getConfig();
+
+        let resolvedAddress: string;
+        if (targetAddress) {
+          resolvedAddress = targetAddress;
+        } else {
+          const key = await loadKey();
+          const { privateKeyToAccount } = await import("viem/accounts");
+          resolvedAddress = privateKeyToAccount(key).address;
+        }
+
+        const primFetch = createPrimFetch({
+          keystore:
+            walletFlag !== undefined || passphrase !== undefined
+              ? { address: walletFlag, passphrase }
+              : true,
+          maxPayment: maxPaymentFlag ?? process.env.PRIM_MAX_PAYMENT ?? "1.00",
+          network: config.network,
+        });
+
+        const client = createWalletClient(primFetch, walletUrl);
+        const data = await client.getPolicy({ address: resolvedAddress });
+
+        if (quiet) {
+          console.log(`max_per_tx:${data.max_per_tx ?? "none"} max_per_day:${data.max_per_day ?? "none"}`);
+        } else if (jsonOutput) {
+          console.log(JSON.stringify(data, null, 2));
+        } else {
+          console.log(`Policy for ${data.wallet_address}`);
+          console.log(`  Max per tx:    ${data.max_per_tx ?? "no limit"}`);
+          console.log(`  Max per day:   ${data.max_per_day ?? "no limit"}`);
+          console.log(`  Daily spent:   ${data.daily_spent} USDC`);
+          console.log(`  Daily reset:   ${data.daily_reset_at}`);
+          const prims = Array.isArray(data.allowed_primitives) ? data.allowed_primitives : null;
+          console.log(`  Allowed prims: ${prims ? prims.join(", ") : "all"}`);
+        }
+        break;
+      }
+
       default: {
         const isHelp = subcommand === "--help" || subcommand === "-h";
         if (isHelp) {
           console.log(
-            "Usage: prim wallet <create|register|list|balance|import|export|default|remove>",
+            "Usage: prim wallet <create|register|list|balance|info|policy|import|export|default|remove>",
           );
           process.exit(0);
         }

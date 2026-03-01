@@ -1,6 +1,9 @@
+// SPDX-License-Identifier: Apache-2.0
 // THIS FILE IS GENERATED — DO NOT EDIT
 // Source: packages/mem/openapi.yaml
 // Regenerate: pnpm gen:sdk
+
+import { unwrap } from "./shared.js";
 
 // ── Types ──────────────────────────────────────────────────────────────────
 
@@ -152,8 +155,10 @@ export type DeleteCacheResponse = Record<string, unknown>;
 
 // ── Client ─────────────────────────────────────────────────────────────────
 
-export function createMemClient(primFetch: (input: RequestInfo | URL, init?: RequestInit) => Promise<Response>) {
-  const baseUrl = "https://mem.prim.sh";
+export function createMemClient(
+  primFetch: (input: RequestInfo | URL, init?: RequestInit) => Promise<Response>,
+  baseUrl = "https://mem.prim.sh",
+) {
   return {
     async createCollection(req: CreateCollectionRequest): Promise<CollectionResponse> {
       const url = `${baseUrl}/v1/collections`;
@@ -162,7 +167,7 @@ export function createMemClient(primFetch: (input: RequestInfo | URL, init?: Req
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(req),
       });
-      return res.json() as Promise<CollectionResponse>;
+      return unwrap<CollectionResponse>(res);
     },
     async listCollections(params: ListCollectionsParams): Promise<ListCollectionsResponse> {
       const qs = new URLSearchParams();
@@ -171,19 +176,19 @@ export function createMemClient(primFetch: (input: RequestInfo | URL, init?: Req
       const query = qs.toString();
       const url = `${baseUrl}/v1/collections${query ? `?${query}` : ""}`;
       const res = await primFetch(url);
-      return res.json() as Promise<ListCollectionsResponse>;
+      return unwrap<ListCollectionsResponse>(res);
     },
     async getCollection(params: GetCollectionParams): Promise<CollectionResponse> {
       const url = `${baseUrl}/v1/collections/${encodeURIComponent(params.id)}`;
       const res = await primFetch(url);
-      return res.json() as Promise<CollectionResponse>;
+      return unwrap<CollectionResponse>(res);
     },
     async deleteCollection(params: DeleteCollectionParams): Promise<DeleteCollectionResponse> {
       const url = `${baseUrl}/v1/collections/${encodeURIComponent(params.id)}`;
       const res = await primFetch(url, {
         method: "DELETE",
       });
-      return res.json() as Promise<DeleteCollectionResponse>;
+      return unwrap<DeleteCollectionResponse>(res);
     },
     async upsertDocuments(params: UpsertDocumentsParams, req: UpsertRequest): Promise<UpsertResponse> {
       const url = `${baseUrl}/v1/collections/${encodeURIComponent(params.id)}/upsert`;
@@ -192,7 +197,7 @@ export function createMemClient(primFetch: (input: RequestInfo | URL, init?: Req
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(req),
       });
-      return res.json() as Promise<UpsertResponse>;
+      return unwrap<UpsertResponse>(res);
     },
     async queryCollection(params: QueryCollectionParams, req: QueryRequest): Promise<QueryResponse> {
       const url = `${baseUrl}/v1/collections/${encodeURIComponent(params.id)}/query`;
@@ -201,7 +206,7 @@ export function createMemClient(primFetch: (input: RequestInfo | URL, init?: Req
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(req),
       });
-      return res.json() as Promise<QueryResponse>;
+      return unwrap<QueryResponse>(res);
     },
     async setCache(params: SetCacheParams, req: SetCacheRequest): Promise<SetCacheResponse> {
       const url = `${baseUrl}/v1/cache/${encodeURIComponent(params.namespace)}/${encodeURIComponent(params.key)}`;
@@ -210,19 +215,19 @@ export function createMemClient(primFetch: (input: RequestInfo | URL, init?: Req
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(req),
       });
-      return res.json() as Promise<SetCacheResponse>;
+      return unwrap<SetCacheResponse>(res);
     },
     async getCache(params: GetCacheParams): Promise<GetCacheResponse> {
       const url = `${baseUrl}/v1/cache/${encodeURIComponent(params.namespace)}/${encodeURIComponent(params.key)}`;
       const res = await primFetch(url);
-      return res.json() as Promise<GetCacheResponse>;
+      return unwrap<GetCacheResponse>(res);
     },
     async deleteCache(params: DeleteCacheParams): Promise<DeleteCacheResponse> {
       const url = `${baseUrl}/v1/cache/${encodeURIComponent(params.namespace)}/${encodeURIComponent(params.key)}`;
       const res = await primFetch(url, {
         method: "DELETE",
       });
-      return res.json() as Promise<DeleteCacheResponse>;
+      return unwrap<DeleteCacheResponse>(res);
     },
   };
 }

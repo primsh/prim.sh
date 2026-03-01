@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: Apache-2.0
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { ProviderRegistry } from "../src/provider-registry.ts";
 import type { PrimProvider, ProviderHealth } from "../src/provider.ts";

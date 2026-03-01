@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: Apache-2.0
 /**
  * RegistrarProvider interface — abstract registrar layer.
  * NameSilo implements this; other registrars can be added later.

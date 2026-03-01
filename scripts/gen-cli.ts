@@ -1,4 +1,5 @@
 #!/usr/bin/env bun
+// SPDX-License-Identifier: Apache-2.0
 /**
  * gen-cli.ts — CLI command generator
  *
@@ -667,9 +668,12 @@ function genHandlerBody(
   }
 
   // --- Build request body ---
-  const hasBody = (route.method === "POST" || route.method === "PUT") && bodyProps.length > 0;
+  const hasBodyProps = (route.method === "POST" || route.method === "PUT") && bodyProps.length > 0;
+  // SDK expects a body arg when the OpenAPI spec has a requestBody (even if no extractable props)
+  const sdkExpectsBody =
+    (route.method === "POST" || route.method === "PUT") && route.bodySchema !== null;
 
-  if (hasBody) {
+  if (hasBodyProps || sdkExpectsBody) {
     lines.push(`${ind}const reqBody: Record<string, unknown> = {};`);
     if (positionalVar && positionalField) {
       lines.push(`${ind}reqBody.${positionalField} = ${positionalVar};`);
@@ -694,53 +698,44 @@ function genHandlerBody(
     }
   }
 
-  // --- Build URL ---
-  let urlPath = route.path;
-  for (let i = 0; i < pathParams.length; i++) {
-    urlPath = urlPath.replace(`{${pathParams[i]}}`, `\${${pathParamVars[i]}}`);
-  }
-
-  const hasQueryParams = queryParams.length > 0;
-  if (hasQueryParams) {
-    lines.push(`${ind}const reqUrl = new URL(\`\${baseUrl}${urlPath}\`);`);
+  // --- Build params (path + query) for SDK ---
+  const hasParams = pathParams.length > 0 || queryParams.length > 0;
+  if (hasParams) {
+    lines.push(`${ind}const params: Record<string, unknown> = {};`);
+    for (let i = 0; i < pathParams.length; i++) {
+      lines.push(`${ind}params.${pathParams[i]} = ${pathParamVars[i]};`);
+    }
     for (const qp of queryParams) {
       const varName = flagVarMap.get(qp.name) ?? toVarName(qp.name);
       if (qp.schema?.type === "boolean") {
-        lines.push(`${ind}if (${varName}) reqUrl.searchParams.set("${qp.name}", "true");`);
+        lines.push(`${ind}if (${varName}) params.${qp.name} = true;`);
+      } else if (qp.schema?.type === "integer" || qp.schema?.type === "number") {
+        lines.push(`${ind}if (${varName}) params.${qp.name} = Number(${varName});`);
       } else {
-        lines.push(`${ind}if (${varName}) reqUrl.searchParams.set("${qp.name}", ${varName});`);
+        lines.push(`${ind}if (${varName}) params.${qp.name} = ${varName};`);
       }
     }
   }
 
-  const fetchUrl = hasQueryParams ? "reqUrl.toString()" : `\`\${baseUrl}${urlPath}\``;
-  const fetchFn = prim.isFaucetLike ? "fetch" : "primFetch";
+  // --- SDK method call ---
+  const opId = route.operation.operationId ?? route.leafName;
+  const sdkArgs: string[] = [];
+  if (hasParams) sdkArgs.push("params");
+  if (sdkExpectsBody) sdkArgs.push("reqBody");
 
-  // --- Make request ---
-  if (hasBody) {
-    lines.push(`${ind}const res = await ${fetchFn}(${fetchUrl}, {`);
-    lines.push(`${ind}  method: "${route.method}",`);
-    lines.push(`${ind}  headers: { "Content-Type": "application/json" },`);
-    lines.push(`${ind}  body: JSON.stringify(reqBody),`);
-    lines.push(`${ind}});`);
-  } else if (route.method === "DELETE") {
-    lines.push(`${ind}const res = await ${fetchFn}(${fetchUrl}, { method: "DELETE" });`);
-  } else if (route.method !== "GET") {
-    lines.push(`${ind}const res = await ${fetchFn}(${fetchUrl}, { method: "${route.method}" });`);
+  if (sdkArgs.length > 0) {
+    const argStr = sdkArgs.map((a) => `${a} as never`).join(", ");
+    lines.push(`${ind}const data = await client.${opId}(${argStr});`);
   } else {
-    lines.push(`${ind}const res = await ${fetchFn}(${fetchUrl});`);
+    lines.push(`${ind}const data = await client.${opId}();`);
   }
 
-  lines.push(`${ind}if (!res.ok) return handleError(res);`);
-
   // --- Response ---
-  if (route.method === "DELETE" && !hasBody) {
+  if (route.method === "DELETE" && !sdkExpectsBody) {
     lines.push(`${ind}if (!quiet) {`);
-    lines.push(`${ind}  const data = await res.json();`);
     lines.push(`${ind}  console.log(JSON.stringify(data, null, 2));`);
     lines.push(`${ind}}`);
   } else {
-    lines.push(`${ind}const data = await res.json();`);
     lines.push(`${ind}if (quiet) {`);
     lines.push(`${ind}  console.log(JSON.stringify(data));`);
     lines.push(`${ind}} else {`);
@@ -807,6 +802,7 @@ function generateCommandFile(spec: OpenAPISpec, id: string): string {
 
   if (routes.length === 0) {
     return [
+      "// SPDX-License-Identifier: Apache-2.0",
       "// THIS FILE IS GENERATED — DO NOT EDIT",
       `// Source: packages/${id}/openapi.yaml`,
       "// Regenerate: pnpm gen:cli",
@@ -839,19 +835,23 @@ function generateCommandFile(spec: OpenAPISpec, id: string): string {
 
   const lines: string[] = [];
 
+  lines.push("// SPDX-License-Identifier: Apache-2.0");
   lines.push("// THIS FILE IS GENERATED — DO NOT EDIT");
   lines.push(`// Source: packages/${id}/openapi.yaml`);
   lines.push("// Regenerate: pnpm gen:cli");
-  lines.push("// BEGIN:PRIM:CLI");
   lines.push("");
 
   // Imports
+  const pascal = id.charAt(0).toUpperCase() + id.slice(1);
+  const sdkClientName = `create${pascal}Client`;
   if (prim.isFaucetLike) {
     lines.push(`import { getDefaultAddress } from "@primsh/keystore";`);
+    lines.push(`import { ${sdkClientName} } from "@primsh/sdk";`);
     lines.push(`import { getFlag, hasFlag } from "./flags.ts";`);
   } else {
     lines.push(`import { createPrimFetch } from "@primsh/x402-client";`);
     lines.push(`import { getConfig } from "@primsh/keystore";`);
+    lines.push(`import { ${sdkClientName} } from "@primsh/sdk";`);
     lines.push(`import { getFlag, hasFlag, resolvePassphrase } from "./flags.ts";`);
   }
   lines.push("");
@@ -865,24 +865,6 @@ function generateCommandFile(spec: OpenAPISpec, id: string): string {
   lines.push("}");
   lines.push("");
 
-  // Error handler
-  lines.push("async function handleError(res: Response): Promise<never> {");
-  lines.push("  let message = `HTTP ${res.status}`;");
-  lines.push(`  let code = "unknown";`);
-  lines.push("  try {");
-  lines.push(
-    "    const body = (await res.json()) as { error?: { code: string; message: string } };",
-  );
-  lines.push("    if (body.error) {");
-  lines.push("      message = body.error.message;");
-  lines.push("      code = body.error.code;");
-  lines.push("    }");
-  lines.push("  } catch {");
-  lines.push("    // ignore parse error");
-  lines.push("  }");
-  lines.push("  throw new Error(`${message} (${code})`);");
-  lines.push("}");
-  lines.push("");
 
   // Main command function
   lines.push(
@@ -906,6 +888,9 @@ function generateCommandFile(spec: OpenAPISpec, id: string): string {
     );
     lines.push("    network: config.network,");
     lines.push("  });");
+    lines.push(`  const client = ${sdkClientName}(primFetch, baseUrl);`);
+  } else {
+    lines.push(`  const client = ${sdkClientName}(fetch, baseUrl);`);
   }
   lines.push("");
 
@@ -1024,7 +1009,7 @@ for (const id of primsToProcess) {
   }
 
   const existing = existsSync(outPath) ? readFileSync(outPath, "utf8") : null;
-  const isGenerated = existing?.includes("// BEGIN:PRIM:CLI") ?? false;
+  const isGenerated = existing?.includes("// THIS FILE IS GENERATED") ?? false;
   const isNew = existing === null;
   const changed = existing !== generated;
 

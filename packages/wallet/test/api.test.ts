@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: Apache-2.0
 /**
  * API route integration tests: health check, signature registration, x402 gating.
  *

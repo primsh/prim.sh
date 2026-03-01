@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: Apache-2.0
 /**
  * scripts/lib/parse-api.ts -- Regex-based TypeScript api.ts parser
  *

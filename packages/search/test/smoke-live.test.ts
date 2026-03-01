@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: Apache-2.0
 /**
  * SE-2: Live smoke test against Tavily API.
  * Tests TavilyClient directly — web search, news search, URL extract.

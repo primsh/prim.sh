@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: Apache-2.0
 import { createCipheriv, createDecipheriv, randomBytes } from "node:crypto";
 import { http, createPublicClient, createWalletClient } from "viem";
 import type { Account, Chain, Hex, Transport, WalletClient } from "viem";

@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: Apache-2.0
 // Minimal Bun runtime augmentations for tsc compatibility.
 // Only declares what tsc can't infer from @types/node alone.
 // Full bun-types is intentionally avoided to prevent fetch type conflicts with vitest mocks.

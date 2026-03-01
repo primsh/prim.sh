@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: Apache-2.0
 /**
  * SP-7 DigitalOcean provider-specific tests.
  * Tests DO-specific behavior: image translation, tag generation, IP extraction, error parsing.

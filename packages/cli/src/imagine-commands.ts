@@ -1,10 +1,11 @@
+// SPDX-License-Identifier: Apache-2.0
 // THIS FILE IS GENERATED — DO NOT EDIT
 // Source: packages/imagine/openapi.yaml
 // Regenerate: pnpm gen:cli
-// BEGIN:PRIM:CLI
 
 import { createPrimFetch } from "@primsh/x402-client";
 import { getConfig } from "@primsh/keystore";
+import { createImagineClient } from "@primsh/sdk";
 import { getFlag, hasFlag, resolvePassphrase } from "./flags.ts";
 
 export function resolveImagineUrl(argv: string[]): string {
@@ -12,21 +13,6 @@ export function resolveImagineUrl(argv: string[]): string {
   if (flag) return flag;
   if (process.env.PRIM_IMAGINE_URL) return process.env.PRIM_IMAGINE_URL;
   return "https://imagine.prim.sh";
-}
-
-async function handleError(res: Response): Promise<never> {
-  let message = `HTTP ${res.status}`;
-  let code = "unknown";
-  try {
-    const body = (await res.json()) as { error?: { code: string; message: string } };
-    if (body.error) {
-      message = body.error.message;
-      code = body.error.code;
-    }
-  } catch {
-    // ignore parse error
-  }
-  throw new Error(`${message} (${code})`);
 }
 
 export async function runImagineCommand(sub: string, argv: string[]): Promise<void> {
@@ -44,6 +30,7 @@ export async function runImagineCommand(sub: string, argv: string[]): Promise<vo
     maxPayment: maxPaymentFlag ?? process.env.PRIM_MAX_PAYMENT ?? "1.00",
     network: config.network,
   });
+  const client = createImagineClient(primFetch, baseUrl);
 
   if (!sub || sub === "--help" || sub === "-h") {
     console.log("Usage: prim imagine <generate|describe|upscale|ls> [args] [flags]");
@@ -57,9 +44,8 @@ export async function runImagineCommand(sub: string, argv: string[]): Promise<vo
 
   switch (sub) {
     case "generate": {
-      const res = await primFetch(`${baseUrl}/v1/generate`, { method: "POST" });
-      if (!res.ok) return handleError(res);
-      const data = await res.json();
+      const reqBody: Record<string, unknown> = {};
+      const data = await client.generate(reqBody as never);
       if (quiet) {
         console.log(JSON.stringify(data));
       } else {
@@ -69,9 +55,8 @@ export async function runImagineCommand(sub: string, argv: string[]): Promise<vo
     }
 
     case "describe": {
-      const res = await primFetch(`${baseUrl}/v1/describe`, { method: "POST" });
-      if (!res.ok) return handleError(res);
-      const data = await res.json();
+      const reqBody: Record<string, unknown> = {};
+      const data = await client.describe(reqBody as never);
       if (quiet) {
         console.log(JSON.stringify(data));
       } else {
@@ -81,9 +66,8 @@ export async function runImagineCommand(sub: string, argv: string[]): Promise<vo
     }
 
     case "upscale": {
-      const res = await primFetch(`${baseUrl}/v1/upscale`, { method: "POST" });
-      if (!res.ok) return handleError(res);
-      const data = await res.json();
+      const reqBody: Record<string, unknown> = {};
+      const data = await client.upscale(reqBody as never);
       if (quiet) {
         console.log(JSON.stringify(data));
       } else {
@@ -93,9 +77,7 @@ export async function runImagineCommand(sub: string, argv: string[]): Promise<vo
     }
 
     case "ls": {
-      const res = await primFetch(`${baseUrl}/v1/models`);
-      if (!res.ok) return handleError(res);
-      const data = await res.json();
+      const data = await client.listModels();
       if (quiet) {
         console.log(JSON.stringify(data));
       } else {

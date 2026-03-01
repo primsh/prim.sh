@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: Apache-2.0
 /**
  * W-9 circuit breaker tests: pause/resume/isPaused truth table, getState, admin routes.
  *

@@ -1,10 +1,11 @@
+// SPDX-License-Identifier: Apache-2.0
 // THIS FILE IS GENERATED — DO NOT EDIT
 // Source: packages/track/openapi.yaml
 // Regenerate: pnpm gen:cli
-// BEGIN:PRIM:CLI
 
 import { createPrimFetch } from "@primsh/x402-client";
 import { getConfig } from "@primsh/keystore";
+import { createTrackClient } from "@primsh/sdk";
 import { getFlag, hasFlag, resolvePassphrase } from "./flags.ts";
 
 export function resolveTrackUrl(argv: string[]): string {
@@ -12,21 +13,6 @@ export function resolveTrackUrl(argv: string[]): string {
   if (flag) return flag;
   if (process.env.PRIM_TRACK_URL) return process.env.PRIM_TRACK_URL;
   return "https://track.prim.sh";
-}
-
-async function handleError(res: Response): Promise<never> {
-  let message = `HTTP ${res.status}`;
-  let code = "unknown";
-  try {
-    const body = (await res.json()) as { error?: { code: string; message: string } };
-    if (body.error) {
-      message = body.error.message;
-      code = body.error.code;
-    }
-  } catch {
-    // ignore parse error
-  }
-  throw new Error(`${message} (${code})`);
 }
 
 export async function runTrackCommand(sub: string, argv: string[]): Promise<void> {
@@ -44,6 +30,7 @@ export async function runTrackCommand(sub: string, argv: string[]): Promise<void
     maxPayment: maxPaymentFlag ?? process.env.PRIM_MAX_PAYMENT ?? "1.00",
     network: config.network,
   });
+  const client = createTrackClient(primFetch, baseUrl);
 
   if (!sub || sub === "--help" || sub === "-h") {
     console.log("Usage: prim track <package> [args] [flags]");
@@ -65,13 +52,7 @@ export async function runTrackCommand(sub: string, argv: string[]): Promise<void
       const reqBody: Record<string, unknown> = {};
       reqBody.tracking_number = trackingNumber;
       if (carrier) reqBody.carrier = carrier;
-      const res = await primFetch(`${baseUrl}/v1/track`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(reqBody),
-      });
-      if (!res.ok) return handleError(res);
-      const data = await res.json();
+      const data = await client.trackPackage(reqBody as never);
       if (quiet) {
         console.log(JSON.stringify(data));
       } else {

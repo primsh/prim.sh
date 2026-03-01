@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: Apache-2.0
 /**
  * spawn.sh API contract — request/response types and error envelope.
  */

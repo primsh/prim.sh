@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: Apache-2.0
 import type { Handler, MiddlewareHandler } from "hono";
 
 const MAX_LATENCY_SAMPLES = 1000;

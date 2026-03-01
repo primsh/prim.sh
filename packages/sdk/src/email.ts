@@ -1,6 +1,9 @@
+// SPDX-License-Identifier: Apache-2.0
 // THIS FILE IS GENERATED — DO NOT EDIT
 // Source: packages/email/openapi.yaml
 // Regenerate: pnpm gen:sdk
+
+import { unwrap } from "./shared.js";
 
 // ── Types ──────────────────────────────────────────────────────────────────
 
@@ -308,8 +311,10 @@ export type ListDomainsResponse = Record<string, unknown>;
 
 // ── Client ─────────────────────────────────────────────────────────────────
 
-export function createEmailClient(primFetch: (input: RequestInfo | URL, init?: RequestInit) => Promise<Response>) {
-  const baseUrl = "https://email.prim.sh";
+export function createEmailClient(
+  primFetch: (input: RequestInfo | URL, init?: RequestInit) => Promise<Response>,
+  baseUrl = "https://email.prim.sh",
+) {
   return {
     async createMailbox(req: CreateMailboxRequest): Promise<MailboxResponse> {
       const url = `${baseUrl}/v1/mailboxes`;
@@ -318,7 +323,7 @@ export function createEmailClient(primFetch: (input: RequestInfo | URL, init?: R
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(req),
       });
-      return res.json() as Promise<MailboxResponse>;
+      return unwrap<MailboxResponse>(res);
     },
     async listMailboxes(params: ListMailboxesParams): Promise<ListMailboxesResponse> {
       const qs = new URLSearchParams();
@@ -327,19 +332,19 @@ export function createEmailClient(primFetch: (input: RequestInfo | URL, init?: R
       const query = qs.toString();
       const url = `${baseUrl}/v1/mailboxes${query ? `?${query}` : ""}`;
       const res = await primFetch(url);
-      return res.json() as Promise<ListMailboxesResponse>;
+      return unwrap<ListMailboxesResponse>(res);
     },
     async getMailbox(params: GetMailboxParams): Promise<MailboxResponse> {
       const url = `${baseUrl}/v1/mailboxes/${encodeURIComponent(params.id)}`;
       const res = await primFetch(url);
-      return res.json() as Promise<MailboxResponse>;
+      return unwrap<MailboxResponse>(res);
     },
     async deleteMailbox(params: DeleteMailboxParams): Promise<DeleteMailboxResponse> {
       const url = `${baseUrl}/v1/mailboxes/${encodeURIComponent(params.id)}`;
       const res = await primFetch(url, {
         method: "DELETE",
       });
-      return res.json() as Promise<DeleteMailboxResponse>;
+      return unwrap<DeleteMailboxResponse>(res);
     },
     async renewMailbox(params: RenewMailboxParams, req: RenewMailboxRequest): Promise<MailboxResponse> {
       const url = `${baseUrl}/v1/mailboxes/${encodeURIComponent(params.id)}/renew`;
@@ -348,7 +353,7 @@ export function createEmailClient(primFetch: (input: RequestInfo | URL, init?: R
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(req),
       });
-      return res.json() as Promise<MailboxResponse>;
+      return unwrap<MailboxResponse>(res);
     },
     async listMessages(params: ListMessagesParams): Promise<ListMessagesResponse> {
       const qs = new URLSearchParams();
@@ -357,12 +362,12 @@ export function createEmailClient(primFetch: (input: RequestInfo | URL, init?: R
       const query = qs.toString();
       const url = `${baseUrl}/v1/mailboxes/${encodeURIComponent(params.id)}/messages${query ? `?${query}` : ""}`;
       const res = await primFetch(url);
-      return res.json() as Promise<ListMessagesResponse>;
+      return unwrap<ListMessagesResponse>(res);
     },
     async getMessage(params: GetMessageParams): Promise<EmailDetail> {
       const url = `${baseUrl}/v1/mailboxes/${encodeURIComponent(params.id)}/messages/${encodeURIComponent(params.msgId)}`;
       const res = await primFetch(url);
-      return res.json() as Promise<EmailDetail>;
+      return unwrap<EmailDetail>(res);
     },
     async sendMessage(params: SendMessageParams, req: SendMessageRequest): Promise<SendMessageResponse> {
       const url = `${baseUrl}/v1/mailboxes/${encodeURIComponent(params.id)}/send`;
@@ -371,7 +376,7 @@ export function createEmailClient(primFetch: (input: RequestInfo | URL, init?: R
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(req),
       });
-      return res.json() as Promise<SendMessageResponse>;
+      return unwrap<SendMessageResponse>(res);
     },
     async registerWebhook(params: RegisterWebhookParams, req: RegisterWebhookRequest): Promise<WebhookResponse> {
       const url = `${baseUrl}/v1/mailboxes/${encodeURIComponent(params.id)}/webhooks`;
@@ -380,19 +385,19 @@ export function createEmailClient(primFetch: (input: RequestInfo | URL, init?: R
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(req),
       });
-      return res.json() as Promise<WebhookResponse>;
+      return unwrap<WebhookResponse>(res);
     },
     async listWebhooks(params: ListWebhooksParams): Promise<ListWebhooksResponse> {
       const url = `${baseUrl}/v1/mailboxes/${encodeURIComponent(params.id)}/webhooks`;
       const res = await primFetch(url);
-      return res.json() as Promise<ListWebhooksResponse>;
+      return unwrap<ListWebhooksResponse>(res);
     },
     async deleteWebhook(params: DeleteWebhookParams): Promise<DeleteWebhookResponse> {
       const url = `${baseUrl}/v1/mailboxes/${encodeURIComponent(params.id)}/webhooks/${encodeURIComponent(params.whId)}`;
       const res = await primFetch(url, {
         method: "DELETE",
       });
-      return res.json() as Promise<DeleteWebhookResponse>;
+      return unwrap<DeleteWebhookResponse>(res);
     },
     async registerDomain(req: RegisterDomainRequest): Promise<DomainResponse> {
       const url = `${baseUrl}/v1/domains`;
@@ -401,7 +406,7 @@ export function createEmailClient(primFetch: (input: RequestInfo | URL, init?: R
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(req),
       });
-      return res.json() as Promise<DomainResponse>;
+      return unwrap<DomainResponse>(res);
     },
     async listDomains(params: ListDomainsParams): Promise<ListDomainsResponse> {
       const qs = new URLSearchParams();
@@ -410,26 +415,26 @@ export function createEmailClient(primFetch: (input: RequestInfo | URL, init?: R
       const query = qs.toString();
       const url = `${baseUrl}/v1/domains${query ? `?${query}` : ""}`;
       const res = await primFetch(url);
-      return res.json() as Promise<ListDomainsResponse>;
+      return unwrap<ListDomainsResponse>(res);
     },
     async getDomain(params: GetDomainParams): Promise<DomainResponse> {
       const url = `${baseUrl}/v1/domains/${encodeURIComponent(params.id)}`;
       const res = await primFetch(url);
-      return res.json() as Promise<DomainResponse>;
+      return unwrap<DomainResponse>(res);
     },
     async deleteDomain(params: DeleteDomainParams): Promise<DeleteDomainResponse> {
       const url = `${baseUrl}/v1/domains/${encodeURIComponent(params.id)}`;
       const res = await primFetch(url, {
         method: "DELETE",
       });
-      return res.json() as Promise<DeleteDomainResponse>;
+      return unwrap<DeleteDomainResponse>(res);
     },
     async verifyDomain(params: VerifyDomainParams): Promise<VerifyDomainResponse> {
       const url = `${baseUrl}/v1/domains/${encodeURIComponent(params.id)}/verify`;
       const res = await primFetch(url, {
         method: "POST",
       });
-      return res.json() as Promise<VerifyDomainResponse>;
+      return unwrap<VerifyDomainResponse>(res);
     },
   };
 }

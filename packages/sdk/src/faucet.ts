@@ -1,6 +1,9 @@
+// SPDX-License-Identifier: Apache-2.0
 // THIS FILE IS GENERATED — DO NOT EDIT
 // Source: packages/faucet/openapi.yaml
 // Regenerate: pnpm gen:sdk
+
+import { unwrap } from "./shared.js";
 
 // ── Types ──────────────────────────────────────────────────────────────────
 
@@ -58,8 +61,10 @@ export interface GetFaucetStatusParams {
 
 // ── Client ─────────────────────────────────────────────────────────────────
 
-export function createFaucetClient(primFetch: (input: RequestInfo | URL, init?: RequestInit) => Promise<Response>) {
-  const baseUrl = "https://faucet.prim.sh";
+export function createFaucetClient(
+  primFetch: (input: RequestInfo | URL, init?: RequestInit) => Promise<Response>,
+  baseUrl = "https://faucet.prim.sh",
+) {
   return {
     async dripUsdc(req: DripRequest): Promise<DripResponse> {
       const url = `${baseUrl}/v1/faucet/usdc`;
@@ -68,7 +73,7 @@ export function createFaucetClient(primFetch: (input: RequestInfo | URL, init?: 
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(req),
       });
-      return res.json() as Promise<DripResponse>;
+      return unwrap<DripResponse>(res);
     },
     async dripEth(req: DripRequest): Promise<DripResponse> {
       const url = `${baseUrl}/v1/faucet/eth`;
@@ -77,7 +82,7 @@ export function createFaucetClient(primFetch: (input: RequestInfo | URL, init?: 
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(req),
       });
-      return res.json() as Promise<DripResponse>;
+      return unwrap<DripResponse>(res);
     },
     async getFaucetStatus(params: GetFaucetStatusParams): Promise<FaucetStatusResponse> {
       const qs = new URLSearchParams();
@@ -85,19 +90,19 @@ export function createFaucetClient(primFetch: (input: RequestInfo | URL, init?: 
       const query = qs.toString();
       const url = `${baseUrl}/v1/faucet/status${query ? `?${query}` : ""}`;
       const res = await primFetch(url);
-      return res.json() as Promise<FaucetStatusResponse>;
+      return unwrap<FaucetStatusResponse>(res);
     },
     async getTreasuryStatus(): Promise<TreasuryStatus> {
       const url = `${baseUrl}/v1/faucet/treasury`;
       const res = await primFetch(url);
-      return res.json() as Promise<TreasuryStatus>;
+      return unwrap<TreasuryStatus>(res);
     },
     async refillTreasury(): Promise<RefillResult> {
       const url = `${baseUrl}/v1/faucet/refill`;
       const res = await primFetch(url, {
         method: "POST",
       });
-      return res.json() as Promise<RefillResult>;
+      return unwrap<RefillResult>(res);
     },
   };
 }

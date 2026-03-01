@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: Apache-2.0
 /**
  * TR-1 track.sh tests: package tracking via Shippo.
  * Service functions accept injectable providers so tests avoid real Shippo calls.

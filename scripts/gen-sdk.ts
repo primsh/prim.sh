@@ -1,4 +1,5 @@
 #!/usr/bin/env bun
+// SPDX-License-Identifier: Apache-2.0
 /**
  * gen-sdk.ts — Typed SDK client generator
  *
@@ -140,10 +141,12 @@ if (generatedIds.length > 0) {
   }
 
   const barrelLines: string[] = [
+    "// SPDX-License-Identifier: Apache-2.0",
     "// THIS FILE IS GENERATED — DO NOT EDIT",
     "// Source: packages/<id>/openapi.yaml (all prims with rest interface)",
     "// Regenerate: pnpm gen:sdk",
     "",
+    'export { unwrap } from "./shared.js";',
   ];
 
   for (const id of allBarrelIds) {

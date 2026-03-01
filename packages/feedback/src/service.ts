@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: Apache-2.0
 import { insertFeedback } from "./db.ts";
 
 const VALID_TYPES = ["bug", "friction", "feature", "praise"] as const;

@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: Apache-2.0
 /**
  * ST-1 store.sh tests: bucket CRUD with ownership enforcement.
  *
@@ -256,7 +257,7 @@ describe("store.sh", () => {
       if (!result.ok) return;
       const row = getBucketById(result.data.bucket.id);
       expect(row).not.toBeNull();
-      expect(row?.cf_name).toBe("my-bucket");
+      expect(row?.cf_name).toMatch(/^[0-9a-f-]{36}$/); // UUID
       expect(row?.name).toBe("my-bucket");
     });
 
@@ -306,6 +307,13 @@ describe("store.sh", () => {
       if (result.ok) return;
       expect(result.status).toBe(400);
       expect(result.code).toBe("bucket_name_taken");
+    });
+
+    it("create bucket — same name allowed for different wallets", async () => {
+      const r1 = await createBucket({ name: "shared-name" }, CALLER);
+      expect(r1.ok).toBe(true);
+      const r2 = await createBucket({ name: "shared-name" }, "0x0000000000000000000000000000000000000099");
+      expect(r2.ok).toBe(true);
     });
 
     it("create bucket — CF error propagation", async () => {
@@ -395,7 +403,7 @@ describe("store.sh", () => {
 
       expect(mockFetch).toHaveBeenCalledTimes(1);
       const [url, init] = mockFetch.mock.calls[0];
-      expect(url).toContain("/r2/buckets/my-bucket");
+      expect(url).toMatch(/\/r2\/buckets\/[0-9a-f-]{36}$/);
       expect(init?.method).toBe("DELETE");
     });
 

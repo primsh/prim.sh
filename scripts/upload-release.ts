@@ -1,4 +1,5 @@
 #!/usr/bin/env bun
+// SPDX-License-Identifier: Apache-2.0
 /**
  * Upload a file to the prim-releases R2 bucket via S3-compatible API (aws4fetch).
  * Usage: bun scripts/upload-release.ts <local-path> <r2-key>

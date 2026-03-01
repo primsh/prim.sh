@@ -1,10 +1,11 @@
+// SPDX-License-Identifier: Apache-2.0
 // THIS FILE IS GENERATED — DO NOT EDIT
 // Source: packages/create/openapi.yaml
 // Regenerate: pnpm gen:cli
-// BEGIN:PRIM:CLI
 
 import { createPrimFetch } from "@primsh/x402-client";
 import { getConfig } from "@primsh/keystore";
+import { createCreateClient } from "@primsh/sdk";
 import { getFlag, hasFlag, resolvePassphrase } from "./flags.ts";
 
 export function resolveCreateUrl(argv: string[]): string {
@@ -12,21 +13,6 @@ export function resolveCreateUrl(argv: string[]): string {
   if (flag) return flag;
   if (process.env.PRIM_CREATE_URL) return process.env.PRIM_CREATE_URL;
   return "https://create.prim.sh";
-}
-
-async function handleError(res: Response): Promise<never> {
-  let message = `HTTP ${res.status}`;
-  let code = "unknown";
-  try {
-    const body = (await res.json()) as { error?: { code: string; message: string } };
-    if (body.error) {
-      message = body.error.message;
-      code = body.error.code;
-    }
-  } catch {
-    // ignore parse error
-  }
-  throw new Error(`${message} (${code})`);
 }
 
 export async function runCreateCommand(sub: string, argv: string[]): Promise<void> {
@@ -44,6 +30,7 @@ export async function runCreateCommand(sub: string, argv: string[]): Promise<voi
     maxPayment: maxPaymentFlag ?? process.env.PRIM_MAX_PAYMENT ?? "1.00",
     network: config.network,
   });
+  const client = createCreateClient(primFetch, baseUrl);
 
   if (!sub || sub === "--help" || sub === "-h") {
     console.log("Usage: prim create <scaffold|validate|schema|ports> [args] [flags]");
@@ -57,9 +44,7 @@ export async function runCreateCommand(sub: string, argv: string[]): Promise<voi
 
   switch (sub) {
     case "scaffold": {
-      const res = await primFetch(`${baseUrl}/v1/scaffold`, { method: "POST" });
-      if (!res.ok) return handleError(res);
-      const data = await res.json();
+      const data = await client.scaffold();
       if (quiet) {
         console.log(JSON.stringify(data));
       } else {
@@ -69,9 +54,7 @@ export async function runCreateCommand(sub: string, argv: string[]): Promise<voi
     }
 
     case "validate": {
-      const res = await primFetch(`${baseUrl}/v1/validate`, { method: "POST" });
-      if (!res.ok) return handleError(res);
-      const data = await res.json();
+      const data = await client.validate();
       if (quiet) {
         console.log(JSON.stringify(data));
       } else {
@@ -81,9 +64,7 @@ export async function runCreateCommand(sub: string, argv: string[]): Promise<voi
     }
 
     case "schema": {
-      const res = await primFetch(`${baseUrl}/v1/schema`);
-      if (!res.ok) return handleError(res);
-      const data = await res.json();
+      const data = await client.getSchema();
       if (quiet) {
         console.log(JSON.stringify(data));
       } else {
@@ -93,9 +74,7 @@ export async function runCreateCommand(sub: string, argv: string[]): Promise<voi
     }
 
     case "ports": {
-      const res = await primFetch(`${baseUrl}/v1/ports`);
-      if (!res.ok) return handleError(res);
-      const data = await res.json();
+      const data = await client.getPorts();
       if (quiet) {
         console.log(JSON.stringify(data));
       } else {

@@ -1,6 +1,9 @@
+// SPDX-License-Identifier: Apache-2.0
 // THIS FILE IS GENERATED — DO NOT EDIT
 // Source: packages/gate/openapi.yaml
 // Regenerate: pnpm gen:sdk
+
+import { unwrap } from "./shared.js";
 
 // ── Types ──────────────────────────────────────────────────────────────────
 
@@ -33,8 +36,10 @@ export interface RedeemResponse {
 
 // ── Client ─────────────────────────────────────────────────────────────────
 
-export function createGateClient(primFetch: (input: RequestInfo | URL, init?: RequestInit) => Promise<Response>) {
-  const baseUrl = "https://gate.prim.sh";
+export function createGateClient(
+  primFetch: (input: RequestInfo | URL, init?: RequestInit) => Promise<Response>,
+  baseUrl = "https://gate.prim.sh",
+) {
   return {
     async redeemInvite(req: RedeemRequest): Promise<RedeemResponse> {
       const url = `${baseUrl}/v1/redeem`;
@@ -43,7 +48,7 @@ export function createGateClient(primFetch: (input: RequestInfo | URL, init?: Re
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(req),
       });
-      return res.json() as Promise<RedeemResponse>;
+      return unwrap<RedeemResponse>(res);
     },
   };
 }

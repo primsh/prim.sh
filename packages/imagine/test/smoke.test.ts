@@ -1,14 +1,16 @@
+// SPDX-License-Identifier: Apache-2.0
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import { mockX402Middleware } from "@primsh/x402-middleware/testing";
+
+const createAgentStackMiddlewareSpy = vi.hoisted(() => vi.fn());
 
 vi.hoisted(() => {
   process.env.PRIM_NETWORK = "eip155:8453";
   process.env.PRIM_PAY_TO = "0x0000000000000000000000000000000000000001";
 });
 
-import { mockX402Middleware } from "@primsh/x402-middleware/testing";
-
-const createAgentStackMiddlewareSpy = vi.hoisted(() => vi.fn());
-
+// Bypass x402 middleware for unit tests.
+// Middleware wiring is verified via check 3 (spy on createAgentStackMiddleware).
 vi.mock("@primsh/x402-middleware", async (importOriginal) => {
   const original = await importOriginal<typeof import("@primsh/x402-middleware")>();
   const mocks = mockX402Middleware();

@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: Apache-2.0
 /**
  * SE-1 search.sh tests: web search, news search, and URL extraction via Tavily.
  * Service functions accept injectable providers so tests avoid global fetch mocking.

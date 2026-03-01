@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: Apache-2.0
 /**
  * R-11: Live smoke test against a real Stalwart instance.
  * Exercises the full email.sh flow: create mailbox → send → read → webhook.

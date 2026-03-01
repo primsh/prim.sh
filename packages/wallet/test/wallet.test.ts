@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: Apache-2.0
 /**
  * W-10 wallet registration tests: signature-based registration, ownership, deactivation.
  *

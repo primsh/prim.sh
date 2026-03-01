@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: Apache-2.0
 import { generatePrivateKey, privateKeyToAccount } from "viem/accounts";
 import { insertWallet } from "../src/db.ts";
 

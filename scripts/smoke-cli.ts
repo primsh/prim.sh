@@ -1,4 +1,5 @@
 #!/usr/bin/env bun
+// SPDX-License-Identifier: Apache-2.0
 /**
  * CLI Smoke Test (L-36) — exercises the full prim workflow through the CLI binary.
  *

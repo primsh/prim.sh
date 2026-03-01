@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: Apache-2.0
 /**
  * Per-wallet fixed-window rate limiter.
  *

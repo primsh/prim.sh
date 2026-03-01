@@ -1,4 +1,5 @@
 #!/usr/bin/env bun
+// SPDX-License-Identifier: Apache-2.0
 /**
  * Live Smoke Test — Core 4 services at *.prim.sh
  *

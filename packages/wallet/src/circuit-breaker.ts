@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: Apache-2.0
 import { getDb } from "./db.ts";
 
 type Scope = "all" | "send" | "swap";

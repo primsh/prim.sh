@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: Apache-2.0
 /**
  * M-1 mem.sh tests: collection CRUD, vector upsert/query, KV cache.
  *

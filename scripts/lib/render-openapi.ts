@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: Apache-2.0
 /**
  * scripts/lib/render-openapi.ts — OpenAPI 3.1 spec renderer
  *

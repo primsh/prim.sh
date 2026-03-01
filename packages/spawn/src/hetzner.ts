@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: Apache-2.0
 /**
  * Hetzner Cloud provider implementation.
  * Wraps Hetzner Cloud API v1 behind the CloudProvider interface.

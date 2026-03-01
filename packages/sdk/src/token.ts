@@ -1,6 +1,9 @@
+// SPDX-License-Identifier: Apache-2.0
 // THIS FILE IS GENERATED — DO NOT EDIT
 // Source: packages/token/openapi.yaml
 // Regenerate: pnpm gen:sdk
+
+import { unwrap } from "./shared.js";
 
 // ── Types ──────────────────────────────────────────────────────────────────
 
@@ -175,8 +178,10 @@ export type ListTokensResponse = Record<string, unknown>;
 
 // ── Client ─────────────────────────────────────────────────────────────────
 
-export function createTokenClient(primFetch: (input: RequestInfo | URL, init?: RequestInit) => Promise<Response>) {
-  const baseUrl = "https://token.prim.sh";
+export function createTokenClient(
+  primFetch: (input: RequestInfo | URL, init?: RequestInit) => Promise<Response>,
+  baseUrl = "https://token.prim.sh",
+) {
   return {
     async deployToken(req: CreateTokenRequest): Promise<TokenResponse> {
       const url = `${baseUrl}/v1/tokens`;
@@ -185,17 +190,17 @@ export function createTokenClient(primFetch: (input: RequestInfo | URL, init?: R
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(req),
       });
-      return res.json() as Promise<TokenResponse>;
+      return unwrap<TokenResponse>(res);
     },
     async listTokens(): Promise<ListTokensResponse> {
       const url = `${baseUrl}/v1/tokens`;
       const res = await primFetch(url);
-      return res.json() as Promise<ListTokensResponse>;
+      return unwrap<ListTokensResponse>(res);
     },
     async getToken(params: GetTokenParams): Promise<TokenResponse> {
       const url = `${baseUrl}/v1/tokens/${encodeURIComponent(params.id)}`;
       const res = await primFetch(url);
-      return res.json() as Promise<TokenResponse>;
+      return unwrap<TokenResponse>(res);
     },
     async mintTokens(params: MintTokensParams, req: MintRequest): Promise<MintResponse> {
       const url = `${baseUrl}/v1/tokens/${encodeURIComponent(params.id)}/mint`;
@@ -204,12 +209,12 @@ export function createTokenClient(primFetch: (input: RequestInfo | URL, init?: R
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(req),
       });
-      return res.json() as Promise<MintResponse>;
+      return unwrap<MintResponse>(res);
     },
     async getTokenSupply(params: GetTokenSupplyParams): Promise<SupplyResponse> {
       const url = `${baseUrl}/v1/tokens/${encodeURIComponent(params.id)}/supply`;
       const res = await primFetch(url);
-      return res.json() as Promise<SupplyResponse>;
+      return unwrap<SupplyResponse>(res);
     },
     async createPool(params: CreatePoolParams, req: CreatePoolRequest): Promise<PoolResponse> {
       const url = `${baseUrl}/v1/tokens/${encodeURIComponent(params.id)}/pool`;
@@ -218,12 +223,12 @@ export function createTokenClient(primFetch: (input: RequestInfo | URL, init?: R
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(req),
       });
-      return res.json() as Promise<PoolResponse>;
+      return unwrap<PoolResponse>(res);
     },
     async getPool(params: GetPoolParams): Promise<PoolResponse> {
       const url = `${baseUrl}/v1/tokens/${encodeURIComponent(params.id)}/pool`;
       const res = await primFetch(url);
-      return res.json() as Promise<PoolResponse>;
+      return unwrap<PoolResponse>(res);
     },
     async getLiquidityParams(params: GetLiquidityParamsParams): Promise<LiquidityParamsResponse> {
       const qs = new URLSearchParams();
@@ -232,7 +237,7 @@ export function createTokenClient(primFetch: (input: RequestInfo | URL, init?: R
       const query = qs.toString();
       const url = `${baseUrl}/v1/tokens/${encodeURIComponent(params.id)}/pool/liquidity-params${query ? `?${query}` : ""}`;
       const res = await primFetch(url);
-      return res.json() as Promise<LiquidityParamsResponse>;
+      return unwrap<LiquidityParamsResponse>(res);
     },
   };
 }

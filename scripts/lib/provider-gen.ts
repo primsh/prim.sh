@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: Apache-2.0
 /**
  * scripts/lib/provider-gen.ts — Generate vendor implementation files
  *

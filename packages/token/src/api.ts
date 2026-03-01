@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: Apache-2.0
 /**
  * token.sh API contract — request/response types and error envelope.
  */
