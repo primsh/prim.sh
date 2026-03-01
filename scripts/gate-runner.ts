@@ -16,6 +16,9 @@
  *   bun scripts/gate-runner.ts --dry-run --canary      # Dry-run canary
  *   bun scripts/gate-runner.ts --canary --group onboarding_e2e --env docker   # Docker backend
  *   bun scripts/gate-runner.ts --canary --group onboarding_e2e --env remote   # DO VPS backend
+ *   bun scripts/gate-runner.ts --selftest --env docker    # Validate Docker backend (no LLM/testnet)
+ *   bun scripts/gate-runner.ts --selftest --env remote    # Validate remote backend
+ *   bun scripts/gate-runner.ts --selftest --env local     # Validate local backend (trivial)
  */
 
 import { generateKeyPairSync } from "node:crypto";
@@ -165,6 +168,7 @@ const { values: args } = parseArgs({
     ci: { type: "boolean", default: false },
     "dry-run": { type: "boolean", default: false },
     canary: { type: "boolean", default: false },
+    selftest: { type: "boolean", default: false },
     env: { type: "string", default: "local" },
   },
   strict: true,
@@ -477,9 +481,9 @@ async function createDockerBackend(): Promise<ExecBackend> {
   ]);
   if (run.exit_code !== 0) throw new Error(`docker run failed: ${run.stderr}`);
 
-  // Bootstrap: install curl + unzip (bun installer requires unzip)
+  // Bootstrap: install curl + unzip (bun installer requires unzip) + xxd (readFileHex)
   const bootstrap = await spawnCollect(
-    ["docker", "exec", cid, "sh", "-c", "apt-get update && apt-get install -y curl unzip"],
+    ["docker", "exec", cid, "sh", "-c", "apt-get update && apt-get install -y curl unzip xxd"],
     120_000,
   );
   if (bootstrap.exit_code !== 0) throw new Error(`docker bootstrap failed: ${bootstrap.stderr}`);
@@ -578,7 +582,7 @@ async function createRemoteBackend(): Promise<ExecBackend> {
     image: "ubuntu-24.04",
     location: "nyc3",
     sshKeyIds: [sshKeyId],
-    userData: "#!/bin/bash\napt-get update && apt-get install -y curl unzip",
+    userData: "#!/bin/bash\napt-get update && apt-get install -y curl unzip xxd",
   });
   const dropletId = server.providerResourceId;
 
@@ -624,7 +628,7 @@ async function createRemoteBackend(): Promise<ExecBackend> {
     primHome,
     async exec(command: string) {
       return sshExec(
-        `PRIM_HOME=${primHome} PATH=${primHome}/bin:\\$HOME/.bun/bin:\\$PATH${process.env.PRIM_NETWORK ? ` PRIM_NETWORK=${process.env.PRIM_NETWORK}` : ""} ${command}`,
+        `PRIM_HOME=${primHome} PATH=${primHome}/bin:$HOME/.bun/bin:$PATH${process.env.PRIM_NETWORK ? ` PRIM_NETWORK=${process.env.PRIM_NETWORK}` : ""} ${command}`,
       );
     },
     async readFile(path: string) {
@@ -648,6 +652,117 @@ async function createRemoteBackend(): Promise<ExecBackend> {
       rmSync(tmpDir, { recursive: true, force: true });
     },
   };
+}
+
+// ── Selftest ──────────────────────────────────────────────────────────────
+
+interface SelftestCheck {
+  name: string;
+  critical: boolean;
+  passed: boolean;
+  elapsed_ms: number;
+  detail: string | null;
+}
+
+async function runSelftest(backend: ExecBackend): Promise<SelftestCheck[]> {
+  const results: SelftestCheck[] = [];
+
+  async function check(
+    name: string,
+    critical: boolean,
+    fn: () => Promise<string | null>,
+  ): Promise<void> {
+    const start = performance.now();
+    try {
+      const detail = await fn();
+      results.push({
+        name,
+        critical,
+        passed: true,
+        elapsed_ms: performance.now() - start,
+        detail,
+      });
+    } catch (err) {
+      results.push({
+        name,
+        critical,
+        passed: false,
+        elapsed_ms: performance.now() - start,
+        detail: err instanceof Error ? err.message : String(err),
+      });
+    }
+  }
+
+  // 1. Basic exec
+  await check("exec basic", true, async () => {
+    const r = await backend.exec("echo hello");
+    if (r.exit_code !== 0) throw new Error(`exit ${r.exit_code}: ${r.stderr}`);
+    if (!r.stdout.includes("hello")) throw new Error(`stdout: ${r.stdout.trim()}`);
+    return null;
+  });
+
+  // 2. Install script
+  await check("install script", true, async () => {
+    const r = await backend.exec("curl -fsSL https://prim.sh/install.sh | sh");
+    if (r.exit_code !== 0) {
+      const detail = r.stderr || r.stdout.trim().split("\n").pop() || "";
+      throw new Error(`exit ${r.exit_code}: ${detail}`);
+    }
+    return null;
+  });
+
+  // 3. prim --version
+  await check("prim --version", true, async () => {
+    const r = await backend.exec("prim --version");
+    if (r.exit_code !== 0) {
+      throw new Error(`exit ${r.exit_code}: ${r.stderr || r.stdout}`);
+    }
+    const version = r.stdout.trim();
+    if (!version) throw new Error("empty stdout");
+    return version;
+  });
+
+  // 4. readFile roundtrip
+  await check("readFile", true, async () => {
+    const testPath = "/tmp/prim-selftest-read.txt";
+    const content = `selftest-${Date.now()}`;
+    await backend.exec(`printf '%s' '${content}' > ${testPath}`);
+    const got = await backend.readFile(testPath);
+    if (got !== content) throw new Error(`expected "${content}", got "${got}"`);
+    return null;
+  });
+
+  // 5. readFileHex roundtrip (uses octal escapes for POSIX sh compat)
+  await check("readFileHex roundtrip", true, async () => {
+    const testPath = "/tmp/prim-selftest-hex.bin";
+    const hexBytes = "deadbeef0102";
+    // \336=0xde \255=0xad \276=0xbe \357=0xef \001=0x01 \002=0x02
+    await backend.exec(`printf '\\336\\255\\276\\357\\001\\002' > ${testPath}`);
+    const got = await backend.readFileHex(testPath);
+    if (got !== hexBytes) throw new Error(`expected "${hexBytes}", got "${got}"`);
+    return null;
+  });
+
+  // 6. readDir
+  await check("readDir", false, async () => {
+    const testPath = "/tmp/prim-selftest-dir-check.txt";
+    await backend.exec(`touch ${testPath}`);
+    const entries = await backend.readDir("/tmp");
+    if (entries.length === 0) throw new Error("empty dir listing");
+    if (!entries.includes("prim-selftest-dir-check.txt"))
+      throw new Error("test file not found in listing");
+    return null;
+  });
+
+  // 7. Pipe through exec
+  await check("pipe through exec", false, async () => {
+    const r = await backend.exec("echo hello | cat");
+    if (r.exit_code !== 0) throw new Error(`exit ${r.exit_code}: ${r.stderr}`);
+    if (!r.stdout.includes("hello")) throw new Error(`stdout: ${r.stdout.trim()}`);
+    return null;
+  });
+
+  return results;
 }
 
 /**
@@ -1387,6 +1502,54 @@ ${groupPrompt}`;
 // ── Main ───────────────────────────────────────────────────────────────────
 
 async function main() {
+  // ── Selftest Mode ───────────────────────────────────────────────────────
+
+  if (args.selftest) {
+    console.log(`\n${c.bold("Backend Selftest")} (${execEnv})`);
+    console.log("═════════════════════════");
+
+    let backend: ExecBackend;
+    if (execEnv === "docker") {
+      console.log(c.dim("  Creating Docker container…"));
+      backend = await createDockerBackend();
+    } else if (execEnv === "remote") {
+      console.log(c.dim("  Provisioning remote VPS…"));
+      backend = await createRemoteBackend();
+    } else {
+      const primHome = join(tmpdir(), `prim-selftest-${Date.now()}`);
+      mkdirSync(primHome, { recursive: true });
+      backend = createLocalBackend(primHome);
+    }
+
+    let exitCode = 0;
+    try {
+      const results = await runSelftest(backend);
+
+      console.log();
+      for (const r of results) {
+        const icon = r.passed ? c.green("●") : c.red("✗");
+        const elapsed = `${(r.elapsed_ms / 1000).toFixed(1)}s`;
+        const detail = r.detail ? `  ${r.detail}` : "";
+        console.log(`  ${icon} ${r.name.padEnd(22)} ${c.dim(elapsed)}${detail}`);
+      }
+
+      const passed = results.filter((r) => r.passed).length;
+      const failed = results.filter((r) => !r.passed).length;
+      console.log();
+      if (failed > 0) {
+        console.log(c.red(`${passed}/${results.length} passed, ${failed} failed`));
+        exitCode = 1;
+      } else {
+        console.log(c.green(`${passed}/${results.length} passed`));
+      }
+    } finally {
+      console.log(c.dim("\n  Cleaning up backend…"));
+      await backend.cleanup();
+    }
+
+    process.exit(exitCode);
+  }
+
   // Load plan
   const planFile = Bun.file(PLAN_PATH);
   if (!(await planFile.exists())) {
