@@ -93,6 +93,14 @@ async function main() {
     return;
   }
 
+  if (group === "gate") {
+    await wrapCommand(async () => {
+      const { runGateCommand } = await import("./gate-commands.ts");
+      await runGateCommand(subcommand, argv);
+    });
+    return;
+  }
+
   if (group === "search") {
     await wrapCommand(async () => {
       const { runSearchCommand } = await import("./search-commands.ts");
@@ -176,6 +184,7 @@ async function main() {
     console.log("  prim domain    <search|quote|register|recover|status|ns|zone|record>");
     console.log("  prim token     <deploy|ls|get|mint|supply|pool>");
     console.log("  prim faucet    <usdc|eth|status>");
+    console.log("  prim gate      <invite>");
     console.log("  prim search    <web|news|extract>");
     console.log("  prim mcp       [--primitives wallet,store,...] [--wallet 0x...]");
     console.log("  prim admin     <list-requests|approve|deny|add-wallet|remove-wallet>");
@@ -217,6 +226,7 @@ async function main() {
       case "balance": {
         // prim wallet balance [address] — optional address, defaults to default wallet
         const address = argv[2];
+        const networkFlag = getFlag("network", argv);
         let resolvedAddress: string;
         if (address) {
           resolvedAddress = address;
@@ -226,7 +236,7 @@ async function main() {
           const { privateKeyToAccount } = await import("viem/accounts");
           resolvedAddress = privateKeyToAccount(key).address;
         }
-        const { balance, funded, network } = await getUsdcBalance(resolvedAddress);
+        const { balance, funded, network } = await getUsdcBalance(resolvedAddress, networkFlag);
         console.log(
           `${resolvedAddress}  ${balance} USDC  [${network}]${funded ? "" : "  (unfunded)"}`,
         );
