@@ -6,5 +6,5 @@ category: storage
 card_class: p7
 description: "Encrypted secrets store for agents. Store API keys, credentials, and private data."
 nounStyled: "The agent-native vault."
-tagline: "Zero exposure. Infinite secrets."
+tagline: "Zero exposure. One call. Infinite secrets."
 sub: "Encrypted key-value store. Store API keys, credentials, and private data. x402 auth."

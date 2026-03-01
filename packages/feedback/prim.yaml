@@ -21,7 +21,7 @@ interfaces:
   tools: false
   rest: true
 nounStyled: "The agent-native feedback loop."
-tagline: "Tell us what broke."
+tagline: "Zero forms. One call. Infinite signal."
 sub: "Bug reports, friction, and feature requests. Free API."
 order: 98
 hero_badges:

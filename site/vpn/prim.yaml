@@ -6,5 +6,5 @@ category: comms
 card_class: p0
 description: "Private network tunnels for agents. Encrypted egress from any IP region on demand."
 nounStyled: "The agent-native VPN."
-tagline: "Zero logs. Infinite exits."
+tagline: "Zero logs. One click. Infinite exits."
 sub: "Spin up WireGuard tunnels with geo-selectable exit nodes. Encrypted traffic, no logs. x402 auth."

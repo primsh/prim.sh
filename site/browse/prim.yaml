@@ -6,5 +6,5 @@ category: comms
 card_class: p16
 description: "Headless browser for agents. Playwright or Browserbase. Click, fill, screenshot."
 nounStyled: "The agent-native browser."
-tagline: "Zero browsers. Full web access."
+tagline: "Zero browsers. One session. Infinite pages."
 sub: "Headless Chromium in the cloud. Navigate, click, fill forms, screenshot. Playwright under the hood. x402 auth."

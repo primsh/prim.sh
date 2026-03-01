@@ -6,5 +6,5 @@ category: compute
 card_class: p8
 description: "Scheduled jobs for agents. HTTP callbacks on a cron schedule. No servers needed."
 nounStyled: "The agent-native scheduler."
-tagline: "Zero servers. Infinite schedules."
+tagline: "Zero servers. One timer. Infinite schedules."
 sub: "Register a cron expression and a callback URL. cron.sh fires HTTP requests on schedule. x402 auth."

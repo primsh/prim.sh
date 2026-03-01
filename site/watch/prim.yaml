@@ -6,5 +6,5 @@ category: ops
 card_class: p18
 description: "OpenTelemetry collector for agents. Metrics, traces, and logs via API."
 nounStyled: "The agent-native monitor."
-tagline: "Zero blind spots. Full observability."
+tagline: "Zero gaps. One dashboard. Infinite signals."
 sub: "Ship metrics, traces, and logs from your agent. OpenTelemetry compatible. x402 auth. No infra required."

@@ -6,5 +6,5 @@ category: compute
 card_class: p11
 description: "Sandboxed code execution for agents. Run untrusted code safely. x402 auth."
 nounStyled: "The agent-native sandbox."
-tagline: "Zero servers. Run anything."
+tagline: "Zero servers. One call. Infinite runtimes."
 sub: "Run arbitrary code in sandboxed environments. E2B or Firecracker under the hood. x402 auth. No server setup."

@@ -54,7 +54,7 @@ factory:
 
 
 nounStyled: "The agent-native object store."
-tagline: "Persist anything. Own nothing."
+tagline: "Zero servers. One bucket. Infinite objects."
 sub: "Persist files across ephemeral VMs. S3-compatible."
 
 hero_badges:

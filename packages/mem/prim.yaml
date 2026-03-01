@@ -48,7 +48,7 @@ factory:
 
 
 nounStyled: "The agent-native memory."
-tagline: "Zero drift. Infinite recall."
+tagline: "Zero drift. One store. Infinite recall."
 sub: "Vector store, cache, and long-term retrieval for agents."
 
 hero_badges:
