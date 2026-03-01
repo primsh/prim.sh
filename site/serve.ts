@@ -48,6 +48,7 @@ const ACCESS_TEMPLATE = readFileSync(ACCESS_PATH, "utf-8").replace(
 const STATIC_ROUTES: Record<string, string> = {
   "/terms": join(ROOT, "site/terms/index.html"),
   "/privacy": join(ROOT, "site/privacy/index.html"),
+  "/docs/costs": join(ROOT, "site/docs/costs/index.html"),
   "/install": join(ROOT, "site/install.sh"),
   "/install.sh": join(ROOT, "site/install.sh"),
 };
@@ -147,9 +148,10 @@ const server = Bun.serve({
       });
     }
 
-    // Static exact routes
-    if (STATIC_ROUTES[pathname]) {
-      return serveFile(STATIC_ROUTES[pathname]);
+    // Static exact routes (strip trailing slash for matching)
+    const clean = pathname.length > 1 && pathname.endsWith("/") ? pathname.slice(0, -1) : pathname;
+    if (STATIC_ROUTES[clean]) {
+      return serveFile(STATIC_ROUTES[clean]);
     }
 
     // /assets/*
