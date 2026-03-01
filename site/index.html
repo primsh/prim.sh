@@ -45,6 +45,10 @@
 /* phantom */
 .product.phantom{opacity:0.30;pointer-events:none;filter:blur(4px);user-select:none}
 .phantom-label{font-size:0.75rem;color:#444;text-transform:uppercase;letter-spacing:0.1em;font-weight:600;margin-top:0.25rem;display:block}
+/* Content overlapping phantom grid */
+.content-overlap{position:relative;z-index:2;margin-top:-1100px}
+.content-overlap::before{content:'';display:block;height:300px;background:linear-gradient(to bottom,transparent,rgba(10,10,10,0.85));pointer-events:none}
+.content-overlap>section,.content-overlap>.cta-section{background:transparent}
 /* Principles */
 .principles{display:grid;grid-template-columns:repeat(2,1fr);gap:1.5rem;margin:2rem 0}
 .principle{background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:1.5rem;box-shadow:0 0 30px color-mix(in srgb,var(--accent) 25%,transparent)}
@@ -219,6 +223,7 @@
   </div>
 </div>
 
+<div class="content-overlap">
 <section>
   <h2>Why prim.sh</h2>
   <div class="manifesto glow-multi">
@@ -271,6 +276,7 @@
     <code>curl -fsSL prim.sh/install.sh | sh</code>
     <button class="copy-btn" onclick="const b=this;navigator.clipboard.writeText('curl -fsSL prim.sh/install.sh | sh').then(()=>{b.textContent='copied';b.classList.add('copied');setTimeout(()=>{b.textContent='copy';b.classList.remove('copied')},2000)})">copy</button>
   </div>
+</div>
 </div>
 
 {{footer}}
