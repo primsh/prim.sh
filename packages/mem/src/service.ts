@@ -1,6 +1,6 @@
 import { createHash, randomBytes } from "node:crypto";
+import type { PaginatedList } from "@primsh/x402-middleware";
 import type {
-  CollectionListResponse,
   CollectionResponse,
   CreateCollectionRequest,
   GetCacheResponse,
@@ -173,7 +173,7 @@ export function listCollections(
   callerWallet: string,
   limit: number,
   page: number,
-): CollectionListResponse {
+): PaginatedList<CollectionResponse> {
   const offset = (page - 1) * limit;
   const rows = getCollectionsByOwner(callerWallet, limit, offset);
   const total = countCollectionsByOwner(callerWallet);

@@ -1,9 +1,11 @@
 import { describe, expect, it, vi, beforeEach } from "vitest";
 
-process.env.PRIM_NETWORK = "eip155:84532";
-process.env.GATE_FUND_KEY = "0x0000000000000000000000000000000000000000000000000000000000000001";
-process.env.GATE_CODES = "TEST-CODE-1,TEST-CODE-2";
-process.env.PRIM_INTERNAL_KEY = "test-internal-key";
+vi.hoisted(() => {
+  process.env.PRIM_NETWORK = "eip155:84532";
+  process.env.GATE_FUND_KEY = "0x0000000000000000000000000000000000000000000000000000000000000001";
+  process.env.GATE_CODES = "TEST-CODE-1,TEST-CODE-2";
+  process.env.PRIM_INTERNAL_KEY = "test-internal-key";
+});
 
 // Mock x402-middleware — gate uses freeService so no x402, but createPrimApp still imports it.
 // Simple factory (no importOriginal) to avoid pulling in @x402/* deps that vitest can't resolve.
@@ -52,6 +54,13 @@ vi.mock("../src/db.ts", () => ({
   seedCodes: vi.fn(() => 2),
   validateAndBurn: vi.fn(() => ({ ok: true })),
   resetDb: vi.fn(),
+  generateCode: vi.fn(() => "PRIM-a3f8c21b"),
+  insertCodes: vi.fn((codes: string[]) => codes.length),
+  listCodes: vi.fn(() => [
+    { code: "PRIM-abc12345", created_at: "2026-01-01T00:00:00.000Z", label: null, wallet: null, redeemed_at: null },
+    { code: "PRIM-used0001", created_at: "2026-01-01T00:00:00.000Z", label: null, wallet: "0x1234", redeemed_at: "2026-01-02T00:00:00.000Z" },
+  ]),
+  revokeCode: vi.fn(() => ({ ok: true })),
 }));
 
 // Mock the fund module
@@ -67,9 +76,11 @@ vi.mock("../src/fund.ts", () => ({
 }));
 
 import app from "../src/index.ts";
-import { validateAndBurn } from "../src/db.ts";
+import { generateCode, insertCodes, listCodes, revokeCode, validateAndBurn } from "../src/db.ts";
 import { fundWallet } from "../src/fund.ts";
 import { addToAllowlist } from "@primsh/x402-middleware/allowlist-db";
+
+const INTERNAL_HEADERS = { "x-internal-key": "test-internal-key", "Content-Type": "application/json" };
 
 describe("gate.sh app", () => {
   beforeEach(() => {
@@ -193,5 +204,149 @@ describe("gate.sh app", () => {
     expect(res.status).toBe(502);
     const body = await res.json();
     expect(body.error.code).toBe("fund_error");
+  });
+
+  // ─── Internal: code management ─────────────────────────────────────────────
+
+  // Check 10: POST /internal/codes without auth → 401
+  it("POST /internal/codes without auth returns 401", async () => {
+    const res = await app.request("/internal/codes", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ count: 1 }),
+    });
+    expect(res.status).toBe(401);
+  });
+
+  // Check 11: POST /internal/codes { count: 3 } → 200, 3 codes
+  it("POST /internal/codes with count generates random codes", async () => {
+    let callCount = 0;
+    vi.mocked(generateCode).mockImplementation(() => {
+      callCount++;
+      return `PRIM-${callCount.toString().padStart(8, "0")}`;
+    });
+    vi.mocked(insertCodes).mockReturnValue(3);
+
+    const res = await app.request("/internal/codes", {
+      method: "POST",
+      headers: INTERNAL_HEADERS,
+      body: JSON.stringify({ count: 3 }),
+    });
+    expect(res.status).toBe(200);
+    const body = await res.json();
+    expect(body.codes).toHaveLength(3);
+    for (const code of body.codes) {
+      expect(code).toMatch(/^PRIM-[a-f0-9]{8}$/);
+    }
+    expect(body.created).toBe(3);
+  });
+
+  // Check 12: POST /internal/codes { codes: ["PRIM-custom1"] } → 200
+  it("POST /internal/codes with specific codes", async () => {
+    vi.mocked(insertCodes).mockReturnValue(1);
+
+    const res = await app.request("/internal/codes", {
+      method: "POST",
+      headers: INTERNAL_HEADERS,
+      body: JSON.stringify({ codes: ["PRIM-custom1"] }),
+    });
+    expect(res.status).toBe(200);
+    const body = await res.json();
+    expect(body.codes).toContain("PRIM-custom1");
+    expect(body.created).toBe(1);
+  });
+
+  // Check 13: POST /internal/codes {} (no count or codes) → 400
+  it("POST /internal/codes with empty body returns 400", async () => {
+    const res = await app.request("/internal/codes", {
+      method: "POST",
+      headers: INTERNAL_HEADERS,
+      body: JSON.stringify({}),
+    });
+    expect(res.status).toBe(400);
+    const body = await res.json();
+    expect(body.error.code).toBe("invalid_request");
+  });
+
+  // Check 14: POST /internal/codes { count: 101 } → 400
+  it("POST /internal/codes with count > 100 returns 400", async () => {
+    const res = await app.request("/internal/codes", {
+      method: "POST",
+      headers: INTERNAL_HEADERS,
+      body: JSON.stringify({ count: 101 }),
+    });
+    expect(res.status).toBe(400);
+    const body = await res.json();
+    expect(body.error.code).toBe("invalid_request");
+  });
+
+  // Check 15: GET /internal/codes → 200
+  it("GET /internal/codes returns list of codes", async () => {
+    const res = await app.request("/internal/codes", {
+      headers: { "x-internal-key": "test-internal-key" },
+    });
+    expect(res.status).toBe(200);
+    const body = await res.json();
+    expect(body.codes).toBeInstanceOf(Array);
+    expect(body.total).toBe(2);
+    expect(body.codes[0]).toMatchObject({
+      code: expect.any(String),
+      status: "available",
+    });
+  });
+
+  // Check 16: GET /internal/codes?status=available → 200, filtered
+  it("GET /internal/codes?status=available returns filtered list", async () => {
+    vi.mocked(listCodes).mockReturnValue([
+      { code: "PRIM-abc12345", created_at: "2026-01-01T00:00:00.000Z", label: null, wallet: null, redeemed_at: null },
+    ]);
+
+    const res = await app.request("/internal/codes?status=available", {
+      headers: { "x-internal-key": "test-internal-key" },
+    });
+    expect(res.status).toBe(200);
+    const body = await res.json();
+    expect(body.codes).toHaveLength(1);
+    expect(body.codes[0].status).toBe("available");
+    expect(vi.mocked(listCodes)).toHaveBeenCalledWith("available");
+  });
+
+  // Check 17: DELETE /internal/codes/PRIM-exists → 200
+  it("DELETE /internal/codes/:code revokes an available code", async () => {
+    vi.mocked(revokeCode).mockReturnValue({ ok: true });
+
+    const res = await app.request("/internal/codes/PRIM-exists", {
+      method: "DELETE",
+      headers: { "x-internal-key": "test-internal-key" },
+    });
+    expect(res.status).toBe(200);
+    const body = await res.json();
+    expect(body.status).toBe("revoked");
+  });
+
+  // Check 18: DELETE /internal/codes/PRIM-missing → 404
+  it("DELETE /internal/codes/:code returns 404 for missing code", async () => {
+    vi.mocked(revokeCode).mockReturnValue({ ok: false, reason: "not_found" });
+
+    const res = await app.request("/internal/codes/PRIM-missing", {
+      method: "DELETE",
+      headers: { "x-internal-key": "test-internal-key" },
+    });
+    expect(res.status).toBe(404);
+    const body = await res.json();
+    expect(body.error.code).toBe("not_found");
+  });
+
+  // Check 19: DELETE /internal/codes/PRIM-used → 409
+  it("DELETE /internal/codes/:code returns 409 for redeemed code", async () => {
+    vi.mocked(revokeCode).mockReturnValue({ ok: false, reason: "already_redeemed" });
+
+    const res = await app.request("/internal/codes/PRIM-used", {
+      method: "DELETE",
+      headers: { "x-internal-key": "test-internal-key" },
+    });
+    expect(res.status).toBe(409);
+    const body = await res.json();
+    expect(body.error.code).toBe("code_redeemed");
   });
 });

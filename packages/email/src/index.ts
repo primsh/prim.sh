@@ -7,18 +7,16 @@ import {
   notFound,
   serviceError,
 } from "@primsh/x402-middleware";
-import type { ApiError } from "@primsh/x402-middleware";
+import type { ApiError, PaginatedList } from "@primsh/x402-middleware";
 import { createPrimApp } from "@primsh/x402-middleware/create-prim-app";
 import type {
   CreateMailboxRequest,
   DeleteDomainResponse,
   DeleteMailboxResponse,
   DeleteWebhookResponse,
-  DomainListResponse,
   DomainResponse,
   EmailDetail,
-  EmailListResponse,
-  MailboxListResponse,
+  EmailMessage,
   MailboxResponse,
   RegisterDomainRequest,
   RegisterWebhookRequest,
@@ -26,7 +24,6 @@ import type {
   SendMessageRequest,
   SendMessageResponse,
   VerifyDomainResponse,
-  WebhookListResponse,
   WebhookResponse,
 } from "./api.ts";
 import {
@@ -175,9 +172,7 @@ const app = createPrimApp(
   { createAgentStackMiddleware, createWalletAllowlistChecker },
 );
 
-const logger = (
-  app as typeof app & { logger: { warn: (msg: string, extra?: Record<string, unknown>) => void } }
-).logger;
+const logger = app.logger;
 
 // POST /v1/mailboxes — Create mailbox
 app.post("/v1/mailboxes", async (c) => {
@@ -214,7 +209,7 @@ app.get("/v1/mailboxes", (c) => {
   const includeExpired = c.req.query("include_expired") === "true";
 
   const data = listMailboxes(caller, page, perPage, includeExpired);
-  return c.json(data as MailboxListResponse, 200);
+  return c.json(data as PaginatedList<MailboxResponse>, 200);
 });
 
 // GET /v1/mailboxes/:id — Get mailbox
@@ -281,7 +276,7 @@ app.get("/v1/mailboxes/:id/messages", async (c) => {
     if (result.code === "expired") return c.json(serviceError("expired", result.message), 410);
     return c.json(serviceError(result.code, result.message), result.status as 502);
   }
-  return c.json(result.data as EmailListResponse, 200);
+  return c.json(result.data as PaginatedList<EmailMessage>, 200);
 });
 
 // GET /v1/mailboxes/:id/messages/:msgId — Get single message
@@ -353,7 +348,7 @@ app.get("/v1/mailboxes/:id/webhooks", (c) => {
     if (result.code === "not_found") return c.json(notFound(result.message), 404);
     return c.json(serviceError(result.code, result.message), result.status as 502);
   }
-  return c.json(result.data as WebhookListResponse, 200);
+  return c.json(result.data as PaginatedList<WebhookResponse>, 200);
 });
 
 // DELETE /v1/mailboxes/:id/webhooks/:whId — Delete webhook
@@ -401,7 +396,7 @@ app.get("/v1/domains", (c) => {
   const page = Math.max(Number(c.req.query("page")) || 1, 1);
 
   const data = listDomains(caller, page, perPage);
-  return c.json(data as DomainListResponse, 200);
+  return c.json(data as PaginatedList<DomainResponse>, 200);
 });
 
 // GET /v1/domains/:id — Get domain details

@@ -31,8 +31,8 @@ function getViemChain(chainId: number) {
  * Fetch live on-chain USDC balance via viem readContract.
  * On RPC failure, returns { balance: "0.00", funded: false } rather than throwing.
  */
-export async function getUsdcBalance(address: string): Promise<BalanceResult> {
-  const netConfig = getNetworkConfig();
+export async function getUsdcBalance(address: string, network?: string): Promise<BalanceResult> {
+  const netConfig = getNetworkConfig(network);
   const rpcUrl = process.env.BASE_RPC_URL ?? netConfig.rpcUrl;
 
   const client = createPublicClient({

@@ -1,5 +1,6 @@
 import { createHash, randomBytes } from "node:crypto";
 import { createLogger } from "@primsh/x402-middleware";
+import type { PaginatedList } from "@primsh/x402-middleware";
 
 const log = createLogger("email.sh", { module: "service" });
 import type {
@@ -8,13 +9,10 @@ import type {
   DeleteMailboxResponse,
   DeleteWebhookResponse,
   DnsRecord,
-  DomainListResponse,
   DomainResponse,
   EmailAddress,
   EmailDetail,
-  EmailListResponse,
   EmailMessage,
-  MailboxListResponse,
   MailboxResponse,
   RegisterDomainRequest,
   RegisterWebhookRequest,
@@ -24,7 +22,6 @@ import type {
   ServiceResult,
   VerificationResult,
   VerifyDomainResponse,
-  WebhookListResponse,
   WebhookPayload,
   WebhookResponse,
 } from "./api.ts";
@@ -396,7 +393,7 @@ export function listMailboxes(
   page: number,
   perPage: number,
   includeExpired = false,
-): MailboxListResponse {
+): PaginatedList<MailboxResponse> {
   const offset = (page - 1) * perPage;
   const rows = includeExpired
     ? getMailboxesByOwnerAll(callerWallet, perPage, offset)
@@ -471,7 +468,7 @@ export async function listMessages(
   mailboxId: string,
   callerWallet: string,
   opts: { limit?: number; position?: number; folder?: FolderName },
-): Promise<ServiceResult<EmailListResponse>> {
+): Promise<ServiceResult<PaginatedList<EmailMessage>>> {
   const check = checkOwnership(mailboxId, callerWallet);
   if (!check.ok) return check;
   await lazyExpire(check.row);
@@ -742,7 +739,7 @@ export async function registerWebhook(
 export function listWebhooks(
   mailboxId: string,
   callerWallet: string,
-): ServiceResult<WebhookListResponse> {
+): ServiceResult<PaginatedList<WebhookResponse>> {
   const check = checkOwnership(mailboxId, callerWallet);
   if (!check.ok) return check;
 
@@ -931,7 +928,7 @@ export function listDomains(
   callerWallet: string,
   page: number,
   perPage: number,
-): DomainListResponse {
+): PaginatedList<DomainResponse> {
   const offset = (page - 1) * perPage;
   const rows = getDomainsByOwner(callerWallet, perPage, offset);
   const total = countDomainsByOwner(callerWallet);

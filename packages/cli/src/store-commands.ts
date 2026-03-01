@@ -61,6 +61,20 @@ async function handleError(res: Response): Promise<never> {
   process.exit(1);
 }
 
+async function resolveBucket(
+  bucketArg: string,
+  baseUrl: string,
+  primFetch: (url: string, init?: RequestInit) => Promise<Response>,
+): Promise<string> {
+  if (/^b[a-z]*_/.test(bucketArg)) return bucketArg;
+  const res = await primFetch(`${baseUrl}/v1/buckets`);
+  if (!res.ok) return handleError(res);
+  const data = (await res.json()) as { buckets: Array<{ id: string; name: string }> };
+  const match = data.buckets.find((b) => b.name === bucketArg);
+  if (!match) throw new Error(`Bucket not found: ${bucketArg}`);
+  return match.id;
+}
+
 export async function runStoreCommand(sub: string, argv: string[]): Promise<void> {
   const baseUrl = resolveStoreUrl(argv);
   const walletFlag = getFlag("wallet", argv);
@@ -120,9 +134,9 @@ export async function runStoreCommand(sub: string, argv: string[]): Promise<void
     }
 
     case "put": {
-      const bucketId = argv[2];
+      const bucketArg = argv[2];
       const key = argv[3];
-      if (!bucketId || !key) {
+      if (!bucketArg || !key) {
         process.stderr.write("Usage: prim store put BUCKET_ID KEY [--file=PATH | stdin]\n");
         process.exit(1);
       }
@@ -146,6 +160,7 @@ export async function runStoreCommand(sub: string, argv: string[]): Promise<void
         contentLength = body.length;
         contentType = contentTypeFlag ?? "application/octet-stream";
       }
+      const bucketId = await resolveBucket(bucketArg, baseUrl, primFetch);
       const res = await primFetch(`${baseUrl}/v1/buckets/${bucketId}/objects/${key}`, {
         method: "PUT",
         headers: {
@@ -165,12 +180,13 @@ export async function runStoreCommand(sub: string, argv: string[]): Promise<void
     }
 
     case "get": {
-      const bucketId = argv[2];
+      const bucketArg = argv[2];
       const key = argv[3];
-      if (!bucketId || !key) {
+      if (!bucketArg || !key) {
         process.stderr.write("Usage: prim store get BUCKET_ID KEY [--out=PATH | stdout]\n");
         process.exit(1);
       }
+      const bucketId = await resolveBucket(bucketArg, baseUrl, primFetch);
       const outPath = getFlag("out", argv);
       const res = await primFetch(`${baseUrl}/v1/buckets/${bucketId}/objects/${key}`);
       if (!res.ok) return handleError(res);
@@ -184,12 +200,13 @@ export async function runStoreCommand(sub: string, argv: string[]): Promise<void
     }
 
     case "rm": {
-      const bucketId = argv[2];
+      const bucketArg = argv[2];
       const key = argv[3];
-      if (!bucketId || !key) {
+      if (!bucketArg || !key) {
         process.stderr.write("Usage: prim store rm BUCKET_ID KEY\n");
         process.exit(1);
       }
+      const bucketId = await resolveBucket(bucketArg, baseUrl, primFetch);
       const res = await primFetch(`${baseUrl}/v1/buckets/${bucketId}/objects/${key}`, {
         method: "DELETE",
       });
@@ -202,11 +219,12 @@ export async function runStoreCommand(sub: string, argv: string[]): Promise<void
     }
 
     case "rm-bucket": {
-      const bucketId = argv[2];
-      if (!bucketId) {
+      const bucketArg = argv[2];
+      if (!bucketArg) {
         process.stderr.write("Usage: prim store rm-bucket BUCKET_ID\n");
         process.exit(1);
       }
+      const bucketId = await resolveBucket(bucketArg, baseUrl, primFetch);
       const res = await primFetch(`${baseUrl}/v1/buckets/${bucketId}`, {
         method: "DELETE",
       });
@@ -219,11 +237,12 @@ export async function runStoreCommand(sub: string, argv: string[]): Promise<void
     }
 
     case "quota": {
-      const bucketId = argv[2];
-      if (!bucketId) {
+      const bucketArg = argv[2];
+      if (!bucketArg) {
         process.stderr.write("Usage: prim store quota BUCKET_ID\n");
         process.exit(1);
       }
+      const bucketId = await resolveBucket(bucketArg, baseUrl, primFetch);
       const res = await primFetch(`${baseUrl}/v1/buckets/${bucketId}/quota`);
       if (!res.ok) return handleError(res);
       const data = (await res.json()) as { usage_bytes: number };

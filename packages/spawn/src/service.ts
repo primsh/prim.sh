@@ -1,4 +1,5 @@
 import { randomBytes } from "node:crypto";
+import type { PaginatedList } from "@primsh/x402-middleware";
 import type {
   ActionOnlyResponse,
   CreateServerRequest,
@@ -9,9 +10,7 @@ import type {
   RebuildResponse,
   ResizeRequest,
   ResizeResponse,
-  ServerListResponse,
   ServerResponse,
-  SshKeyListResponse,
   SshKeyResponse,
 } from "./api.ts";
 import {
@@ -284,7 +283,7 @@ export async function createServer(
   }
 }
 
-export function listServers(callerWallet: string, limit: number, page: number): ServerListResponse {
+export function listServers(callerWallet: string, limit: number, page: number): PaginatedList<ServerResponse> {
   const offset = (page - 1) * limit;
   const rows = getServersByOwner(callerWallet, limit, offset);
   const total = countServersByOwner(callerWallet);
@@ -611,7 +610,7 @@ export async function registerSshKey(
   }
 }
 
-export function listSshKeys(callerWallet: string): SshKeyListResponse {
+export function listSshKeys(callerWallet: string): PaginatedList<SshKeyResponse> {
   const rows = getSshKeysByOwner(callerWallet);
   return {
     data: rows.map(rowToSshKeyResponse),

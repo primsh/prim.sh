@@ -367,7 +367,7 @@ export function renderFooter(crumb: string): string {
   <div class="links">
     <a href="https://x.com/useprim">x</a>
     <a href="https://github.com/primsh">github</a>
-    <a href="https://discord.gg/ccqcdFaZGJ">discord</a>
+    <a href="https://discord.gg/VbFseNDZ">discord</a>
     <a href="/access">access</a>
     <a href="/llms.txt">llms.txt</a>
   </div>

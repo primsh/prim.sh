@@ -67,11 +67,6 @@ export interface RenewMailboxRequest {
   ttl_ms?: number;
 }
 
-import type { PaginatedList } from "@primsh/x402-middleware";
-
-/** @deprecated Use PaginatedList<MailboxResponse> */
-export type MailboxListResponse = PaginatedList<MailboxResponse>;
-
 export interface DeleteMailboxResponse {
   /** Mailbox ID that was deleted. */
   id: string;
@@ -115,9 +110,6 @@ export interface EmailDetail extends EmailMessage {
   /** HTML body. Null if not present. */
   html_body: string | null;
 }
-
-/** @deprecated Use PaginatedList<EmailMessage> */
-export type EmailListResponse = PaginatedList<EmailMessage>;
 
 // ─── Send types (R-6) ─────────────────────────────────────────────────
 
@@ -166,9 +158,6 @@ export interface WebhookResponse {
   /** ISO 8601 timestamp when the webhook was created. */
   created_at: string;
 }
-
-/** @deprecated Use PaginatedList<WebhookResponse> */
-export type WebhookListResponse = PaginatedList<WebhookResponse>;
 
 export interface DeleteWebhookResponse {
   /** Webhook ID that was deleted. */
@@ -238,9 +227,6 @@ export interface DomainResponse {
   /** DKIM DNS records. Only present after successful verification. */
   dkim_records?: DnsRecord[];
 }
-
-/** @deprecated Use PaginatedList<DomainResponse> */
-export type DomainListResponse = PaginatedList<DomainResponse>;
 
 export interface DeleteDomainResponse {
   /** Domain registration ID that was deleted. */

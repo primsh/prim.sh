@@ -4,7 +4,7 @@
 export const BRAND = {
   name: "prim.sh",
   org: "Primitive Shell",
-  copyright: "© 2026 Primitive Shell",
+  copyright: "© 2026 Primitive Shell LLC",
   noun: "Agent infrastructure.",
   nounStyled: "The agent-native stack.",
   tagline: "Zero signup. One payment token. Infinite primitives.",

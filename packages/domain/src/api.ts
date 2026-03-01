@@ -56,11 +56,6 @@ export interface CreateZoneResponse {
   zone: ZoneResponse;
 }
 
-import type { PaginatedList } from "@primsh/x402-middleware";
-
-/** @deprecated Use PaginatedList<ZoneResponse> */
-export type ZoneListResponse = PaginatedList<ZoneResponse>;
-
 // ─── Record types ────────────────────────────────────────────────────────
 
 export type RecordType = "A" | "AAAA" | "CNAME" | "MX" | "TXT" | "SRV" | "CAA" | "NS";
@@ -117,9 +112,6 @@ export interface UpdateRecordRequest {
   /** Priority for MX and SRV records. */
   priority?: number;
 }
-
-/** @deprecated Use PaginatedList<RecordResponse> */
-export type RecordListResponse = PaginatedList<RecordResponse>;
 
 // ─── Domain search types ──────────────────────────────────────────────────
 

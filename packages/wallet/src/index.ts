@@ -14,19 +14,19 @@ import {
   removeFromAllowlist,
 } from "@primsh/x402-middleware/allowlist-db";
 import { createPrimApp } from "@primsh/x402-middleware/create-prim-app";
+import type { PaginatedList } from "@primsh/x402-middleware";
 import type {
   ApiError,
   ApproveFundRequestResponse,
   DeactivateWalletResponse,
   DenyFundRequestResponse,
-  FundRequestListResponse,
   FundRequestResponse,
   PauseResponse,
   PolicyResponse,
   RegisterWalletRequest,
   ResumeResponse,
   WalletDetailResponse,
-  WalletListResponse,
+  WalletListItem,
 } from "./api.ts";
 import type {
   CreateFundRequestRequest,
@@ -154,9 +154,7 @@ const app = createPrimApp(
   { createAgentStackMiddleware, createWalletAllowlistChecker },
 );
 
-const logger = (
-  app as typeof app & { logger: { warn: (msg: string, extra?: Record<string, unknown>) => void } }
-).logger;
+const logger = app.logger;
 
 // Register x402 manually — wallet uses local SQLite allowlist checker
 app.get("/v1/metrics", () => new Response()); // placeholder registered by factory; metrics route already registered above
@@ -239,7 +237,7 @@ app.get("/v1/wallets", async (c) => {
   const after = c.req.query("after");
 
   const result = await listWallets(caller, limit, after);
-  return c.json(result as WalletListResponse, 200);
+  return c.json(result as PaginatedList<WalletListItem>, 200);
 });
 
 // GET /v1/wallets/:address — Wallet detail
@@ -332,7 +330,7 @@ app.get("/v1/wallets/:address/fund-requests", (c) => {
     const { status, code, message } = result;
     return c.json({ error: { code, message } } as ApiError, status as 403 | 404);
   }
-  return c.json(result.data as FundRequestListResponse, 200);
+  return c.json(result.data as PaginatedList<FundRequestResponse>, 200);
 });
 
 // POST /v1/fund-requests/:id/approve
