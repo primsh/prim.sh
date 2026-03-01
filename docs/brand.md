@@ -11,7 +11,7 @@
 
 Primitive Shell owns the vision (agent-native infrastructure). Prim is the product that delivers it. If a second product ever ships, it lives under Primitive Shell alongside Prim.
 
-Legal entity: **Prim.sh LLC** (or Primitive Shell LLC — TBD).
+Legal entity: **Primitive Shell LLC**.
 
 ## Name
 
@@ -82,7 +82,7 @@ No exclamation marks. No "we're excited." No "getting started is easy." State wh
 | Multiple primitives | **prims** | "How many prims are you using?" |
 | The CLI binary | **prim** | `prim spawn create` |
 | Legal / copyright | **© Primitive Shell** | Footer, LICENSE. The org name, not the product. |
-| Legal / formal | **Prim.sh LLC** | Or Primitive Shell LLC — TBD. |
+| Legal / formal | **Primitive Shell LLC** | Registered entity name. |
 
 ## Visual Identity
 
