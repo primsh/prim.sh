@@ -64,7 +64,7 @@ function okBucket(id = "bkt_123") {
 
 function okBucketList(ids = ["bkt_1", "bkt_2"]) {
   return jsonResponse(200, {
-    buckets: ids.map((id) => ({
+    data: ids.map((id) => ({
       id,
       name: id,
       location: null,
