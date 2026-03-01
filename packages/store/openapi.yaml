@@ -357,7 +357,8 @@ paths:
     put:
       operationId: putObject
       summary: Upload an object. Key may include slashes. Content-Length header required.
-      description: Request body is raw bytes. Fails with 413 if upload exceeds quota.
+      description: Request body is raw bytes (NOT JSON-wrapped). Set Content-Type to match the file (e.g. text/plain,
+        image/png). Fails with 413 if upload exceeds quota.
       security:
         - x402: []
       x-price: $0.001

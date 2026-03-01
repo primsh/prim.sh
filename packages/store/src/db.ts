@@ -39,6 +39,9 @@ export function getDb(): Database {
 
   _db.run("CREATE INDEX IF NOT EXISTS idx_buckets_owner_wallet ON buckets(owner_wallet)");
   _db.run("CREATE INDEX IF NOT EXISTS idx_buckets_cf_name ON buckets(cf_name)");
+  _db.run(
+    "CREATE UNIQUE INDEX IF NOT EXISTS idx_buckets_name_owner ON buckets(name, owner_wallet)",
+  );
 
   // ST-3 migration: add quota + usage columns
   try {
@@ -70,6 +73,17 @@ export function getBucketByCfName(cfName: string): BucketRow | null {
   const db = getDb();
   return (
     db.query<BucketRow, [string]>("SELECT * FROM buckets WHERE cf_name = ?").get(cfName) ?? null
+  );
+}
+
+export function getBucketByNameAndOwner(name: string, owner: string): BucketRow | null {
+  const db = getDb();
+  return (
+    db
+      .query<BucketRow, [string, string]>(
+        "SELECT * FROM buckets WHERE name = ? AND owner_wallet = ?",
+      )
+      .get(name, owner) ?? null
   );
 }
 

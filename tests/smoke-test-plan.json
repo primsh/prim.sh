@@ -93,6 +93,16 @@
       "name": "wallet (wallet.sh)",
       "prompt": "Test all wallet.sh endpoints on wallet.prim.sh.",
       "tests": ["W-5", "W-6", "W-7", "W-8", "W-9", "W-10", "W-11", "W-12", "W-13"]
+    },
+    {
+      "id": "onboarding_e2e",
+      "name": "Onboarding E2E (CLI)",
+      "canary_only": true,
+      "interface": "cli",
+      "setup": "onboarding_e2e",
+      "cleanup": "onboarding_e2e",
+      "prompt": "Run these two commands:\n\ncurl -fsSL prim.sh/install.sh | sh\nexport PATH=\"$HOME/.prim/bin:$PATH\"\nprim skill onboard --code {{invite_code}}\n\nFollow every step the onboard skill outputs. Report what passed and what failed.",
+      "tests": []
     }
   ],
   "tests": [

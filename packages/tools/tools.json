@@ -449,7 +449,7 @@
     "type": "function",
     "function": {
       "name": "store_object_put",
-      "description": "Upload an object. Key may include slashes. Content-Length header required. Request body is raw bytes. Price: $0.001 via x402 (USDC on Base).",
+      "description": "Upload an object. Key may include slashes. Content-Length header required. Request body is raw bytes (NOT JSON-wrapped). Price: $0.001 via x402 (USDC on Base).",
       "parameters": {
         "type": "object",
         "properties": {

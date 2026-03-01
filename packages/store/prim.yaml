@@ -160,7 +160,7 @@ routes_map:
     response: PutObjectResponse
     status: 200
     description: "Upload an object. Key may include slashes. Content-Length header required."
-    notes: "Request body is raw bytes. Fails with 413 if upload exceeds quota."
+    notes: "Request body is raw bytes (NOT JSON-wrapped). Set Content-Type to match the file (e.g. text/plain, image/png). Fails with 413 if upload exceeds quota."
     operation_id: put_object
     request_type: null
     response_type: PutObjectResponse
