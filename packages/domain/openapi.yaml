@@ -692,7 +692,7 @@ paths:
       summary: Create a Cloudflare DNS zone. Returns nameservers to set at your registrar.
       security:
         - x402: []
-      x-price: $0.05
+      x-price: $0.001
       requestBody:
         required: true
         content:
@@ -798,7 +798,7 @@ paths:
       summary: Delete zone and all records. Irreversible.
       security:
         - x402: []
-      x-price: $0.01
+      x-price: $0.001
       parameters:
         - name: id
           in: path

@@ -41,19 +41,34 @@ factory:
 pricing:
   - op: "Create server"
     price: "$0.01"
-    note: "One-time provisioning"
+    provider_cost: "$4.00/mo"
+    pricing_type: static
+    as_of: "2026-02"
+    note: "One-time vs ongoing DO cost (needs recurring billing, I-55)"
   - op: "s-1vcpu-1gb"
-    price: "$0.012/hr"
-    note: ""
+    price: "$0.009/hr"
+    provider_cost: "$0.009/hr"
+    pricing_type: static
+    as_of: "2026-02"
+    note: "DO $6/mo amortized"
   - op: "s-2vcpu-4gb"
-    price: "$0.036/hr"
-    note: ""
+    price: "$0.033/hr"
+    provider_cost: "$0.033/hr"
+    pricing_type: static
+    as_of: "2026-02"
+    note: "DO $24/mo amortized"
   - op: "s-4vcpu-8gb"
-    price: "$0.071/hr"
-    note: ""
+    price: "$0.065/hr"
+    provider_cost: "$0.065/hr"
+    pricing_type: static
+    as_of: "2026-02"
+    note: "DO $48/mo amortized"
   - op: "Bandwidth"
     price: "$0.01/GB"
-    note: ""
+    provider_cost: "$0.01/GB"
+    pricing_type: static
+    as_of: "2026-02"
+    note: "DO bandwidth at cost"
 
 
 nounStyled: "The agent-native cloud."

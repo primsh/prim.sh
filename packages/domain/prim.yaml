@@ -19,16 +19,29 @@ env:
 pricing:
   - op: "Domain registration"
     price: "dynamic"
-    note: "Quoted via /quote"
+    provider_cost: "varies"
+    pricing_type: dynamic
+    as_of: "2026-02"
+    estimate: "~$8-40/yr (TLD dependent)"
+    note: "NameSilo wholesale"
   - op: "DNS zone"
-    price: "$0.05"
-    note: "Unlimited records"
+    price: "$0.001"
+    provider_cost: "$0.00"
+    pricing_type: static
+    as_of: "2026-02"
+    note: "x402 floor (Cloudflare free plan)"
   - op: "DNS record"
     price: "$0.001"
-    note: "Per operation"
+    provider_cost: "$0.00"
+    pricing_type: static
+    as_of: "2026-02"
+    note: "x402 floor (Cloudflare free plan)"
   - op: "DNS queries"
     price: "free"
-    note: "First 1M/mo"
+    provider_cost: "$0.00"
+    pricing_type: static
+    as_of: "2026-02"
+    note: "Cloudflare free plan (first 1M/mo)"
 
 providers:
   - name: cloudflare
@@ -81,7 +94,7 @@ hero_example: |
 quick_start:
   - "GET /v1/domains/search?query=myagent&tlds=com,xyz → check availability"
   - "POST /v1/domains/quote with {domain, years} → get price quote (15-min validity)"
-  - "POST /v1/zones with {domain} → create Cloudflare DNS zone ($0.05)"
+  - "POST /v1/zones with {domain} → create Cloudflare DNS zone ($0.001)"
   - "POST /v1/zones/:zoneId/records → add DNS records"
 
 tips:

@@ -21,7 +21,10 @@ env:
 pricing:
   - op: "Redeem invite"
     price: "free"
-    note: "One-time per code"
+    provider_cost: "$0.00"
+    pricing_type: static
+    as_of: "2026-02"
+    note: "Self-hosted allowlist"
 
 interfaces:
   mcp: false

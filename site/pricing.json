@@ -136,25 +136,25 @@
         {
           "method": "POST",
           "path": "/v1/buckets",
-          "price_usdc": "0.02/GB/mo",
+          "price_usdc": "0.015/GB/mo",
           "description": "Create a new storage bucket"
         },
         {
           "method": "GET",
           "path": "/v1/buckets",
-          "price_usdc": "0.001/call",
+          "price_usdc": "0.001",
           "description": "List all buckets owned by the calling wallet"
         },
         {
           "method": "GET",
           "path": "/v1/buckets/{id}",
-          "price_usdc": "0.001/call",
+          "price_usdc": "0.001",
           "description": "Get details for a single bucket. Caller must own the bucket."
         },
         {
           "method": "DELETE",
           "path": "/v1/buckets/{id}",
-          "price_usdc": "0.001/call",
+          "price_usdc": "0.001",
           "description": "Delete a bucket. Bucket must be empty first."
         },
         {
@@ -166,37 +166,37 @@
         {
           "method": "GET",
           "path": "/v1/buckets/{id}/objects",
-          "price_usdc": "0.001/call",
+          "price_usdc": "0.001",
           "description": "List objects in a bucket. Cursor-based pagination."
         },
         {
           "method": "GET",
           "path": "/v1/buckets/{id}/objects/{key}",
-          "price_usdc": "0.01/GB",
+          "price_usdc": "0.001",
           "description": "Download an object. Response body is streamed directly."
         },
         {
           "method": "DELETE",
           "path": "/v1/buckets/{id}/objects/{key}",
-          "price_usdc": "0.001/call",
+          "price_usdc": "0.001",
           "description": "Delete an object from a bucket"
         },
         {
           "method": "GET",
           "path": "/v1/buckets/{id}/quota",
-          "price_usdc": "0.001/call",
+          "price_usdc": "0.001",
           "description": "Get quota and usage for a bucket"
         },
         {
           "method": "PUT",
           "path": "/v1/buckets/{id}/quota",
-          "price_usdc": "0.02/GB/mo",
+          "price_usdc": "0.015/GB/mo",
           "description": "Set the storage quota for a bucket. Pass null to reset to default (100 MB)."
         },
         {
           "method": "POST",
           "path": "/v1/buckets/{id}/quota/reconcile",
-          "price_usdc": "0.02/GB/mo",
+          "price_usdc": "0.015/GB/mo",
           "description": "Recompute bucket usage by scanning actual R2 storage. Use when usage_bytes appears incorrect."
         }
       ]

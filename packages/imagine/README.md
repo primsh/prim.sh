@@ -14,17 +14,17 @@ Part of [prim.sh](https://prim.sh) — zero signup, one payment token, infinite 
 |-------|-------------|-------|---------|----------|
 | `POST /v1/generate` | Generate an image from a text prompt. Returns base64 or URL. | $0.02 | `GenerateRequest` | `GenerateResponse` |
 | `POST /v1/describe` | Describe an image. Accepts base64 or URL. Returns text description. | $0.005 | `DescribeRequest` | `DescribeResponse` |
-| `POST /v1/upscale` | Upscale an image to higher resolution. Accepts base64 or URL. | $0.01 | `UpscaleRequest` | `UpscaleResponse` |
-| `GET /v1/models` | List available image models with capabilities and pricing. | $0.01 | `—` | `ModelsResponse` |
+| `POST /v1/upscale` | Upscale an image to higher resolution. Accepts base64 or URL. | $0.02 | `UpscaleRequest` | `UpscaleResponse` |
+| `GET /v1/models` | List available image models with capabilities and pricing. | $0.001 | `—` | `ModelsResponse` |
 
 ## Pricing
 
 | Operation | Price | Notes |
 |-----------|-------|-------|
-| Generate image | $0.02 | Per image |
-| Describe image | $0.005 | Per image |
-| Upscale image | $0.01 | Per image |
-| List models | free |  |
+| Generate image | $0.02 | Imagen 4 Fast ($0.02/image) |
+| Describe image | $0.005 | Gemini Flash vision |
+| Upscale image | $0.02 | Imagen 4 Fast ($0.02/image) |
+| List models | free | Static model list |
 
 ## Providers
 

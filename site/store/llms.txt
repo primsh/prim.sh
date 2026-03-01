@@ -23,7 +23,7 @@ Limits:
 
 ## Quick Start
 
-  1. POST /v1/buckets → create a bucket ($0.05)
+  1. POST /v1/buckets → create a bucket ($0.001)
   2. PUT /v1/buckets/:id/objects/:key with raw bytes body → upload object
   3. GET /v1/buckets/:id/objects/:key → download object
 
@@ -108,7 +108,7 @@ Response (200):
 
 Create a new storage bucket
 
-Price: $0.05
+Price: $0.001
 
 Request:
   name      string  required  Bucket name. Unique per wallet. 3-63 chars, alphanumeric + hyphens.
@@ -172,7 +172,7 @@ Errors:
 
 Delete a bucket. Bucket must be empty first.
 
-Price: $0.01
+Price: $0.001
 
 Path params:
   id  string  required  id parameter
@@ -306,7 +306,7 @@ Errors:
 
 Set the storage quota for a bucket. Pass null to reset to default (100 MB).
 
-Price: $0.01
+Price: $0.001
 
 Path params:
   id  string  required  id parameter
@@ -333,7 +333,7 @@ Errors:
 
 Recompute bucket usage by scanning actual R2 storage. Use when usage_bytes appears incorrect.
 
-Price: $0.05
+Price: $0.001
 
 Path params:
   id  string  required  id parameter

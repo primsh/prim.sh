@@ -27,7 +27,7 @@ export const memTools: Tool[] = [
   },
   {
     name: "mem_create_collection",
-    description: "Create a vector collection | Price: $0.01",
+    description: "Create a vector collection | Price: $0.001",
     inputSchema: {
         type: "object",
         properties: {
@@ -64,7 +64,7 @@ export const memTools: Tool[] = [
   },
   {
     name: "mem_delete_collection",
-    description: "Delete collection and all documents. Irreversible. | Price: $0.01",
+    description: "Delete collection and all documents. Irreversible. | Price: $0.001",
     inputSchema: {
         type: "object",
         properties: {
@@ -78,7 +78,7 @@ export const memTools: Tool[] = [
   },
   {
     name: "mem_upsert_documents",
-    description: "Embed and store documents. Each document: {id?, text, metadata?}. Existing IDs are replaced. | Price: $0.001",
+    description: "Embed and store documents. Each document: {id?, text, metadata?}. Existing IDs are replaced. | Price: $0.0001",
     inputSchema: {
         type: "object",
         properties: {
@@ -114,7 +114,7 @@ export const memTools: Tool[] = [
   },
   {
     name: "mem_query_collection",
-    description: "Semantic search. Fields: text (required), top_k, filter (Qdrant native format). | Price: $0.001",
+    description: "Semantic search. Fields: text (required), top_k, filter (Qdrant native format). | Price: $0.0001",
     inputSchema: {
         type: "object",
         properties: {

@@ -372,7 +372,7 @@ paths:
       summary: Generate embeddings for text input. Returns vector array.
       security:
         - x402: []
-      x-price: $0.001
+      x-price: $0.0001
       requestBody:
         required: true
         content:
@@ -412,7 +412,7 @@ paths:
       summary: List available models with pricing and capabilities.
       security:
         - x402: []
-      x-price: $0.01
+      x-price: $0.001
       responses:
         "200":
           description: List available models with pricing and capabilities.

@@ -13,7 +13,7 @@ import type { TrackRequest } from "./api.ts";
 import { trackPackage } from "./service.ts";
 
 const TRACK_ROUTES = {
-  "POST /v1/track": "$0.05",
+  "POST /v1/track": "$0.04",
 } as const;
 
 function providerError(message: string): ApiError {

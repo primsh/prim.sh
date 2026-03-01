@@ -18,13 +18,24 @@ env:
 
 pricing:
   - op: "Chat completion"
-    price: "pass-through + 10%"
-    note: "Per-token, varies by model"
+    price: "$0.01"
+    provider_cost: "varies"
+    pricing_type: dynamic
+    as_of: "2026-02"
+    estimate: "~$0.001-0.10 per request"
+    note: "OpenRouter pass-through (needs dynamic pricing)"
   - op: "Embeddings"
-    price: "$0.001"
-    note: "Per 1K tokens"
+    price: "$0.0001"
+    provider_cost: "$0.0001"
+    pricing_type: static
+    as_of: "2026-02"
+    note: "Embedding API at-cost"
   - op: "List models"
-    price: "free"
+    price: "$0.001"
+    provider_cost: "$0.00"
+    pricing_type: static
+    as_of: "2026-02"
+    note: "x402 floor (free read)"
 
 providers:
   - name: openrouter

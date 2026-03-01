@@ -212,7 +212,7 @@ paths:
       summary: Create a new storage bucket
       security:
         - x402: []
-      x-price: $0.05
+      x-price: $0.001
       requestBody:
         required: true
         content:
@@ -318,7 +318,7 @@ paths:
       summary: Delete a bucket. Bucket must be empty first.
       security:
         - x402: []
-      x-price: $0.01
+      x-price: $0.001
       parameters:
         - name: id
           in: path
@@ -602,7 +602,7 @@ paths:
       summary: Set the storage quota for a bucket. Pass null to reset to default (100 MB).
       security:
         - x402: []
-      x-price: $0.01
+      x-price: $0.001
       parameters:
         - name: id
           in: path
@@ -655,7 +655,7 @@ paths:
       summary: Recompute bucket usage by scanning actual R2 storage. Use when usage_bytes appears incorrect.
       security:
         - x402: []
-      x-price: $0.05
+      x-price: $0.001
       parameters:
         - name: id
           in: path

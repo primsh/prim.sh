@@ -19,7 +19,7 @@ Part of [prim.sh](https://prim.sh) — zero signup, one payment token, infinite 
 
 | Operation | Price | Notes |
 |-----------|-------|-------|
-| Submit feedback | free | Always free |
+| Submit feedback | free | Local DB write |
 
 ## Usage
 

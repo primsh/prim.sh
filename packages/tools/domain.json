@@ -65,7 +65,7 @@
     "type": "function",
     "function": {
       "name": "domain_zone_create",
-      "description": "Create a Cloudflare DNS zone. Returns nameservers to set at your registrar. Price: $0.05 via x402 (USDC on Base).",
+      "description": "Create a Cloudflare DNS zone. Returns nameservers to set at your registrar. Price: $0.001 via x402 (USDC on Base).",
       "parameters": {
         "type": "object",
         "properties": {
@@ -123,7 +123,7 @@
     "type": "function",
     "function": {
       "name": "domain_zone_delete",
-      "description": "Delete zone and all records. Irreversible. Price: $0.01 via x402 (USDC on Base).",
+      "description": "Delete zone and all records. Irreversible. Price: $0.001 via x402 (USDC on Base).",
       "parameters": {
         "type": "object",
         "properties": {

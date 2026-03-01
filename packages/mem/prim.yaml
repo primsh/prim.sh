@@ -17,17 +17,29 @@ env:
   - WALLET_INTERNAL_URL
 pricing:
   - op: "Create collection"
-    price: "$0.01"
-    note: ""
+    price: "$0.001"
+    provider_cost: "$0.00"
+    pricing_type: static
+    as_of: "2026-02"
+    note: "x402 floor (self-hosted Qdrant)"
   - op: "Upsert (embed)"
-    price: "$0.001"
-    note: "Per 1k tokens"
+    price: "$0.0001"
+    provider_cost: "$0.0001"
+    pricing_type: static
+    as_of: "2026-02"
+    note: "Google embedding API (~$0.10/M chars)"
   - op: "Query"
-    price: "$0.001"
-    note: "Per search"
+    price: "$0.0001"
+    provider_cost: "$0.0001"
+    pricing_type: static
+    as_of: "2026-02"
+    note: "Google embedding API + Qdrant search"
   - op: "KV cache"
     price: "$0.0001"
-    note: "Per operation"
+    provider_cost: "$0.00"
+    pricing_type: static
+    as_of: "2026-02"
+    note: "x402 floor (SQLite, self-hosted)"
 
 providers:
   - name: qdrant
@@ -70,7 +82,7 @@ hero_example: |
       --data-urlencode "text=what does the user like?"
 
 quick_start:
-  - "POST /v1/collections with {\"name\": \"my-brain\"} → create vector collection ($0.01)"
+  - "POST /v1/collections with {\"name\": \"my-brain\"} → create vector collection ($0.001)"
   - "POST /v1/collections/:id/upsert with documents array → embed and store text"
   - "POST /v1/collections/:id/query with {\"text\": \"...\"} → semantic search"
   - "PUT /v1/cache/:namespace/:key with {\"value\": ..., \"ttl\": 3600} → store in KV cache"

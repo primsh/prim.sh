@@ -27,7 +27,7 @@ export const storeTools: Tool[] = [
   },
   {
     name: "store_create_bucket",
-    description: "Create a new storage bucket | Price: $0.05",
+    description: "Create a new storage bucket | Price: $0.001",
     inputSchema: {
         type: "object",
         properties: {
@@ -59,7 +59,7 @@ export const storeTools: Tool[] = [
   },
   {
     name: "store_delete_bucket",
-    description: "Delete a bucket. Bucket must be empty first. | Price: $0.01",
+    description: "Delete a bucket. Bucket must be empty first. | Price: $0.001",
     inputSchema: {
         type: "object",
         properties: {
@@ -167,7 +167,7 @@ export const storeTools: Tool[] = [
   },
   {
     name: "store_set_quota",
-    description: "Set the storage quota for a bucket. Pass null to reset to default (100 MB). | Price: $0.01",
+    description: "Set the storage quota for a bucket. Pass null to reset to default (100 MB). | Price: $0.001",
     inputSchema: {
         type: "object",
         properties: {
@@ -185,7 +185,7 @@ export const storeTools: Tool[] = [
   },
   {
     name: "store_reconcile_quota",
-    description: "Recompute bucket usage by scanning actual R2 storage. Use when usage_bytes appears incorrect. | Price: $0.05",
+    description: "Recompute bucket usage by scanning actual R2 storage. Use when usage_bytes appears incorrect. | Price: $0.001",
     inputSchema: {
         type: "object",
         properties: {

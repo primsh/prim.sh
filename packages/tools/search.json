@@ -3,7 +3,7 @@
     "type": "function",
     "function": {
       "name": "search_web",
-      "description": "Search the web and return ranked results with optional AI-generated answer. Price: $0.01 via x402 (USDC on Base).",
+      "description": "Search the web and return ranked results with optional AI-generated answer. Price: $0.005 via x402 (USDC on Base).",
       "parameters": {
         "type": "object",
         "properties": {
@@ -66,7 +66,7 @@
     "type": "function",
     "function": {
       "name": "search_news",
-      "description": "Search for recent news articles, ordered by recency. Price: $0.01 via x402 (USDC on Base).",
+      "description": "Search for recent news articles, ordered by recency. Price: $0.005 via x402 (USDC on Base).",
       "parameters": {
         "type": "object",
         "properties": {

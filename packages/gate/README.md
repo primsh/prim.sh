@@ -18,7 +18,7 @@ Part of [prim.sh](https://prim.sh) — zero signup, one payment token, infinite 
 
 | Operation | Price | Notes |
 |-----------|-------|-------|
-| Redeem invite | free | One-time per code |
+| Redeem invite | free | Self-hosted allowlist |
 
 ## Request / Response Types
 

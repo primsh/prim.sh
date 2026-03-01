@@ -79,7 +79,7 @@ docs: update llms.txt with new primitives
 
 - **Bugs**: Use the [bug report template](https://github.com/primsh/prim.sh/issues/new?template=bug_report.yml).
 - **Features**: Use the [feature request template](https://github.com/primsh/prim.sh/issues/new?template=feature_request.yml).
-- **Security**: Email security@prim.sh. Do not open a public issue.
+- **Security**: Email hello@prim.sh or use [GitHub's private vulnerability reporting](https://github.com/primsh/prim.sh/security). Do not open a public issue.
 
 ## Agent-Reported Issues
 

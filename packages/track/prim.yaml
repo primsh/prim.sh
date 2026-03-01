@@ -17,8 +17,11 @@ env:
   - WALLET_INTERNAL_URL
 pricing:
   - op: "Track package"
-    price: "$0.05"
-    note: "Per lookup"
+    price: "$0.04"
+    provider_cost: "$0.04"
+    pricing_type: static
+    as_of: "2026-02"
+    note: "TrackingMore ($0.04/credit)"
 
 providers:
   - name: trackingmore
@@ -62,7 +65,7 @@ hero_example: |
   }
 
 quick_start:
-  - "POST /v1/track with {tracking_number, carrier} → get package status, ETA, events ($0.05)"
+  - "POST /v1/track with {tracking_number, carrier} → get package status, ETA, events ($0.04)"
 
 tips:
   - "Pass carrier slug (e.g. 'ups', 'fedex', 'usps', 'dhl') for accurate routing."

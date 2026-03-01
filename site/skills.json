@@ -1,6 +1,6 @@
 {
   "version": "1.0.0",
-  "generated": "2026-03-01T06:42:59.918Z",
+  "generated": "2026-03-01T07:49:40.408Z",
   "primitives": [
     {
       "id": "auth",
@@ -273,13 +273,13 @@
           "id": "search_web",
           "route": "POST /v1/search",
           "description": "Search the web and return ranked results with optional AI-generated answer",
-          "price": "$0.01"
+          "price": "$0.005"
         },
         {
           "id": "search_news",
           "route": "POST /v1/search/news",
           "description": "Search for recent news articles, ordered by recency",
-          "price": "$0.01"
+          "price": "$0.005"
         },
         {
           "id": "extract_url",
@@ -336,7 +336,7 @@
           "id": "create_bucket",
           "route": "POST /v1/buckets",
           "description": "Create a new storage bucket",
-          "price": "$0.02/GB/mo"
+          "price": "$0.015/GB/mo"
         },
         {
           "id": "list_buckets",
@@ -348,13 +348,13 @@
           "id": "get_bucket",
           "route": "GET /v1/buckets/:id",
           "description": "Get details for a single bucket. Caller must own the bucket.",
-          "price": "$0.01/GB"
+          "price": "$0.001"
         },
         {
           "id": "delete_bucket",
           "route": "DELETE /v1/buckets/:id",
           "description": "Delete a bucket. Bucket must be empty first.",
-          "price": "$0.001/call"
+          "price": "$0.001"
         },
         {
           "id": "put_object",
