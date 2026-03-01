@@ -478,20 +478,7 @@ function renderMethod(m: MethodInfo): string {
   if (isRawResponse) {
     lines.push("      return res;");
   } else {
-    lines.push("      if (!res.ok) {");
-    lines.push("        let msg = `HTTP ${res.status}`;");
-    lines.push('        let code = "unknown";');
-    lines.push("        try {");
-    lines.push(
-      "          const body = await res.json() as { error?: { code: string; message: string } };",
-    );
-    lines.push(
-      "          if (body.error) { msg = body.error.message; code = body.error.code; }",
-    );
-    lines.push("        } catch {}");
-    lines.push("        throw new Error(`${msg} (${code})`);");
-    lines.push("      }");
-    lines.push(`      return res.json() as Promise<${returnType}>;`);
+    lines.push(`      return unwrap<${returnType}>(res);`);
   }
 
   lines.push("    },");
@@ -515,6 +502,8 @@ export function renderSdkClient(primId: string, spec: OpenApiSpec): string {
 
   // ── Types ──────────────────────────────────────────────────────────────
 
+  out.push('import { unwrap } from "./shared.js";');
+  out.push("");
   out.push("// ── Types ──────────────────────────────────────────────────────────────────");
   out.push("");
 

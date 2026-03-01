@@ -3,6 +3,8 @@
 // Source: packages/infer/openapi.yaml
 // Regenerate: pnpm gen:sdk
 
+import { unwrap } from "./shared.js";
+
 // ── Types ──────────────────────────────────────────────────────────────────
 
 export interface ChatRequest {
@@ -114,16 +116,7 @@ export function createInferClient(
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(req),
       });
-      if (!res.ok) {
-        let msg = `HTTP ${res.status}`;
-        let code = "unknown";
-        try {
-          const body = await res.json() as { error?: { code: string; message: string } };
-          if (body.error) { msg = body.error.message; code = body.error.code; }
-        } catch {}
-        throw new Error(`${msg} (${code})`);
-      }
-      return res.json() as Promise<ChatResponse>;
+      return unwrap<ChatResponse>(res);
     },
     async embed(req: EmbedRequest): Promise<EmbedResponse> {
       const url = `${baseUrl}/v1/embed`;
@@ -132,30 +125,12 @@ export function createInferClient(
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(req),
       });
-      if (!res.ok) {
-        let msg = `HTTP ${res.status}`;
-        let code = "unknown";
-        try {
-          const body = await res.json() as { error?: { code: string; message: string } };
-          if (body.error) { msg = body.error.message; code = body.error.code; }
-        } catch {}
-        throw new Error(`${msg} (${code})`);
-      }
-      return res.json() as Promise<EmbedResponse>;
+      return unwrap<EmbedResponse>(res);
     },
     async listModels(): Promise<ModelsResponse> {
       const url = `${baseUrl}/v1/models`;
       const res = await primFetch(url);
-      if (!res.ok) {
-        let msg = `HTTP ${res.status}`;
-        let code = "unknown";
-        try {
-          const body = await res.json() as { error?: { code: string; message: string } };
-          if (body.error) { msg = body.error.message; code = body.error.code; }
-        } catch {}
-        throw new Error(`${msg} (${code})`);
-      }
-      return res.json() as Promise<ModelsResponse>;
+      return unwrap<ModelsResponse>(res);
     },
   };
 }

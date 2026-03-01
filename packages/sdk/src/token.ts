@@ -3,6 +3,8 @@
 // Source: packages/token/openapi.yaml
 // Regenerate: pnpm gen:sdk
 
+import { unwrap } from "./shared.js";
+
 // ── Types ──────────────────────────────────────────────────────────────────
 
 export interface CreatePoolRequest {
@@ -188,44 +190,17 @@ export function createTokenClient(
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(req),
       });
-      if (!res.ok) {
-        let msg = `HTTP ${res.status}`;
-        let code = "unknown";
-        try {
-          const body = await res.json() as { error?: { code: string; message: string } };
-          if (body.error) { msg = body.error.message; code = body.error.code; }
-        } catch {}
-        throw new Error(`${msg} (${code})`);
-      }
-      return res.json() as Promise<TokenResponse>;
+      return unwrap<TokenResponse>(res);
     },
     async listTokens(): Promise<ListTokensResponse> {
       const url = `${baseUrl}/v1/tokens`;
       const res = await primFetch(url);
-      if (!res.ok) {
-        let msg = `HTTP ${res.status}`;
-        let code = "unknown";
-        try {
-          const body = await res.json() as { error?: { code: string; message: string } };
-          if (body.error) { msg = body.error.message; code = body.error.code; }
-        } catch {}
-        throw new Error(`${msg} (${code})`);
-      }
-      return res.json() as Promise<ListTokensResponse>;
+      return unwrap<ListTokensResponse>(res);
     },
     async getToken(params: GetTokenParams): Promise<TokenResponse> {
       const url = `${baseUrl}/v1/tokens/${encodeURIComponent(params.id)}`;
       const res = await primFetch(url);
-      if (!res.ok) {
-        let msg = `HTTP ${res.status}`;
-        let code = "unknown";
-        try {
-          const body = await res.json() as { error?: { code: string; message: string } };
-          if (body.error) { msg = body.error.message; code = body.error.code; }
-        } catch {}
-        throw new Error(`${msg} (${code})`);
-      }
-      return res.json() as Promise<TokenResponse>;
+      return unwrap<TokenResponse>(res);
     },
     async mintTokens(params: MintTokensParams, req: MintRequest): Promise<MintResponse> {
       const url = `${baseUrl}/v1/tokens/${encodeURIComponent(params.id)}/mint`;
@@ -234,30 +209,12 @@ export function createTokenClient(
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(req),
       });
-      if (!res.ok) {
-        let msg = `HTTP ${res.status}`;
-        let code = "unknown";
-        try {
-          const body = await res.json() as { error?: { code: string; message: string } };
-          if (body.error) { msg = body.error.message; code = body.error.code; }
-        } catch {}
-        throw new Error(`${msg} (${code})`);
-      }
-      return res.json() as Promise<MintResponse>;
+      return unwrap<MintResponse>(res);
     },
     async getTokenSupply(params: GetTokenSupplyParams): Promise<SupplyResponse> {
       const url = `${baseUrl}/v1/tokens/${encodeURIComponent(params.id)}/supply`;
       const res = await primFetch(url);
-      if (!res.ok) {
-        let msg = `HTTP ${res.status}`;
-        let code = "unknown";
-        try {
-          const body = await res.json() as { error?: { code: string; message: string } };
-          if (body.error) { msg = body.error.message; code = body.error.code; }
-        } catch {}
-        throw new Error(`${msg} (${code})`);
-      }
-      return res.json() as Promise<SupplyResponse>;
+      return unwrap<SupplyResponse>(res);
     },
     async createPool(params: CreatePoolParams, req: CreatePoolRequest): Promise<PoolResponse> {
       const url = `${baseUrl}/v1/tokens/${encodeURIComponent(params.id)}/pool`;
@@ -266,30 +223,12 @@ export function createTokenClient(
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(req),
       });
-      if (!res.ok) {
-        let msg = `HTTP ${res.status}`;
-        let code = "unknown";
-        try {
-          const body = await res.json() as { error?: { code: string; message: string } };
-          if (body.error) { msg = body.error.message; code = body.error.code; }
-        } catch {}
-        throw new Error(`${msg} (${code})`);
-      }
-      return res.json() as Promise<PoolResponse>;
+      return unwrap<PoolResponse>(res);
     },
     async getPool(params: GetPoolParams): Promise<PoolResponse> {
       const url = `${baseUrl}/v1/tokens/${encodeURIComponent(params.id)}/pool`;
       const res = await primFetch(url);
-      if (!res.ok) {
-        let msg = `HTTP ${res.status}`;
-        let code = "unknown";
-        try {
-          const body = await res.json() as { error?: { code: string; message: string } };
-          if (body.error) { msg = body.error.message; code = body.error.code; }
-        } catch {}
-        throw new Error(`${msg} (${code})`);
-      }
-      return res.json() as Promise<PoolResponse>;
+      return unwrap<PoolResponse>(res);
     },
     async getLiquidityParams(params: GetLiquidityParamsParams): Promise<LiquidityParamsResponse> {
       const qs = new URLSearchParams();
@@ -298,16 +237,7 @@ export function createTokenClient(
       const query = qs.toString();
       const url = `${baseUrl}/v1/tokens/${encodeURIComponent(params.id)}/pool/liquidity-params${query ? `?${query}` : ""}`;
       const res = await primFetch(url);
-      if (!res.ok) {
-        let msg = `HTTP ${res.status}`;
-        let code = "unknown";
-        try {
-          const body = await res.json() as { error?: { code: string; message: string } };
-          if (body.error) { msg = body.error.message; code = body.error.code; }
-        } catch {}
-        throw new Error(`${msg} (${code})`);
-      }
-      return res.json() as Promise<LiquidityParamsResponse>;
+      return unwrap<LiquidityParamsResponse>(res);
     },
   };
 }

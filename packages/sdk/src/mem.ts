@@ -3,6 +3,8 @@
 // Source: packages/mem/openapi.yaml
 // Regenerate: pnpm gen:sdk
 
+import { unwrap } from "./shared.js";
+
 // ── Types ──────────────────────────────────────────────────────────────────
 
 export interface CollectionResponse {
@@ -165,16 +167,7 @@ export function createMemClient(
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(req),
       });
-      if (!res.ok) {
-        let msg = `HTTP ${res.status}`;
-        let code = "unknown";
-        try {
-          const body = await res.json() as { error?: { code: string; message: string } };
-          if (body.error) { msg = body.error.message; code = body.error.code; }
-        } catch {}
-        throw new Error(`${msg} (${code})`);
-      }
-      return res.json() as Promise<CollectionResponse>;
+      return unwrap<CollectionResponse>(res);
     },
     async listCollections(params: ListCollectionsParams): Promise<ListCollectionsResponse> {
       const qs = new URLSearchParams();
@@ -183,46 +176,19 @@ export function createMemClient(
       const query = qs.toString();
       const url = `${baseUrl}/v1/collections${query ? `?${query}` : ""}`;
       const res = await primFetch(url);
-      if (!res.ok) {
-        let msg = `HTTP ${res.status}`;
-        let code = "unknown";
-        try {
-          const body = await res.json() as { error?: { code: string; message: string } };
-          if (body.error) { msg = body.error.message; code = body.error.code; }
-        } catch {}
-        throw new Error(`${msg} (${code})`);
-      }
-      return res.json() as Promise<ListCollectionsResponse>;
+      return unwrap<ListCollectionsResponse>(res);
     },
     async getCollection(params: GetCollectionParams): Promise<CollectionResponse> {
       const url = `${baseUrl}/v1/collections/${encodeURIComponent(params.id)}`;
       const res = await primFetch(url);
-      if (!res.ok) {
-        let msg = `HTTP ${res.status}`;
-        let code = "unknown";
-        try {
-          const body = await res.json() as { error?: { code: string; message: string } };
-          if (body.error) { msg = body.error.message; code = body.error.code; }
-        } catch {}
-        throw new Error(`${msg} (${code})`);
-      }
-      return res.json() as Promise<CollectionResponse>;
+      return unwrap<CollectionResponse>(res);
     },
     async deleteCollection(params: DeleteCollectionParams): Promise<DeleteCollectionResponse> {
       const url = `${baseUrl}/v1/collections/${encodeURIComponent(params.id)}`;
       const res = await primFetch(url, {
         method: "DELETE",
       });
-      if (!res.ok) {
-        let msg = `HTTP ${res.status}`;
-        let code = "unknown";
-        try {
-          const body = await res.json() as { error?: { code: string; message: string } };
-          if (body.error) { msg = body.error.message; code = body.error.code; }
-        } catch {}
-        throw new Error(`${msg} (${code})`);
-      }
-      return res.json() as Promise<DeleteCollectionResponse>;
+      return unwrap<DeleteCollectionResponse>(res);
     },
     async upsertDocuments(params: UpsertDocumentsParams, req: UpsertRequest): Promise<UpsertResponse> {
       const url = `${baseUrl}/v1/collections/${encodeURIComponent(params.id)}/upsert`;
@@ -231,16 +197,7 @@ export function createMemClient(
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(req),
       });
-      if (!res.ok) {
-        let msg = `HTTP ${res.status}`;
-        let code = "unknown";
-        try {
-          const body = await res.json() as { error?: { code: string; message: string } };
-          if (body.error) { msg = body.error.message; code = body.error.code; }
-        } catch {}
-        throw new Error(`${msg} (${code})`);
-      }
-      return res.json() as Promise<UpsertResponse>;
+      return unwrap<UpsertResponse>(res);
     },
     async queryCollection(params: QueryCollectionParams, req: QueryRequest): Promise<QueryResponse> {
       const url = `${baseUrl}/v1/collections/${encodeURIComponent(params.id)}/query`;
@@ -249,16 +206,7 @@ export function createMemClient(
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(req),
       });
-      if (!res.ok) {
-        let msg = `HTTP ${res.status}`;
-        let code = "unknown";
-        try {
-          const body = await res.json() as { error?: { code: string; message: string } };
-          if (body.error) { msg = body.error.message; code = body.error.code; }
-        } catch {}
-        throw new Error(`${msg} (${code})`);
-      }
-      return res.json() as Promise<QueryResponse>;
+      return unwrap<QueryResponse>(res);
     },
     async setCache(params: SetCacheParams, req: SetCacheRequest): Promise<SetCacheResponse> {
       const url = `${baseUrl}/v1/cache/${encodeURIComponent(params.namespace)}/${encodeURIComponent(params.key)}`;
@@ -267,46 +215,19 @@ export function createMemClient(
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(req),
       });
-      if (!res.ok) {
-        let msg = `HTTP ${res.status}`;
-        let code = "unknown";
-        try {
-          const body = await res.json() as { error?: { code: string; message: string } };
-          if (body.error) { msg = body.error.message; code = body.error.code; }
-        } catch {}
-        throw new Error(`${msg} (${code})`);
-      }
-      return res.json() as Promise<SetCacheResponse>;
+      return unwrap<SetCacheResponse>(res);
     },
     async getCache(params: GetCacheParams): Promise<GetCacheResponse> {
       const url = `${baseUrl}/v1/cache/${encodeURIComponent(params.namespace)}/${encodeURIComponent(params.key)}`;
       const res = await primFetch(url);
-      if (!res.ok) {
-        let msg = `HTTP ${res.status}`;
-        let code = "unknown";
-        try {
-          const body = await res.json() as { error?: { code: string; message: string } };
-          if (body.error) { msg = body.error.message; code = body.error.code; }
-        } catch {}
-        throw new Error(`${msg} (${code})`);
-      }
-      return res.json() as Promise<GetCacheResponse>;
+      return unwrap<GetCacheResponse>(res);
     },
     async deleteCache(params: DeleteCacheParams): Promise<DeleteCacheResponse> {
       const url = `${baseUrl}/v1/cache/${encodeURIComponent(params.namespace)}/${encodeURIComponent(params.key)}`;
       const res = await primFetch(url, {
         method: "DELETE",
       });
-      if (!res.ok) {
-        let msg = `HTTP ${res.status}`;
-        let code = "unknown";
-        try {
-          const body = await res.json() as { error?: { code: string; message: string } };
-          if (body.error) { msg = body.error.message; code = body.error.code; }
-        } catch {}
-        throw new Error(`${msg} (${code})`);
-      }
-      return res.json() as Promise<DeleteCacheResponse>;
+      return unwrap<DeleteCacheResponse>(res);
     },
   };
 }

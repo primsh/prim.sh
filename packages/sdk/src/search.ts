@@ -3,6 +3,8 @@
 // Source: packages/search/openapi.yaml
 // Regenerate: pnpm gen:sdk
 
+import { unwrap } from "./shared.js";
+
 // ── Types ──────────────────────────────────────────────────────────────────
 
 export interface ExtractRequest {
@@ -94,16 +96,7 @@ export function createSearchClient(
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(req),
       });
-      if (!res.ok) {
-        let msg = `HTTP ${res.status}`;
-        let code = "unknown";
-        try {
-          const body = await res.json() as { error?: { code: string; message: string } };
-          if (body.error) { msg = body.error.message; code = body.error.code; }
-        } catch {}
-        throw new Error(`${msg} (${code})`);
-      }
-      return res.json() as Promise<SearchResponse>;
+      return unwrap<SearchResponse>(res);
     },
     async searchNews(req: SearchRequest): Promise<SearchResponse> {
       const url = `${baseUrl}/v1/search/news`;
@@ -112,16 +105,7 @@ export function createSearchClient(
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(req),
       });
-      if (!res.ok) {
-        let msg = `HTTP ${res.status}`;
-        let code = "unknown";
-        try {
-          const body = await res.json() as { error?: { code: string; message: string } };
-          if (body.error) { msg = body.error.message; code = body.error.code; }
-        } catch {}
-        throw new Error(`${msg} (${code})`);
-      }
-      return res.json() as Promise<SearchResponse>;
+      return unwrap<SearchResponse>(res);
     },
     async extractUrl(req: ExtractRequest): Promise<ExtractResponse> {
       const url = `${baseUrl}/v1/extract`;
@@ -130,16 +114,7 @@ export function createSearchClient(
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(req),
       });
-      if (!res.ok) {
-        let msg = `HTTP ${res.status}`;
-        let code = "unknown";
-        try {
-          const body = await res.json() as { error?: { code: string; message: string } };
-          if (body.error) { msg = body.error.message; code = body.error.code; }
-        } catch {}
-        throw new Error(`${msg} (${code})`);
-      }
-      return res.json() as Promise<ExtractResponse>;
+      return unwrap<ExtractResponse>(res);
     },
   };
 }

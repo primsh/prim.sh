@@ -3,6 +3,8 @@
 // Source: packages/wallet/openapi.yaml
 // Regenerate: pnpm gen:sdk
 
+import { unwrap } from "./shared.js";
+
 // ── Types ──────────────────────────────────────────────────────────────────
 
 export interface ApproveFundRequestResponse {
@@ -258,16 +260,7 @@ export function createWalletClient(
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(req),
       });
-      if (!res.ok) {
-        let msg = `HTTP ${res.status}`;
-        let code = "unknown";
-        try {
-          const body = await res.json() as { error?: { code: string; message: string } };
-          if (body.error) { msg = body.error.message; code = body.error.code; }
-        } catch {}
-        throw new Error(`${msg} (${code})`);
-      }
-      return res.json() as Promise<RegisterWalletResponse>;
+      return unwrap<RegisterWalletResponse>(res);
     },
     async listWallets(params: ListWalletsParams): Promise<ListWalletsResponse> {
       const qs = new URLSearchParams();
@@ -276,46 +269,19 @@ export function createWalletClient(
       const query = qs.toString();
       const url = `${baseUrl}/v1/wallets${query ? `?${query}` : ""}`;
       const res = await primFetch(url);
-      if (!res.ok) {
-        let msg = `HTTP ${res.status}`;
-        let code = "unknown";
-        try {
-          const body = await res.json() as { error?: { code: string; message: string } };
-          if (body.error) { msg = body.error.message; code = body.error.code; }
-        } catch {}
-        throw new Error(`${msg} (${code})`);
-      }
-      return res.json() as Promise<ListWalletsResponse>;
+      return unwrap<ListWalletsResponse>(res);
     },
     async getWallet(params: GetWalletParams): Promise<WalletDetailResponse> {
       const url = `${baseUrl}/v1/wallets/${encodeURIComponent(params.address)}`;
       const res = await primFetch(url);
-      if (!res.ok) {
-        let msg = `HTTP ${res.status}`;
-        let code = "unknown";
-        try {
-          const body = await res.json() as { error?: { code: string; message: string } };
-          if (body.error) { msg = body.error.message; code = body.error.code; }
-        } catch {}
-        throw new Error(`${msg} (${code})`);
-      }
-      return res.json() as Promise<WalletDetailResponse>;
+      return unwrap<WalletDetailResponse>(res);
     },
     async deactivateWallet(params: DeactivateWalletParams): Promise<DeactivateWalletResponse> {
       const url = `${baseUrl}/v1/wallets/${encodeURIComponent(params.address)}`;
       const res = await primFetch(url, {
         method: "DELETE",
       });
-      if (!res.ok) {
-        let msg = `HTTP ${res.status}`;
-        let code = "unknown";
-        try {
-          const body = await res.json() as { error?: { code: string; message: string } };
-          if (body.error) { msg = body.error.message; code = body.error.code; }
-        } catch {}
-        throw new Error(`${msg} (${code})`);
-      }
-      return res.json() as Promise<DeactivateWalletResponse>;
+      return unwrap<DeactivateWalletResponse>(res);
     },
     async createFundRequest(params: CreateFundRequestParams, req: CreateFundRequestRequest): Promise<FundRequestResponse> {
       const url = `${baseUrl}/v1/wallets/${encodeURIComponent(params.address)}/fund-request`;
@@ -324,16 +290,7 @@ export function createWalletClient(
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(req),
       });
-      if (!res.ok) {
-        let msg = `HTTP ${res.status}`;
-        let code = "unknown";
-        try {
-          const body = await res.json() as { error?: { code: string; message: string } };
-          if (body.error) { msg = body.error.message; code = body.error.code; }
-        } catch {}
-        throw new Error(`${msg} (${code})`);
-      }
-      return res.json() as Promise<FundRequestResponse>;
+      return unwrap<FundRequestResponse>(res);
     },
     async listFundRequests(params: ListFundRequestsParams): Promise<ListFundRequestsResponse> {
       const qs = new URLSearchParams();
@@ -342,32 +299,14 @@ export function createWalletClient(
       const query = qs.toString();
       const url = `${baseUrl}/v1/wallets/${encodeURIComponent(params.address)}/fund-requests${query ? `?${query}` : ""}`;
       const res = await primFetch(url);
-      if (!res.ok) {
-        let msg = `HTTP ${res.status}`;
-        let code = "unknown";
-        try {
-          const body = await res.json() as { error?: { code: string; message: string } };
-          if (body.error) { msg = body.error.message; code = body.error.code; }
-        } catch {}
-        throw new Error(`${msg} (${code})`);
-      }
-      return res.json() as Promise<ListFundRequestsResponse>;
+      return unwrap<ListFundRequestsResponse>(res);
     },
     async approveFundRequest(params: ApproveFundRequestParams): Promise<ApproveFundRequestResponse> {
       const url = `${baseUrl}/v1/fund-requests/${encodeURIComponent(params.id)}/approve`;
       const res = await primFetch(url, {
         method: "POST",
       });
-      if (!res.ok) {
-        let msg = `HTTP ${res.status}`;
-        let code = "unknown";
-        try {
-          const body = await res.json() as { error?: { code: string; message: string } };
-          if (body.error) { msg = body.error.message; code = body.error.code; }
-        } catch {}
-        throw new Error(`${msg} (${code})`);
-      }
-      return res.json() as Promise<ApproveFundRequestResponse>;
+      return unwrap<ApproveFundRequestResponse>(res);
     },
     async denyFundRequest(params: DenyFundRequestParams, req: DenyFundRequestRequest): Promise<DenyFundRequestResponse> {
       const url = `${baseUrl}/v1/fund-requests/${encodeURIComponent(params.id)}/deny`;
@@ -376,30 +315,12 @@ export function createWalletClient(
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(req),
       });
-      if (!res.ok) {
-        let msg = `HTTP ${res.status}`;
-        let code = "unknown";
-        try {
-          const body = await res.json() as { error?: { code: string; message: string } };
-          if (body.error) { msg = body.error.message; code = body.error.code; }
-        } catch {}
-        throw new Error(`${msg} (${code})`);
-      }
-      return res.json() as Promise<DenyFundRequestResponse>;
+      return unwrap<DenyFundRequestResponse>(res);
     },
     async getPolicy(params: GetPolicyParams): Promise<PolicyResponse> {
       const url = `${baseUrl}/v1/wallets/${encodeURIComponent(params.address)}/policy`;
       const res = await primFetch(url);
-      if (!res.ok) {
-        let msg = `HTTP ${res.status}`;
-        let code = "unknown";
-        try {
-          const body = await res.json() as { error?: { code: string; message: string } };
-          if (body.error) { msg = body.error.message; code = body.error.code; }
-        } catch {}
-        throw new Error(`${msg} (${code})`);
-      }
-      return res.json() as Promise<PolicyResponse>;
+      return unwrap<PolicyResponse>(res);
     },
     async updatePolicy(params: UpdatePolicyParams, req: PolicyUpdateRequest): Promise<PolicyResponse> {
       const url = `${baseUrl}/v1/wallets/${encodeURIComponent(params.address)}/policy`;
@@ -408,16 +329,7 @@ export function createWalletClient(
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(req),
       });
-      if (!res.ok) {
-        let msg = `HTTP ${res.status}`;
-        let code = "unknown";
-        try {
-          const body = await res.json() as { error?: { code: string; message: string } };
-          if (body.error) { msg = body.error.message; code = body.error.code; }
-        } catch {}
-        throw new Error(`${msg} (${code})`);
-      }
-      return res.json() as Promise<PolicyResponse>;
+      return unwrap<PolicyResponse>(res);
     },
     async pauseWallet(params: PauseWalletParams, req: PauseRequest): Promise<PauseResponse> {
       const url = `${baseUrl}/v1/wallets/${encodeURIComponent(params.address)}/pause`;
@@ -426,16 +338,7 @@ export function createWalletClient(
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(req),
       });
-      if (!res.ok) {
-        let msg = `HTTP ${res.status}`;
-        let code = "unknown";
-        try {
-          const body = await res.json() as { error?: { code: string; message: string } };
-          if (body.error) { msg = body.error.message; code = body.error.code; }
-        } catch {}
-        throw new Error(`${msg} (${code})`);
-      }
-      return res.json() as Promise<PauseResponse>;
+      return unwrap<PauseResponse>(res);
     },
     async resumeWallet(params: ResumeWalletParams, req: ResumeRequest): Promise<ResumeResponse> {
       const url = `${baseUrl}/v1/wallets/${encodeURIComponent(params.address)}/resume`;
@@ -444,16 +347,7 @@ export function createWalletClient(
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(req),
       });
-      if (!res.ok) {
-        let msg = `HTTP ${res.status}`;
-        let code = "unknown";
-        try {
-          const body = await res.json() as { error?: { code: string; message: string } };
-          if (body.error) { msg = body.error.message; code = body.error.code; }
-        } catch {}
-        throw new Error(`${msg} (${code})`);
-      }
-      return res.json() as Promise<ResumeResponse>;
+      return unwrap<ResumeResponse>(res);
     },
   };
 }

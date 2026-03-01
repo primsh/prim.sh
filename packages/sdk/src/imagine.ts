@@ -3,6 +3,8 @@
 // Source: packages/imagine/openapi.yaml
 // Regenerate: pnpm gen:sdk
 
+import { unwrap } from "./shared.js";
+
 // ── Types ──────────────────────────────────────────────────────────────────
 
 export type DescribeRequest = Record<string, unknown>;
@@ -33,16 +35,7 @@ export function createImagineClient(
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(req),
       });
-      if (!res.ok) {
-        let msg = `HTTP ${res.status}`;
-        let code = "unknown";
-        try {
-          const body = await res.json() as { error?: { code: string; message: string } };
-          if (body.error) { msg = body.error.message; code = body.error.code; }
-        } catch {}
-        throw new Error(`${msg} (${code})`);
-      }
-      return res.json() as Promise<GenerateResponse>;
+      return unwrap<GenerateResponse>(res);
     },
     async describe(req: DescribeRequest): Promise<DescribeResponse> {
       const url = `${baseUrl}/v1/describe`;
@@ -51,16 +44,7 @@ export function createImagineClient(
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(req),
       });
-      if (!res.ok) {
-        let msg = `HTTP ${res.status}`;
-        let code = "unknown";
-        try {
-          const body = await res.json() as { error?: { code: string; message: string } };
-          if (body.error) { msg = body.error.message; code = body.error.code; }
-        } catch {}
-        throw new Error(`${msg} (${code})`);
-      }
-      return res.json() as Promise<DescribeResponse>;
+      return unwrap<DescribeResponse>(res);
     },
     async upscale(req: UpscaleRequest): Promise<UpscaleResponse> {
       const url = `${baseUrl}/v1/upscale`;
@@ -69,30 +53,12 @@ export function createImagineClient(
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(req),
       });
-      if (!res.ok) {
-        let msg = `HTTP ${res.status}`;
-        let code = "unknown";
-        try {
-          const body = await res.json() as { error?: { code: string; message: string } };
-          if (body.error) { msg = body.error.message; code = body.error.code; }
-        } catch {}
-        throw new Error(`${msg} (${code})`);
-      }
-      return res.json() as Promise<UpscaleResponse>;
+      return unwrap<UpscaleResponse>(res);
     },
     async listModels(): Promise<ModelsResponse> {
       const url = `${baseUrl}/v1/models`;
       const res = await primFetch(url);
-      if (!res.ok) {
-        let msg = `HTTP ${res.status}`;
-        let code = "unknown";
-        try {
-          const body = await res.json() as { error?: { code: string; message: string } };
-          if (body.error) { msg = body.error.message; code = body.error.code; }
-        } catch {}
-        throw new Error(`${msg} (${code})`);
-      }
-      return res.json() as Promise<ModelsResponse>;
+      return unwrap<ModelsResponse>(res);
     },
   };
 }

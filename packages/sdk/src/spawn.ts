@@ -3,6 +3,8 @@
 // Source: packages/spawn/openapi.yaml
 // Regenerate: pnpm gen:sdk
 
+import { unwrap } from "./shared.js";
+
 // ── Types ──────────────────────────────────────────────────────────────────
 
 export interface ActionOnlyResponse {
@@ -209,16 +211,7 @@ export function createSpawnClient(
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(req),
       });
-      if (!res.ok) {
-        let msg = `HTTP ${res.status}`;
-        let code = "unknown";
-        try {
-          const body = await res.json() as { error?: { code: string; message: string } };
-          if (body.error) { msg = body.error.message; code = body.error.code; }
-        } catch {}
-        throw new Error(`${msg} (${code})`);
-      }
-      return res.json() as Promise<CreateServerResponse>;
+      return unwrap<CreateServerResponse>(res);
     },
     async listServers(params: ListServersParams): Promise<ListServersResponse> {
       const qs = new URLSearchParams();
@@ -227,94 +220,40 @@ export function createSpawnClient(
       const query = qs.toString();
       const url = `${baseUrl}/v1/servers${query ? `?${query}` : ""}`;
       const res = await primFetch(url);
-      if (!res.ok) {
-        let msg = `HTTP ${res.status}`;
-        let code = "unknown";
-        try {
-          const body = await res.json() as { error?: { code: string; message: string } };
-          if (body.error) { msg = body.error.message; code = body.error.code; }
-        } catch {}
-        throw new Error(`${msg} (${code})`);
-      }
-      return res.json() as Promise<ListServersResponse>;
+      return unwrap<ListServersResponse>(res);
     },
     async getServer(params: GetServerParams): Promise<ServerResponse> {
       const url = `${baseUrl}/v1/servers/${encodeURIComponent(params.id)}`;
       const res = await primFetch(url);
-      if (!res.ok) {
-        let msg = `HTTP ${res.status}`;
-        let code = "unknown";
-        try {
-          const body = await res.json() as { error?: { code: string; message: string } };
-          if (body.error) { msg = body.error.message; code = body.error.code; }
-        } catch {}
-        throw new Error(`${msg} (${code})`);
-      }
-      return res.json() as Promise<ServerResponse>;
+      return unwrap<ServerResponse>(res);
     },
     async deleteServer(params: DeleteServerParams): Promise<DeleteServerResponse> {
       const url = `${baseUrl}/v1/servers/${encodeURIComponent(params.id)}`;
       const res = await primFetch(url, {
         method: "DELETE",
       });
-      if (!res.ok) {
-        let msg = `HTTP ${res.status}`;
-        let code = "unknown";
-        try {
-          const body = await res.json() as { error?: { code: string; message: string } };
-          if (body.error) { msg = body.error.message; code = body.error.code; }
-        } catch {}
-        throw new Error(`${msg} (${code})`);
-      }
-      return res.json() as Promise<DeleteServerResponse>;
+      return unwrap<DeleteServerResponse>(res);
     },
     async startServer(params: StartServerParams): Promise<ActionOnlyResponse> {
       const url = `${baseUrl}/v1/servers/${encodeURIComponent(params.id)}/start`;
       const res = await primFetch(url, {
         method: "POST",
       });
-      if (!res.ok) {
-        let msg = `HTTP ${res.status}`;
-        let code = "unknown";
-        try {
-          const body = await res.json() as { error?: { code: string; message: string } };
-          if (body.error) { msg = body.error.message; code = body.error.code; }
-        } catch {}
-        throw new Error(`${msg} (${code})`);
-      }
-      return res.json() as Promise<ActionOnlyResponse>;
+      return unwrap<ActionOnlyResponse>(res);
     },
     async stopServer(params: StopServerParams): Promise<ActionOnlyResponse> {
       const url = `${baseUrl}/v1/servers/${encodeURIComponent(params.id)}/stop`;
       const res = await primFetch(url, {
         method: "POST",
       });
-      if (!res.ok) {
-        let msg = `HTTP ${res.status}`;
-        let code = "unknown";
-        try {
-          const body = await res.json() as { error?: { code: string; message: string } };
-          if (body.error) { msg = body.error.message; code = body.error.code; }
-        } catch {}
-        throw new Error(`${msg} (${code})`);
-      }
-      return res.json() as Promise<ActionOnlyResponse>;
+      return unwrap<ActionOnlyResponse>(res);
     },
     async rebootServer(params: RebootServerParams): Promise<ActionOnlyResponse> {
       const url = `${baseUrl}/v1/servers/${encodeURIComponent(params.id)}/reboot`;
       const res = await primFetch(url, {
         method: "POST",
       });
-      if (!res.ok) {
-        let msg = `HTTP ${res.status}`;
-        let code = "unknown";
-        try {
-          const body = await res.json() as { error?: { code: string; message: string } };
-          if (body.error) { msg = body.error.message; code = body.error.code; }
-        } catch {}
-        throw new Error(`${msg} (${code})`);
-      }
-      return res.json() as Promise<ActionOnlyResponse>;
+      return unwrap<ActionOnlyResponse>(res);
     },
     async resizeServer(params: ResizeServerParams, req: ResizeRequest): Promise<ResizeResponse> {
       const url = `${baseUrl}/v1/servers/${encodeURIComponent(params.id)}/resize`;
@@ -323,16 +262,7 @@ export function createSpawnClient(
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(req),
       });
-      if (!res.ok) {
-        let msg = `HTTP ${res.status}`;
-        let code = "unknown";
-        try {
-          const body = await res.json() as { error?: { code: string; message: string } };
-          if (body.error) { msg = body.error.message; code = body.error.code; }
-        } catch {}
-        throw new Error(`${msg} (${code})`);
-      }
-      return res.json() as Promise<ResizeResponse>;
+      return unwrap<ResizeResponse>(res);
     },
     async rebuildServer(params: RebuildServerParams, req: RebuildRequest): Promise<RebuildResponse> {
       const url = `${baseUrl}/v1/servers/${encodeURIComponent(params.id)}/rebuild`;
@@ -341,16 +271,7 @@ export function createSpawnClient(
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(req),
       });
-      if (!res.ok) {
-        let msg = `HTTP ${res.status}`;
-        let code = "unknown";
-        try {
-          const body = await res.json() as { error?: { code: string; message: string } };
-          if (body.error) { msg = body.error.message; code = body.error.code; }
-        } catch {}
-        throw new Error(`${msg} (${code})`);
-      }
-      return res.json() as Promise<RebuildResponse>;
+      return unwrap<RebuildResponse>(res);
     },
     async createSshKey(req: CreateSshKeyRequest): Promise<SshKeyResponse> {
       const url = `${baseUrl}/v1/ssh-keys`;
@@ -359,46 +280,19 @@ export function createSpawnClient(
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(req),
       });
-      if (!res.ok) {
-        let msg = `HTTP ${res.status}`;
-        let code = "unknown";
-        try {
-          const body = await res.json() as { error?: { code: string; message: string } };
-          if (body.error) { msg = body.error.message; code = body.error.code; }
-        } catch {}
-        throw new Error(`${msg} (${code})`);
-      }
-      return res.json() as Promise<SshKeyResponse>;
+      return unwrap<SshKeyResponse>(res);
     },
     async listSshKeys(): Promise<ListSshKeysResponse> {
       const url = `${baseUrl}/v1/ssh-keys`;
       const res = await primFetch(url);
-      if (!res.ok) {
-        let msg = `HTTP ${res.status}`;
-        let code = "unknown";
-        try {
-          const body = await res.json() as { error?: { code: string; message: string } };
-          if (body.error) { msg = body.error.message; code = body.error.code; }
-        } catch {}
-        throw new Error(`${msg} (${code})`);
-      }
-      return res.json() as Promise<ListSshKeysResponse>;
+      return unwrap<ListSshKeysResponse>(res);
     },
     async deleteSshKey(params: DeleteSshKeyParams): Promise<DeleteSshKeyResponse> {
       const url = `${baseUrl}/v1/ssh-keys/${encodeURIComponent(params.id)}`;
       const res = await primFetch(url, {
         method: "DELETE",
       });
-      if (!res.ok) {
-        let msg = `HTTP ${res.status}`;
-        let code = "unknown";
-        try {
-          const body = await res.json() as { error?: { code: string; message: string } };
-          if (body.error) { msg = body.error.message; code = body.error.code; }
-        } catch {}
-        throw new Error(`${msg} (${code})`);
-      }
-      return res.json() as Promise<DeleteSshKeyResponse>;
+      return unwrap<DeleteSshKeyResponse>(res);
     },
   };
 }

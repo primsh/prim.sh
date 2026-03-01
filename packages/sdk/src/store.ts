@@ -3,6 +3,8 @@
 // Source: packages/store/openapi.yaml
 // Regenerate: pnpm gen:sdk
 
+import { unwrap } from "./shared.js";
+
 // ── Types ──────────────────────────────────────────────────────────────────
 
 export interface BucketResponse {
@@ -161,16 +163,7 @@ export function createStoreClient(
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(req),
       });
-      if (!res.ok) {
-        let msg = `HTTP ${res.status}`;
-        let code = "unknown";
-        try {
-          const body = await res.json() as { error?: { code: string; message: string } };
-          if (body.error) { msg = body.error.message; code = body.error.code; }
-        } catch {}
-        throw new Error(`${msg} (${code})`);
-      }
-      return res.json() as Promise<CreateBucketResponse>;
+      return unwrap<CreateBucketResponse>(res);
     },
     async listBuckets(params: ListBucketsParams): Promise<ListBucketsResponse> {
       const qs = new URLSearchParams();
@@ -179,92 +172,38 @@ export function createStoreClient(
       const query = qs.toString();
       const url = `${baseUrl}/v1/buckets${query ? `?${query}` : ""}`;
       const res = await primFetch(url);
-      if (!res.ok) {
-        let msg = `HTTP ${res.status}`;
-        let code = "unknown";
-        try {
-          const body = await res.json() as { error?: { code: string; message: string } };
-          if (body.error) { msg = body.error.message; code = body.error.code; }
-        } catch {}
-        throw new Error(`${msg} (${code})`);
-      }
-      return res.json() as Promise<ListBucketsResponse>;
+      return unwrap<ListBucketsResponse>(res);
     },
     async getBucket(params: GetBucketParams): Promise<BucketResponse> {
       const url = `${baseUrl}/v1/buckets/${encodeURIComponent(params.id)}`;
       const res = await primFetch(url);
-      if (!res.ok) {
-        let msg = `HTTP ${res.status}`;
-        let code = "unknown";
-        try {
-          const body = await res.json() as { error?: { code: string; message: string } };
-          if (body.error) { msg = body.error.message; code = body.error.code; }
-        } catch {}
-        throw new Error(`${msg} (${code})`);
-      }
-      return res.json() as Promise<BucketResponse>;
+      return unwrap<BucketResponse>(res);
     },
     async deleteBucket(params: DeleteBucketParams): Promise<DeleteBucketResponse> {
       const url = `${baseUrl}/v1/buckets/${encodeURIComponent(params.id)}`;
       const res = await primFetch(url, {
         method: "DELETE",
       });
-      if (!res.ok) {
-        let msg = `HTTP ${res.status}`;
-        let code = "unknown";
-        try {
-          const body = await res.json() as { error?: { code: string; message: string } };
-          if (body.error) { msg = body.error.message; code = body.error.code; }
-        } catch {}
-        throw new Error(`${msg} (${code})`);
-      }
-      return res.json() as Promise<DeleteBucketResponse>;
+      return unwrap<DeleteBucketResponse>(res);
     },
     async putObject(params: PutObjectParams): Promise<PutObjectResponse> {
       const url = `${baseUrl}/v1/buckets/${encodeURIComponent(params.id)}/objects/${encodeURIComponent(params.key)}`;
       const res = await primFetch(url, {
         method: "PUT",
       });
-      if (!res.ok) {
-        let msg = `HTTP ${res.status}`;
-        let code = "unknown";
-        try {
-          const body = await res.json() as { error?: { code: string; message: string } };
-          if (body.error) { msg = body.error.message; code = body.error.code; }
-        } catch {}
-        throw new Error(`${msg} (${code})`);
-      }
-      return res.json() as Promise<PutObjectResponse>;
+      return unwrap<PutObjectResponse>(res);
     },
     async getObject(params: GetObjectParams): Promise<GetObjectResponse> {
       const url = `${baseUrl}/v1/buckets/${encodeURIComponent(params.id)}/objects/${encodeURIComponent(params.key)}`;
       const res = await primFetch(url);
-      if (!res.ok) {
-        let msg = `HTTP ${res.status}`;
-        let code = "unknown";
-        try {
-          const body = await res.json() as { error?: { code: string; message: string } };
-          if (body.error) { msg = body.error.message; code = body.error.code; }
-        } catch {}
-        throw new Error(`${msg} (${code})`);
-      }
-      return res.json() as Promise<GetObjectResponse>;
+      return unwrap<GetObjectResponse>(res);
     },
     async deleteObject(params: DeleteObjectParams): Promise<DeleteObjectResponse> {
       const url = `${baseUrl}/v1/buckets/${encodeURIComponent(params.id)}/objects/${encodeURIComponent(params.key)}`;
       const res = await primFetch(url, {
         method: "DELETE",
       });
-      if (!res.ok) {
-        let msg = `HTTP ${res.status}`;
-        let code = "unknown";
-        try {
-          const body = await res.json() as { error?: { code: string; message: string } };
-          if (body.error) { msg = body.error.message; code = body.error.code; }
-        } catch {}
-        throw new Error(`${msg} (${code})`);
-      }
-      return res.json() as Promise<DeleteObjectResponse>;
+      return unwrap<DeleteObjectResponse>(res);
     },
     async listObjects(params: ListObjectsParams): Promise<ListObjectsResponse> {
       const qs = new URLSearchParams();
@@ -274,30 +213,12 @@ export function createStoreClient(
       const query = qs.toString();
       const url = `${baseUrl}/v1/buckets/${encodeURIComponent(params.id)}/objects${query ? `?${query}` : ""}`;
       const res = await primFetch(url);
-      if (!res.ok) {
-        let msg = `HTTP ${res.status}`;
-        let code = "unknown";
-        try {
-          const body = await res.json() as { error?: { code: string; message: string } };
-          if (body.error) { msg = body.error.message; code = body.error.code; }
-        } catch {}
-        throw new Error(`${msg} (${code})`);
-      }
-      return res.json() as Promise<ListObjectsResponse>;
+      return unwrap<ListObjectsResponse>(res);
     },
     async getQuota(params: GetQuotaParams): Promise<QuotaResponse> {
       const url = `${baseUrl}/v1/buckets/${encodeURIComponent(params.id)}/quota`;
       const res = await primFetch(url);
-      if (!res.ok) {
-        let msg = `HTTP ${res.status}`;
-        let code = "unknown";
-        try {
-          const body = await res.json() as { error?: { code: string; message: string } };
-          if (body.error) { msg = body.error.message; code = body.error.code; }
-        } catch {}
-        throw new Error(`${msg} (${code})`);
-      }
-      return res.json() as Promise<QuotaResponse>;
+      return unwrap<QuotaResponse>(res);
     },
     async setQuota(params: SetQuotaParams, req: SetQuotaRequest): Promise<QuotaResponse> {
       const url = `${baseUrl}/v1/buckets/${encodeURIComponent(params.id)}/quota`;
@@ -306,32 +227,14 @@ export function createStoreClient(
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(req),
       });
-      if (!res.ok) {
-        let msg = `HTTP ${res.status}`;
-        let code = "unknown";
-        try {
-          const body = await res.json() as { error?: { code: string; message: string } };
-          if (body.error) { msg = body.error.message; code = body.error.code; }
-        } catch {}
-        throw new Error(`${msg} (${code})`);
-      }
-      return res.json() as Promise<QuotaResponse>;
+      return unwrap<QuotaResponse>(res);
     },
     async reconcileQuota(params: ReconcileQuotaParams): Promise<ReconcileResponse> {
       const url = `${baseUrl}/v1/buckets/${encodeURIComponent(params.id)}/quota/reconcile`;
       const res = await primFetch(url, {
         method: "POST",
       });
-      if (!res.ok) {
-        let msg = `HTTP ${res.status}`;
-        let code = "unknown";
-        try {
-          const body = await res.json() as { error?: { code: string; message: string } };
-          if (body.error) { msg = body.error.message; code = body.error.code; }
-        } catch {}
-        throw new Error(`${msg} (${code})`);
-      }
-      return res.json() as Promise<ReconcileResponse>;
+      return unwrap<ReconcileResponse>(res);
     },
   };
 }

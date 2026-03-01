@@ -3,6 +3,8 @@
 // Source: packages/create/openapi.yaml
 // Regenerate: pnpm gen:sdk
 
+import { unwrap } from "./shared.js";
+
 // ── Types ──────────────────────────────────────────────────────────────────
 
 export type ScaffoldResponse = Record<string, unknown>;
@@ -25,60 +27,24 @@ export function createCreateClient(
       const res = await primFetch(url, {
         method: "POST",
       });
-      if (!res.ok) {
-        let msg = `HTTP ${res.status}`;
-        let code = "unknown";
-        try {
-          const body = await res.json() as { error?: { code: string; message: string } };
-          if (body.error) { msg = body.error.message; code = body.error.code; }
-        } catch {}
-        throw new Error(`${msg} (${code})`);
-      }
-      return res.json() as Promise<ScaffoldResponse>;
+      return unwrap<ScaffoldResponse>(res);
     },
     async validate(): Promise<ValidateResponse> {
       const url = `${baseUrl}/v1/validate`;
       const res = await primFetch(url, {
         method: "POST",
       });
-      if (!res.ok) {
-        let msg = `HTTP ${res.status}`;
-        let code = "unknown";
-        try {
-          const body = await res.json() as { error?: { code: string; message: string } };
-          if (body.error) { msg = body.error.message; code = body.error.code; }
-        } catch {}
-        throw new Error(`${msg} (${code})`);
-      }
-      return res.json() as Promise<ValidateResponse>;
+      return unwrap<ValidateResponse>(res);
     },
     async getSchema(): Promise<GetSchemaResponse> {
       const url = `${baseUrl}/v1/schema`;
       const res = await primFetch(url);
-      if (!res.ok) {
-        let msg = `HTTP ${res.status}`;
-        let code = "unknown";
-        try {
-          const body = await res.json() as { error?: { code: string; message: string } };
-          if (body.error) { msg = body.error.message; code = body.error.code; }
-        } catch {}
-        throw new Error(`${msg} (${code})`);
-      }
-      return res.json() as Promise<GetSchemaResponse>;
+      return unwrap<GetSchemaResponse>(res);
     },
     async getPorts(): Promise<GetPortsResponse> {
       const url = `${baseUrl}/v1/ports`;
       const res = await primFetch(url);
-      if (!res.ok) {
-        let msg = `HTTP ${res.status}`;
-        let code = "unknown";
-        try {
-          const body = await res.json() as { error?: { code: string; message: string } };
-          if (body.error) { msg = body.error.message; code = body.error.code; }
-        } catch {}
-        throw new Error(`${msg} (${code})`);
-      }
-      return res.json() as Promise<GetPortsResponse>;
+      return unwrap<GetPortsResponse>(res);
     },
   };
 }

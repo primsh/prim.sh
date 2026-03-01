@@ -3,6 +3,7 @@
 // Source: packages/<id>/openapi.yaml (all prims with rest interface)
 // Regenerate: pnpm gen:sdk
 
+export { unwrap } from "./shared.js";
 export * from "./wallet.js";
 export * from "./faucet.js";
 export * from "./gate.js";
