@@ -1,5 +1,6 @@
 import { randomBytes } from "node:crypto";
 import { createLogger } from "@primsh/x402-middleware";
+import type { PaginatedList } from "@primsh/x402-middleware";
 
 const log = createLogger("domain.sh");
 import type {
@@ -16,7 +17,6 @@ import type {
   MailSetupResponse,
   QuoteRequest,
   QuoteResponse,
-  RecordListResponse,
   RecordResponse,
   RecordType,
   RecoverResponse,
@@ -24,7 +24,6 @@ import type {
   RegistrationStatusResponse,
   UpdateRecordRequest,
   VerifyResponse,
-  ZoneListResponse,
   ZoneResponse,
   ZoneStatus,
 } from "./api.ts";
@@ -197,7 +196,7 @@ export async function createZone(
   }
 }
 
-export function listZones(callerWallet: string, limit: number, page: number): ZoneListResponse {
+export function listZones(callerWallet: string, limit: number, page: number): PaginatedList<ZoneResponse> {
   const offset = (page - 1) * limit;
   const rows = getZonesByOwner(callerWallet, limit, offset);
   const total = countZonesByOwner(callerWallet);
@@ -361,7 +360,7 @@ export async function createRecord(
 export function listRecords(
   zoneId: string,
   callerWallet: string,
-): ServiceResult<RecordListResponse> {
+): ServiceResult<PaginatedList<RecordResponse>> {
   const check = checkZoneOwnership(zoneId, callerWallet);
   if (!check.ok) return check;
 

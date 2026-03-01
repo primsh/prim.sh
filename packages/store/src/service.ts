@@ -18,13 +18,13 @@ import {
 const MAX_BUCKETS_PER_WALLET = Number(process.env.STORE_MAX_BUCKETS_PER_WALLET ?? 10);
 const DEFAULT_BUCKET_QUOTA = Number(process.env.STORE_DEFAULT_BUCKET_QUOTA ?? 104857600); // 100MB
 const MAX_STORAGE_PER_WALLET = Number(process.env.STORE_MAX_STORAGE_PER_WALLET ?? 1073741824); // 1GB
+import type { PaginatedList } from "@primsh/x402-middleware";
 import type {
-  BucketListResponse,
   BucketResponse,
   CreateBucketRequest,
   CreateBucketResponse,
   DeleteObjectResponse,
-  ObjectListResponse,
+  ObjectResponse,
   PutObjectResponse,
   QuotaResponse,
   ReconcileResponse,
@@ -163,7 +163,7 @@ export async function createBucket(
   }
 }
 
-export function listBuckets(callerWallet: string, limit: number, page: number): BucketListResponse {
+export function listBuckets(callerWallet: string, limit: number, page: number): PaginatedList<BucketResponse> {
   const offset = (page - 1) * limit;
   const rows = getBucketsByOwner(callerWallet, limit, offset);
   const total = countBucketsByOwner(callerWallet);
@@ -376,7 +376,7 @@ export async function listObjects(
   prefix?: string,
   limit?: number,
   cursor?: string,
-): Promise<ServiceResult<ObjectListResponse>> {
+): Promise<ServiceResult<PaginatedList<ObjectResponse>>> {
   const check = checkBucketOwnership(bucketId, callerWallet);
   if (!check.ok) return check;
 

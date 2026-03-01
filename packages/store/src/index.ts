@@ -6,16 +6,15 @@ import {
   invalidRequest,
   notFound,
 } from "@primsh/x402-middleware";
-import type { ApiError } from "@primsh/x402-middleware";
+import type { ApiError, PaginatedList } from "@primsh/x402-middleware";
 import { createPrimApp } from "@primsh/x402-middleware/create-prim-app";
 import { bodyLimit } from "hono/body-limit";
 import type {
-  BucketListResponse,
   BucketResponse,
   CreateBucketRequest,
   CreateBucketResponse,
   DeleteObjectResponse,
-  ObjectListResponse,
+  ObjectResponse,
   PutObjectResponse,
   QuotaResponse,
   ReconcileResponse,
@@ -189,7 +188,7 @@ app.get("/v1/buckets", (c) => {
   const page = Math.max(Number(c.req.query("page")) || 1, 1);
 
   const data = listBuckets(caller, limit, page);
-  return c.json(data as BucketListResponse, 200);
+  return c.json(data as PaginatedList<BucketResponse>, 200);
 });
 
 // GET /v1/buckets/:id — Get bucket
@@ -263,7 +262,7 @@ app.get("/v1/buckets/:id/objects", async (c) => {
     if (result.status === 403) return c.json(forbidden(result.message), 403);
     return c.json(r2Error(result.message), result.status as 502);
   }
-  return c.json(result.data as ObjectListResponse, 200);
+  return c.json(result.data as PaginatedList<ObjectResponse>, 200);
 });
 
 // GET /v1/buckets/:id/objects/* — Download object (streaming)
