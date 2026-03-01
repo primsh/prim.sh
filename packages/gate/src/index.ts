@@ -13,9 +13,9 @@ import {
 import { createPrimApp } from "@primsh/x402-middleware/create-prim-app";
 import type { ContentfulStatusCode } from "hono/utils/http-status";
 import { getAddress, isAddress } from "viem";
-import type { RedeemRequest } from "./api.ts";
+import type { CreateCodesRequest, RedeemRequest } from "./api.ts";
 import { seedCodes } from "./db.ts";
-import { redeemInvite } from "./service.ts";
+import { createCodes, deleteCode, getCodes, redeemInvite } from "./service.ts";
 
 const ALLOWLIST_DB_PATH =
   process.env.PRIM_ALLOWLIST_DB ??
@@ -171,6 +171,63 @@ app.get("/internal/allowlist/check", (c) => {
 
   const allowed = isAllowed(ALLOWLIST_DB_PATH, address);
   return c.json({ allowed, address: address.toLowerCase() }, 200);
+});
+
+// ─── Internal: code management ───────────────────────────────────────────────
+
+// POST /internal/codes — create codes
+app.post("/internal/codes", async (c) => {
+  const denied = internalAuth(c);
+  if (denied) return denied;
+
+  let body: Partial<CreateCodesRequest>;
+  try {
+    body = await c.req.json();
+  } catch (err) {
+    logger.warn("JSON parse failed on POST /internal/codes", { error: String(err) });
+    return c.json({ error: { code: "invalid_request", message: "Invalid JSON body" } }, 400);
+  }
+
+  const result = createCodes(body);
+  if (!result.ok) {
+    return c.json(
+      { error: { code: result.code, message: result.message } },
+      result.status as ContentfulStatusCode,
+    );
+  }
+  return c.json(result.data, 200);
+});
+
+// GET /internal/codes — list codes
+app.get("/internal/codes", (c) => {
+  const denied = internalAuth(c);
+  if (denied) return denied;
+
+  const status = c.req.query("status");
+  const result = getCodes(status);
+  if (!result.ok) {
+    return c.json(
+      { error: { code: result.code, message: result.message } },
+      result.status as ContentfulStatusCode,
+    );
+  }
+  return c.json(result.data, 200);
+});
+
+// DELETE /internal/codes/:code — revoke a code
+app.delete("/internal/codes/:code", (c) => {
+  const denied = internalAuth(c);
+  if (denied) return denied;
+
+  const code = c.req.param("code");
+  const result = deleteCode(code);
+  if (!result.ok) {
+    return c.json(
+      { error: { code: result.code, message: result.message } },
+      result.status as ContentfulStatusCode,
+    );
+  }
+  return c.json(result.data, 200);
 });
 
 export default app;

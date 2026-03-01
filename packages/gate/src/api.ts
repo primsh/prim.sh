@@ -27,6 +27,38 @@ export interface RedeemResponse {
   funded: FundingDetail;
 }
 
+// ─── Code management ─────────────────────────────────────────────────────────
+
+export interface CreateCodesRequest {
+  /** Generate N random codes (1–100). */
+  count?: number;
+  /** Add specific codes. */
+  codes?: string[];
+  /** Optional batch label (e.g. "beta-batch-1"). */
+  label?: string;
+}
+
+export interface CreateCodesResponse {
+  /** All created codes. */
+  codes: string[];
+  /** Count actually inserted (excludes dupes). */
+  created: number;
+}
+
+export interface CodeDetail {
+  code: string;
+  status: "available" | "redeemed";
+  created_at: string | null;
+  label: string | null;
+  wallet: string | null;
+  redeemed_at: string | null;
+}
+
+export interface ListCodesResponse {
+  codes: CodeDetail[];
+  total: number;
+}
+
 // ─── Error ────────────────────────────────────────────────────────────────────
 
 export interface ApiError {
@@ -43,6 +75,7 @@ export const ERROR_CODES = [
   "invalid_code",
   "code_redeemed",
   "not_configured",
+  "not_found",
   "fund_error",
 ] as const;
 

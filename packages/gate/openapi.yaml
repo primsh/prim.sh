@@ -40,6 +40,7 @@ components:
                 - invalid_code
                 - code_redeemed
                 - not_configured
+                - not_found
                 - fund_error
               description: Machine-readable error code.
             message:
