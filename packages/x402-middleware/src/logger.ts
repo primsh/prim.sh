@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: Apache-2.0
 import { getRequestId } from "./request-id.js";
 
 export type LogLevel = "debug" | "info" | "warn" | "error";

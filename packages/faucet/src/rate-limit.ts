@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: Apache-2.0
 import { cleanupOldEntries, getLastDrip, upsertDrip } from "./db.ts";
 
 const CLEANUP_INTERVAL_MS = 24 * 60 * 60 * 1000; // 24 hours

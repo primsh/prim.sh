@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: Apache-2.0
 import { randomBytes } from "node:crypto";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { decryptPassword, encryptPassword, getEncryptionKey } from "../src/crypto";

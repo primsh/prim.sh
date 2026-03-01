@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: Apache-2.0
 /**
  * token.sh tests: deploy, list, get, mint, supply with mock RPC + :memory: SQLite.
  *

@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: Apache-2.0
 /**
  * Webhook delivery engine (R-7).
  * Async delivery to agent webhook URLs with HMAC signing and retry.

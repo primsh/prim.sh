@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: Apache-2.0
 /**
  * DigitalOcean Cloud provider implementation.
  * Wraps DigitalOcean API v2 behind the CloudProvider interface.

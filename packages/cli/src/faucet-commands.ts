@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: Apache-2.0
 import { getDefaultAddress } from "@primsh/keystore";
 import { getFlag, hasFlag } from "./flags.ts";
 

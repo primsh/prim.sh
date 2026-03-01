@@ -1,4 +1,5 @@
 #!/usr/bin/env bun
+// SPDX-License-Identifier: Apache-2.0
 /**
  * gen-favicon.ts — generate favicon from SF Mono chevron glyph
  *

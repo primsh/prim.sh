@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: Apache-2.0
 /**
  * ST-1 store.sh tests: bucket CRUD with ownership enforcement.
  *

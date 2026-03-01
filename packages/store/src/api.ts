@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: Apache-2.0
 /**
  * store.sh API contract — request/response types and error envelope.
  */

@@ -1,4 +1,5 @@
 #!/usr/bin/env bun
+// SPDX-License-Identifier: Apache-2.0
 /**
  * check-openapi.ts — Validate OpenAPI specs against actual code.
  *

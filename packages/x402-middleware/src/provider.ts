@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: Apache-2.0
 // ─── PrimProvider base interface ─────────────────────────────────────────────
 //
 // All vendor integrations across prim primitives implement this interface.

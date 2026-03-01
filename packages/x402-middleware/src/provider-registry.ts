@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: Apache-2.0
 // ─── ProviderRegistry ─────────────────────────────────────────────────────────
 //
 // Config-driven vendor selection, fallback chains, and health-check-on-startup.

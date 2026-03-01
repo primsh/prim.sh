@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: Apache-2.0
 import { Hono } from "hono";
 import { beforeEach, describe, expect, it } from "vitest";
 import { metricsHandler, metricsMiddleware, resetMetrics } from "../src/metrics.ts";

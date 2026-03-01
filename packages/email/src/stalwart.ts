@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: Apache-2.0
 /**
  * Thin HTTP wrapper around Stalwart Mail Server REST admin API.
  * Base URL: ${STALWART_API_URL} (default http://localhost:8080)

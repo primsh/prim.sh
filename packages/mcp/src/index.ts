@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+// SPDX-License-Identifier: Apache-2.0
 import { isPrimitive, startMcpServer } from "./server.js";
 import type { Primitive } from "./server.js";
 

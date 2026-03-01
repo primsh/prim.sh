@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: Apache-2.0
 import { readFileSync, statSync } from "node:fs";
 import { writeFile } from "node:fs/promises";
 import { extname } from "node:path";

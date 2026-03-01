@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: Apache-2.0
 // Compatibility shim: bun:sqlite API surface over node:sqlite for vitest (Node 22+)
 // Uses createRequire to bypass vite's module bundler and access node:sqlite directly.
 // Only implements the subset of bun:sqlite used in db.ts.

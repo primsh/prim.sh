@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: Apache-2.0
 import type { Context } from "hono";
 import { forbidden, invalidRequest } from "./errors.js";
 import type { Logger } from "./logger.js";

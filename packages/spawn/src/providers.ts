@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: Apache-2.0
 /**
  * Provider registry — maps provider name to CloudProvider instance.
  */

@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: Apache-2.0
 /**
  * AgentToken compiled artifacts — embedded at build time, no runtime Solidity toolchain needed.
  *

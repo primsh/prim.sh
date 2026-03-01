@@ -1,4 +1,5 @@
 #!/usr/bin/env bun
+// SPDX-License-Identifier: Apache-2.0
 /**
  * Testnet Integration Test — wallet.sh + faucet.sh + store.sh on Base Sepolia
  *

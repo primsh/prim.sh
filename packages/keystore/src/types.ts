@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: Apache-2.0
 export interface V3CryptoParams {
   cipher: "aes-128-ctr";
   cipherparams: { iv: string };

@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: Apache-2.0
 import { randomBytes } from "node:crypto";
 import { createLogger, getNetworkConfig } from "@primsh/x402-middleware";
 import type { PaginatedList } from "@primsh/x402-middleware";

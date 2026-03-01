@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: Apache-2.0
 import { addToAllowlist } from "@primsh/x402-middleware/allowlist-db";
 import type { ServiceResult } from "@primsh/x402-middleware";
 import { createLogger } from "@primsh/x402-middleware";

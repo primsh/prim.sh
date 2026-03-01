@@ -1,4 +1,5 @@
 #!/usr/bin/env bun
+// SPDX-License-Identifier: Apache-2.0
 /**
  * create-prim.ts — Prim package scaffolder
  *
@@ -362,7 +363,8 @@ app.${method}("${routePath}", async (c) => {
 });`;
   });
 
-  return `import { Hono } from "hono";
+  return `// SPDX-License-Identifier: Apache-2.0
+import { Hono } from "hono";
 import { bodyLimit } from "hono/body-limit";
 import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
@@ -498,7 +500,8 @@ export interface ${r.response} {
     }
   }
 
-  return `// ─── ${prim.name} API types ─────────────────────────────────────────────────
+  return `// SPDX-License-Identifier: Apache-2.0
+// ─── ${prim.name} API types ─────────────────────────────────────────────────
 
 ${blocks.join("\n\n")}
 
@@ -555,7 +558,8 @@ export { ProviderError } from "./provider.ts";`
 }`;
   });
 
-  return `${providerImport ? `${providerImport}\n` : ""}import type { ServiceResult } from "@primsh/x402-middleware";
+  return `// SPDX-License-Identifier: Apache-2.0
+${providerImport ? `${providerImport}\n` : ""}import type { ServiceResult } from "@primsh/x402-middleware";
 import type { ${typeImports.join(", ")} } from "./api.ts";
 
 // ─── Service functions ────────────────────────────────────────────────────────
@@ -573,7 +577,8 @@ function genProviderTs(prim: PrimYaml): string | null {
 
   const routes = prim.routes_map ?? [];
 
-  return `// ─── Provider result types ────────────────────────────────────────────────────
+  return `// SPDX-License-Identifier: Apache-2.0
+// ─── Provider result types ────────────────────────────────────────────────────
 
 // TODO: Define the data shape returned by the provider
 // biome-ignore lint/suspicious/noEmptyInterface: scaffold placeholder — add fields before implementing
@@ -623,7 +628,8 @@ function genVendorTs(prim: PrimYaml): { filename: string; content: string } | nu
 
   return {
     filename: `${vendorName}.ts`,
-    content: `import { ProviderError } from "./provider.ts";
+    content: `// SPDX-License-Identifier: Apache-2.0
+import { ProviderError } from "./provider.ts";
 import type { ${providerName}, ${providerDataName} } from "./provider.ts";
 
 export class ${className} implements ${providerName} {
@@ -667,7 +673,8 @@ function genSmokeTestTs(prim: PrimYaml, routePrices: Record<string, string>): st
   const firstRoute = routes[0];
   if (!firstRoute) {
     // Degenerate case — no routes yet
-    return `import { describe, expect, it, vi } from "vitest";
+    return `// SPDX-License-Identifier: Apache-2.0
+import { describe, expect, it, vi } from "vitest";
 
 vi.hoisted(() => {
   process.env.PRIM_NETWORK = "eip155:8453";
@@ -730,7 +737,8 @@ describe("${prim.name} app", () => {
     .map((r) => `        "${r.route}": expect.any(String)`)
     .join(",\n");
 
-  return `import { beforeEach, describe, expect, it, vi } from "vitest";
+  return `// SPDX-License-Identifier: Apache-2.0
+import { beforeEach, describe, expect, it, vi } from "vitest";
 
 vi.hoisted(() => {
   process.env.PRIM_NETWORK = "eip155:8453";

@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: Apache-2.0
 import type { ProviderRegistry, ServiceResult } from "@primsh/x402-middleware";
 import type { ExtractRequest, ExtractResponse, SearchRequest, SearchResponse } from "./api.ts";
 import { ProviderError } from "./provider.ts";

@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: Apache-2.0
 /**
  * SP-8: Live smoke test against DigitalOcean API.
  * Tests the DO provider directly — creates a real droplet, verifies it, destroys it.
