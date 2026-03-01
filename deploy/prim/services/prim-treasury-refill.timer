@@ -1,0 +1,10 @@
+[Unit]
+Description=Daily treasury refill via Circle faucet
+
+[Timer]
+OnCalendar=*-*-* 06:00 UTC
+Persistent=true
+RandomizedDelaySec=300
+
+[Install]
+WantedBy=timers.target
