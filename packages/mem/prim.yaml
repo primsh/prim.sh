@@ -1,5 +1,6 @@
 id: mem
 name: mem.sh
+status: hold
 endpoint: mem.prim.sh
 type: memory
 category: storage

@@ -61,11 +61,11 @@ No API keys. No signup. The wallet *is* the identity.
 | [search.sh](https://search.prim.sh) | Search for agents. No ads, no SEO spam. Just facts and clean markdown. | Live (mainnet) |
 | [spawn.sh](https://spawn.prim.sh) | VPS in one API call. Deploy, scale, destroy. Per-second billing. | Hold |
 | [email.sh](https://email.prim.sh) | Mailboxes on demand. Send, receive, webhook. Disposable or permanent. | Hold |
-| [token.sh](https://token.prim.sh) | Deploy ERC-20 tokens and Uniswap V3 pools. No wallet setup required. | Planned |
-| [mem.sh](https://mem.prim.sh) | Vector store and cache for agents. Persist long-term knowledge and session state. | Planned |
-| [domain.sh](https://domain.prim.sh) | Register domains, manage DNS, auto-TLS. Full domain lifecycle via API. | Planned |
+| [token.sh](https://token.prim.sh) | Deploy ERC-20 tokens and Uniswap V3 pools. No wallet setup required. | Hold |
+| [mem.sh](https://mem.prim.sh) | Vector store and cache for agents. Persist long-term knowledge and session state. | Hold |
+| [domain.sh](https://domain.prim.sh) | Register domains, manage DNS, auto-TLS. Full domain lifecycle via API. | Hold |
 | deploy.sh | Push code, get an endpoint. Container or repo URL to live service. No server config. | Planned |
-| [track.sh](https://track.prim.sh) | Package tracking for agents. USPS, FedEx, UPS, DHL and 1000+ carriers. Status, ETA, full event history. | Planned |
+| [track.sh](https://track.prim.sh) | Package tracking for agents. USPS, FedEx, UPS, DHL and 1000+ carriers. Status, ETA, full event history. | Hold |
 | ring.sh | Phone numbers via API. SMS, voice, TTS. No Twilio account needed. | Planned |
 | pipe.sh | Pub/sub channels, webhook relays, event queues. Agent-to-agent glue. | Planned |
 | vault.sh | Store API keys, tokens, credentials. Scoped access. Ephemeral or persistent. | Planned |
@@ -75,8 +75,8 @@ No API keys. No signup. The wallet *is* the identity.
 | watch.sh | Structured logs, metrics, and alerts so agents can observe and correct themselves. | Planned |
 | trace.sh | Distributed tracing across services. Follow a request from wallet to spawn to store. | Planned |
 | auth.sh | Managed OAuth broker. Connect to third-party APIs without giving agents passwords. | Planned |
-| [create.sh](https://create.prim.sh) | Scaffold new prim.sh primitives. Write a prim.yaml spec, get a complete package with passing tests. | Planned |
-| [imagine.sh](https://imagine.prim.sh) | Media generation for agents. Images, video, audio. Any model, one API. No API keys. | Planned |
+| [create.sh](https://create.prim.sh) | Scaffold new prim.sh primitives. Write a prim.yaml spec, get a complete package with passing tests. | Hold |
+| [imagine.sh](https://imagine.prim.sh) | Media generation for agents. Images, video, audio. Any model, one API. No API keys. | Hold |
 <!-- END:PRIM:PRIMS -->
 
 See the full catalog at [prim.sh/llms.txt](https://prim.sh/llms.txt).

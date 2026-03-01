@@ -1,5 +1,6 @@
 id: token
 name: token.sh
+status: hold
 endpoint: token.prim.sh
 type: defi
 category: crypto

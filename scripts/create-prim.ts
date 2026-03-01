@@ -1292,6 +1292,7 @@ async function runWizard(root: string): Promise<{ prim: PrimYaml; yamlStr: strin
   const prim: PrimYaml = {
     id,
     name,
+    status: "hold",
     endpoint: `${id}.prim.sh`,
     type,
     category,
