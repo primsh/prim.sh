@@ -17,6 +17,9 @@ export interface PricingRow {
   op: string;
   price: string;
   provider_cost?: string;
+  pricing_type?: "static" | "dynamic";
+  as_of?: string;
+  estimate?: string;
   note?: string;
 }
 

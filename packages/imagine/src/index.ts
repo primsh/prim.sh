@@ -13,8 +13,8 @@ import { describe, generate, models, upscale } from "./service.ts";
 const IMAGINE_ROUTES = {
   "POST /v1/generate": "$0.02",
   "POST /v1/describe": "$0.005",
-  "POST /v1/upscale": "$0.01",
-  "GET /v1/models": "$0.01",
+  "POST /v1/upscale": "$0.02",
+  "GET /v1/models": "$0.001",
 } as const;
 
 function providerError(message: string): ApiError {
@@ -51,13 +51,13 @@ const app = createPrimApp(
         {
           method: "POST",
           path: "/v1/upscale",
-          price_usdc: "0.01",
+          price_usdc: "0.02",
           description: "Upscale an image to higher resolution. Accepts base64 or URL.",
         },
         {
           method: "GET",
           path: "/v1/models",
-          price_usdc: "0.01",
+          price_usdc: "0.001",
           description: "List available image models with capabilities and pricing.",
         },
       ],

@@ -20,18 +20,26 @@ pricing:
   - op: "Storage"
     price: "$0.02/GB/mo"
     provider_cost: "$0.015/GB/mo"
+    pricing_type: static
+    as_of: "2026-02"
     note: "R2 storage pricing"
   - op: "Upload"
     price: "free"
     provider_cost: "$0.0000045"
+    pricing_type: static
+    as_of: "2026-02"
     note: "R2 Class A op ($4.50/M). Free to encourage adoption"
   - op: "Download"
     price: "$0.01/GB"
     provider_cost: "$0.00000036"
+    pricing_type: static
+    as_of: "2026-02"
     note: "R2 Class B op ($0.36/M)"
   - op: "API calls"
     price: "$0.001/call"
     provider_cost: "$0.00000036"
+    pricing_type: static
+    as_of: "2026-02"
     note: "R2 Class B op ($0.36/M)"
 
 deploy:

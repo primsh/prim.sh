@@ -12,16 +12,16 @@ Part of [prim.sh](https://prim.sh) — zero signup, one payment token, infinite 
 
 | Route | Description | Price | Request | Response |
 |-------|-------------|-------|---------|----------|
-| `POST /v1/search` | Search the web and return ranked results with optional AI-generated answer | $0.01 | `SearchRequest` | `SearchResponse` |
-| `POST /v1/search/news` | Search for recent news articles, ordered by recency | $0.01 | `SearchRequest` | `SearchResponse` |
+| `POST /v1/search` | Search the web and return ranked results with optional AI-generated answer | $0.005 | `SearchRequest` | `SearchResponse` |
+| `POST /v1/search/news` | Search for recent news articles, ordered by recency | $0.005 | `SearchRequest` | `SearchResponse` |
 | `POST /v1/extract` | Extract readable content from one or more URLs as markdown or plain text | $0.005 | `ExtractRequest` | `ExtractResponse` |
 
 ## Pricing
 
 | Operation | Price | Notes |
 |-----------|-------|-------|
-| Web search | $0.01 | Tavily ($5/1K calls) |
-| News search | $0.01 | Tavily ($5/1K calls) |
+| Web search | $0.005 | Tavily ($5/1K calls) |
+| News search | $0.005 | Tavily ($5/1K calls) |
 | URL extract | $0.005 | Tavily extract (at cost) |
 
 ## Request / Response Types

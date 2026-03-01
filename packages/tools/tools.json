@@ -614,7 +614,7 @@
     "type": "function",
     "function": {
       "name": "search_web",
-      "description": "Search the web and return ranked results with optional AI-generated answer. Price: $0.01 via x402 (USDC on Base).",
+      "description": "Search the web and return ranked results with optional AI-generated answer. Price: $0.005 via x402 (USDC on Base).",
       "parameters": {
         "type": "object",
         "properties": {
@@ -677,7 +677,7 @@
     "type": "function",
     "function": {
       "name": "search_news",
-      "description": "Search for recent news articles, ordered by recency. Price: $0.01 via x402 (USDC on Base).",
+      "description": "Search for recent news articles, ordered by recency. Price: $0.005 via x402 (USDC on Base).",
       "parameters": {
         "type": "object",
         "properties": {
@@ -1415,7 +1415,7 @@
     "type": "function",
     "function": {
       "name": "token_deploy",
-      "description": "Deploy a new ERC-20 token. Returns immediately with deployStatus: 'pending'. Poll GET /v1/tokens/:id until deployStatus is 'confirmed' before minting or pooling. Price: $1.00 via x402 (USDC on Base).",
+      "description": "Deploy a new ERC-20 token. Returns immediately with deployStatus: 'pending'. Poll GET /v1/tokens/:id until deployStatus is 'confirmed' before minting or pooling. Price: $0.10 via x402 (USDC on Base).",
       "parameters": {
         "type": "object",
         "properties": {
@@ -1486,7 +1486,7 @@
     "type": "function",
     "function": {
       "name": "token_mint",
-      "description": "Mint additional tokens to an address. Requires mintable=true at deploy time. Price: $0.10 via x402 (USDC on Base).",
+      "description": "Mint additional tokens to an address. Requires mintable=true at deploy time. Price: $0.01 via x402 (USDC on Base).",
       "parameters": {
         "type": "object",
         "properties": {
@@ -1534,7 +1534,7 @@
     "type": "function",
     "function": {
       "name": "token_pool_create",
-      "description": "Create and initialize a Uniswap V3 pool paired with USDC. One pool per token. Price: $0.50 via x402 (USDC on Base).",
+      "description": "Create and initialize a Uniswap V3 pool paired with USDC. One pool per token. Price: $0.05 via x402 (USDC on Base).",
       "parameters": {
         "type": "object",
         "properties": {
@@ -1608,7 +1608,7 @@
     "type": "function",
     "function": {
       "name": "mem_collection_create",
-      "description": "Create a vector collection. Price: $0.01 via x402 (USDC on Base).",
+      "description": "Create a vector collection. Price: $0.001 via x402 (USDC on Base).",
       "parameters": {
         "type": "object",
         "properties": {
@@ -1679,7 +1679,7 @@
     "type": "function",
     "function": {
       "name": "mem_collection_delete",
-      "description": "Delete collection and all documents. Irreversible. Price: $0.01 via x402 (USDC on Base).",
+      "description": "Delete collection and all documents. Irreversible. Price: $0.001 via x402 (USDC on Base).",
       "parameters": {
         "type": "object",
         "properties": {
@@ -1698,7 +1698,7 @@
     "type": "function",
     "function": {
       "name": "mem_upsert",
-      "description": "Embed and store documents. Each document: {id?, text, metadata?}. Existing IDs are replaced. Price: $0.001 via x402 (USDC on Base).",
+      "description": "Embed and store documents. Each document: {id?, text, metadata?}. Existing IDs are replaced. Price: $0.0001 via x402 (USDC on Base).",
       "parameters": {
         "type": "object",
         "properties": {
@@ -1725,7 +1725,7 @@
     "type": "function",
     "function": {
       "name": "mem_query",
-      "description": "Semantic search. Fields: text (required), top_k, filter (Qdrant native format). Price: $0.001 via x402 (USDC on Base).",
+      "description": "Semantic search. Fields: text (required), top_k, filter (Qdrant native format). Price: $0.0001 via x402 (USDC on Base).",
       "parameters": {
         "type": "object",
         "properties": {
@@ -2249,7 +2249,7 @@
     "type": "function",
     "function": {
       "name": "track_track_package",
-      "description": "Track a package by tracking number and carrier. Returns status, ETA, and full event history. Price: $0.05 via x402 (USDC on Base).",
+      "description": "Track a package by tracking number and carrier. Returns status, ETA, and full event history. Price: $0.04 via x402 (USDC on Base).",
       "parameters": {
         "type": "object",
         "properties": {
@@ -2338,7 +2338,7 @@
     "type": "function",
     "function": {
       "name": "infer_embed",
-      "description": "Generate embeddings for text input. Returns vector array. Price: $0.001 via x402 (USDC on Base).",
+      "description": "Generate embeddings for text input. Returns vector array. Price: $0.0001 via x402 (USDC on Base).",
       "parameters": {
         "type": "object",
         "properties": {
@@ -2363,7 +2363,7 @@
     "type": "function",
     "function": {
       "name": "infer_list_models",
-      "description": "List available models with pricing and capabilities. Price: $0.01 via x402 (USDC on Base).",
+      "description": "List available models with pricing and capabilities. Price: $0.001 via x402 (USDC on Base).",
       "parameters": {
         "type": "object",
         "properties": {}

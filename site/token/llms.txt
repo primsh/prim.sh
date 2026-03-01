@@ -109,7 +109,7 @@ Deploy a new ERC-20 token. Returns immediately with deployStatus: 'pending'.
 
 Poll GET /v1/tokens/:id until deployStatus is 'confirmed' before minting or pooling.
 
-Price: $1.00
+Price: $0.10
 
 Request:
   name           string         required  Token name (e.g. "AgentCoin").
@@ -190,7 +190,7 @@ Errors:
 
 Mint additional tokens to an address. Requires mintable=true at deploy time.
 
-Price: $0.10
+Price: $0.01
 
 Path params:
   id  string  required  id parameter
@@ -241,7 +241,7 @@ Errors:
 
 Create and initialize a Uniswap V3 pool paired with USDC. One pool per token.
 
-Price: $0.50
+Price: $0.05
 
 Path params:
   id  string  required  id parameter

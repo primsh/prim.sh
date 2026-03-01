@@ -9,7 +9,7 @@ import type { CallToolResult } from "@modelcontextprotocol/sdk/types.js";
 export const searchTools: Tool[] = [
   {
     name: "search_web",
-    description: "Search the web and return ranked results with optional AI-generated answer | Price: $0.01",
+    description: "Search the web and return ranked results with optional AI-generated answer | Price: $0.005",
     inputSchema: {
         type: "object",
         properties: {
@@ -59,7 +59,7 @@ export const searchTools: Tool[] = [
   },
   {
     name: "search_news",
-    description: "Search for recent news articles, ordered by recency | Price: $0.01",
+    description: "Search for recent news articles, ordered by recency | Price: $0.005",
     inputSchema: {
         type: "object",
         properties: {

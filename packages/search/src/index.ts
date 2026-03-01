@@ -16,8 +16,8 @@ import { TavilyClient } from "./tavily.ts";
 // ─── App ──────────────────────────────────────────────────────────────────────
 
 const SEARCH_ROUTES = {
-  "POST /v1/search": "$0.01",
-  "POST /v1/search/news": "$0.01",
+  "POST /v1/search": "$0.005",
+  "POST /v1/search/news": "$0.005",
   "POST /v1/extract": "$0.005",
 } as const;
 
@@ -40,11 +40,11 @@ const app = createPrimApp(
     extraFreeRoutes: ["GET /health/providers"],
     pricing: {
       routes: [
-        { method: "POST", path: "/v1/search", price_usdc: "0.01", description: "Web search" },
+        { method: "POST", path: "/v1/search", price_usdc: "0.005", description: "Web search" },
         {
           method: "POST",
           path: "/v1/search/news",
-          price_usdc: "0.01",
+          price_usdc: "0.005",
           description: "News search",
         },
         {

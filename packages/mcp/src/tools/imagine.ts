@@ -23,14 +23,14 @@ export const imagineTools: Tool[] = [
   },
   {
     name: "imagine_upscale",
-    description: "Upscale an image to higher resolution. Accepts base64 or URL. | Price: $0.01",
+    description: "Upscale an image to higher resolution. Accepts base64 or URL. | Price: $0.02",
     inputSchema: {
         type: "object",
       },
   },
   {
     name: "imagine_list_models",
-    description: "List available image models with capabilities and pricing. | Price: $0.01",
+    description: "List available image models with capabilities and pricing. | Price: $0.001",
     inputSchema: {
         type: "object",
         properties: {},

@@ -24,6 +24,10 @@
     .g { color: #00ff88; }
     .r { color: #ff4444; }
     .y { color: #ffcc00; }
+    .free { color: #00ff88; }
+    .badge { display: inline-block; padding: 0.1rem 0.4rem; border-radius: 3px; font-size: 11px; font-weight: bold; letter-spacing: 0.03em; }
+    .badge-static { background: #1a2e1a; color: #00ff88; }
+    .badge-dynamic { background: #2e2a1a; color: #ffcc00; }
     .back { display: inline-block; margin-bottom: 1.5rem; color: var(--muted); font-size: 13px; }
     .back:hover { color: var(--accent); }
     .updated { color: var(--muted); font-size: 12px; margin-top: 2rem; }
@@ -32,227 +36,224 @@
 <body>
   <a href="/" class="back">← prim.sh</a>
   <h1>What it costs to run prim.sh</h1>
-  <p>Full cost transparency. Infrastructure costs are shared overhead; per-route provider costs live in each primitive's prim.yaml.</p>
+  <p>At-cost pricing. Zero margin. Pay for what you use. Fixed infrastructure ($24.49/mo) is absorbed by the business.</p>
 
   <h2>Infrastructure</h2>
   <table>
     <thead>
-      <tr><th>Item</th><th>Provider</th><th>Monthly</th><th>Notes</th></tr>
+      <tr><th>Item</th><th>Provider</th><th>Monthly</th><th>What &amp; Why</th></tr>
     </thead>
     <tbody>
-          <tr><td>vps</td><td>digitalocean</td><td>$12.00</td><td class="muted">s-1vcpu-2gb (2GB RAM, 1 vCPU, 50GB disk). Shared by all prims</td></tr>
-          <tr><td>domain_prim_sh</td><td>namecheap</td><td>$2.92</td><td class="muted">prim.sh, $34.98/yr amortized. Order 195616489 (2026-02-25)</td></tr>
-          <tr><td>domain_primitiveshell_com</td><td>namecheap</td><td>$0.96</td><td class="muted">primitiveshell.com, $11.48/yr incl. ICANN. Order 195781641 (2026-02-27)</td></tr>
-          <tr><td>domain_primitiveshell_org</td><td>namecheap</td><td>$0.61</td><td class="muted">primitiveshell.org, $7.28/yr incl. ICANN. Order 195781641 (2026-02-27)</td></tr>
-          <tr><td>x_premium</td><td>x</td><td>$8.00</td><td class="muted">@useprim marketing. Web pricing (switched from iOS $11/mo on 2026-02-28)</td></tr>
-          <tr><td>github</td><td>github</td><td>$0.00</td><td class="muted">Free plan. Downgraded from Team ($4/mo) on 2026-02-28 — public repo</td></tr>
-          <tr><td>cloudflare</td><td>cloudflare</td><td>$0.00</td><td class="muted">Free plan — R2, DNS, Pages</td></tr>
+          <tr><td>vps</td><td>digitalocean</td><td>$12.00</td><td class="muted">Shared VPS for all prims (s-1vcpu-2gb)</td></tr>
+          <tr><td>domain_prim_sh</td><td>namecheap</td><td>$2.92</td><td class="muted">Primary domain, all API endpoints at *.prim.sh ($34.98/yr)</td></tr>
+          <tr><td>domain_primitiveshell_com</td><td>namecheap</td><td>$0.96</td><td class="muted">Brand protection ($11.48/yr)</td></tr>
+          <tr><td>domain_primitiveshell_org</td><td>namecheap</td><td>$0.61</td><td class="muted">Brand protection ($7.28/yr)</td></tr>
+          <tr><td>x_premium</td><td>x</td><td>$8.00</td><td class="muted">@useprim verified account, marketing (X Premium web)</td></tr>
+          <tr><td>github</td><td>github</td><td>$0.00</td><td class="muted">CI/CD and source hosting (free plan, public repo)</td></tr>
+          <tr><td>cloudflare</td><td>cloudflare</td><td>$0.00</td><td class="muted">DNS, CDN, R2 storage, Pages hosting (free plan)</td></tr>
     </tbody>
     <tfoot>
       <tr class="total"><td>Total fixed</td><td></td><td>$24.49/mo</td><td></td></tr>
     </tfoot>
   </table>
 
-  <h2>Per-primitive margins</h2>
+  <h2>Per-primitive costs</h2>
 
       <h3>wallet.sh <span class="muted">(mainnet)</span></h3>
       <table>
         <thead>
-          <tr><th>Operation</th><th>Price</th><th>Provider Cost</th><th>Margin</th></tr>
+          <tr><th>Operation</th><th>Price</th><th>Provider Cost</th><th>Type</th><th>Verified</th></tr>
         </thead>
         <tbody>
-          <tr><td>Wallet registration</td><td>free</td><td>—</td><td class="g">—</td></tr>
-          <tr><td>API call</td><td>$0.001</td><td>—</td><td class="g">—</td></tr>
-          <tr><td>Policy update</td><td>$0.005</td><td>—</td><td class="g">—</td></tr>
+          <tr><td>Wallet registration</td><td class="free">free</td><td>$0.00</td><td><span class="badge badge-static">static</span></td><td class="muted">2026-02</td></tr>
+          <tr><td>API call</td><td class="">$0.001</td><td>$0.00</td><td><span class="badge badge-static">static</span></td><td class="muted">2026-02</td></tr>
+          <tr><td>Policy update</td><td class="">$0.005</td><td>$0.00</td><td><span class="badge badge-static">static</span></td><td class="muted">2026-02</td></tr>
         </tbody>
       </table>
 
       <h3>faucet.sh <span class="muted">(testnet)</span></h3>
       <table>
         <thead>
-          <tr><th>Operation</th><th>Price</th><th>Provider Cost</th><th>Margin</th></tr>
+          <tr><th>Operation</th><th>Price</th><th>Provider Cost</th><th>Type</th><th>Verified</th></tr>
         </thead>
         <tbody>
-          <tr><td>USDC drip</td><td>free</td><td>—</td><td class="g">—</td></tr>
-          <tr><td>ETH drip</td><td>free</td><td>—</td><td class="g">—</td></tr>
+          <tr><td>USDC drip</td><td class="free">free</td><td>$0.00</td><td><span class="badge badge-static">static</span></td><td class="muted">2026-02</td></tr>
+          <tr><td>ETH drip</td><td class="free">free</td><td>$0.00</td><td><span class="badge badge-static">static</span></td><td class="muted">2026-02</td></tr>
         </tbody>
       </table>
 
       <h3>gate.sh <span class="muted">(testnet)</span></h3>
       <table>
         <thead>
-          <tr><th>Operation</th><th>Price</th><th>Provider Cost</th><th>Margin</th></tr>
+          <tr><th>Operation</th><th>Price</th><th>Provider Cost</th><th>Type</th><th>Verified</th></tr>
         </thead>
         <tbody>
-          <tr><td>Redeem invite</td><td>free</td><td>—</td><td class="g">—</td></tr>
+          <tr><td>Redeem invite</td><td class="free">free</td><td>$0.00</td><td><span class="badge badge-static">static</span></td><td class="muted">2026-02</td></tr>
         </tbody>
       </table>
 
       <h3>store.sh <span class="muted">(mainnet)</span></h3>
       <table>
         <thead>
-          <tr><th>Operation</th><th>Price</th><th>Provider Cost</th><th>Margin</th></tr>
+          <tr><th>Operation</th><th>Price</th><th>Provider Cost</th><th>Type</th><th>Verified</th></tr>
         </thead>
         <tbody>
-          <tr><td>Storage</td><td>$0.02/GB/mo</td><td>$0.015/GB/mo</td><td class="g">25%</td></tr>
-          <tr><td>Upload</td><td>free</td><td>$0.0000045</td><td class="g">—</td></tr>
-          <tr><td>Download</td><td>$0.01/GB</td><td>$0.00000036</td><td class="g">100%</td></tr>
-          <tr><td>API calls</td><td>$0.001/call</td><td>$0.00000036</td><td class="g">100%</td></tr>
+          <tr><td>Storage</td><td class="">$0.02/GB/mo</td><td>$0.015/GB/mo</td><td><span class="badge badge-static">static</span></td><td class="muted">2026-02</td></tr>
+          <tr><td>Upload</td><td class="free">free</td><td>$0.0000045</td><td><span class="badge badge-static">static</span></td><td class="muted">2026-02</td></tr>
+          <tr><td>Download</td><td class="">$0.01/GB</td><td>$0.00000036</td><td><span class="badge badge-static">static</span></td><td class="muted">2026-02</td></tr>
+          <tr><td>API calls</td><td class="">$0.001/call</td><td>$0.00000036</td><td><span class="badge badge-static">static</span></td><td class="muted">2026-02</td></tr>
         </tbody>
       </table>
 
       <h3>search.sh <span class="muted">(mainnet)</span></h3>
       <table>
         <thead>
-          <tr><th>Operation</th><th>Price</th><th>Provider Cost</th><th>Margin</th></tr>
+          <tr><th>Operation</th><th>Price</th><th>Provider Cost</th><th>Type</th><th>Verified</th></tr>
         </thead>
         <tbody>
-          <tr><td>Web search</td><td>$0.01</td><td>$0.005</td><td class="g">50%</td></tr>
-          <tr><td>News search</td><td>$0.01</td><td>$0.005</td><td class="g">50%</td></tr>
-          <tr><td>URL extract</td><td>$0.005</td><td>$0.005</td><td class="g">0%</td></tr>
+          <tr><td>Web search</td><td class="">$0.005</td><td>$0.005</td><td><span class="badge badge-static">static</span></td><td class="muted">2026-02</td></tr>
+          <tr><td>News search</td><td class="">$0.005</td><td>$0.005</td><td><span class="badge badge-static">static</span></td><td class="muted">2026-02</td></tr>
+          <tr><td>URL extract</td><td class="">$0.005</td><td>$0.005</td><td><span class="badge badge-static">static</span></td><td class="muted">2026-02</td></tr>
         </tbody>
       </table>
 
       <h3>spawn.sh <span class="muted">(hold)</span></h3>
       <table>
         <thead>
-          <tr><th>Operation</th><th>Price</th><th>Provider Cost</th><th>Margin</th></tr>
+          <tr><th>Operation</th><th>Price</th><th>Provider Cost</th><th>Type</th><th>Verified</th></tr>
         </thead>
         <tbody>
-          <tr><td>Create server</td><td>$0.01</td><td>$4.00/mo</td><td class="r">-39900%</td></tr>
-          <tr><td>s-1vcpu-1gb</td><td>$0.012/hr</td><td>$0.009/hr</td><td class="g">25%</td></tr>
-          <tr><td>s-2vcpu-4gb</td><td>$0.036/hr</td><td>$0.033/hr</td><td class="g">8%</td></tr>
-          <tr><td>s-4vcpu-8gb</td><td>$0.071/hr</td><td>$0.065/hr</td><td class="g">8%</td></tr>
-          <tr><td>Bandwidth</td><td>$0.01/GB</td><td>$0.01/GB</td><td class="g">0%</td></tr>
+          <tr><td>Create server</td><td class="">$0.01</td><td>$4.00/mo</td><td><span class="badge badge-static">static</span></td><td class="muted">2026-02</td></tr>
+          <tr><td>s-1vcpu-1gb</td><td class="">$0.012/hr</td><td>$0.009/hr</td><td><span class="badge badge-static">static</span></td><td class="muted">2026-02</td></tr>
+          <tr><td>s-2vcpu-4gb</td><td class="">$0.036/hr</td><td>$0.033/hr</td><td><span class="badge badge-static">static</span></td><td class="muted">2026-02</td></tr>
+          <tr><td>s-4vcpu-8gb</td><td class="">$0.071/hr</td><td>$0.065/hr</td><td><span class="badge badge-static">static</span></td><td class="muted">2026-02</td></tr>
+          <tr><td>Bandwidth</td><td class="">$0.01/GB</td><td>$0.01/GB</td><td><span class="badge badge-static">static</span></td><td class="muted">2026-02</td></tr>
         </tbody>
       </table>
 
       <h3>email.sh <span class="muted">(hold)</span></h3>
       <table>
         <thead>
-          <tr><th>Operation</th><th>Price</th><th>Provider Cost</th><th>Margin</th></tr>
+          <tr><th>Operation</th><th>Price</th><th>Provider Cost</th><th>Type</th><th>Verified</th></tr>
         </thead>
         <tbody>
-          <tr><td>Create mailbox</td><td>$0.05</td><td>—</td><td class="g">—</td></tr>
-          <tr><td>Send email</td><td>$0.01</td><td>—</td><td class="g">—</td></tr>
-          <tr><td>Read messages</td><td>$0.001</td><td>—</td><td class="g">—</td></tr>
-          <tr><td>Webhook</td><td>$0.01</td><td>—</td><td class="g">—</td></tr>
-          <tr><td>Custom domain</td><td>$0.05</td><td>—</td><td class="g">—</td></tr>
+          <tr><td>Create mailbox</td><td class="">$0.05</td><td>$0.00</td><td><span class="badge badge-static">static</span></td><td class="muted">2026-02</td></tr>
+          <tr><td>Send email</td><td class="">$0.01</td><td>$0.00</td><td><span class="badge badge-static">static</span></td><td class="muted">2026-02</td></tr>
+          <tr><td>Read messages</td><td class="">$0.001</td><td>$0.00</td><td><span class="badge badge-static">static</span></td><td class="muted">2026-02</td></tr>
+          <tr><td>Webhook</td><td class="">$0.01</td><td>$0.00</td><td><span class="badge badge-static">static</span></td><td class="muted">2026-02</td></tr>
+          <tr><td>Custom domain</td><td class="">$0.05</td><td>$0.00</td><td><span class="badge badge-static">static</span></td><td class="muted">2026-02</td></tr>
         </tbody>
       </table>
 
       <h3>token.sh <span class="muted">(hold)</span></h3>
       <table>
         <thead>
-          <tr><th>Operation</th><th>Price</th><th>Provider Cost</th><th>Margin</th></tr>
+          <tr><th>Operation</th><th>Price</th><th>Provider Cost</th><th>Type</th><th>Verified</th></tr>
         </thead>
         <tbody>
-          <tr><td>Deploy token</td><td>$1.00</td><td>$0.10</td><td class="g">90%</td></tr>
-          <tr><td>Mint</td><td>$0.10</td><td>$0.01</td><td class="g">90%</td></tr>
-          <tr><td>Create pool</td><td>$0.50</td><td>$0.05</td><td class="g">90%</td></tr>
-          <tr><td>Read</td><td>$0.001</td><td>$0.00</td><td class="g">100%</td></tr>
+          <tr><td>Deploy token</td><td class="">$0.10 (varies)</td><td>$0.10</td><td><span class="badge badge-dynamic">dynamic</span></td><td class="muted">2026-02</td></tr>
+          <tr><td>Mint</td><td class="">$0.01 (varies)</td><td>$0.01</td><td><span class="badge badge-dynamic">dynamic</span></td><td class="muted">2026-02</td></tr>
+          <tr><td>Create pool</td><td class="">$0.05 (varies)</td><td>$0.05</td><td><span class="badge badge-dynamic">dynamic</span></td><td class="muted">2026-02</td></tr>
+          <tr><td>Read</td><td class="">$0.001</td><td>$0.00</td><td><span class="badge badge-static">static</span></td><td class="muted">2026-02</td></tr>
         </tbody>
       </table>
 
       <h3>mem.sh <span class="muted">(hold)</span></h3>
       <table>
         <thead>
-          <tr><th>Operation</th><th>Price</th><th>Provider Cost</th><th>Margin</th></tr>
+          <tr><th>Operation</th><th>Price</th><th>Provider Cost</th><th>Type</th><th>Verified</th></tr>
         </thead>
         <tbody>
-          <tr><td>Create collection</td><td>$0.01</td><td>$0.00</td><td class="g">100%</td></tr>
-          <tr><td>Upsert (embed)</td><td>$0.001</td><td>$0.0001</td><td class="g">90%</td></tr>
-          <tr><td>Query</td><td>$0.001</td><td>$0.0001</td><td class="g">90%</td></tr>
-          <tr><td>KV cache</td><td>$0.0001</td><td>$0.00</td><td class="g">100%</td></tr>
+          <tr><td>Create collection</td><td class="">$0.001</td><td>$0.00</td><td><span class="badge badge-static">static</span></td><td class="muted">2026-02</td></tr>
+          <tr><td>Upsert (embed)</td><td class="">$0.0001</td><td>$0.0001</td><td><span class="badge badge-static">static</span></td><td class="muted">2026-02</td></tr>
+          <tr><td>Query</td><td class="">$0.0001</td><td>$0.0001</td><td><span class="badge badge-static">static</span></td><td class="muted">2026-02</td></tr>
+          <tr><td>KV cache</td><td class="">$0.0001</td><td>$0.00</td><td><span class="badge badge-static">static</span></td><td class="muted">2026-02</td></tr>
         </tbody>
       </table>
 
       <h3>domain.sh <span class="muted">(hold)</span></h3>
       <table>
         <thead>
-          <tr><th>Operation</th><th>Price</th><th>Provider Cost</th><th>Margin</th></tr>
+          <tr><th>Operation</th><th>Price</th><th>Provider Cost</th><th>Type</th><th>Verified</th></tr>
         </thead>
         <tbody>
-          <tr><td>Domain registration</td><td>dynamic</td><td>varies</td><td class="g">—</td></tr>
-          <tr><td>DNS zone</td><td>$0.05</td><td>$0.00</td><td class="g">100%</td></tr>
-          <tr><td>DNS record</td><td>$0.001</td><td>$0.00</td><td class="g">100%</td></tr>
-          <tr><td>DNS queries</td><td>free</td><td>$0.00</td><td class="g">—</td></tr>
+          <tr><td>Domain registration</td><td class="">~~$8-40/yr (TLD dependent)</td><td>varies</td><td><span class="badge badge-dynamic">dynamic</span></td><td class="muted">2026-02</td></tr>
+          <tr><td>DNS zone</td><td class="">$0.05</td><td>$0.00</td><td><span class="badge badge-static">static</span></td><td class="muted">2026-02</td></tr>
+          <tr><td>DNS record</td><td class="">$0.001</td><td>$0.00</td><td><span class="badge badge-static">static</span></td><td class="muted">2026-02</td></tr>
+          <tr><td>DNS queries</td><td class="free">free</td><td>$0.00</td><td><span class="badge badge-static">static</span></td><td class="muted">2026-02</td></tr>
         </tbody>
       </table>
 
       <h3>track.sh <span class="muted">(hold)</span></h3>
       <table>
         <thead>
-          <tr><th>Operation</th><th>Price</th><th>Provider Cost</th><th>Margin</th></tr>
+          <tr><th>Operation</th><th>Price</th><th>Provider Cost</th><th>Type</th><th>Verified</th></tr>
         </thead>
         <tbody>
-          <tr><td>Track package</td><td>$0.05</td><td>—</td><td class="g">—</td></tr>
+          <tr><td>Track package</td><td class="">$0.04</td><td>$0.04</td><td><span class="badge badge-static">static</span></td><td class="muted">2026-02</td></tr>
         </tbody>
       </table>
 
       <h3>ring.sh <span class="muted">(—)</span></h3>
       <table>
         <thead>
-          <tr><th>Operation</th><th>Price</th><th>Provider Cost</th><th>Margin</th></tr>
+          <tr><th>Operation</th><th>Price</th><th>Provider Cost</th><th>Type</th><th>Verified</th></tr>
         </thead>
         <tbody>
-          <tr><td>Provision number</td><td>$0.03/day</td><td>—</td><td class="g">—</td></tr>
-          <tr><td>Send SMS</td><td>$0.008</td><td>—</td><td class="g">—</td></tr>
-          <tr><td>Receive SMS</td><td>$0.005</td><td>—</td><td class="g">—</td></tr>
-          <tr><td>Outbound call</td><td>$0.015/min</td><td>—</td><td class="g">—</td></tr>
-          <tr><td>Inbound call</td><td>$0.010/min</td><td>—</td><td class="g">—</td></tr>
-          <tr><td>TTS</td><td>$0.005/min</td><td>—</td><td class="g">—</td></tr>
-          <tr><td>Call recording</td><td>$0.002/min</td><td>—</td><td class="g">—</td></tr>
+          <tr><td>Provision number</td><td class="">$0.03/day</td><td>$0.03/day</td><td><span class="badge badge-static">static</span></td><td class="muted">2026-02</td></tr>
+          <tr><td>Send SMS</td><td class="">$0.008</td><td>$0.004</td><td><span class="badge badge-static">static</span></td><td class="muted">2026-02</td></tr>
+          <tr><td>Receive SMS</td><td class="">$0.005</td><td>$0.003</td><td><span class="badge badge-static">static</span></td><td class="muted">2026-02</td></tr>
+          <tr><td>Outbound call</td><td class="">$0.015/min</td><td>$0.010/min</td><td><span class="badge badge-static">static</span></td><td class="muted">2026-02</td></tr>
+          <tr><td>Inbound call</td><td class="">$0.010/min</td><td>$0.005/min</td><td><span class="badge badge-static">static</span></td><td class="muted">2026-02</td></tr>
+          <tr><td>TTS</td><td class="">$0.005/min</td><td>$0.003/min</td><td><span class="badge badge-static">static</span></td><td class="muted">2026-02</td></tr>
+          <tr><td>Call recording</td><td class="">$0.002/min</td><td>—</td><td><span class="badge badge-static">static</span></td><td class="muted">—</td></tr>
         </tbody>
       </table>
 
       <h3>feedback.sh <span class="muted">(testnet)</span></h3>
       <table>
         <thead>
-          <tr><th>Operation</th><th>Price</th><th>Provider Cost</th><th>Margin</th></tr>
+          <tr><th>Operation</th><th>Price</th><th>Provider Cost</th><th>Type</th><th>Verified</th></tr>
         </thead>
         <tbody>
-          <tr><td>Submit feedback</td><td>free</td><td>—</td><td class="g">—</td></tr>
+          <tr><td>Submit feedback</td><td class="free">free</td><td>$0.00</td><td><span class="badge badge-static">static</span></td><td class="muted">2026-02</td></tr>
         </tbody>
       </table>
 
       <h3>infer.sh <span class="muted">(hold)</span></h3>
       <table>
         <thead>
-          <tr><th>Operation</th><th>Price</th><th>Provider Cost</th><th>Margin</th></tr>
+          <tr><th>Operation</th><th>Price</th><th>Provider Cost</th><th>Type</th><th>Verified</th></tr>
         </thead>
         <tbody>
-          <tr><td>Chat completion</td><td>pass-through + 10%</td><td>—</td><td class="g">—</td></tr>
-          <tr><td>Embeddings</td><td>$0.001</td><td>—</td><td class="g">—</td></tr>
-          <tr><td>List models</td><td>free</td><td>—</td><td class="g">—</td></tr>
+          <tr><td>Chat completion</td><td class="">$0.01 (varies)</td><td>varies</td><td><span class="badge badge-dynamic">dynamic</span></td><td class="muted">2026-02</td></tr>
+          <tr><td>Embeddings</td><td class="">$0.0001</td><td>$0.0001</td><td><span class="badge badge-static">static</span></td><td class="muted">2026-02</td></tr>
+          <tr><td>List models</td><td class="">$0.001</td><td>$0.00</td><td><span class="badge badge-static">static</span></td><td class="muted">2026-02</td></tr>
+        </tbody>
+      </table>
+
+      <h3>create.sh <span class="muted">(hold)</span></h3>
+      <table>
+        <thead>
+          <tr><th>Operation</th><th>Price</th><th>Provider Cost</th><th>Type</th><th>Verified</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>Scaffold</td><td class="free">free</td><td>$0.00</td><td><span class="badge badge-static">static</span></td><td class="muted">2026-02</td></tr>
         </tbody>
       </table>
 
       <h3>imagine.sh <span class="muted">(hold)</span></h3>
       <table>
         <thead>
-          <tr><th>Operation</th><th>Price</th><th>Provider Cost</th><th>Margin</th></tr>
+          <tr><th>Operation</th><th>Price</th><th>Provider Cost</th><th>Type</th><th>Verified</th></tr>
         </thead>
         <tbody>
-          <tr><td>Generate image</td><td>$0.02</td><td>—</td><td class="g">—</td></tr>
-          <tr><td>Describe image</td><td>$0.005</td><td>—</td><td class="g">—</td></tr>
-          <tr><td>Upscale image</td><td>$0.01</td><td>—</td><td class="g">—</td></tr>
-          <tr><td>List models</td><td>free</td><td>—</td><td class="g">—</td></tr>
+          <tr><td>Generate image</td><td class="">$0.02</td><td>$0.02</td><td><span class="badge badge-static">static</span></td><td class="muted">2026-02</td></tr>
+          <tr><td>Describe image</td><td class="">$0.005</td><td>$0.005</td><td><span class="badge badge-static">static</span></td><td class="muted">2026-02</td></tr>
+          <tr><td>Upscale image</td><td class="">$0.02</td><td>$0.02</td><td><span class="badge badge-static">static</span></td><td class="muted">2026-02</td></tr>
+          <tr><td>List models</td><td class="free">free</td><td>$0.00</td><td><span class="badge badge-static">static</span></td><td class="muted">2026-02</td></tr>
         </tbody>
       </table>
-
-  <h2>Risk flags</h2>
-  <table>
-    <thead>
-      <tr><th>Primitive</th><th>Endpoint</th><th>Severity</th><th>Description</th></tr>
-    </thead>
-    <tbody>
-          <tr><td>spawn.sh</td><td class="muted">POST /v1/servers</td><td class="r">high</td><td>$0.01 one-time charge vs $4/mo DO droplet (-39,900% margin). Needs recurring billing model.</td></tr>
-          <tr><td>search.sh</td><td class="muted">POST /v1/search</td><td class="r">high</td><td>x402 price ($0.001) < provider cost ($0.005). -400% margin. Loss leader at beta pricing.</td></tr>
-          <tr><td>token.sh</td><td class="muted">POST /v1/tokens</td><td class="y">moderate</td><td>90% margin at normal Base L2 gas (~$0.10). Mainnet congestion can push gas above $1. Needs gas oracle.</td></tr>
-          <tr><td>domain.sh</td><td class="muted">POST /v1/domains/register</td><td class="y">moderate</td><td>Dynamic pricing via Namecheap. Margin depends on TLD wholesale cost. No fixed margin guarantee.</td></tr>
-    </tbody>
-  </table>
 
   <p class="updated">Generated from <a href="https://github.com/primsh/prim.sh/blob/main/docs/costs.yaml">docs/costs.yaml</a> + prim.yaml files.</p>
 </body>

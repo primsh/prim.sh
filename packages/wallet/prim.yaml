@@ -19,13 +19,22 @@ deploy:
 pricing:
   - op: "Wallet registration"
     price: "free"
-    note: ""
+    provider_cost: "$0.00"
+    pricing_type: static
+    as_of: "2026-02"
+    note: "Self-hosted keystore"
   - op: "API call"
     price: "$0.001"
-    note: "Per request"
+    provider_cost: "$0.00"
+    pricing_type: static
+    as_of: "2026-02"
+    note: "x402 floor (self-hosted)"
   - op: "Policy update"
     price: "$0.005"
-    note: ""
+    provider_cost: "$0.00"
+    pricing_type: static
+    as_of: "2026-02"
+    note: "x402 floor (self-hosted)"
 
 
 nounStyled: "The agent-native wallet."

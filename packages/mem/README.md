@@ -12,12 +12,12 @@ Part of [prim.sh](https://prim.sh) — zero signup, one payment token, infinite 
 
 | Route | Description | Price | Request | Response |
 |-------|-------------|-------|---------|----------|
-| `POST /v1/collections` | Create a vector collection | $0.01 | `CreateCollectionRequest` | `CollectionResponse` |
+| `POST /v1/collections` | Create a vector collection | $0.001 | `CreateCollectionRequest` | `CollectionResponse` |
 | `GET /v1/collections` | List collections owned by the calling wallet (paginated). document_count is null — use GET :id. | $0.001 | `—` | `CollectionListResponse` |
 | `GET /v1/collections/:id` | Get collection with live document_count from Qdrant | $0.001 | `—` | `CollectionResponse` |
-| `DELETE /v1/collections/:id` | Delete collection and all documents. Irreversible. | $0.01 | `—` | `—` |
-| `POST /v1/collections/:id/upsert` | Embed and store documents. Each document: {id?, text, metadata?}. Existing IDs are replaced. | $0.001 | `UpsertRequest` | `UpsertResponse` |
-| `POST /v1/collections/:id/query` | Semantic search. Fields: text (required), top_k, filter (Qdrant native format). | $0.001 | `QueryRequest` | `QueryResponse` |
+| `DELETE /v1/collections/:id` | Delete collection and all documents. Irreversible. | $0.001 | `—` | `—` |
+| `POST /v1/collections/:id/upsert` | Embed and store documents. Each document: {id?, text, metadata?}. Existing IDs are replaced. | $0.0001 | `UpsertRequest` | `UpsertResponse` |
+| `POST /v1/collections/:id/query` | Semantic search. Fields: text (required), top_k, filter (Qdrant native format). | $0.0001 | `QueryRequest` | `QueryResponse` |
 | `PUT /v1/cache/:namespace/:key` | Store a value in the KV cache. Optional ttl in seconds for expiry. | $0.0001 | `SetCacheRequest` | `—` |
 | `GET /v1/cache/:namespace/:key` | Retrieve a cache value. Returns 404 if missing or expired. | $0.0001 | `—` | `GetCacheResponse` |
 | `DELETE /v1/cache/:namespace/:key` | Delete a cache entry | $0.0001 | `—` | `—` |
@@ -26,10 +26,10 @@ Part of [prim.sh](https://prim.sh) — zero signup, one payment token, infinite 
 
 | Operation | Price | Notes |
 |-----------|-------|-------|
-| Create collection | $0.01 | Qdrant (self-hosted) |
-| Upsert (embed) | $0.001 | Google embedding API (~$0.10/M chars) |
-| Query | $0.001 | Google embedding API + Qdrant search |
-| KV cache | $0.0001 | SQLite (self-hosted) |
+| Create collection | $0.001 | x402 floor (self-hosted Qdrant) |
+| Upsert (embed) | $0.0001 | Google embedding API (~$0.10/M chars) |
+| Query | $0.0001 | Google embedding API + Qdrant search |
+| KV cache | $0.0001 | x402 floor (SQLite, self-hosted) |
 
 ## Request / Response Types
 

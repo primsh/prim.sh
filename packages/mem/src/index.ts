@@ -33,12 +33,12 @@ import {
 } from "./service.ts";
 
 const MEM_ROUTES = {
-  "POST /v1/collections": "$0.01",
+  "POST /v1/collections": "$0.001",
   "GET /v1/collections": "$0.001",
   "GET /v1/collections/[id]": "$0.001",
-  "DELETE /v1/collections/[id]": "$0.01",
-  "POST /v1/collections/[id]/upsert": "$0.001",
-  "POST /v1/collections/[id]/query": "$0.001",
+  "DELETE /v1/collections/[id]": "$0.001",
+  "POST /v1/collections/[id]/upsert": "$0.0001",
+  "POST /v1/collections/[id]/query": "$0.0001",
   "PUT /v1/cache/[namespace]/[key]": "$0.0001",
   "GET /v1/cache/[namespace]/[key]": "$0.0001",
   "DELETE /v1/cache/[namespace]/[key]": "$0.0001",

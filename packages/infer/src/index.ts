@@ -12,8 +12,8 @@ import { chat, embed, models } from "./service.ts";
 
 const INFER_ROUTES = {
   "POST /v1/chat": "$0.01",
-  "POST /v1/embed": "$0.001",
-  "GET /v1/models": "$0.01",
+  "POST /v1/embed": "$0.0001",
+  "GET /v1/models": "$0.001",
 } as const;
 
 function providerError(message: string): ApiError {
@@ -37,19 +37,19 @@ const app = createPrimApp(
         {
           method: "POST",
           path: "/v1/chat",
-          price_usdc: "pass-through + 10%",
+          price_usdc: "0.01",
           description: "Chat completion. Supports streaming, tool use, structured output.",
         },
         {
           method: "POST",
           path: "/v1/embed",
-          price_usdc: "0.001",
+          price_usdc: "0.0001",
           description: "Generate embeddings for text input. Returns vector array.",
         },
         {
           method: "GET",
           path: "/v1/models",
-          price_usdc: "0.01",
+          price_usdc: "0.001",
           description: "List available models with pricing and capabilities.",
         },
       ],

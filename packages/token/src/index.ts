@@ -24,12 +24,12 @@ import {
 } from "./service.ts";
 
 const TOKEN_ROUTES = {
-  "POST /v1/tokens": "$1.00",
+  "POST /v1/tokens": "$0.10",
   "GET /v1/tokens": "$0.001",
   "GET /v1/tokens/[id]": "$0.001",
-  "POST /v1/tokens/[id]/mint": "$0.10",
+  "POST /v1/tokens/[id]/mint": "$0.01",
   "GET /v1/tokens/[id]/supply": "$0.001",
-  "POST /v1/tokens/[id]/pool": "$0.50",
+  "POST /v1/tokens/[id]/pool": "$0.05",
   "GET /v1/tokens/[id]/pool": "$0.001",
   "GET /v1/tokens/[id]/pool/liquidity-params": "$0.001",
 } as const;

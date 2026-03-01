@@ -3,7 +3,7 @@
     "type": "function",
     "function": {
       "name": "mem_collection_create",
-      "description": "Create a vector collection. Price: $0.01 via x402 (USDC on Base).",
+      "description": "Create a vector collection. Price: $0.001 via x402 (USDC on Base).",
       "parameters": {
         "type": "object",
         "properties": {
@@ -74,7 +74,7 @@
     "type": "function",
     "function": {
       "name": "mem_collection_delete",
-      "description": "Delete collection and all documents. Irreversible. Price: $0.01 via x402 (USDC on Base).",
+      "description": "Delete collection and all documents. Irreversible. Price: $0.001 via x402 (USDC on Base).",
       "parameters": {
         "type": "object",
         "properties": {
@@ -93,7 +93,7 @@
     "type": "function",
     "function": {
       "name": "mem_upsert",
-      "description": "Embed and store documents. Each document: {id?, text, metadata?}. Existing IDs are replaced. Price: $0.001 via x402 (USDC on Base).",
+      "description": "Embed and store documents. Each document: {id?, text, metadata?}. Existing IDs are replaced. Price: $0.0001 via x402 (USDC on Base).",
       "parameters": {
         "type": "object",
         "properties": {
@@ -120,7 +120,7 @@
     "type": "function",
     "function": {
       "name": "mem_query",
-      "description": "Semantic search. Fields: text (required), top_k, filter (Qdrant native format). Price: $0.001 via x402 (USDC on Base).",
+      "description": "Semantic search. Fields: text (required), top_k, filter (Qdrant native format). Price: $0.0001 via x402 (USDC on Base).",
       "parameters": {
         "type": "object",
         "properties": {

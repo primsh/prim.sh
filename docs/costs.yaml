@@ -8,52 +8,41 @@ infrastructure:
     provider: digitalocean
     monthly_usd: 12.00
     billing: fixed
-    notes: "s-1vcpu-2gb (2GB RAM, 1 vCPU, 50GB disk). Shared by all prims"
+    reason: "Shared VPS for all prims (s-1vcpu-2gb)"
+    as_of: "2026-02"
   - item: domain_prim_sh
     provider: namecheap
     monthly_usd: 2.92
     billing: fixed
-    notes: "prim.sh, $34.98/yr amortized. Order 195616489 (2026-02-25)"
+    reason: "Primary domain, all API endpoints at *.prim.sh ($34.98/yr)"
+    as_of: "2026-02"
   - item: domain_primitiveshell_com
     provider: namecheap
     monthly_usd: 0.96
     billing: fixed
-    notes: "primitiveshell.com, $11.48/yr incl. ICANN. Order 195781641 (2026-02-27)"
+    reason: "Brand protection ($11.48/yr)"
+    as_of: "2026-02"
   - item: domain_primitiveshell_org
     provider: namecheap
     monthly_usd: 0.61
     billing: fixed
-    notes: "primitiveshell.org, $7.28/yr incl. ICANN. Order 195781641 (2026-02-27)"
+    reason: "Brand protection ($7.28/yr)"
+    as_of: "2026-02"
   - item: x_premium
     provider: x
     monthly_usd: 8.00
     billing: fixed
-    notes: "@useprim marketing. Web pricing (switched from iOS $11/mo on 2026-02-28)"
+    reason: "@useprim verified account, marketing (X Premium web)"
+    as_of: "2026-02"
   - item: github
     provider: github
     monthly_usd: 0.00
     billing: fixed
-    notes: "Free plan. Downgraded from Team ($4/mo) on 2026-02-28 — public repo"
+    reason: "CI/CD and source hosting (free plan, public repo)"
+    as_of: "2026-02"
   - item: cloudflare
     provider: cloudflare
     monthly_usd: 0.00
     billing: fixed
-    notes: "Free plan — R2, DNS, Pages"
-
-risk_flags:
-  - primitive: spawn.sh
-    endpoint: "POST /v1/servers"
-    severity: high
-    description: "$0.01 one-time charge vs $4/mo DO droplet (-39,900% margin). Needs recurring billing model."
-  - primitive: search.sh
-    endpoint: "POST /v1/search"
-    severity: high
-    description: "x402 price ($0.001) < provider cost ($0.005). -400% margin. Loss leader at beta pricing."
-  - primitive: token.sh
-    endpoint: "POST /v1/tokens"
-    severity: moderate
-    description: "90% margin at normal Base L2 gas (~$0.10). Mainnet congestion can push gas above $1. Needs gas oracle."
-  - primitive: domain.sh
-    endpoint: "POST /v1/domains/register"
-    severity: moderate
-    description: "Dynamic pricing via Namecheap. Margin depends on TLD wholesale cost. No fixed margin guarantee."
+    reason: "DNS, CDN, R2 storage, Pages hosting (free plan)"
+    as_of: "2026-02"

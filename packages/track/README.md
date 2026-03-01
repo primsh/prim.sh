@@ -12,13 +12,13 @@ Part of [prim.sh](https://prim.sh) — zero signup, one payment token, infinite 
 
 | Route | Description | Price | Request | Response |
 |-------|-------------|-------|---------|----------|
-| `POST /v1/track` | Track a package by tracking number and carrier. Returns status, ETA, and full event history. | $0.05 | `TrackRequest` | `TrackResponse` |
+| `POST /v1/track` | Track a package by tracking number and carrier. Returns status, ETA, and full event history. | $0.04 | `TrackRequest` | `TrackResponse` |
 
 ## Pricing
 
 | Operation | Price | Notes |
 |-----------|-------|-------|
-| Track package | $0.05 | Per lookup |
+| Track package | $0.04 | TrackingMore ($0.04/credit) |
 
 ## Request / Response Types
 

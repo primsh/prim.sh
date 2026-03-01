@@ -33,11 +33,11 @@ Part of [prim.sh](https://prim.sh) — zero signup, one payment token, infinite 
 
 | Operation | Price | Notes |
 |-----------|-------|-------|
-| Create mailbox | $0.05 | 24h TTL included |
-| Send email | $0.01 | Up to 10MB |
-| Read messages | $0.001 | Per request |
-| Webhook | $0.01 | Setup + 3 retries |
-| Custom domain | $0.05 | DNS verification required |
+| Create mailbox | $0.05 | x402 floor (self-hosted Stalwart) |
+| Send email | $0.01 | x402 floor (self-hosted Stalwart) |
+| Read messages | $0.001 | x402 floor (self-hosted Stalwart) |
+| Webhook | $0.01 | x402 floor (self-hosted Stalwart) |
+| Custom domain | $0.05 | x402 floor (DNS verification) |
 
 ## Request / Response Types
 

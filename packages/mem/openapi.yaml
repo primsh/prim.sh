@@ -246,7 +246,7 @@ paths:
       summary: Create a vector collection
       security:
         - x402: []
-      x-price: $0.01
+      x-price: $0.001
       requestBody:
         required: true
         content:
@@ -358,7 +358,7 @@ paths:
       summary: Delete collection and all documents. Irreversible.
       security:
         - x402: []
-      x-price: $0.01
+      x-price: $0.001
       parameters:
         - name: id
           in: path
@@ -399,7 +399,7 @@ paths:
       summary: "Embed and store documents. Each document: {id?, text, metadata?}. Existing IDs are replaced."
       security:
         - x402: []
-      x-price: $0.001
+      x-price: $0.0001
       parameters:
         - name: id
           in: path
@@ -452,7 +452,7 @@ paths:
       summary: "Semantic search. Fields: text (required), top_k, filter (Qdrant native format)."
       security:
         - x402: []
-      x-price: $0.001
+      x-price: $0.0001
       parameters:
         - name: id
           in: path

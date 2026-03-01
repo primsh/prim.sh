@@ -22,8 +22,8 @@ Part of [prim.sh](https://prim.sh) — zero signup, one payment token, infinite 
 
 | Operation | Price | Notes |
 |-----------|-------|-------|
-| USDC drip | free | Rate-limited per address |
-| ETH drip | free | Testnet only |
+| USDC drip | free | Testnet tokens free |
+| ETH drip | free | Testnet tokens free |
 
 ## Request / Response Types
 

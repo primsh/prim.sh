@@ -225,7 +225,7 @@ paths:
       summary: Search the web and return ranked results with optional AI-generated answer
       security:
         - x402: []
-      x-price: $0.01
+      x-price: $0.005
       requestBody:
         required: true
         content:
@@ -265,7 +265,7 @@ paths:
       summary: Search for recent news articles, ordered by recency
       security:
         - x402: []
-      x-price: $0.01
+      x-price: $0.005
       requestBody:
         required: true
         content:

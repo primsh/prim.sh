@@ -1,6 +1,6 @@
 {
   "version": "1.0.0",
-  "generated": "2026-03-01T03:35:01.242Z",
+  "generated": "2026-03-01T06:58:44.900Z",
   "primitives": [
     {
       "id": "auth",
@@ -273,13 +273,13 @@
           "id": "search_web",
           "route": "POST /v1/search",
           "description": "Search the web and return ranked results with optional AI-generated answer",
-          "price": "$0.01"
+          "price": "$0.005"
         },
         {
           "id": "search_news",
           "route": "POST /v1/search/news",
           "description": "Search for recent news articles, ordered by recency",
-          "price": "$0.01"
+          "price": "$0.005"
         },
         {
           "id": "extract_url",

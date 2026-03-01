@@ -50,19 +50,34 @@ deploy:
 pricing:
   - op: "Create mailbox"
     price: "$0.05"
-    note: "24h TTL included"
+    provider_cost: "$0.00"
+    pricing_type: static
+    as_of: "2026-02"
+    note: "x402 floor (self-hosted Stalwart)"
   - op: "Send email"
     price: "$0.01"
-    note: "Up to 10MB"
+    provider_cost: "$0.00"
+    pricing_type: static
+    as_of: "2026-02"
+    note: "x402 floor (self-hosted Stalwart)"
   - op: "Read messages"
     price: "$0.001"
-    note: "Per request"
+    provider_cost: "$0.00"
+    pricing_type: static
+    as_of: "2026-02"
+    note: "x402 floor (self-hosted Stalwart)"
   - op: "Webhook"
     price: "$0.01"
-    note: "Setup + 3 retries"
+    provider_cost: "$0.00"
+    pricing_type: static
+    as_of: "2026-02"
+    note: "x402 floor (self-hosted Stalwart)"
   - op: "Custom domain"
     price: "$0.05"
-    note: "DNS verification required"
+    provider_cost: "$0.00"
+    pricing_type: static
+    as_of: "2026-02"
+    note: "x402 floor (DNS verification)"
 
 
 nounStyled: "The agent-native mailbox."

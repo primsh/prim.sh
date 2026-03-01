@@ -336,7 +336,7 @@ paths:
       description: Poll GET /v1/tokens/:id until deployStatus is 'confirmed' before minting or pooling.
       security:
         - x402: []
-      x-price: $1.00
+      x-price: $0.10
       requestBody:
         required: true
         content:
@@ -426,7 +426,7 @@ paths:
       summary: Mint additional tokens to an address. Requires mintable=true at deploy time.
       security:
         - x402: []
-      x-price: $0.10
+      x-price: $0.01
       parameters:
         - name: id
           in: path
@@ -526,7 +526,7 @@ paths:
       summary: Create and initialize a Uniswap V3 pool paired with USDC. One pool per token.
       security:
         - x402: []
-      x-price: $0.50
+      x-price: $0.05
       parameters:
         - name: id
           in: path
