@@ -23,7 +23,7 @@
   <a href="https://prim.sh/llms.txt">llms.txt</a> &middot;
   <a href="https://discord.gg/VbFseNDZ">Discord</a> &middot;
   <a href="https://x.com/useprim">@useprim</a> &middot;
-  <a href="https://prim.sh/docs/costs">Costs</a>
+  <a href="https://prim.sh/costs">Costs</a>
 </p>
 
 ---
@@ -125,7 +125,7 @@ Each primitive wraps a real provider. We manage the accounts and credentials. Th
 
 The provider layer is abstracted — spawn.sh defines a `CloudProvider` interface, making it straightforward to add new providers. More providers per primitive over time.
 
-See pricing details at [prim.sh/docs/costs](https://prim.sh/docs/costs).
+See pricing details at [prim.sh/costs](https://prim.sh/costs).
 
 ## Architecture
 

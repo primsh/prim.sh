@@ -1,2 +1,5 @@
 # OpenAPI spec shorthand — /openapi/wallet → /openapi/wallet.yaml
 /openapi/:prim  /openapi/:prim.yaml  200
+
+# Route rename — costs page moved from /docs/costs to /costs
+/docs/costs  /costs  301
