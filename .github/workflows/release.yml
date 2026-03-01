@@ -31,6 +31,17 @@ jobs:
       - name: Build x402-middleware
         run: pnpm --filter @primsh/x402-middleware build
 
+      - name: Build MCP package
+        run: pnpm --filter @primsh/mcp build
+
+      - name: Publish @primsh/mcp to npm
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+        run: |
+          echo "//registry.npmjs.org/:_authToken=\${NODE_AUTH_TOKEN}" > ~/.npmrc
+          cd packages/mcp
+          npm publish --access public || echo "Publish skipped (version may already exist)"
+
       - name: Bundle CLI
         run: |
           bun build packages/cli/src/cli.ts \
