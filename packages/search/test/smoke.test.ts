@@ -1,21 +1,23 @@
-import type { Context, Next } from "hono";
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import { mockX402Middleware } from "@primsh/x402-middleware/testing";
+
+const createAgentStackMiddlewareSpy = vi.hoisted(() => vi.fn());
 
 vi.hoisted(() => {
   process.env.PRIM_NETWORK = "eip155:8453";
   process.env.PRIM_PAY_TO = "0x0000000000000000000000000000000000000001";
 });
 
-// Bypass x402 so the handler is reachable in unit tests.
+// Bypass x402 middleware for unit tests.
 // Middleware wiring is verified via check 3 (spy on createAgentStackMiddleware).
 vi.mock("@primsh/x402-middleware", async (importOriginal) => {
   const original = await importOriginal<typeof import("@primsh/x402-middleware")>();
+  const mocks = mockX402Middleware();
+  createAgentStackMiddlewareSpy.mockImplementation(mocks.createAgentStackMiddleware);
   return {
     ...original,
-    createAgentStackMiddleware: vi.fn(() => async (_c: Context, next: Next) => {
-      await next();
-    }),
-    createWalletAllowlistChecker: vi.fn(() => () => Promise.resolve(true)),
+    createAgentStackMiddleware: createAgentStackMiddlewareSpy,
+    createWalletAllowlistChecker: vi.fn(mocks.createWalletAllowlistChecker),
   };
 });
 
@@ -30,7 +32,6 @@ vi.mock("../src/service.ts", async (importOriginal) => {
   };
 });
 
-import { createAgentStackMiddleware } from "@primsh/x402-middleware";
 import type { SearchResponse } from "../src/api.ts";
 import app from "../src/index.ts";
 import { searchWeb } from "../src/service.ts";
@@ -68,7 +69,7 @@ describe("search.sh app", () => {
 
   // Check 3: x402 middleware is wired with the correct paid routes and payTo address
   it("x402 middleware is registered with paid routes and payTo", () => {
-    expect(vi.mocked(createAgentStackMiddleware)).toHaveBeenCalledWith(
+    expect(createAgentStackMiddlewareSpy).toHaveBeenCalledWith(
       expect.objectContaining({
         payTo: expect.any(String),
         freeRoutes: expect.arrayContaining(["GET /"]),
