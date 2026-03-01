@@ -1,7 +1,7 @@
+// SPDX-License-Identifier: Apache-2.0
 // THIS FILE IS GENERATED — DO NOT EDIT
 // Source: packages/infer/openapi.yaml
 // Regenerate: pnpm gen:cli
-// BEGIN:PRIM:CLI
 
 import { createPrimFetch } from "@primsh/x402-client";
 import { getConfig } from "@primsh/keystore";

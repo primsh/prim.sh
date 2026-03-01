@@ -1,4 +1,5 @@
 #!/usr/bin/env bun
+// SPDX-License-Identifier: Apache-2.0
 /**
  * gen-mcp.ts — MCP tool generator
  *
@@ -525,6 +526,7 @@ function generateSections(prim: string, spec: OpenApiSpec): GeneratedSection {
 
 function buildFullFile(prim: string, toolsDef: string, handlerDef: string): string {
   return [
+    "// SPDX-License-Identifier: Apache-2.0",
     `// THIS FILE IS GENERATED — DO NOT EDIT`,
     `// Source: packages/${prim}/openapi.yaml`,
     `// Regenerate: pnpm gen:mcp`,
@@ -616,13 +618,13 @@ for (const prim of PRIMS) {
   let finalContent: string;
   const existing = existsSync(outPath) ? readFileSync(outPath, "utf8") : null;
 
-  const GEN_HEADER = `// THIS FILE IS GENERATED — DO NOT EDIT\n// Source: packages/${prim}/openapi.yaml\n// Regenerate: pnpm gen:mcp\n\n`;
+  const GEN_HEADER = `// SPDX-License-Identifier: Apache-2.0\n// THIS FILE IS GENERATED — DO NOT EDIT\n// Source: packages/${prim}/openapi.yaml\n// Regenerate: pnpm gen:mcp\n\n`;
 
   if (existing?.includes("// BEGIN:GENERATED:TOOLS")) {
     // File already has markers — inject into existing file
     let injected = injectMarkers(existing, toolsDef, handlerDef);
     // Ensure generated header is present at top of file
-    if (!injected.startsWith("// THIS FILE IS GENERATED")) {
+    if (!injected.startsWith("// SPDX-License-Identifier") && !injected.startsWith("// THIS FILE IS GENERATED")) {
       injected = GEN_HEADER + injected;
     }
     finalContent = injected;

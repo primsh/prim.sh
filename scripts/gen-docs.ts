@@ -1,4 +1,5 @@
 #!/usr/bin/env bun
+// SPDX-License-Identifier: Apache-2.0
 /**
  * gen-docs.ts — README + CLAUDE.md factory section generator
  *

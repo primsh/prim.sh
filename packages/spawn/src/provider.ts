@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: Apache-2.0
 /**
  * CloudProvider interface — abstracts cloud compute providers (Hetzner, DigitalOcean, AWS, etc.)
  * Each provider implements this contract; the service layer is provider-agnostic.

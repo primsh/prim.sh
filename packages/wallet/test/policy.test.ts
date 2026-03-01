@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: Apache-2.0
 /**
  * W-7 policy engine tests: CRUD, daily reset, pause/resume, wallet detail/list showing policy state.
  *

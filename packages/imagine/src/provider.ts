@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: Apache-2.0
 // ─── Provider result types ────────────────────────────────────────────────────
 
 // biome-ignore lint/suspicious/noEmptyInterface: scaffold — fields added when provider is implemented

@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: Apache-2.0
 /**
  * JMAP session discovery and bootstrap.
  * Discovers apiUrl, accountId, identityId, and mailbox folder IDs

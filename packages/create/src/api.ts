@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: Apache-2.0
 // ─── create.sh API types ─────────────────────────────────────────────────
 
 export interface ScaffoldRequest {

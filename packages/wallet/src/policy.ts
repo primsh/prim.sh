@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: Apache-2.0
 import { getPolicy, incrementDailySpent, resetDailySpentIfNeeded } from "./db.ts";
 
 type PolicyCheckOk = { ok: true };

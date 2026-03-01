@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: Apache-2.0
 /**
  * Thin fetch wrapper around the Qdrant HTTP API.
  * Minimum Qdrant version: 1.10+ (uses /points/query endpoint).

@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: Apache-2.0
 /**
  * scripts/lib/infra.ts — Shared infrastructure data fetchers
  *

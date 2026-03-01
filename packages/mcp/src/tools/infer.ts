@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: Apache-2.0
 // THIS FILE IS GENERATED — DO NOT EDIT
 // Source: specs/openapi/infer.yaml
 // Regenerate: pnpm gen:mcp

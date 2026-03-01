@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: Apache-2.0
 /**
  * Thin HTTP wrapper around Cloudflare DNS API.
  * Base URL: https://api.cloudflare.com/client/v4

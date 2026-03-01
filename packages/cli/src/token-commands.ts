@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: Apache-2.0
 import { createPrimFetch } from "@primsh/x402-client";
 import { getConfig } from "@primsh/keystore";
 import { getFlag, hasFlag, resolvePassphrase } from "./flags.ts";

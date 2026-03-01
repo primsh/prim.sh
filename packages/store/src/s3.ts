@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: Apache-2.0
 /**
  * S3-compatible object operations via aws4fetch.
  * Base URL: https://{CLOUDFLARE_ACCOUNT_ID}.r2.cloudflarestorage.com

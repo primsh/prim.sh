@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: Apache-2.0
 /**
  * scaffold.ts — Pure scaffold logic extracted from create-prim.ts
  *

@@ -1,4 +1,5 @@
 #!/usr/bin/env bun
+// SPDX-License-Identifier: Apache-2.0
 /**
  * scripts/convert-tasks.ts — One-shot migration: TASKS.md → tasks/tasks.json
  *

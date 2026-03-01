@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: Apache-2.0
 import { DEFAULT_NETWORK, getNetworkConfig } from "@primsh/x402-middleware";
 import { x402Client, x402HTTPClient } from "@x402/core/client";
 import { decodePaymentRequiredHeader } from "@x402/core/http";

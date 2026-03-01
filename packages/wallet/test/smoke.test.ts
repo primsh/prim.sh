@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: Apache-2.0
 import { describe, expect, it, vi } from "vitest";
 
 // Fail-fast guard requires PRIM_PAY_TO to be set — vi.hoisted runs before ES imports

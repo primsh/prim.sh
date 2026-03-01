@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: Apache-2.0
 /**
  * D-9: Live smoke test for domain.sh — Cloudflare DNS + service layer + NameSilo search.
  *

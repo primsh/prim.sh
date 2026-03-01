@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: Apache-2.0
 import { ProviderError } from "./provider.ts";
 import type { ImagineProvider, ImagineProviderData } from "./provider.ts";
 

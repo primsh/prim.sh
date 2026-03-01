@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: Apache-2.0
 /**
  * Faucet package tests: testnet guard, USDC/ETH drip, rate limiting, status endpoint.
  *

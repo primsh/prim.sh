@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: Apache-2.0
 // THIS FILE IS GENERATED — DO NOT EDIT
 // Source: packages/<id>/openapi.yaml (all prims with rest interface)
 // Regenerate: pnpm gen:sdk

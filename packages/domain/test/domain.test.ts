@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: Apache-2.0
 /**
  * D-1/D-2 domain.sh tests: zone + record CRUD with ownership enforcement, domain search.
  *

@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: Apache-2.0
 import { randomBytes } from "node:crypto";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 

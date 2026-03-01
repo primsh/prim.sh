@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: Apache-2.0
 /**
  * TR-2 live smoke test — runs against real TrackingMore API.
  * Requires TRACKINGMORE_API_KEY env var.

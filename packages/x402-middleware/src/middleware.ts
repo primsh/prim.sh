@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: Apache-2.0
 import { HTTPFacilitatorClient, decodePaymentSignatureHeader } from "@x402/core/http";
 import type { FacilitatorClient, RouteConfig } from "@x402/core/server";
 import type { Network } from "@x402/core/types";

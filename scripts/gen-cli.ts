@@ -1,4 +1,5 @@
 #!/usr/bin/env bun
+// SPDX-License-Identifier: Apache-2.0
 /**
  * gen-cli.ts — CLI command generator
  *
@@ -807,6 +808,7 @@ function generateCommandFile(spec: OpenAPISpec, id: string): string {
 
   if (routes.length === 0) {
     return [
+      "// SPDX-License-Identifier: Apache-2.0",
       "// THIS FILE IS GENERATED — DO NOT EDIT",
       `// Source: packages/${id}/openapi.yaml`,
       "// Regenerate: pnpm gen:cli",
@@ -839,10 +841,10 @@ function generateCommandFile(spec: OpenAPISpec, id: string): string {
 
   const lines: string[] = [];
 
+  lines.push("// SPDX-License-Identifier: Apache-2.0");
   lines.push("// THIS FILE IS GENERATED — DO NOT EDIT");
   lines.push(`// Source: packages/${id}/openapi.yaml`);
   lines.push("// Regenerate: pnpm gen:cli");
-  lines.push("// BEGIN:PRIM:CLI");
   lines.push("");
 
   // Imports

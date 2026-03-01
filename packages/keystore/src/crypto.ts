@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: Apache-2.0
 import { createCipheriv, createDecipheriv, randomBytes, scryptSync } from "node:crypto";
 import { keccak256 } from "viem";
 import type { V3CryptoParams } from "./types.ts";
