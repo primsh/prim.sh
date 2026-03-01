@@ -63,7 +63,7 @@ textarea{min-height:80px}
   <h2><span>Have an invite code?</span></h2>
   <p style="color:var(--muted)">Invite codes skip the queue. Redeem one directly:</p>
   <pre><code><span class="cc"># Redeem an invite code</span>
-curl -X POST https://api.prim.sh/invites/redeem \
+curl -X POST https://gate.prim.sh/v1/redeem \
   -H "Content-Type: application/json" \
   -d '{"code":"<span class="a">your-invite-code</span>","wallet":"<span class="a">0x...</span>"}'
 
@@ -81,7 +81,7 @@ curl -X POST https://api.prim.sh/invites/redeem \
 }
 
 <span class="cc"># Submit access request (public, no auth)</span>
-curl -X POST https://api.prim.sh/access/request \
+curl -X POST https://gate.prim.sh/v1/access/request \
   -H "Content-Type: application/json" \
   -d '{"wallet":"<span class="a">0x...</span>","reason":"<span class="a">building X agent</span>"}'
 
@@ -119,7 +119,7 @@ form.addEventListener('submit', async (e) => {
   msg.style.display = 'none';
 
   try {
-    const res = await fetch('https://api.prim.sh/access/request', {
+    const res = await fetch('https://gate.prim.sh/v1/access/request', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ wallet, ...(reason && { reason }) }),

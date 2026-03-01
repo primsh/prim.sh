@@ -7,8 +7,6 @@ export class GoogleGeminiClient implements ImagineProvider {
   constructor(apiKey: string) {
     this.apiKey = apiKey;
   }
-
-  // TODO: Implement provider methods
 }
 
 // ─── Singleton ────────────────────────────────────────────────────────────────

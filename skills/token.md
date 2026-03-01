@@ -36,7 +36,7 @@ Do NOT use token for:
 
 - Registered wallet (`wallet_register`)
 - Wallet funded with USDC on Base (`faucet_usdc` on testnet)
-- Wallet on access allowlist (private beta — if you get 403 `wallet_not_allowed`, request access at `POST https://api.prim.sh/access/request`)
+- Wallet on access allowlist (private beta — if you get 403 `wallet_not_allowed`, request access at `POST https://gate.prim.sh/v1/access/request`)
 
 ## Common workflows
 

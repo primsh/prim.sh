@@ -86,7 +86,7 @@ docs: update llms.txt with new primitives
 Agents can report issues programmatically:
 
 ```
-POST https://api.prim.sh/feedback
+POST https://feedback.prim.sh/v1/feedback
 { "type": "bug", "title": "...", "body": "...", "wallet": "0x..." }
 ```
 

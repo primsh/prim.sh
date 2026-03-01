@@ -1,46 +1,25 @@
 // ─── imagine.sh API types ─────────────────────────────────────────────────
 
-// TODO: Define request fields for POST /v1/generate
-// biome-ignore lint/suspicious/noEmptyInterface: scaffold placeholder — add fields before implementing
-export interface GenerateRequest {
-  // Add fields here
-}
+// biome-ignore lint/suspicious/noEmptyInterface: scaffold — fields added when provider is implemented
+export interface GenerateRequest {}
 
-// TODO: Define response fields for POST /v1/generate
-// biome-ignore lint/suspicious/noEmptyInterface: scaffold placeholder — add fields before implementing
-export interface GenerateResponse {
-  // Add fields here
-}
+// biome-ignore lint/suspicious/noEmptyInterface: scaffold — fields added when provider is implemented
+export interface GenerateResponse {}
 
-// TODO: Define request fields for POST /v1/describe
-// biome-ignore lint/suspicious/noEmptyInterface: scaffold placeholder — add fields before implementing
-export interface DescribeRequest {
-  // Add fields here
-}
+// biome-ignore lint/suspicious/noEmptyInterface: scaffold — fields added when provider is implemented
+export interface DescribeRequest {}
 
-// TODO: Define response fields for POST /v1/describe
-// biome-ignore lint/suspicious/noEmptyInterface: scaffold placeholder — add fields before implementing
-export interface DescribeResponse {
-  // Add fields here
-}
+// biome-ignore lint/suspicious/noEmptyInterface: scaffold — fields added when provider is implemented
+export interface DescribeResponse {}
 
-// TODO: Define request fields for POST /v1/upscale
-// biome-ignore lint/suspicious/noEmptyInterface: scaffold placeholder — add fields before implementing
-export interface UpscaleRequest {
-  // Add fields here
-}
+// biome-ignore lint/suspicious/noEmptyInterface: scaffold — fields added when provider is implemented
+export interface UpscaleRequest {}
 
-// TODO: Define response fields for POST /v1/upscale
-// biome-ignore lint/suspicious/noEmptyInterface: scaffold placeholder — add fields before implementing
-export interface UpscaleResponse {
-  // Add fields here
-}
+// biome-ignore lint/suspicious/noEmptyInterface: scaffold — fields added when provider is implemented
+export interface UpscaleResponse {}
 
-// TODO: Define response fields for GET /v1/models
-// biome-ignore lint/suspicious/noEmptyInterface: scaffold placeholder — add fields before implementing
-export interface ModelsResponse {
-  // Add fields here
-}
+// biome-ignore lint/suspicious/noEmptyInterface: scaffold — fields added when provider is implemented
+export interface ModelsResponse {}
 
 // ─── Error ────────────────────────────────────────────────────────────────────
 

@@ -18,7 +18,7 @@ All paid endpoints enforce an allowlist during beta. If you receive:
 
 Request access:
 
-  POST https://api.prim.sh/access/request
+  POST https://gate.prim.sh/v1/access/request
   Content-Type: application/json
 
   {"wallet": "0xYourWalletAddress", "reason": "optional reason"}

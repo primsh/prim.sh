@@ -21,23 +21,17 @@ type ServiceResult<T> =
 // ─── Service functions ────────────────────────────────────────────────────────
 
 export async function generate(body: GenerateRequest): Promise<ServiceResult<GenerateResponse>> {
-  // TODO: Implement Generate an image from a text prompt. Returns base64 or URL.
   return { ok: false, status: 501, code: "not_implemented", message: "Not implemented" };
 }
 
 export async function describe(body: DescribeRequest): Promise<ServiceResult<DescribeResponse>> {
-  // TODO: Implement Describe an image. Accepts base64 or URL. Returns text description.
   return { ok: false, status: 501, code: "not_implemented", message: "Not implemented" };
 }
 
 export async function upscale(body: UpscaleRequest): Promise<ServiceResult<UpscaleResponse>> {
-  // TODO: Implement Upscale an image to higher resolution. Accepts base64 or URL.
   return { ok: false, status: 501, code: "not_implemented", message: "Not implemented" };
 }
 
-export async function models(
-  body: Record<string, unknown>,
-): Promise<ServiceResult<ModelsResponse>> {
-  // TODO: Implement List available image models with capabilities and pricing.
+export async function models(): Promise<ServiceResult<ModelsResponse>> {
   return { ok: false, status: 501, code: "not_implemented", message: "Not implemented" };
 }
