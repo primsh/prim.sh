@@ -41,7 +41,7 @@
   <p>At-cost pricing. Zero margin. Pay for what you use. Fixed infrastructure ($24.49/mo) is absorbed by Primitive Shell.</p>
 
   <div class="callout">
-    <strong>x402 transaction cost:</strong> Each API call requires a USDC payment on Base chain. The agent pays ~$0.001&ndash;0.005 in ETH gas per transaction, on top of the listed price. Operations priced at $0.001 (&ldquo;x402 floor&rdquo;) exist because the payment is how we identify the caller &mdash; without it, there&rsquo;s no wallet address and no ownership.
+    <strong>x402 transaction cost:</strong> Each API call requires a USDC payment on Base chain. The agent pays ~$0.001&ndash;0.005 in ETH gas per transaction, on top of the listed price. Operations priced at $0.001 (&ldquo;x402 floor&rdquo;) exist because the payment is how we identify the caller &mdash; without it, there&rsquo;s no wallet address and no ownership. Floor-priced operations cover protocol overhead (caller identification, ownership scoping, abuse prevention) &mdash; these are not provider pass-through costs.
   </div>
 
   <h2>Infrastructure</h2>
@@ -261,6 +261,6 @@
         </tbody>
       </table>
 
-  <p class="updated">Generated from <a href="https://github.com/primsh/prim.sh/blob/main/docs/costs.yaml">docs/costs.yaml</a> + prim.yaml files.</p>
+  <p class="updated">Generated from <a href="https://github.com/primsh/prim.sh/blob/main/docs/costs.yaml">docs/costs.yaml</a> + prim.yaml files. Prices reflect current provider rates and may change. See <a href="/terms">Terms of Service</a> for details.</p>
 </body>
 </html>

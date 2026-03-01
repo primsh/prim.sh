@@ -7,6 +7,7 @@ Fixed infrastructure ($24.49/mo) is absorbed by Primitive Shell.
 > **x402 transaction cost:** Each API call requires a USDC payment on Base chain.
 > The agent pays ~$0.001–0.005 in ETH gas per transaction, on top of the listed price.
 > Operations priced at $0.001 ("x402 floor") exist because the payment is how we identify the caller — without it, there's no wallet address and no ownership.
+> Floor-priced operations cover protocol overhead (caller identification, ownership scoping, abuse prevention) — these are not provider pass-through costs.
 
 ## Infrastructure
 
@@ -154,4 +155,8 @@ Fixed infrastructure ($24.49/mo) is absorbed by Primitive Shell.
 | Describe image | $0.005 | $0.005 | static | 2026-02 |
 | Upscale image | $0.02 | $0.02 | static | 2026-02 |
 | List models | free | $0.00 | static | 2026-02 |
+
+---
+
+Prices reflect current provider rates and may change. See [Terms of Service](https://prim.sh/terms) for details.
 

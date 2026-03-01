@@ -123,6 +123,7 @@ function renderMarkdown(): string {
 	lines.push("> **x402 transaction cost:** Each API call requires a USDC payment on Base chain.");
 	lines.push("> The agent pays ~$0.001–0.005 in ETH gas per transaction, on top of the listed price.");
 	lines.push("> Operations priced at $0.001 (\"x402 floor\") exist because the payment is how we identify the caller — without it, there's no wallet address and no ownership.");
+	lines.push("> Floor-priced operations cover protocol overhead (caller identification, ownership scoping, abuse prevention) — these are not provider pass-through costs.");
 	lines.push("");
 
 	// Infrastructure
@@ -150,6 +151,11 @@ function renderMarkdown(): string {
 		}
 		lines.push("");
 	}
+
+	lines.push("---");
+	lines.push("");
+	lines.push("Prices reflect current provider rates and may change. See [Terms of Service](https://prim.sh/terms) for details.");
+	lines.push("");
 
 	return `${lines.join("\n")}\n`;
 }
@@ -230,7 +236,7 @@ ${rows}
   <p>At-cost pricing. Zero margin. Pay for what you use. Fixed infrastructure ($${fixedTotal.toFixed(2)}/mo) is absorbed by Primitive Shell.</p>
 
   <div class="callout">
-    <strong>x402 transaction cost:</strong> Each API call requires a USDC payment on Base chain. The agent pays ~$0.001&ndash;0.005 in ETH gas per transaction, on top of the listed price. Operations priced at $0.001 (&ldquo;x402 floor&rdquo;) exist because the payment is how we identify the caller &mdash; without it, there&rsquo;s no wallet address and no ownership.
+    <strong>x402 transaction cost:</strong> Each API call requires a USDC payment on Base chain. The agent pays ~$0.001&ndash;0.005 in ETH gas per transaction, on top of the listed price. Operations priced at $0.001 (&ldquo;x402 floor&rdquo;) exist because the payment is how we identify the caller &mdash; without it, there&rsquo;s no wallet address and no ownership. Floor-priced operations cover protocol overhead (caller identification, ownership scoping, abuse prevention) &mdash; these are not provider pass-through costs.
   </div>
 
   <h2>Infrastructure</h2>
@@ -249,7 +255,7 @@ ${infraRows}
   <h2>Per-primitive costs</h2>
 ${primSections}
 
-  <p class="updated">Generated from <a href="https://github.com/primsh/prim.sh/blob/main/docs/costs.yaml">docs/costs.yaml</a> + prim.yaml files.</p>
+  <p class="updated">Generated from <a href="https://github.com/primsh/prim.sh/blob/main/docs/costs.yaml">docs/costs.yaml</a> + prim.yaml files. Prices reflect current provider rates and may change. See <a href="/terms">Terms of Service</a> for details.</p>
 </body>
 </html>
 `;
