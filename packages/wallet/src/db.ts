@@ -1,3 +1,6 @@
+import { mkdirSync } from "node:fs";
+import { homedir } from "node:os";
+import { join } from "node:path";
 import { Database } from "bun:sqlite";
 
 export interface WalletRow {
@@ -68,7 +71,9 @@ let _db: Database | null = null;
 export function getDb(): Database {
   if (_db) return _db;
 
-  const dbPath = process.env.WALLET_DB_PATH ?? "./wallet.db";
+  const dataDir = join(process.env.PRIM_HOME ?? join(homedir(), ".prim"), "data");
+  mkdirSync(dataDir, { recursive: true });
+  const dbPath = process.env.WALLET_DB_PATH ?? join(dataDir, "wallet.db");
   _db = new Database(dbPath);
 
   _db.run(`

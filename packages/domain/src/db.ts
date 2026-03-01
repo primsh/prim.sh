@@ -1,3 +1,6 @@
+import { mkdirSync } from "node:fs";
+import { homedir } from "node:os";
+import { join } from "node:path";
 import { Database } from "bun:sqlite";
 
 export interface QuoteRow {
@@ -56,7 +59,9 @@ let _db: Database | null = null;
 export function getDb(): Database {
   if (_db) return _db;
 
-  const dbPath = process.env.DOMAIN_DB_PATH ?? process.env.DNS_DB_PATH ?? "./domain.db";
+  const dataDir = join(process.env.PRIM_HOME ?? join(homedir(), ".prim"), "data");
+  mkdirSync(dataDir, { recursive: true });
+  const dbPath = process.env.DOMAIN_DB_PATH ?? process.env.DNS_DB_PATH ?? join(dataDir, "domain.db");
   _db = new Database(dbPath);
 
   _db.run(`
