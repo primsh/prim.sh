@@ -3,6 +3,8 @@
 // Source: packages/track/openapi.yaml
 // Regenerate: pnpm gen:sdk
 
+import { unwrap } from "./shared.js";
+
 // ── Types ──────────────────────────────────────────────────────────────────
 
 export interface TrackEvent {
@@ -53,8 +55,10 @@ export interface TrackResponse {
 
 // ── Client ─────────────────────────────────────────────────────────────────
 
-export function createTrackClient(primFetch: (input: RequestInfo | URL, init?: RequestInit) => Promise<Response>) {
-  const baseUrl = "https://track.prim.sh";
+export function createTrackClient(
+  primFetch: (input: RequestInfo | URL, init?: RequestInit) => Promise<Response>,
+  baseUrl = "https://track.prim.sh",
+) {
   return {
     async trackPackage(req: TrackRequest): Promise<TrackResponse> {
       const url = `${baseUrl}/v1/track`;
@@ -63,7 +67,7 @@ export function createTrackClient(primFetch: (input: RequestInfo | URL, init?: R
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(req),
       });
-      return res.json() as Promise<TrackResponse>;
+      return unwrap<TrackResponse>(res);
     },
   };
 }

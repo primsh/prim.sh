@@ -3,6 +3,8 @@
 // Source: packages/infer/openapi.yaml
 // Regenerate: pnpm gen:sdk
 
+import { unwrap } from "./shared.js";
+
 // ── Types ──────────────────────────────────────────────────────────────────
 
 export interface ChatRequest {
@@ -102,8 +104,10 @@ export interface Usage {
 
 // ── Client ─────────────────────────────────────────────────────────────────
 
-export function createInferClient(primFetch: (input: RequestInfo | URL, init?: RequestInit) => Promise<Response>) {
-  const baseUrl = "https://infer.prim.sh";
+export function createInferClient(
+  primFetch: (input: RequestInfo | URL, init?: RequestInit) => Promise<Response>,
+  baseUrl = "https://infer.prim.sh",
+) {
   return {
     async chat(req: ChatRequest): Promise<ChatResponse> {
       const url = `${baseUrl}/v1/chat`;
@@ -112,7 +116,7 @@ export function createInferClient(primFetch: (input: RequestInfo | URL, init?: R
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(req),
       });
-      return res.json() as Promise<ChatResponse>;
+      return unwrap<ChatResponse>(res);
     },
     async embed(req: EmbedRequest): Promise<EmbedResponse> {
       const url = `${baseUrl}/v1/embed`;
@@ -121,12 +125,12 @@ export function createInferClient(primFetch: (input: RequestInfo | URL, init?: R
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(req),
       });
-      return res.json() as Promise<EmbedResponse>;
+      return unwrap<EmbedResponse>(res);
     },
     async listModels(): Promise<ModelsResponse> {
       const url = `${baseUrl}/v1/models`;
       const res = await primFetch(url);
-      return res.json() as Promise<ModelsResponse>;
+      return unwrap<ModelsResponse>(res);
     },
   };
 }

@@ -478,7 +478,7 @@ function renderMethod(m: MethodInfo): string {
   if (isRawResponse) {
     lines.push("      return res;");
   } else {
-    lines.push(`      return res.json() as Promise<${returnType}>;`);
+    lines.push(`      return unwrap<${returnType}>(res);`);
   }
 
   lines.push("    },");
@@ -502,6 +502,8 @@ export function renderSdkClient(primId: string, spec: OpenApiSpec): string {
 
   // ── Types ──────────────────────────────────────────────────────────────
 
+  out.push('import { unwrap } from "./shared.js";');
+  out.push("");
   out.push("// ── Types ──────────────────────────────────────────────────────────────────");
   out.push("");
 
@@ -565,10 +567,12 @@ export function renderSdkClient(primId: string, spec: OpenApiSpec): string {
   out.push("");
 
   const clientName = `create${pascalCase(primId)}Client`;
+  out.push(`export function ${clientName}(`);
   out.push(
-    `export function ${clientName}(primFetch: (input: RequestInfo | URL, init?: RequestInit) => Promise<Response>) {`,
+    `  primFetch: (input: RequestInfo | URL, init?: RequestInit) => Promise<Response>,`,
   );
-  out.push(`  const baseUrl = "${baseUrl}";`);
+  out.push(`  baseUrl = "${baseUrl}",`);
+  out.push(`) {`);
   out.push("  return {");
 
   for (const m of methods) {
