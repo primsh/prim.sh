@@ -5,11 +5,11 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Status — prim.sh</title>
-<meta name="description" content="Live status of all prim.sh primitives. 3 live, 3 testing, 30 coming soon.">
+<meta name="description" content="Live status of all prim.sh primitives. 6 live, 30 coming soon.">
 <meta name="theme-color" content="#0a0a0a">
 <meta property="og:type" content="website">
 <meta property="og:title" content="Status — prim.sh">
-<meta property="og:description" content="Live status of all prim.sh primitives. 3 live, 3 testing, 30 coming soon.">
+<meta property="og:description" content="Live status of all prim.sh primitives. 6 live, 30 coming soon.">
 <meta property="og:url" content="https://prim.sh/status">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:site" content="@useprim">
@@ -31,9 +31,9 @@
 .status-wrap a{color:var(--accent);text-decoration:none}
 .status-wrap a:hover{text-decoration:underline}
 .dot{font-size:10px;vertical-align:middle}
-.dot-mainnet{color:#00ff88}
-.dot-testnet{color:#ffcc00}
+.dot-live{color:#00ff88}
 .dot-hold{color:#444}
+.net-label{color:var(--muted);font-size:11px;font-weight:normal;margin-left:0.3rem}
 .status-wrap .discovery{margin-top:2rem;padding:1rem;background:var(--surface);border:1px solid var(--border);border-radius:6px;font-size:13px}
 .status-wrap .discovery code{color:var(--accent)}
 .status-wrap .updated{color:var(--muted);font-size:12px;margin-top:2rem}
@@ -44,60 +44,51 @@
   <img class="logomark" src="/assets/hero.jpg" alt=">|">
   <div class="hero-hd"><a href="/" class="pill"><span class="parent">prim.sh</span><span class="sep">/</span><span class="child">status</span></a></div>
   <h1 class="logo"><span>status</span>.sh</h1>
-  <div class="tagline" style="color:var(--muted);font-size:1.1rem;margin-bottom:0.5rem">3 mainnet. 3 testnet. 30&#x267E;&#xFE0F; coming.</div>
+  <div class="tagline" style="color:var(--muted);font-size:1.1rem;margin-bottom:0.5rem">6 live. 30&#x267E;&#xFE0F; coming.</div>
   <div class="tagline">All systems operational.</div>
 </div>
 
 <div class="status-wrap">
 
-<h2>Live <span class="count">3</span></h2>
+<h2>Live <span class="count">6</span></h2>
 <table>
   <thead>
     <tr><th></th><th>Service</th><th>Endpoint</th><th>Description</th></tr>
   </thead>
   <tbody>
       <tr>
-        <td><span class="dot dot-mainnet">●</span></td>
-        <td><a href="/wallet">wallet.sh</a></td>
+        <td><span class="dot dot-live">●</span></td>
+        <td><a href="/wallet">wallet.sh</a> <span class="net-label">mainnet</span></td>
         <td><a href="https://wallet.prim.sh">wallet.prim.sh</a></td>
         <td class="muted">Agent wallets. Generate keys, hold USDC on Base, and pay any x402 invoice.</td>
       </tr>
       <tr>
-        <td><span class="dot dot-mainnet">●</span></td>
-        <td><a href="/store">store.sh</a></td>
-        <td><a href="https://store.prim.sh">store.prim.sh</a></td>
-        <td class="muted">Object storage. Persist artifacts across ephemeral VMs. S3-compatible.</td>
-      </tr>
-      <tr>
-        <td><span class="dot dot-mainnet">●</span></td>
-        <td><a href="/search">search.sh</a></td>
-        <td><a href="https://search.prim.sh">search.prim.sh</a></td>
-        <td class="muted">Search for agents. Zero ads, zero SEO spam. Just facts and clean markdown.</td>
-      </tr>
-  </tbody>
-</table>
-
-<h2>Testing <span class="count">3</span></h2>
-<table>
-  <thead>
-    <tr><th></th><th>Service</th><th>Endpoint</th><th>Description</th></tr>
-  </thead>
-  <tbody>
-      <tr>
-        <td><span class="dot dot-testnet">●</span></td>
-        <td><a href="/faucet">faucet.sh</a></td>
+        <td><span class="dot dot-live">●</span></td>
+        <td><a href="/faucet">faucet.sh</a> <span class="net-label">testnet</span></td>
         <td><a href="https://faucet.prim.sh">faucet.prim.sh</a></td>
         <td class="muted">Free testnet USDC and ETH on demand. Fund your agent wallet and start building.</td>
       </tr>
       <tr>
-        <td><span class="dot dot-testnet">●</span></td>
-        <td><a href="/gate">gate.sh</a></td>
+        <td><span class="dot dot-live">●</span></td>
+        <td><a href="/gate">gate.sh</a> <span class="net-label">testnet</span></td>
         <td><a href="https://gate.prim.sh">gate.prim.sh</a></td>
         <td class="muted">Access control and onboarding for agents. Invite codes, allowlisting, wallet funding.</td>
       </tr>
       <tr>
-        <td><span class="dot dot-testnet">●</span></td>
-        <td><a href="/feedback">feedback.sh</a></td>
+        <td><span class="dot dot-live">●</span></td>
+        <td><a href="/store">store.sh</a> <span class="net-label">mainnet</span></td>
+        <td><a href="https://store.prim.sh">store.prim.sh</a></td>
+        <td class="muted">Object storage. Persist artifacts across ephemeral VMs. S3-compatible.</td>
+      </tr>
+      <tr>
+        <td><span class="dot dot-live">●</span></td>
+        <td><a href="/search">search.sh</a> <span class="net-label">mainnet</span></td>
+        <td><a href="https://search.prim.sh">search.prim.sh</a></td>
+        <td class="muted">Search for agents. Zero ads, zero SEO spam. Just facts and clean markdown.</td>
+      </tr>
+      <tr>
+        <td><span class="dot dot-live">●</span></td>
+        <td><a href="/feedback">feedback.sh</a> <span class="net-label">testnet</span></td>
         <td><a href="https://feedback.prim.sh">feedback.prim.sh</a></td>
         <td class="muted">Report bugs, friction, and feature requests. Free. Every prim surfaces the feedback URL.</td>
       </tr>

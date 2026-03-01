@@ -62,8 +62,7 @@ const rows: StatusRow[] = prims.map((p) => ({
 	category: p.category ?? "meta",
 }));
 
-const mainnet = rows.filter((r) => r.status === "mainnet");
-const testnet = rows.filter((r) => r.status === "testnet");
+const live = rows.filter((r) => r.status === "mainnet" || r.status === "testnet");
 const hold = rows.filter((r) => r.status === "hold");
 
 // ── Render HTML ────────────────────────────────────────────────────────────
@@ -71,9 +70,8 @@ const hold = rows.filter((r) => r.status === "hold");
 function statusDot(status: string): string {
 	switch (status) {
 		case "mainnet":
-			return '<span class="dot dot-mainnet">●</span>';
 		case "testnet":
-			return '<span class="dot dot-testnet">●</span>';
+			return '<span class="dot dot-live">●</span>';
 		default:
 			return '<span class="dot dot-hold">○</span>';
 	}
@@ -82,26 +80,27 @@ function statusDot(status: string): string {
 function statusLabel(status: string): string {
 	switch (status) {
 		case "mainnet":
-			return "Mainnet";
+			return "mainnet";
 		case "testnet":
-			return "Testnet";
+			return "testnet";
 		default:
-			return "Coming soon";
+			return "";
 	}
 }
 
 function renderRow(r: StatusRow): string {
-	const endpoint =
-		r.status === "mainnet" || r.status === "testnet"
-			? `<a href="https://${r.endpoint}">${r.endpoint}</a>`
-			: `<span class="muted">${r.endpoint}</span>`;
-	const nameLink =
-		r.status === "mainnet" || r.status === "testnet"
-			? `<a href="/${r.id}">${r.name}</a>`
-			: `<span>${r.name}</span>`;
+	const isLive = r.status === "mainnet" || r.status === "testnet";
+	const endpoint = isLive
+		? `<a href="https://${r.endpoint}">${r.endpoint}</a>`
+		: `<span class="muted">${r.endpoint}</span>`;
+	const nameLink = isLive
+		? `<a href="/${r.id}">${r.name}</a>`
+		: `<span>${r.name}</span>`;
+	const label = statusLabel(r.status);
+	const labelHtml = label ? ` <span class="net-label">${label}</span>` : "";
 	return `      <tr>
         <td>${statusDot(r.status)}</td>
-        <td>${nameLink}</td>
+        <td>${nameLink}${labelHtml}</td>
         <td>${endpoint}</td>
         <td class="muted">${r.description}</td>
       </tr>`;
@@ -123,8 +122,7 @@ ${rowsHtml}
 }
 
 function renderHtml(): string {
-	const mainnetSection = renderSection("Live", "mainnet", mainnet);
-	const testnetSection = renderSection("Testing", "testnet", testnet);
+	const liveSection = renderSection("Live", "live", live);
 	const holdSection = renderSection("Coming soon", "hold", hold);
 
 	const footer = renderFooter(`<a href="/">${BRAND.name}</a> / status`);
@@ -136,11 +134,11 @@ function renderHtml(): string {
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Status — ${BRAND.name}</title>
-<meta name="description" content="Live status of all ${BRAND.name} primitives. ${mainnet.length} live, ${testnet.length} testing, ${hold.length} coming soon.">
+<meta name="description" content="Live status of all ${BRAND.name} primitives. ${live.length} live, ${hold.length} coming soon.">
 <meta name="theme-color" content="#0a0a0a">
 <meta property="og:type" content="website">
 <meta property="og:title" content="Status — ${BRAND.name}">
-<meta property="og:description" content="Live status of all ${BRAND.name} primitives. ${mainnet.length} live, ${testnet.length} testing, ${hold.length} coming soon.">
+<meta property="og:description" content="Live status of all ${BRAND.name} primitives. ${live.length} live, ${hold.length} coming soon.">
 <meta property="og:url" content="https://prim.sh/status">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:site" content="@useprim">
@@ -162,9 +160,9 @@ function renderHtml(): string {
 .status-wrap a{color:var(--accent);text-decoration:none}
 .status-wrap a:hover{text-decoration:underline}
 .dot{font-size:10px;vertical-align:middle}
-.dot-mainnet{color:#00ff88}
-.dot-testnet{color:#ffcc00}
+.dot-live{color:#00ff88}
 .dot-hold{color:#444}
+.net-label{color:var(--muted);font-size:11px;font-weight:normal;margin-left:0.3rem}
 .status-wrap .discovery{margin-top:2rem;padding:1rem;background:var(--surface);border:1px solid var(--border);border-radius:6px;font-size:13px}
 .status-wrap .discovery code{color:var(--accent)}
 .status-wrap .updated{color:var(--muted);font-size:12px;margin-top:2rem}
@@ -175,13 +173,12 @@ function renderHtml(): string {
   <img class="logomark" src="/assets/hero.jpg" alt=">|">
   <div class="hero-hd"><a href="/" class="pill"><span class="parent">${BRAND.name}</span><span class="sep">/</span><span class="child">status</span></a></div>
   <h1 class="logo"><span>status</span>.sh</h1>
-  <div class="tagline" style="color:var(--muted);font-size:1.1rem;margin-bottom:0.5rem">${mainnet.length} mainnet. ${testnet.length} testnet. ${hold.length}&#x267E;&#xFE0F; coming.</div>
+  <div class="tagline" style="color:var(--muted);font-size:1.1rem;margin-bottom:0.5rem">${live.length} live. ${hold.length}&#x267E;&#xFE0F; coming.</div>
   <div class="tagline">All systems operational.</div>
 </div>
 
 <div class="status-wrap">
-${mainnetSection}
-${testnetSection}
+${liveSection}
 ${holdSection}
 
 <div class="discovery">
