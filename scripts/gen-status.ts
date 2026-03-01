@@ -175,7 +175,7 @@ function renderHtml(): string {
   <img class="logomark" src="/assets/hero.jpg" alt=">|">
   <div class="hero-hd"><a href="/" class="pill"><span class="parent">${BRAND.name}</span><span class="sep">/</span><span class="child">status</span></a></div>
   <h1 class="logo"><span>status</span>.sh</h1>
-  <div class="tagline" style="color:var(--muted);font-size:1.1rem;margin-bottom:0.5rem">${mainnet.length} live. ${testnet.length} testing. ${hold.length} coming.</div>
+  <div class="tagline" style="color:var(--muted);font-size:1.1rem;margin-bottom:0.5rem">${mainnet.length} mainnet. ${testnet.length} testnet. ${hold.length}&#x267E;&#xFE0F; coming.</div>
   <div class="tagline">All systems operational.</div>
 </div>
 
