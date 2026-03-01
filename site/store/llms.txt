@@ -191,7 +191,7 @@ Errors:
 
 Upload an object. Key may include slashes. Content-Length header required.
 
-Request body is raw bytes. Fails with 413 if upload exceeds quota.
+Request body is raw bytes (NOT JSON-wrapped). Set Content-Type to match the file (e.g. text/plain, image/png). Fails with 413 if upload exceeds quota.
 
 Price: $0.001
 

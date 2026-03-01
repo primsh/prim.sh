@@ -39,6 +39,9 @@ interface GroupDef {
   name: string;
   prompt: string;
   tests: string[];
+  canary_only?: boolean;
+  setup?: string;
+  cleanup?: string;
 }
 
 interface TestDef {
@@ -380,6 +383,148 @@ When you have completed all tasks, provide a final structured report with:
 ${llmsTxt}`;
 }
 
+// ── Group Setup/Cleanup Hooks ─────────────────────────────────────────────
+
+interface SetupContext {
+  invite_code?: string;
+  wallet_address?: string;
+  /** Group-specific primFetch using the onboarding wallet's private key */
+  primFetch?: typeof fetch;
+}
+
+/**
+ * Generate a single-use invite code via gate.sh internal API.
+ * Requires PRIM_INTERNAL_KEY env var.
+ */
+async function generateInviteCode(): Promise<string> {
+  const internalKey = process.env.PRIM_INTERNAL_KEY;
+  if (!internalKey) {
+    throw new Error("PRIM_INTERNAL_KEY is required for onboarding_e2e group");
+  }
+  const gateUrl = process.env.PRIM_GATE_URL ?? "https://gate.prim.sh";
+  const res = await fetch(`${gateUrl}/internal/codes`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "x-internal-key": internalKey,
+    },
+    body: JSON.stringify({ count: 1, label: "gate-runner-onboarding-e2e" }),
+  });
+  if (!res.ok) {
+    const body = await res.text().catch(() => "(unreadable)");
+    throw new Error(`Failed to generate invite code: HTTP ${res.status} — ${body}`);
+  }
+  const data = (await res.json()) as { codes: string[]; created: number };
+  if (!data.codes?.[0]) throw new Error("No invite code returned from gate internal API");
+  return data.codes[0];
+}
+
+/**
+ * Remove a wallet address from the gate.sh allowlist.
+ * Best-effort — does not throw on failure.
+ */
+async function removeFromAllowlist(address: string): Promise<void> {
+  const internalKey = process.env.PRIM_INTERNAL_KEY;
+  if (!internalKey) return;
+  const gateUrl = process.env.PRIM_GATE_URL ?? "https://gate.prim.sh";
+  try {
+    await fetch(`${gateUrl}/internal/allowlist/${address}`, {
+      method: "DELETE",
+      headers: { "x-internal-key": internalKey },
+    });
+  } catch {
+    // best-effort cleanup
+  }
+}
+
+/**
+ * Onboarding setup: generate key, register wallet, generate invite code, redeem it.
+ * Returns a SetupContext with the wallet address, invite code, and a primFetch
+ * bound to the new wallet so the agent's x402 calls use the freshly funded wallet.
+ */
+async function setupOnboardingE2e(): Promise<SetupContext> {
+  const walletUrl = process.env.PRIM_WALLET_URL ?? "https://wallet.prim.sh";
+  const gateUrl = process.env.PRIM_GATE_URL ?? "https://gate.prim.sh";
+
+  // 1. Generate a random private key and derive the address
+  const privateKey = `0x${Buffer.from(crypto.getRandomValues(new Uint8Array(32))).toString("hex")}` as `0x${string}`;
+  const account = privateKeyToAccount(privateKey);
+  const address = getAddress(account.address);
+
+  // 2. Register wallet with wallet.prim.sh (EIP-191 signature)
+  const timestamp = new Date().toISOString();
+  const regMessage = `Register ${address} with prim.sh at ${timestamp}`;
+  const signature = await account.signMessage({ message: regMessage });
+  const regRes = await fetch(`${walletUrl}/v1/wallets`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ address, signature, timestamp }),
+  });
+  if (!regRes.ok && regRes.status !== 409) {
+    const body = await regRes.text().catch(() => "(unreadable)");
+    throw new Error(`Wallet registration failed: HTTP ${regRes.status} — ${body}`);
+  }
+
+  // 3. Generate invite code
+  const inviteCode = await generateInviteCode();
+
+  // 4. Redeem invite code (free endpoint — no x402)
+  const redeemRes = await fetch(`${gateUrl}/v1/redeem`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ code: inviteCode, wallet: address }),
+  });
+  if (!redeemRes.ok) {
+    const body = await redeemRes.text().catch(() => "(unreadable)");
+    throw new Error(`Invite redeem failed: HTTP ${redeemRes.status} — ${body}`);
+  }
+
+  // 5. Create a primFetch bound to the new wallet for x402 payments
+  const groupPrimFetch = createPrimFetch({
+    privateKey,
+    maxPayment: "1.00",
+  });
+
+  return {
+    invite_code: inviteCode,
+    wallet_address: address,
+    primFetch: groupPrimFetch,
+  };
+}
+
+/**
+ * Run the setup hook for a group. Returns context variables to inject into the prompt.
+ */
+async function runGroupSetup(group: GroupDef): Promise<SetupContext> {
+  if (!group.setup) return {};
+
+  switch (group.setup) {
+    case "onboarding_e2e":
+      return await setupOnboardingE2e();
+    default:
+      console.warn(`Unknown setup hook: ${group.setup}`);
+      return {};
+  }
+}
+
+/**
+ * Run the cleanup hook for a group.
+ */
+async function runGroupCleanup(group: GroupDef, ctx: SetupContext): Promise<void> {
+  if (!group.cleanup) return;
+
+  switch (group.cleanup) {
+    case "remove_from_allowlist": {
+      if (ctx.wallet_address) {
+        await removeFromAllowlist(ctx.wallet_address);
+      }
+      break;
+    }
+    default:
+      console.warn(`Unknown cleanup hook: ${group.cleanup}`);
+  }
+}
+
 /**
  * Tool definitions for the canary agent.
  * The agent calls these to make HTTP requests; gate runner executes them.
@@ -485,6 +630,7 @@ async function runCanaryGroup(
   testIndex: Map<string, TestDef>,
   primFetch: typeof fetch,
   inferEndpoint: string,
+  setupCtx?: SetupContext,
 ): Promise<CanaryGroupResult> {
   const primIds = getGroupPrimIds(group, testIndex);
 
@@ -506,7 +652,19 @@ async function runCanaryGroup(
   const serviceName = `${firstPrimId}.sh`;
   const endpoint = `${firstPrimId}.prim.sh`;
 
-  const promptText = buildCanaryPrompt(group.prompt, serviceName, endpoint, llmsTxt);
+  // Substitute setup context variables into the prompt
+  let groupPrompt = group.prompt;
+  if (setupCtx?.invite_code) {
+    groupPrompt = groupPrompt.replace(/\{\{invite_code\}\}/g, setupCtx.invite_code);
+  }
+  if (setupCtx?.wallet_address) {
+    groupPrompt = groupPrompt.replace(/\{\{wallet_address\}\}/g, setupCtx.wallet_address);
+  }
+
+  // Use group-specific primFetch if setup provided one (e.g. onboarding wallet)
+  const groupPrimFetch = setupCtx?.primFetch ?? primFetch;
+
+  const promptText = buildCanaryPrompt(groupPrompt, serviceName, endpoint, llmsTxt);
 
   // OpenAI-compatible messages
   type ChatMessage = {
@@ -664,7 +822,7 @@ async function runCanaryGroup(
       }
 
       try {
-        const result = await executeToolCall(toolCall, primFetch);
+        const result = await executeToolCall(toolCall, groupPrimFetch);
         stepResult = {
           tool_call_id: tc.id,
           method,
@@ -680,6 +838,16 @@ async function runCanaryGroup(
           failCounts.set(endpointKey, priorFails + 1);
         } else {
           failCounts.set(endpointKey, 0); // reset on success
+        }
+
+        // Capture wallet address from redeem/register calls (for cleanup)
+        if (setupCtx && result.ok && reqBody && typeof reqBody === "object") {
+          const body = reqBody as Record<string, unknown>;
+          if (url.includes("/v1/redeem") && typeof body.wallet === "string") {
+            setupCtx.wallet_address = body.wallet;
+          } else if (url.includes("/v1/wallets") && method === "POST" && typeof body.address === "string") {
+            setupCtx.wallet_address = body.address;
+          }
         }
 
         toolResults.push({
@@ -794,8 +962,8 @@ async function main() {
     testIndex.set(t.id, t);
   }
 
-  // Filter groups
-  let groups = plan.groups;
+  // Filter groups — exclude canary_only groups from deterministic runs
+  let groups = args.canary ? plan.groups : plan.groups.filter((g) => !g.canary_only);
   if (args.group) {
     groups = groups.filter((g) => g.id === args.group);
     if (groups.length === 0) {
@@ -902,11 +1070,40 @@ async function main() {
 
     for (const group of groups) {
       console.log(c.bold(`\n── ${group.name} (${group.id}) ──`));
+
+      // Run setup hook (e.g. generate invite code)
+      let setupCtx: SetupContext = {};
+      if (group.setup) {
+        try {
+          console.log(c.dim(`  Running setup: ${group.setup}…`));
+          setupCtx = await runGroupSetup(group);
+          if (setupCtx.wallet_address) {
+            console.log(c.dim(`  Setup: wallet ${setupCtx.wallet_address}`));
+          }
+          if (setupCtx.invite_code) {
+            console.log(c.dim(`  Setup: invite code ${setupCtx.invite_code}`));
+          }
+        } catch (err) {
+          const errMsg = err instanceof Error ? err.message : String(err);
+          console.log(c.red(`  Setup failed: ${errMsg}`));
+          canaryResults.push({
+            group_id: group.id,
+            group_name: group.name,
+            verdict: "error",
+            steps: [],
+            ux_notes: [],
+            agent_summary: null,
+            error: `setup failed: ${errMsg}`,
+          });
+          continue;
+        }
+      }
+
       console.log(c.dim("  Running agent canary…"));
 
       let result: CanaryGroupResult;
       try {
-        result = await runCanaryGroup(group, testIndex, primFetch, inferEndpoint);
+        result = await runCanaryGroup(group, testIndex, primFetch, inferEndpoint, setupCtx);
       } catch (err) {
         const errMsg = err instanceof Error ? err.message : String(err);
         result = {
@@ -918,6 +1115,20 @@ async function main() {
           agent_summary: null,
           error: errMsg,
         };
+      }
+
+      // Run cleanup hook (e.g. remove from allowlist)
+      if (group.cleanup) {
+        try {
+          console.log(c.dim(`  Running cleanup: ${group.cleanup}…`));
+          await runGroupCleanup(group, setupCtx);
+          if (setupCtx.wallet_address) {
+            console.log(c.dim(`  Cleanup: removed ${setupCtx.wallet_address} from allowlist`));
+          }
+        } catch (err) {
+          const errMsg = err instanceof Error ? err.message : String(err);
+          console.log(c.yellow(`  Cleanup warning: ${errMsg}`));
+        }
       }
 
       canaryResults.push(result);
