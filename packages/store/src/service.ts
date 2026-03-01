@@ -18,7 +18,7 @@ import {
 const MAX_BUCKETS_PER_WALLET = Number(process.env.STORE_MAX_BUCKETS_PER_WALLET ?? 10);
 const DEFAULT_BUCKET_QUOTA = Number(process.env.STORE_DEFAULT_BUCKET_QUOTA ?? 104857600); // 100MB
 const MAX_STORAGE_PER_WALLET = Number(process.env.STORE_MAX_STORAGE_PER_WALLET ?? 1073741824); // 1GB
-import type { PaginatedList } from "@primsh/x402-middleware";
+import type { PaginatedList, ServiceResult } from "@primsh/x402-middleware";
 import type {
   BucketResponse,
   CreateBucketRequest,
@@ -62,10 +62,6 @@ function rowToBucketResponse(row: BucketRow): BucketResponse {
 }
 
 // ─── Ownership ───────────────────────────────────────────────────────────
-
-type ServiceResult<T> =
-  | { ok: true; data: T }
-  | { ok: false; status: number; code: string; message: string };
 
 type BucketCheck =
   | { ok: true; row: BucketRow }

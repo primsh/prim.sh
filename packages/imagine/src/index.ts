@@ -3,6 +3,7 @@ import {
   createAgentStackMiddleware,
   createWalletAllowlistChecker,
   invalidRequest,
+  parseJsonBody,
 } from "@primsh/x402-middleware";
 import type { ApiError } from "@primsh/x402-middleware";
 import { createPrimApp } from "@primsh/x402-middleware/create-prim-app";
@@ -69,13 +70,9 @@ const logger = app.logger;
 
 // POST /v1/generate — Generate an image from a text prompt. Returns base64 or URL.
 app.post("/v1/generate", async (c) => {
-  let body: GenerateRequest;
-  try {
-    body = await c.req.json<GenerateRequest>();
-  } catch (err) {
-    logger.warn("JSON parse failed on POST /v1/generate", { error: String(err) });
-    return c.json(invalidRequest("Invalid JSON body"), 400);
-  }
+  const bodyOrRes = await parseJsonBody<GenerateRequest>(c, logger, "POST /v1/generate");
+  if (bodyOrRes instanceof Response) return bodyOrRes;
+  const body = bodyOrRes;
 
   const result = await generate(body);
 
@@ -98,13 +95,9 @@ app.post("/v1/generate", async (c) => {
 
 // POST /v1/describe — Describe an image. Accepts base64 or URL. Returns text description.
 app.post("/v1/describe", async (c) => {
-  let body: DescribeRequest;
-  try {
-    body = await c.req.json<DescribeRequest>();
-  } catch (err) {
-    logger.warn("JSON parse failed on POST /v1/describe", { error: String(err) });
-    return c.json(invalidRequest("Invalid JSON body"), 400);
-  }
+  const bodyOrRes = await parseJsonBody<DescribeRequest>(c, logger, "POST /v1/describe");
+  if (bodyOrRes instanceof Response) return bodyOrRes;
+  const body = bodyOrRes;
 
   const result = await describe(body);
 
@@ -127,13 +120,9 @@ app.post("/v1/describe", async (c) => {
 
 // POST /v1/upscale — Upscale an image to higher resolution. Accepts base64 or URL.
 app.post("/v1/upscale", async (c) => {
-  let body: UpscaleRequest;
-  try {
-    body = await c.req.json<UpscaleRequest>();
-  } catch (err) {
-    logger.warn("JSON parse failed on POST /v1/upscale", { error: String(err) });
-    return c.json(invalidRequest("Invalid JSON body"), 400);
-  }
+  const bodyOrRes = await parseJsonBody<UpscaleRequest>(c, logger, "POST /v1/upscale");
+  if (bodyOrRes instanceof Response) return bodyOrRes;
+  const body = bodyOrRes;
 
   const result = await upscale(body);
 

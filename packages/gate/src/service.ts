@@ -1,4 +1,5 @@
 import { addToAllowlist } from "@primsh/x402-middleware/allowlist-db";
+import type { ServiceResult } from "@primsh/x402-middleware";
 import { createLogger } from "@primsh/x402-middleware";
 import type {
   CodeDetail,
@@ -13,10 +14,6 @@ import { validateAndBurn } from "./db.ts";
 import { fundWallet } from "./fund.ts";
 
 const log = createLogger("gate.sh", { module: "service" });
-
-type ServiceResult<T> =
-  | { ok: true; data: T }
-  | { ok: false; status: number; code: string; message: string };
 
 type RedeemResult = ServiceResult<RedeemResponse>;
 

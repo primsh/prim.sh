@@ -5,22 +5,16 @@ vi.hoisted(() => {
 });
 
 // Stub bun:sqlite so db.ts doesn't fail in vitest (Node runtime)
-vi.mock("bun:sqlite", () => {
-  class MockDatabase {
-    run() {}
-    query() {
-      return { get: () => null, all: () => [], run: () => {} };
-    }
-  }
-  return { Database: MockDatabase };
-});
+import { mockBunSqlite, mockX402Middleware } from "@primsh/x402-middleware/testing";
+vi.mock("bun:sqlite", () => mockBunSqlite());
 
-// Bypass x402 middleware for unit tests.
 vi.mock("@primsh/x402-middleware", async (importOriginal) => {
   const original = await importOriginal<typeof import("@primsh/x402-middleware")>();
+  const mocks = mockX402Middleware();
   return {
     ...original,
-    createWalletAllowlistChecker: vi.fn(() => () => Promise.resolve(true)),
+    createAgentStackMiddleware: vi.fn(mocks.createAgentStackMiddleware),
+    createWalletAllowlistChecker: vi.fn(mocks.createWalletAllowlistChecker),
   };
 });
 

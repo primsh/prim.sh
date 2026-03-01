@@ -3,6 +3,7 @@ import {
   createAgentStackMiddleware,
   createWalletAllowlistChecker,
   invalidRequest,
+  parseJsonBody,
 } from "@primsh/x402-middleware";
 import type { ApiError } from "@primsh/x402-middleware";
 import { createPrimApp } from "@primsh/x402-middleware/create-prim-app";
@@ -61,13 +62,9 @@ const logger = app.logger;
 
 // POST /v1/chat — Chat completion. Supports streaming, tool use, structured output.
 app.post("/v1/chat", async (c) => {
-  let body: ChatRequest;
-  try {
-    body = await c.req.json<ChatRequest>();
-  } catch (err) {
-    logger.warn("JSON parse failed on POST /v1/chat", { error: String(err) });
-    return c.json(invalidRequest("Invalid JSON body"), 400);
-  }
+  const bodyOrRes = await parseJsonBody<ChatRequest>(c, logger, "POST /v1/chat");
+  if (bodyOrRes instanceof Response) return bodyOrRes;
+  const body = bodyOrRes;
 
   const result = await chat(body);
 
@@ -90,13 +87,9 @@ app.post("/v1/chat", async (c) => {
 
 // POST /v1/embed — Generate embeddings for text input. Returns vector array.
 app.post("/v1/embed", async (c) => {
-  let body: EmbedRequest;
-  try {
-    body = await c.req.json<EmbedRequest>();
-  } catch (err) {
-    logger.warn("JSON parse failed on POST /v1/embed", { error: String(err) });
-    return c.json(invalidRequest("Invalid JSON body"), 400);
-  }
+  const bodyOrRes = await parseJsonBody<EmbedRequest>(c, logger, "POST /v1/embed");
+  if (bodyOrRes instanceof Response) return bodyOrRes;
+  const body = bodyOrRes;
 
   const result = await embed(body);
 

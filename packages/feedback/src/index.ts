@@ -1,5 +1,6 @@
 import { resolve } from "node:path";
 import type { Context } from "hono";
+import { parseJsonBody } from "@primsh/x402-middleware";
 import { createPrimApp } from "@primsh/x402-middleware/create-prim-app";
 import { submit } from "./service.ts";
 import { listFeedback, countFeedback } from "./db.ts";
@@ -36,14 +37,13 @@ function internalAuth(c: Context): Response | null {
   return null;
 }
 
+const logger = app.logger;
+
 // POST /v1/submit — Submit feedback
 app.post("/v1/submit", async (c) => {
-  let body: Record<string, unknown>;
-  try {
-    body = await c.req.json();
-  } catch {
-    return c.json({ error: { code: "invalid_request", message: "Invalid JSON body" } }, 400);
-  }
+  const bodyOrRes = await parseJsonBody<Record<string, unknown>>(c, logger, "POST /v1/submit");
+  if (bodyOrRes instanceof Response) return bodyOrRes;
+  const body = bodyOrRes;
 
   const result = submit({
     primitive: body.primitive as string,

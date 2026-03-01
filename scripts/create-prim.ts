@@ -336,13 +336,11 @@ function genIndexTs(prim: PrimYaml, routePrices: Record<string, string>): string
 
     return `// ${r.route} — ${r.description}
 app.${method}("${routePath}", async (c) => {
-  let body: ${reqType};
-  try {
-    body = await c.req.json<${reqType}>();
-  } catch (err) {
-    logger.warn("JSON parse failed on ${r.route}", { error: String(err) });
-    return c.json(invalidRequest("Invalid JSON body"), 400);
-  }
+  const caller = requireCaller(c);
+  if (caller instanceof Response) return caller;
+
+  const body = await parseJsonBody<${reqType}>(c, logger, "${r.route}");
+  if (body instanceof Response) return body;
 
   const result = await ${fnName}(body);
 
@@ -381,6 +379,8 @@ import {
   metricsHandler,
   requestIdMiddleware,
   invalidRequest,
+  requireCaller,
+  parseJsonBody,
 } from "@primsh/x402-middleware";
 import type { ApiError } from "@primsh/x402-middleware";
 ${uniqueRequestTypes.length > 0 ? `import type { ${uniqueRequestTypes.join(", ")} } from "./api.ts";` : ""}
@@ -528,10 +528,6 @@ function genServiceTs(prim: PrimYaml): string {
   const routes = prim.routes_map ?? [];
   const hasProviders = (prim.providers ?? []).length > 0;
 
-  const serviceResultType = `type ServiceResult<T> =
-  | { ok: true; data: T }
-  | { ok: false; status: number; code: string; message: string; retryAfter?: number };`;
-
   const providerImport = hasProviders
     ? `import { ProviderError } from "./provider.ts";
 import type { ${toPascalCase(prim.id)}Provider } from "./provider.ts";
@@ -559,11 +555,8 @@ export { ProviderError } from "./provider.ts";`
 }`;
   });
 
-  return `${providerImport ? `${providerImport}\n` : ""}import type { ${typeImports.join(", ")} } from "./api.ts";
-
-// ─── ServiceResult ────────────────────────────────────────────────────────────
-
-${serviceResultType}
+  return `${providerImport ? `${providerImport}\n` : ""}import type { ServiceResult } from "@primsh/x402-middleware";
+import type { ${typeImports.join(", ")} } from "./api.ts";
 
 // ─── Service functions ────────────────────────────────────────────────────────
 
@@ -676,22 +669,27 @@ function genSmokeTestTs(prim: PrimYaml, routePrices: Record<string, string>): st
     // Degenerate case — no routes yet
     return `import { describe, expect, it, vi } from "vitest";
 
-process.env.PRIM_NETWORK = "eip155:8453";
-process.env.PRIM_PAY_TO = "0x0000000000000000000000000000000000000001";
+vi.hoisted(() => {
+  process.env.PRIM_NETWORK = "eip155:8453";
+  process.env.PRIM_PAY_TO = "0x0000000000000000000000000000000000000001";
+});
+
+import { mockX402Middleware } from "@primsh/x402-middleware/testing";
+
+const createAgentStackMiddlewareSpy = vi.hoisted(() => vi.fn());
 
 vi.mock("@primsh/x402-middleware", async (importOriginal) => {
   const original = await importOriginal<typeof import("@primsh/x402-middleware")>();
+  const mocks = mockX402Middleware();
+  createAgentStackMiddlewareSpy.mockImplementation(mocks.createAgentStackMiddleware);
   return {
     ...original,
-    createAgentStackMiddleware: vi.fn(
-      () => async (_c: import("hono").Context, next: import("hono").Next) => { await next(); },
-    ),
-    createWalletAllowlistChecker: vi.fn(() => () => Promise.resolve(true)),
+    createAgentStackMiddleware: createAgentStackMiddlewareSpy,
+    createWalletAllowlistChecker: vi.fn(mocks.createWalletAllowlistChecker),
   };
 });
 
 import app from "../src/index.ts";
-import { createAgentStackMiddleware } from "@primsh/x402-middleware";
 
 describe("${prim.name} app", () => {
   it("exposes a default export", () => {
@@ -706,7 +704,7 @@ describe("${prim.name} app", () => {
   });
 
   it("x402 middleware is registered with paid routes and payTo", () => {
-    expect(vi.mocked(createAgentStackMiddleware)).toHaveBeenCalledWith(
+    expect(createAgentStackMiddlewareSpy).toHaveBeenCalledWith(
       expect.objectContaining({
         payTo: expect.any(String),
         freeRoutes: expect.arrayContaining(["GET /"]),
@@ -732,22 +730,25 @@ describe("${prim.name} app", () => {
     .map((r) => `        "${r.route}": expect.any(String)`)
     .join(",\n");
 
-  return `import { describe, expect, it, vi, beforeEach } from "vitest";
-import type { Context, Next } from "hono";
+  return `import { beforeEach, describe, expect, it, vi } from "vitest";
 
-process.env.PRIM_NETWORK = "eip155:8453";
-process.env.PRIM_PAY_TO = "0x0000000000000000000000000000000000000001";
+vi.hoisted(() => {
+  process.env.PRIM_NETWORK = "eip155:8453";
+  process.env.PRIM_PAY_TO = "0x0000000000000000000000000000000000000001";
+});
 
-// Bypass x402 so the handler is reachable in unit tests.
-// Middleware wiring is verified via check 3 (spy on createAgentStackMiddleware).
+import { mockX402Middleware } from "@primsh/x402-middleware/testing";
+
+const createAgentStackMiddlewareSpy = vi.hoisted(() => vi.fn());
+
 vi.mock("@primsh/x402-middleware", async (importOriginal) => {
   const original = await importOriginal<typeof import("@primsh/x402-middleware")>();
+  const mocks = mockX402Middleware();
+  createAgentStackMiddlewareSpy.mockImplementation(mocks.createAgentStackMiddleware);
   return {
     ...original,
-    createAgentStackMiddleware: vi.fn(
-      () => async (_c: Context, next: Next) => { await next(); },
-    ),
-    createWalletAllowlistChecker: vi.fn(() => () => Promise.resolve(true)),
+    createAgentStackMiddleware: createAgentStackMiddlewareSpy,
+    createWalletAllowlistChecker: vi.fn(mocks.createWalletAllowlistChecker),
   };
 });
 
@@ -762,7 +763,6 @@ ${serviceFns.map((fn) => `    ${fn}: vi.fn()`).join(",\n")}
 
 import app from "../src/index.ts";
 import { ${firstFnName} } from "../src/service.ts";
-import { createAgentStackMiddleware } from "@primsh/x402-middleware";
 import type { ${firstResType} } from "../src/api.ts";
 
 // TODO: Fill in a realistic mock response for ${firstResType}
@@ -788,7 +788,7 @@ describe("${prim.name} app", () => {
 
   // Check 3: x402 middleware is wired with the correct paid routes and payTo address
   it("x402 middleware is registered with paid routes and payTo", () => {
-    expect(vi.mocked(createAgentStackMiddleware)).toHaveBeenCalledWith(
+    expect(createAgentStackMiddlewareSpy).toHaveBeenCalledWith(
       expect.objectContaining({
         payTo: expect.any(String),
         freeRoutes: expect.arrayContaining(["GET /"]),

@@ -9,6 +9,7 @@ import {
   createLogger,
   createWalletAllowlistChecker,
   getNetworkConfig,
+  parseJsonBody,
 } from "@primsh/x402-middleware";
 import { createPrimApp } from "@primsh/x402-middleware/create-prim-app";
 import type { ContentfulStatusCode } from "hono/utils/http-status";
@@ -72,13 +73,9 @@ app.get("/", (c) => {
 
 // POST /v1/redeem — Redeem an invite code (free)
 app.post("/v1/redeem", async (c) => {
-  let body: Partial<RedeemRequest>;
-  try {
-    body = await c.req.json<Partial<RedeemRequest>>();
-  } catch (err) {
-    logger.warn("JSON parse failed on POST /v1/redeem", { error: String(err) });
-    return c.json({ error: { code: "invalid_request", message: "Invalid JSON body" } }, 400);
-  }
+  const bodyOrRes = await parseJsonBody<Partial<RedeemRequest>>(c, logger, "POST /v1/redeem");
+  if (bodyOrRes instanceof Response) return bodyOrRes;
+  const body = bodyOrRes;
 
   if (!body.code || typeof body.code !== "string" || !body.code.trim()) {
     return c.json({ error: { code: "invalid_request", message: "code is required" } }, 400);
@@ -127,13 +124,9 @@ app.post("/internal/allowlist/add", async (c) => {
   const denied = internalAuth(c);
   if (denied) return denied;
 
-  let body: { address?: string; added_by?: string; note?: string };
-  try {
-    body = await c.req.json();
-  } catch (err) {
-    logger.warn("JSON parse failed on POST /internal/allowlist/add", { error: String(err) });
-    return c.json({ error: { code: "invalid_request", message: "Invalid JSON body" } }, 400);
-  }
+  const bodyOrRes = await parseJsonBody<{ address?: string; added_by?: string; note?: string }>(c, logger, "POST /internal/allowlist/add");
+  if (bodyOrRes instanceof Response) return bodyOrRes;
+  const body = bodyOrRes;
 
   if (!body.address) {
     return c.json(
@@ -180,13 +173,9 @@ app.post("/internal/codes", async (c) => {
   const denied = internalAuth(c);
   if (denied) return denied;
 
-  let body: Partial<CreateCodesRequest>;
-  try {
-    body = await c.req.json();
-  } catch (err) {
-    logger.warn("JSON parse failed on POST /internal/codes", { error: String(err) });
-    return c.json({ error: { code: "invalid_request", message: "Invalid JSON body" } }, 400);
-  }
+  const bodyOrRes = await parseJsonBody<Partial<CreateCodesRequest>>(c, logger, "POST /internal/codes");
+  if (bodyOrRes instanceof Response) return bodyOrRes;
+  const body = bodyOrRes;
 
   const result = createCodes(body);
   if (!result.ok) {

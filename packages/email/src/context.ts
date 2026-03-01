@@ -1,4 +1,4 @@
-import type { ServiceResult } from "./api.ts";
+import type { ServiceResult } from "@primsh/x402-middleware";
 import { decryptPassword } from "./crypto.ts";
 import { getMailboxById, updateMailboxJmap } from "./db.ts";
 import { JmapError, buildBasicAuth, discoverSession } from "./jmap.ts";

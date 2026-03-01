@@ -5,6 +5,8 @@ import {
   forbidden,
   invalidRequest,
   notFound,
+  parseJsonBody,
+  requireCaller,
 } from "@primsh/x402-middleware";
 import type { ApiError } from "@primsh/x402-middleware";
 import { createPrimApp } from "@primsh/x402-middleware/create-prim-app";
@@ -64,16 +66,13 @@ const logger = app.logger;
 
 // POST /v1/tokens — Deploy new ERC-20
 app.post("/v1/tokens", async (c) => {
-  const caller = c.get("walletAddress");
-  if (!caller) return c.json(forbidden("No wallet address in payment"), 403);
+  const callerOrRes = requireCaller(c);
+  if (callerOrRes instanceof Response) return callerOrRes;
+  const caller = callerOrRes;
 
-  let body: CreateTokenRequest;
-  try {
-    body = await c.req.json<CreateTokenRequest>();
-  } catch (err) {
-    logger.warn("JSON parse failed on POST /v1/tokens", { error: String(err) });
-    return c.json(invalidRequest("Invalid JSON body"), 400);
-  }
+  const bodyOrRes = await parseJsonBody<CreateTokenRequest>(c, logger, "POST /v1/tokens");
+  if (bodyOrRes instanceof Response) return bodyOrRes;
+  const body = bodyOrRes;
 
   const result = await deployToken(body, caller);
   if (!result.ok) {
@@ -86,8 +85,9 @@ app.post("/v1/tokens", async (c) => {
 
 // GET /v1/tokens — List caller's tokens
 app.get("/v1/tokens", (c) => {
-  const caller = c.get("walletAddress");
-  if (!caller) return c.json(forbidden("No wallet address in payment"), 403);
+  const callerOrRes = requireCaller(c);
+  if (callerOrRes instanceof Response) return callerOrRes;
+  const caller = callerOrRes;
 
   const result = listTokens(caller);
   if (!result.ok)
@@ -97,8 +97,9 @@ app.get("/v1/tokens", (c) => {
 
 // GET /v1/tokens/:id — Token detail
 app.get("/v1/tokens/:id", (c) => {
-  const caller = c.get("walletAddress");
-  if (!caller) return c.json(forbidden("No wallet address in payment"), 403);
+  const callerOrRes = requireCaller(c);
+  if (callerOrRes instanceof Response) return callerOrRes;
+  const caller = callerOrRes;
 
   const result = getToken(c.req.param("id"), caller);
   if (!result.ok) {
@@ -111,16 +112,13 @@ app.get("/v1/tokens/:id", (c) => {
 
 // POST /v1/tokens/:id/mint — Mint additional tokens
 app.post("/v1/tokens/:id/mint", async (c) => {
-  const caller = c.get("walletAddress");
-  if (!caller) return c.json(forbidden("No wallet address in payment"), 403);
+  const callerOrRes = requireCaller(c);
+  if (callerOrRes instanceof Response) return callerOrRes;
+  const caller = callerOrRes;
 
-  let body: MintRequest;
-  try {
-    body = await c.req.json<MintRequest>();
-  } catch (err) {
-    logger.warn("JSON parse failed on POST /v1/tokens/:id/mint", { error: String(err) });
-    return c.json(invalidRequest("Invalid JSON body"), 400);
-  }
+  const bodyOrRes = await parseJsonBody<MintRequest>(c, logger, "POST /v1/tokens/:id/mint");
+  if (bodyOrRes instanceof Response) return bodyOrRes;
+  const body = bodyOrRes;
 
   const result = await mintTokens(c.req.param("id"), body, caller);
   if (!result.ok) {
@@ -137,8 +135,9 @@ app.post("/v1/tokens/:id/mint", async (c) => {
 
 // GET /v1/tokens/:id/supply — Live on-chain totalSupply
 app.get("/v1/tokens/:id/supply", async (c) => {
-  const caller = c.get("walletAddress");
-  if (!caller) return c.json(forbidden("No wallet address in payment"), 403);
+  const callerOrRes = requireCaller(c);
+  if (callerOrRes instanceof Response) return callerOrRes;
+  const caller = callerOrRes;
 
   const result = await getSupply(c.req.param("id"), caller);
   if (!result.ok) {
@@ -152,16 +151,13 @@ app.get("/v1/tokens/:id/supply", async (c) => {
 
 // POST /v1/tokens/:id/pool — Create + initialize Uniswap V3 pool
 app.post("/v1/tokens/:id/pool", async (c) => {
-  const caller = c.get("walletAddress");
-  if (!caller) return c.json(forbidden("No wallet address in payment"), 403);
+  const callerOrRes = requireCaller(c);
+  if (callerOrRes instanceof Response) return callerOrRes;
+  const caller = callerOrRes;
 
-  let body: CreatePoolRequest;
-  try {
-    body = await c.req.json<CreatePoolRequest>();
-  } catch (err) {
-    logger.warn("JSON parse failed on POST /v1/tokens/:id/pool", { error: String(err) });
-    return c.json(invalidRequest("Invalid JSON body"), 400);
-  }
+  const bodyOrRes = await parseJsonBody<CreatePoolRequest>(c, logger, "POST /v1/tokens/:id/pool");
+  if (bodyOrRes instanceof Response) return bodyOrRes;
+  const body = bodyOrRes;
 
   const result = await createPool(c.req.param("id"), body, caller);
   if (!result.ok) {
@@ -178,8 +174,9 @@ app.post("/v1/tokens/:id/pool", async (c) => {
 // GET /v1/tokens/:id/pool/liquidity-params — Compute add-liquidity calldata
 // NOTE: must be registered before GET /v1/tokens/:id/pool to avoid routing conflict
 app.get("/v1/tokens/:id/pool/liquidity-params", (c) => {
-  const caller = c.get("walletAddress");
-  if (!caller) return c.json(forbidden("No wallet address in payment"), 403);
+  const callerOrRes = requireCaller(c);
+  if (callerOrRes instanceof Response) return callerOrRes;
+  const caller = callerOrRes;
 
   const tokenAmount = c.req.query("tokenAmount") ?? "";
   const usdcAmount = c.req.query("usdcAmount") ?? "";
@@ -196,8 +193,9 @@ app.get("/v1/tokens/:id/pool/liquidity-params", (c) => {
 
 // GET /v1/tokens/:id/pool — Pool info
 app.get("/v1/tokens/:id/pool", (c) => {
-  const caller = c.get("walletAddress");
-  if (!caller) return c.json(forbidden("No wallet address in payment"), 403);
+  const callerOrRes = requireCaller(c);
+  if (callerOrRes instanceof Response) return callerOrRes;
+  const caller = callerOrRes;
 
   const result = getPool(c.req.param("id"), caller);
   if (!result.ok) {

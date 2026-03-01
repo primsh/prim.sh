@@ -6,6 +6,8 @@ import {
   forbidden,
   getNetworkConfig,
   notFound,
+  parseJsonBody,
+  requireCaller,
 } from "@primsh/x402-middleware";
 import {
   addToAllowlist,
@@ -186,16 +188,9 @@ app.use(
 
 // POST /v1/wallets — Register wallet via EIP-191 signature (FREE)
 app.post("/v1/wallets", async (c) => {
-  let body: Partial<RegisterWalletRequest>;
-  try {
-    body = await c.req.json<Partial<RegisterWalletRequest>>();
-  } catch (err) {
-    logger.warn("JSON parse failed on POST /v1/wallets", { error: String(err) });
-    return c.json(
-      { error: { code: "invalid_request", message: "Invalid JSON body" } } as ApiError,
-      400,
-    );
-  }
+  const bodyOrRes = await parseJsonBody<Partial<RegisterWalletRequest>>(c, logger, "POST /v1/wallets");
+  if (bodyOrRes instanceof Response) return bodyOrRes;
+  const body = bodyOrRes;
 
   const { address, signature, timestamp } = body;
   if (!address || !signature || !timestamp) {
@@ -227,10 +222,9 @@ app.post("/v1/wallets", async (c) => {
 
 // GET /v1/wallets — List wallets
 app.get("/v1/wallets", async (c) => {
-  const caller = c.get("walletAddress");
-  if (!caller) {
-    return c.json(forbidden("No wallet address in payment"), 403);
-  }
+  const callerOrRes = requireCaller(c);
+  if (callerOrRes instanceof Response) return callerOrRes;
+  const caller = callerOrRes;
 
   const limitParam = c.req.query("limit");
   const limit = Math.min(Number(limitParam) || 20, 100);
@@ -243,10 +237,9 @@ app.get("/v1/wallets", async (c) => {
 // GET /v1/wallets/:address — Wallet detail
 app.get("/v1/wallets/:address", async (c) => {
   const address = c.req.param("address");
-  const caller = c.get("walletAddress");
-  if (!caller) {
-    return c.json(forbidden("No wallet address in payment"), 403);
-  }
+  const callerOrRes = requireCaller(c);
+  if (callerOrRes instanceof Response) return callerOrRes;
+  const caller = callerOrRes;
 
   const result = await getWallet(address, caller);
   if (!result.ok) {
@@ -260,10 +253,9 @@ app.get("/v1/wallets/:address", async (c) => {
 // DELETE /v1/wallets/:address — Deactivate
 app.delete("/v1/wallets/:address", (c) => {
   const address = c.req.param("address");
-  const caller = c.get("walletAddress");
-  if (!caller) {
-    return c.json(forbidden("No wallet address in payment"), 403);
-  }
+  const callerOrRes = requireCaller(c);
+  if (callerOrRes instanceof Response) return callerOrRes;
+  const caller = callerOrRes;
 
   const result = deactivateWallet(address, caller);
   if (!result.ok) {
@@ -277,23 +269,13 @@ app.delete("/v1/wallets/:address", (c) => {
 // POST /v1/wallets/:address/fund-request
 app.post("/v1/wallets/:address/fund-request", async (c) => {
   const address = c.req.param("address");
-  const caller = c.get("walletAddress");
-  if (!caller) {
-    return c.json(forbidden("No wallet address in payment"), 403);
-  }
+  const callerOrRes = requireCaller(c);
+  if (callerOrRes instanceof Response) return callerOrRes;
+  const caller = callerOrRes;
 
-  let body: Partial<CreateFundRequestRequest>;
-  try {
-    body = await c.req.json<Partial<CreateFundRequestRequest>>();
-  } catch (err) {
-    logger.warn("JSON parse failed on POST /v1/wallets/:address/fund-request", {
-      error: String(err),
-    });
-    return c.json(
-      { error: { code: "invalid_request", message: "Invalid JSON body" } } as ApiError,
-      400,
-    );
-  }
+  const bodyOrRes = await parseJsonBody<Partial<CreateFundRequestRequest>>(c, logger, "POST /v1/wallets/:address/fund-request");
+  if (bodyOrRes instanceof Response) return bodyOrRes;
+  const body = bodyOrRes;
 
   const { amount, reason } = body;
   if (!amount || !reason) {
@@ -316,10 +298,9 @@ app.post("/v1/wallets/:address/fund-request", async (c) => {
 // GET /v1/wallets/:address/fund-requests
 app.get("/v1/wallets/:address/fund-requests", (c) => {
   const address = c.req.param("address");
-  const caller = c.get("walletAddress");
-  if (!caller) {
-    return c.json(forbidden("No wallet address in payment"), 403);
-  }
+  const callerOrRes = requireCaller(c);
+  if (callerOrRes instanceof Response) return callerOrRes;
+  const caller = callerOrRes;
 
   const limitParam = c.req.query("limit");
   const limit = Math.min(Number(limitParam) || 20, 100);
@@ -336,10 +317,9 @@ app.get("/v1/wallets/:address/fund-requests", (c) => {
 // POST /v1/fund-requests/:id/approve
 app.post("/v1/fund-requests/:id/approve", (c) => {
   const id = c.req.param("id");
-  const caller = c.get("walletAddress");
-  if (!caller) {
-    return c.json(forbidden("No wallet address in payment"), 403);
-  }
+  const callerOrRes = requireCaller(c);
+  if (callerOrRes instanceof Response) return callerOrRes;
+  const caller = callerOrRes;
 
   const result = approveFundRequest(id, caller);
   if (!result.ok) {
@@ -352,10 +332,9 @@ app.post("/v1/fund-requests/:id/approve", (c) => {
 // POST /v1/fund-requests/:id/deny
 app.post("/v1/fund-requests/:id/deny", async (c) => {
   const id = c.req.param("id");
-  const caller = c.get("walletAddress");
-  if (!caller) {
-    return c.json(forbidden("No wallet address in payment"), 403);
-  }
+  const callerOrRes = requireCaller(c);
+  if (callerOrRes instanceof Response) return callerOrRes;
+  const caller = callerOrRes;
 
   let reason: string | undefined;
   try {
@@ -377,8 +356,9 @@ app.post("/v1/fund-requests/:id/deny", async (c) => {
 // GET /v1/wallets/:address/policy
 app.get("/v1/wallets/:address/policy", (c) => {
   const address = c.req.param("address");
-  const caller = c.get("walletAddress");
-  if (!caller) return c.json(forbidden("No wallet address in payment"), 403);
+  const callerOrRes = requireCaller(c);
+  if (callerOrRes instanceof Response) return callerOrRes;
+  const caller = callerOrRes;
 
   const result = getSpendingPolicy(address, caller);
   if (!result.ok) {
@@ -392,19 +372,13 @@ app.get("/v1/wallets/:address/policy", (c) => {
 // PUT /v1/wallets/:address/policy
 app.put("/v1/wallets/:address/policy", async (c) => {
   const address = c.req.param("address");
-  const caller = c.get("walletAddress");
-  if (!caller) return c.json(forbidden("No wallet address in payment"), 403);
+  const callerOrRes = requireCaller(c);
+  if (callerOrRes instanceof Response) return callerOrRes;
+  const caller = callerOrRes;
 
-  let body: Partial<PolicyUpdateRequest>;
-  try {
-    body = await c.req.json<Partial<PolicyUpdateRequest>>();
-  } catch (err) {
-    logger.warn("JSON parse failed on PUT /v1/wallets/:address/policy", { error: String(err) });
-    return c.json(
-      { error: { code: "invalid_request", message: "Invalid JSON body" } } as ApiError,
-      400,
-    );
-  }
+  const bodyOrRes = await parseJsonBody<Partial<PolicyUpdateRequest>>(c, logger, "PUT /v1/wallets/:address/policy");
+  if (bodyOrRes instanceof Response) return bodyOrRes;
+  const body = bodyOrRes;
 
   const result = updateSpendingPolicy(address, caller, body);
   if (!result.ok) {
@@ -417,8 +391,9 @@ app.put("/v1/wallets/:address/policy", async (c) => {
 // POST /v1/wallets/:address/pause
 app.post("/v1/wallets/:address/pause", async (c) => {
   const address = c.req.param("address");
-  const caller = c.get("walletAddress");
-  if (!caller) return c.json(forbidden("No wallet address in payment"), 403);
+  const callerOrRes = requireCaller(c);
+  if (callerOrRes instanceof Response) return callerOrRes;
+  const caller = callerOrRes;
 
   let scope: string | undefined;
   try {
@@ -450,8 +425,9 @@ app.post("/v1/wallets/:address/pause", async (c) => {
 // POST /v1/wallets/:address/resume
 app.post("/v1/wallets/:address/resume", async (c) => {
   const address = c.req.param("address");
-  const caller = c.get("walletAddress");
-  if (!caller) return c.json(forbidden("No wallet address in payment"), 403);
+  const callerOrRes = requireCaller(c);
+  if (callerOrRes instanceof Response) return callerOrRes;
+  const caller = callerOrRes;
 
   let scope: string | undefined;
   try {
@@ -484,19 +460,9 @@ app.post("/v1/wallets/:address/resume", async (c) => {
 
 // POST /v1/admin/circuit-breaker/pause
 app.post("/v1/admin/circuit-breaker/pause", async (c) => {
-  let scope: string | undefined;
-  try {
-    const body = await c.req.json<{ scope?: string }>();
-    scope = body.scope;
-  } catch (err) {
-    logger.warn("JSON parse failed on POST /v1/admin/circuit-breaker/pause", {
-      error: String(err),
-    });
-    return c.json(
-      { error: { code: "invalid_request", message: "Invalid JSON body" } } as ApiError,
-      400,
-    );
-  }
+  const bodyOrRes = await parseJsonBody<{ scope?: string }>(c, logger, "POST /v1/admin/circuit-breaker/pause");
+  if (bodyOrRes instanceof Response) return bodyOrRes;
+  const { scope } = bodyOrRes;
 
   if (!scope || !["all", "send", "swap"].includes(scope)) {
     return c.json(
@@ -513,19 +479,9 @@ app.post("/v1/admin/circuit-breaker/pause", async (c) => {
 
 // POST /v1/admin/circuit-breaker/resume
 app.post("/v1/admin/circuit-breaker/resume", async (c) => {
-  let scope: string | undefined;
-  try {
-    const body = await c.req.json<{ scope?: string }>();
-    scope = body.scope;
-  } catch (err) {
-    logger.warn("JSON parse failed on POST /v1/admin/circuit-breaker/resume", {
-      error: String(err),
-    });
-    return c.json(
-      { error: { code: "invalid_request", message: "Invalid JSON body" } } as ApiError,
-      400,
-    );
-  }
+  const bodyOrRes = await parseJsonBody<{ scope?: string }>(c, logger, "POST /v1/admin/circuit-breaker/resume");
+  if (bodyOrRes instanceof Response) return bodyOrRes;
+  const { scope } = bodyOrRes;
 
   if (!scope || !["all", "send", "swap"].includes(scope)) {
     return c.json(
@@ -567,13 +523,9 @@ app.post("/internal/allowlist/add", async (c) => {
   const denied = internalAuth(c);
   if (denied) return denied;
 
-  let body: { address?: string; added_by?: string; note?: string };
-  try {
-    body = await c.req.json();
-  } catch (err) {
-    logger.warn("JSON parse failed on POST /internal/allowlist/add", { error: String(err) });
-    return c.json({ error: { code: "invalid_request", message: "Invalid JSON body" } }, 400);
-  }
+  const bodyOrRes = await parseJsonBody<{ address?: string; added_by?: string; note?: string }>(c, logger, "POST /internal/allowlist/add");
+  if (bodyOrRes instanceof Response) return bodyOrRes;
+  const body = bodyOrRes;
 
   if (!body.address) {
     return c.json(

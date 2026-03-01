@@ -5,6 +5,8 @@ import {
   forbidden,
   invalidRequest,
   notFound,
+  parseJsonBody,
+  requireCaller,
 } from "@primsh/x402-middleware";
 import type { ApiError, PaginatedList } from "@primsh/x402-middleware";
 import { createPrimApp } from "@primsh/x402-middleware/create-prim-app";
@@ -155,16 +157,13 @@ app.use("*", async (c, next) => {
 
 // POST /v1/buckets — Create bucket
 app.post("/v1/buckets", async (c) => {
-  const caller = c.get("walletAddress");
-  if (!caller) return c.json(forbidden("No wallet address in payment"), 403);
+  const callerOrRes = requireCaller(c);
+  if (callerOrRes instanceof Response) return callerOrRes;
+  const caller = callerOrRes;
 
-  let body: CreateBucketRequest;
-  try {
-    body = await c.req.json<CreateBucketRequest>();
-  } catch (err) {
-    logger.warn("JSON parse failed on POST /v1/buckets", { error: String(err) });
-    return c.json(invalidRequest("Invalid JSON body"), 400);
-  }
+  const bodyOrRes = await parseJsonBody<CreateBucketRequest>(c, logger, "POST /v1/buckets");
+  if (bodyOrRes instanceof Response) return bodyOrRes;
+  const body = bodyOrRes;
 
   const result = await createBucket(body, caller);
   if (!result.ok) {
@@ -181,8 +180,9 @@ app.post("/v1/buckets", async (c) => {
 
 // GET /v1/buckets — List buckets
 app.get("/v1/buckets", (c) => {
-  const caller = c.get("walletAddress");
-  if (!caller) return c.json(forbidden("No wallet address in payment"), 403);
+  const callerOrRes = requireCaller(c);
+  if (callerOrRes instanceof Response) return callerOrRes;
+  const caller = callerOrRes;
 
   const limit = Math.min(Number(c.req.query("limit")) || 20, 100);
   const page = Math.max(Number(c.req.query("page")) || 1, 1);
@@ -193,8 +193,9 @@ app.get("/v1/buckets", (c) => {
 
 // GET /v1/buckets/:id — Get bucket
 app.get("/v1/buckets/:id", (c) => {
-  const caller = c.get("walletAddress");
-  if (!caller) return c.json(forbidden("No wallet address in payment"), 403);
+  const callerOrRes = requireCaller(c);
+  if (callerOrRes instanceof Response) return callerOrRes;
+  const caller = callerOrRes;
 
   const result = getBucket(c.req.param("id"), caller);
   if (!result.ok) {
@@ -206,8 +207,9 @@ app.get("/v1/buckets/:id", (c) => {
 
 // DELETE /v1/buckets/:id — Delete bucket
 app.delete("/v1/buckets/:id", async (c) => {
-  const caller = c.get("walletAddress");
-  if (!caller) return c.json(forbidden("No wallet address in payment"), 403);
+  const callerOrRes = requireCaller(c);
+  if (callerOrRes instanceof Response) return callerOrRes;
+  const caller = callerOrRes;
 
   const result = await deleteBucket(c.req.param("id"), caller);
   if (!result.ok) {
@@ -222,8 +224,9 @@ app.delete("/v1/buckets/:id", async (c) => {
 
 // PUT /v1/buckets/:id/objects/* — Upload object
 app.put("/v1/buckets/:id/objects/*", async (c) => {
-  const caller = c.get("walletAddress");
-  if (!caller) return c.json(forbidden("No wallet address in payment"), 403);
+  const callerOrRes = requireCaller(c);
+  if (callerOrRes instanceof Response) return callerOrRes;
+  const caller = callerOrRes;
 
   const key = extractObjectKey(c);
   const contentType = c.req.header("Content-Type");
@@ -249,8 +252,9 @@ app.put("/v1/buckets/:id/objects/*", async (c) => {
 
 // GET /v1/buckets/:id/objects — List objects (must register before wildcard)
 app.get("/v1/buckets/:id/objects", async (c) => {
-  const caller = c.get("walletAddress");
-  if (!caller) return c.json(forbidden("No wallet address in payment"), 403);
+  const callerOrRes = requireCaller(c);
+  if (callerOrRes instanceof Response) return callerOrRes;
+  const caller = callerOrRes;
 
   const prefix = c.req.query("prefix") || undefined;
   const limit = Math.min(Number(c.req.query("limit")) || 100, 1000);
@@ -267,8 +271,9 @@ app.get("/v1/buckets/:id/objects", async (c) => {
 
 // GET /v1/buckets/:id/objects/* — Download object (streaming)
 app.get("/v1/buckets/:id/objects/*", async (c) => {
-  const caller = c.get("walletAddress");
-  if (!caller) return c.json(forbidden("No wallet address in payment"), 403);
+  const callerOrRes = requireCaller(c);
+  if (callerOrRes instanceof Response) return callerOrRes;
+  const caller = callerOrRes;
 
   const key = extractObjectKey(c);
 
@@ -291,8 +296,9 @@ app.get("/v1/buckets/:id/objects/*", async (c) => {
 
 // DELETE /v1/buckets/:id/objects/* — Delete object
 app.delete("/v1/buckets/:id/objects/*", async (c) => {
-  const caller = c.get("walletAddress");
-  if (!caller) return c.json(forbidden("No wallet address in payment"), 403);
+  const callerOrRes = requireCaller(c);
+  if (callerOrRes instanceof Response) return callerOrRes;
+  const caller = callerOrRes;
 
   const key = extractObjectKey(c);
 
@@ -309,8 +315,9 @@ app.delete("/v1/buckets/:id/objects/*", async (c) => {
 
 // GET /v1/buckets/:id/quota — Get quota + usage
 app.get("/v1/buckets/:id/quota", (c) => {
-  const caller = c.get("walletAddress");
-  if (!caller) return c.json(forbidden("No wallet address in payment"), 403);
+  const callerOrRes = requireCaller(c);
+  if (callerOrRes instanceof Response) return callerOrRes;
+  const caller = callerOrRes;
 
   const result = getUsage(c.req.param("id"), caller);
   if (!result.ok) {
@@ -322,16 +329,13 @@ app.get("/v1/buckets/:id/quota", (c) => {
 
 // PUT /v1/buckets/:id/quota — Set quota
 app.put("/v1/buckets/:id/quota", async (c) => {
-  const caller = c.get("walletAddress");
-  if (!caller) return c.json(forbidden("No wallet address in payment"), 403);
+  const callerOrRes = requireCaller(c);
+  if (callerOrRes instanceof Response) return callerOrRes;
+  const caller = callerOrRes;
 
-  let body: SetQuotaRequest;
-  try {
-    body = await c.req.json<SetQuotaRequest>();
-  } catch (err) {
-    logger.warn("JSON parse failed on PUT /v1/buckets/:id/quota", { error: String(err) });
-    return c.json(invalidRequest("Invalid JSON body"), 400);
-  }
+  const bodyOrRes = await parseJsonBody<SetQuotaRequest>(c, logger, "PUT /v1/buckets/:id/quota");
+  if (bodyOrRes instanceof Response) return bodyOrRes;
+  const body = bodyOrRes;
 
   const result = setQuotaForBucket(c.req.param("id"), caller, body.quota_bytes);
   if (!result.ok) {
@@ -345,8 +349,9 @@ app.put("/v1/buckets/:id/quota", async (c) => {
 
 // POST /v1/buckets/:id/quota/reconcile — Reconcile usage
 app.post("/v1/buckets/:id/quota/reconcile", async (c) => {
-  const caller = c.get("walletAddress");
-  if (!caller) return c.json(forbidden("No wallet address in payment"), 403);
+  const callerOrRes = requireCaller(c);
+  if (callerOrRes instanceof Response) return callerOrRes;
+  const caller = callerOrRes;
 
   const result = await reconcileUsage(c.req.param("id"), caller);
   if (!result.ok) {

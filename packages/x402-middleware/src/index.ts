@@ -8,6 +8,7 @@ export * from "./pagination";
 export * from "./rate-limit";
 export * from "./errors";
 export * from "./feedback-url";
+export * from "./helpers";
 export * from "./create-prim-app";
 export * from "./provider";
 export * from "./provider-registry";

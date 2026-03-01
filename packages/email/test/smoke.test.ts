@@ -1,4 +1,3 @@
-import type { Context, Next } from "hono";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 vi.hoisted(() => {
@@ -6,30 +5,21 @@ vi.hoisted(() => {
   process.env.PRIM_PAY_TO = "0x0000000000000000000000000000000000000001";
 });
 
-// Bypass x402 so the handler is reachable in unit tests.
-// The middleware passthrough also sets walletAddress so wallet-guard checks pass.
-// Middleware wiring is verified via check 3 (spy on createAgentStackMiddleware).
+// Stub bun:sqlite so the DB module doesn't fail in vitest (Node runtime)
+import { mockBunSqlite, mockX402Middleware } from "@primsh/x402-middleware/testing";
+vi.mock("bun:sqlite", () => mockBunSqlite());
+
+const createAgentStackMiddlewareSpy = vi.hoisted(() => vi.fn());
+
 vi.mock("@primsh/x402-middleware", async (importOriginal) => {
   const original = await importOriginal<typeof import("@primsh/x402-middleware")>();
+  const mocks = mockX402Middleware();
+  createAgentStackMiddlewareSpy.mockImplementation(mocks.createAgentStackMiddleware);
   return {
     ...original,
-    createAgentStackMiddleware: vi.fn(() => async (c: Context, next: Next) => {
-      c.set("walletAddress", "0x0000000000000000000000000000000000000001");
-      await next();
-    }),
-    createWalletAllowlistChecker: vi.fn(() => () => Promise.resolve(true)),
+    createAgentStackMiddleware: createAgentStackMiddlewareSpy,
+    createWalletAllowlistChecker: vi.fn(mocks.createWalletAllowlistChecker),
   };
-});
-
-// Stub bun:sqlite so the DB module doesn't fail in vitest (Node runtime)
-vi.mock("bun:sqlite", () => {
-  class MockDatabase {
-    run() {}
-    query() {
-      return { get: () => null, all: () => [], run: () => {} };
-    }
-  }
-  return { Database: MockDatabase };
 });
 
 // Mock the service layer so smoke tests don't need real Stalwart / JMAP
@@ -43,7 +33,6 @@ vi.mock("../src/service.ts", async (importOriginal) => {
   };
 });
 
-import { createAgentStackMiddleware } from "@primsh/x402-middleware";
 import type { MailboxResponse } from "../src/api.ts";
 import app from "../src/index.ts";
 import { createMailbox } from "../src/service.ts";
@@ -78,7 +67,7 @@ describe("email.sh app", () => {
 
   // Check 3: x402 middleware is wired with the correct paid routes and payTo address
   it("x402 middleware is registered with paid routes and payTo", () => {
-    expect(vi.mocked(createAgentStackMiddleware)).toHaveBeenCalledWith(
+    expect(createAgentStackMiddlewareSpy).toHaveBeenCalledWith(
       expect.objectContaining({
         payTo: expect.any(String),
         freeRoutes: expect.arrayContaining(["GET /"]),
