@@ -863,9 +863,6 @@ tagBtns.forEach(b => b.addEventListener('click', e => {
   e.preventDefault();
   const tag = b.dataset.tag;
   if (activeTags.has(tag)) { activeTags.delete(tag); } else { activeTags.add(tag); }
-  if (activeTags.size) {
-    activate([...tabs].find(t => t.dataset.tab === 'all') || tabs[0]);
-  }
   applyTagFilter();
   try {
     if (activeTags.size) localStorage.setItem('cs-tags', JSON.stringify([...activeTags]));
