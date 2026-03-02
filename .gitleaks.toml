@@ -120,16 +120,3 @@ tags = ["prim", "key", "faucet", "privatekey"]
       "TESTNET_WALLET=0xYOUR_FUNDED_SEPOLIA_PRIVATE_KEY",
   ]
 
-# Rule: Circle API key
-[[rules]]
-id = "prim-circle-api-key"
-description = "Circle API key (CIRCLE_API_KEY)"
-regex = '''(?i)CIRCLE_API_KEY\s*=\s*[A-Za-z0-9_\-:]{20,}'''
-tags = ["prim", "key", "circle"]
-
-  [rules.allowlist]
-  regexes = [
-      # Test values only
-      '''CIRCLE_API_KEY\s*=\s*["']?test-api-key["']?''',
-      '''CIRCLE_API_KEY\s*=\s*$''',
-  ]

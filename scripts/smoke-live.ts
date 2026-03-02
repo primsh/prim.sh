@@ -7,7 +7,7 @@
  *   1. Health checks for all 4 services
  *   2. Wallet registration via EIP-191 signature
  *   3. Store CRUD with on-chain x402 settlement
- *   4. Faucet USDC drip (if CIRCLE_API_KEY set)
+ *   4. Faucet USDC drip (CDP primary, treasury fallback)
  *   5. Spawn SSH key + server lifecycle (if DO_API_TOKEN set)
  *
  * Usage:
@@ -17,7 +17,6 @@
  * Env vars:
  *   AGENT_PRIVATE_KEY   — agent wallet private key (required for x402 tests)
  *   PRIM_NETWORK        — must be eip155:84532 (Base Sepolia)
- *   CIRCLE_API_KEY      — enables faucet test (optional)
  *   DO_API_TOKEN        — enables spawn test (optional)
  */
 
@@ -36,7 +35,6 @@ const SEARCH_URL = "https://search.prim.sh";
 const EMAIL_URL = "https://email.prim.sh";
 
 const HAS_DO_TOKEN = !!process.env.DO_API_TOKEN;
-const HAS_CIRCLE_KEY = !!process.env.CIRCLE_API_KEY;
 
 // ─── Test helpers ────────────────────────────────────────────────────────
 
@@ -103,7 +101,6 @@ async function main() {
   const account = privateKeyToAccount(agentKey);
   const walletAddress = getAddress(account.address);
   console.log(`\n  Agent: ${walletAddress}`);
-  if (!HAS_CIRCLE_KEY) console.log("  ⚠ CIRCLE_API_KEY not set — faucet test skipped");
   if (!HAS_DO_TOKEN) console.log("  ⚠ DO_API_TOKEN not set — spawn tests skipped");
 
   // ─── Wallet ─────────────────────────────────────────────────────────
@@ -131,27 +128,25 @@ async function main() {
 
   // ─── Faucet ─────────────────────────────────────────────────────────
 
-  if (HAS_CIRCLE_KEY) {
-    console.log("\n─── Faucet ─────────────────────────────────────────────────\n");
+  console.log("\n─── Faucet ─────────────────────────────────────────────────\n");
 
-    await step("Faucet USDC drip", async () => {
-      const res = await fetch(`${FAUCET_URL}/v1/faucet/usdc`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ address: walletAddress }),
-      });
-      if (!res.ok) {
-        const text = await res.text();
-        // 429 = rate limited, not a service failure
-        if (res.status === 429) {
-          console.log("(rate limited — OK) ");
-          return;
-        }
-        throw new Error(`${res.status}: ${text}`);
-      }
-      console.log("(dripped) ");
+  await step("Faucet USDC drip", async () => {
+    const res = await fetch(`${FAUCET_URL}/v1/faucet/usdc`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ address: walletAddress }),
     });
-  }
+    if (!res.ok) {
+      const text = await res.text();
+      // 429 = rate limited, not a service failure
+      if (res.status === 429) {
+        console.log("(rate limited — OK) ");
+        return;
+      }
+      throw new Error(`${res.status}: ${text}`);
+    }
+    console.log("(dripped) ");
+  });
 
   // ─── Balance check ──────────────────────────────────────────────────
 

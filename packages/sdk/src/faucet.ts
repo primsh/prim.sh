@@ -13,7 +13,7 @@ export interface DripRequest {
 }
 
 export interface DripResponse {
-  /** Transaction hash on Base Sepolia. May be "pending" if Circle returns 204. */
+  /** Transaction hash on Base Sepolia. */
   tx_hash: string;
   /** Amount dispensed as a decimal string (e.g. "10.00" for USDC, "0.01" for ETH). */
   amount: string;
@@ -21,7 +21,7 @@ export interface DripResponse {
   currency: string;
   /** CAIP-2 chain identifier (e.g. "eip155:84532"). */
   chain: string;
-  /** Backend that dispensed the tokens. "circle" | "treasury". Only present on USDC drips. */
+  /** Backend that dispensed the tokens. "cdp" | "treasury". */
   source?: string;
 }
 
@@ -45,12 +45,16 @@ export interface RefillResult {
   claimed: number;
   failed: number;
   estimated_eth: string;
+  usdc_claimed: number;
+  usdc_failed: number;
+  estimated_usdc: string;
   tx_hashes: string[];
 }
 
 export interface TreasuryStatus {
   address: string;
   eth_balance: string;
+  usdc_balance: string;
   needs_refill: boolean;
 }
 

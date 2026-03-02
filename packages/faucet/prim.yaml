@@ -11,9 +11,11 @@ order: 2
 phantom: false
 env:
   - PRIM_NETWORK
-  - CIRCLE_API_KEY
   - CDP_API_KEY_ID
   - CDP_API_KEY_SECRET
+  - TESTNET_WALLET
+  - FAUCET_RESERVE_USDC
+  - FAUCET_RESERVE_ETH
   - FAUCET_REFILL_THRESHOLD_ETH
   - FAUCET_REFILL_BATCH_SIZE
 pricing:
@@ -76,7 +78,7 @@ tips:
   - "No x402 payment required — faucet is entirely free."
   - "Check GET /v1/faucet/status before dripping to avoid wasted 429 responses."
   - "ETH cooldown is 1 hour; USDC cooldown is 2 hours per address."
-  - "USDC uses Circle Faucet API with treasury wallet ERC-20 transfer as fallback."
+  - "USDC uses CDP faucet as primary with treasury wallet ERC-20 transfer as fallback."
   - "faucet.sh only operates on Base Sepolia — mainnet addresses return 403."
 
 limits:
@@ -101,7 +103,7 @@ routes_map:
       - { status: 403, code: wallet_not_allowed, description: "Wallet not on allowlist (private beta)" }
       - { status: 403, code: mainnet_rejected, description: "Faucet only operates on testnet" }
       - { status: 429, code: rate_limited, description: "Address already dripped within 2 hours. retryAfter in response." }
-      - { status: 502, code: faucet_error, description: "Both Circle and treasury fallback failed" }
+      - { status: 502, code: faucet_error, description: "Both CDP and treasury fallback failed" }
   - route: "POST /v1/faucet/eth"
     request: DripRequest
     response: DripResponse

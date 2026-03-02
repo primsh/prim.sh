@@ -6,7 +6,7 @@
  * Non-custodial flow (W-10):
  *   1. Generate private key locally (agent-side)
  *   2. Register wallet via EIP-191 signature
- *   3. Fund via faucet.sh (Circle USDC drip)
+ *   3. Fund via faucet.sh (CDP USDC drip)
  *   4. Exercise store.sh endpoints via @primsh/x402-client
  *
  * Usage:
@@ -246,27 +246,22 @@ async function main() {
     return;
   }
 
-  // 2. Fund wallet via faucet.sh (USDC) — requires CIRCLE_API_KEY
+  // 2. Fund wallet via faucet.sh (USDC) — CDP primary, treasury fallback
   let faucetOk = false;
-  if (process.env.CIRCLE_API_KEY) {
-    await step("Fund wallet via faucet.sh (USDC)", async () => {
-      const res = await fetch(`${FAUCET_URL}/v1/faucet/usdc`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ address: walletAddress }),
-      });
-      if (!res.ok) {
-        const text = await res.text();
-        throw new Error(`POST /v1/faucet/usdc → ${res.status}: ${text}`);
-      }
-      const data = (await res.json()) as { amount: string; currency: string };
-      faucetOk = true;
-      console.log(`(${data.amount} ${data.currency})`);
+  await step("Fund wallet via faucet.sh (USDC)", async () => {
+    const res = await fetch(`${FAUCET_URL}/v1/faucet/usdc`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ address: walletAddress }),
     });
-  } else {
-    console.log("  Fund wallet via faucet.sh... ⊘ skipped (no CIRCLE_API_KEY)");
-    console.log(`    Fund manually: https://faucet.circle.com/ → Base Sepolia → ${walletAddress}`);
-  }
+    if (!res.ok) {
+      const text = await res.text();
+      throw new Error(`POST /v1/faucet/usdc → ${res.status}: ${text}`);
+    }
+    const data = (await res.json()) as { amount: string; currency: string };
+    faucetOk = true;
+    console.log(`(${data.amount} ${data.currency})`);
+  });
 
   // 3. Check USDC balance (poll if faucet was used)
   await step("Check USDC balance", async () => {

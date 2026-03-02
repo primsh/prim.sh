@@ -37,11 +37,11 @@ Part of [prim.sh](https://prim.sh) — zero signup, one payment token, infinite 
 
 | Field | Type | Description |
 |-------|------|-------------|
-| `tx_hash` | `string` | Transaction hash on Base Sepolia. May be "pending" if Circle returns 204. |
+| `tx_hash` | `string` | Transaction hash on Base Sepolia. |
 | `amount` | `string` | Amount dispensed as a decimal string (e.g. "10.00" for USDC, "0.01" for ETH). |
 | `currency` | `string` | Currency dispensed: "USDC" or "ETH". |
 | `chain` | `string` | CAIP-2 chain identifier (e.g. "eip155:84532"). |
-| `source` | `string` | Backend that dispensed the tokens. "circle" | "treasury". Only present on USDC drips. |
+| `source` | `string` | Backend that dispensed the tokens. "cdp" | "treasury". |
 
 ### `FaucetStatusResponse`
 
@@ -57,6 +57,7 @@ Part of [prim.sh](https://prim.sh) — zero signup, one payment token, infinite 
 |-------|------|-------------|
 | `address` | `string` |  |
 | `eth_balance` | `string` |  |
+| `usdc_balance` | `string` |  |
 | `needs_refill` | `boolean` |  |
 
 ### `RefillResult`
@@ -66,6 +67,9 @@ Part of [prim.sh](https://prim.sh) — zero signup, one payment token, infinite 
 | `claimed` | `number` |  |
 | `failed` | `number` |  |
 | `estimated_eth` | `string` |  |
+| `usdc_claimed` | `number` |  |
+| `usdc_failed` | `number` |  |
+| `estimated_usdc` | `string` |  |
 | `tx_hashes` | `string[]` |  |
 
 ## Usage
@@ -84,9 +88,11 @@ curl -X POST https://faucet.prim.sh/v1/faucet/usdc \
 ## Environment
 
 - `PRIM_NETWORK`
-- `CIRCLE_API_KEY`
 - `CDP_API_KEY_ID`
 - `CDP_API_KEY_SECRET`
+- `TESTNET_WALLET`
+- `FAUCET_RESERVE_USDC`
+- `FAUCET_RESERVE_ETH`
 - `FAUCET_REFILL_THRESHOLD_ETH`
 - `FAUCET_REFILL_BATCH_SIZE`
 

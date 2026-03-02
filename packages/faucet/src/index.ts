@@ -258,16 +258,20 @@ app.post("/v1/faucet/refill", async (c) => {
 
   try {
     let batchSize: number | undefined;
+    let usdcBatchSize: number | undefined;
     try {
-      const body = await c.req.json<{ batch_size?: number }>();
+      const body = await c.req.json<{ batch_size?: number; usdc_batch_size?: number }>();
       if (body.batch_size != null) {
         batchSize = body.batch_size;
+      }
+      if (body.usdc_batch_size != null) {
+        usdcBatchSize = body.usdc_batch_size;
       }
     } catch {
       // No body or invalid JSON — use defaults
     }
 
-    const result = await refillTreasury(batchSize);
+    const result = await refillTreasury(batchSize, usdcBatchSize);
     refillLimiter.record("__refill__");
     return c.json(result, 200);
   } catch (err) {
