@@ -37,9 +37,9 @@ bun scripts/treasury-refill.ts --dry-run # balances only
 
 ## Get testnet USDC (Circle faucet)
 
-Circle rate-limits aggressively (1 drip/token/chain/24h per key×wallet). `treasury-refill.ts` multiplies throughput with N keys × M wallets (see `CIRCLE_API_KEYS`, `DRIP_WALLET_KEYS`).
+Circle rate-limits aggressively — we consistently hit 429s. `treasury-refill.ts` attempts N keys × M wallets to work around this, but it hasn't been reliable in practice. TESTNET_WALLET likely already has USDC from previous successful drips.
 
-If rate-limited, TESTNET_WALLET likely already has USDC from previous drips.
+Better USDC sourcing (testnet USDC mint, alternative faucet, cron) is TBD.
 
 ## Check balances
 
@@ -84,5 +84,5 @@ cast send $GATE --value 0.001ether \
 | Provider | Token | Limit | Throughput hack |
 |----------|-------|-------|-----------------|
 | CDP | ETH | ~10/min observed | Batch sequential calls with 1s delay |
-| Circle | USDC | 1/token/chain/24h per key×wallet | N keys × M wallets via `treasury-refill.ts` |
-| Circle | ETH | 1/token/chain/24h per key×wallet | Same |
+| Circle | USDC | 1/token/chain/24h per key×wallet | Unreliable — consistently 429'd |
+| Circle | ETH | 1/token/chain/24h per key×wallet | Same — use CDP instead |
