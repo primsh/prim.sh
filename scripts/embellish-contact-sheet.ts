@@ -1058,8 +1058,17 @@ refineBtn.addEventListener('click', () => {
 });
 
 // ── Init ──
-updateUI();
-updateRefineBtn();
+// In serve mode, fetch fresh votes from API (baked-in votes may be stale)
+fetch('/api/vote').then(r => r.ok ? r.json() : {}).then(fresh => {
+  Object.keys(votes).forEach(k => delete votes[k]);
+  Object.assign(votes, fresh);
+  updateUI();
+  updateRefineBtn();
+}).catch(() => {
+  // Fallback to baked-in votes (static file mode)
+  updateUI();
+  updateRefineBtn();
+});
 </script>
 </body>
 </html>`;
