@@ -1,8 +1,8 @@
 [Unit]
-Description=Daily treasury refill via Circle faucet
+Description=CDP treasury refill every 6 hours
 
 [Timer]
-OnCalendar=*-*-* 06:00 UTC
+OnCalendar=*-*-* 00/6:00 UTC
 Persistent=true
 RandomizedDelaySec=300
 

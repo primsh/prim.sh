@@ -1,6 +1,14 @@
 // SPDX-License-Identifier: Apache-2.0
 import { getNetworkConfig } from "@primsh/x402-middleware";
-import { http, createPublicClient, createWalletClient, formatEther, parseEther } from "viem";
+import {
+  http,
+  createPublicClient,
+  createWalletClient,
+  formatEther,
+  formatUnits,
+  parseEther,
+  parseUnits,
+} from "viem";
 import type { Address, Hex } from "viem";
 import { privateKeyToAccount } from "viem/accounts";
 import { baseSepolia } from "viem/chains";
@@ -11,7 +19,7 @@ export interface DripResult {
   amount: string;
   currency: "USDC" | "ETH";
   chain: string;
-  source?: "circle" | "treasury";
+  source?: "cdp" | "treasury";
 }
 
 // ─── Nonce queue ──────────────────────────────────────────────────────────
@@ -53,8 +61,8 @@ class NonceQueue {
 
 const nonceQueue = new NonceQueue();
 
-// Minimal ERC-20 transfer ABI
-const ERC20_TRANSFER_ABI = [
+// Minimal ERC-20 ABI (transfer + balanceOf)
+const ERC20_ABI = [
   {
     name: "transfer",
     type: "function",
@@ -65,9 +73,81 @@ const ERC20_TRANSFER_ABI = [
     ],
     outputs: [{ name: "", type: "bool" }],
   },
+  {
+    name: "balanceOf",
+    type: "function",
+    stateMutability: "view",
+    inputs: [{ name: "account", type: "address" }],
+    outputs: [{ name: "", type: "uint256" }],
+  },
 ] as const;
 
-/** Check testnet wallet ETH balance and whether it needs refill. */
+// ─── CDP singleton ────────────────────────────────────────────────────────
+
+interface CdpFaucetClient {
+  evm: {
+    requestFaucet: (args: {
+      address: string;
+      network: "base-sepolia" | "ethereum-sepolia";
+      token: "eth" | "usdc" | "eurc" | "cbbtc";
+    }) => Promise<{ transactionHash: string }>;
+  };
+}
+
+let cdpInstance: CdpFaucetClient | null = null;
+
+async function getCdpClient(): Promise<CdpFaucetClient> {
+  if (cdpInstance) return cdpInstance;
+
+  const cdpKeyId = process.env.CDP_API_KEY_ID;
+  const cdpKeySecret = process.env.CDP_API_KEY_SECRET;
+  if (!cdpKeyId || !cdpKeySecret) {
+    throw new Error("CDP_API_KEY_ID and CDP_API_KEY_SECRET required");
+  }
+
+  const { CdpClient } = await import("@coinbase/cdp-sdk");
+  cdpInstance = new CdpClient({ apiKeyId: cdpKeyId, apiKeySecret: cdpKeySecret });
+  return cdpInstance as CdpFaucetClient;
+}
+
+/** Drip tokens via CDP faucet directly to an address. */
+async function cdpDrip(
+  address: string,
+  token: "usdc" | "eth",
+): Promise<{ tx_hash: string } | null> {
+  try {
+    const cdp = await getCdpClient();
+    const result = await cdp.evm.requestFaucet({
+      address,
+      network: "base-sepolia",
+      token,
+    });
+    return { tx_hash: result.transactionHash };
+  } catch {
+    return null;
+  }
+}
+
+// ─── Reserve floor helpers ────────────────────────────────────────────────
+
+const USDC_DECIMALS = 6;
+const USDC_DRIP_AMOUNT = 10_000_000n; // 10.00 USDC
+const DEFAULT_RESERVE_USDC = "10.00";
+const DEFAULT_RESERVE_ETH = "0.005";
+
+function getReserveUsdc(): bigint {
+  const str = process.env.FAUCET_RESERVE_USDC ?? DEFAULT_RESERVE_USDC;
+  return parseUnits(str, USDC_DECIMALS);
+}
+
+function getReserveEth(): bigint {
+  const str = process.env.FAUCET_RESERVE_ETH ?? DEFAULT_RESERVE_ETH;
+  return parseEther(str);
+}
+
+// ─── Public API ───────────────────────────────────────────────────────────
+
+/** Check testnet wallet ETH + USDC balance and whether it needs refill. */
 export async function getTreasuryBalance(): Promise<TreasuryStatus> {
   const walletKey = process.env.TESTNET_WALLET;
   if (!walletKey) {
@@ -83,145 +163,144 @@ export async function getTreasuryBalance(): Promise<TreasuryStatus> {
     transport: http(rpcUrl),
   });
 
-  const balance = await client.getBalance({ address: account.address });
+  const [ethBalance, usdcBalance] = await Promise.all([
+    client.getBalance({ address: account.address }),
+    client.readContract({
+      address: netConfig.usdcAddress as Address,
+      abi: ERC20_ABI,
+      functionName: "balanceOf",
+      args: [account.address],
+    }),
+  ]);
+
   const thresholdStr = process.env.FAUCET_REFILL_THRESHOLD_ETH ?? "0.02";
 
   return {
     address: account.address,
-    eth_balance: formatEther(balance),
-    needs_refill: balance < parseEther(thresholdStr),
+    eth_balance: formatEther(ethBalance),
+    usdc_balance: formatUnits(usdcBalance, USDC_DECIMALS),
+    needs_refill: ethBalance < parseEther(thresholdStr),
   };
 }
 
-/** Claim testnet ETH from Coinbase CDP faucet in batch. */
-export async function refillTreasury(batchSize?: number): Promise<RefillResult> {
+/** Claim testnet ETH + USDC from Coinbase CDP faucet in batch. */
+export async function refillTreasury(
+  batchSize?: number,
+  usdcBatchSize?: number,
+): Promise<RefillResult> {
   const walletKey = process.env.TESTNET_WALLET;
   if (!walletKey) {
     throw new Error("TESTNET_WALLET not configured");
   }
 
-  const cdpKeyId = process.env.CDP_API_KEY_ID;
-  const cdpKeySecret = process.env.CDP_API_KEY_SECRET;
-  if (!cdpKeyId || !cdpKeySecret) {
+  // Validate CDP env vars early (getCdpClient caches, so won't re-check after first call)
+  if (!process.env.CDP_API_KEY_ID || !process.env.CDP_API_KEY_SECRET) {
     throw new Error("CDP_API_KEY_ID and CDP_API_KEY_SECRET required for refill");
   }
 
+  const cdp = await getCdpClient();
   const account = privateKeyToAccount(walletKey as Hex);
-  const size = Math.min(batchSize ?? 100, 200);
-  const CHUNK_SIZE = 1;
+  const ethSize = Math.min(batchSize ?? 100, 200);
+  const usdcSize = Math.min(usdcBatchSize ?? batchSize ?? 10, 200);
 
-  const { CdpClient } = await import("@coinbase/cdp-sdk");
-  const cdp = new CdpClient({
-    apiKeyId: cdpKeyId,
-    apiKeySecret: cdpKeySecret,
-  });
+  const ethTxHashes: string[] = [];
+  let ethFailed = 0;
+  const usdcTxHashes: string[] = [];
+  let usdcFailed = 0;
 
-  const txHashes: string[] = [];
-  let failed = 0;
-
-  for (let i = 0; i < size; i += CHUNK_SIZE) {
-    const chunk = Math.min(CHUNK_SIZE, size - i);
-    const claims = Array.from({ length: chunk }, () =>
-      cdp.evm.requestFaucet({ address: account.address, network: "base-sepolia", token: "eth" }),
-    );
-    const results = await Promise.allSettled(claims);
-    for (const r of results) {
-      if (r.status === "fulfilled") {
-        txHashes.push(r.value.transactionHash);
-      } else {
-        failed++;
-      }
+  // ETH claims
+  for (let i = 0; i < ethSize; i++) {
+    try {
+      const result = await cdp.evm.requestFaucet({
+        address: account.address,
+        network: "base-sepolia",
+        token: "eth",
+      });
+      ethTxHashes.push(result.transactionHash);
+    } catch {
+      ethFailed++;
     }
-    // Brief pause between chunks to avoid CDP rate limits
-    if (i + CHUNK_SIZE < size) {
-      await new Promise((resolve) => setTimeout(resolve, 1000));
+    if (i + 1 < ethSize) {
+      await new Promise((resolve) => setTimeout(resolve, 1200));
+    }
+  }
+
+  // USDC claims
+  for (let i = 0; i < usdcSize; i++) {
+    try {
+      const result = await cdp.evm.requestFaucet({
+        address: account.address,
+        network: "base-sepolia",
+        token: "usdc",
+      });
+      usdcTxHashes.push(result.transactionHash);
+    } catch {
+      usdcFailed++;
+    }
+    if (i + 1 < usdcSize) {
+      await new Promise((resolve) => setTimeout(resolve, 1200));
     }
   }
 
   return {
-    claimed: txHashes.length,
-    failed,
-    estimated_eth: (txHashes.length * 0.0001).toFixed(4),
-    tx_hashes: txHashes,
+    claimed: ethTxHashes.length,
+    failed: ethFailed,
+    estimated_eth: (ethTxHashes.length * 0.0001).toFixed(4),
+    usdc_claimed: usdcTxHashes.length,
+    usdc_failed: usdcFailed,
+    estimated_usdc: (usdcTxHashes.length * 10).toFixed(2),
+    tx_hashes: [...ethTxHashes, ...usdcTxHashes],
   };
 }
 
 /**
- * Dispense test USDC via the Circle Faucet API.
- * Falls back to direct wallet transfer if Circle returns an error (e.g. 429 rate-limited).
- * Requires CIRCLE_API_KEY env var for the Circle path.
- * Requires TESTNET_WALLET env var for the fallback path.
- * API: POST https://api.circle.com/v1/faucet/drips
+ * Dispense test USDC via CDP faucet (primary) with treasury fallback.
+ * Treasury fallback respects reserve floor — refuses if balance would drop below reserve.
  */
 export async function dripUsdc(address: string): Promise<DripResult> {
   const netConfig = getNetworkConfig();
 
-  // ── Attempt 1: Circle Faucet API ──────────────────────────────────────────
-  const apiKey = process.env.CIRCLE_API_KEY;
-  let circleError: string | null = null;
-
-  if (apiKey) {
-    try {
-      const response = await fetch("https://api.circle.com/v1/faucet/drips", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${apiKey}`,
-        },
-        body: JSON.stringify({
-          address,
-          blockchain: "BASE-SEPOLIA",
-          usdc: true,
-        }),
-      });
-
-      if (response.ok) {
-        // Circle returns 204 No Content on success (fire-and-forget, no tx hash)
-        let txHash = "pending";
-        if (response.status !== 204) {
-          try {
-            const data = (await response.json()) as Record<string, string>;
-            txHash = data.txHash ?? data.transactionHash ?? "pending";
-          } catch {
-            // Empty body — that's fine
-          }
-        }
-
-        return {
-          tx_hash: txHash,
-          amount: "10.00",
-          currency: "USDC",
-          chain: netConfig.network,
-          source: "circle",
-        };
-      }
-
-      const text = await response.text();
-      circleError = `Circle faucet error (${response.status}): ${text}`;
-    } catch (err) {
-      circleError = err instanceof Error ? err.message : String(err);
-    }
-  } else {
-    circleError = "CIRCLE_API_KEY not configured";
+  // ── Attempt 1: CDP faucet (drip directly to agent) ──────────────────────
+  const cdpResult = await cdpDrip(address, "usdc");
+  if (cdpResult) {
+    return {
+      tx_hash: cdpResult.tx_hash,
+      amount: "10.00",
+      currency: "USDC",
+      chain: netConfig.network,
+      source: "cdp",
+    };
   }
 
-  // ── Attempt 2: Direct wallet ERC-20 transfer ──────────────────────────────
+  // ── Attempt 2: Treasury ERC-20 transfer (with reserve floor) ────────────
   const walletKey = process.env.TESTNET_WALLET;
   if (!walletKey) {
-    // Neither path is available — surface the original Circle error
-    throw new Error(circleError ?? "CIRCLE_API_KEY not configured");
+    throw new Error("CDP drip failed and TESTNET_WALLET not configured");
+  }
+
+  const rpcUrl = process.env.BASE_RPC_URL ?? netConfig.rpcUrl;
+  const account = privateKeyToAccount(walletKey as Hex);
+  const publicClient = createPublicClient({
+    chain: baseSepolia,
+    transport: http(rpcUrl),
+  });
+
+  // Reserve floor check
+  const usdcBalance = await publicClient.readContract({
+    address: netConfig.usdcAddress as Address,
+    abi: ERC20_ABI,
+    functionName: "balanceOf",
+    args: [account.address],
+  });
+
+  const reserveFloor = getReserveUsdc();
+  if (usdcBalance < USDC_DRIP_AMOUNT + reserveFloor) {
+    throw new Error(
+      "CDP drip failed and treasury USDC below reserve floor. Call POST /v1/faucet/refill.",
+    );
   }
 
   try {
-    const rpcUrl = process.env.BASE_RPC_URL ?? netConfig.rpcUrl;
-    // USDC has 6 decimals; Circle gives 10 USDC, so we match that
-    const USDC_DRIP_AMOUNT = 10_000_000n; // 10.00 USDC
-
-    const account = privateKeyToAccount(walletKey as Hex);
-    const publicClient = createPublicClient({
-      chain: baseSepolia,
-      transport: http(rpcUrl),
-    });
     const client = createWalletClient({
       account,
       chain: baseSepolia,
@@ -231,7 +310,7 @@ export async function dripUsdc(address: string): Promise<DripResult> {
     const nonce = await nonceQueue.next(publicClient, account.address);
     const txHash = await client.writeContract({
       address: netConfig.usdcAddress as Address,
-      abi: ERC20_TRANSFER_ABI,
+      abi: ERC20_ABI,
       functionName: "transfer",
       args: [address as Address, USDC_DRIP_AMOUNT],
       nonce,
@@ -247,32 +326,52 @@ export async function dripUsdc(address: string): Promise<DripResult> {
   } catch (treasuryErr) {
     nonceQueue.reset();
     const treasuryMsg = treasuryErr instanceof Error ? treasuryErr.message : String(treasuryErr);
-    throw new Error(`Circle failed (${circleError}); direct transfer also failed: ${treasuryMsg}`);
+    throw new Error(`CDP drip failed; direct transfer also failed: ${treasuryMsg}`);
   }
 }
 
-/** Dispense test ETH from TESTNET_WALLET. */
+/**
+ * Dispense test ETH via CDP faucet (primary) with treasury fallback.
+ * Treasury fallback respects reserve floor — refuses if balance would drop below reserve.
+ */
 export async function dripEth(address: string): Promise<DripResult> {
-  const walletKey = process.env.TESTNET_WALLET;
-  if (!walletKey) {
-    throw new Error("TESTNET_WALLET not configured");
+  const netConfig = getNetworkConfig();
+
+  // ── Attempt 1: CDP faucet (drip directly to agent) ──────────────────────
+  const cdpResult = await cdpDrip(address, "eth");
+  if (cdpResult) {
+    return {
+      tx_hash: cdpResult.tx_hash,
+      amount: "0.01",
+      currency: "ETH",
+      chain: netConfig.network,
+      source: "cdp",
+    };
   }
 
-  const netConfig = getNetworkConfig();
+  // ── Attempt 2: Treasury ETH transfer (with reserve floor) ──────────────
+  const walletKey = process.env.TESTNET_WALLET;
+  if (!walletKey) {
+    throw new Error("CDP drip failed and TESTNET_WALLET not configured");
+  }
+
   const rpcUrl = process.env.BASE_RPC_URL ?? netConfig.rpcUrl;
   const dripAmount = process.env.FAUCET_DRIP_ETH ?? "0.01";
-
   const account = privateKeyToAccount(walletKey as Hex);
 
-  // Pre-check: ensure wallet has enough for drip + gas
   const publicClient = createPublicClient({
     chain: baseSepolia,
     transport: http(rpcUrl),
   });
   const balance = await publicClient.getBalance({ address: account.address });
-  const needed = parseEther(dripAmount) + parseEther("0.001");
-  if (balance < needed) {
-    const err = new Error("TESTNET_WALLET ETH balance too low. Call POST /v1/faucet/refill.");
+  const dripValue = parseEther(dripAmount);
+  const gasBuffer = parseEther("0.001");
+  const reserveFloor = getReserveEth();
+
+  if (balance < dripValue + gasBuffer + reserveFloor) {
+    const err = new Error(
+      "CDP drip failed and TESTNET_WALLET ETH below reserve floor. Call POST /v1/faucet/refill.",
+    );
     (err as Error & { code: string }).code = "treasury_low";
     throw err;
   }
@@ -287,7 +386,7 @@ export async function dripEth(address: string): Promise<DripResult> {
     const nonce = await nonceQueue.next(publicClient, account.address);
     const txHash = await client.sendTransaction({
       to: address as Address,
-      value: parseEther(dripAmount),
+      value: dripValue,
       nonce,
     });
 
@@ -296,6 +395,7 @@ export async function dripEth(address: string): Promise<DripResult> {
       amount: dripAmount,
       currency: "ETH",
       chain: netConfig.network,
+      source: "treasury",
     };
   } catch (err) {
     nonceQueue.reset();

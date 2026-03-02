@@ -1,5 +1,5 @@
 [Unit]
-Description=prim.sh treasury refill (Circle faucet drip)
+Description=prim.sh CDP treasury refill (ETH + USDC)
 After=network.target
 
 [Service]
@@ -7,4 +7,4 @@ Type=oneshot
 User=prim
 WorkingDirectory=/opt/prim
 EnvironmentFile=/etc/prim/faucet.env
-ExecStart=/home/prim/.bun/bin/bun run scripts/treasury-refill.ts
+ExecStart=/home/prim/.bun/bin/bun run scripts/cdp-refill.ts
