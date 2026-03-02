@@ -871,28 +871,28 @@ tagBtns.forEach(b => b.addEventListener('click', e => {
 }));
 
 const urlTag = new URLSearchParams(location.search).get('tag');
-if (urlTag) {
-  activeTags.add(urlTag);
-  activate([...tabs].find(t => t.dataset.tab === 'all') || tabs[0]);
-  applyTagFilter();
-} else {
-  // Restore saved tab + tags
-  try {
-    const savedTab = localStorage.getItem('cs-tab');
+try {
+  const savedTab = localStorage.getItem('cs-tab');
+  const restoreTab = () => {
+    const tb = savedTab ? [...tabs].find(t => t.dataset.tab === savedTab) : null;
+    activate(tb || tabs[0]);
+  };
+
+  if (urlTag) {
+    activeTags.add(urlTag);
+    restoreTab();
+    applyTagFilter();
+  } else {
     const savedTags = localStorage.getItem('cs-tags');
     if (savedTags) {
       for (const t of JSON.parse(savedTags)) activeTags.add(t);
-      activate([...tabs].find(t => t.dataset.tab === 'all') || tabs[0]);
+      restoreTab();
       applyTagFilter();
-    } else if (savedTab) {
-      const tb = [...tabs].find(t => t.dataset.tab === savedTab);
-      if (tb) activate(tb);
-      else activate(tabs[0]);
     } else {
-      activate(tabs[0]);
+      restoreTab();
     }
-  } catch { activate(tabs[0]); }
-}
+  }
+} catch { activate(tabs[0]); }
 
 // ── View toggle ──
 document.querySelectorAll('.view-toggle a').forEach(b => b.addEventListener('click', e => {
