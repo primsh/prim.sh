@@ -141,7 +141,7 @@ routes_map:
     request_type: null
     response_type: TreasuryStatus
     errors:
-      - { status: 502, code: faucet_error, description: "FAUCET_TREASURY_KEY not configured" }
+      - { status: 502, code: faucet_error, description: "TESTNET_WALLET not configured" }
   - route: "POST /v1/faucet/refill"
     request: null
     response: RefillResult

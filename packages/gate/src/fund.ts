@@ -41,9 +41,9 @@ export interface FundResult {
  * Uses the same viem pattern as faucet.sh treasury transfers.
  */
 export async function fundWallet(address: string): Promise<FundResult> {
-  const fundKey = process.env.GATE_FUND_KEY;
+  const fundKey = process.env.GATE_WALLET;
   if (!fundKey) {
-    throw new Error("GATE_FUND_KEY not configured");
+    throw new Error("GATE_WALLET not configured");
   }
 
   const usdcAmount = process.env.GATE_USDC_AMOUNT ?? "5.00";

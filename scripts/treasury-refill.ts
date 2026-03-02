@@ -17,7 +17,7 @@
  *   CIRCLE_API_KEYS        — Comma-separated Circle API keys (preferred)
  *   CIRCLE_API_KEY         — Single key fallback
  *   DRIP_WALLET_KEYS       — Comma-separated private keys for drip wallets
- *   FAUCET_TREASURY_KEY    — Main treasury private key (sweep destination)
+ *   TESTNET_WALLET    — Main treasury private key (sweep destination)
  *   AGENT_PRIVATE_KEY      — Fallback for treasury key
  *   BASE_RPC_URL           — Base Sepolia RPC (default: https://sepolia.base.org)
  */
@@ -87,8 +87,8 @@ function getApiKeys(): string[] {
 }
 
 function getTreasuryKey(): string {
-  const key = process.env.FAUCET_TREASURY_KEY ?? process.env.AGENT_PRIVATE_KEY;
-  if (!key) throw new Error("FAUCET_TREASURY_KEY or AGENT_PRIVATE_KEY required");
+  const key = process.env.TESTNET_WALLET ?? process.env.AGENT_PRIVATE_KEY;
+  if (!key) throw new Error("TESTNET_WALLET or AGENT_PRIVATE_KEY required");
   return key;
 }
 

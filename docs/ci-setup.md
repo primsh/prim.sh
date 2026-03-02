@@ -164,7 +164,7 @@ If you are running the full prim stack on your own VPS, each service reads envir
 | `STALWART_API_URL` | email.sh | Base URL of the Stalwart Mail Server REST API |
 | `STALWART_API_TOKEN` | email.sh | Admin token for the Stalwart REST API |
 | `HETZNER_API_TOKEN` | spawn.sh | Hetzner Cloud API token for VPS provisioning |
-| `GATE_FUND_KEY` | gate.sh | Private key of the wallet used to fund new agent wallets |
+| `GATE_WALLET` | gate.sh | Private key of the wallet used to fund new agent wallets |
 | `GATE_CODES` | gate.sh | Comma-separated list of valid invite codes |
 | `DATABASE_URL` | store.sh | SQLite database path for key-value storage |
 

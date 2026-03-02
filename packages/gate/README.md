@@ -53,7 +53,7 @@ curl -X POST https://gate.prim.sh/v1/redeem \
 ## Environment
 
 - `PRIM_NETWORK`
-- `GATE_FUND_KEY`
+- `GATE_WALLET`
 - `GATE_CODES`
 - `GATE_USDC_AMOUNT`
 - `GATE_ETH_AMOUNT`

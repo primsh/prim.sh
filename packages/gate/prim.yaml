@@ -12,7 +12,7 @@ phantom: false
 show_on_index: false
 env:
   - PRIM_NETWORK
-  - GATE_FUND_KEY
+  - GATE_WALLET
   - GATE_CODES
   - GATE_USDC_AMOUNT
   - GATE_ETH_AMOUNT

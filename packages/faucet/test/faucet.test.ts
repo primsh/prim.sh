@@ -11,7 +11,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 process.env.PRIM_NETWORK = "eip155:84532";
 process.env.CIRCLE_API_KEY = "test-api-key";
 // Hardhat/Anvil account #0 — well-known public test key, not a real secret
-process.env.FAUCET_TREASURY_KEY =
+process.env.TESTNET_WALLET =
   "0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80";
 process.env.FAUCET_DRIP_ETH = "0.01";
 // Use in-memory SQLite for tests (isolated, no disk files)
@@ -123,7 +123,7 @@ beforeEach(() => {
   mockGetBalance.mockResolvedValue(1000000000000000000n); // 1 ETH
   process.env.PRIM_NETWORK = "eip155:84532";
   process.env.CIRCLE_API_KEY = "test-api-key";
-  process.env.FAUCET_TREASURY_KEY =
+  process.env.TESTNET_WALLET =
     "0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80";
   process.env.FAUCET_DRIP_ETH = "0.01";
   process.env.CDP_API_KEY_ID = "test-cdp-key-id";
@@ -233,7 +233,7 @@ describe("POST /v1/faucet/usdc", () => {
     expect(res.status).toBe(502);
     const body = (await res.json()) as { error: { code: string; message: string } };
     expect(body.error.code).toBe("faucet_error");
-    expect(body.error.message).toContain("treasury also failed");
+    expect(body.error.message).toContain("direct transfer also failed");
   });
 
   it("Circle 429 rate-limited — falls back to treasury and returns 200", async () => {
@@ -261,13 +261,13 @@ describe("POST /v1/faucet/usdc", () => {
     expect(body.tx_hash).toBe("0xTreasuryUsdcTx2");
   });
 
-  it("no CIRCLE_API_KEY + no FAUCET_TREASURY_KEY — returns 502", async () => {
+  it("no CIRCLE_API_KEY + no TESTNET_WALLET — returns 502", async () => {
     const origCircle = process.env.CIRCLE_API_KEY;
-    const origTreasury = process.env.FAUCET_TREASURY_KEY;
+    const origTreasury = process.env.TESTNET_WALLET;
     // biome-ignore lint/performance/noDelete: process.env must use delete to truly unset
     delete process.env.CIRCLE_API_KEY;
     // biome-ignore lint/performance/noDelete: process.env must use delete to truly unset
-    delete process.env.FAUCET_TREASURY_KEY;
+    delete process.env.TESTNET_WALLET;
 
     const addr = "0x1CBd3b2770909D4e10f157cABC84C7264073C9Ec";
     const res = await postJson("/v1/faucet/usdc", { address: addr });
@@ -276,7 +276,7 @@ describe("POST /v1/faucet/usdc", () => {
     expect(body.error.code).toBe("faucet_error");
 
     process.env.CIRCLE_API_KEY = origCircle;
-    process.env.FAUCET_TREASURY_KEY = origTreasury;
+    process.env.TESTNET_WALLET = origTreasury;
   });
 
   it("no CIRCLE_API_KEY — falls back to treasury and returns 200", async () => {
@@ -333,19 +333,19 @@ describe("POST /v1/faucet/eth", () => {
     expect(body.error.retryAfter).toBeGreaterThan(0);
   });
 
-  it("missing FAUCET_TREASURY_KEY — returns 502", async () => {
-    const orig = process.env.FAUCET_TREASURY_KEY;
+  it("missing TESTNET_WALLET — returns 502", async () => {
+    const orig = process.env.TESTNET_WALLET;
     // biome-ignore lint/performance/noDelete: process.env must use delete to truly unset
-    delete process.env.FAUCET_TREASURY_KEY;
+    delete process.env.TESTNET_WALLET;
 
     const addr = "0x976EA74026E726554dB657fA54763abd0C3a0aa9";
     const res = await postJson("/v1/faucet/eth", { address: addr });
     expect(res.status).toBe(502);
     const body = (await res.json()) as { error: { code: string; message: string } };
     expect(body.error.code).toBe("faucet_error");
-    expect(body.error.message).toContain("FAUCET_TREASURY_KEY");
+    expect(body.error.message).toContain("TESTNET_WALLET");
 
-    process.env.FAUCET_TREASURY_KEY = orig;
+    process.env.TESTNET_WALLET = orig;
   });
 
   it("sendTransaction failure — returns 502", async () => {
@@ -434,17 +434,17 @@ describe("GET /v1/faucet/treasury", () => {
     expect(body.needs_refill).toBe(true);
   });
 
-  it("returns 502 when FAUCET_TREASURY_KEY missing", async () => {
-    const orig = process.env.FAUCET_TREASURY_KEY;
+  it("returns 502 when TESTNET_WALLET missing", async () => {
+    const orig = process.env.TESTNET_WALLET;
     // biome-ignore lint/performance/noDelete: process.env must use delete to truly unset
-    delete process.env.FAUCET_TREASURY_KEY;
+    delete process.env.TESTNET_WALLET;
 
     const res = await app.request("/v1/faucet/treasury");
     expect(res.status).toBe(502);
     const body = (await res.json()) as { error: { code: string } };
     expect(body.error.code).toBe("faucet_error");
 
-    process.env.FAUCET_TREASURY_KEY = orig;
+    process.env.TESTNET_WALLET = orig;
   });
 });
 
