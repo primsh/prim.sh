@@ -86,9 +86,31 @@ function mdToHtml(md: string): string {
       continue;
     }
 
-    // Paragraph — collect lines until blank line or code fence
+    // Unordered list — collect consecutive "- " lines
+    if (line.trimStart().startsWith("- ")) {
+      const items: string[] = [];
+      while (i < lines.length && lines[i].trimStart().startsWith("- ")) {
+        items.push(inlineMarkdown(lines[i].trimStart().slice(2)));
+        i++;
+      }
+      const lis = items
+        .map((item) => `<li style="margin:0 0 8px 0; padding-left:4px;">${item}</li>`)
+        .join("\n");
+      out.push(
+        `<table width="100%" cellpadding="0" cellspacing="0" style="margin:0 0 16px 0;">` +
+          `<tr><td><ul style="margin:0; padding-left:20px; list-style-type:disc;">\n${lis}\n</ul></td></tr></table>`,
+      );
+      continue;
+    }
+
+    // Paragraph — collect lines until blank line, code fence, or list
     const pLines: string[] = [];
-    while (i < lines.length && lines[i].trim() !== "" && !lines[i].trimStart().startsWith("```")) {
+    while (
+      i < lines.length &&
+      lines[i].trim() !== "" &&
+      !lines[i].trimStart().startsWith("```") &&
+      !lines[i].trimStart().startsWith("- ")
+    ) {
       pLines.push(lines[i]);
       i++;
     }
