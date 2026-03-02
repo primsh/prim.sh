@@ -28,16 +28,11 @@ Circle faucet ──USDC──▶ TESTNET_WALLET
 
 CDP faucet is reliable (~0.0001 ETH per drip, no rate limit hit at 10 sequential calls).
 
-Existing code in `packages/faucet/src/service.ts:refillTreasury()` wraps this. Or use `treasury-refill.ts`:
+Existing code in `packages/faucet/src/service.ts:refillTreasury()` wraps this.
 
-```bash
-bun scripts/treasury-refill.ts          # drip + sweep
-bun scripts/treasury-refill.ts --dry-run # balances only
-```
+## Get testnet USDC
 
-## Get testnet USDC (Circle faucet)
-
-Circle rate-limits aggressively — we consistently hit 429s. `treasury-refill.ts` attempts N keys × M wallets to work around this, but it hasn't been reliable in practice. TESTNET_WALLET likely already has USDC from previous successful drips.
+Circle faucet is consistently rate-limited (429). No reliable USDC faucet API exists yet. For now, TESTNET_WALLET has USDC from previous drips — use `cast` to move it where needed.
 
 Better USDC sourcing (testnet USDC mint, alternative faucet, cron) is TBD.
 
