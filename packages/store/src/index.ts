@@ -24,6 +24,7 @@ import type {
   QuotaResponse,
   ReconcileResponse,
   SetQuotaRequest,
+  UpdateBucketRequest,
 } from "./api.ts";
 import {
   createBucket,
@@ -31,6 +32,7 @@ import {
   deleteObject,
   getBucket,
   getObject,
+  getPublicObject,
   getUsage,
   listBuckets,
   listObjects,
@@ -38,12 +40,14 @@ import {
   putObject,
   reconcileUsage,
   setQuotaForBucket,
+  updateBucket,
 } from "./service.ts";
 
 const STORE_ROUTES = {
   "POST /v1/buckets": "$0.001",
   "GET /v1/buckets": "$0.001",
   "GET /v1/buckets/[id]": "$0.001",
+  "PUT /v1/buckets/[id]": "$0.001",
   "DELETE /v1/buckets/[id]": "$0.001",
   "PUT /v1/buckets/[id]/objects/*": "$0.001",
   "GET /v1/buckets/[id]/objects": "$0.001",
@@ -86,6 +90,7 @@ const app = createPrimApp(
       ? resolve(import.meta.dir, "../../../site/store/llms.txt")
       : undefined,
     routes: STORE_ROUTES,
+    extraFreeRoutes: ["GET /public/[bucket_id]/*"],
     skipBodyLimit: true,
     metricsName: "store.prim.sh",
     pricing: {
@@ -93,6 +98,12 @@ const app = createPrimApp(
         { method: "POST", path: "/v1/buckets", price_usdc: "0.001", description: "Create a bucket" },
         { method: "GET", path: "/v1/buckets", price_usdc: "0.001", description: "List buckets" },
         { method: "GET", path: "/v1/buckets/{id}", price_usdc: "0.001", description: "Get bucket" },
+        {
+          method: "PUT",
+          path: "/v1/buckets/{id}",
+          price_usdc: "0.001",
+          description: "Update bucket",
+        },
         {
           method: "DELETE",
           path: "/v1/buckets/{id}",
@@ -209,6 +220,28 @@ app.get("/v1/buckets/:id", (c) => {
   const caller = callerOrRes;
 
   const result = getBucket(c.req.param("id"), caller);
+  if (!result.ok) {
+    if (result.status === 404) return c.json(notFound(result.message), 404);
+    return c.json(forbidden(result.message), 403);
+  }
+  return c.json(result.data as BucketResponse, 200);
+});
+
+// PUT /v1/buckets/:id — Update bucket (e.g. toggle public visibility)
+app.put("/v1/buckets/:id", async (c) => {
+  const callerOrRes = requireCaller(c);
+  if (callerOrRes instanceof Response) return callerOrRes;
+  const caller = callerOrRes;
+
+  const bodyOrRes = await parseJsonBody<UpdateBucketRequest>(c, logger, "PUT /v1/buckets/:id");
+  if (bodyOrRes instanceof Response) return bodyOrRes;
+  const body = bodyOrRes;
+
+  if (typeof body.is_public !== "boolean") {
+    return c.json(invalidRequest("is_public (boolean) is required"), 400);
+  }
+
+  const result = updateBucket(c.req.param("id"), caller, body);
   if (!result.ok) {
     if (result.status === 404) return c.json(notFound(result.message), 404);
     return c.json(forbidden(result.message), 403);
@@ -397,6 +430,36 @@ app.post("/v1/buckets/:id/quota/reconcile", async (c) => {
     return c.json(r2Error(result.message), result.status as 502);
   }
   return c.json(result.data as ReconcileResponse, 200);
+});
+
+// ─── Public object routes ────────────────────────────────────────────────
+
+// GET /public/:bucket_id/* — Serve public object (no x402, unauthenticated)
+// GET /public/:bucket_id with no key naturally 404s via Hono's router (no wildcard match)
+app.get("/public/:bucket_id/*", async (c) => {
+  const bucketId = c.req.param("bucket_id");
+  const keyMatch = c.req.path.match(/\/public\/[^/]+\/(.+)/);
+  const key = keyMatch ? decodeURIComponent(keyMatch[1]) : "";
+
+  if (!key) {
+    return c.json(notFound("Object key is required"), 404);
+  }
+
+  const result = await getPublicObject(bucketId, key);
+  if (!result.ok) {
+    if (result.status === 400) return c.json(invalidRequest(result.message), 400);
+    return c.json(notFound(result.message), 404);
+  }
+
+  return new Response(result.data.body, {
+    status: 200,
+    headers: {
+      "Content-Type": result.data.contentType,
+      "Content-Length": String(result.data.contentLength),
+      ETag: result.data.etag,
+      "Cache-Control": "public, max-age=3600",
+    },
+  });
 });
 
 export default app;

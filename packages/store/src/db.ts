@@ -12,6 +12,7 @@ export interface BucketRow {
   location: string | null;
   quota_bytes: number | null;
   usage_bytes: number;
+  is_public: number;
   created_at: number;
   updated_at: number;
 }
@@ -52,6 +53,13 @@ export function getDb(): Database {
   }
   try {
     _db.run("ALTER TABLE buckets ADD COLUMN usage_bytes INTEGER NOT NULL DEFAULT 0");
+  } catch {
+    /* column exists */
+  }
+
+  // ST-8 migration: add is_public column
+  try {
+    _db.run("ALTER TABLE buckets ADD COLUMN is_public INTEGER NOT NULL DEFAULT 0");
   } catch {
     /* column exists */
   }
@@ -123,18 +131,37 @@ export function insertBucket(params: {
   name: string;
   owner_wallet: string;
   location: string | null;
+  is_public?: boolean;
 }): void {
   const db = getDb();
   const now = Date.now();
   db.query(
-    `INSERT INTO buckets (id, cf_name, name, owner_wallet, location, created_at, updated_at)
-     VALUES (?, ?, ?, ?, ?, ?, ?)`,
-  ).run(params.id, params.cf_name, params.name, params.owner_wallet, params.location, now, now);
+    `INSERT INTO buckets (id, cf_name, name, owner_wallet, location, is_public, created_at, updated_at)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+  ).run(
+    params.id,
+    params.cf_name,
+    params.name,
+    params.owner_wallet,
+    params.location,
+    params.is_public ? 1 : 0,
+    now,
+    now,
+  );
 }
 
 export function deleteBucketRow(id: string): void {
   const db = getDb();
   db.query("DELETE FROM buckets WHERE id = ?").run(id);
+}
+
+export function updateBucketPublic(id: string, isPublic: boolean): void {
+  const db = getDb();
+  db.query("UPDATE buckets SET is_public = ?, updated_at = ? WHERE id = ?").run(
+    isPublic ? 1 : 0,
+    Date.now(),
+    id,
+  );
 }
 
 // ─── Quota queries ────────────────────────────────────────────────────────

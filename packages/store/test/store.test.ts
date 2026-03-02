@@ -165,6 +165,7 @@ import {
   deleteObject,
   getBucket,
   getObject,
+  getPublicObject,
   getUsage,
   isValidBucketName,
   isValidObjectKey,
@@ -174,6 +175,7 @@ import {
   putObject,
   reconcileUsage,
   setQuotaForBucket,
+  updateBucket,
 } from "../src/service.ts";
 
 // ─── Fixtures ────────────────────────────────────────────────────────────
@@ -1152,6 +1154,128 @@ describe("store.sh", () => {
       if (result.ok) return;
       expect(result.status).toBe(400);
       expect(result.code).toBe("invalid_request");
+    });
+  });
+
+  // ─── Public Buckets ─────────────────────────────────────────────────
+
+  describe("public buckets", () => {
+    async function createTestBucket(isPublic = false): Promise<string> {
+      const result = await createBucket(
+        { name: `public-test-${Date.now()}`, is_public: isPublic },
+        CALLER,
+      );
+      if (!result.ok) throw new Error("Setup failed: could not create bucket");
+      return result.data.bucket.id;
+    }
+
+    it("create bucket with is_public: true — stored in DB", async () => {
+      const bucketId = await createTestBucket(true);
+      const row = getBucketById(bucketId);
+      expect(row?.is_public).toBe(1);
+    });
+
+    it("create bucket default — is_public: false", async () => {
+      const bucketId = await createTestBucket(false);
+      const row = getBucketById(bucketId);
+      expect(row?.is_public).toBe(0);
+    });
+
+    it("create bucket with is_public: true — response includes public_url", async () => {
+      const result = await createBucket({ name: `pub-url-${Date.now()}`, is_public: true }, CALLER);
+      expect(result.ok).toBe(true);
+      if (!result.ok) return;
+      expect(result.data.bucket.is_public).toBe(true);
+      expect(result.data.bucket.public_url).toContain("/public/");
+    });
+
+    it("create bucket default — response has no public_url", async () => {
+      const result = await createBucket({ name: `priv-url-${Date.now()}` }, CALLER);
+      expect(result.ok).toBe(true);
+      if (!result.ok) return;
+      expect(result.data.bucket.is_public).toBe(false);
+      expect(result.data.bucket.public_url).toBeUndefined();
+    });
+
+    it("updateBucket is_public: true — reflected in response", async () => {
+      const bucketId = await createTestBucket(false);
+      const result = updateBucket(bucketId, CALLER, { is_public: true });
+      expect(result.ok).toBe(true);
+      if (!result.ok) return;
+      expect(result.data.is_public).toBe(true);
+      expect(result.data.public_url).toContain(`/public/${bucketId}`);
+    });
+
+    it("updateBucket — non-owner gets 403", async () => {
+      const bucketId = await createTestBucket(false);
+      const result = updateBucket(bucketId, OTHER, { is_public: true });
+      expect(result.ok).toBe(false);
+      if (result.ok) return;
+      expect(result.status).toBe(403);
+    });
+
+    it("updateBucket — nonexistent bucket gets 404", () => {
+      const result = updateBucket("b_nonexist", CALLER, { is_public: true });
+      expect(result.ok).toBe(false);
+      if (result.ok) return;
+      expect(result.status).toBe(404);
+    });
+
+    it("getPublicObject — public bucket returns streamed content", async () => {
+      const bucketId = await createTestBucket(true);
+      const result = await getPublicObject(bucketId, "hello.txt");
+      expect(result.ok).toBe(true);
+      if (!result.ok) return;
+      expect(result.data.contentType).toBe("text/plain");
+    });
+
+    it("getPublicObject — private bucket returns 404", async () => {
+      const bucketId = await createTestBucket(false);
+      const result = await getPublicObject(bucketId, "hello.txt");
+      expect(result.ok).toBe(false);
+      if (result.ok) return;
+      expect(result.status).toBe(404);
+    });
+
+    it("getPublicObject — nonexistent bucket returns 404", async () => {
+      const result = await getPublicObject("b_nonexist", "hello.txt");
+      expect(result.ok).toBe(false);
+      if (result.ok) return;
+      expect(result.status).toBe(404);
+    });
+
+    it("getPublicObject — nonexistent key returns 404", async () => {
+      const bucketId = await createTestBucket(true);
+      mockFetch.mockImplementationOnce(async () => {
+        return new Response(
+          "<Error><Code>NoSuchKey</Code><Message>The specified key does not exist.</Message></Error>",
+          { status: 404, headers: { "Content-Type": "application/xml" } },
+        );
+      });
+      const result = await getPublicObject(bucketId, "missing.txt");
+      expect(result.ok).toBe(false);
+      if (result.ok) return;
+      expect(result.status).toBe(404);
+    });
+
+    it("putObject in public bucket — response includes public_url", async () => {
+      const bucketId = await createTestBucket(true);
+      // HEAD returns 404 (new object)
+      mockFetch.mockImplementationOnce(async () => new Response(null, { status: 404 }));
+      const result = await putObject(bucketId, "file.txt", "data", "text/plain", CALLER, 4);
+      expect(result.ok).toBe(true);
+      if (!result.ok) return;
+      expect(result.data.public_url).toContain(`/public/${bucketId}/file.txt`);
+    });
+
+    it("putObject in private bucket — response has no public_url", async () => {
+      const bucketId = await createTestBucket(false);
+      // HEAD returns 404 (new object)
+      mockFetch.mockImplementationOnce(async () => new Response(null, { status: 404 }));
+      const result = await putObject(bucketId, "file.txt", "data", "text/plain", CALLER, 4);
+      expect(result.ok).toBe(true);
+      if (!result.ok) return;
+      expect(result.data.public_url).toBeUndefined();
     });
   });
 });

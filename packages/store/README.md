@@ -42,6 +42,7 @@ Part of [prim.sh](https://prim.sh) — zero signup, one payment token, infinite 
 |-------|------|----------|
 | `name` | `string` | required |
 | `location` | `string` | optional |
+| `is_public` | `boolean` | optional |
 
 ### `CreateBucketResponse`
 
@@ -59,6 +60,8 @@ Part of [prim.sh](https://prim.sh) — zero signup, one payment token, infinite 
 | `owner_wallet` | `string` | Ethereum address of the bucket owner. |
 | `quota_bytes` | `number | null` | Per-bucket quota in bytes. Null = default (100 MB). |
 | `usage_bytes` | `number` | Current storage usage in bytes. |
+| `is_public` | `boolean` | Whether the bucket is publicly readable. |
+| `public_url` | `string` | Stable public URL prefix for this bucket. Only present when is_public is true. |
 | `created_at` | `string` | ISO 8601 timestamp when the bucket was created. |
 
 ### `PutObjectResponse`
@@ -68,6 +71,7 @@ Part of [prim.sh](https://prim.sh) — zero signup, one payment token, infinite 
 | `key` | `string` | Object key as stored. |
 | `size` | `number` | Object size in bytes. |
 | `etag` | `string` | ETag (MD5 hash). |
+| `public_url` | `string` | Stable public URL for this object. Only present when bucket is public. |
 
 ### `DeleteObjectResponse`
 

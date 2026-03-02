@@ -39,6 +39,10 @@ export const storeTools: Tool[] = [
             type: "string",
             description: "Storage region (e.g. \"us-east-1\"). Defaults to primary region.",
           },
+          "is_public": {
+            type: "boolean",
+            description: "Whether the bucket should be publicly readable. Defaults to false.",
+          },
         },
         required: ["name"],
       },

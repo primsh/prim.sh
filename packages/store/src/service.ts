@@ -13,6 +13,7 @@ import {
   incrementUsage,
   insertBucket,
   setUsage,
+  updateBucketPublic,
 } from "./db.ts";
 
 // ─── Per-wallet limits (configurable via env) ─────────────────────────────
@@ -30,6 +31,7 @@ import type {
   PutObjectResponse,
   QuotaResponse,
   ReconcileResponse,
+  UpdateBucketRequest,
 } from "./api.ts";
 import {
   CloudflareError,
@@ -46,6 +48,10 @@ import {
   putObject as s3PutObject,
 } from "./s3.ts";
 
+// ─── Constants ──────────────────────────────────────────────────────────
+
+const STORE_BASE_URL = "https://store.prim.sh";
+
 // ─── Helpers ─────────────────────────────────────────────────────────────
 
 function generateBucketId(): string {
@@ -53,15 +59,21 @@ function generateBucketId(): string {
 }
 
 function rowToBucketResponse(row: BucketRow): BucketResponse {
-  return {
+  const isPublic = row.is_public === 1;
+  const response: BucketResponse = {
     id: row.id,
     name: row.name,
     location: row.location,
     owner_wallet: row.owner_wallet,
     quota_bytes: row.quota_bytes,
     usage_bytes: row.usage_bytes,
+    is_public: isPublic,
     created_at: new Date(row.created_at).toISOString(),
   };
+  if (isPublic) {
+    response.public_url = `${STORE_BASE_URL}/public/${row.id}`;
+  }
+  return response;
 }
 
 // ─── Ownership ───────────────────────────────────────────────────────────
@@ -148,6 +160,7 @@ export async function createBucket(
       name: request.name,
       owner_wallet: callerWallet,
       location: cfBucket.location ?? request.location ?? null,
+      is_public: request.is_public ?? false,
     });
 
     // Apply default quota
@@ -207,6 +220,52 @@ export async function deleteBucket(
   deleteBucketRow(bucketId);
 
   return { ok: true, data: { status: "deleted" } };
+}
+
+export function updateBucket(
+  bucketId: string,
+  callerWallet: string,
+  updates: UpdateBucketRequest,
+): ServiceResult<BucketResponse> {
+  const check = checkBucketOwnership(bucketId, callerWallet);
+  if (!check.ok) return check;
+
+  updateBucketPublic(bucketId, updates.is_public);
+
+  const updated = getBucketById(bucketId);
+  if (!updated) {
+    return { ok: false, status: 404, code: "not_found", message: "Bucket not found" };
+  }
+  return { ok: true, data: rowToBucketResponse(updated) };
+}
+
+export async function getPublicObject(
+  bucketId: string,
+  key: string,
+): Promise<
+  ServiceResult<{ body: ReadableStream; contentType: string; contentLength: number; etag: string }>
+> {
+  const row = getBucketById(bucketId);
+  if (!row || row.is_public !== 1) {
+    return { ok: false, status: 404, code: "not_found", message: "Not found" };
+  }
+
+  if (!isValidObjectKey(key)) {
+    return { ok: false, status: 400, code: "invalid_request", message: "Invalid object key" };
+  }
+
+  try {
+    const result = await s3GetObject(row.cf_name, key);
+    return { ok: true, data: result };
+  } catch (err) {
+    if (err instanceof CloudflareError) {
+      if (err.code === "not_found") {
+        return { ok: false, status: 404, code: "not_found", message: "Not found" };
+      }
+      return { ok: false, status: err.statusCode, code: err.code, message: err.message };
+    }
+    throw err;
+  }
 }
 
 // ─── Object service ─────────────────────────────────────────────────────
@@ -295,7 +354,11 @@ export async function putObject(
       else if (netDelta < 0) decrementUsage(bucketId, -netDelta);
     }
 
-    return { ok: true, data: { key, size: actualSize, etag: result.etag } };
+    const data: PutObjectResponse = { key, size: actualSize, etag: result.etag };
+    if (check.row.is_public === 1) {
+      data.public_url = `${STORE_BASE_URL}/public/${bucketId}/${key}`;
+    }
+    return { ok: true, data };
   } catch (err) {
     if (err instanceof CloudflareError) {
       return { ok: false, status: err.statusCode, code: err.code, message: err.message };
