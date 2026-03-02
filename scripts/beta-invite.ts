@@ -124,13 +124,14 @@ interface EmailConfig {
   from: string;
   subject: string;
   hero: { src: string; alt: string; link: string };
+  heroes?: string[];
   body: string;
   signature: { name: string; url: string };
   footer: { logo: string; logo_alt: string; links: string; copyright: string };
-  invites: Array<{ name: string; email: string; code: string }>;
+  invites: Array<{ name: string; email: string; code: string; hero?: string }>;
 }
 
-function renderEmail(config: EmailConfig, invite: { name: string; code: string }, version: string): string {
+function renderEmail(config: EmailConfig, invite: { name: string; code: string; hero?: string }, version: string): string {
   // Substitute variables in body
   const body = config.body
     .replace(/\{name\}/g, invite.name)
@@ -157,7 +158,7 @@ function renderEmail(config: EmailConfig, invite: { name: string; code: string }
 <!-- Hero -->
 <tr><td style="padding:0;">
   <a href="${config.hero.link}" style="display:block;">
-    <img src="${config.hero.src}" alt="${escapeHtml(config.hero.alt)}" width="600" style="width:100%; height:auto; display:block; border-radius:8px;" />
+    <img src="${invite.hero || config.hero.src}" alt="${escapeHtml(config.hero.alt)}" width="600" style="width:100%; height:auto; display:block; border-radius:8px;" />
   </a>
 </td></tr>
 
@@ -234,6 +235,15 @@ if (invites.length === 0) {
   process.exit(1);
 }
 
+// Assign unique hero images round-robin from heroes pool
+if (config.heroes?.length) {
+  for (let i = 0; i < invites.length; i++) {
+    if (!invites[i].hero) {
+      invites[i].hero = config.heroes[i % config.heroes.length];
+    }
+  }
+}
+
 const subject = config.subject.replace(/\{version\}/g, version);
 
 if (command === "gen") {
@@ -252,6 +262,7 @@ if (command === "gen") {
     console.log(`  Subject: ${subject}`);
     console.log(`  Version: v${version}`);
     console.log(`  Code: ${invite.code}`);
+    if (invite.hero) console.log(`  Hero: ${invite.hero}`);
     console.log();
   }
 } else if (command === "send") {

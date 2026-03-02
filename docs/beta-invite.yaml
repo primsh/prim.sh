@@ -1,9 +1,19 @@
 from: ggn@prim.sh
 subject: "prim.sh v{version} private beta"
 hero:
-  src: https://prim.sh/assets/og/brand.png
+  src: https://dl.prim.sh/assets/email/beta/hero-1.jpg
   alt: "prim.sh — Zero signup. One payment token. Infinite primitives."
   link: https://prim.sh
+
+# 7 unique hero images — assigned round-robin to invites
+heroes:
+  - https://dl.prim.sh/assets/email/beta/hero-1.jpg
+  - https://dl.prim.sh/assets/email/beta/hero-2.jpg
+  - https://dl.prim.sh/assets/email/beta/hero-3.jpg
+  - https://dl.prim.sh/assets/email/beta/hero-4.jpg
+  - https://dl.prim.sh/assets/email/beta/hero-5.jpg
+  - https://dl.prim.sh/assets/email/beta/hero-6.jpg
+  - https://dl.prim.sh/assets/email/beta/hero-7.jpg
 
 body: |
   Hey {name},
