@@ -16,7 +16,7 @@
  */
 
 import { execSync } from "node:child_process";
-import { readFileSync, writeFileSync } from "node:fs";
+import { existsSync, readFileSync, writeFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { parseArgs } from "node:util";
 import { parse as parseYaml } from "yaml";
@@ -25,6 +25,7 @@ import { parse as parseYaml } from "yaml";
 
 const YAML_PATH = resolve(import.meta.dirname, "..", "docs", "beta-invite.yaml");
 const VERSION_URL = "https://dl.prim.sh/latest/VERSION";
+const MAILER_SCRIPT = resolve(import.meta.dirname, ".env.send-email.sh");
 
 // ── Styles ──────────────────────────────────────────────────────────────────
 
@@ -310,11 +311,16 @@ if (command === "gen") {
     const rawPath = `/tmp/beta-invite-${invite.code}.eml`;
     writeFileSync(rawPath, rawMime);
 
-    const account = config.from.split("@")[0];
-    console.log(`Sending via himalaya (account: ${account})...`);
+    if (!existsSync(MAILER_SCRIPT)) {
+      console.log(`  No mailer configured. Raw MIME saved at: ${rawPath}`);
+      console.log(`  Create ${MAILER_SCRIPT} to enable sending.`);
+      console.log();
+      continue;
+    }
 
+    console.log("Sending...");
     try {
-      execSync(`cat "${rawPath}" | himalaya message send --account ${account}`, {
+      execSync(`bash "${MAILER_SCRIPT}" "${rawPath}" "${config.from}" "${invite.email}" "${subject}"`, {
         stdio: "inherit",
       });
       console.log("Sent.");
