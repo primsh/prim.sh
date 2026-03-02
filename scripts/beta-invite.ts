@@ -214,8 +214,16 @@ if (!command || !["gen", "send"].includes(command)) {
   process.exit(1);
 }
 
-// Load YAML
+// Load YAML — template + local overrides (from, invites)
 const config = parseYaml(readFileSync(YAML_PATH, "utf-8")) as EmailConfig;
+const LOCAL_PATH = YAML_PATH.replace(".yaml", ".local.yaml");
+try {
+  const local = parseYaml(readFileSync(LOCAL_PATH, "utf-8")) as Partial<EmailConfig>;
+  Object.assign(config, local);
+} catch {
+  console.error(`Missing ${LOCAL_PATH} — copy from beta-invite.yaml and add from + invites`);
+  process.exit(1);
+}
 
 // Fetch version
 const versionRes = await fetch(VERSION_URL);

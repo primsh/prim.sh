@@ -1,4 +1,4 @@
-from: ggn@prim.sh
+# from + invites are in docs/beta-invite.local.yaml (gitignored)
 subject: "prim.sh v{version} private beta"
 hero:
   src: https://dl.prim.sh/assets/email/beta/hero-1.jpg
@@ -57,10 +57,4 @@ footer:
   links: "[prim.sh](https://prim.sh) · [costs](https://prim.sh/costs/) · [terms](https://prim.sh/terms/) · [privacy](https://prim.sh/privacy/) · [llms.txt](https://prim.sh/llms.txt)"
   copyright: "© 2026 Primitive Shell LLC"
 
-invites:
-  - name: Alice
-    email: alice@example.com
-    code: PRIM-80e06f6c
-  # - name: Bob
-  #   email: bob@example.com
-  #   code: PRIM-xxxxxxxx
+# invites: defined in docs/beta-invite.local.yaml

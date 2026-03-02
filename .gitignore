@@ -8,6 +8,7 @@ coverage/
 # Env / data
 .env
 .env.*
+*.local.yaml
 scripts/.env.*
 !scripts/.env.example
 *.db
