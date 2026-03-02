@@ -1005,7 +1005,11 @@ function startRefine(scope) {
   es.addEventListener('done', e => {
     const d = JSON.parse(e.data);
     html += '<div class="step done">Done! ' + d.imageCount + ' new images ready — see <a href="?tag=' + encodeURIComponent(d.tag) + '" style="color:#4DD0E1;text-decoration:underline;">#' + d.tag + '</a></div>';
-    html += '<button class="reload-btn" onclick="location.href=\'?tag=' + encodeURIComponent(d.tag) + '\'">view #' + d.tag + '</button>';
+    html += '<button class="reload-btn" data-tag="' + d.tag + '">view #' + d.tag + '</button>';
+    setTimeout(function() {
+      const btn = refineStatus.querySelector('.reload-btn[data-tag]');
+      if (btn) btn.addEventListener('click', function() { location.href = '?tag=' + encodeURIComponent(btn.dataset.tag); });
+    }, 0);
     refineStatus.innerHTML = html;
     es.close();
     refineBtn.classList.remove('running');
