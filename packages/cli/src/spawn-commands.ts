@@ -2,6 +2,7 @@
 import { readFileSync } from "node:fs";
 import { createPrimFetch } from "@primsh/x402-client";
 import { getConfig } from "@primsh/keystore";
+import { handleApiError } from "./errors.ts";
 import { getFlag, hasFlag, resolvePassphrase } from "./flags.ts";
 
 export function resolveSpawnUrl(argv: string[]): string {
@@ -9,21 +10,6 @@ export function resolveSpawnUrl(argv: string[]): string {
   if (flag) return flag;
   if (process.env.PRIM_SPAWN_URL) return process.env.PRIM_SPAWN_URL;
   return "https://spawn.prim.sh";
-}
-
-async function handleError(res: Response): Promise<never> {
-  let message = `HTTP ${res.status}`;
-  let code = "unknown";
-  try {
-    const body = (await res.json()) as { error?: { code: string; message: string } };
-    if (body.error) {
-      message = body.error.message;
-      code = body.error.code;
-    }
-  } catch {
-    // ignore parse error
-  }
-  throw new Error(`${message} (${code})`);
 }
 
 export async function runSpawnCommand(sub: string, argv: string[]): Promise<void> {
@@ -71,7 +57,7 @@ export async function runSpawnCommand(sub: string, argv: string[]): Promise<void
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ name, public_key: publicKey }),
         });
-        if (!res.ok) return handleError(res);
+        if (!res.ok) return handleApiError(res);
         const data = (await res.json()) as { id: string };
         if (quiet) {
           console.log(data.id);
@@ -83,7 +69,7 @@ export async function runSpawnCommand(sub: string, argv: string[]): Promise<void
 
       case "ls": {
         const res = await primFetch(`${baseUrl}/v1/ssh-keys`);
-        if (!res.ok) return handleError(res);
+        if (!res.ok) return handleApiError(res);
         const data = (await res.json()) as { ssh_keys: Array<{ id: string }> };
         if (quiet) {
           for (const k of data.ssh_keys) console.log(k.id);
@@ -102,7 +88,7 @@ export async function runSpawnCommand(sub: string, argv: string[]): Promise<void
         const res = await primFetch(`${baseUrl}/v1/ssh-keys/${keyId}`, {
           method: "DELETE",
         });
-        if (!res.ok) return handleError(res);
+        if (!res.ok) return handleApiError(res);
         if (!quiet) {
           const data = await res.json();
           console.log(JSON.stringify(data, null, 2));
@@ -139,7 +125,7 @@ export async function runSpawnCommand(sub: string, argv: string[]): Promise<void
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(reqBody),
       });
-      if (!res.ok) return handleError(res);
+      if (!res.ok) return handleApiError(res);
       const data = (await res.json()) as { server: { id: string } };
       if (quiet) {
         console.log(data.server.id);
@@ -156,7 +142,7 @@ export async function runSpawnCommand(sub: string, argv: string[]): Promise<void
       url.searchParams.set("page", page);
       url.searchParams.set("limit", perPage);
       const res = await primFetch(url.toString());
-      if (!res.ok) return handleError(res);
+      if (!res.ok) return handleApiError(res);
       const data = (await res.json()) as { servers: Array<{ id: string }> };
       if (quiet) {
         for (const s of data.servers) console.log(s.id);
@@ -173,7 +159,7 @@ export async function runSpawnCommand(sub: string, argv: string[]): Promise<void
         process.exit(1);
       }
       const res = await primFetch(`${baseUrl}/v1/servers/${serverId}`);
-      if (!res.ok) return handleError(res);
+      if (!res.ok) return handleApiError(res);
       const data = (await res.json()) as {
         id: string;
         status: string;
@@ -205,7 +191,7 @@ export async function runSpawnCommand(sub: string, argv: string[]): Promise<void
       const res = await primFetch(`${baseUrl}/v1/servers/${serverId}`, {
         method: "DELETE",
       });
-      if (!res.ok) return handleError(res);
+      if (!res.ok) return handleApiError(res);
       if (!quiet) {
         const data = await res.json();
         console.log(JSON.stringify(data, null, 2));
@@ -222,7 +208,7 @@ export async function runSpawnCommand(sub: string, argv: string[]): Promise<void
       const res = await primFetch(`${baseUrl}/v1/servers/${serverId}/reboot`, {
         method: "POST",
       });
-      if (!res.ok) return handleError(res);
+      if (!res.ok) return handleApiError(res);
       if (!quiet) {
         const data = await res.json();
         console.log(JSON.stringify(data, null, 2));
@@ -239,7 +225,7 @@ export async function runSpawnCommand(sub: string, argv: string[]): Promise<void
       const res = await primFetch(`${baseUrl}/v1/servers/${serverId}/stop`, {
         method: "POST",
       });
-      if (!res.ok) return handleError(res);
+      if (!res.ok) return handleApiError(res);
       if (!quiet) {
         const data = await res.json();
         console.log(JSON.stringify(data, null, 2));
@@ -256,7 +242,7 @@ export async function runSpawnCommand(sub: string, argv: string[]): Promise<void
       const res = await primFetch(`${baseUrl}/v1/servers/${serverId}/start`, {
         method: "POST",
       });
-      if (!res.ok) return handleError(res);
+      if (!res.ok) return handleApiError(res);
       if (!quiet) {
         const data = await res.json();
         console.log(JSON.stringify(data, null, 2));

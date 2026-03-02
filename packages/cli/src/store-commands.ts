@@ -4,6 +4,7 @@ import { writeFile } from "node:fs/promises";
 import { extname } from "node:path";
 import { createPrimFetch } from "@primsh/x402-client";
 import { getConfig } from "@primsh/keystore";
+import { handleApiError } from "./errors.ts";
 import { getFlag, hasFlag, resolvePassphrase } from "./flags.ts";
 
 async function readStdin(): Promise<Buffer> {
@@ -46,20 +47,6 @@ function inferContentType(filePath: string): string {
   return map[ext] ?? "application/octet-stream";
 }
 
-async function handleError(res: Response): Promise<never> {
-  let message = `HTTP ${res.status}`;
-  let code = "unknown";
-  try {
-    const body = (await res.json()) as { error?: { code: string; message: string } };
-    if (body.error) {
-      message = body.error.message;
-      code = body.error.code;
-    }
-  } catch {
-    // ignore parse error
-  }
-  throw new Error(`${message} (${code})`);
-}
 
 async function resolveBucket(
   bucketArg: string,
@@ -68,7 +55,7 @@ async function resolveBucket(
 ): Promise<string> {
   if (/^b[a-z]*_/.test(bucketArg)) return bucketArg;
   const res = await primFetch(`${baseUrl}/v1/buckets`);
-  if (!res.ok) return handleError(res);
+  if (!res.ok) return handleApiError(res);
   const data = (await res.json()) as { data: Array<{ id: string; name: string }> };
   const match = data.data.find((b) => b.name === bucketArg);
   if (!match) throw new Error(`Bucket not found: ${bucketArg}`);
@@ -106,7 +93,7 @@ export async function runStoreCommand(sub: string, argv: string[]): Promise<void
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(reqBody),
       });
-      if (!res.ok) return handleError(res);
+      if (!res.ok) return handleApiError(res);
       const data = (await res.json()) as { bucket: { id: string } };
       if (quiet) {
         console.log(data.bucket.id);
@@ -130,7 +117,7 @@ export async function runStoreCommand(sub: string, argv: string[]): Promise<void
         url.searchParams.set("per_page", perPage);
         if (prefix) url.searchParams.set("prefix", prefix);
         const res = await primFetch(url.toString());
-        if (!res.ok) return handleError(res);
+        if (!res.ok) return handleApiError(res);
         const data = (await res.json()) as { objects: Array<{ key: string }> };
         if (quiet) {
           for (const obj of data.objects) console.log(obj.key);
@@ -145,7 +132,7 @@ export async function runStoreCommand(sub: string, argv: string[]): Promise<void
         url.searchParams.set("page", page);
         url.searchParams.set("per_page", perPage);
         const res = await primFetch(url.toString());
-        if (!res.ok) return handleError(res);
+        if (!res.ok) return handleApiError(res);
         const data = (await res.json()) as { data: Array<{ id: string }> };
         if (quiet) {
           for (const b of data.data) console.log(b.id);
@@ -192,7 +179,7 @@ export async function runStoreCommand(sub: string, argv: string[]): Promise<void
         },
         body: body as BodyInit,
       });
-      if (!res.ok) return handleError(res);
+      if (!res.ok) return handleApiError(res);
       const data = (await res.json()) as { key: string };
       if (quiet) {
         console.log(data.key);
@@ -212,7 +199,7 @@ export async function runStoreCommand(sub: string, argv: string[]): Promise<void
       const bucketId = await resolveBucket(bucketArg, baseUrl, primFetch);
       const outPath = getFlag("out", argv);
       const res = await primFetch(`${baseUrl}/v1/buckets/${bucketId}/objects/${key}`);
-      if (!res.ok) return handleError(res);
+      if (!res.ok) return handleApiError(res);
       const buf = Buffer.from(await res.arrayBuffer());
       if (outPath) {
         await writeFile(outPath, buf);
@@ -233,7 +220,7 @@ export async function runStoreCommand(sub: string, argv: string[]): Promise<void
       const res = await primFetch(`${baseUrl}/v1/buckets/${bucketId}/objects/${key}`, {
         method: "DELETE",
       });
-      if (!res.ok) return handleError(res);
+      if (!res.ok) return handleApiError(res);
       if (!quiet) {
         const data = await res.json();
         console.log(JSON.stringify(data, null, 2));
@@ -251,7 +238,7 @@ export async function runStoreCommand(sub: string, argv: string[]): Promise<void
       const res = await primFetch(`${baseUrl}/v1/buckets/${bucketId}`, {
         method: "DELETE",
       });
-      if (!res.ok) return handleError(res);
+      if (!res.ok) return handleApiError(res);
       if (!quiet) {
         const data = await res.json();
         console.log(JSON.stringify(data, null, 2));
@@ -267,7 +254,7 @@ export async function runStoreCommand(sub: string, argv: string[]): Promise<void
       }
       const bucketId = await resolveBucket(bucketArg, baseUrl, primFetch);
       const res = await primFetch(`${baseUrl}/v1/buckets/${bucketId}/quota`);
-      if (!res.ok) return handleError(res);
+      if (!res.ok) return handleApiError(res);
       const data = (await res.json()) as { usage_bytes: number };
       if (quiet) {
         console.log(data.usage_bytes);

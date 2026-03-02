@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: Apache-2.0
 import { getDefaultAddress } from "@primsh/keystore";
+import { handleApiError } from "./errors.ts";
 import { getFlag, hasFlag } from "./flags.ts";
 
 export function resolveFaucetUrl(argv: string[]): string {
@@ -18,20 +19,6 @@ async function resolveAddress(argv: string[]): Promise<string> {
   process.exit(1);
 }
 
-async function handleError(res: Response): Promise<never> {
-  let message = `HTTP ${res.status}`;
-  let code = "unknown";
-  try {
-    const body = (await res.json()) as { error?: { code: string; message: string } };
-    if (body.error) {
-      message = body.error.message;
-      code = body.error.code;
-    }
-  } catch {
-    // ignore parse error
-  }
-  throw new Error(`${message} (${code})`);
-}
 
 export async function runFaucetCommand(sub: string, argv: string[]): Promise<void> {
   const baseUrl = resolveFaucetUrl(argv);
@@ -45,7 +32,7 @@ export async function runFaucetCommand(sub: string, argv: string[]): Promise<voi
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ address }),
       });
-      if (!res.ok) return handleError(res);
+      if (!res.ok) return handleApiError(res);
       const data = (await res.json()) as {
         tx_hash: string;
         amount: string;
@@ -67,7 +54,7 @@ export async function runFaucetCommand(sub: string, argv: string[]): Promise<voi
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ address }),
       });
-      if (!res.ok) return handleError(res);
+      if (!res.ok) return handleApiError(res);
       const data = (await res.json()) as {
         tx_hash: string;
         amount: string;
@@ -87,7 +74,7 @@ export async function runFaucetCommand(sub: string, argv: string[]): Promise<voi
       const url = new URL(`${baseUrl}/v1/faucet/status`);
       url.searchParams.set("address", address);
       const res = await fetch(url.toString());
-      if (!res.ok) return handleError(res);
+      if (!res.ok) return handleApiError(res);
       const data = (await res.json()) as {
         address: string;
         usdc: { available: boolean; retry_after_ms: number };
