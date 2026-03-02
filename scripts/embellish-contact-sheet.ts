@@ -851,46 +851,55 @@ function activate(tab) {
   const id = tab.dataset.tab;
   secs.forEach(s => s.classList.toggle('active', id === 'all' || s.id === id));
 }
+// ── State persistence (localStorage) ──
+let activeTab = 'embellished';
+
+function persistState() {
+  const state = { tab: activeTab };
+  if (activeTags.size) state.tags = [...activeTags];
+  try { localStorage.setItem('cs-state', JSON.stringify(state)); } catch {}
+}
+
+function activateTab(id) {
+  activeTab = id;
+  const tb = [...tabs].find(t => t.dataset.tab === id);
+  activate(tb || tabs[0]);
+}
+
 tabs.forEach(t => t.addEventListener('click', e => {
-  e.preventDefault(); activate(t);
-  try {
-    localStorage.setItem('cs-tab', t.dataset.tab);
-    // Clicking a tab clears any active tag filter
-    if (activeTags.size) { activeTags.clear(); applyTagFilter(); localStorage.removeItem('cs-tags'); }
-  } catch {}
+  e.preventDefault();
+  activeTab = t.dataset.tab;
+  activate(t);
+  if (activeTags.size) { activeTags.clear(); applyTagFilter(); }
+  persistState();
 }));
 tagBtns.forEach(b => b.addEventListener('click', e => {
   e.preventDefault();
   const tag = b.dataset.tag;
   if (activeTags.has(tag)) { activeTags.delete(tag); } else { activeTags.add(tag); }
   applyTagFilter();
-  try {
-    if (activeTags.size) localStorage.setItem('cs-tags', JSON.stringify([...activeTags]));
-    else localStorage.removeItem('cs-tags');
-  } catch {}
+  persistState();
 }));
 
+// ── Restore ──
 const urlTag = new URLSearchParams(location.search).get('tag');
 try {
-  const savedTab = localStorage.getItem('cs-tab');
-  const restoreTab = () => {
-    const tb = savedTab ? [...tabs].find(t => t.dataset.tab === savedTab) : null;
-    activate(tb || tabs[0]);
-  };
-
+  const saved = (() => {
+    try { const s = localStorage.getItem('cs-state'); return s ? JSON.parse(s) : null; } catch { return null; }
+  })();
   if (urlTag) {
     activeTags.add(urlTag);
-    restoreTab();
+    activateTab('all');
     applyTagFilter();
+    persistState();
+  } else if (saved && saved.tags && saved.tags.length) {
+    for (const t of saved.tags) activeTags.add(t);
+    activateTab(saved.tab || 'embellished');
+    applyTagFilter();
+  } else if (saved && saved.tab) {
+    activateTab(saved.tab);
   } else {
-    const savedTags = localStorage.getItem('cs-tags');
-    if (savedTags) {
-      for (const t of JSON.parse(savedTags)) activeTags.add(t);
-      restoreTab();
-      applyTagFilter();
-    } else {
-      restoreTab();
-    }
+    activateTab('embellished');
   }
 } catch { activate(tabs[0]); }
 
