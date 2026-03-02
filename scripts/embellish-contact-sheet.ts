@@ -520,6 +520,32 @@ const html = `<!DOCTYPE html>
   body.column-view .grid { grid-template-columns: 1fr; gap: 12px; max-width: 700px; }
   body.column-view .card img { aspect-ratio: auto; object-fit: contain; }
 
+  /* Modal */
+  .modal-overlay {
+    display: none; position: fixed; inset: 0; z-index: 1100;
+    background: rgba(10,10,10,0.85); justify-content: center; align-items: center;
+  }
+  .modal-overlay.open { display: flex; }
+  .modal {
+    background: #111; border: 1px solid #333; border-radius: 6px;
+    padding: 24px 28px; min-width: 320px; max-width: 420px;
+  }
+  .modal h3 { color: #e0e0e0; font-size: 14px; margin-bottom: 16px; }
+  .modal .modal-options { display: flex; flex-direction: column; gap: 8px; }
+  .modal .modal-opt {
+    padding: 10px 16px; border: 1px solid #333; border-radius: 4px;
+    background: #0a0a0a; color: #e0e0e0; font-family: inherit; font-size: 12px;
+    cursor: pointer; transition: all 0.15s; text-align: left;
+  }
+  .modal .modal-opt:hover { border-color: #4DD0E1; color: #4DD0E1; }
+  .modal .modal-opt .opt-count { color: #4DD0E1; font-weight: bold; }
+  .modal .modal-cancel {
+    margin-top: 12px; padding: 6px 14px; border: 1px solid #333; border-radius: 3px;
+    background: transparent; color: #666; font-family: inherit; font-size: 11px;
+    cursor: pointer; width: 100%;
+  }
+  .modal .modal-cancel:hover { color: #888; border-color: #444; }
+
   /* Lightbox */
   .lightbox {
     display: none; position: fixed; inset: 0; z-index: 1000;
@@ -618,6 +644,9 @@ ${renderSection("Email Heroes", "email", sections.email)}
   <img src="" alt="" />
   <div class="lb-meta"></div>
 </div>
+<div class="modal-overlay" id="modal-overlay">
+  <div class="modal" id="modal"></div>
+</div>
 
 <script>
 const ENTRIES = ${entriesJson};
@@ -709,14 +738,87 @@ allCards.forEach(card => {
   });
 });
 
+// ── Modal helper ──
+const modalOverlay = document.getElementById('modal-overlay');
+const modalEl = document.getElementById('modal');
+
+function showModal(title, options, onCancel) {
+  let h = '<h3>' + title + '</h3><div class="modal-options">';
+  options.forEach(function(opt, i) {
+    h += '<button class="modal-opt" data-idx="' + i + '">' + opt.label + '</button>';
+  });
+  h += '</div><button class="modal-cancel">cancel</button>';
+  modalEl.innerHTML = h;
+  modalOverlay.classList.add('open');
+
+  modalEl.querySelectorAll('.modal-opt').forEach(function(btn) {
+    btn.addEventListener('click', function() {
+      modalOverlay.classList.remove('open');
+      options[Number(btn.dataset.idx)].action();
+    });
+  });
+  modalEl.querySelector('.modal-cancel').addEventListener('click', function() {
+    modalOverlay.classList.remove('open');
+    if (onCancel) onCancel();
+  });
+  modalOverlay.addEventListener('click', function(ev) {
+    if (ev.target === modalOverlay) { modalOverlay.classList.remove('open'); if (onCancel) onCancel(); }
+  }, { once: true });
+}
+
+function getFilteredRelDirs() {
+  if (activeTags.size === 0) return null; // no filter
+  return ENTRIES.filter(function(e) {
+    const t = e.tag ?? '';
+    for (const f of activeTags) { if (t === f || t.startsWith(f + '/')) return true; }
+    return false;
+  }).map(function(e) { return e.relDir; });
+}
+
+function countVotes(scope) {
+  let kept = 0, rejected = 0;
+  const dirs = scope === 'filtered' ? getFilteredRelDirs() : null;
+  Object.keys(votes).forEach(function(k) {
+    if (dirs && !dirs.includes(k)) return;
+    if (votes[k] === 'keep') kept++;
+    if (votes[k] === 'reject') rejected++;
+  });
+  return { kept: kept, rejected: rejected, total: kept + rejected };
+}
+
 document.getElementById('clear-votes').addEventListener('click', () => {
-  Object.keys(votes).forEach(k => delete votes[k]);
-  fetch('/api/vote', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(votes),
-  }).catch(() => {});
-  updateUI();
+  const filtered = getFilteredRelDirs();
+  const filteredVotes = filtered ? countVotes('filtered') : { total: 0 };
+  const allVotes = countVotes('all');
+
+  if (allVotes.total === 0) return;
+
+  // If no filter active or no filtered votes, just clear all
+  if (!filtered || filteredVotes.total === 0) {
+    Object.keys(votes).forEach(k => delete votes[k]);
+    fetch('/api/vote', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(votes) }).catch(() => {});
+    updateUI();
+    return;
+  }
+
+  showModal('Clear votes', [
+    {
+      label: 'Filtered votes (<span class="opt-count">' + filteredVotes.total + '</span>)',
+      action: function() {
+        filtered.forEach(function(d) { delete votes[d]; });
+        fetch('/api/vote', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(votes) }).catch(() => {});
+        updateUI();
+      }
+    },
+    {
+      label: 'All votes (<span class="opt-count">' + allVotes.total + '</span>)',
+      action: function() {
+        Object.keys(votes).forEach(k => delete votes[k]);
+        fetch('/api/vote', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(votes) }).catch(() => {});
+        updateUI();
+      }
+    }
+  ]);
 });
 
 // ── Tag filter ──
@@ -857,14 +959,18 @@ function updateRefineBtn() {
   refineBtn.disabled = !hasKept;
 }
 
-refineBtn.addEventListener('click', () => {
+function startRefine(scope) {
   refineBtn.disabled = true;
   refineBtn.classList.add('running');
   refineBtn.textContent = 'refining...';
   refineStatus.classList.add('show');
   refineStatus.innerHTML = '<div class="step active">Connecting...</div>';
 
-  const es = new EventSource('/api/refine');
+  let url = '/api/refine?scope=' + scope;
+  if (scope === 'filtered' && activeTags.size > 0) {
+    url += '&tags=' + encodeURIComponent(JSON.stringify([...activeTags]));
+  }
+  const es = new EventSource(url);
   let html = '';
 
   es.addEventListener('step', e => {
@@ -898,8 +1004,8 @@ refineBtn.addEventListener('click', () => {
 
   es.addEventListener('done', e => {
     const d = JSON.parse(e.data);
-    html += '<div class="step done">Done! ' + d.imageCount + ' images tagged <span style="color:#4DD0E1">#' + d.tag + '</span></div>';
-    html += '<button class="reload-btn" onclick="location.reload()">reload to see results</button>';
+    html += '<div class="step done">Done! ' + d.imageCount + ' new images ready — see <a href="?tag=' + encodeURIComponent(d.tag) + '" style="color:#4DD0E1;text-decoration:underline;">#' + d.tag + '</a></div>';
+    html += '<button class="reload-btn" onclick="location.href=\'?tag=' + encodeURIComponent(d.tag) + '\'">view #' + d.tag + '</button>';
     refineStatus.innerHTML = html;
     es.close();
     refineBtn.classList.remove('running');
@@ -920,6 +1026,35 @@ refineBtn.addEventListener('click', () => {
     refineBtn.textContent = 'refine + regen';
     updateRefineBtn();
   });
+}
+
+refineBtn.addEventListener('click', () => {
+  const filtered = getFilteredRelDirs();
+  const fv = filtered ? countVotes('filtered') : { kept: 0, rejected: 0 };
+  const av = countVotes('all');
+
+  // If no filter active, go straight to all
+  if (!filtered || (fv.kept === 0 && fv.rejected === 0)) {
+    startRefine('all');
+    return;
+  }
+
+  // If filtered and all are the same, go straight
+  if (fv.kept === av.kept && fv.rejected === av.rejected) {
+    startRefine('all');
+    return;
+  }
+
+  showModal('Refine scope', [
+    {
+      label: 'Filtered votes (<span class="opt-count">' + fv.kept + '</span> kept, <span class="opt-count">' + fv.rejected + '</span> rejected)',
+      action: function() { startRefine('filtered'); }
+    },
+    {
+      label: 'All votes (<span class="opt-count">' + av.kept + '</span> kept, <span class="opt-count">' + av.rejected + '</span> rejected)',
+      action: function() { startRefine('all'); }
+    }
+  ]);
 });
 
 // ── Init ──
@@ -992,8 +1127,20 @@ if (SERVE) {
               const freshVotes: VoteMap = existsSync(VOTES_PATH)
                 ? JSON.parse(readFileSync(VOTES_PATH, "utf-8")) : {};
 
-              const kept = entries.filter(e => freshVotes[e.relDir] === "keep");
-              const rejected = entries.filter(e => freshVotes[e.relDir] === "reject");
+              // Scope filtering — only use votes matching active tags
+              const scope = url.searchParams.get("scope") ?? "all";
+              const tagsParam = url.searchParams.get("tags");
+              const filterTags: string[] = tagsParam ? JSON.parse(tagsParam) : [];
+
+              const scopedEntries = scope === "filtered" && filterTags.length > 0
+                ? entries.filter(e => {
+                    const t = e.tag ?? "";
+                    return filterTags.some(f => t === f || t.startsWith(f + "/"));
+                  })
+                : entries;
+
+              const kept = scopedEntries.filter(e => freshVotes[e.relDir] === "keep");
+              const rejected = scopedEntries.filter(e => freshVotes[e.relDir] === "reject");
 
               if (kept.length === 0) { send("error", { error: "No kept images to learn from" }); ctrl.close(); return; }
               if (rejected.length === 0) { send("error", { error: "No rejected images to retry" }); ctrl.close(); return; }
