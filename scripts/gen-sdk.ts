@@ -146,7 +146,9 @@ if (generatedIds.length > 0) {
     "// Source: packages/<id>/openapi.yaml (all prims with rest interface)",
     "// Regenerate: pnpm gen:sdk",
     "",
-    'export { unwrap } from "./shared.js";',
+    'export { unwrap, PrimError } from "./shared.js";',
+    'export { createPrimClient } from "./client.js";',
+    'export type { PrimClientConfig } from "./client.js";',
   ];
 
   for (const id of allBarrelIds) {
@@ -184,6 +186,20 @@ if (generatedIds.length > 0) {
 
   const barrelPath = join(OUTPUT_DIR, "index.ts");
   applyFile(barrelPath, barrelLines.join("\n"));
+
+  // Generate exports map in package.json
+  const pkgPath = join(ROOT, "packages", "sdk", "package.json");
+  const pkg = JSON.parse(readFileSync(pkgPath, "utf8"));
+  const exports: Record<string, string> = {
+    ".": "./src/index.ts",
+    "./client": "./src/client.ts",
+    "./shared": "./src/shared.ts",
+  };
+  for (const id of allBarrelIds) {
+    exports[`./${id}`] = `./src/${id}.ts`;
+  }
+  pkg.exports = exports;
+  applyFile(pkgPath, `${JSON.stringify(pkg, null, 2)}\n`);
 }
 
 console.log(`\n  total: ${generatedIds.length} client(s) generated`);
