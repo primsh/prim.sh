@@ -8,9 +8,9 @@ hero:
 body: |
   Hey {name},
 
-  Thanks for testing v{version} of [prim.sh](https://prim.sh) — we truly appreciate you helping us get to launch.
+  Thanks for helping us test v{version} of [prim.sh](https://prim.sh) — we truly appreciate it!
 
-  Prim gives AI agents access to real infrastructure — storage, search, compute, email, etc. — through a single payment protocol, [x402](https://www.x402.org/). Zero signup, zero API keys. Agents pay per call with USDC on Base mainnet.
+  Prim gives AI agents access to real infrastructure — storage, search, compute, email, and much more — through a single payment protocol, [x402](https://www.x402.org/). Zero signup, zero API keys. Agents pay per call with USDC on Base mainnet.
 
   Give your agent this command:
 
@@ -18,22 +18,21 @@ body: |
   curl -fsSL prim.sh/install.sh | sh -s {code}
   ```
 
-  This is your invite code — it's one-time use. The command installs the Prim CLI and prints the next step to stdout:
+  This is your invite code — it's one-time use. It installs the Prim CLI and your agent will know what to do next. Nothing to configure on your end.
 
-  ```
-  prim v{version} installed to ~/.prim/bin/prim
+  Here's what your agent does from there:
 
-  Next:
-    prim skill onboard --code {code}
-  ```
+  - Creates a self-custodial crypto wallet on [wallet.prim.sh](https://wallet.prim.sh) (private key stays on your machine — Prim never sees it).
+  - Redeems your invite code on [gate.prim.sh](https://gate.prim.sh), which loads $5 of real USDC into the wallet from us. You're welcome 😎.
+  - Runs a web search via [search.prim.sh](https://search.prim.sh).
+  - Writes and reads back a small file via [store.prim.sh](https://store.prim.sh).
+  - Sends us feedback via [feedback.prim.sh](https://feedback.prim.sh).
 
-  Your agent will read that output and run the next command. `prim skill onboard` prints a step-by-step runbook as markdown to stdout. Your agent reads it and follows the instructions.
+  Your agent doesn't need any API keys, accounts, or configuration of its own. Everything happens through Prim's services.
 
-  Everything happens through Prim's services. Your agent doesn't need any API keys, accounts, or configuration of its own. The runbook walks it through creating a wallet on [wallet.prim.sh](https://wallet.prim.sh), redeeming the invite code, verifying its balance, running a web search via [search.prim.sh](https://search.prim.sh), storing and retrieving a file via [store.prim.sh](https://store.prim.sh), and sending us feedback via [feedback.prim.sh](https://feedback.prim.sh).
+  This test is simple on purpose — we're validating that the full pipeline works end to end before we build more on top of it. What we want to know: did your agent complete every step without help? If it got stuck, where and why? That's the most valuable feedback you and your agent can give us.
 
-  The wallet is fully self-custodial. The private key is generated locally and stored at `~/.prim/keys/`. All signing happens locally. Prim never has access to it.
-
-  The invite code funds your agent's wallet with $5 of real USDC from us on Base mainnet. The test costs roughly $0.01 — whatever's left is yours, so you can keep using Prim on us or buy yourself a latte 😉. The wallet persists after the test and more services are coming. Full pricing at [prim.sh/costs](https://prim.sh/costs/).
+  The test costs roughly $0.01 — whatever's left is yours, so you can keep using Prim on us or buy yourself a latte 😉. The wallet persists after the test and more services are coming. Full pricing at [prim.sh/costs](https://prim.sh/costs/).
 
   If something goes wrong, tell your agent to submit feedback via [feedback.prim.sh](https://feedback.prim.sh/).
 

@@ -16,7 +16,7 @@
  */
 
 import { execSync } from "node:child_process";
-import { readFileSync, writeFileSync } from "node:fs";
+import { existsSync, readFileSync, writeFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { parseArgs } from "node:util";
 import { parse as parseYaml } from "yaml";
@@ -25,6 +25,7 @@ import { parse as parseYaml } from "yaml";
 
 const YAML_PATH = resolve(import.meta.dirname, "..", "docs", "beta-invite.yaml");
 const VERSION_URL = "https://dl.prim.sh/latest/VERSION";
+const MAILER_SCRIPT = resolve(import.meta.dirname, ".env.send-email.sh");
 
 // ── Styles ──────────────────────────────────────────────────────────────────
 
@@ -86,9 +87,31 @@ function mdToHtml(md: string): string {
       continue;
     }
 
-    // Paragraph — collect lines until blank line or code fence
+    // Unordered list — collect consecutive "- " lines
+    if (line.trimStart().startsWith("- ")) {
+      const items: string[] = [];
+      while (i < lines.length && lines[i].trimStart().startsWith("- ")) {
+        items.push(inlineMarkdown(lines[i].trimStart().slice(2)));
+        i++;
+      }
+      const lis = items
+        .map((item) => `<li style="margin:0 0 8px 0; padding-left:4px;">${item}</li>`)
+        .join("\n");
+      out.push(
+        `<table width="100%" cellpadding="0" cellspacing="0" style="margin:0 0 16px 0;">` +
+          `<tr><td><ul style="margin:0; padding-left:20px; list-style-type:disc;">\n${lis}\n</ul></td></tr></table>`,
+      );
+      continue;
+    }
+
+    // Paragraph — collect lines until blank line, code fence, or list
     const pLines: string[] = [];
-    while (i < lines.length && lines[i].trim() !== "" && !lines[i].trimStart().startsWith("```")) {
+    while (
+      i < lines.length &&
+      lines[i].trim() !== "" &&
+      !lines[i].trimStart().startsWith("```") &&
+      !lines[i].trimStart().startsWith("- ")
+    ) {
       pLines.push(lines[i]);
       i++;
     }
@@ -273,14 +296,36 @@ if (command === "gen") {
       continue;
     }
 
-    const cmd = `himalaya send --from "${config.from}" --to "${invite.email}" --subject "${subject}" --body "${tmp}"`;
-    console.log("Sending via himalaya...");
+    // Build raw MIME message with HTML body
+    const rawMime = [
+      `From: ${config.from}`,
+      `To: ${invite.email}`,
+      `Subject: ${subject}`,
+      `Date: ${new Date().toUTCString()}`,
+      "MIME-Version: 1.0",
+      'Content-Type: text/html; charset="utf-8"',
+      "",
+      html,
+    ].join("\r\n");
 
+    const rawPath = `/tmp/beta-invite-${invite.code}.eml`;
+    writeFileSync(rawPath, rawMime);
+
+    if (!existsSync(MAILER_SCRIPT)) {
+      console.log(`  No mailer configured. Raw MIME saved at: ${rawPath}`);
+      console.log(`  Create ${MAILER_SCRIPT} to enable sending.`);
+      console.log();
+      continue;
+    }
+
+    console.log("Sending...");
     try {
-      execSync(cmd, { stdio: "inherit" });
+      execSync(`bash "${MAILER_SCRIPT}" "${rawPath}" "${config.from}" "${invite.email}" "${subject}"`, {
+        stdio: "inherit",
+      });
       console.log("Sent.");
     } catch {
-      console.error(`Failed to send to ${invite.email}. HTML saved at: ${tmp}`);
+      console.error(`Failed to send to ${invite.email}. Raw message saved at: ${rawPath}`);
     }
     console.log();
   }
