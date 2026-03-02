@@ -29,9 +29,11 @@ vi.mock("../src/service.ts", async (importOriginal) => {
     createBucket: vi.fn(),
     listBuckets: vi.fn(),
     getBucket: vi.fn(),
+    updateBucket: vi.fn(),
     deleteBucket: vi.fn(),
     putObject: vi.fn(),
     getObject: vi.fn(),
+    getPublicObject: vi.fn(),
     deleteObject: vi.fn(),
     listObjects: vi.fn(),
     getUsage: vi.fn(),
@@ -41,9 +43,9 @@ vi.mock("../src/service.ts", async (importOriginal) => {
   };
 });
 
-import type { CreateBucketResponse, PresignResponse } from "../src/api.ts";
+import type { BucketResponse, CreateBucketResponse, PresignResponse } from "../src/api.ts";
 import app from "../src/index.ts";
-import { createBucket, presignObject } from "../src/service.ts";
+import { createBucket, getPublicObject, presignObject, updateBucket } from "../src/service.ts";
 
 const MOCK_BUCKET: CreateBucketResponse = {
   bucket: {
@@ -53,6 +55,7 @@ const MOCK_BUCKET: CreateBucketResponse = {
     owner_wallet: "0x0000000000000000000000000000000000000001",
     quota_bytes: 104857600,
     usage_bytes: 0,
+    is_public: false,
     created_at: "2026-02-26T00:00:00.000Z",
   },
 };
@@ -61,6 +64,8 @@ describe("store.sh app", () => {
   beforeEach(() => {
     vi.mocked(createBucket).mockReset();
     vi.mocked(presignObject).mockReset();
+    vi.mocked(updateBucket).mockReset();
+    vi.mocked(getPublicObject).mockReset();
   });
 
   // Check 1: default export defined
@@ -76,14 +81,17 @@ describe("store.sh app", () => {
     expect(body).toMatchObject({ service: "store.sh", status: "ok" });
   });
 
-  // Check 3: x402 middleware is wired with correct paid routes and payTo address
+  // Check 3: x402 middleware is wired with correct paid routes, payTo, and free routes
   it("x402 middleware is registered with paid routes and payTo", () => {
     expect(createAgentStackMiddlewareSpy).toHaveBeenCalledWith(
       expect.objectContaining({
         payTo: expect.any(String),
-        freeRoutes: expect.arrayContaining(["GET /"]),
+        freeRoutes: expect.arrayContaining(["GET /", "GET /public/[bucket_id]/*"]),
       }),
-      expect.objectContaining({ "POST /v1/buckets": expect.any(String) }),
+      expect.objectContaining({
+        "POST /v1/buckets": expect.any(String),
+        "PUT /v1/buckets/[id]": expect.any(String),
+      }),
     );
   });
 
@@ -122,7 +130,46 @@ describe("store.sh app", () => {
     expect(res.status).toBe(400);
   });
 
-  // Check 6: presign happy path — POST /v1/buckets/:id/presign returns 200 with presign shape
+  // Check 6: PUT /v1/buckets/:id — update bucket visibility
+  it("PUT /v1/buckets/:id with is_public returns 200 with updated bucket", async () => {
+    const mockBucket: BucketResponse = {
+      ...MOCK_BUCKET.bucket,
+      is_public: true,
+      public_url: "https://store.prim.sh/public/b_abcd1234",
+    };
+    vi.mocked(updateBucket).mockReturnValueOnce({ ok: true, data: mockBucket });
+
+    const res = await app.request("/v1/buckets/b_abcd1234", {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ is_public: true }),
+    });
+
+    expect(res.status).toBe(200);
+    const body = (await res.json()) as BucketResponse;
+    expect(body.is_public).toBe(true);
+    expect(body.public_url).toContain("/public/b_abcd1234");
+  });
+
+  // Check 7: GET /public/:bucket_id/* — free public object route
+  it("GET /public/:bucket_id/key returns streamed content", async () => {
+    const stream = new ReadableStream({
+      start(controller) {
+        controller.enqueue(new TextEncoder().encode("hello"));
+        controller.close();
+      },
+    });
+    vi.mocked(getPublicObject).mockResolvedValueOnce({
+      ok: true,
+      data: { body: stream, contentType: "text/plain", contentLength: 5, etag: '"abc"' },
+    });
+
+    const res = await app.request("/public/b_abcd1234/images/hero.png");
+    expect(res.status).toBe(200);
+    expect(res.headers.get("Cache-Control")).toBe("public, max-age=3600");
+  });
+
+  // Check 8: presign happy path — POST /v1/buckets/:id/presign returns 200 with presign shape
   it("POST /v1/buckets/:id/presign returns 200 with presigned URL", async () => {
     const mockPresign: PresignResponse = {
       url: "https://test-cf-account.r2.cloudflarestorage.com/cf-bucket/file.txt?X-Amz-Signature=abc",

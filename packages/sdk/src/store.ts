@@ -20,6 +20,10 @@ export interface BucketResponse {
   quota_bytes: number | null;
   /** Current storage usage in bytes. */
   usage_bytes: number;
+  /** Whether the bucket is publicly readable. */
+  is_public: boolean;
+  /** Stable public URL prefix for this bucket. Only present when is_public is true. */
+  public_url?: string;
   /** ISO 8601 timestamp when the bucket was created. */
   created_at: string;
 }
@@ -29,6 +33,8 @@ export interface CreateBucketRequest {
   name: string;
   /** Storage region (e.g. "us-east-1"). Defaults to primary region. */
   location?: string;
+  /** Whether the bucket should be publicly readable. Defaults to false. */
+  is_public?: boolean;
 }
 
 export interface CreateBucketResponse {
@@ -68,6 +74,8 @@ export interface PutObjectResponse {
   size: number;
   /** ETag (MD5 hash). */
   etag: string;
+  /** Stable public URL for this object. Only present when bucket is public. */
+  public_url?: string;
 }
 
 export interface QuotaResponse {

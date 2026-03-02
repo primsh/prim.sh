@@ -111,8 +111,9 @@ Create a new storage bucket
 Price: $0.001
 
 Request:
-  name      string  required  Bucket name. Unique per wallet. 3-63 chars, alphanumeric + hyphens.
-  location  string  optional  Storage region (e.g. "us-east-1"). Defaults to primary region.
+  name       string   required  Bucket name. Unique per wallet. 3-63 chars, alphanumeric + hyphens.
+  location   string   optional  Storage region (e.g. "us-east-1"). Defaults to primary region.
+  is_public  boolean  optional  Whether the bucket should be publicly readable. Defaults to false.
 
 Response (201):
   bucket  BucketResponse  The created bucket.
@@ -159,6 +160,8 @@ Response (200):
   owner_wallet  string         Ethereum address of the bucket owner.
   quota_bytes   number | null  Per-bucket quota in bytes. Null = default (100 MB).
   usage_bytes   number         Current storage usage in bytes.
+  is_public     boolean        Whether the bucket is publicly readable.
+  public_url    string         Stable public URL prefix for this bucket. Only present when is_public is true.
   created_at    string         ISO 8601 timestamp when the bucket was created.
 
 Errors:
@@ -200,9 +203,10 @@ Path params:
   key  string  required  key parameter
 
 Response (200):
-  key   string  Object key as stored.
-  size  number  Object size in bytes.
-  etag  string  ETag (MD5 hash).
+  key         string  Object key as stored.
+  size        number  Object size in bytes.
+  etag        string  ETag (MD5 hash).
+  public_url  string  Stable public URL for this object. Only present when bucket is public.
 
 Errors:
   400  invalid_request         Missing or invalid body

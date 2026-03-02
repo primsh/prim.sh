@@ -56,6 +56,7 @@ components:
         - owner_wallet
         - quota_bytes
         - usage_bytes
+        - is_public
         - created_at
       properties:
         id:
@@ -80,6 +81,12 @@ components:
         usage_bytes:
           type: number
           description: Current storage usage in bytes.
+        is_public:
+          type: boolean
+          description: Whether the bucket is publicly readable.
+        public_url:
+          type: string
+          description: Stable public URL prefix for this bucket. Only present when is_public is true.
         created_at:
           type: string
           description: ISO 8601 timestamp when the bucket was created.
@@ -94,6 +101,9 @@ components:
         location:
           type: string
           description: Storage region (e.g. "us-east-1"). Defaults to primary region.
+        is_public:
+          type: boolean
+          description: Whether the bucket should be publicly readable. Defaults to false.
     CreateBucketResponse:
       type: object
       required:
@@ -169,6 +179,9 @@ components:
         etag:
           type: string
           description: ETag (MD5 hash).
+        public_url:
+          type: string
+          description: Stable public URL for this object. Only present when bucket is public.
     QuotaResponse:
       type: object
       required:
