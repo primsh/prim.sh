@@ -273,14 +273,31 @@ if (command === "gen") {
       continue;
     }
 
-    const cmd = `himalaya send --from "${config.from}" --to "${invite.email}" --subject "${subject}" --body "${tmp}"`;
-    console.log("Sending via himalaya...");
+    // Build raw MIME message with HTML body
+    const rawMime = [
+      `From: ${config.from}`,
+      `To: ${invite.email}`,
+      `Subject: ${subject}`,
+      `Date: ${new Date().toUTCString()}`,
+      "MIME-Version: 1.0",
+      'Content-Type: text/html; charset="utf-8"',
+      "",
+      html,
+    ].join("\r\n");
+
+    const rawPath = `/tmp/beta-invite-${invite.code}.eml`;
+    writeFileSync(rawPath, rawMime);
+
+    const account = config.from.split("@")[0];
+    console.log(`Sending via himalaya (account: ${account})...`);
 
     try {
-      execSync(cmd, { stdio: "inherit" });
+      execSync(`cat "${rawPath}" | himalaya message send --account ${account}`, {
+        stdio: "inherit",
+      });
       console.log("Sent.");
     } catch {
-      console.error(`Failed to send to ${invite.email}. HTML saved at: ${tmp}`);
+      console.error(`Failed to send to ${invite.email}. Raw message saved at: ${rawPath}`);
     }
     console.log();
   }
