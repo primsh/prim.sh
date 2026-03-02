@@ -246,7 +246,7 @@ jobs:
 
       - name: Run gitleaks
         run: |
-          VERSION=$(curl -sf https://api.github.com/repos/gitleaks/gitleaks/releases/latest | grep '"tag_name"' | cut -d'"' -f4)
+          VERSION=v8.30.0
           curl -sSfL "https://github.com/gitleaks/gitleaks/releases/download/${VERSION}/gitleaks_${VERSION#v}_linux_x64.tar.gz" | tar -xz gitleaks
           sudo mv gitleaks /usr/local/bin/
           if [ "${{ github.event_name }}" = "pull_request" ]; then
