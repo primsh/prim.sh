@@ -197,6 +197,33 @@ export const storeTools: Tool[] = [
         required: ["id"],
       },
   },
+  {
+    name: "store_presign_object",
+    description: "Generate a presigned URL for direct GET or PUT access to an object. GET presign requires object to exist. | Price: $0.001",
+    inputSchema: {
+        type: "object",
+        properties: {
+          "id": {
+            type: "string",
+            description: "id parameter",
+          },
+          "key": {
+            type: "string",
+            description: "Object key to presign.",
+          },
+          "method": {
+            type: "string",
+            enum: ["GET","PUT"],
+            description: "HTTP method: \"GET\" for download, \"PUT\" for upload.",
+          },
+          "expires_in": {
+            type: "number",
+            description: "URL lifetime in seconds (60–86400). Defaults to 3600.",
+          },
+        },
+        required: ["id","key","method"],
+      },
+  },
 ];
 // END:GENERATED:TOOLS
 
@@ -297,6 +324,18 @@ export async function handleStoreTool(
 
       case "store_reconcile_quota": {
         const res = await primFetch(`${baseUrl}/v1/buckets/${args.id}/quota/reconcile`, { method: "POST" });
+        const data = await res.json();
+        if (!res.ok) return errorResult(data);
+        return { content: [{ type: "text", text: JSON.stringify(data, null, 2) }] };
+      }
+
+      case "store_presign_object": {
+        const { id, ...body } = args;
+        const res = await primFetch(`${baseUrl}/v1/buckets/${args.id}/presign`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(body),
+        });
         const data = await res.json();
         if (!res.ok) return errorResult(data);
         return { content: [{ type: "text", text: JSON.stringify(data, null, 2) }] };

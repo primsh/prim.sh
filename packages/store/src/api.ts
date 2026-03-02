@@ -112,3 +112,25 @@ export interface ReconcileResponse {
   /** Difference (actual - previous). Negative means recorded was overstated. */
   delta_bytes: number;
 }
+
+// ─── Presign types ─────────────────────────────────────────────────────────
+
+export interface PresignRequest {
+  /** Object key to presign. */
+  key: string;
+  /** HTTP method: "GET" for download, "PUT" for upload. */
+  method: "GET" | "PUT";
+  /** URL lifetime in seconds (60–86400). Defaults to 3600. */
+  expires_in?: number;
+}
+
+export interface PresignResponse {
+  /** Presigned URL for direct R2 access. */
+  url: string;
+  /** HTTP method this URL was signed for. */
+  method: "GET" | "PUT";
+  /** Object key. */
+  key: string;
+  /** ISO 8601 timestamp when the URL expires. */
+  expires_at: string;
+}

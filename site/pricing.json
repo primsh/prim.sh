@@ -1,5 +1,5 @@
 {
-  "updated": "2026-03-01",
+  "updated": "2026-03-02",
   "currency": "USDC",
   "network": "eip155:84532",
   "services": [
@@ -198,6 +198,12 @@
           "path": "/v1/buckets/{id}/quota/reconcile",
           "price_usdc": "0.015/GB/mo",
           "description": "Recompute bucket usage by scanning actual R2 storage. Use when usage_bytes appears incorrect."
+        },
+        {
+          "method": "POST",
+          "path": "/v1/buckets/{id}/presign",
+          "price_usdc": "0.001",
+          "description": "Generate a presigned URL for direct GET or PUT access to an object. GET presign requires object to exist."
         }
       ]
     },

@@ -26,6 +26,7 @@ import type {
   CreateBucketResponse,
   DeleteObjectResponse,
   ObjectResponse,
+  PresignResponse,
   PutObjectResponse,
   QuotaResponse,
   ReconcileResponse,
@@ -41,6 +42,7 @@ import {
   getObject as s3GetObject,
   headObject as s3HeadObject,
   listObjects as s3ListObjects,
+  presignUrl as s3PresignUrl,
   putObject as s3PutObject,
 } from "./s3.ts";
 
@@ -408,6 +410,59 @@ export async function listObjects(
     }
     throw err;
   }
+}
+
+// ─── Presign service ─────────────────────────────────────────────────────
+
+const PRESIGN_MIN_EXPIRES = 60;
+const PRESIGN_MAX_EXPIRES = 86400;
+const PRESIGN_DEFAULT_EXPIRES = 3600;
+
+export async function presignObject(
+  bucketId: string,
+  callerWallet: string,
+  key: string,
+  method: "GET" | "PUT",
+  expiresIn?: number,
+): Promise<ServiceResult<PresignResponse>> {
+  const check = checkBucketOwnership(bucketId, callerWallet);
+  if (!check.ok) return check;
+
+  if (!isValidObjectKey(key)) {
+    return {
+      ok: false,
+      status: 400,
+      code: "invalid_request",
+      message: "Invalid object key. Must be 1-1024 chars, no null bytes, no leading slash.",
+    };
+  }
+
+  const ttl = expiresIn ?? PRESIGN_DEFAULT_EXPIRES;
+  if (ttl < PRESIGN_MIN_EXPIRES || ttl > PRESIGN_MAX_EXPIRES) {
+    return {
+      ok: false,
+      status: 400,
+      code: "invalid_request",
+      message: `expires_in must be between ${PRESIGN_MIN_EXPIRES} and ${PRESIGN_MAX_EXPIRES} seconds.`,
+    };
+  }
+
+  // GET presign: verify object exists
+  if (method === "GET") {
+    try {
+      const head = await s3HeadObject(check.row.cf_name, key);
+      if (!head) {
+        return { ok: false, status: 404, code: "not_found", message: "Object not found" };
+      }
+    } catch {
+      return { ok: false, status: 404, code: "not_found", message: "Object not found" };
+    }
+  }
+
+  const url = await s3PresignUrl(check.row.cf_name, key, method, ttl);
+  const expiresAt = new Date(Date.now() + ttl * 1000).toISOString();
+
+  return { ok: true, data: { url, method, key, expires_at: expiresAt } };
 }
 
 // ─── Quota service ──────────────────────────────────────────────────────

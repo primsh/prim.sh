@@ -23,6 +23,7 @@ Part of [prim.sh](https://prim.sh) — zero signup, one payment token, infinite 
 | `GET /v1/buckets/:id/quota` | Get quota and usage for a bucket | $0.001 | `—` | `QuotaResponse` |
 | `PUT /v1/buckets/:id/quota` | Set the storage quota for a bucket. Pass null to reset to default (100 MB). | $0.001 | `SetQuotaRequest` | `QuotaResponse` |
 | `POST /v1/buckets/:id/quota/reconcile` | Recompute bucket usage by scanning actual R2 storage. Use when usage_bytes appears incorrect. | $0.001 | `—` | `ReconcileResponse` |
+| `POST /v1/buckets/:id/presign` | Generate a presigned URL for direct GET or PUT access to an object. GET presign requires object to exist. | $0.001 | `PresignRequest` | `PresignResponse` |
 
 ## Pricing
 
@@ -97,6 +98,23 @@ Part of [prim.sh](https://prim.sh) — zero signup, one payment token, infinite 
 | `previous_bytes` | `number` | Storage usage recorded before reconciliation, in bytes. |
 | `actual_bytes` | `number` | Actual storage usage recomputed from R2, in bytes. |
 | `delta_bytes` | `number` | Difference (actual - previous). Negative means recorded was overstated. |
+
+### `PresignRequest`
+
+| Field | Type | Required |
+|-------|------|----------|
+| `key` | `string` | required |
+| `method` | `"GET" | "PUT"` | required |
+| `expires_in` | `number` | optional |
+
+### `PresignResponse`
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `url` | `string` | Presigned URL for direct R2 access. |
+| `method` | `"GET" | "PUT"` | HTTP method this URL was signed for. |
+| `key` | `string` | Object key. |
+| `expires_at` | `string` | ISO 8601 timestamp when the URL expires. |
 
 ## Providers
 

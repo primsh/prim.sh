@@ -168,6 +168,22 @@ export async function listObjects(
   return { objects, isTruncated, nextToken };
 }
 
+export async function presignUrl(
+  bucketName: string,
+  key: string,
+  method: "GET" | "PUT",
+  expiresIn: number,
+): Promise<string> {
+  const client = getS3Client();
+  const url = new URL(`${getBaseUrl()}/${bucketName}/${key}`);
+  url.searchParams.set("X-Amz-Expires", String(expiresIn));
+  const signed = await client.sign(url.toString(), {
+    method,
+    aws: { signQuery: true },
+  });
+  return signed.url;
+}
+
 /** Reset singleton for tests */
 export function resetS3Client(): void {
   _client = null;

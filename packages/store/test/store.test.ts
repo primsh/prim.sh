@@ -170,6 +170,7 @@ import {
   isValidObjectKey,
   listBuckets,
   listObjects,
+  presignObject,
   putObject,
   reconcileUsage,
   setQuotaForBucket,
@@ -1057,6 +1058,100 @@ describe("store.sh", () => {
       expect(result.ok).toBe(false);
       if (result.ok) return;
       expect(result.code).toBe("bucket_name_taken");
+    });
+  });
+
+  // ─── Presigned URLs ─────────────────────────────────────────────────
+
+  describe("presignObject", () => {
+    async function createTestBucket(): Promise<string> {
+      const result = await createBucket({ name: `presign-test-${Date.now()}` }, CALLER);
+      if (!result.ok) throw new Error("Setup failed: could not create bucket");
+      return result.data.bucket.id;
+    }
+
+    it("GET presign for existing object returns signed URL", async () => {
+      const bucketId = await createTestBucket();
+      // HEAD returns 200 (object exists) — default mock handles this
+      const result = await presignObject(bucketId, CALLER, "file.txt", "GET");
+      expect(result.ok).toBe(true);
+      if (!result.ok) return;
+      expect(result.data.url).toContain("X-Amz-Signature");
+      expect(result.data.method).toBe("GET");
+      expect(result.data.key).toBe("file.txt");
+      expect(result.data.expires_at).toBeDefined();
+    });
+
+    it("GET presign for nonexistent object returns 404", async () => {
+      const bucketId = await createTestBucket();
+      // HEAD returns 404 (object missing)
+      mockFetch.mockImplementationOnce(async () => new Response(null, { status: 404 }));
+      const result = await presignObject(bucketId, CALLER, "missing.txt", "GET");
+      expect(result.ok).toBe(false);
+      if (result.ok) return;
+      expect(result.status).toBe(404);
+      expect(result.code).toBe("not_found");
+    });
+
+    it("PUT presign succeeds without existence check", async () => {
+      const bucketId = await createTestBucket();
+      const result = await presignObject(bucketId, CALLER, "new-file.txt", "PUT");
+      expect(result.ok).toBe(true);
+      if (!result.ok) return;
+      expect(result.data.url).toContain("X-Amz-Signature");
+      expect(result.data.method).toBe("PUT");
+    });
+
+    it("non-owner gets 403", async () => {
+      const bucketId = await createTestBucket();
+      const result = await presignObject(bucketId, OTHER, "file.txt", "GET");
+      expect(result.ok).toBe(false);
+      if (result.ok) return;
+      expect(result.status).toBe(403);
+    });
+
+    it("nonexistent bucket returns 404", async () => {
+      const result = await presignObject("b_nonexist", CALLER, "file.txt", "GET");
+      expect(result.ok).toBe(false);
+      if (result.ok) return;
+      expect(result.status).toBe(404);
+    });
+
+    it("expires_in too low returns 400", async () => {
+      const bucketId = await createTestBucket();
+      const result = await presignObject(bucketId, CALLER, "file.txt", "GET", 10);
+      expect(result.ok).toBe(false);
+      if (result.ok) return;
+      expect(result.status).toBe(400);
+      expect(result.code).toBe("invalid_request");
+    });
+
+    it("expires_in too high returns 400", async () => {
+      const bucketId = await createTestBucket();
+      const result = await presignObject(bucketId, CALLER, "file.txt", "GET", 100000);
+      expect(result.ok).toBe(false);
+      if (result.ok) return;
+      expect(result.status).toBe(400);
+      expect(result.code).toBe("invalid_request");
+    });
+
+    it("expires_in defaults to 3600 when omitted", async () => {
+      const bucketId = await createTestBucket();
+      // HEAD returns 200 (object exists) — default mock
+      const result = await presignObject(bucketId, CALLER, "file.txt", "GET");
+      expect(result.ok).toBe(true);
+      if (!result.ok) return;
+      // The URL should contain X-Amz-Expires=3600
+      expect(result.data.url).toContain("X-Amz-Expires=3600");
+    });
+
+    it("invalid object key returns 400", async () => {
+      const bucketId = await createTestBucket();
+      const result = await presignObject(bucketId, CALLER, "/invalid-key", "GET");
+      expect(result.ok).toBe(false);
+      if (result.ok) return;
+      expect(result.status).toBe(400);
+      expect(result.code).toBe("invalid_request");
     });
   });
 });
