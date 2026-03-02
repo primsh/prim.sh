@@ -10,7 +10,7 @@ port: 3005
 order: 4
 phantom: false
 env:
-  - PRIM_PAY_TO
+  - REVENUE_WALLET
   - PRIM_NETWORK
   - TAVILY_API_KEY
   - WALLET_INTERNAL_URL

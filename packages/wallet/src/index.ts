@@ -55,7 +55,7 @@ import {
 } from "./service.ts";
 
 const networkConfig = getNetworkConfig();
-const PAY_TO_ADDRESS = process.env.PRIM_PAY_TO as string; // validated by createPrimApp
+const PAY_TO_ADDRESS = process.env.REVENUE_WALLET as string; // validated by createPrimApp
 const NETWORK = networkConfig.network;
 const INTERNAL_KEY = process.env.PRIM_INTERNAL_KEY;
 const ALLOWLIST_DB_PATH =

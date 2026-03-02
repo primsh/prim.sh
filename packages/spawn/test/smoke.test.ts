@@ -3,7 +3,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 vi.hoisted(() => {
   process.env.PRIM_NETWORK = "eip155:8453";
-  process.env.PRIM_PAY_TO = "0x0000000000000000000000000000000000000001";
+  process.env.REVENUE_WALLET = "0x0000000000000000000000000000000000000001";
 });
 
 import { mockX402Middleware } from "@primsh/x402-middleware/testing";

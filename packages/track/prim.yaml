@@ -11,7 +11,7 @@ port: 3010
 order: 10
 phantom: false
 env:
-  - PRIM_PAY_TO
+  - REVENUE_WALLET
   - PRIM_NETWORK
   - TRACKINGMORE_API_KEY
   - WALLET_INTERNAL_URL

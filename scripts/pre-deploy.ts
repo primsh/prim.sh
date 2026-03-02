@@ -7,7 +7,7 @@
  *   1. Package exists — packages/<primitive>/src/index.ts present
  *   2. Unit tests pass — pnpm --filter @primsh/<primitive> test exits 0
  *   3. Required env vars — non-empty in current environment
- *   4. x402 config valid — PRIM_NETWORK and PRIM_PAY_TO well-formed
+ *   4. x402 config valid — PRIM_NETWORK and REVENUE_WALLET well-formed
  *   5. Port not allocated — localhost:<port> not already in use
  *   6. External deps reachable — Qdrant / Stalwart / Base RPC health checks
  *   7. DNS resolves to VPS — <primitive>.prim.sh → <VPS_IP>
@@ -46,21 +46,21 @@ type Primitive = string;
 
 // BEGIN:PRIM:ENV
 const REQUIRED_ENV: Record<Primitive, string[]> = {
-  wallet: ["PRIM_PAY_TO", "PRIM_NETWORK", "PRIM_INTERNAL_KEY"],
+  wallet: ["REVENUE_WALLET", "PRIM_NETWORK", "PRIM_INTERNAL_KEY"],
   faucet: ["PRIM_NETWORK", "CDP_API_KEY_ID", "CDP_API_KEY_SECRET", "TESTNET_WALLET", "FAUCET_RESERVE_USDC", "FAUCET_RESERVE_ETH", "FAUCET_REFILL_THRESHOLD_ETH", "FAUCET_REFILL_BATCH_SIZE"],
   gate: ["PRIM_NETWORK", "GATE_WALLET", "GATE_CODES", "GATE_USDC_AMOUNT", "GATE_ETH_AMOUNT", "PRIM_ALLOWLIST_DB", "PRIM_INTERNAL_KEY"],
-  store: ["PRIM_PAY_TO", "PRIM_NETWORK", "CLOUDFLARE_ACCOUNT_ID", "R2_ACCESS_KEY_ID", "R2_SECRET_ACCESS_KEY", "WALLET_INTERNAL_URL"],
-  search: ["PRIM_PAY_TO", "PRIM_NETWORK", "TAVILY_API_KEY", "WALLET_INTERNAL_URL"],
-  spawn: ["PRIM_PAY_TO", "PRIM_NETWORK", "DO_API_TOKEN", "WALLET_INTERNAL_URL"],
-  email: ["PRIM_PAY_TO", "PRIM_NETWORK", "STALWART_URL", "STALWART_API_KEY", "EMAIL_DEFAULT_DOMAIN", "WALLET_INTERNAL_URL"],
-  token: ["PRIM_PAY_TO", "PRIM_NETWORK", "TOKEN_MASTER_KEY", "TOKEN_DEPLOYER_ENCRYPTED_KEY", "BASE_RPC_URL", "WALLET_INTERNAL_URL"],
-  mem: ["PRIM_PAY_TO", "PRIM_NETWORK", "QDRANT_URL", "GOOGLE_API_KEY", "WALLET_INTERNAL_URL"],
-  domain: ["PRIM_PAY_TO", "PRIM_NETWORK", "CLOUDFLARE_API_TOKEN", "CLOUDFLARE_ZONE_ID", "NAMESILO_API_KEY", "WALLET_INTERNAL_URL"],
-  track: ["PRIM_PAY_TO", "PRIM_NETWORK", "TRACKINGMORE_API_KEY", "WALLET_INTERNAL_URL"],
+  store: ["REVENUE_WALLET", "PRIM_NETWORK", "CLOUDFLARE_ACCOUNT_ID", "R2_ACCESS_KEY_ID", "R2_SECRET_ACCESS_KEY", "WALLET_INTERNAL_URL"],
+  search: ["REVENUE_WALLET", "PRIM_NETWORK", "TAVILY_API_KEY", "WALLET_INTERNAL_URL"],
+  spawn: ["REVENUE_WALLET", "PRIM_NETWORK", "DO_API_TOKEN", "WALLET_INTERNAL_URL"],
+  email: ["REVENUE_WALLET", "PRIM_NETWORK", "STALWART_URL", "STALWART_API_KEY", "EMAIL_DEFAULT_DOMAIN", "WALLET_INTERNAL_URL"],
+  token: ["REVENUE_WALLET", "PRIM_NETWORK", "TOKEN_MASTER_KEY", "TOKEN_DEPLOYER_ENCRYPTED_KEY", "BASE_RPC_URL", "WALLET_INTERNAL_URL"],
+  mem: ["REVENUE_WALLET", "PRIM_NETWORK", "QDRANT_URL", "GOOGLE_API_KEY", "WALLET_INTERNAL_URL"],
+  domain: ["REVENUE_WALLET", "PRIM_NETWORK", "CLOUDFLARE_API_TOKEN", "CLOUDFLARE_ZONE_ID", "NAMESILO_API_KEY", "WALLET_INTERNAL_URL"],
+  track: ["REVENUE_WALLET", "PRIM_NETWORK", "TRACKINGMORE_API_KEY", "WALLET_INTERNAL_URL"],
   feedback: ["PRIM_INTERNAL_KEY", "FEEDBACK_DB_PATH"],
-  infer: ["PRIM_PAY_TO", "PRIM_NETWORK", "OPENROUTER_API_KEY", "WALLET_INTERNAL_URL"],
+  infer: ["REVENUE_WALLET", "PRIM_NETWORK", "OPENROUTER_API_KEY", "WALLET_INTERNAL_URL"],
   create: ["PRIM_NETWORK", "WALLET_INTERNAL_URL"],
-  imagine: ["PRIM_PAY_TO", "PRIM_NETWORK", "GEMINI_API_KEY", "WALLET_INTERNAL_URL"],
+  imagine: ["REVENUE_WALLET", "PRIM_NETWORK", "GEMINI_API_KEY", "WALLET_INTERNAL_URL"],
 };
 // END:PRIM:ENV
 
@@ -182,18 +182,18 @@ function checkX402Config(primitive: Primitive) {
     pass("PRIM_NETWORK", `${network} (${label})`);
   }
 
-  // faucet has no PRIM_PAY_TO requirement
+  // faucet has no REVENUE_WALLET requirement
   if (primitive === "faucet") {
-    pass("PRIM_PAY_TO", "skipped for faucet");
+    pass("REVENUE_WALLET", "skipped for faucet");
     return;
   }
 
-  const payTo = process.env.PRIM_PAY_TO ?? "";
+  const payTo = process.env.REVENUE_WALLET ?? "";
   const ethAddressPattern = /^0x[0-9a-fA-F]{40}$/;
   if (!ethAddressPattern.test(payTo)) {
-    fail("PRIM_PAY_TO", `not a valid 0x address, got: ${payTo || "(unset)"}`);
+    fail("REVENUE_WALLET", `not a valid 0x address, got: ${payTo || "(unset)"}`);
   } else {
-    pass("PRIM_PAY_TO", payTo);
+    pass("REVENUE_WALLET", payTo);
   }
 }
 

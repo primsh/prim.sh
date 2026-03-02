@@ -192,7 +192,7 @@ curl -X POST https://email.prim.sh/v1/mailboxes \
 
 ## Environment
 
-- `PRIM_PAY_TO`
+- `REVENUE_WALLET`
 - `PRIM_NETWORK`
 - `STALWART_URL`
 - `STALWART_API_KEY`

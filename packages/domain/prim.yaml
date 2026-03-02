@@ -10,7 +10,7 @@ port: 3009
 order: 9
 phantom: false
 env:
-  - PRIM_PAY_TO
+  - REVENUE_WALLET
   - PRIM_NETWORK
   - CLOUDFLARE_API_TOKEN
   - CLOUDFLARE_ZONE_ID

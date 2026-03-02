@@ -184,7 +184,7 @@ curl -X POST https://wallet.prim.sh/v1/wallets \
 
 ## Environment
 
-- `PRIM_PAY_TO`
+- `REVENUE_WALLET`
 - `PRIM_NETWORK`
 - `PRIM_INTERNAL_KEY`
 

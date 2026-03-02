@@ -11,7 +11,7 @@ port: 3004
 order: 5
 phantom: false
 env:
-  - PRIM_PAY_TO
+  - REVENUE_WALLET
   - PRIM_NETWORK
   - DO_API_TOKEN
   - WALLET_INTERNAL_URL

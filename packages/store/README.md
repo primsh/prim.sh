@@ -141,7 +141,7 @@ curl -X POST https://store.prim.sh/v1/buckets \
 
 ## Environment
 
-- `PRIM_PAY_TO`
+- `REVENUE_WALLET`
 - `PRIM_NETWORK`
 - `CLOUDFLARE_ACCOUNT_ID`
 - `R2_ACCESS_KEY_ID`

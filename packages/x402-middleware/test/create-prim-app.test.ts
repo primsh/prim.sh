@@ -36,7 +36,7 @@ describe("createPrimApp boot", () => {
 
   // ── 1. llmsTxtPath undefined → no crash ────────────────────────────────
   it("boots when llmsTxtPath is undefined", () => {
-    vi.stubEnv("PRIM_PAY_TO", "0xPayTo");
+    vi.stubEnv("REVENUE_WALLET", "0xPayTo");
 
     const app = createPrimApp(baseConfig({ llmsTxtPath: undefined }), passthroughDeps);
     expect(app).toBeDefined();
@@ -44,27 +44,27 @@ describe("createPrimApp boot", () => {
 
   // ── 2. llmsTxtPath points to non-existent file → no crash ──────────────
   it("boots when llmsTxtPath points to a non-existent file", () => {
-    vi.stubEnv("PRIM_PAY_TO", "0xPayTo");
+    vi.stubEnv("REVENUE_WALLET", "0xPayTo");
 
     const fakePath = join(tmpdir(), `prim-test-${Date.now()}-does-not-exist.txt`);
     const app = createPrimApp(baseConfig({ llmsTxtPath: fakePath }), passthroughDeps);
     expect(app).toBeDefined();
   });
 
-  // ── 3. Throws when PRIM_PAY_TO missing and freeService is false ────────
-  it("throws when PRIM_PAY_TO is not set and freeService is false", () => {
+  // ── 3. Throws when REVENUE_WALLET missing and freeService is false ────────
+  it("throws when REVENUE_WALLET is not set and freeService is false", () => {
     // biome-ignore lint/performance/noDelete: env vars require delete to remove
-    delete process.env.PRIM_PAY_TO;
+    delete process.env.REVENUE_WALLET;
 
     expect(() => createPrimApp(baseConfig(), passthroughDeps)).toThrowError(
-      "PRIM_PAY_TO environment variable is required",
+      "REVENUE_WALLET environment variable is required",
     );
   });
 
-  // ── 4. Boots when freeService is true (no PRIM_PAY_TO needed) ──────────
-  it("boots when freeService is true without PRIM_PAY_TO", () => {
+  // ── 4. Boots when freeService is true (no REVENUE_WALLET needed) ──────────
+  it("boots when freeService is true without REVENUE_WALLET", () => {
     // biome-ignore lint/performance/noDelete: env vars require delete to remove
-    delete process.env.PRIM_PAY_TO;
+    delete process.env.REVENUE_WALLET;
 
     const app = createPrimApp(baseConfig({ freeService: true }), passthroughDeps);
     expect(app).toBeDefined();
@@ -72,7 +72,7 @@ describe("createPrimApp boot", () => {
 
   // ── 5. GET / → 200 with correct health check response ──────────────────
   it("responds 200 on GET / with { service, status: 'ok' }", async () => {
-    vi.stubEnv("PRIM_PAY_TO", "0xPayTo");
+    vi.stubEnv("REVENUE_WALLET", "0xPayTo");
 
     const app = createPrimApp(baseConfig(), passthroughDeps);
     const res = await app.request("/", { method: "GET" });

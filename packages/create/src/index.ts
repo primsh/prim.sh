@@ -25,9 +25,9 @@ import { ports, scaffold, schema, validate } from "./service.ts";
 const logger = createLogger("create.sh");
 
 const networkConfig = getNetworkConfig();
-const PAY_TO_ADDRESS = process.env.PRIM_PAY_TO;
+const PAY_TO_ADDRESS = process.env.REVENUE_WALLET;
 if (!PAY_TO_ADDRESS) {
-  throw new Error("[create.sh] PRIM_PAY_TO environment variable is required");
+  throw new Error("[create.sh] REVENUE_WALLET environment variable is required");
 }
 const NETWORK = networkConfig.network;
 const WALLET_INTERNAL_URL = process.env.WALLET_INTERNAL_URL ?? "http://127.0.0.1:3001";

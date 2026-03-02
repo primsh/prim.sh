@@ -10,7 +10,7 @@ port: 3007
 order: 7
 phantom: false
 env:
-  - PRIM_PAY_TO
+  - REVENUE_WALLET
   - PRIM_NETWORK
   - TOKEN_MASTER_KEY
   - TOKEN_DEPLOYER_ENCRYPTED_KEY

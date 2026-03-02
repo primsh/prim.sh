@@ -135,7 +135,7 @@ function genCaddyFragment(
 // ── Env template generator ─────────────────────────────────────────────────
 
 const ENV_COMMENTS: Record<string, string> = {
-  PRIM_PAY_TO: "# x402 payment recipient address (your treasury wallet)",
+  REVENUE_WALLET: "# x402 payment recipient address (from wallets.yaml)",
   PRIM_NETWORK: "# Chain: eip155:8453 (Base mainnet) or eip155:84532 (Base Sepolia)",
   PRIM_INTERNAL_KEY: "# Shared secret for internal API calls between services",
   TESTNET_WALLET: "# Treasury wallet private key (hex, no 0x prefix) for faucet drips",

@@ -11,7 +11,7 @@ tagline: "Zero API keys. One prompt. Infinite models."
 port: 3012
 wraps: OpenRouter API
 env:
-  - PRIM_PAY_TO
+  - REVENUE_WALLET
   - PRIM_NETWORK
   - OPENROUTER_API_KEY
   - WALLET_INTERNAL_URL
