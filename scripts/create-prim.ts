@@ -391,9 +391,9 @@ import { ${serviceFns.join(", ")} } from "./service.ts";
 const logger = createLogger("${prim.name}");
 
 const networkConfig = getNetworkConfig();
-const PAY_TO_ADDRESS = process.env.PRIM_PAY_TO;
+const PAY_TO_ADDRESS = process.env.REVENUE_WALLET;
 if (!PAY_TO_ADDRESS) {
-  throw new Error("[${prim.name}] PRIM_PAY_TO environment variable is required");
+  throw new Error("[${prim.name}] REVENUE_WALLET environment variable is required");
 }
 const NETWORK = networkConfig.network;
 const WALLET_INTERNAL_URL = process.env.WALLET_INTERNAL_URL ?? "http://127.0.0.1:3001";
@@ -678,7 +678,7 @@ import { describe, expect, it, vi } from "vitest";
 
 vi.hoisted(() => {
   process.env.PRIM_NETWORK = "eip155:8453";
-  process.env.PRIM_PAY_TO = "0x0000000000000000000000000000000000000001";
+  process.env.REVENUE_WALLET = "0x0000000000000000000000000000000000000001";
 });
 
 import { mockX402Middleware } from "@primsh/x402-middleware/testing";
@@ -742,7 +742,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 vi.hoisted(() => {
   process.env.PRIM_NETWORK = "eip155:8453";
-  process.env.PRIM_PAY_TO = "0x0000000000000000000000000000000000000001";
+  process.env.REVENUE_WALLET = "0x0000000000000000000000000000000000000001";
 });
 
 import { mockX402Middleware } from "@primsh/x402-middleware/testing";
@@ -1280,7 +1280,7 @@ async function runWizard(root: string): Promise<{ prim: PrimYaml; yamlStr: strin
 
   // Build env list: always include standard env vars + any provider vars
   const providerEnvVars = providers.flatMap((p) => (p.env_key ? [p.env_key] : []));
-  const env = ["PRIM_PAY_TO", "PRIM_NETWORK", ...providerEnvVars, "WALLET_INTERNAL_URL"].filter(
+  const env = ["REVENUE_WALLET", "PRIM_NETWORK", ...providerEnvVars, "WALLET_INTERNAL_URL"].filter(
     (v, i, a) => a.indexOf(v) === i,
   );
 

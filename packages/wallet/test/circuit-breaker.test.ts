@@ -8,7 +8,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 vi.hoisted(() => {
-  process.env.PRIM_PAY_TO = "0x0000000000000000000000000000000000000001";
+  process.env.REVENUE_WALLET = "0x0000000000000000000000000000000000000001";
   process.env.WALLET_DB_PATH = ":memory:";
 });
 

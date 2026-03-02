@@ -10,7 +10,7 @@ port: 3002
 order: 3
 phantom: false
 env:
-  - PRIM_PAY_TO
+  - REVENUE_WALLET
   - PRIM_NETWORK
   - CLOUDFLARE_ACCOUNT_ID
   - R2_ACCESS_KEY_ID

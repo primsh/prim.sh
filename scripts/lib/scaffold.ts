@@ -361,9 +361,9 @@ import { ${serviceFns.join(", ")} } from "./service.ts";
 const logger = createLogger("${prim.name}");
 
 const networkConfig = getNetworkConfig();
-const PAY_TO_ADDRESS = process.env.PRIM_PAY_TO;
+const PAY_TO_ADDRESS = process.env.REVENUE_WALLET;
 if (!PAY_TO_ADDRESS) {
-  throw new Error("[${prim.name}] PRIM_PAY_TO environment variable is required");
+  throw new Error("[${prim.name}] REVENUE_WALLET environment variable is required");
 }
 const NETWORK = networkConfig.network;
 const WALLET_INTERNAL_URL = process.env.WALLET_INTERNAL_URL ?? "http://127.0.0.1:3001";
@@ -645,7 +645,7 @@ function genSmokeTestTs(prim: PrimYaml, routePrices: Record<string, string>): st
     return `import { describe, expect, it, vi } from "vitest";
 
 process.env.PRIM_NETWORK = "eip155:8453";
-process.env.PRIM_PAY_TO = "0x0000000000000000000000000000000000000001";
+process.env.REVENUE_WALLET = "0x0000000000000000000000000000000000000001";
 
 vi.mock("@primsh/x402-middleware", async (importOriginal) => {
   const original = await importOriginal<typeof import("@primsh/x402-middleware")>();
@@ -702,7 +702,7 @@ describe("${prim.name} app", () => {
 import type { Context, Next } from "hono";
 
 process.env.PRIM_NETWORK = "eip155:8453";
-process.env.PRIM_PAY_TO = "0x0000000000000000000000000000000000000001";
+process.env.REVENUE_WALLET = "0x0000000000000000000000000000000000000001";
 
 // Bypass x402 so the handler is reachable in unit tests.
 // Middleware wiring is verified via check 3 (spy on createAgentStackMiddleware).

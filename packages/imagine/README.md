@@ -48,7 +48,7 @@ curl -X POST https://imagine.prim.sh/v1/generate \
 
 ## Environment
 
-- `PRIM_PAY_TO`
+- `REVENUE_WALLET`
 - `PRIM_NETWORK`
 - `GEMINI_API_KEY`
 - `WALLET_INTERNAL_URL`

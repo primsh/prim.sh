@@ -195,12 +195,12 @@ export async function fetchR2Costs(): Promise<InfraCost | null> {
 }
 
 export async function fetchOnChainRevenue(): Promise<OnChainRevenue> {
-  const payTo = process.env.PRIM_PAY_TO;
+  const payTo = process.env.REVENUE_WALLET;
   if (!payTo)
     return {
       treasury_balance_usdc: null,
       inbound_30d_usdc: null,
-      error: "PRIM_PAY_TO not set",
+      error: "REVENUE_WALLET not set",
     };
 
   const rpcUrl = process.env.BASE_RPC_URL || "https://mainnet.base.org";
@@ -246,7 +246,7 @@ export async function fetchOnChainRevenue(): Promise<OnChainRevenue> {
     // Base: ~2s blocks, 30 days ~= 1_296_000 blocks
     const fromBlock = Math.max(0, latestBlock - 1_296_000);
 
-    // Get Transfer events to PRIM_PAY_TO in last 30 days
+    // Get Transfer events to REVENUE_WALLET in last 30 days
     const logsRes = await fetch(rpcUrl, {
       method: "POST",
       headers: { "Content-Type": "application/json" },

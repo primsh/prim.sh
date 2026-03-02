@@ -157,7 +157,7 @@ If you are running the full prim stack on your own VPS, each service reads envir
 
 | Variable | Service | Description |
 |----------|---------|-------------|
-| `PRIM_PAY_TO` | All services | EVM wallet address that receives x402 payments |
+| `REVENUE_WALLET` | All services | EVM wallet address that receives x402 payments |
 | `PRIM_INTERNAL_KEY` | wallet.sh | Internal service key for authenticated internal calls |
 | `PRIM_NETWORK` | All services | Chain identifier — `eip155:8453` (mainnet) or `eip155:84532` (testnet) |
 | `WALLET_ENCRYPTION_KEY` | wallet.sh | AES-256 key for encrypting stored wallet private keys |

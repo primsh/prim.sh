@@ -28,7 +28,7 @@ accent: <hex>          # 6-digit hex, e.g. "#FF5722"
 accent_dim: <hex>      # accent darkened ~20%, e.g. "#cc3f00"
 accent_glow: <rgba>    # rgba(r,g,b,0.08), e.g. "rgba(255,87,34,0.08)"
 env:
-  - PRIM_PAY_TO
+  - REVENUE_WALLET
   - PRIM_NETWORK
   - <PROVIDER_API_KEY>   # if wrapping a vendor
   - WALLET_INTERNAL_URL
@@ -172,7 +172,7 @@ accent_dim: "#a8d900"
 accent_glow: "rgba(198,255,0,0.08)"
 wraps: Tavily API
 env:
-  - PRIM_PAY_TO
+  - REVENUE_WALLET
   - PRIM_NETWORK
   - TAVILY_API_KEY
   - WALLET_INTERNAL_URL
@@ -253,6 +253,6 @@ Before writing the file:
 - [ ] `port` is not already assigned (see port table above)
 - [ ] `accent` is visually distinct from existing colors
 - [ ] All `routes_map` entries have `operation_id`, `request`, `response`, `description`
-- [ ] `env` includes `PRIM_PAY_TO`, `PRIM_NETWORK`, `WALLET_INTERNAL_URL`
+- [ ] `env` includes `REVENUE_WALLET`, `PRIM_NETWORK`, `WALLET_INTERNAL_URL`
 - [ ] `pricing` entries match the routes
 - [ ] `status` is `"building"` for new prims

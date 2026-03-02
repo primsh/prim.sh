@@ -193,16 +193,16 @@ function main() {
   let totalFails = 0;
 
   for (const prim of deployedPrims) {
-    // Detect free service: freeService flag in prim.yaml (or absence of PRIM_PAY_TO in env)
+    // Detect free service: freeService flag in prim.yaml (or absence of REVENUE_WALLET in env)
     const primYamlPath = join(ROOT, "packages", prim.id, "prim.yaml");
     let isFreeService = false;
     if (existsSync(primYamlPath)) {
       const yamlContent = readFileSync(primYamlPath, "utf8");
       // Check for free_service: true in prim.yaml
       isFreeService = /^free_service:\s*true/m.test(yamlContent);
-      // Also detect if PRIM_PAY_TO is absent from env list (faucet pattern)
+      // Also detect if REVENUE_WALLET is absent from env list (faucet pattern)
       if (!isFreeService && prim.env) {
-        isFreeService = !prim.env.includes("PRIM_PAY_TO");
+        isFreeService = !prim.env.includes("REVENUE_WALLET");
       }
     }
 

@@ -62,7 +62,7 @@ curl -X POST https://track.prim.sh/v1/track \
 
 ## Environment
 
-- `PRIM_PAY_TO`
+- `REVENUE_WALLET`
 - `PRIM_NETWORK`
 - `TRACKINGMORE_API_KEY`
 - `WALLET_INTERNAL_URL`

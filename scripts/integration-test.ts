@@ -70,7 +70,7 @@ const HAS_MEM = !!(process.env.GOOGLE_API_KEY && process.env.QDRANT_URL);
 if (DRY_RUN) {
   console.log("✓ Dry-run mode. wallet.sh + faucet.sh will start.");
 } else {
-  requireEnv("PRIM_PAY_TO");
+  requireEnv("REVENUE_WALLET");
   requireEnv("CLOUDFLARE_API_TOKEN");
   requireEnv("CLOUDFLARE_ACCOUNT_ID");
   requireEnv("R2_ACCESS_KEY_ID");

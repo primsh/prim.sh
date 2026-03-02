@@ -117,7 +117,7 @@ curl -X POST https://mem.prim.sh/v1/collections \
 
 ## Environment
 
-- `PRIM_PAY_TO`
+- `REVENUE_WALLET`
 - `PRIM_NETWORK`
 - `QDRANT_URL`
 - `GOOGLE_API_KEY`

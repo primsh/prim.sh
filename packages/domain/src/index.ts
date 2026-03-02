@@ -63,9 +63,9 @@ import {
   verifyZone,
 } from "./service.ts";
 
-const PAY_TO_ADDRESS = process.env.PRIM_PAY_TO;
+const PAY_TO_ADDRESS = process.env.REVENUE_WALLET;
 if (!PAY_TO_ADDRESS) {
-  throw new Error("[domain.sh] PRIM_PAY_TO environment variable is required");
+  throw new Error("[domain.sh] REVENUE_WALLET environment variable is required");
 }
 const NETWORK = process.env.PRIM_NETWORK ?? "eip155:8453";
 

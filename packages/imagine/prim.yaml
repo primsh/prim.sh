@@ -10,7 +10,7 @@ tagline: "Zero API keys. One call. Infinite media."
 port: 3013
 wraps: Google Gemini Imagen API
 env:
-  - PRIM_PAY_TO
+  - REVENUE_WALLET
   - PRIM_NETWORK
   - GEMINI_API_KEY
   - WALLET_INTERNAL_URL

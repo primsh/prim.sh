@@ -97,7 +97,7 @@ curl -X POST https://infer.prim.sh/v1/chat \
 
 ## Environment
 
-- `PRIM_PAY_TO`
+- `REVENUE_WALLET`
 - `PRIM_NETWORK`
 - `OPENROUTER_API_KEY`
 - `WALLET_INTERNAL_URL`

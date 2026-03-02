@@ -7,7 +7,7 @@
  * domain-specific handlers.
  *
  * Config flags:
- *   freeService    — skip PRIM_PAY_TO validation + x402 middleware (faucet.sh)
+ *   freeService    — skip REVENUE_WALLET validation + x402 middleware (faucet.sh)
  *   skipX402       — skip x402 middleware; caller wires its own (wallet.sh)
  *   skipBodyLimit  — skip default 1 MB bodyLimit; caller wires conditional limit (store.sh)
  *   skipHealthCheck — skip the default GET / health check; caller registers custom one (faucet.sh)
@@ -61,7 +61,7 @@ export interface PrimAppConfig {
     }>;
   };
   /**
-   * Skip PRIM_PAY_TO validation + x402 middleware entirely.
+   * Skip REVENUE_WALLET validation + x402 middleware entirely.
    * Use for free-service primitives (faucet.sh).
    */
   freeService?: boolean;
@@ -128,11 +128,11 @@ export function createPrimApp(
   const LLMS_TXT = llmsTxtPath && existsSync(llmsTxtPath) ? readFileSync(llmsTxtPath, "utf-8") : "";
   const logger = createLogger(serviceName);
 
-  // Validate PRIM_PAY_TO unless this is a free service
+  // Validate REVENUE_WALLET unless this is a free service
   if (!freeService) {
-    const PAY_TO_ADDRESS = process.env.PRIM_PAY_TO;
+    const PAY_TO_ADDRESS = process.env.REVENUE_WALLET;
     if (!PAY_TO_ADDRESS) {
-      throw new Error(`[${serviceName}] PRIM_PAY_TO environment variable is required`);
+      throw new Error(`[${serviceName}] REVENUE_WALLET environment variable is required`);
     }
   }
 
@@ -163,7 +163,7 @@ export function createPrimApp(
 
   // 4. x402 payment gate — unless freeService or skipX402
   if (!freeService && !skipX402) {
-    const PAY_TO_ADDRESS = process.env.PRIM_PAY_TO as string;
+    const PAY_TO_ADDRESS = process.env.REVENUE_WALLET as string;
     const networkConfig = getNetworkConfig();
     const NETWORK = networkConfig.network;
     const WALLET_INTERNAL_URL = process.env.WALLET_INTERNAL_URL ?? "http://127.0.0.1:3001";

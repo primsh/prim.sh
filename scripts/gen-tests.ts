@@ -273,7 +273,7 @@ function generateFullFile(ctx: GenContext): string {
   if (!ctx.isFreeService) {
     lines.push("vi.hoisted(() => {");
     lines.push(`  process.env.PRIM_NETWORK = "eip155:8453";`);
-    lines.push(`  process.env.PRIM_PAY_TO = "0x0000000000000000000000000000000000000001";`);
+    lines.push(`  process.env.REVENUE_WALLET = "0x0000000000000000000000000000000000000001";`);
     lines.push("});");
   } else {
     lines.push("vi.hoisted(() => {");

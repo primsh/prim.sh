@@ -11,7 +11,7 @@ port: 3006
 order: 6
 phantom: false
 env:
-  - PRIM_PAY_TO
+  - REVENUE_WALLET
   - PRIM_NETWORK
   - STALWART_URL
   - STALWART_API_KEY

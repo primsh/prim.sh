@@ -84,7 +84,7 @@ curl -X POST https://search.prim.sh/v1/search \
 
 ## Environment
 
-- `PRIM_PAY_TO`
+- `REVENUE_WALLET`
 - `PRIM_NETWORK`
 - `TAVILY_API_KEY`
 - `WALLET_INTERNAL_URL`

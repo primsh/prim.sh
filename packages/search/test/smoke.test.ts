@@ -6,7 +6,7 @@ const createAgentStackMiddlewareSpy = vi.hoisted(() => vi.fn());
 
 vi.hoisted(() => {
   process.env.PRIM_NETWORK = "eip155:8453";
-  process.env.PRIM_PAY_TO = "0x0000000000000000000000000000000000000001";
+  process.env.REVENUE_WALLET = "0x0000000000000000000000000000000000000001";
 });
 
 // Bypass x402 middleware for unit tests.

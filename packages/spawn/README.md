@@ -156,7 +156,7 @@ curl -X POST https://spawn.prim.sh/v1/servers \
 
 ## Environment
 
-- `PRIM_PAY_TO`
+- `REVENUE_WALLET`
 - `PRIM_NETWORK`
 - `DO_API_TOKEN`
 - `WALLET_INTERNAL_URL`

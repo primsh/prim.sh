@@ -59,6 +59,36 @@ if $NEED_RELOAD; then
   systemctl daemon-reload
 fi
 
+# ── 3b. Check for env drift ──────────────────────────────────────────────
+# Compare template keys against existing env file keys. Warn on missing keys
+# (new required vars not yet configured on VPS).
+check_env_drift() {
+  local svc="$1"
+  local template="$REPO_DIR/deploy/prim/generated/$svc.env.template"
+  local env_file="$ENV_DIR/$svc.env"
+
+  [[ ! -f "$template" ]] && return
+  [[ ! -f "$env_file" ]] && return
+
+  # Extract non-comment, non-empty KEY= lines from template
+  local missing=()
+  while IFS='=' read -r key _; do
+    [[ -z "$key" || "$key" == \#* ]] && continue
+    [[ "$key" == "PORT" ]] && continue
+    if ! grep -q "^${key}=" "$env_file" 2>/dev/null; then
+      missing+=("$key")
+    fi
+  done < "$template"
+
+  if [[ ${#missing[@]} -gt 0 ]]; then
+    log "  ⚠  $svc.env missing keys: ${missing[*]}"
+  fi
+}
+
+for svc in "${SERVICES[@]}"; do
+  check_env_drift "$svc"
+done
+
 # ── 4. Update Caddyfile ──────────────────────────────────────────────────────
 cp "$SCRIPT_DIR/Caddyfile" /etc/caddy/Caddyfile
 systemctl reload caddy 2>/dev/null || true

@@ -143,7 +143,7 @@ curl -X POST https://token.prim.sh/v1/tokens \
 
 ## Environment
 
-- `PRIM_PAY_TO`
+- `REVENUE_WALLET`
 - `PRIM_NETWORK`
 - `TOKEN_MASTER_KEY`
 - `TOKEN_DEPLOYER_ENCRYPTED_KEY`
