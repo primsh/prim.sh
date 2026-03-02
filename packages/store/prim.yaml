@@ -266,6 +266,20 @@ routes_map:
       - { status: 403, code: forbidden, description: "Bucket belongs to a different wallet" }
       - { status: 404, code: not_found, description: "Bucket not found" }
       - { status: 502, code: r2_error, description: "Upstream R2 error" }
+  - route: "POST /v1/buckets/:id/presign"
+    request: PresignRequest
+    response: PresignResponse
+    status: 200
+    description: "Generate a presigned URL for direct GET or PUT access to an object. GET presign requires object to exist."
+    operation_id: presign_object
+    request_type: PresignRequest
+    response_type: PresignResponse
+    errors:
+      - { status: 400, code: invalid_request, description: "Invalid key, method, or expires_in" }
+      - { status: 402, code: payment_required, description: "x402 payment needed" }
+      - { status: 403, code: forbidden, description: "Bucket belongs to a different wallet" }
+      - { status: 404, code: not_found, description: "Bucket or object not found" }
+      - { status: 502, code: r2_error, description: "Upstream R2 error" }
 
 cta:
   headline: "Storage is an **API call**."
@@ -305,3 +319,6 @@ sections:
       - "GET    /v1/buckets/:id/quota                # Get quota + usage"
       - "PUT    /v1/buckets/:id/quota                # Set quota"
       - "POST   /v1/buckets/:id/quota/reconcile      # Recompute usage from R2"
+      - ""
+      - "# Presign"
+      - "POST   /v1/buckets/:id/presign              # Generate presigned URL"

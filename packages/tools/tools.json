@@ -613,6 +613,43 @@
   {
     "type": "function",
     "function": {
+      "name": "store_presign_object",
+      "description": "Generate a presigned URL for direct GET or PUT access to an object. GET presign requires object to exist. Price: $0.001 via x402 (USDC on Base).",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "id parameter"
+          },
+          "key": {
+            "type": "string",
+            "description": "Object key to presign."
+          },
+          "method": {
+            "type": "string",
+            "description": "HTTP method: \"GET\" for download, \"PUT\" for upload.",
+            "enum": [
+              "GET",
+              "PUT"
+            ]
+          },
+          "expires_in": {
+            "type": "number",
+            "description": "URL lifetime in seconds (60–86400). Defaults to 3600."
+          }
+        },
+        "required": [
+          "id",
+          "key",
+          "method"
+        ]
+      }
+    }
+  },
+  {
+    "type": "function",
+    "function": {
       "name": "search_web",
       "description": "Search the web and return ranked results with optional AI-generated answer. Price: $0.005 via x402 (USDC on Base).",
       "parameters": {

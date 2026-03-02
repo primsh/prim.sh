@@ -41,6 +41,26 @@ export interface DeleteObjectResponse {
   status: "deleted";
 }
 
+export interface PresignRequest {
+  /** Object key to presign. */
+  key: string;
+  /** HTTP method: "GET" for download, "PUT" for upload. */
+  method: "GET" | "PUT";
+  /** URL lifetime in seconds (60–86400). Defaults to 3600. */
+  expires_in?: number;
+}
+
+export interface PresignResponse {
+  /** Presigned URL for direct R2 access. */
+  url: string;
+  /** HTTP method this URL was signed for. */
+  method: "GET" | "PUT";
+  /** Object key. */
+  key: string;
+  /** ISO 8601 timestamp when the URL expires. */
+  expires_at: string;
+}
+
 export interface PutObjectResponse {
   /** Object key as stored. */
   key: string;
@@ -141,6 +161,11 @@ export interface ReconcileQuotaParams {
   id: string;
 }
 
+export interface PresignObjectParams {
+  /** id parameter */
+  id: string;
+}
+
 export type ListBucketsResponse = Record<string, unknown>;
 
 export type DeleteBucketResponse = Record<string, unknown>;
@@ -235,6 +260,15 @@ export function createStoreClient(
         method: "POST",
       });
       return unwrap<ReconcileResponse>(res);
+    },
+    async presignObject(params: PresignObjectParams, req: PresignRequest): Promise<PresignResponse> {
+      const url = `${baseUrl}/v1/buckets/${encodeURIComponent(params.id)}/presign`;
+      const res = await primFetch(url, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(req),
+      });
+      return unwrap<PresignResponse>(res);
     },
   };
 }

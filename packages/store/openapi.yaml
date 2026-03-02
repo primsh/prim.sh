@@ -112,6 +112,47 @@ components:
           enum:
             - deleted
           description: Always "deleted" on success.
+    PresignRequest:
+      type: object
+      required:
+        - key
+        - method
+      properties:
+        key:
+          type: string
+          description: Object key to presign.
+        method:
+          type: string
+          enum:
+            - GET
+            - PUT
+          description: 'HTTP method: "GET" for download, "PUT" for upload.'
+        expires_in:
+          type: number
+          description: URL lifetime in seconds (60–86400). Defaults to 3600.
+    PresignResponse:
+      type: object
+      required:
+        - url
+        - method
+        - key
+        - expires_at
+      properties:
+        url:
+          type: string
+          description: Presigned URL for direct R2 access.
+        method:
+          type: string
+          enum:
+            - GET
+            - PUT
+          description: HTTP method this URL was signed for.
+        key:
+          type: string
+          description: Object key.
+        expires_at:
+          type: string
+          description: ISO 8601 timestamp when the URL expires.
     PutObjectResponse:
       type: object
       required:
@@ -680,6 +721,59 @@ paths:
                 $ref: "#/components/schemas/Error"
         "404":
           description: Bucket not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "502":
+          description: Upstream R2 error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+  /v1/buckets/{id}/presign:
+    post:
+      operationId: presignObject
+      summary: Generate a presigned URL for direct GET or PUT access to an object. GET presign requires object to exist.
+      security:
+        - x402: []
+      x-price: $0.001
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: id parameter
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PresignRequest"
+      responses:
+        "200":
+          description: Generate a presigned URL for direct GET or PUT access to an object. GET presign requires object to exist.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PresignResponse"
+        "400":
+          description: Invalid key, method, or expires_in
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "402":
+          description: x402 payment required.
+        "403":
+          description: Bucket belongs to a different wallet
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "404":
+          description: Bucket or object not found
           content:
             application/json:
               schema:

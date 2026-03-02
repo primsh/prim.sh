@@ -18,6 +18,8 @@ import type {
   CreateBucketResponse,
   DeleteObjectResponse,
   ObjectResponse,
+  PresignRequest,
+  PresignResponse,
   PutObjectResponse,
   QuotaResponse,
   ReconcileResponse,
@@ -32,6 +34,7 @@ import {
   getUsage,
   listBuckets,
   listObjects,
+  presignObject,
   putObject,
   reconcileUsage,
   setQuotaForBucket,
@@ -49,6 +52,7 @@ const STORE_ROUTES = {
   "GET /v1/buckets/[id]/quota": "$0.001",
   "PUT /v1/buckets/[id]/quota": "$0.001",
   "POST /v1/buckets/[id]/quota/reconcile": "$0.001",
+  "POST /v1/buckets/[id]/presign": "$0.001",
 } as const;
 
 function r2Error(message: string): ApiError {
@@ -136,6 +140,12 @@ const app = createPrimApp(
           path: "/v1/buckets/{id}/quota/reconcile",
           price_usdc: "0.001",
           description: "Reconcile usage",
+        },
+        {
+          method: "POST",
+          path: "/v1/buckets/{id}/presign",
+          price_usdc: "0.001",
+          description: "Generate presigned URL",
         },
       ],
     },
@@ -310,6 +320,32 @@ app.delete("/v1/buckets/:id/objects/*", async (c) => {
     return c.json(r2Error(result.message), result.status as 502);
   }
   return c.json(result.data as DeleteObjectResponse, 200);
+});
+
+// ─── Presign routes ─────────────────────────────────────────────────────
+
+// POST /v1/buckets/:id/presign — Generate presigned URL
+app.post("/v1/buckets/:id/presign", async (c) => {
+  const callerOrRes = requireCaller(c);
+  if (callerOrRes instanceof Response) return callerOrRes;
+  const caller = callerOrRes;
+
+  const bodyOrRes = await parseJsonBody<PresignRequest>(c, logger, "POST /v1/buckets/:id/presign");
+  if (bodyOrRes instanceof Response) return bodyOrRes;
+  const body = bodyOrRes;
+
+  if (!body.key || !body.method || (body.method !== "GET" && body.method !== "PUT")) {
+    return c.json(invalidRequest("key (string) and method ('GET' | 'PUT') are required"), 400);
+  }
+
+  const result = await presignObject(c.req.param("id"), caller, body.key, body.method, body.expires_in);
+  if (!result.ok) {
+    if (result.code === "invalid_request") return c.json(invalidRequest(result.message), 400);
+    if (result.status === 404) return c.json(notFound(result.message), 404);
+    if (result.status === 403) return c.json(forbidden(result.message), 403);
+    return c.json(r2Error(result.message), result.status as 502);
+  }
+  return c.json(result.data as PresignResponse, 200);
 });
 
 // ─── Quota routes ───────────────────────────────────────────────────────

@@ -37,12 +37,13 @@ vi.mock("../src/service.ts", async (importOriginal) => {
     getUsage: vi.fn(),
     setQuotaForBucket: vi.fn(),
     reconcileUsage: vi.fn(),
+    presignObject: vi.fn(),
   };
 });
 
-import type { CreateBucketResponse } from "../src/api.ts";
+import type { CreateBucketResponse, PresignResponse } from "../src/api.ts";
 import app from "../src/index.ts";
-import { createBucket } from "../src/service.ts";
+import { createBucket, presignObject } from "../src/service.ts";
 
 const MOCK_BUCKET: CreateBucketResponse = {
   bucket: {
@@ -59,6 +60,7 @@ const MOCK_BUCKET: CreateBucketResponse = {
 describe("store.sh app", () => {
   beforeEach(() => {
     vi.mocked(createBucket).mockReset();
+    vi.mocked(presignObject).mockReset();
   });
 
   // Check 1: default export defined
@@ -118,5 +120,29 @@ describe("store.sh app", () => {
     });
 
     expect(res.status).toBe(400);
+  });
+
+  // Check 6: presign happy path — POST /v1/buckets/:id/presign returns 200 with presign shape
+  it("POST /v1/buckets/:id/presign returns 200 with presigned URL", async () => {
+    const mockPresign: PresignResponse = {
+      url: "https://test-cf-account.r2.cloudflarestorage.com/cf-bucket/file.txt?X-Amz-Signature=abc",
+      method: "GET",
+      key: "file.txt",
+      expires_at: "2026-03-01T12:00:00.000Z",
+    };
+    vi.mocked(presignObject).mockResolvedValueOnce({ ok: true, data: mockPresign });
+
+    const res = await app.request("/v1/buckets/b_test1234/presign", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ key: "file.txt", method: "GET" }),
+    });
+
+    expect(res.status).toBe(200);
+    const body = (await res.json()) as PresignResponse;
+    expect(body.url).toContain("X-Amz-Signature");
+    expect(body.method).toBe("GET");
+    expect(body.key).toBe("file.txt");
+    expect(body.expires_at).toBeDefined();
   });
 });

@@ -352,6 +352,35 @@ Errors:
 
 ---
 
+### POST /v1/buckets/:id/presign
+
+Generate a presigned URL for direct GET or PUT access to an object. GET presign requires object to exist.
+
+Price: $0.001
+
+Path params:
+  id  string  required  id parameter
+
+Request:
+  key         string         required  Object key to presign.
+  method      "GET" | "PUT"  required  HTTP method: "GET" for download, "PUT" for upload.
+  expires_in  number         optional  URL lifetime in seconds (60–86400). Defaults to 3600.
+
+Response (200):
+  url         string         Presigned URL for direct R2 access.
+  method      "GET" | "PUT"  HTTP method this URL was signed for.
+  key         string         Object key.
+  expires_at  string         ISO 8601 timestamp when the URL expires.
+
+Errors:
+  400  invalid_request   Invalid key, method, or expires_in
+  402  payment_required  x402 payment needed
+  403  forbidden         Bucket belongs to a different wallet
+  404  not_found         Bucket or object not found
+  502  r2_error          Upstream R2 error
+
+---
+
 ## Ownership
 
 All buckets and objects are scoped to the wallet address extracted from the x402 payment. Callers can only access their own buckets.
