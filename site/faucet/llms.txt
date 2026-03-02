@@ -181,7 +181,7 @@ Response (200):
   needs_refill  boolean
 
 Errors:
-  502  faucet_error  FAUCET_TREASURY_KEY not configured
+  502  faucet_error  TESTNET_WALLET not configured
 
 ---
 

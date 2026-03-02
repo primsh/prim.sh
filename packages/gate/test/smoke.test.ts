@@ -3,7 +3,7 @@ import { describe, expect, it, vi, beforeEach } from "vitest";
 
 vi.hoisted(() => {
   process.env.PRIM_NETWORK = "eip155:84532";
-  process.env.GATE_FUND_KEY = "0x0000000000000000000000000000000000000000000000000000000000000001";
+  process.env.GATE_WALLET = "0x0000000000000000000000000000000000000000000000000000000000000001";
   process.env.GATE_CODES = "TEST-CODE-1,TEST-CODE-2";
   process.env.PRIM_INTERNAL_KEY = "test-internal-key";
 });

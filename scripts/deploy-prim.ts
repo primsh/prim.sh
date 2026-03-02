@@ -139,7 +139,7 @@ const ENV_COMMENTS: Record<string, string> = {
   PRIM_NETWORK: "# Chain: eip155:8453 (Base mainnet) or eip155:84532 (Base Sepolia)",
   PRIM_INTERNAL_KEY: "# Shared secret for internal API calls between services",
   CIRCLE_API_KEY: "# Circle API key for Base Sepolia USDC drips",
-  FAUCET_TREASURY_KEY: "# Treasury wallet private key (hex, no 0x prefix) for ETH drips",
+  TESTNET_WALLET: "# Treasury wallet private key (hex, no 0x prefix) for ETH drips",
   DO_API_TOKEN: "# DigitalOcean API token",
   WALLET_INTERNAL_URL: "# URL of the wallet service internal API",
   CLOUDFLARE_ACCOUNT_ID: "# Cloudflare account ID",

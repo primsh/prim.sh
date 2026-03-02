@@ -295,7 +295,7 @@ paths:
               schema:
                 $ref: "#/components/schemas/TreasuryStatus"
         "502":
-          description: FAUCET_TREASURY_KEY not configured
+          description: TESTNET_WALLET not configured
           content:
             application/json:
               schema:
