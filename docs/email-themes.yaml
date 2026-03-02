@@ -1,0 +1,21 @@
+beta:
+  prompts:
+    - "laboratory experiment with beakers and test tubes, the mark glowing green on an oscilloscope, steam rising, dark science lab"
+    - "rocket on launchpad at ignition, thrust flames, the mark projected in neon green on the exhaust plume, night launch"
+    - "underground bunker control room, the mark on a CRT terminal, green phosphor glow, cable bundles"
+    - "circuit board macro, the mark etched in green copper traces, solder points glowing, shallow depth of field"
+
+launch:
+  prompts:
+    - "fireworks celebration, the mark illuminated against night sky, long exposure light trails, confetti"
+    - "space shuttle breaking through clouds at dawn, the mark as mission patch, golden sunrise"
+
+announcement:
+  prompts:
+    - "neon sign in rain-slicked alley, the mark buzzing in green neon, reflections on wet pavement"
+    - "billboard at night, the mark glowing on screen, electric blue and green"
+
+legal:
+  prompts:
+    - "stone tablet with the mark chiseled into granite, marble columns, dramatic top lighting"
+    - "embossed seal on dark paper, the mark in metallic green foil, formal"

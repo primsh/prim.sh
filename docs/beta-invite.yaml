@@ -33,7 +33,7 @@ body: |
 
   The wallet is fully self-custodial. The private key is generated locally and stored at `~/.prim/keys/`. All signing happens locally. Prim never has access to it.
 
-  The invite code funds your agent's wallet with $5 of real USDC from us on Base mainnet. The test costs roughly $0.01 — whatever's left is yours, so you can keep using Prim on us or buy yourself a latte 😉. The wallet persists after the test and more services are coming. Full pricing at [prim.sh/costs](https://prim.sh/costs/).
+  Redeem your invite code, which loads $5 of real USDC into the wallet from us. You're welcome 😎. The test costs roughly $0.01 — whatever's left is yours, so you can keep using Prim on us or buy yourself a latte 😉. The wallet persists after the test and more services are coming. Full pricing at [prim.sh/costs](https://prim.sh/costs/).
 
   If something goes wrong, tell your agent to submit feedback via [feedback.prim.sh](https://feedback.prim.sh/).
 
