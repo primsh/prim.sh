@@ -1042,6 +1042,24 @@ async function cleanupOnboardingE2e(ctx: SetupContext): Promise<void> {
   const backend = ctx.backend;
   if (!backend) return;
 
+  // Verify CLI config has correct network after onboarding
+  try {
+    const configPath = `${backend.primHome}/config.toml`;
+    const configRaw = await backend.readFile(configPath);
+    const expectedNetwork = getNetworkConfig().network;
+    if (configRaw.includes(`network = "${expectedNetwork}"`)) {
+      console.log(c.green(`  Verify: config.toml network = "${expectedNetwork}" ✓`));
+    } else if (configRaw.includes("network = ")) {
+      const match = configRaw.match(/network = "([^"]+)"/);
+      const actual = match?.[1] ?? "(unknown)";
+      console.log(c.red(`  Verify: config.toml network MISMATCH — expected "${expectedNetwork}", got "${actual}"`));
+    } else {
+      console.log(c.yellow("  Verify: config.toml has no network field"));
+    }
+  } catch {
+    console.log(c.dim("  Verify: could not read config.toml (onboard may not have completed)"));
+  }
+
   const address = await discoverWalletAddress(backend);
   if (address) {
     // Decrypt wallet key once — used for sweep and store cleanup
