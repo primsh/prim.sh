@@ -1658,25 +1658,26 @@ async function main() {
   // ── Live Run Setup ─────────────────────────────────────────────────────
 
   // Build primFetch for paid routes (used in both deterministic and canary)
+  // Prefer AGENT_PRIVATE_KEY when set (explicit > implicit keystore)
   let primFetch: typeof fetch;
-  try {
+  const agentPk = process.env.AGENT_PRIVATE_KEY;
+  if (agentPk) {
     primFetch = createPrimFetch({
-      keystore: true,
+      privateKey: agentPk as `0x${string}`,
       maxPayment: "1.00",
     });
-  } catch {
-    // Fall back to AGENT_PRIVATE_KEY env
-    const pk = process.env.AGENT_PRIVATE_KEY;
-    if (!pk) {
+  } else {
+    try {
+      primFetch = createPrimFetch({
+        keystore: true,
+        maxPayment: "1.00",
+      });
+    } catch {
       console.error(
         c.red("No wallet available. Set AGENT_PRIVATE_KEY or configure keystore at ~/.prim/keys/"),
       );
       process.exit(1);
     }
-    primFetch = createPrimFetch({
-      privateKey: pk as `0x${string}`,
-      maxPayment: "1.00",
-    });
   }
 
   // ── Canary Mode ────────────────────────────────────────────────────────
