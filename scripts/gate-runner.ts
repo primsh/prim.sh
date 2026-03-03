@@ -2049,7 +2049,10 @@ async function main() {
   captureStore.set("runner", "gate-runner");
 
   // Agent wallet — derive address from private key and pre-sign EIP-191 registration
-  const agentPrivateKey = process.env.AGENT_PRIVATE_KEY as `0x${string}` | undefined;
+  // Fall back to TESTNET_WALLET if AGENT_PRIVATE_KEY is not set
+  const agentPrivateKey = (process.env.AGENT_PRIVATE_KEY ?? process.env.TESTNET_WALLET) as
+    | `0x${string}`
+    | undefined;
   const agentAddressEnv = process.env.AGENT_ADDRESS;
   const isoTimestamp = new Date().toISOString();
   captureStore.set("iso_timestamp", isoTimestamp);
@@ -2063,6 +2066,13 @@ async function main() {
     captureStore.set("eip191_sig", eip191Sig);
   } else if (agentAddressEnv) {
     captureStore.set("agent_address", agentAddressEnv);
+  } else {
+    console.warn(
+      c.yellow(
+        "⚠ No agent wallet configured (set AGENT_PRIVATE_KEY or TESTNET_WALLET). " +
+          "Wallet/faucet tests will be blocked by unresolved templates.",
+      ),
+    );
   }
 
   // Load prim status map for gating
@@ -2128,10 +2138,16 @@ async function main() {
         const endpoint = substitute(testDef.endpoint, captureStore);
         const input = substituteInput(testDef.input, captureStore);
 
-        // Check for unresolved template variables
-        if (endpoint.includes("{{")) {
+        // Check for unresolved template variables in endpoint and body
+        const serializedInput = input != null ? JSON.stringify(input) : "";
+        const unresolvedIn = endpoint.includes("{{")
+          ? `endpoint: ${endpoint}`
+          : serializedInput.includes("{{")
+            ? `body: ${serializedInput}`
+            : null;
+        if (unresolvedIn) {
           result.result = "blocked";
-          result.run_note = `unresolved template in endpoint: ${endpoint}`;
+          result.run_note = `unresolved template in ${unresolvedIn}`;
           summary.blocked++;
           console.log(
             `  ${c.yellow("○")} ${testId.padEnd(8)} ${c.yellow("blocked")}  ${c.dim(result.run_note)}`,
