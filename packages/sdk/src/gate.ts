@@ -30,6 +30,8 @@ export interface RedeemResponse {
   status: "redeemed";
   /** Checksummed wallet address that was funded. */
   wallet: string;
+  /** Network the funds were sent on (e.g. "eip155:8453"). */
+  network: string;
   /** Funding details. */
   funded: FundingDetail;
 }

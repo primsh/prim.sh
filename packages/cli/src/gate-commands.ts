@@ -52,9 +52,9 @@ export async function runGateCommand(sub: string, argv: string[]): Promise<void>
       reqBody.wallet = wallet;
       const data = await client.redeemInvite(reqBody as never);
 
-      // gate.sh is testnet-only — save network so balance/store/search default correctly
-      if (!config.network) {
-        config.network = "eip155:84532";
+      // Save network from gate response so balance/store/search use the correct chain
+      if (data.network && data.network !== config.network) {
+        config.network = data.network;
         await writeConfig(config);
       }
 

@@ -35,6 +35,7 @@ Part of [prim.sh](https://prim.sh) — zero signup, one payment token, infinite 
 |-------|------|-------------|
 | `status` | `"redeemed"` | Always "redeemed" on success. |
 | `wallet` | `string` | Checksummed wallet address that was funded. |
+| `network` | `string` | Network the funds were sent on (e.g. "eip155:8453"). |
 | `funded` | `FundingDetail` | Funding details. |
 
 ## Usage
