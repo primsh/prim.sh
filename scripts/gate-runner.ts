@@ -22,14 +22,32 @@
  */
 
 import { generateKeyPairSync } from "node:crypto";
-import { existsSync, mkdirSync, readFileSync, readdirSync, rmSync, writeFileSync } from "node:fs";
+import {
+  appendFileSync,
+  existsSync,
+  mkdirSync,
+  readFileSync,
+  readdirSync,
+  rmSync,
+  writeFileSync,
+} from "node:fs";
 import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
 import { parseArgs } from "node:util";
-import { getAddress } from "viem";
+import {
+  createPublicClient,
+  createWalletClient,
+  formatUnits,
+  getAddress,
+  http,
+  parseUnits,
+} from "viem";
+import type { Address, Hex } from "viem";
 import { privateKeyToAccount } from "viem/accounts";
+import { base, baseSepolia } from "viem/chains";
 import { decryptFromV3 } from "../packages/keystore/src/crypto.ts";
 import type { KeystoreFile } from "../packages/keystore/src/types.ts";
+import { getNetworkConfig } from "../packages/x402-middleware/src/network-config.ts";
 import { createDigitalOceanProvider } from "../packages/spawn/src/digitalocean.ts";
 import { createPrimFetch } from "../packages/x402-client/src/index.ts";
 import { loadPrimitives } from "./lib/primitives.js";
@@ -867,30 +885,38 @@ async function discoverWalletAddress(backend: ExecBackend): Promise<string | nul
 
 /**
  * Delete store buckets owned by a wallet. Best-effort — logs warnings, never throws.
+ * Accepts a pre-decrypted privateKey to avoid double-decryption when called from cleanup.
  */
-async function cleanupStoreBuckets(backend: ExecBackend, address: string): Promise<void> {
-  // Decrypt the wallet's private key from the keystore via backend
-  const keyPath = `${backend.primHome}/keys/${address}.json`;
-  const deviceKeyPath = `${backend.primHome}/device.key`;
+async function cleanupStoreBuckets(
+  backend: ExecBackend,
+  address: string,
+  existingKey?: string,
+): Promise<void> {
+  let privateKey = existingKey;
 
-  let keystoreRaw: string;
-  try {
-    keystoreRaw = await backend.readFile(keyPath);
-  } catch {
-    console.warn(`  Cleanup: keystore file not found at ${keyPath}`);
-    return;
+  if (!privateKey) {
+    const keyPath = `${backend.primHome}/keys/${address}.json`;
+    const deviceKeyPath = `${backend.primHome}/device.key`;
+
+    let keystoreRaw: string;
+    try {
+      keystoreRaw = await backend.readFile(keyPath);
+    } catch {
+      console.warn(`  Cleanup: keystore file not found at ${keyPath}`);
+      return;
+    }
+
+    let deviceKey: string;
+    try {
+      deviceKey = await backend.readFileHex(deviceKeyPath);
+    } catch {
+      console.warn("  Cleanup: device.key not found, cannot decrypt wallet for store cleanup");
+      return;
+    }
+
+    const keystoreFile = JSON.parse(keystoreRaw) as KeystoreFile;
+    privateKey = decryptFromV3(keystoreFile.crypto, deviceKey);
   }
-
-  let deviceKey: string;
-  try {
-    deviceKey = await backend.readFileHex(deviceKeyPath);
-  } catch {
-    console.warn("  Cleanup: device.key not found, cannot decrypt wallet for store cleanup");
-    return;
-  }
-
-  const keystoreFile = JSON.parse(keystoreRaw) as KeystoreFile;
-  const privateKey = decryptFromV3(keystoreFile.crypto, deviceKey);
 
   const storeFetch = createPrimFetch({ privateKey, maxPayment: "1.00" });
   const storeUrl = process.env.PRIM_STORE_URL ?? "https://store.prim.sh";
@@ -925,12 +951,92 @@ async function cleanupStoreBuckets(backend: ExecBackend, address: string): Promi
   }
 }
 
+const ERC20_ABI = [
+  {
+    name: "transfer",
+    type: "function",
+    stateMutability: "nonpayable",
+    inputs: [
+      { name: "to", type: "address" },
+      { name: "amount", type: "uint256" },
+    ],
+    outputs: [{ name: "", type: "bool" }],
+  },
+  {
+    name: "balanceOf",
+    type: "function",
+    stateMutability: "view",
+    inputs: [{ name: "account", type: "address" }],
+    outputs: [{ type: "uint256" }],
+  },
+] as const;
+
+/**
+ * Log test wallet credentials to ~/.prim/test-wallets.log for recovery.
+ */
+function logTestWallet(address: string, privateKey: string, env: string): void {
+  const logDir = join(process.env.HOME ?? "/tmp", ".prim");
+  const logFile = join(logDir, "test-wallets.log");
+  mkdirSync(logDir, { recursive: true });
+  const entry = `${new Date().toISOString()}  env=${env}  address=${address}  key=${privateKey}\n`;
+  appendFileSync(logFile, entry);
+  console.log(c.dim(`  Logged wallet credentials to ${logFile}`));
+}
+
+/**
+ * Sweep remaining USDC + ETH from a test wallet back to GATE_WALLET.
+ * Best-effort — logs warnings, never throws.
+ */
+async function sweepTestWallet(privateKey: string, address: string): Promise<void> {
+  const gateWalletKey = process.env.GATE_WALLET ?? process.env.AGENT_PRIVATE_KEY;
+  if (!gateWalletKey) {
+    console.warn("  Sweep: no GATE_WALLET or AGENT_PRIVATE_KEY — skipping");
+    return;
+  }
+  const gateAddress = privateKeyToAccount(gateWalletKey as Hex).address;
+
+  const netConfig = getNetworkConfig();
+  const chain = netConfig.chainId === 84532 ? baseSepolia : base;
+  const publicClient = createPublicClient({ chain, transport: http(netConfig.rpcUrl) });
+  const account = privateKeyToAccount(privateKey as Hex);
+  const walletClient = createWalletClient({ account, chain, transport: http(netConfig.rpcUrl) });
+
+  // Check USDC balance
+  const usdcBalance = (await publicClient.readContract({
+    address: netConfig.usdcAddress as Address,
+    abi: ERC20_ABI,
+    functionName: "balanceOf",
+    args: [address as Address],
+  })) as bigint;
+
+  if (usdcBalance > 0n) {
+    try {
+      const tx = await walletClient.writeContract({
+        address: netConfig.usdcAddress as Address,
+        abi: ERC20_ABI,
+        functionName: "transfer",
+        args: [gateAddress, usdcBalance],
+      });
+      console.log(
+        c.green(`  Sweep: ${formatUnits(usdcBalance, 6)} USDC → ${gateAddress} (${tx})`),
+      );
+    } catch (err) {
+      console.warn(
+        `  Sweep USDC failed: ${err instanceof Error ? err.message : String(err)}`,
+      );
+    }
+  } else {
+    console.log(c.dim("  Sweep: 0 USDC — nothing to reclaim"));
+  }
+}
+
 /**
  * Onboarding E2E cleanup:
  * 1. Find wallet address from backend keys/
- * 2. Delete store buckets (best-effort)
- * 3. Remove from allowlist
- * 4. Tear down backend (container/droplet/tempdir)
+ * 2. Decrypt private key, log credentials, sweep funds
+ * 3. Delete store buckets (best-effort)
+ * 4. Remove from allowlist
+ * 5. Tear down backend (container/droplet/tempdir)
  */
 async function cleanupOnboardingE2e(ctx: SetupContext): Promise<void> {
   const backend = ctx.backend;
@@ -938,9 +1044,40 @@ async function cleanupOnboardingE2e(ctx: SetupContext): Promise<void> {
 
   const address = await discoverWalletAddress(backend);
   if (address) {
+    // Decrypt wallet key once — used for sweep and store cleanup
+    let privateKey: string | null = null;
+    try {
+      const keyPath = `${backend.primHome}/keys/${address}.json`;
+      const deviceKeyPath = `${backend.primHome}/device.key`;
+      const keystoreRaw = await backend.readFile(keyPath);
+      const deviceKey = await backend.readFileHex(deviceKeyPath);
+      const keystoreFile = JSON.parse(keystoreRaw) as KeystoreFile;
+      privateKey = decryptFromV3(keystoreFile.crypto, deviceKey);
+    } catch (err) {
+      console.warn(
+        `  Cleanup: could not decrypt wallet: ${err instanceof Error ? err.message : String(err)}`,
+      );
+    }
+
+    // Log credentials for recovery before anything destructive
+    if (privateKey) {
+      logTestWallet(address, privateKey, execEnv);
+    }
+
+    // Sweep funds back to GATE_WALLET before revoking access
+    if (privateKey) {
+      try {
+        await sweepTestWallet(privateKey, address);
+      } catch (err) {
+        console.warn(
+          `  Cleanup: sweep failed: ${err instanceof Error ? err.message : String(err)}`,
+        );
+      }
+    }
+
     // Clean store buckets before revoking access
     try {
-      await cleanupStoreBuckets(backend, address);
+      await cleanupStoreBuckets(backend, address, privateKey ?? undefined);
     } catch (err) {
       console.warn(
         `  Cleanup: store bucket cleanup failed: ${err instanceof Error ? err.message : String(err)}`,
