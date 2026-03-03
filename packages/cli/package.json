@@ -1,6 +1,6 @@
 {
   "name": "@primsh/cli",
-  "version": "0.1.0",
+  "version": "0.0.0",
   "private": false,
   "type": "module",
   "description": "CLI binary for Prim infrastructure primitives",
