@@ -78,6 +78,7 @@ vi.mock("@primsh/x402-middleware/allowlist-db", () => ({
 vi.mock("../src/db.ts", () => ({
   seedCodes: vi.fn(() => 2),
   validateAndBurn: vi.fn(() => ({ ok: true })),
+  unburnCode: vi.fn(),
   resetDb: vi.fn(),
   generateCode: vi.fn(() => "PRIM-a3f8c21b"),
   insertCodes: vi.fn((codes: string[]) => codes.length),
@@ -101,9 +102,9 @@ vi.mock("../src/fund.ts", () => ({
 }));
 
 import app from "../src/index.ts";
-import { generateCode, insertCodes, listCodes, revokeCode, validateAndBurn } from "../src/db.ts";
+import { generateCode, insertCodes, listCodes, revokeCode, unburnCode, validateAndBurn } from "../src/db.ts";
 import { fundWallet } from "../src/fund.ts";
-import { addToAllowlist } from "@primsh/x402-middleware/allowlist-db";
+import { addToAllowlist, removeFromAllowlist } from "@primsh/x402-middleware/allowlist-db";
 
 const INTERNAL_HEADERS = { "x-internal-key": "test-internal-key", "Content-Type": "application/json" };
 
@@ -218,8 +219,8 @@ describe("gate.sh app", () => {
     expect(body.error.code).toBe("code_redeemed");
   });
 
-  // Check 9: funding failure → 502 (wallet is still allowlisted)
-  it("POST /v1/redeem with fund failure returns 502", async () => {
+  // Check 9: funding failure → 502 + rollback code and allowlist
+  it("POST /v1/redeem with fund failure returns 502 and rolls back", async () => {
     vi.mocked(fundWallet).mockRejectedValue(new Error("RPC timeout"));
     const res = await app.request("/v1/redeem", {
       method: "POST",
@@ -229,6 +230,8 @@ describe("gate.sh app", () => {
     expect(res.status).toBe(502);
     const body = await res.json();
     expect(body.error.code).toBe("fund_error");
+    expect(vi.mocked(unburnCode)).toHaveBeenCalledWith("TEST-CODE-1");
+    expect(vi.mocked(removeFromAllowlist)).toHaveBeenCalled();
   });
 
   // ─── Internal: code management ─────────────────────────────────────────────

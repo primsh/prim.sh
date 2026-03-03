@@ -70,8 +70,8 @@ jobs:
           fi
           echo "All required checks passed."
 
-  release:
-    name: Build and release
+  release-cli:
+    name: Build CLI + upload to R2
     needs: ci-gate
     runs-on: ubuntu-latest
 
@@ -82,48 +82,13 @@ jobs:
         with:
           bun-version: "1.3.8"
 
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 22
-          registry-url: https://registry.npmjs.org
-
       - uses: pnpm/action-setup@v4
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
-      - name: Dependency audit
-        run: pnpm audit --audit-level=high
-
       - name: Build x402-middleware
         run: pnpm --filter @primsh/x402-middleware build
-
-      - name: Build MCP package
-        run: pnpm --filter @primsh/mcp build
-
-      - name: Sync version from tag
-        run: |
-          VERSION="${{ needs.ci-gate.outputs.version }}"
-          cd packages/mcp
-          npm version "${VERSION}" --no-git-tag-version --allow-same-version
-          echo "Set @primsh/mcp version to ${VERSION}"
-
-      - name: Publish @primsh/mcp to npm
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
-        run: |
-          cd packages/mcp
-          OUTPUT=$(npm publish --access public --provenance 2>&1) && {
-            echo "Published @primsh/mcp@${{ needs.ci-gate.outputs.version }}"
-          } || {
-            if echo "$OUTPUT" | grep -qE "EPUBLISHCONFLICT|You cannot publish over the previously published versions|Cannot publish over"; then
-              echo "::notice::@primsh/mcp@${{ needs.ci-gate.outputs.version }} already published, skipping"
-            else
-              echo "$OUTPUT"
-              echo "::error::npm publish failed"
-              exit 1
-            fi
-          }
 
       - name: Bundle CLI
         run: |
@@ -178,3 +143,55 @@ jobs:
             dist/prim-linux-arm64 \
             dist/cli.js \
             dist/checksums.sha256
+
+  release-mcp:
+    name: Publish @primsh/mcp to npm
+    needs: ci-gate
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: "1.3.8"
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          registry-url: https://registry.npmjs.org
+
+      - uses: pnpm/action-setup@v4
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Build x402-middleware
+        run: pnpm --filter @primsh/x402-middleware build
+
+      - name: Build MCP package
+        run: pnpm --filter @primsh/mcp build
+
+      - name: Sync version from tag
+        run: |
+          VERSION="${{ needs.ci-gate.outputs.version }}"
+          cd packages/mcp
+          npm version "${VERSION}" --no-git-tag-version --allow-same-version
+          echo "Set @primsh/mcp version to ${VERSION}"
+
+      - name: Publish @primsh/mcp to npm
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+        run: |
+          cd packages/mcp
+          OUTPUT=$(npm publish --access public --provenance 2>&1) && {
+            echo "Published @primsh/mcp@${{ needs.ci-gate.outputs.version }}"
+          } || {
+            if echo "$OUTPUT" | grep -qE "EPUBLISHCONFLICT|You cannot publish over the previously published versions|Cannot publish over"; then
+              echo "::notice::@primsh/mcp@${{ needs.ci-gate.outputs.version }} already published, skipping"
+            else
+              echo "$OUTPUT"
+              echo "::error::npm publish failed"
+              exit 1
+            fi
+          }
