@@ -497,7 +497,7 @@ async function createDockerBackend(): Promise<ExecBackend> {
         cid,
         "sh",
         "-c",
-        `PRIM_HOME=${primHome} PATH=${primHome}/bin:$HOME/.bun/bin:$PATH${process.env.PRIM_NETWORK ? ` PRIM_NETWORK=${process.env.PRIM_NETWORK}` : ""} ${command}`,
+        `export PRIM_HOME=${primHome} PATH=${primHome}/bin:$HOME/.bun/bin:$PATH${process.env.PRIM_NETWORK ? ` PRIM_NETWORK=${process.env.PRIM_NETWORK}` : ""}; ${command}`,
       ]);
     },
     async readFile(path: string) {
@@ -628,7 +628,7 @@ async function createRemoteBackend(): Promise<ExecBackend> {
     primHome,
     async exec(command: string) {
       return sshExec(
-        `PRIM_HOME=${primHome} PATH=${primHome}/bin:$HOME/.bun/bin:$PATH${process.env.PRIM_NETWORK ? ` PRIM_NETWORK=${process.env.PRIM_NETWORK}` : ""} ${command}`,
+        `export PRIM_HOME=${primHome} PATH=${primHome}/bin:$HOME/.bun/bin:$PATH${process.env.PRIM_NETWORK ? ` PRIM_NETWORK=${process.env.PRIM_NETWORK}` : ""}; ${command}`,
       );
     },
     async readFile(path: string) {
@@ -1143,11 +1143,13 @@ async function runCanaryGroup(
     }
     // For docker/remote backends, prepend install instructions
     if (execEnv !== "local" && setupCtx?.invite_code) {
-      groupPrompt = `The prim CLI is NOT installed yet. First install it:
-  curl -fsSL prim.sh/install.sh | sh -s ${setupCtx.invite_code}
-  export PATH="$HOME/.prim/bin:$PATH"
+      groupPrompt = `The prim CLI is NOT installed yet. Run these commands ONE AT A TIME using separate shell_exec calls:
 
-Then follow the onboarding runbook that was printed.
+Step A: curl -fsSL prim.sh/install.sh | sh
+Step B: export PATH="$HOME/.prim/bin:$PATH"
+Step C: prim skill onboard --code ${setupCtx.invite_code}
+
+Step C will print a multi-step runbook. Execute EVERY step in the runbook sequentially, one shell_exec call per command. Do not stop after printing the runbook — you must run each step.
 
 ${groupPrompt}`;
     }
@@ -1179,7 +1181,14 @@ ${groupPrompt}`;
 
   const tools = isCli ? CLI_CANARY_TOOLS : CANARY_TOOLS;
   const systemPrompt = isCli
-    ? "You have a shell_exec tool. Run the commands you are given. Report results."
+    ? `You have a shell_exec tool. You are testing a CLI by executing a multi-step runbook.
+
+Rules:
+- Execute ONE command per shell_exec call. Do not combine commands with && or newlines.
+- After each command, read the output and decide what to do next based on the runbook instructions.
+- If a command prints a runbook or step list, execute each step sequentially using separate shell_exec calls.
+- Continue until ALL steps are complete or a step fails with no recovery path.
+- After all steps, report a structured summary of what passed and failed.`
     : "You are an API tester for prim.sh. Use the http_request tool to make API calls. Be concise and structured in your final report.";
 
   // OpenAI-compatible messages
@@ -1558,6 +1567,12 @@ async function main() {
   }
   const plan: TestPlan = await planFile.json();
 
+  // Override network from env if set
+  if (process.env.PRIM_NETWORK) {
+    const net = process.env.PRIM_NETWORK;
+    plan.network = net === "eip155:8453" ? "Base mainnet (eip155:8453)" : `Base Sepolia (${net})`;
+  }
+
   // Build test index
   const testIndex = new Map<string, TestDef>();
   for (const t of plan.tests) {
@@ -1643,25 +1658,26 @@ async function main() {
   // ── Live Run Setup ─────────────────────────────────────────────────────
 
   // Build primFetch for paid routes (used in both deterministic and canary)
+  // Prefer AGENT_PRIVATE_KEY when set (explicit > implicit keystore)
   let primFetch: typeof fetch;
-  try {
+  const agentPk = process.env.AGENT_PRIVATE_KEY;
+  if (agentPk) {
     primFetch = createPrimFetch({
-      keystore: true,
+      privateKey: agentPk as `0x${string}`,
       maxPayment: "1.00",
     });
-  } catch {
-    // Fall back to AGENT_PRIVATE_KEY env
-    const pk = process.env.AGENT_PRIVATE_KEY;
-    if (!pk) {
+  } else {
+    try {
+      primFetch = createPrimFetch({
+        keystore: true,
+        maxPayment: "1.00",
+      });
+    } catch {
       console.error(
         c.red("No wallet available. Set AGENT_PRIVATE_KEY or configure keystore at ~/.prim/keys/"),
       );
       process.exit(1);
     }
-    primFetch = createPrimFetch({
-      privateKey: pk as `0x${string}`,
-      maxPayment: "1.00",
-    });
   }
 
   // ── Canary Mode ────────────────────────────────────────────────────────

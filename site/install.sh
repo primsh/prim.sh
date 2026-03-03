@@ -30,7 +30,7 @@ curl -fsSL -o "$TMPDIR/checksums.sha256" "$BASE_URL/checksums.sha256"
 
 # Verify checksum
 cd "$TMPDIR"
-EXPECTED=$(grep "$BINARY" checksums.sha256)
+EXPECTED=$(grep "  ${BINARY}\$" checksums.sha256)
 if [ -z "$EXPECTED" ]; then
   echo "No checksum found for $BINARY" >&2
   exit 1

@@ -497,5 +497,11 @@ export async function runSkillCommand(
     content = content.replace(/\{\{CODE\}\}/g, () => replacement);
   }
 
+  // Interpolate network placeholders in all skills
+  const network = process.env.PRIM_NETWORK ?? "eip155:8453";
+  const networkName = network === "eip155:84532" ? "Base Sepolia testnet" : "Base mainnet";
+  content = content.replace(/\{\{NETWORK\}\}/g, network);
+  content = content.replace(/\{\{NETWORK_NAME\}\}/g, networkName);
+
   process.stdout.write(content);
 }
