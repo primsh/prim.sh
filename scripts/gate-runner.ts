@@ -497,7 +497,7 @@ async function createDockerBackend(): Promise<ExecBackend> {
         cid,
         "sh",
         "-c",
-        `PRIM_HOME=${primHome} PATH=${primHome}/bin:$HOME/.bun/bin:$PATH${process.env.PRIM_NETWORK ? ` PRIM_NETWORK=${process.env.PRIM_NETWORK}` : ""} ${command}`,
+        `export PRIM_HOME=${primHome} PATH=${primHome}/bin:$HOME/.bun/bin:$PATH${process.env.PRIM_NETWORK ? ` PRIM_NETWORK=${process.env.PRIM_NETWORK}` : ""}; ${command}`,
       ]);
     },
     async readFile(path: string) {
@@ -628,7 +628,7 @@ async function createRemoteBackend(): Promise<ExecBackend> {
     primHome,
     async exec(command: string) {
       return sshExec(
-        `PRIM_HOME=${primHome} PATH=${primHome}/bin:$HOME/.bun/bin:$PATH${process.env.PRIM_NETWORK ? ` PRIM_NETWORK=${process.env.PRIM_NETWORK}` : ""} ${command}`,
+        `export PRIM_HOME=${primHome} PATH=${primHome}/bin:$HOME/.bun/bin:$PATH${process.env.PRIM_NETWORK ? ` PRIM_NETWORK=${process.env.PRIM_NETWORK}` : ""}; ${command}`,
       );
     },
     async readFile(path: string) {
