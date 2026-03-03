@@ -2,6 +2,7 @@
 import { readFileSync } from "node:fs";
 import { createPrimFetch } from "@primsh/x402-client";
 import { getConfig } from "@primsh/keystore";
+import { handleApiError } from "./errors.ts";
 import { getFlag, hasFlag, resolvePassphrase } from "./flags.ts";
 
 async function readStdin(): Promise<Buffer> {
@@ -19,20 +20,6 @@ export function resolveEmailUrl(argv: string[]): string {
   return "https://email.prim.sh";
 }
 
-async function handleError(res: Response): Promise<never> {
-  let message = `HTTP ${res.status}`;
-  let code = "unknown";
-  try {
-    const body = (await res.json()) as { error?: { code: string; message: string } };
-    if (body.error) {
-      message = body.error.message;
-      code = body.error.code;
-    }
-  } catch {
-    // ignore parse error
-  }
-  throw new Error(`${message} (${code})`);
-}
 
 export async function runEmailCommand(sub: string, argv: string[]): Promise<void> {
   const baseUrl = resolveEmailUrl(argv);
@@ -77,7 +64,7 @@ export async function runEmailCommand(sub: string, argv: string[]): Promise<void
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(reqBody),
         });
-        if (!res.ok) return handleError(res);
+        if (!res.ok) return handleApiError(res);
         const data = (await res.json()) as { id: string };
         if (quiet) {
           console.log(data.id);
@@ -93,7 +80,7 @@ export async function runEmailCommand(sub: string, argv: string[]): Promise<void
           process.exit(1);
         }
         const res = await primFetch(`${baseUrl}/v1/mailboxes/${mailboxId}/webhooks`);
-        if (!res.ok) return handleError(res);
+        if (!res.ok) return handleApiError(res);
         const data = (await res.json()) as { webhooks: Array<{ id: string }> };
         if (quiet) {
           for (const w of data.webhooks) console.log(w.id);
@@ -112,7 +99,7 @@ export async function runEmailCommand(sub: string, argv: string[]): Promise<void
         const res = await primFetch(`${baseUrl}/v1/mailboxes/${mailboxId}/webhooks/${webhookId}`, {
           method: "DELETE",
         });
-        if (!res.ok) return handleError(res);
+        if (!res.ok) return handleApiError(res);
         if (!quiet) {
           const data = await res.json();
           console.log(JSON.stringify(data, null, 2));
@@ -142,7 +129,7 @@ export async function runEmailCommand(sub: string, argv: string[]): Promise<void
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ domain }),
         });
-        if (!res.ok) return handleError(res);
+        if (!res.ok) return handleApiError(res);
         const data = (await res.json()) as { id: string };
         if (quiet) {
           console.log(data.id);
@@ -154,7 +141,7 @@ export async function runEmailCommand(sub: string, argv: string[]): Promise<void
 
       case "ls": {
         const res = await primFetch(`${baseUrl}/v1/domains`);
-        if (!res.ok) return handleError(res);
+        if (!res.ok) return handleApiError(res);
         const data = (await res.json()) as { domains: Array<{ id: string }> };
         if (quiet) {
           for (const d of data.domains) console.log(d.id);
@@ -171,7 +158,7 @@ export async function runEmailCommand(sub: string, argv: string[]): Promise<void
           process.exit(1);
         }
         const res = await primFetch(`${baseUrl}/v1/domains/${domainId}`);
-        if (!res.ok) return handleError(res);
+        if (!res.ok) return handleApiError(res);
         const data = await res.json();
         console.log(JSON.stringify(data, null, 2));
         break;
@@ -186,7 +173,7 @@ export async function runEmailCommand(sub: string, argv: string[]): Promise<void
         const res = await primFetch(`${baseUrl}/v1/domains/${domainId}/verify`, {
           method: "POST",
         });
-        if (!res.ok) return handleError(res);
+        if (!res.ok) return handleApiError(res);
         const data = await res.json();
         console.log(JSON.stringify(data, null, 2));
         break;
@@ -201,7 +188,7 @@ export async function runEmailCommand(sub: string, argv: string[]): Promise<void
         const res = await primFetch(`${baseUrl}/v1/domains/${domainId}`, {
           method: "DELETE",
         });
-        if (!res.ok) return handleError(res);
+        if (!res.ok) return handleApiError(res);
         if (!quiet) {
           const data = await res.json();
           console.log(JSON.stringify(data, null, 2));
@@ -228,7 +215,7 @@ export async function runEmailCommand(sub: string, argv: string[]): Promise<void
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(reqBody),
       });
-      if (!res.ok) return handleError(res);
+      if (!res.ok) return handleApiError(res);
       const data = (await res.json()) as { mailbox: { id: string } };
       if (quiet) {
         console.log(data.mailbox.id);
@@ -247,7 +234,7 @@ export async function runEmailCommand(sub: string, argv: string[]): Promise<void
       url.searchParams.set("per_page", perPage);
       if (includeExpired) url.searchParams.set("include_expired", "true");
       const res = await primFetch(url.toString());
-      if (!res.ok) return handleError(res);
+      if (!res.ok) return handleApiError(res);
       const data = (await res.json()) as { mailboxes: Array<{ id: string }> };
       if (quiet) {
         for (const m of data.mailboxes) console.log(m.id);
@@ -264,7 +251,7 @@ export async function runEmailCommand(sub: string, argv: string[]): Promise<void
         process.exit(1);
       }
       const res = await primFetch(`${baseUrl}/v1/mailboxes/${mailboxId}`);
-      if (!res.ok) return handleError(res);
+      if (!res.ok) return handleApiError(res);
       const data = await res.json();
       console.log(JSON.stringify(data, null, 2));
       break;
@@ -279,7 +266,7 @@ export async function runEmailCommand(sub: string, argv: string[]): Promise<void
       const res = await primFetch(`${baseUrl}/v1/mailboxes/${mailboxId}`, {
         method: "DELETE",
       });
-      if (!res.ok) return handleError(res);
+      if (!res.ok) return handleApiError(res);
       if (!quiet) {
         const data = await res.json();
         console.log(JSON.stringify(data, null, 2));
@@ -301,7 +288,7 @@ export async function runEmailCommand(sub: string, argv: string[]): Promise<void
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(reqBody),
       });
-      if (!res.ok) return handleError(res);
+      if (!res.ok) return handleApiError(res);
       const data = await res.json();
       console.log(JSON.stringify(data, null, 2));
       break;
@@ -322,7 +309,7 @@ export async function runEmailCommand(sub: string, argv: string[]): Promise<void
       if (limit) url.searchParams.set("limit", limit);
       if (folder) url.searchParams.set("folder", folder);
       const res = await primFetch(url.toString());
-      if (!res.ok) return handleError(res);
+      if (!res.ok) return handleApiError(res);
       const data = (await res.json()) as {
         messages: Array<{
           id: string;
@@ -362,7 +349,7 @@ export async function runEmailCommand(sub: string, argv: string[]): Promise<void
       const wantHtml = hasFlag("html", argv);
       const jsonOutput = hasFlag("json", argv);
       const res = await primFetch(`${baseUrl}/v1/mailboxes/${mailboxId}/messages/${messageId}`);
-      if (!res.ok) return handleError(res);
+      if (!res.ok) return handleApiError(res);
       const data = (await res.json()) as {
         from: string;
         to: string;
@@ -431,7 +418,7 @@ export async function runEmailCommand(sub: string, argv: string[]): Promise<void
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(reqBody),
       });
-      if (!res.ok) return handleError(res);
+      if (!res.ok) return handleApiError(res);
       const data = (await res.json()) as { message_id?: string };
       if (quiet) {
         console.log(data.message_id ?? "");

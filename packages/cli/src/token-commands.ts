@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: Apache-2.0
 import { createPrimFetch } from "@primsh/x402-client";
 import { getConfig } from "@primsh/keystore";
+import { handleApiError } from "./errors.ts";
 import { getFlag, hasFlag, resolvePassphrase } from "./flags.ts";
 
 export function resolveTokenUrl(argv: string[]): string {
@@ -8,21 +9,6 @@ export function resolveTokenUrl(argv: string[]): string {
   if (flag) return flag;
   if (process.env.PRIM_TOKEN_URL) return process.env.PRIM_TOKEN_URL;
   return "https://token.prim.sh";
-}
-
-async function handleError(res: Response): Promise<never> {
-  let message = `HTTP ${res.status}`;
-  let code = "unknown";
-  try {
-    const body = (await res.json()) as { error?: { code: string; message: string } };
-    if (body.error) {
-      message = body.error.message;
-      code = body.error.code;
-    }
-  } catch {
-    // ignore parse error
-  }
-  throw new Error(`${message} (${code})`);
 }
 
 export async function runTokenCommand(sub: string, argv: string[]): Promise<void> {
@@ -68,7 +54,7 @@ export async function runTokenCommand(sub: string, argv: string[]): Promise<void
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(reqBody),
         });
-        if (!res.ok) return handleError(res);
+        if (!res.ok) return handleApiError(res);
         const data = await res.json();
         if (quiet) {
           const d = data as { pool_address?: string };
@@ -85,7 +71,7 @@ export async function runTokenCommand(sub: string, argv: string[]): Promise<void
           process.exit(1);
         }
         const res = await primFetch(`${baseUrl}/v1/tokens/${tokenId}/pool`);
-        if (!res.ok) return handleError(res);
+        if (!res.ok) return handleApiError(res);
         const data = await res.json();
         console.log(JSON.stringify(data, null, 2));
         break;
@@ -110,7 +96,7 @@ export async function runTokenCommand(sub: string, argv: string[]): Promise<void
         url.searchParams.set("tokenAmount", tokenAmount);
         url.searchParams.set("usdcAmount", usdcAmount);
         const res = await primFetch(url.toString());
-        if (!res.ok) return handleError(res);
+        if (!res.ok) return handleApiError(res);
         const data = await res.json();
         console.log(JSON.stringify(data, null, 2));
         break;
@@ -150,7 +136,7 @@ export async function runTokenCommand(sub: string, argv: string[]): Promise<void
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(reqBody),
       });
-      if (!res.ok) return handleError(res);
+      if (!res.ok) return handleApiError(res);
       const data = (await res.json()) as { id?: string };
       if (quiet) {
         console.log(data.id ?? "");
@@ -162,7 +148,7 @@ export async function runTokenCommand(sub: string, argv: string[]): Promise<void
 
     case "ls": {
       const res = await primFetch(`${baseUrl}/v1/tokens`);
-      if (!res.ok) return handleError(res);
+      if (!res.ok) return handleApiError(res);
       const data = (await res.json()) as {
         tokens: Array<{
           id: string;
@@ -201,7 +187,7 @@ export async function runTokenCommand(sub: string, argv: string[]): Promise<void
         process.exit(1);
       }
       const res = await primFetch(`${baseUrl}/v1/tokens/${tokenId}`);
-      if (!res.ok) return handleError(res);
+      if (!res.ok) return handleApiError(res);
       const data = await res.json();
       console.log(JSON.stringify(data, null, 2));
       break;
@@ -224,7 +210,7 @@ export async function runTokenCommand(sub: string, argv: string[]): Promise<void
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ to, amount }),
       });
-      if (!res.ok) return handleError(res);
+      if (!res.ok) return handleApiError(res);
       const data = (await res.json()) as { tx_hash?: string };
       if (quiet) {
         console.log(data.tx_hash ?? "");
@@ -241,7 +227,7 @@ export async function runTokenCommand(sub: string, argv: string[]): Promise<void
         process.exit(1);
       }
       const res = await primFetch(`${baseUrl}/v1/tokens/${tokenId}/supply`);
-      if (!res.ok) return handleError(res);
+      if (!res.ok) return handleApiError(res);
       const data = (await res.json()) as { totalSupply?: string };
       if (quiet) {
         console.log(data.totalSupply ?? "");

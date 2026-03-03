@@ -2,6 +2,7 @@
 import { readFileSync } from "node:fs";
 import { createPrimFetch } from "@primsh/x402-client";
 import { getConfig } from "@primsh/keystore";
+import { handleApiError } from "./errors.ts";
 import { getFlag, hasFlag, resolvePassphrase } from "./flags.ts";
 
 export function resolveMemUrl(argv: string[]): string {
@@ -11,20 +12,6 @@ export function resolveMemUrl(argv: string[]): string {
   return "https://mem.prim.sh";
 }
 
-async function handleError(res: Response): Promise<never> {
-  let message = `HTTP ${res.status}`;
-  let code = "unknown";
-  try {
-    const body = (await res.json()) as { error?: { code: string; message: string } };
-    if (body.error) {
-      message = body.error.message;
-      code = body.error.code;
-    }
-  } catch {
-    // ignore parse error
-  }
-  throw new Error(`${message} (${code})`);
-}
 
 export async function runMemCommand(sub: string, argv: string[]): Promise<void> {
   const baseUrl = resolveMemUrl(argv);
@@ -88,7 +75,7 @@ export async function runMemCommand(sub: string, argv: string[]): Promise<void> 
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(reqBody),
         });
-        if (!res.ok) return handleError(res);
+        if (!res.ok) return handleApiError(res);
         const data = await res.json();
         if (quiet) {
           console.log("ok");
@@ -106,7 +93,7 @@ export async function runMemCommand(sub: string, argv: string[]): Promise<void> 
           process.exit(1);
         }
         const res = await primFetch(`${baseUrl}/v1/cache/${namespace}/${key}`);
-        if (!res.ok) return handleError(res);
+        if (!res.ok) return handleApiError(res);
         const data = (await res.json()) as { value: unknown };
         if (quiet) {
           const val = data.value;
@@ -127,7 +114,7 @@ export async function runMemCommand(sub: string, argv: string[]): Promise<void> 
         const res = await primFetch(`${baseUrl}/v1/cache/${namespace}/${key}`, {
           method: "DELETE",
         });
-        if (!res.ok) return handleError(res);
+        if (!res.ok) return handleApiError(res);
         if (!quiet) {
           const data = await res.json();
           console.log(JSON.stringify(data, null, 2));
@@ -161,7 +148,7 @@ export async function runMemCommand(sub: string, argv: string[]): Promise<void> 
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(reqBody),
       });
-      if (!res.ok) return handleError(res);
+      if (!res.ok) return handleApiError(res);
       const data = (await res.json()) as { id: string };
       if (quiet) {
         console.log(data.id);
@@ -178,7 +165,7 @@ export async function runMemCommand(sub: string, argv: string[]): Promise<void> 
       url.searchParams.set("page", page);
       url.searchParams.set("limit", limit);
       const res = await primFetch(url.toString());
-      if (!res.ok) return handleError(res);
+      if (!res.ok) return handleApiError(res);
       const data = (await res.json()) as { collections: Array<{ id: string; name: string }> };
       if (quiet) {
         for (const c of data.collections) console.log(c.id);
@@ -195,7 +182,7 @@ export async function runMemCommand(sub: string, argv: string[]): Promise<void> 
         process.exit(1);
       }
       const res = await primFetch(`${baseUrl}/v1/collections/${collectionId}`);
-      if (!res.ok) return handleError(res);
+      if (!res.ok) return handleApiError(res);
       const data = await res.json();
       console.log(JSON.stringify(data, null, 2));
       break;
@@ -210,7 +197,7 @@ export async function runMemCommand(sub: string, argv: string[]): Promise<void> 
       const res = await primFetch(`${baseUrl}/v1/collections/${collectionId}`, {
         method: "DELETE",
       });
-      if (!res.ok) return handleError(res);
+      if (!res.ok) return handleApiError(res);
       if (!quiet) {
         const data = await res.json();
         console.log(JSON.stringify(data, null, 2));
@@ -250,7 +237,7 @@ export async function runMemCommand(sub: string, argv: string[]): Promise<void> 
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ documents: [doc] }),
       });
-      if (!res.ok) return handleError(res);
+      if (!res.ok) return handleApiError(res);
       const data = (await res.json()) as { ids: string[] };
       if (quiet) {
         for (const id of data.ids) console.log(id);
@@ -279,7 +266,7 @@ export async function runMemCommand(sub: string, argv: string[]): Promise<void> 
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(reqBody),
       });
-      if (!res.ok) return handleError(res);
+      if (!res.ok) return handleApiError(res);
       const data = (await res.json()) as {
         matches: Array<{ id: string; score: number; text: string }>;
       };

@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: Apache-2.0
 import { createPrimFetch } from "@primsh/x402-client";
 import { getConfig } from "@primsh/keystore";
+import { handleApiError } from "./errors.ts";
 import { getFlag, hasFlag, resolvePassphrase } from "./flags.ts";
 
 export function resolveDomainUrl(argv: string[]): string {
@@ -10,20 +11,6 @@ export function resolveDomainUrl(argv: string[]): string {
   return "https://domain.prim.sh";
 }
 
-async function handleError(res: Response): Promise<never> {
-  let message = `HTTP ${res.status}`;
-  let code = "unknown";
-  try {
-    const body = (await res.json()) as { error?: { code: string; message: string } };
-    if (body.error) {
-      message = body.error.message;
-      code = body.error.code;
-    }
-  } catch {
-    // ignore parse error
-  }
-  throw new Error(`${message} (${code})`);
-}
 
 export async function runDomainCommand(sub: string, argv: string[]): Promise<void> {
   const baseUrl = resolveDomainUrl(argv);
@@ -56,7 +43,7 @@ export async function runDomainCommand(sub: string, argv: string[]): Promise<voi
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ domain: zone }),
         });
-        if (!res.ok) return handleError(res);
+        if (!res.ok) return handleApiError(res);
         const data = (await res.json()) as { zone: { id: string; name_servers: string[] } };
         if (quiet) {
           console.log(data.zone.id);
@@ -73,7 +60,7 @@ export async function runDomainCommand(sub: string, argv: string[]): Promise<voi
         url.searchParams.set("page", page);
         url.searchParams.set("limit", limit);
         const res = await primFetch(url.toString());
-        if (!res.ok) return handleError(res);
+        if (!res.ok) return handleApiError(res);
         const data = (await res.json()) as {
           zones: Array<{ id: string; domain: string; status: string }>;
         };
@@ -92,7 +79,7 @@ export async function runDomainCommand(sub: string, argv: string[]): Promise<voi
           process.exit(1);
         }
         const res = await primFetch(`${baseUrl}/v1/zones/${zoneId}`);
-        if (!res.ok) return handleError(res);
+        if (!res.ok) return handleApiError(res);
         const data = await res.json();
         console.log(JSON.stringify(data, null, 2));
         break;
@@ -105,7 +92,7 @@ export async function runDomainCommand(sub: string, argv: string[]): Promise<voi
           process.exit(1);
         }
         const res = await primFetch(`${baseUrl}/v1/zones/${zoneId}`, { method: "DELETE" });
-        if (!res.ok) return handleError(res);
+        if (!res.ok) return handleApiError(res);
         if (!quiet) {
           const data = await res.json();
           console.log(JSON.stringify(data, null, 2));
@@ -120,7 +107,7 @@ export async function runDomainCommand(sub: string, argv: string[]): Promise<voi
           process.exit(1);
         }
         const res = await primFetch(`${baseUrl}/v1/zones/${zoneId}/verify`);
-        if (!res.ok) return handleError(res);
+        if (!res.ok) return handleApiError(res);
         const data = await res.json();
         console.log(JSON.stringify(data, null, 2));
         break;
@@ -133,7 +120,7 @@ export async function runDomainCommand(sub: string, argv: string[]): Promise<voi
           process.exit(1);
         }
         const res = await primFetch(`${baseUrl}/v1/zones/${zoneId}/activate`, { method: "PUT" });
-        if (!res.ok) return handleError(res);
+        if (!res.ok) return handleApiError(res);
         const data = await res.json();
         console.log(JSON.stringify(data, null, 2));
         break;
@@ -177,7 +164,7 @@ export async function runDomainCommand(sub: string, argv: string[]): Promise<voi
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(body),
         });
-        if (!res.ok) return handleError(res);
+        if (!res.ok) return handleApiError(res);
         const data = await res.json();
         console.log(JSON.stringify(data, null, 2));
         break;
@@ -222,7 +209,7 @@ export async function runDomainCommand(sub: string, argv: string[]): Promise<voi
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(body),
         });
-        if (!res.ok) return handleError(res);
+        if (!res.ok) return handleApiError(res);
         const data = (await res.json()) as { id: string };
         if (quiet) {
           console.log(data.id);
@@ -239,7 +226,7 @@ export async function runDomainCommand(sub: string, argv: string[]): Promise<voi
           process.exit(1);
         }
         const res = await primFetch(`${baseUrl}/v1/zones/${zoneId}/records`);
-        if (!res.ok) return handleError(res);
+        if (!res.ok) return handleApiError(res);
         const data = (await res.json()) as {
           records: Array<{ id: string; type: string; name: string; content: string }>;
         };
@@ -259,7 +246,7 @@ export async function runDomainCommand(sub: string, argv: string[]): Promise<voi
           process.exit(1);
         }
         const res = await primFetch(`${baseUrl}/v1/zones/${zoneId}/records/${recordId}`);
-        if (!res.ok) return handleError(res);
+        if (!res.ok) return handleApiError(res);
         const data = await res.json();
         console.log(JSON.stringify(data, null, 2));
         break;
@@ -291,7 +278,7 @@ export async function runDomainCommand(sub: string, argv: string[]): Promise<voi
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(body),
         });
-        if (!res.ok) return handleError(res);
+        if (!res.ok) return handleApiError(res);
         const data = await res.json();
         console.log(JSON.stringify(data, null, 2));
         break;
@@ -307,7 +294,7 @@ export async function runDomainCommand(sub: string, argv: string[]): Promise<voi
         const res = await primFetch(`${baseUrl}/v1/zones/${zoneId}/records/${recordId}`, {
           method: "DELETE",
         });
-        if (!res.ok) return handleError(res);
+        if (!res.ok) return handleApiError(res);
         if (!quiet) {
           const data = await res.json();
           console.log(JSON.stringify(data, null, 2));
@@ -334,7 +321,7 @@ export async function runDomainCommand(sub: string, argv: string[]): Promise<voi
       url.searchParams.set("query", query);
       if (tldsFlag) url.searchParams.set("tlds", tldsFlag);
       const res = await primFetch(url.toString());
-      if (!res.ok) return handleError(res);
+      if (!res.ok) return handleApiError(res);
       const data = (await res.json()) as {
         results: Array<{
           domain: string;
@@ -377,7 +364,7 @@ export async function runDomainCommand(sub: string, argv: string[]): Promise<voi
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(body),
       });
-      if (!res.ok) return handleError(res);
+      if (!res.ok) return handleApiError(res);
       const data = (await res.json()) as {
         quote_id: string;
         domain: string;
@@ -409,7 +396,7 @@ export async function runDomainCommand(sub: string, argv: string[]): Promise<voi
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(quoteBody),
       });
-      if (!quoteRes.ok) return handleError(quoteRes);
+      if (!quoteRes.ok) return handleApiError(quoteRes);
       const quote = (await quoteRes.json()) as {
         quote_id: string;
         domain: string;
@@ -430,7 +417,7 @@ export async function runDomainCommand(sub: string, argv: string[]): Promise<voi
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ quote_id: quote.quote_id }),
       });
-      if (!regRes.ok) return handleError(regRes);
+      if (!regRes.ok) return handleApiError(regRes);
       const data = (await regRes.json()) as {
         domain: string;
         zone_id: string | null;
@@ -460,7 +447,7 @@ export async function runDomainCommand(sub: string, argv: string[]): Promise<voi
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ recovery_token: secret }),
       });
-      if (!res.ok) return handleError(res);
+      if (!res.ok) return handleApiError(res);
       const data = await res.json();
       console.log(JSON.stringify(data, null, 2));
       break;
@@ -473,7 +460,7 @@ export async function runDomainCommand(sub: string, argv: string[]): Promise<voi
         process.exit(1);
       }
       const res = await primFetch(`${baseUrl}/v1/domains/${domain}/status`);
-      if (!res.ok) return handleError(res);
+      if (!res.ok) return handleApiError(res);
       const data = await res.json();
       console.log(JSON.stringify(data, null, 2));
       break;
@@ -488,7 +475,7 @@ export async function runDomainCommand(sub: string, argv: string[]): Promise<voi
       const res = await primFetch(`${baseUrl}/v1/domains/${domain}/configure-ns`, {
         method: "POST",
       });
-      if (!res.ok) return handleError(res);
+      if (!res.ok) return handleApiError(res);
       const data = await res.json();
       console.log(JSON.stringify(data, null, 2));
       break;

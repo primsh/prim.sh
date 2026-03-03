@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: Apache-2.0
 import { createPrimFetch } from "@primsh/x402-client";
 import { getConfig } from "@primsh/keystore";
+import { handleApiError } from "./errors.ts";
 import { getFlag, hasFlag, resolvePassphrase } from "./flags.ts";
 
 export function resolveSearchUrl(argv: string[]): string {
@@ -10,20 +11,6 @@ export function resolveSearchUrl(argv: string[]): string {
   return "https://search.prim.sh";
 }
 
-async function handleError(res: Response): Promise<never> {
-  let message = `HTTP ${res.status}`;
-  let code = "unknown";
-  try {
-    const body = (await res.json()) as { error?: { code: string; message: string } };
-    if (body.error) {
-      message = body.error.message;
-      code = body.error.code;
-    }
-  } catch {
-    // ignore parse error
-  }
-  throw new Error(`${message} (${code})`);
-}
 
 /**
  * Collect all positional args after argv[1] (subcommand) that are not flags.
@@ -124,7 +111,7 @@ export async function runSearchCommand(sub: string, argv: string[]): Promise<voi
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(reqBody),
       });
-      if (!res.ok) return handleError(res);
+      if (!res.ok) return handleApiError(res);
       const data = (await res.json()) as {
         query: string;
         answer?: string;
@@ -159,7 +146,7 @@ export async function runSearchCommand(sub: string, argv: string[]): Promise<voi
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(reqBody),
       });
-      if (!res.ok) return handleError(res);
+      if (!res.ok) return handleApiError(res);
       const data = (await res.json()) as {
         query: string;
         answer?: string;
@@ -186,7 +173,7 @@ export async function runSearchCommand(sub: string, argv: string[]): Promise<voi
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ urls, format }),
       });
-      if (!res.ok) return handleError(res);
+      if (!res.ok) return handleApiError(res);
       const data = (await res.json()) as {
         results: Array<{ url: string; content: string }>;
         failed: Array<{ url: string; error: string }>;
