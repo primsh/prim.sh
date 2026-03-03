@@ -79,6 +79,7 @@ describe("createPrimApp boot", () => {
 
     expect(res.status).toBe(200);
     const body = await res.json();
-    expect(body).toEqual({ service: "test.sh", status: "ok" });
+    expect(body).toMatchObject({ service: "test.sh", status: "ok" });
+    expect(body.network).toMatch(/^eip155:\d+$/);
   });
 });

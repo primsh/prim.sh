@@ -194,7 +194,7 @@ export function createPrimApp(
   // 5. Standard free routes
   if (!skipHealthCheck) {
     app.get("/", (c) => {
-      return c.json({ service: serviceName, status: "ok" });
+      return c.json({ service: serviceName, status: "ok", network: getNetworkConfig().network });
     });
   }
 
