@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: Apache-2.0
-import { addToAllowlist } from "@primsh/x402-middleware/allowlist-db";
+import { addToAllowlist, removeFromAllowlist } from "@primsh/x402-middleware/allowlist-db";
 import type { ServiceResult } from "@primsh/x402-middleware";
 import { createLogger } from "@primsh/x402-middleware";
 import type {
@@ -9,7 +9,7 @@ import type {
   ListCodesResponse,
   RedeemResponse,
 } from "./api.ts";
-import { generateCode, insertCodes, listCodes, revokeCode } from "./db.ts";
+import { generateCode, insertCodes, listCodes, revokeCode, unburnCode } from "./db.ts";
 import type { CodeRow } from "./db.ts";
 import { validateAndBurn } from "./db.ts";
 import { fundWallet } from "./fund.ts";
@@ -65,7 +65,9 @@ export async function redeemInvite(
     };
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);
-    log.error("Funding failed (wallet is allowlisted but unfunded)", { wallet, error: message });
+    log.error("Funding failed — rolling back code + allowlist", { wallet, code, error: message });
+    unburnCode(code);
+    removeFromAllowlist(allowlistDbPath, wallet);
     return { ok: false, status: 502, code: "fund_error", message: `Funding failed: ${message}` };
   }
 }

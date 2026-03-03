@@ -85,6 +85,12 @@ export function validateAndBurn(code: string, wallet: string): ValidateResult {
   return { ok: true };
 }
 
+/** Rollback a burned code — clear wallet + redeemed_at so the code can be reused. */
+export function unburnCode(code: string): void {
+  const db = getDb();
+  db.prepare("UPDATE invite_codes SET wallet = NULL, redeemed_at = NULL WHERE code = ?").run(code);
+}
+
 /** Reset DB connection (for tests). */
 export function resetDb(): void {
   _db = null;
