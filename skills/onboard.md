@@ -9,7 +9,7 @@ requires: []
 
 Executable runbook. Run each step, check the output, diagnose failures before proceeding.
 
-Network: Base Sepolia testnet (`eip155:84532`). Payment: USDC (6 decimals).
+Network: {{NETWORK_NAME}} (`{{NETWORK}}`). Payment: USDC (6 decimals).
 
 ---
 
@@ -97,7 +97,7 @@ prim faucet usdc
 prim wallet balance
 ```
 
-**Expected**: `0x<ADDRESS>  X.XX USDC  [eip155:84532]` with balance > 0.
+**Expected**: `0x<ADDRESS>  X.XX USDC  [{{NETWORK}}]` with balance > 0.
 
 **If `(unfunded)`**: transaction may be settling. Wait 10 seconds, retry up to 3 times.
 
@@ -170,7 +170,7 @@ Onboarding complete.
 
   Wallet:  <address>
   Balance: <balance> USDC
-  Network: eip155:84532 (Base Sepolia)
+  Network: {{NETWORK}} ({{NETWORK_NAME}})
   store:   OK | FAILED
   search:  OK | FAILED
 

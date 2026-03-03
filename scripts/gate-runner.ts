@@ -1143,11 +1143,13 @@ async function runCanaryGroup(
     }
     // For docker/remote backends, prepend install instructions
     if (execEnv !== "local" && setupCtx?.invite_code) {
-      groupPrompt = `The prim CLI is NOT installed yet. First install it:
-  curl -fsSL prim.sh/install.sh | sh -s ${setupCtx.invite_code}
-  export PATH="$HOME/.prim/bin:$PATH"
+      groupPrompt = `The prim CLI is NOT installed yet. Run these commands ONE AT A TIME using separate shell_exec calls:
 
-Then follow the onboarding runbook that was printed.
+Step A: curl -fsSL prim.sh/install.sh | sh
+Step B: export PATH="$HOME/.prim/bin:$PATH"
+Step C: prim skill onboard --code ${setupCtx.invite_code}
+
+Step C will print a multi-step runbook. Execute EVERY step in the runbook sequentially, one shell_exec call per command. Do not stop after printing the runbook — you must run each step.
 
 ${groupPrompt}`;
     }
@@ -1179,7 +1181,14 @@ ${groupPrompt}`;
 
   const tools = isCli ? CLI_CANARY_TOOLS : CANARY_TOOLS;
   const systemPrompt = isCli
-    ? "You have a shell_exec tool. Run the commands you are given. Report results."
+    ? `You have a shell_exec tool. You are testing a CLI by executing a multi-step runbook.
+
+Rules:
+- Execute ONE command per shell_exec call. Do not combine commands with && or newlines.
+- After each command, read the output and decide what to do next based on the runbook instructions.
+- If a command prints a runbook or step list, execute each step sequentially using separate shell_exec calls.
+- Continue until ALL steps are complete or a step fails with no recovery path.
+- After all steps, report a structured summary of what passed and failed.`
     : "You are an API tester for prim.sh. Use the http_request tool to make API calls. Be concise and structured in your final report.";
 
   // OpenAI-compatible messages
@@ -1557,6 +1566,12 @@ async function main() {
     process.exit(1);
   }
   const plan: TestPlan = await planFile.json();
+
+  // Override network from env if set
+  if (process.env.PRIM_NETWORK) {
+    const net = process.env.PRIM_NETWORK;
+    plan.network = net === "eip155:8453" ? "Base mainnet (eip155:8453)" : `Base Sepolia (${net})`;
+  }
 
   // Build test index
   const testIndex = new Map<string, TestDef>();

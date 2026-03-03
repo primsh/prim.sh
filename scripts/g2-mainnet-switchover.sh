@@ -61,7 +61,7 @@ for svc in "${MAINNET_SERVICES[@]}"; do
   env_file="$ENV_DIR/$svc.env"
   current=$(grep -E "^PRIM_NETWORK=" "$env_file" 2>/dev/null || echo "PRIM_NETWORK=<not set>")
 
-  if grep -qE "^PRIM_NETWORK=$MAINNET" "$env_file" 2>/dev/null; then
+  if grep -qE "^PRIM_NETWORK=$MAINNET$" "$env_file" 2>/dev/null; then
     log "  $svc: already mainnet — skip"
     continue
   fi
