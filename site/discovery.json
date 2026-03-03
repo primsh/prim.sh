@@ -25,7 +25,7 @@
     {
       "id": "gate",
       "name": "gate.sh",
-      "status": "testnet",
+      "status": "mainnet",
       "endpoint": "https://gate.prim.sh",
       "description": "Access control and onboarding for agents. Invite codes, allowlisting, wallet funding.",
       "openapi": "https://prim.sh/openapi/gate.yaml"

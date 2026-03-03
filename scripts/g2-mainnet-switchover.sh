@@ -22,7 +22,7 @@ source "$(dirname "${BASH_SOURCE[0]}")/../deploy/prim/prim-env.sh"
 
 LOG_FILE="/var/log/prim-g2-switchover.log"
 # BEGIN:PRIM:MAINNET_SERVICES
-MAINNET_SERVICES=(wallet store search)
+MAINNET_SERVICES=(wallet gate store search)
 # END:PRIM:MAINNET_SERVICES
 
 log() {

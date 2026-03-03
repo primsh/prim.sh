@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: Apache-2.0
 import { addToAllowlist, removeFromAllowlist } from "@primsh/x402-middleware/allowlist-db";
 import type { ServiceResult } from "@primsh/x402-middleware";
-import { createLogger } from "@primsh/x402-middleware";
+import { createLogger, getNetworkConfig } from "@primsh/x402-middleware";
 import type {
   CodeDetail,
   CreateCodesRequest,
@@ -55,6 +55,7 @@ export async function redeemInvite(
       data: {
         status: "redeemed",
         wallet,
+        network: getNetworkConfig().network,
         funded: {
           usdc: funded.usdc_amount,
           eth: funded.eth_amount,

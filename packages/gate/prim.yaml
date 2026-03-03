@@ -1,7 +1,7 @@
 id: gate
 name: gate.sh
 endpoint: gate.prim.sh
-status: testnet
+status: mainnet
 type: access
 category: access
 card_class: pgate
@@ -62,12 +62,12 @@ quick_start:
 tips:
   - "No x402 payment required — gate.sh is entirely free."
   - "Each invite code is one-time use. Once redeemed, it cannot be reused."
-  - "Funds $5 USDC + 0.001 ETH on Base for gas."
+  - "Funds USDC + ETH on Base for gas (amounts configurable per deployment)."
   - "Wallet is automatically added to the platform allowlist on redeem."
 
 limits:
   - "Codes: one-time use, burned on redemption"
-  - "Funding: configurable per deployment (default $5 USDC + 0.001 ETH)"
+  - "Funding: configurable per deployment"
 
 ownership: "Invite codes are not tied to a wallet. Any valid EVM address can redeem a code."
 

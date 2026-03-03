@@ -29,6 +29,7 @@ vi.mock("@primsh/x402-middleware", () => {
     createWalletAllowlistChecker: vi.fn(() => () => Promise.resolve(true)),
     createLogger: vi.fn(() => ({ info: vi.fn(), warn: vi.fn(), error: vi.fn() })),
     getNetworkConfig: vi.fn(() => ({
+      network: "eip155:84532",
       chainId: 84532,
       chain: { id: 84532, name: "Base Sepolia" },
       facilitatorUrl: "https://facilitator.example.com",
@@ -158,6 +159,7 @@ describe("gate.sh app", () => {
     expect(body).toMatchObject({
       status: "redeemed",
       wallet: expect.any(String),
+      network: "eip155:84532",
       funded: {
         usdc: "5.00",
         eth: "0.001",

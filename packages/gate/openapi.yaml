@@ -83,6 +83,7 @@ components:
       required:
         - status
         - wallet
+        - network
         - funded
       properties:
         status:
@@ -93,6 +94,9 @@ components:
         wallet:
           type: string
           description: Checksummed wallet address that was funded.
+        network:
+          type: string
+          description: Network the funds were sent on (e.g. "eip155:8453").
         funded:
           $ref: "#/components/schemas/FundingDetail"
           description: Funding details.

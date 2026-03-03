@@ -34,7 +34,7 @@ Fixed infrastructure ($24.49/mo) is absorbed by Primitive Shell.
 | USDC drip | free | $0.00 | static | 2026-02 |
 | ETH drip | free | $0.00 | static | 2026-02 |
 
-### gate.sh (testnet)
+### gate.sh (mainnet)
 
 | Operation | Price | Provider Cost | Type | Verified |
 |-----------|-------|---------------|------|----------|
