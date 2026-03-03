@@ -6,11 +6,11 @@
  *   pnpm -C packages/gate test:smoke
  *
  * Optional env:
- *   GATE_URL       — override base URL (default: https://gate.prim.sh)
- *   GATE_TEST_CODE — a valid, unredeemed invite code to test full redeem flow
- *   GATE_TEST_WALLET — wallet address for redeem test
+ *   GATE_URL         — override base URL (default: https://gate.prim.sh)
+ *   GATE_TEST_CODE   — a valid, unredeemed invite code to test full redeem flow
+ *   GATE_TEST_WALLET — wallet address for redeem test (required with GATE_TEST_CODE)
  *
- * Without GATE_TEST_CODE, only non-destructive checks run.
+ * Without GATE_TEST_CODE + GATE_TEST_WALLET, only non-destructive checks run.
  */
 
 import { describe, expect, it } from "vitest";
@@ -63,15 +63,13 @@ describe("gate.sh live smoke test", { timeout: 15_000 }, () => {
     expect(body.error.code).toBe("invalid_code");
   });
 
-  const hasTestCode = !!process.env.GATE_TEST_CODE;
+  const hasRedeemEnv = !!process.env.GATE_TEST_CODE && !!process.env.GATE_TEST_WALLET;
 
-  it.skipIf(!hasTestCode)(
+  it.skipIf(!hasRedeemEnv)(
     "4. POST /v1/redeem — valid code returns 200 with network and funding",
     async () => {
       const code = process.env.GATE_TEST_CODE!;
-      const wallet =
-        process.env.GATE_TEST_WALLET ??
-        "0x09D896446fBd3299Fa8d7898001b086E56f642B5";
+      const wallet = process.env.GATE_TEST_WALLET!;
 
       const res = await fetch(`${BASE_URL}/v1/redeem`, {
         method: "POST",
