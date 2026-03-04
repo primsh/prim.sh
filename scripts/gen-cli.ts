@@ -19,7 +19,7 @@
 import { existsSync, readFileSync, writeFileSync } from "node:fs";
 import { join, resolve } from "node:path";
 import { parse as parseYaml } from "yaml";
-import { primsForInterface, specPath } from "./lib/primitives.js";
+import { type RouteMapping, loadPrimitives, primsForInterface, specPath } from "./lib/primitives.js";
 
 const ROOT = resolve(import.meta.dir, "..");
 const CHECK_MODE = process.argv.includes("--check");
@@ -105,6 +105,8 @@ interface RouteOperation {
    * Used as a variable name in generated code.
    */
   subgroupVar: string | null;
+  /** Body field name that can be read from stdin when not provided as a flag. */
+  stdinField: string | null;
 }
 
 function isSkipped(op: Operation): boolean {
@@ -429,7 +431,7 @@ function deriveLeafName(opId: string, method: string, path: string): string {
   return words[words.length - 1] ?? method.toLowerCase();
 }
 
-function parseRoutes(spec: OpenAPISpec): RouteOperation[] {
+function parseRoutes(spec: OpenAPISpec, stdinMap?: Map<string, string>): RouteOperation[] {
   const routes: RouteOperation[] = [];
 
   for (const [path, pathItem] of Object.entries(spec.paths)) {
@@ -444,6 +446,20 @@ function parseRoutes(spec: OpenAPISpec): RouteOperation[] {
       const isFree = isFreeOperation(op);
       const { subgroup, leafName } = classifyRoute(path, method, op);
 
+      // Look up stdin_field from prim.yaml routes_map
+      const routeKey = `${method.toUpperCase()} ${path}`;
+      let stdinField = stdinMap?.get(routeKey) ?? null;
+
+      // Validate: only keep stdinField if the field exists in the body schema
+      if (stdinField && bodySchema) {
+        const resolved = resolveSchemaRef(spec, bodySchema);
+        if (!resolved?.properties?.[stdinField]) {
+          stdinField = null;
+        }
+      } else if (stdinField && !bodySchema) {
+        stdinField = null;
+      }
+
       routes.push({
         path,
         method: method.toUpperCase(),
@@ -455,6 +471,7 @@ function parseRoutes(spec: OpenAPISpec): RouteOperation[] {
         subgroup,
         leafName,
         subgroupVar: subgroup ? toVarName(subgroup) : null,
+        stdinField,
       });
     }
   }
@@ -601,10 +618,13 @@ function genHandlerBody(
       ? pickPositionalArg(bodyProps, pathParams)
       : null;
   let positionalVar: string | null = null;
+  const stdinField = route.stdinField;
 
   if (positionalField && pathParams.length === 0) {
     positionalVar = toVarName(positionalField);
-    lines.push(`${ind}const ${positionalVar} = argv[${argvOffset}];`);
+    // Use `let` if this field also accepts stdin
+    const decl = stdinField === positionalField ? "let" : "const";
+    lines.push(`${ind}${decl} ${positionalVar} = argv[${argvOffset}];`);
   }
 
   // --- Flag declarations ---
@@ -615,12 +635,14 @@ function genHandlerBody(
     if (pathParams.includes(prop.name)) continue; // in path
     const flag = toFlagName(prop.name);
     const varName = toVarName(prop.name);
+    // Use `let` if this field accepts stdin
+    const decl = stdinField === prop.name ? "let" : "const";
     if (prop.type === "boolean") {
       lines.push(`${ind}const ${varName} = hasFlag("${flag}", argv);`);
     } else if (prop.defaultVal !== undefined) {
-      lines.push(`${ind}const ${varName} = getFlag("${flag}", argv) ?? "${prop.defaultVal}";`);
+      lines.push(`${ind}${decl} ${varName} = getFlag("${flag}", argv) ?? "${prop.defaultVal}";`);
     } else {
-      lines.push(`${ind}const ${varName} = getFlag("${flag}", argv);`);
+      lines.push(`${ind}${decl} ${varName} = getFlag("${flag}", argv);`);
     }
     flagVarMap.set(prop.name, varName);
   }
@@ -637,6 +659,21 @@ function genHandlerBody(
       lines.push(`${ind}const ${varName} = getFlag("${flag}", argv);`);
     }
     flagVarMap.set(qp.name, varName);
+  }
+
+  // --- Stdin fallback ---
+  if (stdinField) {
+    // Only emit stdin fallback if the field is a declared variable (positional or flag)
+    const isPositional = stdinField === positionalField;
+    const isFlag = flagVarMap.has(stdinField);
+    if (isPositional || isFlag) {
+      const stdinVar = isPositional ? positionalVar : flagVarMap.get(stdinField);
+      if (stdinVar) {
+        lines.push(`${ind}if (!${stdinVar} && !process.stdin.isTTY) {`);
+        lines.push(`${ind}  ${stdinVar} = (await readStdin()).toString("utf-8").trimEnd();`);
+        lines.push(`${ind}}`);
+      }
+    }
   }
 
   // --- Required check ---
@@ -757,12 +794,14 @@ function buildUsageString(
   const parts = ["prim", prim.id];
   if (route.subgroup) parts.push(route.subgroup);
   parts.push(route.leafName);
+  const stdinField = route.stdinField;
 
   for (const p of pathParams) {
     parts.push(p.toUpperCase());
   }
   if (positionalField) {
-    parts.push(positionalField.toUpperCase());
+    const suffix = stdinField === positionalField ? " | stdin" : "";
+    parts.push(`${positionalField.toUpperCase()}${suffix}`);
   }
 
   const opts: string[] = [];
@@ -771,11 +810,13 @@ function buildUsageString(
     if (pathParams.includes(prop.name)) continue;
     const flag = toFlagName(prop.name);
     if (prop.required && prop.type !== "boolean") {
-      parts.push(`--${flag} ${prop.name.toUpperCase()}`);
+      const suffix = stdinField === prop.name ? " | stdin" : "";
+      parts.push(`--${flag} ${prop.name.toUpperCase()}${suffix}`);
     } else if (prop.type === "boolean") {
       opts.push(`[--${flag}]`);
     } else {
-      opts.push(`[--${flag} VALUE]`);
+      const suffix = stdinField === prop.name ? " | stdin" : "";
+      opts.push(`[--${flag} VALUE${suffix}]`);
     }
   }
   for (const qp of route.queryParams) {
@@ -796,9 +837,27 @@ function buildUsageString(
 
 // ── File generator ────────────────────────────────────────────────────────────
 
-function generateCommandFile(spec: OpenAPISpec, id: string): string {
+/** Build a map of "METHOD /path" → stdin_field from a prim's routes_map */
+function buildStdinMap(routesMap: RouteMapping[] | undefined): Map<string, string> {
+  const map = new Map<string, string>();
+  if (!routesMap) return map;
+  for (const rm of routesMap) {
+    if (rm.stdin_field) {
+      // prim.yaml uses :param style, OpenAPI uses {param} — normalize
+      const oaPath = rm.route
+        .replace(/^(GET|POST|PUT|DELETE|PATCH) /, "")
+        .replace(/:([a-zA-Z_]+)/g, "{$1}");
+      const method = rm.route.split(" ")[0];
+      map.set(`${method} ${oaPath}`, rm.stdin_field);
+    }
+  }
+  return map;
+}
+
+function generateCommandFile(spec: OpenAPISpec, id: string, routesMap?: RouteMapping[]): string {
   const prim = derivePrimConfig(spec, id);
-  const routes = parseRoutes(spec);
+  const stdinMap = buildStdinMap(routesMap);
+  const routes = parseRoutes(spec, stdinMap);
 
   if (routes.length === 0) {
     return [
@@ -844,6 +903,7 @@ function generateCommandFile(spec: OpenAPISpec, id: string): string {
   // Imports
   const pascal = id.charAt(0).toUpperCase() + id.slice(1);
   const sdkClientName = `create${pascal}Client`;
+  const hasStdin = routes.some((r) => r.stdinField !== null);
   if (prim.isFaucetLike) {
     lines.push(`import { getDefaultAddress } from "@primsh/keystore";`);
     lines.push(`import { ${sdkClientName} } from "@primsh/sdk";`);
@@ -853,6 +913,9 @@ function generateCommandFile(spec: OpenAPISpec, id: string): string {
     lines.push(`import { getConfig } from "@primsh/keystore";`);
     lines.push(`import { ${sdkClientName} } from "@primsh/sdk";`);
     lines.push(`import { getFlag, hasFlag, resolvePassphrase } from "./flags.ts";`);
+  }
+  if (hasStdin) {
+    lines.push(`import { readStdin } from "./stdin.ts";`);
   }
   lines.push("");
 
@@ -969,10 +1032,14 @@ function generateCommandFile(spec: OpenAPISpec, id: string): string {
 let anyFailed = false;
 const cliSrcDir = join(ROOT, "packages/cli/src");
 
+// Load all primitives to get routes_map (for stdin_field)
+const allPrims = loadPrimitives(ROOT);
+const primByIdMap = new Map(allPrims.map((p) => [p.id, p]));
+
 // Prims with OpenAPI specs that have CLI commands
 // (wallet is excluded — its CLI is part of cli.ts directly)
 // wallet excluded — its CLI is hand-maintained in cli.ts
-const CLI_PRIMS = primsForInterface("cli")
+const CLI_PRIMS = primsForInterface("cli", ROOT)
   .map((p) => p.id)
   .filter((id) => id !== "wallet");
 
@@ -981,7 +1048,7 @@ const primsToProcess = TARGET_PRIM ? [TARGET_PRIM] : CLI_PRIMS;
 console.log(`Mode: ${CHECK_MODE ? "check" : "generate"}\n`);
 
 for (const id of primsToProcess) {
-  const sp = specPath(id);
+  const sp = specPath(id, ROOT);
   if (!existsSync(sp)) {
     console.log(`  – packages/${id}/openapi.yaml not found, skipping`);
     continue;
@@ -1001,7 +1068,8 @@ for (const id of primsToProcess) {
 
   let generated: string;
   try {
-    generated = generateCommandFile(spec, id);
+    const primData = primByIdMap.get(id);
+    generated = generateCommandFile(spec, id, primData?.routes_map);
   } catch (err) {
     console.error(`  ✗ Failed to generate ${id}-commands.ts: ${err}`);
     anyFailed = true;

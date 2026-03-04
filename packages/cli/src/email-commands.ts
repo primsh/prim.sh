@@ -4,14 +4,7 @@ import { createPrimFetch } from "@primsh/x402-client";
 import { getConfig } from "@primsh/keystore";
 import { handleApiError } from "./errors.ts";
 import { getFlag, hasFlag, resolvePassphrase } from "./flags.ts";
-
-async function readStdin(): Promise<Buffer> {
-  const chunks: Buffer[] = [];
-  for await (const chunk of process.stdin) {
-    chunks.push(Buffer.from(chunk as Uint8Array));
-  }
-  return Buffer.concat(chunks);
-}
+import { readStdin } from "./stdin.ts";
 
 export function resolveEmailUrl(argv: string[]): string {
   const flag = getFlag("url", argv);

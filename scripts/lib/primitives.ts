@@ -62,6 +62,7 @@ export interface RouteMapping {
   operation_id?: string;
   request_type?: string | null;
   response_type?: string | null;
+  stdin_field?: string;
 }
 
 export type ProviderStatus = "active" | "planned" | "deprecated";

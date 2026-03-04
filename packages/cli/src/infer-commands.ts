@@ -7,6 +7,7 @@ import { createPrimFetch } from "@primsh/x402-client";
 import { getConfig } from "@primsh/keystore";
 import { createInferClient } from "@primsh/sdk";
 import { getFlag, hasFlag, resolvePassphrase } from "./flags.ts";
+import { readStdin } from "./stdin.ts";
 
 export function resolveInferUrl(argv: string[]): string {
   const flag = getFlag("url", argv);
@@ -35,8 +36,8 @@ export async function runInferCommand(sub: string, argv: string[]): Promise<void
   if (!sub || sub === "--help" || sub === "-h") {
     console.log("Usage: prim infer <chat|embed|ls> [args] [flags]");
     console.log("");
-    console.log("  Usage: prim infer chat --model MODEL --messages MESSAGES [--temperature VALUE] [--max-tokens VALUE] [--top-p VALUE]");
-    console.log("  Usage: prim infer embed --model MODEL --input INPUT");
+    console.log("  Usage: prim infer chat --model MODEL --messages MESSAGES | stdin [--temperature VALUE] [--max-tokens VALUE] [--top-p VALUE]");
+    console.log("  Usage: prim infer embed --model MODEL --input INPUT | stdin");
     console.log("  Usage: prim infer ls");
     process.exit(1);
   }
@@ -44,7 +45,7 @@ export async function runInferCommand(sub: string, argv: string[]): Promise<void
   switch (sub) {
     case "chat": {
       const model = getFlag("model", argv);
-      const messages = getFlag("messages", argv);
+      let messages = getFlag("messages", argv);
       const temperature = getFlag("temperature", argv);
       const maxTokens = getFlag("max-tokens", argv);
       const topP = getFlag("top-p", argv);
@@ -55,9 +56,12 @@ export async function runInferCommand(sub: string, argv: string[]): Promise<void
       const tools = getFlag("tools", argv);
       const toolChoice = getFlag("tool-choice", argv);
       const responseFormat = getFlag("response-format", argv);
+      if (!messages && !process.stdin.isTTY) {
+        messages = (await readStdin()).toString("utf-8").trimEnd();
+      }
       if (!model || !messages) {
         process.stderr.write(
-          "Usage: prim infer chat --model MODEL --messages MESSAGES [--temperature VALUE] [--max-tokens VALUE] [--top-p VALUE]\n",
+          "Usage: prim infer chat --model MODEL --messages MESSAGES | stdin [--temperature VALUE] [--max-tokens VALUE] [--top-p VALUE]\n",
         );
         process.exit(1);
       }
@@ -85,10 +89,13 @@ export async function runInferCommand(sub: string, argv: string[]): Promise<void
 
     case "embed": {
       const model = getFlag("model", argv);
-      const input = getFlag("input", argv);
+      let input = getFlag("input", argv);
+      if (!input && !process.stdin.isTTY) {
+        input = (await readStdin()).toString("utf-8").trimEnd();
+      }
       if (!model || !input) {
         process.stderr.write(
-          "Usage: prim infer embed --model MODEL --input INPUT\n",
+          "Usage: prim infer embed --model MODEL --input INPUT | stdin\n",
         );
         process.exit(1);
       }

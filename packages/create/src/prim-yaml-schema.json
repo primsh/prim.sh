@@ -115,6 +115,10 @@
             "type": "string",
             "description": "Additional notes"
           },
+          "stdin_field": {
+            "type": "string",
+            "description": "Body field name that can be read from stdin when not provided as a flag. The CLI will read stdin if the field flag is missing and stdin is not a TTY."
+          },
           "errors": {
             "type": "array",
             "items": {

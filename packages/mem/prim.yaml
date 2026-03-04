@@ -161,6 +161,7 @@ routes_map:
     status: 200
     description: "Embed and store documents. Each document: {id?, text, metadata?}. Existing IDs are replaced."
     operation_id: upsert_documents
+    stdin_field: text
     request_type: UpsertRequest
     response_type: UpsertResponse
     errors:
@@ -191,6 +192,7 @@ routes_map:
     status: 200
     description: "Store a value in the KV cache. Optional ttl in seconds for expiry."
     operation_id: set_cache
+    stdin_field: value
     request_type: SetCacheRequest
     response_type: null
     errors:
