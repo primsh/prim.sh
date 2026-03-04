@@ -190,10 +190,7 @@ export function createMemClient(
       });
       return unwrap<DeleteCollectionResponse>(res);
     },
-    async upsertDocuments(
-      params: UpsertDocumentsParams,
-      req: UpsertRequest,
-    ): Promise<UpsertResponse> {
+    async upsertDocuments(params: UpsertDocumentsParams, req: UpsertRequest): Promise<UpsertResponse> {
       const url = `${baseUrl}/v1/collections/${encodeURIComponent(params.id)}/upsert`;
       const res = await primFetch(url, {
         method: "POST",
@@ -202,10 +199,7 @@ export function createMemClient(
       });
       return unwrap<UpsertResponse>(res);
     },
-    async queryCollection(
-      params: QueryCollectionParams,
-      req: QueryRequest,
-    ): Promise<QueryResponse> {
+    async queryCollection(params: QueryCollectionParams, req: QueryRequest): Promise<QueryResponse> {
       const url = `${baseUrl}/v1/collections/${encodeURIComponent(params.id)}/query`;
       const res = await primFetch(url, {
         method: "POST",

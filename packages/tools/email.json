@@ -56,7 +56,9 @@
             "description": "id parameter"
           }
         },
-        "required": ["id"]
+        "required": [
+          "id"
+        ]
       }
     }
   },
@@ -73,7 +75,9 @@
             "description": "id parameter"
           }
         },
-        "required": ["id"]
+        "required": [
+          "id"
+        ]
       }
     }
   },
@@ -94,7 +98,9 @@
             "description": "Extension duration in milliseconds. Omit to apply default TTL."
           }
         },
-        "required": ["id"]
+        "required": [
+          "id"
+        ]
       }
     }
   },
@@ -119,7 +125,9 @@
             "description": "Position-based cursor for pagination"
           }
         },
-        "required": ["id"]
+        "required": [
+          "id"
+        ]
       }
     }
   },
@@ -140,7 +148,10 @@
             "description": "msgId parameter"
           }
         },
-        "required": ["id", "msgId"]
+        "required": [
+          "id",
+          "msgId"
+        ]
       }
     }
   },
@@ -181,7 +192,11 @@
             "description": "BCC recipient email address."
           }
         },
-        "required": ["id", "to", "subject"]
+        "required": [
+          "id",
+          "to",
+          "subject"
+        ]
       }
     }
   },
@@ -213,7 +228,10 @@
             }
           }
         },
-        "required": ["id", "url"]
+        "required": [
+          "id",
+          "url"
+        ]
       }
     }
   },
@@ -230,7 +248,9 @@
             "description": "id parameter"
           }
         },
-        "required": ["id"]
+        "required": [
+          "id"
+        ]
       }
     }
   },
@@ -251,7 +271,10 @@
             "description": "whId parameter"
           }
         },
-        "required": ["id", "whId"]
+        "required": [
+          "id",
+          "whId"
+        ]
       }
     }
   },
@@ -268,7 +291,9 @@
             "description": "Domain name to register (e.g. \"myproject.com\")."
           }
         },
-        "required": ["domain"]
+        "required": [
+          "domain"
+        ]
       }
     }
   },
@@ -305,7 +330,9 @@
             "description": "id parameter"
           }
         },
-        "required": ["id"]
+        "required": [
+          "id"
+        ]
       }
     }
   },
@@ -322,7 +349,9 @@
             "description": "id parameter"
           }
         },
-        "required": ["id"]
+        "required": [
+          "id"
+        ]
       }
     }
   },
@@ -339,7 +368,9 @@
             "description": "id parameter"
           }
         },
-        "required": ["id"]
+        "required": [
+          "id"
+        ]
       }
     }
   }

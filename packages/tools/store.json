@@ -20,7 +20,9 @@
             "description": "Whether the bucket should be publicly readable. Defaults to false."
           }
         },
-        "required": ["name"]
+        "required": [
+          "name"
+        ]
       }
     }
   },
@@ -57,7 +59,9 @@
             "description": "id parameter"
           }
         },
-        "required": ["id"]
+        "required": [
+          "id"
+        ]
       }
     }
   },
@@ -74,7 +78,9 @@
             "description": "id parameter"
           }
         },
-        "required": ["id"]
+        "required": [
+          "id"
+        ]
       }
     }
   },
@@ -95,7 +101,10 @@
             "description": "key parameter"
           }
         },
-        "required": ["id", "key"]
+        "required": [
+          "id",
+          "key"
+        ]
       }
     }
   },
@@ -116,7 +125,10 @@
             "description": "key parameter"
           }
         },
-        "required": ["id", "key"]
+        "required": [
+          "id",
+          "key"
+        ]
       }
     }
   },
@@ -137,7 +149,10 @@
             "description": "key parameter"
           }
         },
-        "required": ["id", "key"]
+        "required": [
+          "id",
+          "key"
+        ]
       }
     }
   },
@@ -166,7 +181,9 @@
             "description": "Cursor from previous response's next_cursor"
           }
         },
-        "required": ["id"]
+        "required": [
+          "id"
+        ]
       }
     }
   },
@@ -183,7 +200,9 @@
             "description": "id parameter"
           }
         },
-        "required": ["id"]
+        "required": [
+          "id"
+        ]
       }
     }
   },
@@ -204,7 +223,10 @@
             "description": "New quota in bytes. Pass null to reset to default (100 MB)."
           }
         },
-        "required": ["id", "quota_bytes"]
+        "required": [
+          "id",
+          "quota_bytes"
+        ]
       }
     }
   },
@@ -221,7 +243,9 @@
             "description": "id parameter"
           }
         },
-        "required": ["id"]
+        "required": [
+          "id"
+        ]
       }
     }
   },
@@ -244,14 +268,21 @@
           "method": {
             "type": "string",
             "description": "HTTP method: \"GET\" for download, \"PUT\" for upload.",
-            "enum": ["GET", "PUT"]
+            "enum": [
+              "GET",
+              "PUT"
+            ]
           },
           "expires_in": {
             "type": "number",
             "description": "URL lifetime in seconds (60–86400). Defaults to 3600."
           }
         },
-        "required": ["id", "key", "method"]
+        "required": [
+          "id",
+          "key",
+          "method"
+        ]
       }
     }
   }

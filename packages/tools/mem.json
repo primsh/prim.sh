@@ -14,14 +14,20 @@
           "distance": {
             "type": "string",
             "description": "Distance metric for similarity search. Default \"Cosine\".",
-            "enum": ["Cosine", "Euclid", "Dot"]
+            "enum": [
+              "Cosine",
+              "Euclid",
+              "Dot"
+            ]
           },
           "dimension": {
             "type": "number",
             "description": "Vector dimension. Must match the embedding model used. Default 1536."
           }
         },
-        "required": ["name"]
+        "required": [
+          "name"
+        ]
       }
     }
   },
@@ -58,7 +64,9 @@
             "description": "id parameter"
           }
         },
-        "required": ["id"]
+        "required": [
+          "id"
+        ]
       }
     }
   },
@@ -75,7 +83,9 @@
             "description": "id parameter"
           }
         },
-        "required": ["id"]
+        "required": [
+          "id"
+        ]
       }
     }
   },
@@ -99,7 +109,10 @@
             }
           }
         },
-        "required": ["id", "documents"]
+        "required": [
+          "id",
+          "documents"
+        ]
       }
     }
   },
@@ -128,7 +141,10 @@
             "description": "Qdrant-native filter passthrough."
           }
         },
-        "required": ["id", "text"]
+        "required": [
+          "id",
+          "text"
+        ]
       }
     }
   },
@@ -157,7 +173,11 @@
             "description": "TTL in seconds. Omit or null for permanent."
           }
         },
-        "required": ["namespace", "key", "value"]
+        "required": [
+          "namespace",
+          "key",
+          "value"
+        ]
       }
     }
   },
@@ -178,7 +198,10 @@
             "description": "key parameter"
           }
         },
-        "required": ["namespace", "key"]
+        "required": [
+          "namespace",
+          "key"
+        ]
       }
     }
   },
@@ -199,7 +222,10 @@
             "description": "key parameter"
           }
         },
-        "required": ["namespace", "key"]
+        "required": [
+          "namespace",
+          "key"
+        ]
       }
     }
   }

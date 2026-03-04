@@ -264,10 +264,7 @@ export function createSpawnClient(
       });
       return unwrap<ResizeResponse>(res);
     },
-    async rebuildServer(
-      params: RebuildServerParams,
-      req: RebuildRequest,
-    ): Promise<RebuildResponse> {
+    async rebuildServer(params: RebuildServerParams, req: RebuildRequest): Promise<RebuildResponse> {
       const url = `${baseUrl}/v1/servers/${encodeURIComponent(params.id)}/rebuild`;
       const res = await primFetch(url, {
         method: "POST",
