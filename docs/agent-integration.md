@@ -6,9 +6,7 @@ Four ways to integrate prim into an agent: SDK, CLI subprocess, MCP server, and 
 
 The TypeScript SDK provides typed clients for every primitive. It's the safest and most ergonomic option for programmatic use.
 
-```bash
-npm install @primsh/sdk @primsh/x402-client
-```
+Install from the monorepo (these packages are not yet published to npm):
 
 ```typescript
 import { createPrimFetch } from "@primsh/x402-client";

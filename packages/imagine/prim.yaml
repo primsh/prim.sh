@@ -72,7 +72,7 @@ routes_map:
     status: 200
     description: "Generate an image from a text prompt. Returns base64 or URL."
     operation_id: generate
-    stdin_field: prompt
+
     errors:
       - { status: 400, code: invalid_request, description: "Missing or invalid prompt" }
       - { status: 402, code: payment_required, description: "x402 payment needed" }
