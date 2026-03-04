@@ -280,7 +280,11 @@ export async function createServer(
   }
 }
 
-export function listServers(callerWallet: string, limit: number, page: number): PaginatedList<ServerResponse> {
+export function listServers(
+  callerWallet: string,
+  limit: number,
+  page: number,
+): PaginatedList<ServerResponse> {
   const offset = (page - 1) * limit;
   const rows = getServersByOwner(callerWallet, limit, offset);
   const total = countServersByOwner(callerWallet);

@@ -1,12 +1,6 @@
 // SPDX-License-Identifier: Apache-2.0
 import { getNetworkConfig } from "@primsh/x402-middleware";
-import {
-  http,
-  createPublicClient,
-  createWalletClient,
-  parseEther,
-  parseUnits,
-} from "viem";
+import { http, createPublicClient, createWalletClient, parseEther, parseUnits } from "viem";
 import type { Address, Hex } from "viem";
 import { privateKeyToAccount } from "viem/accounts";
 import { base, baseSepolia } from "viem/chains";

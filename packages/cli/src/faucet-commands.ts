@@ -19,7 +19,6 @@ async function resolveAddress(argv: string[]): Promise<string> {
   process.exit(1);
 }
 
-
 export async function runFaucetCommand(sub: string, argv: string[]): Promise<void> {
   const baseUrl = resolveFaucetUrl(argv);
   const quiet = hasFlag("quiet", argv);

@@ -62,7 +62,8 @@ export function getDb(): Database {
 
   const dataDir = join(process.env.PRIM_HOME ?? join(homedir(), ".prim"), "data");
   mkdirSync(dataDir, { recursive: true });
-  const dbPath = process.env.DOMAIN_DB_PATH ?? process.env.DNS_DB_PATH ?? join(dataDir, "domain.db");
+  const dbPath =
+    process.env.DOMAIN_DB_PATH ?? process.env.DNS_DB_PATH ?? join(dataDir, "domain.db");
   _db = new Database(dbPath);
 
   _db.run(`

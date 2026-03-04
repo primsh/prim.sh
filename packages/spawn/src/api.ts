@@ -194,4 +194,3 @@ export interface SshKeyResponse {
   /** ISO 8601 timestamp when the key was registered. */
   created_at: string;
 }
-

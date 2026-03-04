@@ -193,7 +193,11 @@ export async function createZone(
   }
 }
 
-export function listZones(callerWallet: string, limit: number, page: number): PaginatedList<ZoneResponse> {
+export function listZones(
+  callerWallet: string,
+  limit: number,
+  page: number,
+): PaginatedList<ZoneResponse> {
   const offset = (page - 1) * limit;
   const rows = getZonesByOwner(callerWallet, limit, offset);
   const total = countZonesByOwner(callerWallet);

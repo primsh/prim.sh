@@ -173,11 +173,7 @@ export function createPrimFetch(config: CreatePrimFetchConfig): typeof fetch {
       const priceAtomic = BigInt(requirements.amount);
       const priceHuman = formatUsdc(priceAtomic);
       const route =
-        typeof input === "string"
-          ? input
-          : input instanceof URL
-            ? input.toString()
-            : input.url;
+        typeof input === "string" ? input : input instanceof URL ? input.toString() : input.url;
       config.onPayment({ amount: priceHuman, route });
     }
 

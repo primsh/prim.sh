@@ -20,7 +20,6 @@ export function resolveEmailUrl(argv: string[]): string {
   return "https://email.prim.sh";
 }
 
-
 export async function runEmailCommand(sub: string, argv: string[]): Promise<void> {
   const baseUrl = resolveEmailUrl(argv);
   const walletFlag = getFlag("wallet", argv);

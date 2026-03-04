@@ -315,7 +315,10 @@ describe("store.sh", () => {
     it("create bucket — same name allowed for different wallets", async () => {
       const r1 = await createBucket({ name: "shared-name" }, CALLER);
       expect(r1.ok).toBe(true);
-      const r2 = await createBucket({ name: "shared-name" }, "0x0000000000000000000000000000000000000099");
+      const r2 = await createBucket(
+        { name: "shared-name" },
+        "0x0000000000000000000000000000000000000099",
+      );
       expect(r2.ok).toBe(true);
     });
 

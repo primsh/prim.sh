@@ -11,7 +11,6 @@ export function resolveSearchUrl(argv: string[]): string {
   return "https://search.prim.sh";
 }
 
-
 /**
  * Collect all positional args after argv[1] (subcommand) that are not flags.
  * argv[0] = group, argv[1] = subcommand, argv[2]+ = args/flags.

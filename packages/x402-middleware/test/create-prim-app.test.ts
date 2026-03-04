@@ -16,8 +16,8 @@ const passthroughDeps: PrimAppDeps = {
     const handler: MiddlewareHandler = async (_c, next) => next();
     return handler;
   }) as unknown as PrimAppDeps["createAgentStackMiddleware"],
-  createWalletAllowlistChecker: (() =>
-    async () => true) as unknown as PrimAppDeps["createWalletAllowlistChecker"],
+  createWalletAllowlistChecker: (() => async () =>
+    true) as unknown as PrimAppDeps["createWalletAllowlistChecker"],
 };
 
 function baseConfig(overrides: Partial<PrimAppConfig> = {}): PrimAppConfig {

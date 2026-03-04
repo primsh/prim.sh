@@ -43,7 +43,9 @@ async function main() {
     console.log("Usage: prim <command> <subcommand>");
     console.log("       prim --version");
     console.log("");
-    console.log("  prim wallet    <create|register|list|balance|info|policy|import|export|default|remove>");
+    console.log(
+      "  prim wallet    <create|register|list|balance|info|policy|import|export|default|remove>",
+    );
     console.log("  prim store     <create-bucket|ls|put|get|rm|rm-bucket|quota>");
     console.log("  prim spawn     <create|ls|get|rm|reboot|stop|start|ssh-key>");
     console.log("  prim email     <create|ls|get|rm|renew|inbox|read|send|webhook|domain>");
@@ -450,7 +452,9 @@ async function main() {
         const data = await client.getPolicy({ address: resolvedAddress });
 
         if (quiet) {
-          console.log(`max_per_tx:${data.max_per_tx ?? "none"} max_per_day:${data.max_per_day ?? "none"}`);
+          console.log(
+            `max_per_tx:${data.max_per_tx ?? "none"} max_per_day:${data.max_per_day ?? "none"}`,
+          );
         } else if (jsonOutput) {
           console.log(JSON.stringify(data, null, 2));
         } else {

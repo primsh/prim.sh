@@ -13,9 +13,20 @@ describe("createPrimClient", () => {
   it("returns an object with all prim namespaces", () => {
     const client = createPrimClient({ privateKey: "0xdead" });
     const expected = [
-      "wallet", "store", "search", "spawn", "email", "token",
-      "mem", "domain", "track", "infer", "create", "imagine",
-      "faucet", "gate",
+      "wallet",
+      "store",
+      "search",
+      "spawn",
+      "email",
+      "token",
+      "mem",
+      "domain",
+      "track",
+      "infer",
+      "create",
+      "imagine",
+      "faucet",
+      "gate",
     ];
     for (const ns of expected) {
       expect(client).toHaveProperty(ns);

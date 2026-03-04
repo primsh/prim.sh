@@ -109,10 +109,7 @@ export interface PrimAppConfig {
  *
  * Returns the Hono app. Callers add their domain-specific routes after.
  */
-export function createPrimApp(
-  config: PrimAppConfig,
-  deps: PrimAppDeps = {},
-): PrimApp {
+export function createPrimApp(config: PrimAppConfig, deps: PrimAppDeps = {}): PrimApp {
   const {
     serviceName,
     llmsTxtPath,

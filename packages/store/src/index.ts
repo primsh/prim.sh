@@ -95,7 +95,12 @@ const app = createPrimApp(
     metricsName: "store.prim.sh",
     pricing: {
       routes: [
-        { method: "POST", path: "/v1/buckets", price_usdc: "0.001", description: "Create a bucket" },
+        {
+          method: "POST",
+          path: "/v1/buckets",
+          price_usdc: "0.001",
+          description: "Create a bucket",
+        },
         { method: "GET", path: "/v1/buckets", price_usdc: "0.001", description: "List buckets" },
         { method: "GET", path: "/v1/buckets/{id}", price_usdc: "0.001", description: "Get bucket" },
         {
@@ -371,7 +376,13 @@ app.post("/v1/buckets/:id/presign", async (c) => {
     return c.json(invalidRequest("key (string) and method ('GET' | 'PUT') are required"), 400);
   }
 
-  const result = await presignObject(c.req.param("id"), caller, body.key, body.method, body.expires_in);
+  const result = await presignObject(
+    c.req.param("id"),
+    caller,
+    body.key,
+    body.method,
+    body.expires_in,
+  );
   if (!result.ok) {
     if (result.code === "invalid_request") return c.json(invalidRequest(result.message), 400);
     if (result.status === 404) return c.json(notFound(result.message), 404);

@@ -11,14 +11,26 @@ const INTERNAL_KEY = process.env.PRIM_INTERNAL_KEY;
 const app = createPrimApp(
   {
     serviceName: "feedback.sh",
-    llmsTxtPath: import.meta.dir ? resolve(import.meta.dir, "../../../site/feedback/llms.txt") : undefined,
+    llmsTxtPath: import.meta.dir
+      ? resolve(import.meta.dir, "../../../site/feedback/llms.txt")
+      : undefined,
     routes: {},
     metricsName: "feedback.prim.sh",
     freeService: true,
     pricing: {
       routes: [
-        { method: "POST", path: "/v1/submit", price_usdc: "0", description: "Submit feedback (free)" },
-        { method: "GET", path: "/v1/feed", price_usdc: "0", description: "List feedback (internal)" },
+        {
+          method: "POST",
+          path: "/v1/submit",
+          price_usdc: "0",
+          description: "Submit feedback (free)",
+        },
+        {
+          method: "GET",
+          path: "/v1/feed",
+          price_usdc: "0",
+          description: "List feedback (internal)",
+        },
       ],
     },
   },
@@ -29,7 +41,10 @@ const app = createPrimApp(
 
 function internalAuth(c: Context): Response | null {
   if (!INTERNAL_KEY) {
-    return c.json({ error: { code: "not_configured", message: "Internal API not configured" } }, 501);
+    return c.json(
+      { error: { code: "not_configured", message: "Internal API not configured" } },
+      501,
+    );
   }
   const key = c.req.header("x-internal-key");
   if (key !== INTERNAL_KEY) {
