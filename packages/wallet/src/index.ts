@@ -54,7 +54,7 @@ import {
   resumeWallet,
   updateSpendingPolicy,
 } from "./service.ts";
-import { getUsdcBalance } from "./balance.ts";
+import { getEthBalance, getUsdcBalance } from "./balance.ts";
 
 const networkConfig = getNetworkConfig();
 const PAY_TO_ADDRESS = process.env.REVENUE_WALLET as string; // validated by createPrimApp
@@ -250,8 +250,12 @@ app.get("/v1/wallets/:address", async (c) => {
     // HRD-65: If wallet is unregistered and caller is querying their own address,
     // fall back to on-chain balance instead of 404
     if (result.status === 404 && caller.toLowerCase() === address.toLowerCase()) {
-      const { balance, funded } = await getUsdcBalance(address as `0x${string}`);
-      return c.json({ address, balance, funded, registered: false }, 200);
+      const addr = address as `0x${string}`;
+      const [{ balance, funded }, { eth_balance }] = await Promise.all([
+        getUsdcBalance(addr),
+        getEthBalance(addr),
+      ]);
+      return c.json({ address, balance, eth_balance, funded, registered: false }, 200);
     }
     const status = result.status;
     if (status === 404) return c.json(notFound(result.message), 404);

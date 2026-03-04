@@ -7,6 +7,7 @@ import { base, baseSepolia } from "viem/chains";
 const log = createLogger("wallet.sh", { module: "balance" });
 
 const USDC_DECIMALS = 6;
+const ETH_DECIMALS = 18;
 
 const BALANCE_OF_ABI = [
   {
@@ -37,6 +38,19 @@ function getClient() {
     _clientChainId = config.chainId;
   }
   return _client as ReturnType<typeof createPublicClient>;
+}
+
+export async function getEthBalance(
+  address: Address,
+): Promise<{ eth_balance: string }> {
+  try {
+    const raw = await getClient().getBalance({ address });
+    const eth_balance = Number(formatUnits(raw, ETH_DECIMALS)).toFixed(6);
+    return { eth_balance };
+  } catch (err) {
+    log.warn("ETH balance RPC query failed", { address, error: String(err) });
+    return { eth_balance: "0.000000" };
+  }
 }
 
 export async function getUsdcBalance(

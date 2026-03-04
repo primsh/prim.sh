@@ -7,7 +7,7 @@ import {
   exportKey,
   getConfig,
   getDefaultAddress,
-  getUsdcBalance,
+  getWalletBalances,
   importKey,
   listKeys,
   loadAccount,
@@ -18,6 +18,7 @@ import {
 import type { KeystoreFile } from "@primsh/keystore";
 import { createWalletClient } from "@primsh/sdk";
 import { createPrimFetch } from "@primsh/x402-client";
+import { getNetworkConfig, getNetworkLabel } from "@primsh/x402-middleware";
 import pkg from "../package.json";
 import { getFlag, hasFlag, resolvePassphrase } from "./flags.ts";
 
@@ -257,15 +258,15 @@ async function main() {
           const { privateKeyToAccount } = await import("viem/accounts");
           resolvedAddress = privateKeyToAccount(key).address;
         }
-        const { balance, funded, network } = await getUsdcBalance(resolvedAddress, resolvedNetwork);
-        console.log(
-          `${resolvedAddress}  ${balance} USDC  [${network}]${funded ? "" : "  (unfunded)"}`,
+        const { usdc, eth, funded, network } = await getWalletBalances(
+          resolvedAddress,
+          resolvedNetwork,
         );
-        if (!funded && !resolvedNetwork) {
-          console.log(
-            "Hint: showing mainnet balance. Use --network eip155:84532 or set PRIM_NETWORK for testnet.",
-          );
-        }
+        const netConfig = getNetworkConfig(network);
+        const label = getNetworkLabel(netConfig);
+        console.log(`${resolvedAddress}  [${label}]`);
+        console.log(`  USDC   ${usdc}${!funded ? "  (unfunded)" : ""}`);
+        console.log(`  ETH    ${eth}`);
         break;
       }
 

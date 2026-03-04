@@ -32,6 +32,7 @@ vi.mock("@primsh/x402-middleware/allowlist-db", () => ({
 // Mock the balance module — returns "0.00" (RPC not available in tests)
 vi.mock("../src/balance.ts", () => ({
   getUsdcBalance: vi.fn(() => Promise.resolve({ balance: "0.00", funded: false })),
+  getEthBalance: vi.fn(() => Promise.resolve({ eth_balance: "0.000000" })),
 }));
 
 // Mock the service layer so smoke tests don't need real keystores
@@ -143,6 +144,7 @@ describe("wallet.sh app", () => {
     const body = await res.json();
     // Should include on-chain balance even for unregistered wallets
     expect(body.balance).toBeDefined();
+    expect(body.eth_balance).toBeDefined();
     expect(body.address).toBe(address);
   });
 });

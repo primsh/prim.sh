@@ -15,12 +15,18 @@ describe("MCP package smoke tests", () => {
     expect(typeof startMcpServer).toBe("function");
   });
 
-  // Check 2: isPrimitive type guard returns correct results
-  it("isPrimitive correctly identifies valid and invalid primitives", () => {
+  // Check 2: isPrimitive type guard returns correct results (deployed primitives only)
+  it("isPrimitive correctly identifies deployed and non-deployed primitives", () => {
     expect(isPrimitive("wallet")).toBe(true);
     expect(isPrimitive("faucet")).toBe(true);
     expect(isPrimitive("store")).toBe(true);
-    expect(isPrimitive("spawn")).toBe(true);
+    expect(isPrimitive("search")).toBe(true);
+    // Non-deployed primitives should NOT be registered
+    expect(isPrimitive("spawn")).toBe(false);
+    expect(isPrimitive("email")).toBe(false);
+    expect(isPrimitive("mem")).toBe(false);
+    expect(isPrimitive("domain")).toBe(false);
+    expect(isPrimitive("token")).toBe(false);
     expect(isPrimitive("notreal")).toBe(false);
     expect(isPrimitive("")).toBe(false);
     expect(isPrimitive("WALLET")).toBe(false);

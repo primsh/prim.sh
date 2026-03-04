@@ -9,6 +9,7 @@ export {
   removeKey,
 } from "./keystore.ts";
 export { getDefaultAddress, setDefaultAddress, getConfig, writeConfig } from "./config.ts";
-export { getUsdcBalance } from "./balance.ts";
+export { getUsdcBalance, getEthBalance, getWalletBalances } from "./balance.ts";
+export type { WalletBalances } from "./balance.ts";
 export { decryptFromV3 } from "./crypto.ts";
 export type { KeystoreFile, PrimConfig, KeyInfo } from "./types.ts";

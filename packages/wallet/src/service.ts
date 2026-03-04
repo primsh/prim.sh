@@ -21,7 +21,7 @@ import type {
   WalletDetailResponse,
   WalletListItem,
 } from "./api.ts";
-import { getUsdcBalance } from "./balance.ts";
+import { getEthBalance, getUsdcBalance } from "./balance.ts";
 import {
   deactivateWallet as dbDeactivateWallet,
   getFundRequestById,
@@ -195,13 +195,18 @@ export async function listWallets(
 
   const wallets = await Promise.all(
     activeRows.map(async (r) => {
-      const { balance, funded } = await getUsdcBalance(r.address as `0x${string}`);
+      const addr = r.address as `0x${string}`;
+      const [{ balance, funded }, { eth_balance }] = await Promise.all([
+        getUsdcBalance(addr),
+        getEthBalance(addr),
+      ]);
       const policy = getPolicy(r.address);
       const paused = policy !== null && policy.pause_scope !== null;
       return {
         address: r.address,
         chain: r.chain,
         balance,
+        eth_balance,
         funded,
         paused,
         created_at: new Date(r.created_at).toISOString(),
@@ -259,7 +264,11 @@ export async function getWallet(
   if (!check.ok) return check;
 
   const { row } = check;
-  const { balance, funded } = await getUsdcBalance(row.address as `0x${string}`);
+  const addr = row.address as `0x${string}`;
+  const [{ balance, funded }, { eth_balance }] = await Promise.all([
+    getUsdcBalance(addr),
+    getEthBalance(addr),
+  ]);
   const policyRow = getPolicy(row.address);
   const paused = policyRow !== null && policyRow.pause_scope !== null;
 
@@ -282,6 +291,7 @@ export async function getWallet(
       address: row.address,
       chain: row.chain,
       balance,
+      eth_balance,
       funded,
       paused,
       created_by: row.created_by,

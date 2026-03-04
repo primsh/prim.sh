@@ -2,29 +2,15 @@
 import { Server } from "@modelcontextprotocol/sdk/server/index.js";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
 import { CallToolRequestSchema, ListToolsRequestSchema } from "@modelcontextprotocol/sdk/types.js";
-import { domainTools, handleDomainTool } from "./tools/domain.js";
-import { emailTools, handleEmailTool } from "./tools/email.js";
 import { faucetTools, handleFaucetTool } from "./tools/faucet.js";
-import { handleMemTool, memTools } from "./tools/mem.js";
 import { handleReportTool, reportTools } from "./tools/report.js";
 import { handleSearchTool, searchTools } from "./tools/search.js";
-import { handleSpawnTool, spawnTools } from "./tools/spawn.js";
 import { handleStoreTool, storeTools } from "./tools/store.js";
-import { handleTokenTool, tokenTools } from "./tools/token.js";
 import { handleWalletTool, walletTools } from "./tools/wallet.js";
 import { createMcpFetch, getBaseUrl } from "./x402.js";
 
-const PRIMITIVE_GROUPS = [
-  "wallet",
-  "store",
-  "spawn",
-  "faucet",
-  "search",
-  "email",
-  "mem",
-  "domain",
-  "token",
-] as const;
+/** Only primitives that are actually deployed. Update when new primitives go live. */
+const PRIMITIVE_GROUPS = ["wallet", "store", "faucet", "search"] as const;
 type Primitive = (typeof PRIMITIVE_GROUPS)[number];
 
 function isPrimitive(s: string): s is Primitive {
@@ -72,13 +58,8 @@ export async function startMcpServer(options: ServerOptions = {}): Promise<void>
   const allTools = [
     ...filterTools(walletTools, "wallet", enabledPrimitives),
     ...filterTools(storeTools, "store", enabledPrimitives),
-    ...filterTools(spawnTools, "spawn", enabledPrimitives),
     ...filterTools(faucetTools, "faucet", enabledPrimitives),
     ...filterTools(searchTools, "search", enabledPrimitives),
-    ...filterTools(emailTools, "email", enabledPrimitives),
-    ...filterTools(memTools, "mem", enabledPrimitives),
-    ...filterTools(domainTools, "domain", enabledPrimitives),
-    ...filterTools(tokenTools, "token", enabledPrimitives),
     ...reportTools,
   ];
 
@@ -98,26 +79,11 @@ export async function startMcpServer(options: ServerOptions = {}): Promise<void>
     if (name.startsWith("store_") && enabledPrimitives.includes("store")) {
       return handleStoreTool(name, toolArgs, primFetch, getBaseUrl("store"));
     }
-    if (name.startsWith("spawn_") && enabledPrimitives.includes("spawn")) {
-      return handleSpawnTool(name, toolArgs, primFetch, getBaseUrl("spawn"));
-    }
     if (name.startsWith("faucet_") && enabledPrimitives.includes("faucet")) {
       return handleFaucetTool(name, toolArgs, getBaseUrl("faucet"));
     }
     if (name.startsWith("search_") && enabledPrimitives.includes("search")) {
       return handleSearchTool(name, toolArgs, primFetch, getBaseUrl("search"));
-    }
-    if (name.startsWith("email_") && enabledPrimitives.includes("email")) {
-      return handleEmailTool(name, toolArgs, primFetch, getBaseUrl("email"));
-    }
-    if (name.startsWith("mem_") && enabledPrimitives.includes("mem")) {
-      return handleMemTool(name, toolArgs, primFetch, getBaseUrl("mem"));
-    }
-    if (name.startsWith("domain_") && enabledPrimitives.includes("domain")) {
-      return handleDomainTool(name, toolArgs, primFetch, getBaseUrl("domain"));
-    }
-    if (name.startsWith("token_") && enabledPrimitives.includes("token")) {
-      return handleTokenTool(name, toolArgs, primFetch, getBaseUrl("token"));
     }
     if (name === "prim_report") {
       return handleReportTool(name, toolArgs);

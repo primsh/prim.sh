@@ -15,6 +15,7 @@ const { mockGetUsdcBalance } = vi.hoisted(() => ({
 
 vi.mock("../src/balance.ts", () => ({
   getUsdcBalance: mockGetUsdcBalance,
+  getEthBalance: vi.fn(() => Promise.resolve({ eth_balance: "0.000000" })),
 }));
 
 import { resetDb } from "../src/db.ts";

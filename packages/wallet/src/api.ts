@@ -78,6 +78,8 @@ export interface WalletListItem {
   chain: string;
   /** USDC balance as a decimal string (e.g. "5.25"). */
   balance: string;
+  /** ETH balance as a decimal string (e.g. "0.000100"). */
+  eth_balance: string;
   /** Whether the wallet has ever been funded. */
   funded: boolean;
   /** Whether the wallet is currently paused. */
@@ -104,6 +106,8 @@ export interface WalletDetailResponse {
   chain: string;
   /** USDC balance as a decimal string. */
   balance: string;
+  /** ETH balance as a decimal string (e.g. "0.000100"). */
+  eth_balance: string;
   /** Whether the wallet has ever been funded. */
   funded: boolean;
   /** Whether the wallet is currently paused. */
