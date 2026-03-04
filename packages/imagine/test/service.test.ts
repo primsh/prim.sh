@@ -46,6 +46,5 @@ describe("imagine.sh service", () => {
 
     it.todo("scopes to caller wallet address");
   });
-
 });
 // END:GENERATED:UNIT

@@ -34,7 +34,22 @@ vi.mock("../src/db.ts", () => ({
   updateRegistration: vi.fn(),
 }));
 
-import { createZone, listZones, getZone, deleteZone, createRecord, listRecords, getRecord, updateRecord, deleteRecord, batchRecords, quoteDomain, verifyZone, activateZone, searchDomains } from "../src/service.ts";
+import {
+  createZone,
+  listZones,
+  getZone,
+  deleteZone,
+  createRecord,
+  listRecords,
+  getRecord,
+  updateRecord,
+  deleteRecord,
+  batchRecords,
+  quoteDomain,
+  verifyZone,
+  activateZone,
+  searchDomains,
+} from "../src/service.ts";
 
 // BEGIN:GENERATED:UNIT
 describe("domain.sh service", () => {
@@ -285,6 +300,5 @@ describe("domain.sh service", () => {
 
     it.todo("scopes to caller wallet address");
   });
-
 });
 // END:GENERATED:UNIT

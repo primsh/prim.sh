@@ -25,7 +25,19 @@ vi.mock("../src/db.ts", () => ({
   deleteSshKeyRow: vi.fn(),
 }));
 
-import { createServer, listServers, getServer, deleteServer, startServer, stopServer, rebootServer, resizeServer, rebuildServer, listSshKeys, deleteSshKey } from "../src/service.ts";
+import {
+  createServer,
+  listServers,
+  getServer,
+  deleteServer,
+  startServer,
+  stopServer,
+  rebootServer,
+  resizeServer,
+  rebuildServer,
+  listSshKeys,
+  deleteSshKey,
+} from "../src/service.ts";
 
 // BEGIN:GENERATED:UNIT
 describe("spawn.sh service", () => {
@@ -228,6 +240,5 @@ describe("spawn.sh service", () => {
 
     it.todo("scopes to caller wallet address");
   });
-
 });
 // END:GENERATED:UNIT

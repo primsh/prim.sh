@@ -38,6 +38,5 @@ describe("faucet.sh service", () => {
     // TODO: set up db/provider mocks to return valid data, then replace .todo with .test
     it.todo("resolves with valid input");
   });
-
 });
 // END:GENERATED:UNIT

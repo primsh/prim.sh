@@ -23,7 +23,16 @@ vi.mock("../src/db.ts", () => ({
   deleteExpiredEntries: vi.fn(),
 }));
 
-import { isValidCollectionName, isValidCacheNamespace, isValidUuidV4, createCollection, listCollections, getCollection, deleteCollection, upsertDocuments } from "../src/service.ts";
+import {
+  isValidCollectionName,
+  isValidCacheNamespace,
+  isValidUuidV4,
+  createCollection,
+  listCollections,
+  getCollection,
+  deleteCollection,
+  upsertDocuments,
+} from "../src/service.ts";
 
 // BEGIN:GENERATED:UNIT
 describe("mem.sh service", () => {
@@ -139,6 +148,5 @@ describe("mem.sh service", () => {
 
     it.todo("scopes to caller wallet address");
   });
-
 });
 // END:GENERATED:UNIT

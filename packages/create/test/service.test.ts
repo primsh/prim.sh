@@ -26,6 +26,5 @@ describe("create.sh service", () => {
     // TODO: set up mocks to trigger invalid_request
     it.todo("returns invalid_request on error");
   });
-
 });
 // END:GENERATED:UNIT

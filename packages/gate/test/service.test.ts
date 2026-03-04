@@ -42,6 +42,5 @@ describe("gate.sh service", () => {
     // TODO: set up mocks to trigger fund_error
     it.todo("returns fund_error on error");
   });
-
 });
 // END:GENERATED:UNIT

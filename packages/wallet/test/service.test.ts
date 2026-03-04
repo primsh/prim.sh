@@ -38,7 +38,18 @@ vi.mock("../src/db.ts", () => ({
 
 vi.mock("viem");
 
-import { registerWallet, listWallets, getWallet, deactivateWallet, createFundRequest, listFundRequests, approveFundRequest, denyFundRequest, pauseWallet, resumeWallet } from "../src/service.ts";
+import {
+  registerWallet,
+  listWallets,
+  getWallet,
+  deactivateWallet,
+  createFundRequest,
+  listFundRequests,
+  approveFundRequest,
+  denyFundRequest,
+  pauseWallet,
+  resumeWallet,
+} from "../src/service.ts";
 
 // BEGIN:GENERATED:UNIT
 describe("wallet.sh service", () => {
@@ -216,6 +227,5 @@ describe("wallet.sh service", () => {
 
     it.todo("scopes to caller wallet address");
   });
-
 });
 // END:GENERATED:UNIT

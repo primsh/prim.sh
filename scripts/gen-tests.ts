@@ -781,7 +781,17 @@ function generateUnitFile(ctx: GenContext): string {
   });
 
   if (testable.length > 0) {
-    lines.push(`import { ${testable.join(", ")} } from "../src/service.ts";`);
+    const importLine = `import { ${testable.join(", ")} } from "../src/service.ts";`;
+    if (importLine.length > 100) {
+      // Multi-line import for biome formatting
+      lines.push(`import {`);
+      for (const fn of testable) {
+        lines.push(`  ${fn},`);
+      }
+      lines.push(`} from "../src/service.ts";`);
+    } else {
+      lines.push(importLine);
+    }
     lines.push("");
   }
 
@@ -867,6 +877,11 @@ function generateUnitMarkedContent(
 
     lines.push("  });");
     lines.push("");
+  }
+
+  // Remove trailing blank line before closing brace (biome formatting)
+  if (lines.length > 0 && lines[lines.length - 1] === "") {
+    lines.pop();
   }
 
   lines.push("});");

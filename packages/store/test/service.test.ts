@@ -27,7 +27,19 @@ vi.mock("../src/db.ts", () => ({
   setUsage: vi.fn(),
 }));
 
-import { isValidBucketName, isValidObjectKey, createBucket, listBuckets, getBucket, deleteBucket, putObject, getObject, deleteObject, listObjects, presignObject } from "../src/service.ts";
+import {
+  isValidBucketName,
+  isValidObjectKey,
+  createBucket,
+  listBuckets,
+  getBucket,
+  deleteBucket,
+  putObject,
+  getObject,
+  deleteObject,
+  listObjects,
+  presignObject,
+} from "../src/service.ts";
 
 // BEGIN:GENERATED:UNIT
 describe("store.sh service", () => {
@@ -216,6 +228,5 @@ describe("store.sh service", () => {
 
     it.todo("scopes to caller wallet address");
   });
-
 });
 // END:GENERATED:UNIT

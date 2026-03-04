@@ -22,7 +22,16 @@ vi.mock("../src/db.ts", () => ({
 
 vi.mock("viem");
 
-import { validateCreateToken, deployToken, listTokens, getToken, mintTokens, createPool, getPool, getLiquidityParams } from "../src/service.ts";
+import {
+  validateCreateToken,
+  deployToken,
+  listTokens,
+  getToken,
+  mintTokens,
+  createPool,
+  getPool,
+  getLiquidityParams,
+} from "../src/service.ts";
 
 // BEGIN:GENERATED:UNIT
 describe("token.sh service", () => {
@@ -167,6 +176,5 @@ describe("token.sh service", () => {
 
     it.todo("scopes to caller wallet address");
   });
-
 });
 // END:GENERATED:UNIT
