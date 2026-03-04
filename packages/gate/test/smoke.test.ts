@@ -90,6 +90,11 @@ vi.mock("../src/db.ts", () => ({
   revokeCode: vi.fn(() => ({ ok: true })),
 }));
 
+// Mock the register-wallet module
+vi.mock("../src/register-wallet.ts", () => ({
+  registerWalletOnService: vi.fn(() => Promise.resolve(true)),
+}));
+
 // Mock the fund module
 vi.mock("../src/fund.ts", () => ({
   fundWallet: vi.fn(() =>
@@ -234,6 +239,20 @@ describe("gate.sh app", () => {
     expect(body.error.code).toBe("fund_error");
     expect(vi.mocked(unburnCode)).toHaveBeenCalledWith("TEST-CODE-1");
     expect(vi.mocked(removeFromAllowlist)).toHaveBeenCalled();
+  });
+
+  // Check 20: HRD-64 — redeem should auto-register wallet on wallet.sh
+  it("POST /v1/redeem registers the wallet on wallet.sh after funding", async () => {
+    const res = await app.request("/v1/redeem", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ code: "TEST-CODE-1", wallet: "0x09D896446fBd3299Fa8d7898001b086E56f642B5" }),
+    });
+    expect(res.status).toBe(200);
+    const body = await res.json();
+    // After redeem, the wallet should be auto-registered on wallet.sh
+    // so agents can immediately query balance without a separate registration step
+    expect(body.wallet_registered).toBe(true);
   });
 
   // ─── Internal: code management ─────────────────────────────────────────────

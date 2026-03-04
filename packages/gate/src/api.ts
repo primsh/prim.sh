@@ -28,6 +28,8 @@ export interface RedeemResponse {
   network: string;
   /** Funding details. */
   funded: FundingDetail;
+  /** Whether the wallet was auto-registered on wallet.sh. */
+  wallet_registered: boolean;
 }
 
 // ─── Code management ─────────────────────────────────────────────────────────

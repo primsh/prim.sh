@@ -13,6 +13,7 @@ import { generateCode, insertCodes, listCodes, revokeCode, unburnCode } from "./
 import type { CodeRow } from "./db.ts";
 import { validateAndBurn } from "./db.ts";
 import { fundWallet } from "./fund.ts";
+import { registerWalletOnService } from "./register-wallet.ts";
 
 const log = createLogger("gate.sh", { module: "service" });
 
@@ -50,6 +51,9 @@ export async function redeemInvite(
     const funded = await fundWallet(wallet);
     log.info("Wallet funded", { wallet, usdc: funded.usdc_amount, eth: funded.eth_amount });
 
+    // 4. Auto-register wallet on wallet.sh (non-blocking)
+    const walletRegistered = await registerWalletOnService(wallet);
+
     return {
       ok: true,
       data: {
@@ -62,6 +66,7 @@ export async function redeemInvite(
           usdc_tx: funded.usdc_tx,
           eth_tx: funded.eth_tx,
         },
+        wallet_registered: walletRegistered,
       },
     };
   } catch (err) {

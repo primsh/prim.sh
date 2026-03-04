@@ -41,6 +41,46 @@ import {
 const DEFAULT_CHAIN = "eip155:8453";
 const SIGNATURE_MAX_AGE_MS = 5 * 60 * 1000; // 5 minutes
 
+type InternalRegisterResult =
+  | { ok: true; data: { address: string; chain: string; created_at: string } }
+  | { ok: false; status: number; code: string; message: string };
+
+/**
+ * Register a wallet via internal API (no signature verification).
+ * Used by gate.sh to auto-register wallets after redeem.
+ */
+export function registerWalletInternal(address: string): InternalRegisterResult {
+  if (!address || !isAddress(address)) {
+    return { ok: false, status: 400, code: "invalid_request", message: "Invalid Ethereum address" };
+  }
+
+  const normalizedAddress = getAddress(address);
+  const existing = getWalletByAddress(normalizedAddress);
+
+  if (existing && !existing.deactivated_at) {
+    return { ok: false, status: 409, code: "already_registered", message: "Wallet already registered" };
+  }
+
+  if (existing?.deactivated_at) {
+    reactivateWallet(normalizedAddress);
+  } else {
+    insertWallet({
+      address: normalizedAddress,
+      chain: DEFAULT_CHAIN,
+      createdBy: normalizedAddress,
+    });
+  }
+
+  return {
+    ok: true,
+    data: {
+      address: normalizedAddress,
+      chain: DEFAULT_CHAIN,
+      created_at: new Date().toISOString(),
+    },
+  };
+}
+
 /**
  * Builds the canonical message agents must sign for registration.
  * Address is always checksummed via getAddress() before inclusion.

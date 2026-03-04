@@ -29,12 +29,18 @@ vi.mock("@primsh/x402-middleware/allowlist-db", () => ({
   createAllowlistChecker: vi.fn(() => () => Promise.resolve(true)),
 }));
 
+// Mock the balance module — returns "0.00" (RPC not available in tests)
+vi.mock("../src/balance.ts", () => ({
+  getUsdcBalance: vi.fn(() => Promise.resolve({ balance: "0.00", funded: false })),
+}));
+
 // Mock the service layer so smoke tests don't need real keystores
 vi.mock("../src/service.ts", async (importOriginal) => {
   const original = await importOriginal<typeof import("../src/service.ts")>();
   return {
     ...original,
     registerWallet: vi.fn(),
+    registerWalletInternal: vi.fn(),
     listWallets: vi.fn(),
     getWallet: vi.fn(),
     deactivateWallet: vi.fn(),
@@ -50,7 +56,7 @@ vi.mock("../src/service.ts", async (importOriginal) => {
 });
 
 import app from "../src/index.ts";
-import { registerWallet } from "../src/service.ts";
+import { registerWallet, getWallet } from "../src/service.ts";
 
 describe("wallet.sh app", () => {
   // Check 1: default export defined
@@ -118,5 +124,25 @@ describe("wallet.sh app", () => {
     expect(res.status).toBe(400);
     const body = await res.json();
     expect(body.error.code).toBe("invalid_request");
+  });
+
+  // Check 6: HRD-65 — balance for unregistered wallet returns on-chain balance, not 404
+  it("GET /v1/wallets/:address returns balance for unregistered wallet instead of 404", async () => {
+    // Wallet is funded on-chain (e.g. by gate.sh redeem) but not registered on wallet.sh.
+    // The caller queries their own address — currently returns 404, should return balance.
+    const address = "0x0000000000000000000000000000000000000001";
+    vi.mocked(getWallet).mockResolvedValueOnce({
+      ok: false,
+      status: 404,
+      code: "not_found",
+      message: "Wallet not found",
+    });
+
+    const res = await app.request(`/v1/wallets/${address}`);
+    expect(res.status).not.toBe(404);
+    const body = await res.json();
+    // Should include on-chain balance even for unregistered wallets
+    expect(body.balance).toBeDefined();
+    expect(body.address).toBe(address);
   });
 });
