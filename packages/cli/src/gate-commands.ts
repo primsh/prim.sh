@@ -50,8 +50,8 @@ export async function runGateCommand(sub: string, argv: string[]): Promise<void>
       reqBody.wallet = wallet;
       const data = await client.redeemInvite(reqBody as never);
 
-      // Save network from gate response so balance/store/search use the correct chain
-      if (data.network && data.network !== config.network) {
+      // Always save network from gate response — this is the authoritative chain.
+      if (data.network) {
         config.network = data.network;
         await writeConfig(config);
       }

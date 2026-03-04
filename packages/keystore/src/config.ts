@@ -21,16 +21,24 @@ function serializeToml(record: Record<string, string>): string {
     .join("\n")}\n`;
 }
 
-export async function readConfig(): Promise<PrimConfig> {
+/** Read only what's persisted on disk — no env var fallback. Used for writes. */
+function readConfigFile(): PrimConfig {
   const configPath = getConfigPath();
-  if (!existsSync(configPath)) {
-    return { network: process.env.PRIM_NETWORK };
-  }
+  if (!existsSync(configPath)) return {};
   const content = readFileSync(configPath, "utf-8");
   const parsed = parseToml(content);
   return {
     default_wallet: parsed.default_wallet,
-    network: parsed.network ?? process.env.PRIM_NETWORK,
+    network: parsed.network,
+  };
+}
+
+/** Read config with env var fallback for runtime use. */
+export async function readConfig(): Promise<PrimConfig> {
+  const file = readConfigFile();
+  return {
+    default_wallet: file.default_wallet,
+    network: file.network ?? process.env.PRIM_NETWORK,
   };
 }
 
@@ -48,7 +56,8 @@ export async function getDefaultAddress(): Promise<string | null> {
 }
 
 export async function setDefaultAddress(address: string): Promise<void> {
-  const config = await readConfig();
+  // Read only from disk — never bake PRIM_NETWORK env var into config.toml.
+  const config = readConfigFile();
   config.default_wallet = address;
   await writeConfig(config);
 }
