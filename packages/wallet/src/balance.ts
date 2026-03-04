@@ -40,9 +40,7 @@ function getClient() {
   return _client as ReturnType<typeof createPublicClient>;
 }
 
-export async function getEthBalance(
-  address: Address,
-): Promise<{ eth_balance: string }> {
+export async function getEthBalance(address: Address): Promise<{ eth_balance: string }> {
   try {
     const raw = await getClient().getBalance({ address });
     const eth_balance = Number(formatUnits(raw, ETH_DECIMALS)).toFixed(6);

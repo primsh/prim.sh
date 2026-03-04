@@ -47,7 +47,6 @@ function inferContentType(filePath: string): string {
   return map[ext] ?? "application/octet-stream";
 }
 
-
 async function resolveBucket(
   bucketArg: string,
   baseUrl: string,

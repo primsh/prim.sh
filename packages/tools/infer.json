@@ -48,20 +48,13 @@
           },
           "tool_choice": {
             "type": "string",
-            "enum": [
-              "none",
-              "auto",
-              "required"
-            ]
+            "enum": ["none", "auto", "required"]
           },
           "response_format": {
             "type": "object"
           }
         },
-        "required": [
-          "model",
-          "messages"
-        ]
+        "required": ["model", "messages"]
       }
     }
   },
@@ -83,10 +76,7 @@
             }
           }
         },
-        "required": [
-          "model",
-          "input"
-        ]
+        "required": ["model", "input"]
       }
     }
   },

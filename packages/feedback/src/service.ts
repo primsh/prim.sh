@@ -30,13 +30,23 @@ export function submit(req: SubmitRequest): SubmitResult | SubmitError {
     return { ok: false, status: 400, code: "invalid_request", message: "primitive is required" };
   }
   if (!req.type || !VALID_TYPES.includes(req.type as (typeof VALID_TYPES)[number])) {
-    return { ok: false, status: 400, code: "invalid_request", message: `type must be one of: ${VALID_TYPES.join(", ")}` };
+    return {
+      ok: false,
+      status: 400,
+      code: "invalid_request",
+      message: `type must be one of: ${VALID_TYPES.join(", ")}`,
+    };
   }
   if (!req.body || typeof req.body !== "string") {
     return { ok: false, status: 400, code: "invalid_request", message: "body is required" };
   }
   if (req.body.length > MAX_BODY_LENGTH) {
-    return { ok: false, status: 400, code: "invalid_request", message: `body must be ${MAX_BODY_LENGTH} characters or fewer` };
+    return {
+      ok: false,
+      status: 400,
+      code: "invalid_request",
+      message: `body must be ${MAX_BODY_LENGTH} characters or fewer`,
+    };
   }
 
   const id = crypto.randomUUID().slice(0, 12);

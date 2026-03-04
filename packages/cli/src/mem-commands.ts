@@ -12,7 +12,6 @@ export function resolveMemUrl(argv: string[]): string {
   return "https://mem.prim.sh";
 }
 
-
 export async function runMemCommand(sub: string, argv: string[]): Promise<void> {
   const baseUrl = resolveMemUrl(argv);
   const walletFlag = getFlag("wallet", argv);

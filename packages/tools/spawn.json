@@ -39,12 +39,7 @@
             "description": "Cloud-init script to run on first boot."
           }
         },
-        "required": [
-          "name",
-          "type",
-          "image",
-          "location"
-        ]
+        "required": ["name", "type", "image", "location"]
       }
     }
   },
@@ -81,9 +76,7 @@
             "description": "id parameter"
           }
         },
-        "required": [
-          "id"
-        ]
+        "required": ["id"]
       }
     }
   },
@@ -100,9 +93,7 @@
             "description": "id parameter"
           }
         },
-        "required": [
-          "id"
-        ]
+        "required": ["id"]
       }
     }
   },
@@ -119,9 +110,7 @@
             "description": "id parameter"
           }
         },
-        "required": [
-          "id"
-        ]
+        "required": ["id"]
       }
     }
   },
@@ -138,9 +127,7 @@
             "description": "id parameter"
           }
         },
-        "required": [
-          "id"
-        ]
+        "required": ["id"]
       }
     }
   },
@@ -157,9 +144,7 @@
             "description": "id parameter"
           }
         },
-        "required": [
-          "id"
-        ]
+        "required": ["id"]
       }
     }
   },
@@ -184,10 +169,7 @@
             "description": "Upgrade disk along with CPU/RAM. Irreversible if true. Default false."
           }
         },
-        "required": [
-          "id",
-          "type"
-        ]
+        "required": ["id", "type"]
       }
     }
   },
@@ -208,10 +190,7 @@
             "description": "OS image slug to rebuild with (e.g. \"debian-12\")."
           }
         },
-        "required": [
-          "id",
-          "image"
-        ]
+        "required": ["id", "image"]
       }
     }
   },
@@ -232,10 +211,7 @@
             "description": "Public key string (e.g. \"ssh-ed25519 AAAA...\")."
           }
         },
-        "required": [
-          "name",
-          "public_key"
-        ]
+        "required": ["name", "public_key"]
       }
     }
   },
@@ -263,9 +239,7 @@
             "description": "id parameter"
           }
         },
-        "required": [
-          "id"
-        ]
+        "required": ["id"]
       }
     }
   }

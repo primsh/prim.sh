@@ -28,11 +28,7 @@
             "description": "Human-readable label for this wallet."
           }
         },
-        "required": [
-          "address",
-          "signature",
-          "timestamp"
-        ]
+        "required": ["address", "signature", "timestamp"]
       }
     }
   },
@@ -69,9 +65,7 @@
             "description": "address parameter"
           }
         },
-        "required": [
-          "address"
-        ]
+        "required": ["address"]
       }
     }
   },
@@ -88,9 +82,7 @@
             "description": "address parameter"
           }
         },
-        "required": [
-          "address"
-        ]
+        "required": ["address"]
       }
     }
   },
@@ -115,11 +107,7 @@
             "description": "Human-readable reason for the funding request."
           }
         },
-        "required": [
-          "address",
-          "amount",
-          "reason"
-        ]
+        "required": ["address", "amount", "reason"]
       }
     }
   },
@@ -144,9 +132,7 @@
             "description": "Cursor from previous response"
           }
         },
-        "required": [
-          "address"
-        ]
+        "required": ["address"]
       }
     }
   },
@@ -163,9 +149,7 @@
             "description": "id parameter"
           }
         },
-        "required": [
-          "id"
-        ]
+        "required": ["id"]
       }
     }
   },
@@ -186,9 +170,7 @@
             "description": "Reason for denial."
           }
         },
-        "required": [
-          "id"
-        ]
+        "required": ["id"]
       }
     }
   },
@@ -205,9 +187,7 @@
             "description": "address parameter"
           }
         },
-        "required": [
-          "address"
-        ]
+        "required": ["address"]
       }
     }
   },
@@ -236,9 +216,7 @@
             "description": "Allowed primitive hostnames. Pass null to allow all."
           }
         },
-        "required": [
-          "address"
-        ]
+        "required": ["address"]
       }
     }
   },
@@ -259,9 +237,7 @@
             "description": "Scope to pause. \"all\" | \"send\" | \"swap\". Default \"all\"."
           }
         },
-        "required": [
-          "address"
-        ]
+        "required": ["address"]
       }
     }
   },
@@ -282,9 +258,7 @@
             "description": "Scope to resume. \"all\" | \"send\" | \"swap\". Default \"all\"."
           }
         },
-        "required": [
-          "address"
-        ]
+        "required": ["address"]
       }
     }
   },
@@ -301,9 +275,7 @@
             "description": "EVM wallet address to drip to (0x... 42 chars)."
           }
         },
-        "required": [
-          "address"
-        ]
+        "required": ["address"]
       }
     }
   },
@@ -320,9 +292,7 @@
             "description": "EVM wallet address to drip to (0x... 42 chars)."
           }
         },
-        "required": [
-          "address"
-        ]
+        "required": ["address"]
       }
     }
   },
@@ -385,9 +355,7 @@
             "description": "Whether the bucket should be publicly readable. Defaults to false."
           }
         },
-        "required": [
-          "name"
-        ]
+        "required": ["name"]
       }
     }
   },
@@ -424,9 +392,7 @@
             "description": "id parameter"
           }
         },
-        "required": [
-          "id"
-        ]
+        "required": ["id"]
       }
     }
   },
@@ -443,9 +409,7 @@
             "description": "id parameter"
           }
         },
-        "required": [
-          "id"
-        ]
+        "required": ["id"]
       }
     }
   },
@@ -466,10 +430,7 @@
             "description": "key parameter"
           }
         },
-        "required": [
-          "id",
-          "key"
-        ]
+        "required": ["id", "key"]
       }
     }
   },
@@ -490,10 +451,7 @@
             "description": "key parameter"
           }
         },
-        "required": [
-          "id",
-          "key"
-        ]
+        "required": ["id", "key"]
       }
     }
   },
@@ -514,10 +472,7 @@
             "description": "key parameter"
           }
         },
-        "required": [
-          "id",
-          "key"
-        ]
+        "required": ["id", "key"]
       }
     }
   },
@@ -546,9 +501,7 @@
             "description": "Cursor from previous response's next_cursor"
           }
         },
-        "required": [
-          "id"
-        ]
+        "required": ["id"]
       }
     }
   },
@@ -565,9 +518,7 @@
             "description": "id parameter"
           }
         },
-        "required": [
-          "id"
-        ]
+        "required": ["id"]
       }
     }
   },
@@ -588,10 +539,7 @@
             "description": "New quota in bytes. Pass null to reset to default (100 MB)."
           }
         },
-        "required": [
-          "id",
-          "quota_bytes"
-        ]
+        "required": ["id", "quota_bytes"]
       }
     }
   },
@@ -608,9 +556,7 @@
             "description": "id parameter"
           }
         },
-        "required": [
-          "id"
-        ]
+        "required": ["id"]
       }
     }
   },
@@ -633,21 +579,14 @@
           "method": {
             "type": "string",
             "description": "HTTP method: \"GET\" for download, \"PUT\" for upload.",
-            "enum": [
-              "GET",
-              "PUT"
-            ]
+            "enum": ["GET", "PUT"]
           },
           "expires_in": {
             "type": "number",
             "description": "URL lifetime in seconds (60–86400). Defaults to 3600."
           }
         },
-        "required": [
-          "id",
-          "key",
-          "method"
-        ]
+        "required": ["id", "key", "method"]
       }
     }
   },
@@ -670,10 +609,7 @@
           "search_depth": {
             "type": "string",
             "description": "Search depth. \"basic\" | \"advanced\", default \"basic\".",
-            "enum": [
-              "basic",
-              "advanced"
-            ]
+            "enum": ["basic", "advanced"]
           },
           "country": {
             "type": "string",
@@ -682,12 +618,7 @@
           "time_range": {
             "type": "string",
             "description": "Restrict results by recency. \"day\" | \"week\" | \"month\" | \"year\".",
-            "enum": [
-              "day",
-              "week",
-              "month",
-              "year"
-            ]
+            "enum": ["day", "week", "month", "year"]
           },
           "include_answer": {
             "type": "boolean",
@@ -708,9 +639,7 @@
             }
           }
         },
-        "required": [
-          "query"
-        ]
+        "required": ["query"]
       }
     }
   },
@@ -733,10 +662,7 @@
           "search_depth": {
             "type": "string",
             "description": "Search depth. \"basic\" | \"advanced\", default \"basic\".",
-            "enum": [
-              "basic",
-              "advanced"
-            ]
+            "enum": ["basic", "advanced"]
           },
           "country": {
             "type": "string",
@@ -745,12 +671,7 @@
           "time_range": {
             "type": "string",
             "description": "Restrict results by recency. \"day\" | \"week\" | \"month\" | \"year\".",
-            "enum": [
-              "day",
-              "week",
-              "month",
-              "year"
-            ]
+            "enum": ["day", "week", "month", "year"]
           },
           "include_answer": {
             "type": "boolean",
@@ -771,9 +692,7 @@
             }
           }
         },
-        "required": [
-          "query"
-        ]
+        "required": ["query"]
       }
     }
   },
@@ -795,15 +714,10 @@
           "format": {
             "type": "string",
             "description": "Output format. \"markdown\" | \"text\", default \"markdown\".",
-            "enum": [
-              "markdown",
-              "text"
-            ]
+            "enum": ["markdown", "text"]
           }
         },
-        "required": [
-          "urls"
-        ]
+        "required": ["urls"]
       }
     }
   },
@@ -847,12 +761,7 @@
             "description": "Cloud-init script to run on first boot."
           }
         },
-        "required": [
-          "name",
-          "type",
-          "image",
-          "location"
-        ]
+        "required": ["name", "type", "image", "location"]
       }
     }
   },
@@ -889,9 +798,7 @@
             "description": "id parameter"
           }
         },
-        "required": [
-          "id"
-        ]
+        "required": ["id"]
       }
     }
   },
@@ -908,9 +815,7 @@
             "description": "id parameter"
           }
         },
-        "required": [
-          "id"
-        ]
+        "required": ["id"]
       }
     }
   },
@@ -927,9 +832,7 @@
             "description": "id parameter"
           }
         },
-        "required": [
-          "id"
-        ]
+        "required": ["id"]
       }
     }
   },
@@ -946,9 +849,7 @@
             "description": "id parameter"
           }
         },
-        "required": [
-          "id"
-        ]
+        "required": ["id"]
       }
     }
   },
@@ -965,9 +866,7 @@
             "description": "id parameter"
           }
         },
-        "required": [
-          "id"
-        ]
+        "required": ["id"]
       }
     }
   },
@@ -992,10 +891,7 @@
             "description": "Upgrade disk along with CPU/RAM. Irreversible if true. Default false."
           }
         },
-        "required": [
-          "id",
-          "type"
-        ]
+        "required": ["id", "type"]
       }
     }
   },
@@ -1016,10 +912,7 @@
             "description": "OS image slug to rebuild with (e.g. \"debian-12\")."
           }
         },
-        "required": [
-          "id",
-          "image"
-        ]
+        "required": ["id", "image"]
       }
     }
   },
@@ -1040,10 +933,7 @@
             "description": "Public key string (e.g. \"ssh-ed25519 AAAA...\")."
           }
         },
-        "required": [
-          "name",
-          "public_key"
-        ]
+        "required": ["name", "public_key"]
       }
     }
   },
@@ -1071,9 +961,7 @@
             "description": "id parameter"
           }
         },
-        "required": [
-          "id"
-        ]
+        "required": ["id"]
       }
     }
   },
@@ -1134,9 +1022,7 @@
             "description": "id parameter"
           }
         },
-        "required": [
-          "id"
-        ]
+        "required": ["id"]
       }
     }
   },
@@ -1153,9 +1039,7 @@
             "description": "id parameter"
           }
         },
-        "required": [
-          "id"
-        ]
+        "required": ["id"]
       }
     }
   },
@@ -1176,9 +1060,7 @@
             "description": "Extension duration in milliseconds. Omit to apply default TTL."
           }
         },
-        "required": [
-          "id"
-        ]
+        "required": ["id"]
       }
     }
   },
@@ -1203,9 +1085,7 @@
             "description": "Position-based cursor for pagination"
           }
         },
-        "required": [
-          "id"
-        ]
+        "required": ["id"]
       }
     }
   },
@@ -1226,10 +1106,7 @@
             "description": "msgId parameter"
           }
         },
-        "required": [
-          "id",
-          "msgId"
-        ]
+        "required": ["id", "msgId"]
       }
     }
   },
@@ -1270,11 +1147,7 @@
             "description": "BCC recipient email address."
           }
         },
-        "required": [
-          "id",
-          "to",
-          "subject"
-        ]
+        "required": ["id", "to", "subject"]
       }
     }
   },
@@ -1306,10 +1179,7 @@
             }
           }
         },
-        "required": [
-          "id",
-          "url"
-        ]
+        "required": ["id", "url"]
       }
     }
   },
@@ -1326,9 +1196,7 @@
             "description": "id parameter"
           }
         },
-        "required": [
-          "id"
-        ]
+        "required": ["id"]
       }
     }
   },
@@ -1349,10 +1217,7 @@
             "description": "whId parameter"
           }
         },
-        "required": [
-          "id",
-          "whId"
-        ]
+        "required": ["id", "whId"]
       }
     }
   },
@@ -1369,9 +1234,7 @@
             "description": "Domain name to register (e.g. \"myproject.com\")."
           }
         },
-        "required": [
-          "domain"
-        ]
+        "required": ["domain"]
       }
     }
   },
@@ -1408,9 +1271,7 @@
             "description": "id parameter"
           }
         },
-        "required": [
-          "id"
-        ]
+        "required": ["id"]
       }
     }
   },
@@ -1427,9 +1288,7 @@
             "description": "id parameter"
           }
         },
-        "required": [
-          "id"
-        ]
+        "required": ["id"]
       }
     }
   },
@@ -1446,9 +1305,7 @@
             "description": "id parameter"
           }
         },
-        "required": [
-          "id"
-        ]
+        "required": ["id"]
       }
     }
   },
@@ -1485,11 +1342,7 @@
             "description": "Maximum mintable supply as a raw integer string. Null = unlimited. Only applies if mintable is true."
           }
         },
-        "required": [
-          "name",
-          "symbol",
-          "initialSupply"
-        ]
+        "required": ["name", "symbol", "initialSupply"]
       }
     }
   },
@@ -1517,9 +1370,7 @@
             "description": "id parameter"
           }
         },
-        "required": [
-          "id"
-        ]
+        "required": ["id"]
       }
     }
   },
@@ -1544,11 +1395,7 @@
             "description": "Amount to mint as a raw integer string."
           }
         },
-        "required": [
-          "id",
-          "to",
-          "amount"
-        ]
+        "required": ["id", "to", "amount"]
       }
     }
   },
@@ -1565,9 +1412,7 @@
             "description": "id parameter"
           }
         },
-        "required": [
-          "id"
-        ]
+        "required": ["id"]
       }
     }
   },
@@ -1592,10 +1437,7 @@
             "description": "Uniswap V3 fee tier. 500 | 3000 | 10000, default 3000."
           }
         },
-        "required": [
-          "id",
-          "pricePerToken"
-        ]
+        "required": ["id", "pricePerToken"]
       }
     }
   },
@@ -1612,9 +1454,7 @@
             "description": "id parameter"
           }
         },
-        "required": [
-          "id"
-        ]
+        "required": ["id"]
       }
     }
   },
@@ -1639,9 +1479,7 @@
             "description": "Raw USDC amount to pair (6 decimals)"
           }
         },
-        "required": [
-          "id"
-        ]
+        "required": ["id"]
       }
     }
   },
@@ -1660,20 +1498,14 @@
           "distance": {
             "type": "string",
             "description": "Distance metric for similarity search. Default \"Cosine\".",
-            "enum": [
-              "Cosine",
-              "Euclid",
-              "Dot"
-            ]
+            "enum": ["Cosine", "Euclid", "Dot"]
           },
           "dimension": {
             "type": "number",
             "description": "Vector dimension. Must match the embedding model used. Default 1536."
           }
         },
-        "required": [
-          "name"
-        ]
+        "required": ["name"]
       }
     }
   },
@@ -1710,9 +1542,7 @@
             "description": "id parameter"
           }
         },
-        "required": [
-          "id"
-        ]
+        "required": ["id"]
       }
     }
   },
@@ -1729,9 +1559,7 @@
             "description": "id parameter"
           }
         },
-        "required": [
-          "id"
-        ]
+        "required": ["id"]
       }
     }
   },
@@ -1755,10 +1583,7 @@
             }
           }
         },
-        "required": [
-          "id",
-          "documents"
-        ]
+        "required": ["id", "documents"]
       }
     }
   },
@@ -1787,10 +1612,7 @@
             "description": "Qdrant-native filter passthrough."
           }
         },
-        "required": [
-          "id",
-          "text"
-        ]
+        "required": ["id", "text"]
       }
     }
   },
@@ -1819,11 +1641,7 @@
             "description": "TTL in seconds. Omit or null for permanent."
           }
         },
-        "required": [
-          "namespace",
-          "key",
-          "value"
-        ]
+        "required": ["namespace", "key", "value"]
       }
     }
   },
@@ -1844,10 +1662,7 @@
             "description": "key parameter"
           }
         },
-        "required": [
-          "namespace",
-          "key"
-        ]
+        "required": ["namespace", "key"]
       }
     }
   },
@@ -1868,10 +1683,7 @@
             "description": "key parameter"
           }
         },
-        "required": [
-          "namespace",
-          "key"
-        ]
+        "required": ["namespace", "key"]
       }
     }
   },
@@ -1912,9 +1724,7 @@
             "description": "Number of years to register. Default 1."
           }
         },
-        "required": [
-          "domain"
-        ]
+        "required": ["domain"]
       }
     }
   },
@@ -1931,9 +1741,7 @@
             "description": "domain parameter"
           }
         },
-        "required": [
-          "domain"
-        ]
+        "required": ["domain"]
       }
     }
   },
@@ -1950,9 +1758,7 @@
             "description": "Domain name to create a zone for (e.g. \"example.com\")."
           }
         },
-        "required": [
-          "domain"
-        ]
+        "required": ["domain"]
       }
     }
   },
@@ -1989,9 +1795,7 @@
             "description": "id parameter"
           }
         },
-        "required": [
-          "id"
-        ]
+        "required": ["id"]
       }
     }
   },
@@ -2008,9 +1812,7 @@
             "description": "id parameter"
           }
         },
-        "required": [
-          "id"
-        ]
+        "required": ["id"]
       }
     }
   },
@@ -2027,9 +1829,7 @@
             "description": "zone_id parameter"
           }
         },
-        "required": [
-          "zone_id"
-        ]
+        "required": ["zone_id"]
       }
     }
   },
@@ -2046,9 +1846,7 @@
             "description": "zone_id parameter"
           }
         },
-        "required": [
-          "zone_id"
-        ]
+        "required": ["zone_id"]
       }
     }
   },
@@ -2077,11 +1875,7 @@
             "description": "DKIM keys to configure. Provide rsa and/or ed25519."
           }
         },
-        "required": [
-          "zone_id",
-          "mail_server",
-          "mail_server_ip"
-        ]
+        "required": ["zone_id", "mail_server", "mail_server_ip"]
       }
     }
   },
@@ -2119,9 +1913,7 @@
             }
           }
         },
-        "required": [
-          "zone_id"
-        ]
+        "required": ["zone_id"]
       }
     }
   },
@@ -2162,12 +1954,7 @@
             "description": "Priority for MX and SRV records."
           }
         },
-        "required": [
-          "zone_id",
-          "type",
-          "name",
-          "content"
-        ]
+        "required": ["zone_id", "type", "name", "content"]
       }
     }
   },
@@ -2184,9 +1971,7 @@
             "description": "zone_id parameter"
           }
         },
-        "required": [
-          "zone_id"
-        ]
+        "required": ["zone_id"]
       }
     }
   },
@@ -2207,10 +1992,7 @@
             "description": "id parameter"
           }
         },
-        "required": [
-          "zone_id",
-          "id"
-        ]
+        "required": ["zone_id", "id"]
       }
     }
   },
@@ -2255,10 +2037,7 @@
             "description": "Priority for MX and SRV records."
           }
         },
-        "required": [
-          "zone_id",
-          "id"
-        ]
+        "required": ["zone_id", "id"]
       }
     }
   },
@@ -2279,10 +2058,7 @@
             "description": "id parameter"
           }
         },
-        "required": [
-          "zone_id",
-          "id"
-        ]
+        "required": ["zone_id", "id"]
       }
     }
   },
@@ -2303,9 +2079,7 @@
             "description": "Carrier slug (e.g. \"usps\", \"ups\", \"fedex\"). Omit to auto-detect."
           }
         },
-        "required": [
-          "tracking_number"
-        ]
+        "required": ["tracking_number"]
       }
     }
   },
@@ -2358,20 +2132,13 @@
           },
           "tool_choice": {
             "type": "string",
-            "enum": [
-              "none",
-              "auto",
-              "required"
-            ]
+            "enum": ["none", "auto", "required"]
           },
           "response_format": {
             "type": "object"
           }
         },
-        "required": [
-          "model",
-          "messages"
-        ]
+        "required": ["model", "messages"]
       }
     }
   },
@@ -2393,10 +2160,7 @@
             }
           }
         },
-        "required": [
-          "model",
-          "input"
-        ]
+        "required": ["model", "input"]
       }
     }
   },

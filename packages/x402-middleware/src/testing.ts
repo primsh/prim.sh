@@ -12,8 +12,8 @@ export function mockBunSqlite() {
 
 export function mockX402Middleware(walletAddress = "0x0000000000000000000000000000000000000001") {
   return {
-    createAgentStackMiddleware: () =>
-      async (c: { set: (key: string, value: string) => void }, next: () => Promise<void>) => {
+    createAgentStackMiddleware:
+      () => async (c: { set: (key: string, value: string) => void }, next: () => Promise<void>) => {
         c.set("walletAddress", walletAddress);
         await next();
       },

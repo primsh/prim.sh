@@ -11,7 +11,6 @@ export function resolveDomainUrl(argv: string[]): string {
   return "https://domain.prim.sh";
 }
 
-
 export async function runDomainCommand(sub: string, argv: string[]): Promise<void> {
   const baseUrl = resolveDomainUrl(argv);
   const walletFlag = getFlag("wallet", argv);

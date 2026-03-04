@@ -308,7 +308,11 @@ app.post("/v1/mailboxes/:id/send", async (c) => {
   if (callerOrRes instanceof Response) return callerOrRes;
   const caller = callerOrRes;
 
-  const bodyOrRes = await parseJsonBody<SendMessageRequest>(c, logger, "POST /v1/mailboxes/:id/send");
+  const bodyOrRes = await parseJsonBody<SendMessageRequest>(
+    c,
+    logger,
+    "POST /v1/mailboxes/:id/send",
+  );
   if (bodyOrRes instanceof Response) return bodyOrRes;
   const body = bodyOrRes;
 
@@ -328,7 +332,11 @@ app.post("/v1/mailboxes/:id/webhooks", async (c) => {
   if (callerOrRes instanceof Response) return callerOrRes;
   const caller = callerOrRes;
 
-  const bodyOrRes = await parseJsonBody<RegisterWebhookRequest>(c, logger, "POST /v1/mailboxes/:id/webhooks");
+  const bodyOrRes = await parseJsonBody<RegisterWebhookRequest>(
+    c,
+    logger,
+    "POST /v1/mailboxes/:id/webhooks",
+  );
   if (bodyOrRes instanceof Response) return bodyOrRes;
   const body = bodyOrRes;
 

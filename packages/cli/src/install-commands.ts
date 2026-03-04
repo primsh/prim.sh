@@ -275,7 +275,9 @@ export async function runInstallCommand(
       if (res.ok) {
         const remote = (await res.text()).trim();
         if (remote !== localVersion) {
-          console.log(`Update available: v${localVersion} → v${remote}. Run \`prim upgrade\` to update.\n`);
+          console.log(
+            `Update available: v${localVersion} → v${remote}. Run \`prim upgrade\` to update.\n`,
+          );
         }
       }
     } catch {
@@ -444,12 +446,15 @@ export async function runUpgradeCommand(argv: string[], localVersion: string): P
 
   const actualHash = createHash("sha256").update(binaryData).digest("hex");
   if (actualHash !== expectedHash) {
-    throw new Error(`Checksum verification failed.\n  Expected: ${expectedHash}\n  Got:      ${actualHash}`);
+    throw new Error(
+      `Checksum verification failed.\n  Expected: ${expectedHash}\n  Got:      ${actualHash}`,
+    );
   }
 
-  const installPath = process.execPath.endsWith("bun") || process.execPath.endsWith("node")
-    ? join(homedir(), ".prim", "bin", "prim")
-    : process.execPath;
+  const installPath =
+    process.execPath.endsWith("bun") || process.execPath.endsWith("node")
+      ? join(homedir(), ".prim", "bin", "prim")
+      : process.execPath;
   const installDir = dirname(installPath);
 
   if (!existsSync(installDir)) {

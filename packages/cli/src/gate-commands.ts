@@ -42,9 +42,7 @@ export async function runGateCommand(sub: string, argv: string[]): Promise<void>
       const code = getFlag("code", argv);
       const wallet = getFlag("wallet", argv);
       if (!code || !wallet) {
-        process.stderr.write(
-          "Usage: prim gate invite --code CODE --wallet WALLET\n",
-        );
+        process.stderr.write("Usage: prim gate invite --code CODE --wallet WALLET\n");
         process.exit(1);
       }
       const reqBody: Record<string, unknown> = {};

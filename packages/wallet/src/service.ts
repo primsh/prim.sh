@@ -58,7 +58,12 @@ export function registerWalletInternal(address: string): InternalRegisterResult 
   const existing = getWalletByAddress(normalizedAddress);
 
   if (existing && !existing.deactivated_at) {
-    return { ok: false, status: 409, code: "already_registered", message: "Wallet already registered" };
+    return {
+      ok: false,
+      status: 409,
+      code: "already_registered",
+      message: "Wallet already registered",
+    };
   }
 
   if (existing?.deactivated_at) {

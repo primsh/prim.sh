@@ -136,7 +136,11 @@ app.post("/v1/domains/quote", async (c) => {
 // POST /v1/domains/register — Register a domain (dynamic x402 pricing from quote)
 // Bypasses x402 middleware — implements payment protocol directly.
 app.post("/v1/domains/register", async (c) => {
-  const bodyOrRes = await parseJsonBody<{ quote_id?: string }>(c, logger, "POST /v1/domains/register");
+  const bodyOrRes = await parseJsonBody<{ quote_id?: string }>(
+    c,
+    logger,
+    "POST /v1/domains/register",
+  );
   if (bodyOrRes instanceof Response) return bodyOrRes;
   const body = bodyOrRes;
 
@@ -439,7 +443,11 @@ app.post("/v1/zones/:zone_id/mail-setup", async (c) => {
   if (callerOrRes instanceof Response) return callerOrRes;
   const caller = callerOrRes;
 
-  const bodyOrRes = await parseJsonBody<MailSetupRequest>(c, logger, "POST /v1/zones/:zone_id/mail-setup");
+  const bodyOrRes = await parseJsonBody<MailSetupRequest>(
+    c,
+    logger,
+    "POST /v1/zones/:zone_id/mail-setup",
+  );
   if (bodyOrRes instanceof Response) return bodyOrRes;
   const body = bodyOrRes;
 
@@ -459,7 +467,11 @@ app.post("/v1/zones/:zone_id/records/batch", async (c) => {
   if (callerOrRes instanceof Response) return callerOrRes;
   const caller = callerOrRes;
 
-  const bodyOrRes = await parseJsonBody<BatchRecordsRequest>(c, logger, "POST /v1/zones/:zone_id/records/batch");
+  const bodyOrRes = await parseJsonBody<BatchRecordsRequest>(
+    c,
+    logger,
+    "POST /v1/zones/:zone_id/records/batch",
+  );
   if (bodyOrRes instanceof Response) return bodyOrRes;
   const body = bodyOrRes;
 
@@ -481,7 +493,11 @@ app.post("/v1/zones/:zone_id/records", async (c) => {
   if (callerOrRes instanceof Response) return callerOrRes;
   const caller = callerOrRes;
 
-  const bodyOrRes = await parseJsonBody<CreateRecordRequest>(c, logger, "POST /v1/zones/:zone_id/records");
+  const bodyOrRes = await parseJsonBody<CreateRecordRequest>(
+    c,
+    logger,
+    "POST /v1/zones/:zone_id/records",
+  );
   if (bodyOrRes instanceof Response) return bodyOrRes;
   const body = bodyOrRes;
 
@@ -529,7 +545,11 @@ app.put("/v1/zones/:zone_id/records/:id", async (c) => {
   if (callerOrRes instanceof Response) return callerOrRes;
   const caller = callerOrRes;
 
-  const bodyOrRes = await parseJsonBody<UpdateRecordRequest>(c, logger, "PUT /v1/zones/:zone_id/records/:id");
+  const bodyOrRes = await parseJsonBody<UpdateRecordRequest>(
+    c,
+    logger,
+    "PUT /v1/zones/:zone_id/records/:id",
+  );
   if (bodyOrRes instanceof Response) return bodyOrRes;
   const body = bodyOrRes;
 

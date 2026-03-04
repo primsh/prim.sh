@@ -10,8 +10,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 // Set testnet env before any imports
 process.env.PRIM_NETWORK = "eip155:84532";
 // Hardhat/Anvil account #0 — well-known public test key, not a real secret
-process.env.TESTNET_WALLET =
-  "0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80";
+process.env.TESTNET_WALLET = "0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80";
 process.env.FAUCET_DRIP_ETH = "0.01";
 // Use in-memory SQLite for tests (isolated, no disk files)
 process.env.FAUCET_DB_PATH = ":memory:";
@@ -102,8 +101,7 @@ beforeEach(() => {
   mockGetBalance.mockResolvedValue(1000000000000000000n); // 1 ETH
   mockReadContract.mockResolvedValue(20_000_000n); // 20 USDC
   process.env.PRIM_NETWORK = "eip155:84532";
-  process.env.TESTNET_WALLET =
-    "0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80";
+  process.env.TESTNET_WALLET = "0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80";
   process.env.FAUCET_DRIP_ETH = "0.01";
   process.env.CDP_API_KEY_ID = "test-cdp-key-id";
   process.env.CDP_API_KEY_SECRET = "test-cdp-key-secret";

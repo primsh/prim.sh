@@ -12,9 +12,7 @@
             "description": "EVM wallet address to drip to (0x... 42 chars)."
           }
         },
-        "required": [
-          "address"
-        ]
+        "required": ["address"]
       }
     }
   },
@@ -31,9 +29,7 @@
             "description": "EVM wallet address to drip to (0x... 42 chars)."
           }
         },
-        "required": [
-          "address"
-        ]
+        "required": ["address"]
       }
     }
   },

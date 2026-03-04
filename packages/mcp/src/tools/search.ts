@@ -10,132 +10,134 @@ import type { CallToolResult } from "@modelcontextprotocol/sdk/types.js";
 export const searchTools: Tool[] = [
   {
     name: "search_web",
-    description: "Search the web and return ranked results with optional AI-generated answer | Price: $0.005",
+    description:
+      "Search the web and return ranked results with optional AI-generated answer | Price: $0.005",
     inputSchema: {
-        type: "object",
-        properties: {
-          "query": {
-            type: "string",
-            description: "Search query string.",
-          },
-          "max_results": {
-            type: "number",
-            description: "Maximum number of results to return. 1-20, default 10.",
-          },
-          "search_depth": {
-            type: "string",
-            enum: ["basic","advanced"],
-            description: "Search depth. \"basic\" | \"advanced\", default \"basic\".",
-          },
-          "country": {
-            type: "string",
-            description: "Two-letter ISO 3166-1 country code to bias results (e.g. \"US\").",
-          },
-          "time_range": {
-            type: "string",
-            enum: ["day","week","month","year"],
-            description: "Restrict results by recency. \"day\" | \"week\" | \"month\" | \"year\".",
-          },
-          "include_answer": {
-            type: "boolean",
-            description: "Include AI-generated answer summarizing top results. Default false.",
-          },
-          "include_domains": {
-            type: "array",
-            items: {
-              type: "string",
-            },
-            description: "Restrict results to these domains only (e.g. [\"docs.base.org\"]).",
-          },
-          "exclude_domains": {
-            type: "array",
-            items: {
-              type: "string",
-            },
-            description: "Exclude results from these domains (e.g. [\"reddit.com\"]).",
-          },
+      type: "object",
+      properties: {
+        query: {
+          type: "string",
+          description: "Search query string.",
         },
-        required: ["query"],
+        max_results: {
+          type: "number",
+          description: "Maximum number of results to return. 1-20, default 10.",
+        },
+        search_depth: {
+          type: "string",
+          enum: ["basic", "advanced"],
+          description: 'Search depth. "basic" | "advanced", default "basic".',
+        },
+        country: {
+          type: "string",
+          description: 'Two-letter ISO 3166-1 country code to bias results (e.g. "US").',
+        },
+        time_range: {
+          type: "string",
+          enum: ["day", "week", "month", "year"],
+          description: 'Restrict results by recency. "day" | "week" | "month" | "year".',
+        },
+        include_answer: {
+          type: "boolean",
+          description: "Include AI-generated answer summarizing top results. Default false.",
+        },
+        include_domains: {
+          type: "array",
+          items: {
+            type: "string",
+          },
+          description: 'Restrict results to these domains only (e.g. ["docs.base.org"]).',
+        },
+        exclude_domains: {
+          type: "array",
+          items: {
+            type: "string",
+          },
+          description: 'Exclude results from these domains (e.g. ["reddit.com"]).',
+        },
       },
+      required: ["query"],
+    },
   },
   {
     name: "search_news",
     description: "Search for recent news articles, ordered by recency | Price: $0.005",
     inputSchema: {
-        type: "object",
-        properties: {
-          "query": {
-            type: "string",
-            description: "Search query string.",
-          },
-          "max_results": {
-            type: "number",
-            description: "Maximum number of results to return. 1-20, default 10.",
-          },
-          "search_depth": {
-            type: "string",
-            enum: ["basic","advanced"],
-            description: "Search depth. \"basic\" | \"advanced\", default \"basic\".",
-          },
-          "country": {
-            type: "string",
-            description: "Two-letter ISO 3166-1 country code to bias results (e.g. \"US\").",
-          },
-          "time_range": {
-            type: "string",
-            enum: ["day","week","month","year"],
-            description: "Restrict results by recency. \"day\" | \"week\" | \"month\" | \"year\".",
-          },
-          "include_answer": {
-            type: "boolean",
-            description: "Include AI-generated answer summarizing top results. Default false.",
-          },
-          "include_domains": {
-            type: "array",
-            items: {
-              type: "string",
-            },
-            description: "Restrict results to these domains only (e.g. [\"docs.base.org\"]).",
-          },
-          "exclude_domains": {
-            type: "array",
-            items: {
-              type: "string",
-            },
-            description: "Exclude results from these domains (e.g. [\"reddit.com\"]).",
-          },
+      type: "object",
+      properties: {
+        query: {
+          type: "string",
+          description: "Search query string.",
         },
-        required: ["query"],
+        max_results: {
+          type: "number",
+          description: "Maximum number of results to return. 1-20, default 10.",
+        },
+        search_depth: {
+          type: "string",
+          enum: ["basic", "advanced"],
+          description: 'Search depth. "basic" | "advanced", default "basic".',
+        },
+        country: {
+          type: "string",
+          description: 'Two-letter ISO 3166-1 country code to bias results (e.g. "US").',
+        },
+        time_range: {
+          type: "string",
+          enum: ["day", "week", "month", "year"],
+          description: 'Restrict results by recency. "day" | "week" | "month" | "year".',
+        },
+        include_answer: {
+          type: "boolean",
+          description: "Include AI-generated answer summarizing top results. Default false.",
+        },
+        include_domains: {
+          type: "array",
+          items: {
+            type: "string",
+          },
+          description: 'Restrict results to these domains only (e.g. ["docs.base.org"]).',
+        },
+        exclude_domains: {
+          type: "array",
+          items: {
+            type: "string",
+          },
+          description: 'Exclude results from these domains (e.g. ["reddit.com"]).',
+        },
       },
+      required: ["query"],
+    },
   },
   {
     name: "search_extract_url",
-    description: "Extract readable content from one or more URLs as markdown or plain text | Price: $0.005",
+    description:
+      "Extract readable content from one or more URLs as markdown or plain text | Price: $0.005",
     inputSchema: {
-        type: "object",
-        properties: {
-          "urls": {
-            oneOf: [
-              {
+      type: "object",
+      properties: {
+        urls: {
+          oneOf: [
+            {
+              type: "string",
+            },
+            {
+              type: "array",
+              items: {
                 type: "string",
               },
-              {
-                type: "array",
-                items: {
-                  type: "string",
-                },
-              },
-            ],
-            description: "URL string or array of URLs to extract content from.",
-          },
-          "format": {
-            type: "string",
-            enum: ["markdown","text"],
-            description: "Output format. \"markdown\" | \"text\", default \"markdown\".",
-          },
+            },
+          ],
+          description: "URL string or array of URLs to extract content from.",
         },
-        required: ["urls"],
+        format: {
+          type: "string",
+          enum: ["markdown", "text"],
+          description: 'Output format. "markdown" | "text", default "markdown".',
+        },
       },
+      required: ["urls"],
+    },
   },
 ];
 // END:GENERATED:TOOLS

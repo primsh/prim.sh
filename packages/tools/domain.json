@@ -36,9 +36,7 @@
             "description": "Number of years to register. Default 1."
           }
         },
-        "required": [
-          "domain"
-        ]
+        "required": ["domain"]
       }
     }
   },
@@ -55,9 +53,7 @@
             "description": "domain parameter"
           }
         },
-        "required": [
-          "domain"
-        ]
+        "required": ["domain"]
       }
     }
   },
@@ -74,9 +70,7 @@
             "description": "Domain name to create a zone for (e.g. \"example.com\")."
           }
         },
-        "required": [
-          "domain"
-        ]
+        "required": ["domain"]
       }
     }
   },
@@ -113,9 +107,7 @@
             "description": "id parameter"
           }
         },
-        "required": [
-          "id"
-        ]
+        "required": ["id"]
       }
     }
   },
@@ -132,9 +124,7 @@
             "description": "id parameter"
           }
         },
-        "required": [
-          "id"
-        ]
+        "required": ["id"]
       }
     }
   },
@@ -151,9 +141,7 @@
             "description": "zone_id parameter"
           }
         },
-        "required": [
-          "zone_id"
-        ]
+        "required": ["zone_id"]
       }
     }
   },
@@ -170,9 +158,7 @@
             "description": "zone_id parameter"
           }
         },
-        "required": [
-          "zone_id"
-        ]
+        "required": ["zone_id"]
       }
     }
   },
@@ -201,11 +187,7 @@
             "description": "DKIM keys to configure. Provide rsa and/or ed25519."
           }
         },
-        "required": [
-          "zone_id",
-          "mail_server",
-          "mail_server_ip"
-        ]
+        "required": ["zone_id", "mail_server", "mail_server_ip"]
       }
     }
   },
@@ -243,9 +225,7 @@
             }
           }
         },
-        "required": [
-          "zone_id"
-        ]
+        "required": ["zone_id"]
       }
     }
   },
@@ -286,12 +266,7 @@
             "description": "Priority for MX and SRV records."
           }
         },
-        "required": [
-          "zone_id",
-          "type",
-          "name",
-          "content"
-        ]
+        "required": ["zone_id", "type", "name", "content"]
       }
     }
   },
@@ -308,9 +283,7 @@
             "description": "zone_id parameter"
           }
         },
-        "required": [
-          "zone_id"
-        ]
+        "required": ["zone_id"]
       }
     }
   },
@@ -331,10 +304,7 @@
             "description": "id parameter"
           }
         },
-        "required": [
-          "zone_id",
-          "id"
-        ]
+        "required": ["zone_id", "id"]
       }
     }
   },
@@ -379,10 +349,7 @@
             "description": "Priority for MX and SRV records."
           }
         },
-        "required": [
-          "zone_id",
-          "id"
-        ]
+        "required": ["zone_id", "id"]
       }
     }
   },
@@ -403,10 +370,7 @@
             "description": "id parameter"
           }
         },
-        "required": [
-          "zone_id",
-          "id"
-        ]
+        "required": ["zone_id", "id"]
       }
     }
   }

@@ -18,13 +18,9 @@ vi.mock("@primsh/x402-middleware", () => {
 
   return {
     createAgentStackMiddleware: vi.fn(
-      () =>
-        async (
-          _c: import("hono").Context,
-          next: import("hono").Next,
-        ) => {
-          await next();
-        },
+      () => async (_c: import("hono").Context, next: import("hono").Next) => {
+        await next();
+      },
     ),
     createWalletAllowlistChecker: vi.fn(() => () => Promise.resolve(true)),
     createLogger: vi.fn(() => ({ info: vi.fn(), warn: vi.fn(), error: vi.fn() })),
@@ -40,7 +36,11 @@ vi.mock("@primsh/x402-middleware", () => {
       if (!caller) return c.json(forbidden("No wallet address in payment"), 403);
       return caller;
     },
-    parseJsonBody: async (c: import("hono").Context, logger: { warn: (...a: unknown[]) => void }, label: string) => {
+    parseJsonBody: async (
+      c: import("hono").Context,
+      logger: { warn: (...a: unknown[]) => void },
+      label: string,
+    ) => {
       try {
         return await c.req.json();
       } catch (err) {
@@ -84,8 +84,20 @@ vi.mock("../src/db.ts", () => ({
   generateCode: vi.fn(() => "PRIM-a3f8c21b"),
   insertCodes: vi.fn((codes: string[]) => codes.length),
   listCodes: vi.fn(() => [
-    { code: "PRIM-abc12345", created_at: "2026-01-01T00:00:00.000Z", label: null, wallet: null, redeemed_at: null },
-    { code: "PRIM-used0001", created_at: "2026-01-01T00:00:00.000Z", label: null, wallet: "0x1234", redeemed_at: "2026-01-02T00:00:00.000Z" },
+    {
+      code: "PRIM-abc12345",
+      created_at: "2026-01-01T00:00:00.000Z",
+      label: null,
+      wallet: null,
+      redeemed_at: null,
+    },
+    {
+      code: "PRIM-used0001",
+      created_at: "2026-01-01T00:00:00.000Z",
+      label: null,
+      wallet: "0x1234",
+      redeemed_at: "2026-01-02T00:00:00.000Z",
+    },
   ]),
   revokeCode: vi.fn(() => ({ ok: true })),
 }));
@@ -108,11 +120,21 @@ vi.mock("../src/fund.ts", () => ({
 }));
 
 import app from "../src/index.ts";
-import { generateCode, insertCodes, listCodes, revokeCode, unburnCode, validateAndBurn } from "../src/db.ts";
+import {
+  generateCode,
+  insertCodes,
+  listCodes,
+  revokeCode,
+  unburnCode,
+  validateAndBurn,
+} from "../src/db.ts";
 import { fundWallet } from "../src/fund.ts";
 import { addToAllowlist, removeFromAllowlist } from "@primsh/x402-middleware/allowlist-db";
 
-const INTERNAL_HEADERS = { "x-internal-key": "test-internal-key", "Content-Type": "application/json" };
+const INTERNAL_HEADERS = {
+  "x-internal-key": "test-internal-key",
+  "Content-Type": "application/json",
+};
 
 describe("gate.sh app", () => {
   beforeEach(() => {
@@ -147,7 +169,10 @@ describe("gate.sh app", () => {
     const res = await app.request("/v1/redeem", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ code: "TEST-CODE-1", wallet: "0x09D896446fBd3299Fa8d7898001b086E56f642B5" }),
+      body: JSON.stringify({
+        code: "TEST-CODE-1",
+        wallet: "0x09D896446fBd3299Fa8d7898001b086E56f642B5",
+      }),
     });
     expect(res.status).toBe(200);
   });
@@ -157,7 +182,10 @@ describe("gate.sh app", () => {
     const res = await app.request("/v1/redeem", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ code: "TEST-CODE-1", wallet: "0x09D896446fBd3299Fa8d7898001b086E56f642B5" }),
+      body: JSON.stringify({
+        code: "TEST-CODE-1",
+        wallet: "0x09D896446fBd3299Fa8d7898001b086E56f642B5",
+      }),
     });
     expect(res.status).toBe(200);
     const body = await res.json();
@@ -206,7 +234,10 @@ describe("gate.sh app", () => {
     const res = await app.request("/v1/redeem", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ code: "BAD-CODE", wallet: "0x09D896446fBd3299Fa8d7898001b086E56f642B5" }),
+      body: JSON.stringify({
+        code: "BAD-CODE",
+        wallet: "0x09D896446fBd3299Fa8d7898001b086E56f642B5",
+      }),
     });
     expect(res.status).toBe(400);
     const body = await res.json();
@@ -219,7 +250,10 @@ describe("gate.sh app", () => {
     const res = await app.request("/v1/redeem", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ code: "TEST-CODE-1", wallet: "0x09D896446fBd3299Fa8d7898001b086E56f642B5" }),
+      body: JSON.stringify({
+        code: "TEST-CODE-1",
+        wallet: "0x09D896446fBd3299Fa8d7898001b086E56f642B5",
+      }),
     });
     expect(res.status).toBe(409);
     const body = await res.json();
@@ -232,7 +266,10 @@ describe("gate.sh app", () => {
     const res = await app.request("/v1/redeem", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ code: "TEST-CODE-1", wallet: "0x09D896446fBd3299Fa8d7898001b086E56f642B5" }),
+      body: JSON.stringify({
+        code: "TEST-CODE-1",
+        wallet: "0x09D896446fBd3299Fa8d7898001b086E56f642B5",
+      }),
     });
     expect(res.status).toBe(502);
     const body = await res.json();
@@ -246,7 +283,10 @@ describe("gate.sh app", () => {
     const res = await app.request("/v1/redeem", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ code: "TEST-CODE-1", wallet: "0x09D896446fBd3299Fa8d7898001b086E56f642B5" }),
+      body: JSON.stringify({
+        code: "TEST-CODE-1",
+        wallet: "0x09D896446fBd3299Fa8d7898001b086E56f642B5",
+      }),
     });
     expect(res.status).toBe(200);
     const body = await res.json();
@@ -347,7 +387,13 @@ describe("gate.sh app", () => {
   // Check 16: GET /internal/codes?status=available → 200, filtered
   it("GET /internal/codes?status=available returns filtered list", async () => {
     vi.mocked(listCodes).mockReturnValue([
-      { code: "PRIM-abc12345", created_at: "2026-01-01T00:00:00.000Z", label: null, wallet: null, redeemed_at: null },
+      {
+        code: "PRIM-abc12345",
+        created_at: "2026-01-01T00:00:00.000Z",
+        label: null,
+        wallet: null,
+        redeemed_at: null,
+      },
     ]);
 
     const res = await app.request("/internal/codes?status=available", {

@@ -18,9 +18,7 @@
   "exports": {
     ".": "./dist/index.js"
   },
-  "files": [
-    "dist"
-  ],
+  "files": ["dist"],
   "scripts": {
     "build": "bun build src/index.ts --bundle --target=node --outdir=dist --external @modelcontextprotocol/sdk --external viem --external @x402/evm --external @x402/core --external @x402/hono",
     "dev": "bun run src/index.ts",

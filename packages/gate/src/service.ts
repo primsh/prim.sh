@@ -92,9 +92,7 @@ function toCodeDetail(row: CodeRow): CodeDetail {
 }
 
 /** Create codes — either generate random ones, accept specific ones, or both. */
-export function createCodes(
-  req: CreateCodesRequest,
-): ServiceResult<CreateCodesResponse> {
+export function createCodes(req: CreateCodesRequest): ServiceResult<CreateCodesResponse> {
   if (!req.count && (!req.codes || req.codes.length === 0)) {
     return {
       ok: false,
@@ -127,9 +125,7 @@ export function createCodes(
 }
 
 /** List codes, optionally filtered by status. */
-export function getCodes(
-  status?: string,
-): ServiceResult<ListCodesResponse> {
+export function getCodes(status?: string): ServiceResult<ListCodesResponse> {
   if (status && status !== "available" && status !== "redeemed") {
     return {
       ok: false,
@@ -145,15 +141,18 @@ export function getCodes(
 }
 
 /** Revoke (delete) an available code. */
-export function deleteCode(
-  code: string,
-): ServiceResult<{ status: "revoked" }> {
+export function deleteCode(code: string): ServiceResult<{ status: "revoked" }> {
   const result = revokeCode(code);
   if (!result.ok) {
     if (result.reason === "not_found") {
       return { ok: false, status: 404, code: "not_found", message: "Code not found" };
     }
-    return { ok: false, status: 409, code: "code_redeemed", message: "Cannot revoke a redeemed code" };
+    return {
+      ok: false,
+      status: 409,
+      code: "code_redeemed",
+      message: "Cannot revoke a redeemed code",
+    };
   }
   return { ok: true, data: { status: "revoked" } };
 }

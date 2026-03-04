@@ -192,7 +192,11 @@ app.use(
 
 // POST /v1/wallets — Register wallet via EIP-191 signature (FREE)
 app.post("/v1/wallets", async (c) => {
-  const bodyOrRes = await parseJsonBody<Partial<RegisterWalletRequest>>(c, logger, "POST /v1/wallets");
+  const bodyOrRes = await parseJsonBody<Partial<RegisterWalletRequest>>(
+    c,
+    logger,
+    "POST /v1/wallets",
+  );
   if (bodyOrRes instanceof Response) return bodyOrRes;
   const body = bodyOrRes;
 
@@ -287,7 +291,11 @@ app.post("/v1/wallets/:address/fund-request", async (c) => {
   if (callerOrRes instanceof Response) return callerOrRes;
   const caller = callerOrRes;
 
-  const bodyOrRes = await parseJsonBody<Partial<CreateFundRequestRequest>>(c, logger, "POST /v1/wallets/:address/fund-request");
+  const bodyOrRes = await parseJsonBody<Partial<CreateFundRequestRequest>>(
+    c,
+    logger,
+    "POST /v1/wallets/:address/fund-request",
+  );
   if (bodyOrRes instanceof Response) return bodyOrRes;
   const body = bodyOrRes;
 
@@ -390,7 +398,11 @@ app.put("/v1/wallets/:address/policy", async (c) => {
   if (callerOrRes instanceof Response) return callerOrRes;
   const caller = callerOrRes;
 
-  const bodyOrRes = await parseJsonBody<Partial<PolicyUpdateRequest>>(c, logger, "PUT /v1/wallets/:address/policy");
+  const bodyOrRes = await parseJsonBody<Partial<PolicyUpdateRequest>>(
+    c,
+    logger,
+    "PUT /v1/wallets/:address/policy",
+  );
   if (bodyOrRes instanceof Response) return bodyOrRes;
   const body = bodyOrRes;
 
@@ -474,7 +486,11 @@ app.post("/v1/wallets/:address/resume", async (c) => {
 
 // POST /v1/admin/circuit-breaker/pause
 app.post("/v1/admin/circuit-breaker/pause", async (c) => {
-  const bodyOrRes = await parseJsonBody<{ scope?: string }>(c, logger, "POST /v1/admin/circuit-breaker/pause");
+  const bodyOrRes = await parseJsonBody<{ scope?: string }>(
+    c,
+    logger,
+    "POST /v1/admin/circuit-breaker/pause",
+  );
   if (bodyOrRes instanceof Response) return bodyOrRes;
   const { scope } = bodyOrRes;
 
@@ -493,7 +509,11 @@ app.post("/v1/admin/circuit-breaker/pause", async (c) => {
 
 // POST /v1/admin/circuit-breaker/resume
 app.post("/v1/admin/circuit-breaker/resume", async (c) => {
-  const bodyOrRes = await parseJsonBody<{ scope?: string }>(c, logger, "POST /v1/admin/circuit-breaker/resume");
+  const bodyOrRes = await parseJsonBody<{ scope?: string }>(
+    c,
+    logger,
+    "POST /v1/admin/circuit-breaker/resume",
+  );
   if (bodyOrRes instanceof Response) return bodyOrRes;
   const { scope } = bodyOrRes;
 
@@ -563,7 +583,11 @@ app.post("/internal/allowlist/add", async (c) => {
   const denied = internalAuth(c);
   if (denied) return denied;
 
-  const bodyOrRes = await parseJsonBody<{ address?: string; added_by?: string; note?: string }>(c, logger, "POST /internal/allowlist/add");
+  const bodyOrRes = await parseJsonBody<{ address?: string; added_by?: string; note?: string }>(
+    c,
+    logger,
+    "POST /internal/allowlist/add",
+  );
   if (bodyOrRes instanceof Response) return bodyOrRes;
   const body = bodyOrRes;
 

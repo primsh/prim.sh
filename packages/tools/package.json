@@ -11,7 +11,5 @@
     "./manifest.json": "./manifest.json",
     "./*.json": "./*.json"
   },
-  "files": [
-    "*.json"
-  ]
+  "files": ["*.json"]
 }

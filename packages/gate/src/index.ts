@@ -28,7 +28,10 @@ const INTERNAL_KEY = process.env.PRIM_INTERNAL_KEY;
 // Seed invite codes from env on startup
 const rawCodes = process.env.GATE_CODES ?? "";
 if (rawCodes) {
-  const codes = rawCodes.split(",").map((c) => c.trim()).filter(Boolean);
+  const codes = rawCodes
+    .split(",")
+    .map((c) => c.trim())
+    .filter(Boolean);
   const seeded = seedCodes(codes);
   if (seeded > 0) {
     const log = createLogger("gate.sh");
@@ -104,9 +107,7 @@ app.post("/v1/redeem", async (c) => {
 
 // ─── Internal: allowlist management ────────────────────────────────────────
 
-function internalAuth(
-  c: Parameters<import("hono").MiddlewareHandler>[0],
-): Response | null {
+function internalAuth(c: Parameters<import("hono").MiddlewareHandler>[0]): Response | null {
   if (!INTERNAL_KEY) {
     return c.json(
       { error: { code: "not_configured", message: "Internal API not configured" } },
@@ -125,7 +126,11 @@ app.post("/internal/allowlist/add", async (c) => {
   const denied = internalAuth(c);
   if (denied) return denied;
 
-  const bodyOrRes = await parseJsonBody<{ address?: string; added_by?: string; note?: string }>(c, logger, "POST /internal/allowlist/add");
+  const bodyOrRes = await parseJsonBody<{ address?: string; added_by?: string; note?: string }>(
+    c,
+    logger,
+    "POST /internal/allowlist/add",
+  );
   if (bodyOrRes instanceof Response) return bodyOrRes;
   const body = bodyOrRes;
 
@@ -174,7 +179,11 @@ app.post("/internal/codes", async (c) => {
   const denied = internalAuth(c);
   if (denied) return denied;
 
-  const bodyOrRes = await parseJsonBody<Partial<CreateCodesRequest>>(c, logger, "POST /internal/codes");
+  const bodyOrRes = await parseJsonBody<Partial<CreateCodesRequest>>(
+    c,
+    logger,
+    "POST /internal/codes",
+  );
   if (bodyOrRes instanceof Response) return bodyOrRes;
   const body = bodyOrRes;
 

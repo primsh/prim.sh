@@ -12,58 +12,59 @@ export const faucetTools: Tool[] = [
     name: "faucet_drip_usdc",
     description: "Dispense 10 test USDC on Base Sepolia. Rate limit: once per 2 hours per address.",
     inputSchema: {
-        type: "object",
-        properties: {
-          "address": {
-            type: "string",
-            description: "EVM wallet address to drip to (0x... 42 chars).",
-          },
+      type: "object",
+      properties: {
+        address: {
+          type: "string",
+          description: "EVM wallet address to drip to (0x... 42 chars).",
         },
-        required: ["address"],
       },
+      required: ["address"],
+    },
   },
   {
     name: "faucet_drip_eth",
     description: "Dispense 0.01 test ETH on Base Sepolia. Rate limit: once per 1 hour per address.",
     inputSchema: {
-        type: "object",
-        properties: {
-          "address": {
-            type: "string",
-            description: "EVM wallet address to drip to (0x... 42 chars).",
-          },
+      type: "object",
+      properties: {
+        address: {
+          type: "string",
+          description: "EVM wallet address to drip to (0x... 42 chars).",
         },
-        required: ["address"],
       },
+      required: ["address"],
+    },
   },
   {
     name: "faucet_get_faucet_status",
     description: "Check rate limit status for a wallet address across both faucets.",
     inputSchema: {
-        type: "object",
-        properties: {
-          "address": {
-            type: "string",
-            description: "EVM wallet address (required)",
-          },
+      type: "object",
+      properties: {
+        address: {
+          type: "string",
+          description: "EVM wallet address (required)",
         },
       },
+    },
   },
   {
     name: "faucet_get_treasury_status",
     description: "Check treasury wallet ETH balance and refill status.",
     inputSchema: {
-        type: "object",
-        properties: {},
-      },
+      type: "object",
+      properties: {},
+    },
   },
   {
     name: "faucet_refill_treasury",
-    description: "Batch-claim testnet ETH from Coinbase CDP faucet into treasury. Rate limited to once per 10 minutes.",
+    description:
+      "Batch-claim testnet ETH from Coinbase CDP faucet into treasury. Rate limited to once per 10 minutes.",
     inputSchema: {
-        type: "object",
-        properties: {},
-      },
+      type: "object",
+      properties: {},
+    },
   },
 ];
 // END:GENERATED:TOOLS

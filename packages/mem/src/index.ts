@@ -141,7 +141,11 @@ app.post("/v1/collections/:id/upsert", async (c) => {
   if (callerOrRes instanceof Response) return callerOrRes;
   const caller = callerOrRes;
 
-  const bodyOrRes = await parseJsonBody<UpsertRequest>(c, logger, "POST /v1/collections/:id/upsert");
+  const bodyOrRes = await parseJsonBody<UpsertRequest>(
+    c,
+    logger,
+    "POST /v1/collections/:id/upsert",
+  );
   if (bodyOrRes instanceof Response) return bodyOrRes;
   const body = bodyOrRes;
 
@@ -183,7 +187,11 @@ app.put("/v1/cache/:namespace/:key", async (c) => {
   if (callerOrRes instanceof Response) return callerOrRes;
   const caller = callerOrRes;
 
-  const bodyOrRes = await parseJsonBody<SetCacheRequest>(c, logger, "PUT /v1/cache/:namespace/:key");
+  const bodyOrRes = await parseJsonBody<SetCacheRequest>(
+    c,
+    logger,
+    "PUT /v1/cache/:namespace/:key",
+  );
   if (bodyOrRes instanceof Response) return bodyOrRes;
   const body = bodyOrRes;
 

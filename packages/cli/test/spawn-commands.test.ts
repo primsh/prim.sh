@@ -261,12 +261,7 @@ describe("create", () => {
 
   it("--ssh-keys=SINGLE sends single-element array (not char-by-char)", async () => {
     mockFetch.mockResolvedValue(okCreateServer());
-    await runSpawnCommand("create", [
-      "spawn",
-      "create",
-      "--name=my-server",
-      "--ssh-keys=sk_abc",
-    ]);
+    await runSpawnCommand("create", ["spawn", "create", "--name=my-server", "--ssh-keys=sk_abc"]);
     expect(mockFetch).toHaveBeenCalledWith(
       expect.anything(),
       expect.objectContaining({

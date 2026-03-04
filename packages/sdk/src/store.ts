@@ -269,7 +269,10 @@ export function createStoreClient(
       });
       return unwrap<ReconcileResponse>(res);
     },
-    async presignObject(params: PresignObjectParams, req: PresignRequest): Promise<PresignResponse> {
+    async presignObject(
+      params: PresignObjectParams,
+      req: PresignRequest,
+    ): Promise<PresignResponse> {
       const url = `${baseUrl}/v1/buckets/${encodeURIComponent(params.id)}/presign`;
       const res = await primFetch(url, {
         method: "POST",

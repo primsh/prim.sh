@@ -12,151 +12,158 @@ export const tokenTools: Tool[] = [
     name: "token_list_tokens",
     description: "List tokens deployed by the authenticated wallet | Price: $0.001",
     inputSchema: {
-        type: "object",
-        properties: {},
-      },
+      type: "object",
+      properties: {},
+    },
   },
   {
     name: "token_deploy_token",
-    description: "Deploy a new ERC-20 token. Returns immediately with deployStatus: 'pending'. | Price: $0.10",
+    description:
+      "Deploy a new ERC-20 token. Returns immediately with deployStatus: 'pending'. | Price: $0.10",
     inputSchema: {
-        type: "object",
-        properties: {
-          "name": {
-            type: "string",
-            description: "Token name (e.g. \"AgentCoin\").",
-          },
-          "symbol": {
-            type: "string",
-            description: "Token symbol (e.g. \"AGT\").",
-          },
-          "decimals": {
-            type: "number",
-            description: "Decimal places. Default 18.",
-          },
-          "initialSupply": {
-            type: "string",
-            description: "Initial supply as a raw integer string (e.g. \"1000000000000000000\" = 1 token at 18 decimals).",
-          },
-          "mintable": {
-            type: "boolean",
-            description: "Whether additional tokens can be minted after deployment. Default false.",
-          },
-          "maxSupply": {
-            type: ["string","null"],
-            description: "Maximum mintable supply as a raw integer string. Null = unlimited. Only applies if mintable is true.",
-          },
+      type: "object",
+      properties: {
+        name: {
+          type: "string",
+          description: 'Token name (e.g. "AgentCoin").',
         },
-        required: ["name","symbol","initialSupply"],
+        symbol: {
+          type: "string",
+          description: 'Token symbol (e.g. "AGT").',
+        },
+        decimals: {
+          type: "number",
+          description: "Decimal places. Default 18.",
+        },
+        initialSupply: {
+          type: "string",
+          description:
+            'Initial supply as a raw integer string (e.g. "1000000000000000000" = 1 token at 18 decimals).',
+        },
+        mintable: {
+          type: "boolean",
+          description: "Whether additional tokens can be minted after deployment. Default false.",
+        },
+        maxSupply: {
+          type: ["string", "null"],
+          description:
+            "Maximum mintable supply as a raw integer string. Null = unlimited. Only applies if mintable is true.",
+        },
       },
+      required: ["name", "symbol", "initialSupply"],
+    },
   },
   {
     name: "token_get_token",
     description: "Get token details: deployStatus, contractAddress, supply, pool | Price: $0.001",
     inputSchema: {
-        type: "object",
-        properties: {
-          "id": {
-            type: "string",
-            description: "id parameter",
-          },
+      type: "object",
+      properties: {
+        id: {
+          type: "string",
+          description: "id parameter",
         },
-        required: ["id"],
       },
+      required: ["id"],
+    },
   },
   {
     name: "token_mint_tokens",
-    description: "Mint additional tokens to an address. Requires mintable=true at deploy time. | Price: $0.01",
+    description:
+      "Mint additional tokens to an address. Requires mintable=true at deploy time. | Price: $0.01",
     inputSchema: {
-        type: "object",
-        properties: {
-          "id": {
-            type: "string",
-            description: "id parameter",
-          },
-          "to": {
-            type: "string",
-            description: "Recipient address to mint tokens to.",
-          },
-          "amount": {
-            type: "string",
-            description: "Amount to mint as a raw integer string.",
-          },
+      type: "object",
+      properties: {
+        id: {
+          type: "string",
+          description: "id parameter",
         },
-        required: ["id","to","amount"],
+        to: {
+          type: "string",
+          description: "Recipient address to mint tokens to.",
+        },
+        amount: {
+          type: "string",
+          description: "Amount to mint as a raw integer string.",
+        },
       },
+      required: ["id", "to", "amount"],
+    },
   },
   {
     name: "token_get_token_supply",
     description: "Live on-chain total supply from contract | Price: $0.001",
     inputSchema: {
-        type: "object",
-        properties: {
-          "id": {
-            type: "string",
-            description: "id parameter",
-          },
+      type: "object",
+      properties: {
+        id: {
+          type: "string",
+          description: "id parameter",
         },
-        required: ["id"],
       },
+      required: ["id"],
+    },
   },
   {
     name: "token_get_pool",
-    description: "Get pool details: poolAddress, token0, token1, fee, sqrtPriceX96, tick | Price: $0.001",
+    description:
+      "Get pool details: poolAddress, token0, token1, fee, sqrtPriceX96, tick | Price: $0.001",
     inputSchema: {
-        type: "object",
-        properties: {
-          "id": {
-            type: "string",
-            description: "id parameter",
-          },
+      type: "object",
+      properties: {
+        id: {
+          type: "string",
+          description: "id parameter",
         },
-        required: ["id"],
       },
+      required: ["id"],
+    },
   },
   {
     name: "token_create_pool",
-    description: "Create and initialize a Uniswap V3 pool paired with USDC. One pool per token. | Price: $0.05",
+    description:
+      "Create and initialize a Uniswap V3 pool paired with USDC. One pool per token. | Price: $0.05",
     inputSchema: {
-        type: "object",
-        properties: {
-          "id": {
-            type: "string",
-            description: "id parameter",
-          },
-          "pricePerToken": {
-            type: "string",
-            description: "Initial price per token in USDC as a decimal string (e.g. \"0.001\").",
-          },
-          "feeTier": {
-            type: "number",
-            description: "Uniswap V3 fee tier. 500 | 3000 | 10000, default 3000.",
-          },
+      type: "object",
+      properties: {
+        id: {
+          type: "string",
+          description: "id parameter",
         },
-        required: ["id","pricePerToken"],
+        pricePerToken: {
+          type: "string",
+          description: 'Initial price per token in USDC as a decimal string (e.g. "0.001").',
+        },
+        feeTier: {
+          type: "number",
+          description: "Uniswap V3 fee tier. 500 | 3000 | 10000, default 3000.",
+        },
       },
+      required: ["id", "pricePerToken"],
+    },
   },
   {
     name: "token_get_liquidity_params",
-    description: "Get calldata for adding liquidity. Returns approvals[] and position manager params. | Price: $0.001",
+    description:
+      "Get calldata for adding liquidity. Returns approvals[] and position manager params. | Price: $0.001",
     inputSchema: {
-        type: "object",
-        properties: {
-          "id": {
-            type: "string",
-            description: "id parameter",
-          },
-          "tokenAmount": {
-            type: "string",
-            description: "Raw token amount to add as liquidity",
-          },
-          "usdcAmount": {
-            type: "string",
-            description: "Raw USDC amount to pair (6 decimals)",
-          },
+      type: "object",
+      properties: {
+        id: {
+          type: "string",
+          description: "id parameter",
         },
-        required: ["id"],
+        tokenAmount: {
+          type: "string",
+          description: "Raw token amount to add as liquidity",
+        },
+        usdcAmount: {
+          type: "string",
+          description: "Raw USDC amount to pair (6 decimals)",
+        },
       },
+      required: ["id"],
+    },
   },
 ];
 // END:GENERATED:TOOLS
@@ -235,8 +242,10 @@ export async function handleTokenTool(
 
       case "token_get_liquidity_params": {
         const url = new URL(`${baseUrl}/v1/tokens/${args.id}/pool/liquidity-params`);
-        if (args.tokenAmount !== undefined) url.searchParams.set("tokenAmount", String(args.tokenAmount));
-        if (args.usdcAmount !== undefined) url.searchParams.set("usdcAmount", String(args.usdcAmount));
+        if (args.tokenAmount !== undefined)
+          url.searchParams.set("tokenAmount", String(args.tokenAmount));
+        if (args.usdcAmount !== undefined)
+          url.searchParams.set("usdcAmount", String(args.usdcAmount));
         const res = await primFetch(url.toString());
         const data = await res.json();
         if (!res.ok) return errorResult(data);

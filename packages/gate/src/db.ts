@@ -16,10 +16,7 @@ CREATE TABLE IF NOT EXISTS invite_codes (
 let _db: Database | null = null;
 
 function getDbPath(): string {
-  return (
-    process.env.GATE_DB_PATH ??
-    join(process.env.PRIM_DATA_DIR ?? "/var/lib/prim", "gate.db")
-  );
+  return process.env.GATE_DB_PATH ?? join(process.env.PRIM_DATA_DIR ?? "/var/lib/prim", "gate.db");
 }
 
 function getDb(): Database {
@@ -56,9 +53,7 @@ export function seedCodes(codes: string[]): number {
   return seeded;
 }
 
-export type ValidateResult =
-  | { ok: true }
-  | { ok: false; reason: "invalid_code" | "code_redeemed" };
+export type ValidateResult = { ok: true } | { ok: false; reason: "invalid_code" | "code_redeemed" };
 
 /** Validate and burn an invite code atomically. */
 export function validateAndBurn(code: string, wallet: string): ValidateResult {
@@ -112,9 +107,7 @@ export interface CodeRow {
 /** Insert codes into the DB. Returns count actually inserted (skips dupes). */
 export function insertCodes(codes: string[], label?: string): number {
   const db = getDb();
-  const stmt = db.prepare(
-    "INSERT OR IGNORE INTO invite_codes (code, label) VALUES (?, ?)",
-  );
+  const stmt = db.prepare("INSERT OR IGNORE INTO invite_codes (code, label) VALUES (?, ?)");
   let inserted = 0;
   for (const code of codes) {
     const trimmed = code.trim();
@@ -131,12 +124,16 @@ export function listCodes(status?: "available" | "redeemed"): CodeRow[] {
   const db = getDb();
   if (status === "available") {
     return db
-      .prepare("SELECT code, created_at, label, wallet, redeemed_at FROM invite_codes WHERE redeemed_at IS NULL")
+      .prepare(
+        "SELECT code, created_at, label, wallet, redeemed_at FROM invite_codes WHERE redeemed_at IS NULL",
+      )
       .all() as unknown as CodeRow[];
   }
   if (status === "redeemed") {
     return db
-      .prepare("SELECT code, created_at, label, wallet, redeemed_at FROM invite_codes WHERE redeemed_at IS NOT NULL")
+      .prepare(
+        "SELECT code, created_at, label, wallet, redeemed_at FROM invite_codes WHERE redeemed_at IS NOT NULL",
+      )
       .all() as unknown as CodeRow[];
   }
   return db
@@ -144,16 +141,15 @@ export function listCodes(status?: "available" | "redeemed"): CodeRow[] {
     .all() as unknown as CodeRow[];
 }
 
-export type RevokeResult =
-  | { ok: true }
-  | { ok: false; reason: "not_found" | "already_redeemed" };
+export type RevokeResult = { ok: true } | { ok: false; reason: "not_found" | "already_redeemed" };
 
 /** Revoke (delete) an available code. Returns error if missing or already redeemed. */
 export function revokeCode(code: string): RevokeResult {
   const db = getDb();
-  const row = db
-    .prepare("SELECT code, redeemed_at FROM invite_codes WHERE code = ?")
-    .get(code) as { code: string; redeemed_at: string | null } | null;
+  const row = db.prepare("SELECT code, redeemed_at FROM invite_codes WHERE code = ?").get(code) as {
+    code: string;
+    redeemed_at: string | null;
+  } | null;
 
   if (!row) {
     return { ok: false, reason: "not_found" };

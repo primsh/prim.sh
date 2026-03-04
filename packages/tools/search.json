@@ -18,10 +18,7 @@
           "search_depth": {
             "type": "string",
             "description": "Search depth. \"basic\" | \"advanced\", default \"basic\".",
-            "enum": [
-              "basic",
-              "advanced"
-            ]
+            "enum": ["basic", "advanced"]
           },
           "country": {
             "type": "string",
@@ -30,12 +27,7 @@
           "time_range": {
             "type": "string",
             "description": "Restrict results by recency. \"day\" | \"week\" | \"month\" | \"year\".",
-            "enum": [
-              "day",
-              "week",
-              "month",
-              "year"
-            ]
+            "enum": ["day", "week", "month", "year"]
           },
           "include_answer": {
             "type": "boolean",
@@ -56,9 +48,7 @@
             }
           }
         },
-        "required": [
-          "query"
-        ]
+        "required": ["query"]
       }
     }
   },
@@ -81,10 +71,7 @@
           "search_depth": {
             "type": "string",
             "description": "Search depth. \"basic\" | \"advanced\", default \"basic\".",
-            "enum": [
-              "basic",
-              "advanced"
-            ]
+            "enum": ["basic", "advanced"]
           },
           "country": {
             "type": "string",
@@ -93,12 +80,7 @@
           "time_range": {
             "type": "string",
             "description": "Restrict results by recency. \"day\" | \"week\" | \"month\" | \"year\".",
-            "enum": [
-              "day",
-              "week",
-              "month",
-              "year"
-            ]
+            "enum": ["day", "week", "month", "year"]
           },
           "include_answer": {
             "type": "boolean",
@@ -119,9 +101,7 @@
             }
           }
         },
-        "required": [
-          "query"
-        ]
+        "required": ["query"]
       }
     }
   },
@@ -143,15 +123,10 @@
           "format": {
             "type": "string",
             "description": "Output format. \"markdown\" | \"text\", default \"markdown\".",
-            "enum": [
-              "markdown",
-              "text"
-            ]
+            "enum": ["markdown", "text"]
           }
         },
-        "required": [
-          "urls"
-        ]
+        "required": ["urls"]
       }
     }
   }

@@ -285,7 +285,10 @@ export function createWalletClient(
       });
       return unwrap<DeactivateWalletResponse>(res);
     },
-    async createFundRequest(params: CreateFundRequestParams, req: CreateFundRequestRequest): Promise<FundRequestResponse> {
+    async createFundRequest(
+      params: CreateFundRequestParams,
+      req: CreateFundRequestRequest,
+    ): Promise<FundRequestResponse> {
       const url = `${baseUrl}/v1/wallets/${encodeURIComponent(params.address)}/fund-request`;
       const res = await primFetch(url, {
         method: "POST",
@@ -303,14 +306,19 @@ export function createWalletClient(
       const res = await primFetch(url);
       return unwrap<ListFundRequestsResponse>(res);
     },
-    async approveFundRequest(params: ApproveFundRequestParams): Promise<ApproveFundRequestResponse> {
+    async approveFundRequest(
+      params: ApproveFundRequestParams,
+    ): Promise<ApproveFundRequestResponse> {
       const url = `${baseUrl}/v1/fund-requests/${encodeURIComponent(params.id)}/approve`;
       const res = await primFetch(url, {
         method: "POST",
       });
       return unwrap<ApproveFundRequestResponse>(res);
     },
-    async denyFundRequest(params: DenyFundRequestParams, req: DenyFundRequestRequest): Promise<DenyFundRequestResponse> {
+    async denyFundRequest(
+      params: DenyFundRequestParams,
+      req: DenyFundRequestRequest,
+    ): Promise<DenyFundRequestResponse> {
       const url = `${baseUrl}/v1/fund-requests/${encodeURIComponent(params.id)}/deny`;
       const res = await primFetch(url, {
         method: "POST",
@@ -324,7 +332,10 @@ export function createWalletClient(
       const res = await primFetch(url);
       return unwrap<PolicyResponse>(res);
     },
-    async updatePolicy(params: UpdatePolicyParams, req: PolicyUpdateRequest): Promise<PolicyResponse> {
+    async updatePolicy(
+      params: UpdatePolicyParams,
+      req: PolicyUpdateRequest,
+    ): Promise<PolicyResponse> {
       const url = `${baseUrl}/v1/wallets/${encodeURIComponent(params.address)}/policy`;
       const res = await primFetch(url, {
         method: "PUT",

@@ -28,11 +28,7 @@
             "description": "Human-readable label for this wallet."
           }
         },
-        "required": [
-          "address",
-          "signature",
-          "timestamp"
-        ]
+        "required": ["address", "signature", "timestamp"]
       }
     }
   },
@@ -69,9 +65,7 @@
             "description": "address parameter"
           }
         },
-        "required": [
-          "address"
-        ]
+        "required": ["address"]
       }
     }
   },
@@ -88,9 +82,7 @@
             "description": "address parameter"
           }
         },
-        "required": [
-          "address"
-        ]
+        "required": ["address"]
       }
     }
   },
@@ -115,11 +107,7 @@
             "description": "Human-readable reason for the funding request."
           }
         },
-        "required": [
-          "address",
-          "amount",
-          "reason"
-        ]
+        "required": ["address", "amount", "reason"]
       }
     }
   },
@@ -144,9 +132,7 @@
             "description": "Cursor from previous response"
           }
         },
-        "required": [
-          "address"
-        ]
+        "required": ["address"]
       }
     }
   },
@@ -163,9 +149,7 @@
             "description": "id parameter"
           }
         },
-        "required": [
-          "id"
-        ]
+        "required": ["id"]
       }
     }
   },
@@ -186,9 +170,7 @@
             "description": "Reason for denial."
           }
         },
-        "required": [
-          "id"
-        ]
+        "required": ["id"]
       }
     }
   },
@@ -205,9 +187,7 @@
             "description": "address parameter"
           }
         },
-        "required": [
-          "address"
-        ]
+        "required": ["address"]
       }
     }
   },
@@ -236,9 +216,7 @@
             "description": "Allowed primitive hostnames. Pass null to allow all."
           }
         },
-        "required": [
-          "address"
-        ]
+        "required": ["address"]
       }
     }
   },
@@ -259,9 +237,7 @@
             "description": "Scope to pause. \"all\" | \"send\" | \"swap\". Default \"all\"."
           }
         },
-        "required": [
-          "address"
-        ]
+        "required": ["address"]
       }
     }
   },
@@ -282,9 +258,7 @@
             "description": "Scope to resume. \"all\" | \"send\" | \"swap\". Default \"all\"."
           }
         },
-        "required": [
-          "address"
-        ]
+        "required": ["address"]
       }
     }
   }

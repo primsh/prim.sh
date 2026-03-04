@@ -178,7 +178,11 @@ export async function createBucket(
   }
 }
 
-export function listBuckets(callerWallet: string, limit: number, page: number): PaginatedList<BucketResponse> {
+export function listBuckets(
+  callerWallet: string,
+  limit: number,
+  page: number,
+): PaginatedList<BucketResponse> {
   const offset = (page - 1) * limit;
   const rows = getBucketsByOwner(callerWallet, limit, offset);
   const total = countBucketsByOwner(callerWallet);

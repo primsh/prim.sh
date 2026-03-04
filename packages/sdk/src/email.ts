@@ -346,7 +346,10 @@ export function createEmailClient(
       });
       return unwrap<DeleteMailboxResponse>(res);
     },
-    async renewMailbox(params: RenewMailboxParams, req: RenewMailboxRequest): Promise<MailboxResponse> {
+    async renewMailbox(
+      params: RenewMailboxParams,
+      req: RenewMailboxRequest,
+    ): Promise<MailboxResponse> {
       const url = `${baseUrl}/v1/mailboxes/${encodeURIComponent(params.id)}/renew`;
       const res = await primFetch(url, {
         method: "POST",
@@ -369,7 +372,10 @@ export function createEmailClient(
       const res = await primFetch(url);
       return unwrap<EmailDetail>(res);
     },
-    async sendMessage(params: SendMessageParams, req: SendMessageRequest): Promise<SendMessageResponse> {
+    async sendMessage(
+      params: SendMessageParams,
+      req: SendMessageRequest,
+    ): Promise<SendMessageResponse> {
       const url = `${baseUrl}/v1/mailboxes/${encodeURIComponent(params.id)}/send`;
       const res = await primFetch(url, {
         method: "POST",
@@ -378,7 +384,10 @@ export function createEmailClient(
       });
       return unwrap<SendMessageResponse>(res);
     },
-    async registerWebhook(params: RegisterWebhookParams, req: RegisterWebhookRequest): Promise<WebhookResponse> {
+    async registerWebhook(
+      params: RegisterWebhookParams,
+      req: RegisterWebhookRequest,
+    ): Promise<WebhookResponse> {
       const url = `${baseUrl}/v1/mailboxes/${encodeURIComponent(params.id)}/webhooks`;
       const res = await primFetch(url, {
         method: "POST",

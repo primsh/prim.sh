@@ -452,7 +452,10 @@ export function createDomainClient(
       });
       return unwrap<MailSetupResponse>(res);
     },
-    async batchRecords(params: BatchRecordsParams, req: BatchRecordsRequest): Promise<BatchRecordsResponse> {
+    async batchRecords(
+      params: BatchRecordsParams,
+      req: BatchRecordsRequest,
+    ): Promise<BatchRecordsResponse> {
       const url = `${baseUrl}/v1/zones/${encodeURIComponent(params.zone_id)}/records/batch`;
       const res = await primFetch(url, {
         method: "POST",
@@ -461,7 +464,10 @@ export function createDomainClient(
       });
       return unwrap<BatchRecordsResponse>(res);
     },
-    async createRecord(params: CreateRecordParams, req: CreateRecordRequest): Promise<RecordResponse> {
+    async createRecord(
+      params: CreateRecordParams,
+      req: CreateRecordRequest,
+    ): Promise<RecordResponse> {
       const url = `${baseUrl}/v1/zones/${encodeURIComponent(params.zone_id)}/records`;
       const res = await primFetch(url, {
         method: "POST",
@@ -480,7 +486,10 @@ export function createDomainClient(
       const res = await primFetch(url);
       return unwrap<RecordResponse>(res);
     },
-    async updateRecord(params: UpdateRecordParams, req: UpdateRecordRequest): Promise<RecordResponse> {
+    async updateRecord(
+      params: UpdateRecordParams,
+      req: UpdateRecordRequest,
+    ): Promise<RecordResponse> {
       const url = `${baseUrl}/v1/zones/${encodeURIComponent(params.zone_id)}/records/${encodeURIComponent(params.id)}`;
       const res = await primFetch(url, {
         method: "PUT",

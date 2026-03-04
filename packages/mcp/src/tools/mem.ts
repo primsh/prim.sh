@@ -10,195 +10,199 @@ import type { CallToolResult } from "@modelcontextprotocol/sdk/types.js";
 export const memTools: Tool[] = [
   {
     name: "mem_list_collections",
-    description: "List collections owned by the calling wallet (paginated). document_count is null — use GET :id. | Price: $0.001",
+    description:
+      "List collections owned by the calling wallet (paginated). document_count is null — use GET :id. | Price: $0.001",
     inputSchema: {
-        type: "object",
-        properties: {
-          "limit": {
-            type: "integer",
-            description: "1-100, default 20",
-          },
-          "after": {
-            type: "string",
-            description: "Cursor from previous response",
-          },
+      type: "object",
+      properties: {
+        limit: {
+          type: "integer",
+          description: "1-100, default 20",
+        },
+        after: {
+          type: "string",
+          description: "Cursor from previous response",
         },
       },
+    },
   },
   {
     name: "mem_create_collection",
     description: "Create a vector collection | Price: $0.001",
     inputSchema: {
-        type: "object",
-        properties: {
-          "name": {
-            type: "string",
-            description: "Collection name. Unique per wallet.",
-          },
-          "distance": {
-            type: "string",
-            enum: ["Cosine","Euclid","Dot"],
-            description: "Distance metric for similarity search. Default \"Cosine\".",
-          },
-          "dimension": {
-            type: "number",
-            description: "Vector dimension. Must match the embedding model used. Default 1536.",
-          },
+      type: "object",
+      properties: {
+        name: {
+          type: "string",
+          description: "Collection name. Unique per wallet.",
         },
-        required: ["name"],
+        distance: {
+          type: "string",
+          enum: ["Cosine", "Euclid", "Dot"],
+          description: 'Distance metric for similarity search. Default "Cosine".',
+        },
+        dimension: {
+          type: "number",
+          description: "Vector dimension. Must match the embedding model used. Default 1536.",
+        },
       },
+      required: ["name"],
+    },
   },
   {
     name: "mem_get_collection",
     description: "Get collection with live document_count from Qdrant | Price: $0.001",
     inputSchema: {
-        type: "object",
-        properties: {
-          "id": {
-            type: "string",
-            description: "id parameter",
-          },
+      type: "object",
+      properties: {
+        id: {
+          type: "string",
+          description: "id parameter",
         },
-        required: ["id"],
       },
+      required: ["id"],
+    },
   },
   {
     name: "mem_delete_collection",
     description: "Delete collection and all documents. Irreversible. | Price: $0.001",
     inputSchema: {
-        type: "object",
-        properties: {
-          "id": {
-            type: "string",
-            description: "id parameter",
-          },
+      type: "object",
+      properties: {
+        id: {
+          type: "string",
+          description: "id parameter",
         },
-        required: ["id"],
       },
+      required: ["id"],
+    },
   },
   {
     name: "mem_upsert_documents",
-    description: "Embed and store documents. Each document: {id?, text, metadata?}. Existing IDs are replaced. | Price: $0.0001",
+    description:
+      "Embed and store documents. Each document: {id?, text, metadata?}. Existing IDs are replaced. | Price: $0.0001",
     inputSchema: {
-        type: "object",
-        properties: {
-          "id": {
-            type: "string",
-            description: "id parameter",
-          },
-          "documents": {
-            type: "array",
-            items: {
-              type: "object",
-              required: ["text"],
-              properties: {
-                "id": {
-                  type: "string",
-                  description: "Must be UUID v4 if provided; omit to auto-generate.",
-                },
-                "text": {
-                  type: "string",
-                  description: "Document text to embed and store.",
-                },
-                "metadata": {
-                  type: "string",
-                  description: "Arbitrary JSON metadata to store alongside the vector.",
-                },
+      type: "object",
+      properties: {
+        id: {
+          type: "string",
+          description: "id parameter",
+        },
+        documents: {
+          type: "array",
+          items: {
+            type: "object",
+            required: ["text"],
+            properties: {
+              id: {
+                type: "string",
+                description: "Must be UUID v4 if provided; omit to auto-generate.",
+              },
+              text: {
+                type: "string",
+                description: "Document text to embed and store.",
+              },
+              metadata: {
+                type: "string",
+                description: "Arbitrary JSON metadata to store alongside the vector.",
               },
             },
-            description: "Documents to upsert. Existing IDs are overwritten.",
           },
+          description: "Documents to upsert. Existing IDs are overwritten.",
         },
-        required: ["id","documents"],
       },
+      required: ["id", "documents"],
+    },
   },
   {
     name: "mem_query_collection",
-    description: "Semantic search. Fields: text (required), top_k, filter (Qdrant native format). | Price: $0.0001",
+    description:
+      "Semantic search. Fields: text (required), top_k, filter (Qdrant native format). | Price: $0.0001",
     inputSchema: {
-        type: "object",
-        properties: {
-          "id": {
-            type: "string",
-            description: "id parameter",
-          },
-          "text": {
-            type: "string",
-            description: "Query text to embed and search against.",
-          },
-          "top_k": {
-            type: "number",
-            description: "Number of nearest neighbors to return. Default 10.",
-          },
-          "filter": {
-            type: "string",
-            description: "Qdrant-native filter passthrough.",
-          },
+      type: "object",
+      properties: {
+        id: {
+          type: "string",
+          description: "id parameter",
         },
-        required: ["id","text"],
+        text: {
+          type: "string",
+          description: "Query text to embed and search against.",
+        },
+        top_k: {
+          type: "number",
+          description: "Number of nearest neighbors to return. Default 10.",
+        },
+        filter: {
+          type: "string",
+          description: "Qdrant-native filter passthrough.",
+        },
       },
+      required: ["id", "text"],
+    },
   },
   {
     name: "mem_get_cache",
     description: "Retrieve a cache value. Returns 404 if missing or expired. | Price: $0.0001",
     inputSchema: {
-        type: "object",
-        properties: {
-          "namespace": {
-            type: "string",
-            description: "namespace parameter",
-          },
-          "key": {
-            type: "string",
-            description: "key parameter",
-          },
+      type: "object",
+      properties: {
+        namespace: {
+          type: "string",
+          description: "namespace parameter",
         },
-        required: ["namespace","key"],
+        key: {
+          type: "string",
+          description: "key parameter",
+        },
       },
+      required: ["namespace", "key"],
+    },
   },
   {
     name: "mem_set_cache",
-    description: "Store a value in the KV cache. Optional ttl in seconds for expiry. | Price: $0.0001",
+    description:
+      "Store a value in the KV cache. Optional ttl in seconds for expiry. | Price: $0.0001",
     inputSchema: {
-        type: "object",
-        properties: {
-          "namespace": {
-            type: "string",
-            description: "namespace parameter",
-          },
-          "key": {
-            type: "string",
-            description: "key parameter",
-          },
-          "value": {
-            type: "string",
-            description: "Value to store. Any JSON-serializable value.",
-          },
-          "ttl": {
-            type: ["number","null"],
-            description: "TTL in seconds. Omit or null for permanent.",
-          },
+      type: "object",
+      properties: {
+        namespace: {
+          type: "string",
+          description: "namespace parameter",
         },
-        required: ["namespace","key","value"],
+        key: {
+          type: "string",
+          description: "key parameter",
+        },
+        value: {
+          type: "string",
+          description: "Value to store. Any JSON-serializable value.",
+        },
+        ttl: {
+          type: ["number", "null"],
+          description: "TTL in seconds. Omit or null for permanent.",
+        },
       },
+      required: ["namespace", "key", "value"],
+    },
   },
   {
     name: "mem_delete_cache",
     description: "Delete a cache entry | Price: $0.0001",
     inputSchema: {
-        type: "object",
-        properties: {
-          "namespace": {
-            type: "string",
-            description: "namespace parameter",
-          },
-          "key": {
-            type: "string",
-            description: "key parameter",
-          },
+      type: "object",
+      properties: {
+        namespace: {
+          type: "string",
+          description: "namespace parameter",
         },
-        required: ["namespace","key"],
+        key: {
+          type: "string",
+          description: "key parameter",
+        },
       },
+      required: ["namespace", "key"],
+    },
   },
 ];
 // END:GENERATED:TOOLS
@@ -291,7 +295,9 @@ export async function handleMemTool(
       }
 
       case "mem_delete_cache": {
-        const res = await primFetch(`${baseUrl}/v1/cache/${args.namespace}/${args.key}`, { method: "DELETE" });
+        const res = await primFetch(`${baseUrl}/v1/cache/${args.namespace}/${args.key}`, {
+          method: "DELETE",
+        });
         const data = await res.json();
         if (!res.ok) return errorResult(data);
         return { content: [{ type: "text", text: JSON.stringify(data, null, 2) }] };
