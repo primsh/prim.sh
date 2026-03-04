@@ -12,225 +12,221 @@ export const storeTools: Tool[] = [
     name: "store_list_buckets",
     description: "List all buckets owned by the calling wallet | Price: $0.001",
     inputSchema: {
-      type: "object",
-      properties: {
-        limit: {
-          type: "integer",
-          description: "1-100, default 20",
-        },
-        page: {
-          type: "integer",
-          description: "1-based page number, default 1",
+        type: "object",
+        properties: {
+          "limit": {
+            type: "integer",
+            description: "1-100, default 20",
+          },
+          "page": {
+            type: "integer",
+            description: "1-based page number, default 1",
+          },
         },
       },
-    },
   },
   {
     name: "store_create_bucket",
     description: "Create a new storage bucket | Price: $0.001",
     inputSchema: {
-      type: "object",
-      properties: {
-        name: {
-          type: "string",
-          description: "Bucket name. Unique per wallet. 3-63 chars, alphanumeric + hyphens.",
+        type: "object",
+        properties: {
+          "name": {
+            type: "string",
+            description: "Bucket name. Unique per wallet. 3-63 chars, alphanumeric + hyphens.",
+          },
+          "location": {
+            type: "string",
+            description: "Storage region (e.g. \"us-east-1\"). Defaults to primary region.",
+          },
+          "is_public": {
+            type: "boolean",
+            description: "Whether the bucket should be publicly readable. Defaults to false.",
+          },
         },
-        location: {
-          type: "string",
-          description: 'Storage region (e.g. "us-east-1"). Defaults to primary region.',
-        },
-        is_public: {
-          type: "boolean",
-          description: "Whether the bucket should be publicly readable. Defaults to false.",
-        },
+        required: ["name"],
       },
-      required: ["name"],
-    },
   },
   {
     name: "store_get_bucket",
     description: "Get details for a single bucket. Caller must own the bucket. | Price: $0.001",
     inputSchema: {
-      type: "object",
-      properties: {
-        id: {
-          type: "string",
-          description: "id parameter",
+        type: "object",
+        properties: {
+          "id": {
+            type: "string",
+            description: "id parameter",
+          },
         },
+        required: ["id"],
       },
-      required: ["id"],
-    },
   },
   {
     name: "store_delete_bucket",
     description: "Delete a bucket. Bucket must be empty first. | Price: $0.001",
     inputSchema: {
-      type: "object",
-      properties: {
-        id: {
-          type: "string",
-          description: "id parameter",
+        type: "object",
+        properties: {
+          "id": {
+            type: "string",
+            description: "id parameter",
+          },
         },
+        required: ["id"],
       },
-      required: ["id"],
-    },
   },
   {
     name: "store_get_object",
     description: "Download an object. Response body is streamed directly. | Price: $0.001",
     inputSchema: {
-      type: "object",
-      properties: {
-        id: {
-          type: "string",
-          description: "id parameter",
+        type: "object",
+        properties: {
+          "id": {
+            type: "string",
+            description: "id parameter",
+          },
+          "key": {
+            type: "string",
+            description: "key parameter",
+          },
         },
-        key: {
-          type: "string",
-          description: "key parameter",
-        },
+        required: ["id","key"],
       },
-      required: ["id", "key"],
-    },
   },
   {
     name: "store_put_object",
-    description:
-      "Upload an object. Key may include slashes. Content-Length header required. | Price: $0.001",
+    description: "Upload an object. Key may include slashes. Content-Length header required. | Price: $0.001",
     inputSchema: {
-      type: "object",
-      properties: {
-        id: {
-          type: "string",
-          description: "id parameter",
+        type: "object",
+        properties: {
+          "id": {
+            type: "string",
+            description: "id parameter",
+          },
+          "key": {
+            type: "string",
+            description: "key parameter",
+          },
         },
-        key: {
-          type: "string",
-          description: "key parameter",
-        },
+        required: ["id","key"],
       },
-      required: ["id", "key"],
-    },
   },
   {
     name: "store_delete_object",
     description: "Delete an object from a bucket | Price: $0.001",
     inputSchema: {
-      type: "object",
-      properties: {
-        id: {
-          type: "string",
-          description: "id parameter",
+        type: "object",
+        properties: {
+          "id": {
+            type: "string",
+            description: "id parameter",
+          },
+          "key": {
+            type: "string",
+            description: "key parameter",
+          },
         },
-        key: {
-          type: "string",
-          description: "key parameter",
-        },
+        required: ["id","key"],
       },
-      required: ["id", "key"],
-    },
   },
   {
     name: "store_list_objects",
     description: "List objects in a bucket. Cursor-based pagination. | Price: $0.001",
     inputSchema: {
-      type: "object",
-      properties: {
-        id: {
-          type: "string",
-          description: "id parameter",
+        type: "object",
+        properties: {
+          "id": {
+            type: "string",
+            description: "id parameter",
+          },
+          "prefix": {
+            type: "string",
+            description: "Filter by key prefix (e.g. notes/)",
+          },
+          "limit": {
+            type: "integer",
+            description: "1-1000, default 100",
+          },
+          "cursor": {
+            type: "string",
+            description: "Cursor from previous response's next_cursor",
+          },
         },
-        prefix: {
-          type: "string",
-          description: "Filter by key prefix (e.g. notes/)",
-        },
-        limit: {
-          type: "integer",
-          description: "1-1000, default 100",
-        },
-        cursor: {
-          type: "string",
-          description: "Cursor from previous response's next_cursor",
-        },
+        required: ["id"],
       },
-      required: ["id"],
-    },
   },
   {
     name: "store_get_quota",
     description: "Get quota and usage for a bucket | Price: $0.001",
     inputSchema: {
-      type: "object",
-      properties: {
-        id: {
-          type: "string",
-          description: "id parameter",
+        type: "object",
+        properties: {
+          "id": {
+            type: "string",
+            description: "id parameter",
+          },
         },
+        required: ["id"],
       },
-      required: ["id"],
-    },
   },
   {
     name: "store_set_quota",
-    description:
-      "Set the storage quota for a bucket. Pass null to reset to default (100 MB). | Price: $0.001",
+    description: "Set the storage quota for a bucket. Pass null to reset to default (100 MB). | Price: $0.001",
     inputSchema: {
-      type: "object",
-      properties: {
-        id: {
-          type: "string",
-          description: "id parameter",
+        type: "object",
+        properties: {
+          "id": {
+            type: "string",
+            description: "id parameter",
+          },
+          "quota_bytes": {
+            type: ["number","null"],
+            description: "New quota in bytes. Pass null to reset to default (100 MB).",
+          },
         },
-        quota_bytes: {
-          type: ["number", "null"],
-          description: "New quota in bytes. Pass null to reset to default (100 MB).",
-        },
+        required: ["id","quota_bytes"],
       },
-      required: ["id", "quota_bytes"],
-    },
   },
   {
     name: "store_reconcile_quota",
-    description:
-      "Recompute bucket usage by scanning actual R2 storage. Use when usage_bytes appears incorrect. | Price: $0.001",
+    description: "Recompute bucket usage by scanning actual R2 storage. Use when usage_bytes appears incorrect. | Price: $0.001",
     inputSchema: {
-      type: "object",
-      properties: {
-        id: {
-          type: "string",
-          description: "id parameter",
+        type: "object",
+        properties: {
+          "id": {
+            type: "string",
+            description: "id parameter",
+          },
         },
+        required: ["id"],
       },
-      required: ["id"],
-    },
   },
   {
     name: "store_presign_object",
-    description:
-      "Generate a presigned URL for direct GET or PUT access to an object. GET presign requires object to exist. | Price: $0.001",
+    description: "Generate a presigned URL for direct GET or PUT access to an object. GET presign requires object to exist. | Price: $0.001",
     inputSchema: {
-      type: "object",
-      properties: {
-        id: {
-          type: "string",
-          description: "id parameter",
+        type: "object",
+        properties: {
+          "id": {
+            type: "string",
+            description: "id parameter",
+          },
+          "key": {
+            type: "string",
+            description: "Object key to presign.",
+          },
+          "method": {
+            type: "string",
+            enum: ["GET","PUT"],
+            description: "HTTP method: \"GET\" for download, \"PUT\" for upload.",
+          },
+          "expires_in": {
+            type: "number",
+            description: "URL lifetime in seconds (60–86400). Defaults to 3600.",
+          },
         },
-        key: {
-          type: "string",
-          description: "Object key to presign.",
-        },
-        method: {
-          type: "string",
-          enum: ["GET", "PUT"],
-          description: 'HTTP method: "GET" for download, "PUT" for upload.',
-        },
-        expires_in: {
-          type: "number",
-          description: "URL lifetime in seconds (60–86400). Defaults to 3600.",
-        },
+        required: ["id","key","method"],
       },
-      required: ["id", "key", "method"],
-    },
   },
 ];
 // END:GENERATED:TOOLS
@@ -287,18 +283,14 @@ export async function handleStoreTool(
       }
 
       case "store_put_object": {
-        const res = await primFetch(`${baseUrl}/v1/buckets/${args.id}/objects/${args.key}`, {
-          method: "PUT",
-        });
+        const res = await primFetch(`${baseUrl}/v1/buckets/${args.id}/objects/${args.key}`, { method: "PUT" });
         const data = await res.json();
         if (!res.ok) return errorResult(data);
         return { content: [{ type: "text", text: JSON.stringify(data, null, 2) }] };
       }
 
       case "store_delete_object": {
-        const res = await primFetch(`${baseUrl}/v1/buckets/${args.id}/objects/${args.key}`, {
-          method: "DELETE",
-        });
+        const res = await primFetch(`${baseUrl}/v1/buckets/${args.id}/objects/${args.key}`, { method: "DELETE" });
         const data = await res.json();
         if (!res.ok) return errorResult(data);
         return { content: [{ type: "text", text: JSON.stringify(data, null, 2) }] };
@@ -335,9 +327,7 @@ export async function handleStoreTool(
       }
 
       case "store_reconcile_quota": {
-        const res = await primFetch(`${baseUrl}/v1/buckets/${args.id}/quota/reconcile`, {
-          method: "POST",
-        });
+        const res = await primFetch(`${baseUrl}/v1/buckets/${args.id}/quota/reconcile`, { method: "POST" });
         const data = await res.json();
         if (!res.ok) return errorResult(data);
         return { content: [{ type: "text", text: JSON.stringify(data, null, 2) }] };
