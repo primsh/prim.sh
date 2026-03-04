@@ -180,9 +180,11 @@ describe("schema migration", () => {
         created_at  INTEGER NOT NULL
       );
     `);
-    oldDb.prepare(
-      "INSERT INTO access_log (method, path, status, duration_ms, wallet, request_id, created_at) VALUES (?, ?, ?, ?, ?, ?, ?)",
-    ).run("GET", "/", 200, 5, null, null, Date.now());
+    oldDb
+      .prepare(
+        "INSERT INTO access_log (method, path, status, duration_ms, wallet, request_id, created_at) VALUES (?, ?, ?, ?, ?, ?, ?)",
+      )
+      .run("GET", "/", 200, 5, null, null, Date.now());
     oldDb.close();
 
     // Now open via getAccessLogDb which should migrate

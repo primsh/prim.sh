@@ -14,7 +14,10 @@ export function createUsageHandler(serviceName: string) {
     const key = c.req.header("x-internal-key");
     const expected = process.env.INTERNAL_API_KEY;
     if (!expected || key !== expected) {
-      return c.json({ error: { code: "unauthorized", message: "Invalid or missing x-internal-key" } }, 401);
+      return c.json(
+        { error: { code: "unauthorized", message: "Invalid or missing x-internal-key" } },
+        401,
+      );
     }
 
     // Lazy import to avoid bun:sqlite in test environments

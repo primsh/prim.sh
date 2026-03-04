@@ -129,10 +129,7 @@ export function queryAccessLog(db: Database, filters: AccessLogQuery = {}): Acce
  *   2. Pattern match: "GET /v1/buckets/[id]" → matches "GET /v1/buckets/b_abc"
  *      Patterns: [param] → [^/]+, * → .+
  */
-export function resolveRoutePrice(
-  routeKey: string,
-  routes: AgentStackRouteConfig,
-): string | null {
+export function resolveRoutePrice(routeKey: string, routes: AgentStackRouteConfig): string | null {
   // Exact match
   const exact = routes[routeKey];
   if (exact != null) {
@@ -142,9 +139,7 @@ export function resolveRoutePrice(
   // Pattern match
   for (const [pattern, value] of Object.entries(routes)) {
     if (!pattern.includes("[") && !pattern.includes("*")) continue;
-    const regex = new RegExp(
-      `^${pattern.replace(/\[[^\]]+\]/g, "[^/]+").replace(/\*/g, ".+")}$`,
-    );
+    const regex = new RegExp(`^${pattern.replace(/\[[^\]]+\]/g, "[^/]+").replace(/\*/g, ".+")}$`);
     if (regex.test(routeKey)) {
       return typeof value === "string" ? value : value.price;
     }
