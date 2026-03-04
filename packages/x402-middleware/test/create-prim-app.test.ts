@@ -25,6 +25,7 @@ function baseConfig(overrides: Partial<PrimAppConfig> = {}): PrimAppConfig {
     serviceName: "test.sh",
     routes: { "POST /v1/test": "$0.01" },
     metricsName: "test.prim.sh",
+    skipAccessLog: true,
     ...overrides,
   };
 }

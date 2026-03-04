@@ -16,6 +16,7 @@
 import { existsSync, readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { Hono } from "hono";
+import type { MiddlewareHandler } from "hono";
 import { bodyLimit } from "hono/body-limit";
 import type { Logger } from "./logger.js";
 import { createLogger } from "./logger.js";
@@ -80,6 +81,11 @@ export interface PrimAppConfig {
    * Use when the primitive registers a custom health check response (faucet.sh).
    */
   skipHealthCheck?: boolean;
+  /**
+   * Skip access log middleware (SQLite-backed request logging).
+   * Defaults to false. Set to true in tests to avoid SQLite dependency.
+   */
+  skipAccessLog?: boolean;
   /** URL for feedback submission. Defaults to PRIM_FEEDBACK_URL env var. */
   feedbackUrl?: string;
   /** Custom body size limit in bytes. Defaults to 1 MB. Ignored when skipBodyLimit is true. */
@@ -91,14 +97,15 @@ export interface PrimAppConfig {
  *
  * Middleware order (unless skipped):
  *   1.   requestIdMiddleware
- *   1.5. feedbackUrlMiddleware (when PRIM_FEEDBACK_URL or config.feedbackUrl is set)
- *   2.   bodyLimit (1 MB)
- *   3.   metricsMiddleware
- *   4.   createAgentStackMiddleware (x402 payment gate)
- *   5. GET /           — health check
- *   6. GET /llms.txt   — LLM-readable spec
- *   7. GET /v1/metrics — operational metrics
- *   8. GET /pricing    — pricing table (if config.pricing provided)
+ *   2.   accessLogMiddleware (wraps next(), logs after response)
+ *   2.5. feedbackUrlMiddleware (when PRIM_FEEDBACK_URL or config.feedbackUrl is set)
+ *   3.   bodyLimit (1 MB)
+ *   4.   metricsMiddleware
+ *   5.   createAgentStackMiddleware (x402 payment gate)
+ *   6. GET /           — health check
+ *   7. GET /llms.txt   — LLM-readable spec
+ *   8. GET /v1/metrics — operational metrics
+ *   9. GET /pricing    — pricing table (if config.pricing provided)
  *
  * Returns the Hono app. Callers add their domain-specific routes after.
  */
@@ -141,13 +148,28 @@ export function createPrimApp(
   // 1. Request ID
   app.use("*", requestIdMiddleware());
 
-  // 1.5. Feedback URL header
+  // 2. Access log (wraps next(), captures response status + wallet after x402 runs)
+  const skipAccessLog = config.skipAccessLog ?? !!process.env.VITEST;
+  if (!skipAccessLog) {
+    let accessLogHandler: MiddlewareHandler | undefined;
+    // Module path as variable prevents vitest/vite from statically resolving bun:sqlite
+    const accessLogModule = "./access-log.js";
+    app.use("*", async (c, next) => {
+      if (!accessLogHandler) {
+        const mod = await import(/* @vite-ignore */ accessLogModule);
+        accessLogHandler = mod.createAccessLogMiddleware(serviceName) as MiddlewareHandler;
+      }
+      return accessLogHandler(c, next);
+    });
+  }
+
+  // 2.5. Feedback URL header
   const resolvedFeedbackUrl = feedbackUrl ?? process.env.PRIM_FEEDBACK_URL;
   if (resolvedFeedbackUrl) {
     app.use("*", feedbackUrlMiddleware(resolvedFeedbackUrl));
   }
 
-  // 2. Body size limit (1 MB) — unless caller wants to wire its own
+  // 3. Body size limit (1 MB) — unless caller wants to wire its own
   if (!skipBodyLimit) {
     app.use(
       "*",
@@ -158,10 +180,10 @@ export function createPrimApp(
     );
   }
 
-  // 3. Metrics collection
+  // 4. Metrics collection
   app.use("*", metricsMiddleware());
 
-  // 4. x402 payment gate — unless freeService or skipX402
+  // 5. x402 payment gate — unless freeService or skipX402
   if (!freeService && !skipX402) {
     const PAY_TO_ADDRESS = process.env.REVENUE_WALLET as string;
     const networkConfig = getNetworkConfig();
@@ -191,7 +213,7 @@ export function createPrimApp(
     );
   }
 
-  // 5. Standard free routes
+  // 6. Standard free routes
   if (!skipHealthCheck) {
     app.get("/", (c) => {
       return c.json({ service: serviceName, status: "ok", network: getNetworkConfig().network });
