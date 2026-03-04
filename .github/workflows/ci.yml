@@ -86,6 +86,32 @@ jobs:
       - name: Lint
         run: pnpm -r lint
 
+  format:
+    name: Format
+    needs: [setup]
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: workspace
+
+      - name: Extract workspace
+        run: tar -xf workspace.tar
+
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: "1.3.8"
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - uses: pnpm/action-setup@v4
+
+      - name: Format check
+        run: pnpm -r format
+
   typecheck:
     name: Typecheck
     needs: [setup]

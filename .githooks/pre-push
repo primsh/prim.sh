@@ -1,15 +1,42 @@
 #!/bin/sh
-# Pre-push hook: verify generated files are up to date
-# Catches cascading staleness (e.g., OpenAPI → Tools → SDK) before CI does.
+# Pre-push hook: format, lint, and verify generated files are up to date.
 # Install: git config core.hooksPath .githooks
 
 # Skip if explicitly bypassed
-if [ "$PRIM_SKIP_GEN_CHECK" = "1" ]; then
+if [ "$PRIM_SKIP_HOOKS" = "1" ]; then
   exit 0
 fi
 
+echo "Running format check..."
+pnpm -r format 2>&1
+EXIT_CODE=$?
+
+if [ $EXIT_CODE -ne 0 ]; then
+  echo ""
+  echo "ERROR: Formatting issues found."
+  echo ""
+  echo "  Fix: pnpm -r format --write"
+  echo "  Skip: PRIM_SKIP_HOOKS=1 git push"
+  echo ""
+  exit 1
+fi
+
+echo "Running lint..."
+pnpm -r lint 2>&1
+EXIT_CODE=$?
+
+if [ $EXIT_CODE -ne 0 ]; then
+  echo ""
+  echo "ERROR: Lint errors found."
+  echo ""
+  echo "  Fix: pnpm -r lint --write"
+  echo "  Skip: PRIM_SKIP_HOOKS=1 git push"
+  echo ""
+  exit 1
+fi
+
 echo "Running gen:check..."
-pnpm gen:check --silent 2>&1
+pnpm gen:check 2>&1
 EXIT_CODE=$?
 
 if [ $EXIT_CODE -ne 0 ]; then
@@ -17,7 +44,7 @@ if [ $EXIT_CODE -ne 0 ]; then
   echo "ERROR: Generated files are out of date."
   echo ""
   echo "  Fix: pnpm gen && git add <changed files>"
-  echo "  Skip: PRIM_SKIP_GEN_CHECK=1 git push"
+  echo "  Skip: PRIM_SKIP_HOOKS=1 git push"
   echo ""
   exit 1
 fi
