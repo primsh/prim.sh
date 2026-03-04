@@ -8,7 +8,7 @@
     "indentStyle": "space",
     "indentWidth": 2,
     "lineWidth": 100,
-    "ignore": ["**/mcp/src/tools/*", "**/sdk/src/*", "**/*-commands.ts"]
+    "ignore": ["**/src/tools/*.ts", "**/*-commands.ts", "**/tools/*.json", "site/skills.json"]
   },
   "linter": {
     "enabled": true,
