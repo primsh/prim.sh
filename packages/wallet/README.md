@@ -62,6 +62,7 @@ Part of [prim.sh](https://prim.sh) — zero signup, one payment token, infinite 
 | `address` | `string` | Ethereum address. |
 | `chain` | `string` | Chain identifier. |
 | `balance` | `string` | USDC balance as a decimal string. |
+| `eth_balance` | `string` | ETH balance as a decimal string (e.g. "0.000100"). |
 | `funded` | `boolean` | Whether the wallet has ever been funded. |
 | `paused` | `boolean` | Whether the wallet is currently paused. |
 | `created_by` | `string` | Address that registered this wallet (or self). |

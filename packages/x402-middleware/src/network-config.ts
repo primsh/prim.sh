@@ -5,6 +5,7 @@ export interface NetworkConfig {
   rpcUrl: string;
   usdcAddress: string;
   isTestnet: boolean;
+  displayName: string;
 }
 
 const NETWORKS: Record<string, NetworkConfig> = {
@@ -14,6 +15,7 @@ const NETWORKS: Record<string, NetworkConfig> = {
     rpcUrl: "https://mainnet.base.org",
     usdcAddress: "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
     isTestnet: false,
+    displayName: "Base",
   },
   "eip155:84532": {
     network: "eip155:84532",
@@ -21,6 +23,7 @@ const NETWORKS: Record<string, NetworkConfig> = {
     rpcUrl: "https://sepolia.base.org",
     usdcAddress: "0x036CbD53842c5426634e7929541eC2318f3dCF7e",
     isTestnet: true,
+    displayName: "Base Sepolia",
   },
 };
 
@@ -44,6 +47,13 @@ export const FACILITATORS = {
  *
  * Resolution order: explicit `network` param > `PRIM_NETWORK` env var > mainnet default.
  */
+/**
+ * Returns a human-readable network label, e.g. "Base · mainnet" or "Base Sepolia · testnet".
+ */
+export function getNetworkLabel(config: NetworkConfig): string {
+  return `${config.displayName} · ${config.isTestnet ? "testnet" : "mainnet"}`;
+}
+
 export function getNetworkConfig(network?: string): NetworkConfig {
   const key = network ?? process.env.PRIM_NETWORK ?? DEFAULT_NETWORK;
   const config = NETWORKS[key];
