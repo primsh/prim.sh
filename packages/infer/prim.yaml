@@ -63,6 +63,7 @@ routes_map:
     status: 200
     description: "Chat completion. Supports streaming, tool use, structured output."
     operation_id: chat
+    stdin_field: messages
     errors:
       - { status: 400, code: invalid_request, description: "Missing or invalid model/messages" }
       - { status: 402, code: payment_required, description: "x402 payment needed" }
@@ -74,6 +75,7 @@ routes_map:
     status: 200
     description: "Generate embeddings for text input. Returns vector array."
     operation_id: embed
+    stdin_field: input
     errors:
       - { status: 400, code: invalid_request, description: "Missing or invalid input" }
       - { status: 402, code: payment_required, description: "x402 payment needed" }

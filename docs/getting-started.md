@@ -98,6 +98,19 @@ const res = await fetch402("https://store.prim.sh/v1/buckets", {
 });
 ```
 
+Or use the typed SDK for a higher-level API:
+
+```typescript
+import { createPrimFetch } from "@primsh/x402-client";
+import { createStoreClient } from "@primsh/sdk";
+
+const primFetch = createPrimFetch({ privateKey: process.env.AGENT_PRIVATE_KEY });
+const store = createStoreClient(primFetch, "https://store.prim.sh");
+const { bucket } = await store.createBucket({ name: "my-data" });
+```
+
+For agent-specific patterns (safe subprocess spawning, stdin piping, MCP, function-calling tools), see the [Agent Integration Guide](./agent-integration.md).
+
 ## CLI reference
 
 ```

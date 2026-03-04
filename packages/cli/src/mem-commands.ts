@@ -4,6 +4,7 @@ import { createPrimFetch } from "@primsh/x402-client";
 import { getConfig } from "@primsh/keystore";
 import { handleApiError } from "./errors.ts";
 import { getFlag, hasFlag, resolvePassphrase } from "./flags.ts";
+import { readStdin } from "./stdin.ts";
 
 export function resolveMemUrl(argv: string[]): string {
   const flag = getFlag("url", argv);
@@ -60,9 +61,16 @@ export async function runMemCommand(sub: string, argv: string[]): Promise<void> 
           } catch {
             value = raw;
           }
+        } else if (!process.stdin.isTTY) {
+          const raw = (await readStdin()).toString("utf-8").trimEnd();
+          try {
+            value = JSON.parse(raw);
+          } catch {
+            value = raw;
+          }
         } else {
           process.stderr.write(
-            "Usage: prim mem cache put NAMESPACE KEY [--value VALUE | --file PATH] [--ttl SECONDS]\n",
+            "Usage: prim mem cache put NAMESPACE KEY [--value VALUE | --file PATH | stdin] [--ttl SECONDS]\n",
           );
           process.exit(1);
         }
@@ -213,10 +221,13 @@ export async function runMemCommand(sub: string, argv: string[]): Promise<void> 
         );
         process.exit(1);
       }
-      const text = getFlag("text", argv);
+      let text = getFlag("text", argv);
+      if (!text && !process.stdin.isTTY) {
+        text = (await readStdin()).toString("utf-8").trimEnd();
+      }
       if (!text) {
         process.stderr.write(
-          "Usage: prim mem upsert COLLECTION_ID --text TEXT [--id DOC_ID] [--metadata JSON]\n",
+          "Usage: prim mem upsert COLLECTION_ID [--text TEXT | stdin] [--id DOC_ID] [--metadata JSON]\n",
         );
         process.exit(1);
       }
