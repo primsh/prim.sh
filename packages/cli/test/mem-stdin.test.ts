@@ -124,9 +124,9 @@ describe("cache put from stdin", () => {
 
   it("exits 1 if stdin is TTY and no --value/--file", async () => {
     mockTtyStdin();
-    await expect(
-      runMemCommand("cache", ["mem", "cache", "put", "ns", "mykey"]),
-    ).rejects.toThrow("process.exit(1)");
+    await expect(runMemCommand("cache", ["mem", "cache", "put", "ns", "mykey"])).rejects.toThrow(
+      "process.exit(1)",
+    );
     expect(stderrSpy).toHaveBeenCalled();
   });
 });
@@ -166,9 +166,9 @@ describe("upsert from stdin", () => {
 
   it("exits 1 if stdin is TTY and no --text", async () => {
     mockTtyStdin();
-    await expect(
-      runMemCommand("upsert", ["mem", "upsert", "col_123"]),
-    ).rejects.toThrow("process.exit(1)");
+    await expect(runMemCommand("upsert", ["mem", "upsert", "col_123"])).rejects.toThrow(
+      "process.exit(1)",
+    );
     expect(stderrSpy).toHaveBeenCalled();
   });
 });
