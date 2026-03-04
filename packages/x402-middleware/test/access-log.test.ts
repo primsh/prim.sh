@@ -9,7 +9,9 @@ import {
   getAccessLogDb,
   queryAccessLog,
   resetAccessLogDbs,
+  resolveRoutePrice,
 } from "../src/access-log.ts";
+import type { AgentStackRouteConfig } from "../src/types.ts";
 
 let tempDir: string;
 
@@ -103,6 +105,151 @@ describe("access log middleware", () => {
     const entries = queryAccessLog(db);
     expect(entries[0].status).toBe(400);
   });
+
+  it("logs price_usdc from route config for paid requests", async () => {
+    const routes: AgentStackRouteConfig = {
+      "POST /v1/action": "0.005",
+    };
+    const app = new Hono<{ Variables: { walletAddress: string | undefined } }>();
+    app.use("*", createAccessLogMiddleware("test.sh", { routes, network: "eip155:8453" }));
+    app.post("/v1/action", (c) => {
+      c.set("walletAddress", "0xWALLET");
+      return c.json({ ok: true });
+    });
+    app.get("/", (c) => c.json({ ok: true }));
+
+    await app.request("/v1/action", { method: "POST" });
+    await app.request("/", { method: "GET" });
+
+    const db = getAccessLogDb("test.sh");
+    const entries = queryAccessLog(db);
+
+    const paidEntry = entries.find((e) => e.path === "/v1/action");
+    expect(paidEntry?.price_usdc).toBe("0.005");
+    expect(paidEntry?.network).toBe("eip155:8453");
+
+    // Free route has null price
+    const freeEntry = entries.find((e) => e.path === "/");
+    expect(freeEntry?.price_usdc).toBeNull();
+  });
+
+  it("price_usdc is null for 402 responses even with route config", async () => {
+    const routes: AgentStackRouteConfig = {
+      "POST /v1/action": "0.005",
+    };
+    const app = new Hono();
+    app.use("*", createAccessLogMiddleware("test.sh", { routes, network: "eip155:8453" }));
+    app.post("/v1/action", (c) => c.json({ error: "payment required" }, 402));
+
+    await app.request("/v1/action", { method: "POST" });
+
+    const db = getAccessLogDb("test.sh");
+    const entries = queryAccessLog(db);
+    expect(entries[0].price_usdc).toBeNull();
+    expect(entries[0].network).toBe("eip155:8453");
+  });
+
+  it("network is populated from options", async () => {
+    const app = new Hono();
+    app.use("*", createAccessLogMiddleware("test.sh", { network: "eip155:84532" }));
+    app.get("/", (c) => c.json({ ok: true }));
+
+    await app.request("/", { method: "GET" });
+
+    const db = getAccessLogDb("test.sh");
+    const entries = queryAccessLog(db);
+    expect(entries[0].network).toBe("eip155:84532");
+  });
+});
+
+describe("schema migration", () => {
+  it("adds price_usdc and network columns to existing DB without data loss", () => {
+    // Import the mock Database (vitest aliases bun:sqlite → node:sqlite shim)
+    const { Database } = require("../src/__mocks__/bun-sqlite.ts");
+    const dbFile = join(tempDir, "old-access.db");
+    const oldDb = new Database(dbFile, { create: true });
+    oldDb.exec(`
+      CREATE TABLE access_log (
+        id          INTEGER PRIMARY KEY AUTOINCREMENT,
+        method      TEXT NOT NULL,
+        path        TEXT NOT NULL,
+        status      INTEGER NOT NULL,
+        duration_ms INTEGER NOT NULL,
+        wallet      TEXT,
+        request_id  TEXT,
+        created_at  INTEGER NOT NULL
+      );
+    `);
+    oldDb.prepare(
+      "INSERT INTO access_log (method, path, status, duration_ms, wallet, request_id, created_at) VALUES (?, ?, ?, ?, ?, ?, ?)",
+    ).run("GET", "/", 200, 5, null, null, Date.now());
+    oldDb.close();
+
+    // Now open via getAccessLogDb which should migrate
+    vi.stubEnv("PRIM_DATA_DIR", tempDir);
+    resetAccessLogDbs();
+    const db = getAccessLogDb("old");
+    const entries = queryAccessLog(db);
+
+    expect(entries).toHaveLength(1);
+    expect(entries[0].method).toBe("GET");
+    expect(entries[0].price_usdc).toBeNull();
+    expect(entries[0].network).toBeNull();
+
+    // Verify new columns are usable
+    db.prepare(
+      "INSERT INTO access_log (method, path, status, duration_ms, created_at, price_usdc, network) VALUES (?, ?, ?, ?, ?, ?, ?)",
+    ).run("POST", "/v1/test", 200, 10, Date.now(), "0.001", "eip155:8453");
+
+    const all = queryAccessLog(db);
+    expect(all).toHaveLength(2);
+    const newEntry = all.find((e) => e.path === "/v1/test");
+    expect(newEntry?.price_usdc).toBe("0.001");
+    expect(newEntry?.network).toBe("eip155:8453");
+  });
+});
+
+describe("resolveRoutePrice", () => {
+  it("resolves exact match", () => {
+    const routes: AgentStackRouteConfig = {
+      "POST /v1/buckets": "0.001",
+      "GET /v1/buckets": { price: "0.002", description: "list" },
+    };
+    expect(resolveRoutePrice("POST /v1/buckets", routes)).toBe("0.001");
+    expect(resolveRoutePrice("GET /v1/buckets", routes)).toBe("0.002");
+  });
+
+  it("resolves [param] patterns", () => {
+    const routes: AgentStackRouteConfig = {
+      "GET /v1/buckets/[id]": "0.001",
+      "DELETE /v1/buckets/[id]/objects/[key]": "0.003",
+    };
+    expect(resolveRoutePrice("GET /v1/buckets/b_abc123", routes)).toBe("0.001");
+    expect(resolveRoutePrice("DELETE /v1/buckets/b_1/objects/readme.txt", routes)).toBe("0.003");
+  });
+
+  it("resolves * wildcard patterns", () => {
+    const routes: AgentStackRouteConfig = {
+      "GET /v1/files/*": "0.001",
+    };
+    expect(resolveRoutePrice("GET /v1/files/path/to/file.txt", routes)).toBe("0.001");
+  });
+
+  it("returns null for unmatched routes", () => {
+    const routes: AgentStackRouteConfig = {
+      "POST /v1/action": "0.001",
+    };
+    expect(resolveRoutePrice("GET /v1/unknown", routes)).toBeNull();
+    expect(resolveRoutePrice("GET /", routes)).toBeNull();
+  });
+
+  it("prefers exact match over pattern", () => {
+    const routes: AgentStackRouteConfig = {
+      "GET /v1/buckets/special": "0.010",
+      "GET /v1/buckets/[id]": "0.001",
+    };
+    expect(resolveRoutePrice("GET /v1/buckets/special", routes)).toBe("0.010");
+  });
 });
 
 describe("queryAccessLog filters", () => {
@@ -157,6 +304,25 @@ describe("queryAccessLog filters", () => {
     const gets = queryAccessLog(db, { method: "GET" });
     expect(gets).toHaveLength(1);
     expect(gets[0].method).toBe("GET");
+  });
+
+  it("filters by status", async () => {
+    const app = new Hono();
+    app.use("*", createAccessLogMiddleware("test.sh"));
+    app.get("/ok", (c) => c.json({ ok: true }));
+    app.get("/fail", (c) => c.json({ error: "not found" }, 404));
+
+    await app.request("/ok", { method: "GET" });
+    await app.request("/fail", { method: "GET" });
+
+    const db = getAccessLogDb("test.sh");
+    const ok = queryAccessLog(db, { status: 200 });
+    expect(ok).toHaveLength(1);
+    expect(ok[0].path).toBe("/ok");
+
+    const notFound = queryAccessLog(db, { status: 404 });
+    expect(notFound).toHaveLength(1);
+    expect(notFound[0].path).toBe("/fail");
   });
 
   it("respects limit", async () => {

@@ -2,6 +2,7 @@
 import { Database } from "bun:sqlite";
 import { join } from "node:path";
 import type { MiddlewareHandler } from "hono";
+import type { AgentStackRouteConfig } from "./types.js";
 
 const INIT_SQL = `
 CREATE TABLE IF NOT EXISTS access_log (
@@ -12,17 +13,33 @@ CREATE TABLE IF NOT EXISTS access_log (
   duration_ms INTEGER NOT NULL,
   wallet      TEXT,
   request_id  TEXT,
-  created_at  INTEGER NOT NULL
+  created_at  INTEGER NOT NULL,
+  price_usdc  TEXT,
+  network     TEXT
 );
 CREATE INDEX IF NOT EXISTS idx_access_log_wallet_ts ON access_log (wallet, created_at);
 CREATE INDEX IF NOT EXISTS idx_access_log_ts ON access_log (created_at);
 `;
+
+/** Columns added after initial schema — migrated via ALTER TABLE on existing DBs. */
+const MIGRATION_COLUMNS = ["price_usdc", "network"] as const;
 
 const _dbs = new Map<string, Database>();
 
 function dbPath(serviceName: string): string {
   const slug = serviceName.replace(/\.sh$/, "");
   return join(process.env.PRIM_DATA_DIR ?? "/var/lib/prim", `${slug}-access.db`);
+}
+
+/** Run schema migrations for columns that may not exist on older DBs. */
+function migrateSchema(db: Database): void {
+  const cols = db.prepare("PRAGMA table_info(access_log)").all() as Array<{ name: string }>;
+  const existing = new Set(cols.map((c) => c.name));
+  for (const col of MIGRATION_COLUMNS) {
+    if (!existing.has(col)) {
+      db.exec(`ALTER TABLE access_log ADD COLUMN ${col} TEXT`);
+    }
+  }
 }
 
 /**
@@ -36,6 +53,7 @@ export function getAccessLogDb(serviceName: string): Database {
   db = new Database(path, { create: true });
   db.exec("PRAGMA journal_mode=WAL;");
   db.exec(INIT_SQL);
+  migrateSchema(db);
   _dbs.set(path, db);
   return db;
 }
@@ -49,12 +67,15 @@ export interface AccessLogEntry {
   wallet: string | null;
   request_id: string | null;
   created_at: number;
+  price_usdc: string | null;
+  network: string | null;
 }
 
 export interface AccessLogQuery {
   wallet?: string;
   method?: string;
   path?: string;
+  status?: number;
   since?: number;
   until?: number;
   limit?: number;
@@ -79,6 +100,10 @@ export function queryAccessLog(db: Database, filters: AccessLogQuery = {}): Acce
     clauses.push("path = ?");
     params.push(filters.path);
   }
+  if (filters.status != null) {
+    clauses.push("status = ?");
+    params.push(filters.status);
+  }
   if (filters.since != null) {
     clauses.push("created_at >= ?");
     params.push(filters.since);
@@ -97,17 +122,59 @@ export function queryAccessLog(db: Database, filters: AccessLogQuery = {}): Acce
 }
 
 /**
+ * Resolve the price for a given "METHOD /path" from the route config map.
+ *
+ * Matching order:
+ *   1. Exact match: "POST /v1/buckets"
+ *   2. Pattern match: "GET /v1/buckets/[id]" → matches "GET /v1/buckets/b_abc"
+ *      Patterns: [param] → [^/]+, * → .+
+ */
+export function resolveRoutePrice(
+  routeKey: string,
+  routes: AgentStackRouteConfig,
+): string | null {
+  // Exact match
+  const exact = routes[routeKey];
+  if (exact != null) {
+    return typeof exact === "string" ? exact : exact.price;
+  }
+
+  // Pattern match
+  for (const [pattern, value] of Object.entries(routes)) {
+    if (!pattern.includes("[") && !pattern.includes("*")) continue;
+    const regex = new RegExp(
+      `^${pattern.replace(/\[[^\]]+\]/g, "[^/]+").replace(/\*/g, ".+")}$`,
+    );
+    if (regex.test(routeKey)) {
+      return typeof value === "string" ? value : value.price;
+    }
+  }
+
+  return null;
+}
+
+export interface AccessLogMiddlewareOptions {
+  routes?: AgentStackRouteConfig;
+  network?: string;
+}
+
+/**
  * Hono middleware that logs every request to a per-service SQLite DB.
  *
  * Position: after requestIdMiddleware, before everything else.
  * Calls `await next()` so x402 + routes run first, then captures
  * wallet address (set by x402), response status, and duration.
  */
-export function createAccessLogMiddleware(serviceName: string): MiddlewareHandler {
+export function createAccessLogMiddleware(
+  serviceName: string,
+  options?: AccessLogMiddlewareOptions,
+): MiddlewareHandler {
   const db = getAccessLogDb(serviceName);
   const stmt = db.prepare(
-    "INSERT INTO access_log (method, path, status, duration_ms, wallet, request_id, created_at) VALUES (?, ?, ?, ?, ?, ?, ?)",
+    "INSERT INTO access_log (method, path, status, duration_ms, wallet, request_id, created_at, price_usdc, network) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
   );
+  const routes = options?.routes;
+  const network = options?.network ?? null;
 
   return async (c, next) => {
     const start = Date.now();
@@ -120,8 +187,14 @@ export function createAccessLogMiddleware(serviceName: string): MiddlewareHandle
     const wallet = c.get("walletAddress") ?? null;
     const requestId = c.get("requestId") ?? null;
 
+    // Only resolve price for paid (non-402) responses with a wallet
+    let priceUsdc: string | null = null;
+    if (routes && wallet && status !== 402) {
+      priceUsdc = resolveRoutePrice(`${method} ${path}`, routes);
+    }
+
     try {
-      stmt.run(method, path, status, duration, wallet, requestId, start);
+      stmt.run(method, path, status, duration, wallet, requestId, start, priceUsdc, network);
     } catch (_) {
       // Non-blocking — never fail a request because of logging
     }

@@ -154,7 +154,10 @@ export function createPrimApp(config: PrimAppConfig, deps: PrimAppDeps = {}): Pr
     app.use("*", async (c, next) => {
       if (!accessLogHandler) {
         const mod = await import(/* @vite-ignore */ accessLogModule);
-        accessLogHandler = mod.createAccessLogMiddleware(serviceName) as MiddlewareHandler;
+        accessLogHandler = mod.createAccessLogMiddleware(serviceName, {
+          routes,
+          network: getNetworkConfig().network,
+        }) as MiddlewareHandler;
       }
       return accessLogHandler(c, next);
     });
@@ -193,6 +196,7 @@ export function createPrimApp(config: PrimAppConfig, deps: PrimAppDeps = {}): Pr
       "GET /llms.txt",
       "GET /pricing",
       "GET /v1/metrics",
+      "GET /internal/usage",
       ...extraFreeRoutes,
     ];
 
@@ -232,6 +236,16 @@ export function createPrimApp(config: PrimAppConfig, deps: PrimAppDeps = {}): Pr
       routes: pricing.routes,
     };
     app.get("/pricing", (c) => c.json(pricingResponse));
+  }
+
+  // 10. Internal usage endpoint (access log query over HTTP)
+  if (!skipAccessLog) {
+    const usageModule = "./usage-endpoint.js";
+    app.get("/internal/usage", async (c) => {
+      const mod = await import(/* @vite-ignore */ usageModule);
+      const handler = mod.createUsageHandler(serviceName);
+      return handler(c);
+    });
   }
 
   // Expose logger so callers can use the same logger instance
