@@ -32,6 +32,10 @@
       "import": "./src/create-prim-app.ts",
       "types": "./src/create-prim-app.ts"
     },
+    "./access-log": {
+      "import": "./src/access-log.ts",
+      "types": "./src/access-log.ts"
+    },
     "./testing": {
       "import": "./src/testing.ts",
       "types": "./src/testing.ts"
