@@ -37,6 +37,7 @@ Part of [prim.sh](https://prim.sh) — zero signup, one payment token, infinite 
 | `wallet` | `string` | Checksummed wallet address that was funded. |
 | `network` | `string` | Network the funds were sent on (e.g. "eip155:8453"). |
 | `funded` | `FundingDetail` | Funding details. |
+| `wallet_registered` | `boolean` | Whether the wallet was auto-registered on wallet.sh. |
 
 ## Usage
 

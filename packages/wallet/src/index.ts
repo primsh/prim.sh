@@ -50,9 +50,11 @@ import {
   listWallets,
   pauseWallet,
   registerWallet,
+  registerWalletInternal,
   resumeWallet,
   updateSpendingPolicy,
 } from "./service.ts";
+import { getUsdcBalance } from "./balance.ts";
 
 const networkConfig = getNetworkConfig();
 const PAY_TO_ADDRESS = process.env.REVENUE_WALLET as string; // validated by createPrimApp
@@ -178,6 +180,7 @@ app.use(
         "POST /v1/admin/circuit-breaker/pause",
         "POST /v1/admin/circuit-breaker/resume",
         "GET /v1/admin/circuit-breaker",
+        "POST /internal/wallets",
         "POST /internal/allowlist/add",
         "DELETE /internal/allowlist/:address",
         "GET /internal/allowlist/check",
@@ -244,6 +247,12 @@ app.get("/v1/wallets/:address", async (c) => {
 
   const result = await getWallet(address, caller);
   if (!result.ok) {
+    // HRD-65: If wallet is unregistered and caller is querying their own address,
+    // fall back to on-chain balance instead of 404
+    if (result.status === 404 && caller.toLowerCase() === address.toLowerCase()) {
+      const { balance, funded } = await getUsdcBalance(address as `0x${string}`);
+      return c.json({ address, balance, funded, registered: false }, 200);
+    }
     const status = result.status;
     if (status === 404) return c.json(notFound(result.message), 404);
     return c.json(forbidden(result.message), 403);
@@ -518,6 +527,32 @@ function internalAuth(c: Parameters<import("hono").MiddlewareHandler>[0]): Respo
   }
   return null;
 }
+
+// POST /internal/wallets — Register wallet (system-provisioned, no signature)
+app.post("/internal/wallets", async (c) => {
+  const denied = internalAuth(c);
+  if (denied) return denied;
+
+  const bodyOrRes = await parseJsonBody<{ address?: string }>(c, logger, "POST /internal/wallets");
+  if (bodyOrRes instanceof Response) return bodyOrRes;
+  const body = bodyOrRes;
+
+  if (!body.address) {
+    return c.json(
+      { error: { code: "invalid_request", message: "Missing required field: address" } },
+      400,
+    );
+  }
+
+  const result = registerWalletInternal(body.address);
+  if (!result.ok) {
+    return c.json(
+      { error: { code: result.code, message: result.message } },
+      result.status as 400 | 409,
+    );
+  }
+  return c.json({ ok: true, ...result.data }, 200);
+});
 
 // POST /internal/allowlist/add — Add wallet to allowlist
 app.post("/internal/allowlist/add", async (c) => {

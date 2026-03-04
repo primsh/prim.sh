@@ -85,6 +85,7 @@ components:
         - wallet
         - network
         - funded
+        - wallet_registered
       properties:
         status:
           type: string
@@ -100,6 +101,9 @@ components:
         funded:
           $ref: "#/components/schemas/FundingDetail"
           description: Funding details.
+        wallet_registered:
+          type: boolean
+          description: Whether the wallet was auto-registered on wallet.sh.
 paths:
   /:
     get:
