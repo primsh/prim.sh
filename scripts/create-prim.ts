@@ -840,6 +840,93 @@ ${routesObjEntries}
 `;
 }
 
+function genSmokeLiveTestTs(prim: PrimYaml): string {
+  const routes = prim.routes_map ?? [];
+  const isFree = prim.factory?.free_service === true;
+  const idUpper = prim.id.toUpperCase();
+  const endpoint = prim.endpoint ?? `${prim.id}.prim.sh`;
+
+  const lines: string[] = [];
+  lines.push("// SPDX-License-Identifier: Apache-2.0");
+  lines.push("/**");
+  lines.push(` * Live smoke test against ${endpoint}.`);
+  lines.push(" *");
+  lines.push(" * Run:");
+  lines.push(` *   pnpm -C packages/${prim.id} test:smoke`);
+  lines.push(" *");
+  if (isFree) {
+    lines.push(` * All checks are non-destructive (health + error paths).`);
+    lines.push(` * ${prim.name} is a free service — no x402 gating.`);
+  } else {
+    lines.push(" * All checks are non-destructive (health + error paths + 402 gating).");
+  }
+  lines.push(" */");
+  lines.push("");
+  lines.push(`import { describe, expect, it } from "vitest";`);
+  lines.push("");
+  lines.push(`const BASE_URL = process.env.${idUpper}_URL ?? "https://${endpoint}";`);
+  lines.push("");
+  lines.push(`describe("${prim.name} live smoke test", { timeout: 15_000 }, () => {`);
+
+  let testNum = 0;
+
+  // Health check
+  lines.push(`  it("${testNum}. GET / — health check returns service name", async () => {`);
+  lines.push("    const res = await fetch(`${BASE_URL}/`);");
+  lines.push("    expect(res.status).toBe(200);");
+  lines.push("    const body = await res.json();");
+  lines.push(`    expect(body.service).toBe("${prim.name}");`);
+  lines.push(`    expect(body.status).toBe("ok");`);
+  lines.push("  });");
+
+  // 402 checks for paid routes (non-free services only)
+  if (!isFree) {
+    const paidRoutes = routes.filter((r) => {
+      const method = r.route.split(" ")[0];
+      return method === "POST" || method === "PUT" || method === "DELETE";
+    });
+    for (const r of paidRoutes) {
+      testNum++;
+      const method = r.route.split(" ")[0];
+      const path = r.route.replace(/^[A-Z]+\s+/, "");
+      lines.push("");
+      lines.push(
+        `  it("${testNum}. ${method} ${path} — requires x402 payment", async () => {`,
+      );
+      lines.push(`    const res = await fetch(\`\${BASE_URL}${path}\`, {`);
+      lines.push(`      method: "${method}",`);
+      lines.push(`      headers: { "Content-Type": "application/json" },`);
+      lines.push(`      body: JSON.stringify({}),`);
+      lines.push("    });");
+      lines.push("    expect(res.status).toBe(402);");
+      lines.push("  });");
+    }
+  }
+
+  // 400 check for first POST route
+  const firstPost = routes.find((r) => r.route.startsWith("POST "));
+  if (firstPost) {
+    testNum++;
+    const path = firstPost.route.replace(/^[A-Z]+\s+/, "");
+    lines.push("");
+    lines.push(
+      `  it("${testNum}. POST ${path} — missing fields returns 400", async () => {`,
+    );
+    lines.push(`    const res = await fetch(\`\${BASE_URL}${path}\`, {`);
+    lines.push(`      method: "POST",`);
+    lines.push(`      headers: { "Content-Type": "application/json" },`);
+    lines.push(`      body: JSON.stringify({}),`);
+    lines.push("    });");
+    lines.push("    expect(res.status).toBe(400);");
+    lines.push("  });");
+  }
+
+  lines.push("});");
+  lines.push("");
+
+  return lines.join("\n");
+}
+
 function genReadme(prim: PrimYaml, routePrices: Record<string, string>): string {
   const routes = prim.routes_map ?? [];
   const endpoint = prim.endpoint ?? `${prim.id}.prim.sh`;
@@ -1380,6 +1467,9 @@ async function scaffold(id: string, prim: PrimYaml, force: boolean, root: string
 
   // test/smoke.test.ts
   writeFile(join(pkgDir, "test", "smoke.test.ts"), genSmokeTestTs(prim, routePrices), force);
+
+  // test/smoke-live.test.ts
+  writeFile(join(pkgDir, "test", "smoke-live.test.ts"), genSmokeLiveTestTs(prim), force);
 
   // README.md
   writeFile(join(pkgDir, "README.md"), genReadme(prim, routePrices), force);

@@ -169,6 +169,12 @@ function syntheticValue(field: ParsedField): string {
 const MARKER_OPEN = "// BEGIN:GENERATED:SMOKE";
 const MARKER_CLOSE = "// END:GENERATED:SMOKE";
 
+/** Names that collide with vitest globals — skip as service test imports */
+const VITEST_GLOBALS = new Set([
+  "describe", "it", "expect", "vi", "test",
+  "beforeEach", "afterEach", "beforeAll", "afterAll",
+]);
+
 /**
  * Parse exported function names from a db.ts file.
  * Used to build a db mock that stubs out sqlite-backed functions.
@@ -546,6 +552,400 @@ function injectIntoExisting(
   return { result, hadMarkers: true, changed };
 }
 
+// ── Smoke-live generation ─────────────────────────────────────────────────────
+
+const MARKER_OPEN_LIVE = "// BEGIN:GENERATED:SMOKE_LIVE";
+const MARKER_CLOSE_LIVE = "// END:GENERATED:SMOKE_LIVE";
+
+/**
+ * Generate the full smoke-live.test.ts file content.
+ */
+function generateSmokeLiveFile(ctx: GenContext): string {
+  const { p, routes, isFreeService } = ctx;
+  const idUpper = p.id.toUpperCase();
+  const endpoint = p.endpoint ?? `${p.id}.prim.sh`;
+
+  const lines: string[] = [];
+  lines.push("// SPDX-License-Identifier: Apache-2.0");
+  lines.push("/**");
+  lines.push(` * Live smoke test against ${endpoint}.`);
+  lines.push(" *");
+  lines.push(" * Run:");
+  lines.push(` *   pnpm -C packages/${p.id} test:smoke`);
+  lines.push(" *");
+  if (isFreeService) {
+    lines.push(" * All checks are non-destructive (health + error paths).");
+    lines.push(` * ${p.name} is a free service — no x402 gating.`);
+  } else {
+    lines.push(" * All checks are non-destructive (health + error paths + 402 gating).");
+  }
+  lines.push(" */");
+  lines.push("");
+  lines.push(`import { describe, expect, it } from "vitest";`);
+  lines.push("");
+  lines.push(`const BASE_URL = process.env.${idUpper}_URL ?? "https://${endpoint}";`);
+  lines.push("");
+
+  lines.push(MARKER_OPEN_LIVE);
+  lines.push(generateSmokeLiveMarkedContent(ctx));
+  lines.push(MARKER_CLOSE_LIVE);
+  lines.push("");
+
+  return lines.join("\n");
+}
+
+/**
+ * Generate the content between SMOKE_LIVE markers.
+ */
+function generateSmokeLiveMarkedContent(ctx: GenContext): string {
+  const { p, routes, isFreeService } = ctx;
+  const lines: string[] = [];
+
+  lines.push(`describe("${p.name} live smoke test", { timeout: 15_000 }, () => {`);
+
+  let testNum = 0;
+
+  // Health check
+  lines.push(`  it("${testNum}. GET / — health check returns service name", async () => {`);
+  lines.push("    const res = await fetch(`${BASE_URL}/`);");
+  lines.push("    expect(res.status).toBe(200);");
+  lines.push("    const body = await res.json();");
+  lines.push(`    expect(body.service).toBe("${p.name}");`);
+  lines.push(`    expect(body.status).toBe("ok");`);
+  lines.push("  });");
+
+  // 402 checks for paid routes (non-free services only)
+  if (!isFreeService) {
+    const paidRoutes = routes.filter((r) => {
+      const method = parseRoute(r.route).method;
+      return method === "POST" || method === "PUT" || method === "DELETE";
+    });
+    for (const r of paidRoutes) {
+      testNum++;
+      const { method, path } = parseRoute(r.route);
+      lines.push("");
+      lines.push(
+        `  it("${testNum}. ${method} ${path} — requires x402 payment", async () => {`,
+      );
+      lines.push(`    const res = await fetch(\`\${BASE_URL}${path}\`, {`);
+      lines.push(`      method: "${method}",`);
+      lines.push(`      headers: { "Content-Type": "application/json" },`);
+      lines.push(`      body: JSON.stringify({}),`);
+      lines.push("    });");
+      lines.push("    expect(res.status).toBe(402);");
+      lines.push("  });");
+    }
+  }
+
+  // 400 check for first POST route
+  const firstPost = routes.find((r) => parseRoute(r.route).method === "POST");
+  if (firstPost) {
+    testNum++;
+    const path = parseRoute(firstPost.route).path;
+    lines.push("");
+    lines.push(
+      `  it("${testNum}. POST ${path} — missing fields returns 400", async () => {`,
+    );
+    lines.push(`    const res = await fetch(\`\${BASE_URL}${path}\`, {`);
+    lines.push(`      method: "POST",`);
+    lines.push(`      headers: { "Content-Type": "application/json" },`);
+    lines.push(`      body: JSON.stringify({}),`);
+    lines.push("    });");
+    lines.push("    expect(res.status).toBe(400);");
+    lines.push("  });");
+  }
+
+  lines.push("});");
+
+  return lines.join("\n");
+}
+
+/**
+ * Inject content between SMOKE_LIVE markers in an existing file.
+ */
+function injectSmokeLiveMarkers(
+  existing: string,
+  newContent: string,
+): { result: string; hadMarkers: boolean; changed: boolean } {
+  const openIdx = existing.indexOf(MARKER_OPEN_LIVE);
+  const closeIdx = existing.indexOf(MARKER_CLOSE_LIVE);
+
+  if (openIdx === -1 || closeIdx === -1) {
+    return { result: existing, hadMarkers: false, changed: false };
+  }
+
+  const before = existing.slice(0, openIdx + MARKER_OPEN_LIVE.length);
+  const after = existing.slice(closeIdx);
+  const result = `${before}\n${newContent}\n${after}`;
+  const changed = result !== existing;
+  return { result, hadMarkers: true, changed };
+}
+
+// ── Unit test generation ──────────────────────────────────────────────────────
+
+const MARKER_OPEN_UNIT = "// BEGIN:GENERATED:UNIT";
+const MARKER_CLOSE_UNIT = "// END:GENERATED:UNIT";
+
+/**
+ * Detect external provider modules imported by service.ts.
+ * Returns module specifiers for non-local, non-stdlib, non-@primsh imports.
+ */
+function detectProviderImports(servicePath: string): string[] {
+  if (!existsSync(servicePath)) return [];
+  const src = readFileSync(servicePath, "utf8");
+  const imports: string[] = [];
+  const re = /from\s+["']([^"']+)["']/g;
+  let m: RegExpExecArray | null;
+  // biome-ignore lint/suspicious/noAssignInExpressions: standard regex iteration
+  while ((m = re.exec(src)) !== null) {
+    const spec = m[1];
+    // Skip local, node:, and @primsh imports
+    if (spec.startsWith(".") || spec.startsWith("node:") || spec.startsWith("@primsh/")) continue;
+    // Skip bun: builtins
+    if (spec.startsWith("bun:")) continue;
+    imports.push(spec);
+  }
+  return [...new Set(imports)];
+}
+
+/**
+ * Build the mapping from operation_id → route info for unit test generation.
+ */
+function buildRouteOpMap(
+  routes: RouteMapping[],
+): Map<string, { route: RouteMapping; method: string; path: string }> {
+  const map = new Map<string, { route: RouteMapping; method: string; path: string }>();
+  for (const r of routes) {
+    if (!r.operation_id) continue;
+    const { method, path } = parseRoute(r.route);
+    map.set(r.operation_id, { route: r, method, path });
+  }
+  return map;
+}
+
+/**
+ * Generate the full service.test.ts file content.
+ */
+function generateUnitFile(ctx: GenContext): string {
+  const { p, routes, serviceExports, hasDbFile, needsBunSqliteMock, apiInterfaces } = ctx;
+  const lines: string[] = [];
+  const servicePath = join(ROOT, "packages", p.id, "src/service.ts");
+  const providerImports = detectProviderImports(servicePath);
+  const routeOpMap = buildRouteOpMap(routes);
+
+  // Preamble
+  lines.push("// SPDX-License-Identifier: Apache-2.0");
+  lines.push(`import { describe, expect, it, vi } from "vitest";`);
+  lines.push("");
+
+  // Env setup
+  lines.push("vi.hoisted(() => {");
+  lines.push(`  process.env.PRIM_NETWORK = "eip155:84532";`);
+  lines.push("});");
+  lines.push("");
+
+  // bun:sqlite mock
+  if (needsBunSqliteMock) {
+    lines.push(`import { mockBunSqlite } from "@primsh/x402-middleware/testing";`);
+    lines.push(`vi.mock("bun:sqlite", () => mockBunSqlite());`);
+    lines.push("");
+  }
+
+  // Mock db.ts
+  if (hasDbFile) {
+    lines.push(`vi.mock("../src/db.ts", () => ({`);
+    for (const fn of ctx.dbExports) {
+      lines.push(`  ${fn}: vi.fn(),`);
+    }
+    lines.push("}));");
+    lines.push("");
+  }
+
+  // Mock provider modules
+  for (const mod of providerImports) {
+    lines.push(`vi.mock("${mod}");`);
+  }
+  if (providerImports.length > 0) lines.push("");
+
+  // Import service functions that have matching routes
+  // Skip names that collide with vitest globals to avoid shadowing
+  const testable = serviceExports.filter((fn) => {
+    if (VITEST_GLOBALS.has(fn)) return false;
+    // Include if it matches an operation_id
+    for (const [opId] of routeOpMap) {
+      if (toCamelCase(opId) === fn) return true;
+    }
+    // Include validators
+    if (fn.startsWith("is") || fn.startsWith("validate")) return true;
+    return false;
+  });
+
+  if (testable.length > 0) {
+    lines.push(`import { ${testable.join(", ")} } from "../src/service.ts";`);
+    lines.push("");
+  }
+
+  // Markers
+  lines.push(MARKER_OPEN_UNIT);
+  lines.push(generateUnitMarkedContent(ctx, testable, routeOpMap));
+  lines.push(MARKER_CLOSE_UNIT);
+  lines.push("");
+
+  return lines.join("\n");
+}
+
+/**
+ * Generate the content between UNIT markers.
+ */
+function generateUnitMarkedContent(
+  ctx: GenContext,
+  testable: string[],
+  routeOpMap: Map<string, { route: RouteMapping; method: string; path: string }>,
+): string {
+  const { p, serviceUsesOkWrapper, apiInterfaces } = ctx;
+  const lines: string[] = [];
+
+  lines.push(`describe("${p.name} service", () => {`);
+
+  for (const fn of testable) {
+    // Find matching route first — route match takes priority over validator prefix
+    let matchedRoute: RouteMapping | undefined;
+    for (const [opId, info] of routeOpMap) {
+      if (toCamelCase(opId) === fn) {
+        matchedRoute = info.route;
+        break;
+      }
+    }
+
+    // Validator pattern: no route match + starts with is/validate
+    if (!matchedRoute && (fn.startsWith("is") || fn.startsWith("validate"))) {
+      lines.push(`  describe("${fn}", () => {`);
+      lines.push(`    // TODO: replace with valid/invalid input for ${fn}`);
+      lines.push(`    it.todo("returns true for valid input");`);
+      lines.push(`    it.todo("returns false for invalid input");`);
+      lines.push("  });");
+      lines.push("");
+      continue;
+    }
+
+    lines.push(`  describe("${fn}", () => {`);
+
+    // Happy path — use .todo since mocks need manual setup
+    const requestTypeName = matchedRoute?.request_type ?? matchedRoute?.request;
+    const minimalBody = buildMinimalBody(requestTypeName, apiInterfaces);
+    const hasCaller = matchedRoute && !ctx.isFreeService;
+
+    if (serviceUsesOkWrapper) {
+      lines.push(
+        `    // TODO: set up db/provider mocks to return valid data, then replace .todo with .test`,
+      );
+      lines.push(`    it.todo("returns ok:true with valid input");`);
+    } else {
+      lines.push(
+        `    // TODO: set up db/provider mocks to return valid data, then replace .todo with .test`,
+      );
+      lines.push(`    it.todo("resolves with valid input");`);
+    }
+
+    // Error paths from routes_map errors array
+    if (matchedRoute?.errors && serviceUsesOkWrapper) {
+      const seen = new Set<string>();
+      for (const err of matchedRoute.errors) {
+        if (seen.has(err.code)) continue;
+        seen.add(err.code);
+        lines.push("");
+        lines.push(`    // TODO: set up mocks to trigger ${err.code}`);
+        lines.push(`    it.todo("returns ${err.code} on error");`);
+      }
+    }
+
+    // Ownership violation test for caller-scoped services
+    if (hasCaller && serviceUsesOkWrapper) {
+      lines.push("");
+      lines.push(`    it.todo("scopes to caller wallet address");`);
+    }
+
+    lines.push("  });");
+    lines.push("");
+  }
+
+  lines.push("});");
+
+  return lines.join("\n");
+}
+
+/**
+ * Inject content between UNIT markers in an existing file.
+ */
+function injectUnitMarkers(
+  existing: string,
+  newContent: string,
+): { result: string; hadMarkers: boolean; changed: boolean } {
+  const openIdx = existing.indexOf(MARKER_OPEN_UNIT);
+  const closeIdx = existing.indexOf(MARKER_CLOSE_UNIT);
+
+  if (openIdx === -1 || closeIdx === -1) {
+    return { result: existing, hadMarkers: false, changed: false };
+  }
+
+  const before = existing.slice(0, openIdx + MARKER_OPEN_UNIT.length);
+  const after = existing.slice(closeIdx);
+  const result = `${before}\n${newContent}\n${after}`;
+  const changed = result !== existing;
+  return { result, hadMarkers: true, changed };
+}
+
+// ── File processing helper ────────────────────────────────────────────────────
+
+/**
+ * Process a generated file — create if missing, inject if markers exist, skip otherwise.
+ */
+function processGeneratedFile(
+  filePath: string,
+  generateFull: () => string,
+  generateMarked: () => string,
+  injectFn: (existing: string, content: string) => { result: string; hadMarkers: boolean; changed: boolean },
+  label: string,
+): void {
+  if (!existsSync(filePath)) {
+    const content = generateFull();
+
+    if (CHECK_MODE) {
+      console.error(`  ✗ ${filePath} does not exist — run pnpm gen:tests`);
+      anyFailed = true;
+    } else {
+      writeFileSync(filePath, content);
+      console.log(`  ↺ ${filePath} [created]`);
+    }
+    return;
+  }
+
+  const existing = readFileSync(filePath, "utf8");
+  const newMarkerContent = generateMarked();
+  const { result, hadMarkers, changed } = injectFn(existing, newMarkerContent);
+
+  if (!hadMarkers) {
+    console.log(`  – ${filePath} (no markers, skipping)`);
+    return;
+  }
+
+  if (CHECK_MODE) {
+    if (changed) {
+      console.error(`  ✗ ${filePath} is out of date — run pnpm gen:tests`);
+      anyFailed = true;
+    } else {
+      console.log(`  ✓ ${filePath}`);
+    }
+  } else {
+    if (changed) {
+      writeFileSync(filePath, result);
+      console.log(`  ↺ ${filePath} [updated]`);
+    } else {
+      console.log(`  ✓ ${filePath} (up to date)`);
+    }
+  }
+}
+
 // ── Main ─────────────────────────────────────────────────────────────────────
 
 const prims = loadPrimitives();
@@ -565,7 +965,6 @@ console.log(`Loaded ${targets.length} prim(s) to process`);
 console.log(CHECK_MODE ? "Mode: check\n" : "Mode: generate\n");
 
 for (const p of targets) {
-  const smokeTestPath = join(ROOT, "packages", p.id, "test/smoke.test.ts");
   const ctx = buildContext(p);
   const primary = primaryRoute(ctx.routes);
 
@@ -578,55 +977,58 @@ for (const p of targets) {
     }
   }
 
-  if (!existsSync(smokeTestPath)) {
-    const content = generateFullFile(ctx);
+  console.log(`  ${p.id}:`);
 
-    if (CHECK_MODE) {
-      console.error(`  ✗ ${smokeTestPath} does not exist — run pnpm gen:tests`);
-      anyFailed = true;
-    } else {
-      writeFileSync(smokeTestPath, content);
-      console.log(`  ↺ ${smokeTestPath} [created]`);
-    }
-    continue;
-  }
+  // ── smoke.test.ts ──
+  const smokeTestPath = join(ROOT, "packages", p.id, "test/smoke.test.ts");
+  processGeneratedFile(
+    smokeTestPath,
+    () => generateFullFile(ctx),
+    () => generateMarkedContent(ctx, primary, resolvedServiceFn),
+    injectIntoExisting,
+    "smoke",
+  );
 
-  // File exists — try marker injection
-  const existing = readFileSync(smokeTestPath, "utf8");
-  const newMarkerContent = generateMarkedContent(ctx, primary, resolvedServiceFn);
-  const { result, hadMarkers, changed } = injectIntoExisting(existing, newMarkerContent);
+  // ── smoke-live.test.ts ──
+  const smokeLivePath = join(ROOT, "packages", p.id, "test/smoke-live.test.ts");
+  processGeneratedFile(
+    smokeLivePath,
+    () => generateSmokeLiveFile(ctx),
+    () => generateSmokeLiveMarkedContent(ctx),
+    injectSmokeLiveMarkers,
+    "smoke-live",
+  );
 
-  if (!hadMarkers) {
-    if (CHECK_MODE) {
-      console.log(`  – ${smokeTestPath} (no markers, skipping check)`);
-    } else {
-      console.log(`  – ${smokeTestPath} (no markers, skipping)`);
-    }
-    continue;
-  }
+  // ── service.test.ts (only if service.ts exists with route-matched exports) ──
+  if (ctx.hasServiceFile) {
+    const routeOpMap = buildRouteOpMap(ctx.routes);
+    const testable = ctx.serviceExports.filter((fn) => {
+      if (VITEST_GLOBALS.has(fn)) return false;
+      for (const [opId] of routeOpMap) {
+        if (toCamelCase(opId) === fn) return true;
+      }
+      if (fn.startsWith("is") || fn.startsWith("validate")) return true;
+      return false;
+    });
 
-  if (CHECK_MODE) {
-    if (changed) {
-      console.error(`  ✗ ${smokeTestPath} is out of date — run pnpm gen:tests`);
-      anyFailed = true;
-    } else {
-      console.log(`  ✓ ${smokeTestPath}`);
-    }
-  } else {
-    if (changed) {
-      writeFileSync(smokeTestPath, result);
-      console.log(`  ↺ ${smokeTestPath} [updated]`);
-    } else {
-      console.log(`  ✓ ${smokeTestPath} (up to date)`);
+    if (testable.length > 0) {
+      const unitTestPath = join(ROOT, "packages", p.id, "test/service.test.ts");
+      processGeneratedFile(
+        unitTestPath,
+        () => generateUnitFile(ctx),
+        () => generateUnitMarkedContent(ctx, testable, routeOpMap),
+        injectUnitMarkers,
+        "unit",
+      );
     }
   }
 }
 
 if (CHECK_MODE && anyFailed) {
-  console.error("\nSome smoke tests are out of date. Run: pnpm gen:tests");
+  console.error("\nSome test files are out of date. Run: pnpm gen:tests");
   process.exit(1);
 } else if (CHECK_MODE) {
-  console.log("\nAll smoke tests are up to date.");
+  console.log("\nAll generated test files are up to date.");
 } else {
   console.log("\nDone.");
 }
