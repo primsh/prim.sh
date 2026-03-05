@@ -142,7 +142,7 @@ jobs:
             --include='*.jpg' --include='*.jpeg' --include='*.png' \
             --include='*.ico' --include='*.svg' --include='*.webp' \
             --include='*.txt' --include='*.json' \
-            --include='*.sh' --include='install' \
+            --include='*.sh' --include='*.ps1' --include='install' \
             --include='_headers' --include='_redirects' \
             --exclude='*' \
             site/ site-dist/

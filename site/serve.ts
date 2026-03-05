@@ -50,6 +50,7 @@ const STATIC_ROUTES: Record<string, string> = {
   "/status": join(ROOT, "site/status/index.html"),
   "/install": join(ROOT, "site/install.sh"),
   "/install.sh": join(ROOT, "site/install.sh"),
+  "/install.ps1": join(ROOT, "site/install.ps1"),
 };
 
 // ── YAML loading ──────────────────────────────────────────────────────────────
@@ -120,7 +121,7 @@ console.log(`[serve] ${primCache.size} prims, ${legalCache.size} legal pages loa
 
 function mimeFor(path: string): string {
   if (path.endsWith(".html")) return "text/html; charset=utf-8";
-  if (path.endsWith(".sh")) return "text/plain; charset=utf-8";
+  if (path.endsWith(".sh") || path.endsWith(".ps1")) return "text/plain; charset=utf-8";
   if (path.endsWith(".txt")) return "text/plain; charset=utf-8";
   if (path.endsWith(".jpg") || path.endsWith(".jpeg")) return "image/jpeg";
   if (path.endsWith(".png")) return "image/png";
