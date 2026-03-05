@@ -11,7 +11,7 @@
  *   bun scripts/gen-prims.ts --check  # diff against disk, exit 1 if any file would change
  */
 
-import { existsSync, readFileSync, writeFileSync } from "node:fs";
+import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { join, resolve } from "node:path";
 import { parseApiFile } from "./lib/parse-api.js";
 import {
@@ -520,6 +520,7 @@ ${urls.join("\n")}
         pricing: "https://prim.sh/pricing.json",
         openai_plugin: "https://prim.sh/.well-known/ai-plugin.json",
         mcp: "https://prim.sh/.well-known/mcp.json",
+        x402_manifest: "https://prim.sh/.well-known/x402-manifest.json",
         sitemap: "https://prim.sh/sitemap.xml",
       },
     },
@@ -528,6 +529,74 @@ ${urls.join("\n")}
   )}\n`;
 
   applyFullFile(join(ROOT, "site/discovery.json"), discoveryContent);
+}
+
+// 15. site/.well-known/x402-manifest.json — x402 payment endpoint discovery
+{
+  const builtPrims = prims.filter(
+    (p) =>
+      (p.status === "mainnet" || p.status === "testnet") &&
+      p.routes_map &&
+      p.routes_map.length > 0 &&
+      !p.factory?.free_service,
+  );
+
+  const endpoints = builtPrims.flatMap((p) => {
+    const endpoint = p.endpoint ?? `${p.id}.prim.sh`;
+    const defaultPrice = p.pricing?.find(
+      (r) => r.op.toLowerCase().includes("read") || r.op.toLowerCase().includes("api call"),
+    );
+    const defaultPriceStr = defaultPrice ? defaultPrice.price.replace("$", "") : "0.001";
+
+    // biome-ignore lint/style/noNonNullAssertion: routes_map checked in filter
+    return p.routes_map!.map((rm) => {
+      const [method, path] = rm.route.split(" ", 2);
+      let price = defaultPriceStr;
+      if (p.pricing) {
+        for (const pr of p.pricing) {
+          const opLower = pr.op.toLowerCase();
+          const descLower = rm.description.toLowerCase();
+          if (
+            descLower.includes(opLower) ||
+            opLower.includes(method.toLowerCase()) ||
+            (opLower.includes("create") && (descLower.includes("create") || method === "POST"))
+          ) {
+            price = pr.price.replace("$", "");
+            break;
+          }
+        }
+      }
+      return {
+        url: `https://${endpoint}${path.replace(/:(\w+)/g, "{$1}")}`,
+        method,
+        price: price,
+        currency: "USDC",
+        network: "eip155:8453",
+        description: rm.description,
+      };
+    });
+  });
+
+  const manifest = `${JSON.stringify(
+    {
+      schema: "x402-manifest/v1",
+      name: "prim.sh",
+      description: "Agent infrastructure primitives. Pay with USDC on Base.",
+      facilitator: "https://facilitator.payai.network",
+      token: {
+        symbol: "USDC",
+        address: "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+        network: "eip155:8453",
+        decimals: 6,
+      },
+      endpoints,
+    },
+    null,
+    2,
+  )}\n`;
+
+  mkdirSync(join(ROOT, "site/.well-known"), { recursive: true });
+  applyFullFile(join(ROOT, "site/.well-known/x402-manifest.json"), manifest);
 }
 
 if (CHECK_MODE && anyFailed) {

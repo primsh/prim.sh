@@ -61,6 +61,7 @@
     "pricing": "https://prim.sh/pricing.json",
     "openai_plugin": "https://prim.sh/.well-known/ai-plugin.json",
     "mcp": "https://prim.sh/.well-known/mcp.json",
+    "x402_manifest": "https://prim.sh/.well-known/x402-manifest.json",
     "sitemap": "https://prim.sh/sitemap.xml"
   }
 }
