@@ -562,6 +562,7 @@ function renderComingSoon(cfg: PrimConfig): string {
 <title>${esc(cfg.name)} — ${esc(cfg.tagline)}</title>
 ${headMeta(cfg)}
 ${inlineCSS(cfg)}
+${renderJsonLd(cfg)}
 </head>
 <body>
 <div class="hero">
@@ -734,6 +735,48 @@ ${renderFooter(`<a href="/">${BRAND.name}</a> / ${esc(cfg.id)}`)}
 </html>`;
 }
 
+// ── JSON-LD structured data ───────────────────────────────────────────────
+
+function renderJsonLd(cfg: PrimConfig): string {
+  const appName = esc(cfg.name);
+  const desc = esc(cfg.description ?? cfg.sub);
+  const url = `https://prim.sh/${cfg.id}`;
+  const { label } = statusInfo(cfg.status);
+
+  const data = [
+    {
+      "@context": "https://schema.org",
+      "@type": "SoftwareApplication",
+      name: cfg.name,
+      url,
+      description: cfg.description ?? cfg.sub,
+      applicationCategory: "DeveloperApplication",
+      operatingSystem: "Any",
+      offers: {
+        "@type": "Offer",
+        price: "0",
+        priceCurrency: "USD",
+        description: "Pay-per-call via x402 (USDC on Base)",
+      },
+      author: {
+        "@type": "Organization",
+        name: "Primitive Shell",
+        url: "https://prim.sh",
+      },
+    },
+    {
+      "@context": "https://schema.org",
+      "@type": "BreadcrumbList",
+      itemListElement: [
+        { "@type": "ListItem", position: 1, name: "prim.sh", item: "https://prim.sh" },
+        { "@type": "ListItem", position: 2, name: cfg.name, item: url },
+      ],
+    },
+  ];
+
+  return `<script type="application/ld+json">\n${JSON.stringify(data)}\n</script>`;
+}
+
 // ── main render ───────────────────────────────────────────────────────────────
 
 export function render(cfg: PrimConfig): string {
@@ -789,6 +832,7 @@ export function render(cfg: PrimConfig): string {
 <title>${esc(cfg.name)} — ${esc(cfg.tagline)}</title>
 ${headMeta(cfg)}
 ${inlineCSS(cfg)}
+${renderJsonLd(cfg)}
 </head>
 <body>
 <div class="hero">
