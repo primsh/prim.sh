@@ -141,7 +141,7 @@ function renderHtml(): string {
 <meta property="og:description" content="Live status of all ${BRAND.name} primitives. ${live.length} live, ${hold.length} coming soon.">
 <meta property="og:url" content="https://prim.sh/status">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:site" content="@useprim">
+<meta name="twitter:site" content="@primitiveshell">
 <link rel="canonical" href="https://prim.sh/status">
 <link rel="icon" type="image/svg+xml" href="/assets/favicon.svg">
 <link rel="icon" type="image/png" href="/assets/favicon-192.png">

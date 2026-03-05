@@ -386,7 +386,7 @@ export function renderFooter(crumb: string): string {
     <a href="/search" style="color:var(--cat-intelligence)">search</a>
   </div>
   <div class="links">
-    <a href="https://x.com/useprim">x</a>
+    <a href="https://x.com/primitiveshell">x</a>
     <a href="https://github.com/primsh">github</a>
     <a href="https://discord.gg/VbFseNDZ">discord</a>
     <a href="/access">access</a>
@@ -562,6 +562,7 @@ function renderComingSoon(cfg: PrimConfig): string {
 <title>${esc(cfg.name)} — ${esc(cfg.tagline)}</title>
 ${headMeta(cfg)}
 ${inlineCSS(cfg)}
+${renderJsonLd(cfg)}
 </head>
 <body>
 <div class="hero">
@@ -612,7 +613,7 @@ function headMeta(cfg: PrimConfig): string {
 <meta property="og:image" content="https://prim.sh/assets/og/${esc(cfg.id)}.png">
 <meta property="og:url" content="https://prim.sh/${esc(cfg.id)}">
 <meta name="twitter:card" content="summary_large_image">
-<meta name="twitter:site" content="@useprim">
+<meta name="twitter:site" content="@primitiveshell">
 <meta name="twitter:title" content="${title}">
 <meta name="twitter:description" content="${desc}">
 <meta name="twitter:image" content="https://prim.sh/assets/og/${esc(cfg.id)}.png">
@@ -642,7 +643,7 @@ export function renderLegal(cfg: LegalConfig): string {
 <meta property="og:description" content="${desc}">
 <meta property="og:url" content="https://prim.sh/${esc(cfg.id)}">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:site" content="@useprim">
+<meta name="twitter:site" content="@primitiveshell">
 <link rel="canonical" href="https://prim.sh/${esc(cfg.id)}">
 <link rel="icon" type="image/svg+xml" href="/assets/favicon.svg">
 <link rel="icon" type="image/png" href="/assets/favicon-192.png">
@@ -734,6 +735,48 @@ ${renderFooter(`<a href="/">${BRAND.name}</a> / ${esc(cfg.id)}`)}
 </html>`;
 }
 
+// ── JSON-LD structured data ───────────────────────────────────────────────
+
+function renderJsonLd(cfg: PrimConfig): string {
+  const appName = esc(cfg.name);
+  const desc = esc(cfg.description ?? cfg.sub);
+  const url = `https://prim.sh/${cfg.id}`;
+  const { label } = statusInfo(cfg.status);
+
+  const data = [
+    {
+      "@context": "https://schema.org",
+      "@type": "SoftwareApplication",
+      name: cfg.name,
+      url,
+      description: cfg.description ?? cfg.sub,
+      applicationCategory: "DeveloperApplication",
+      operatingSystem: "Any",
+      offers: {
+        "@type": "Offer",
+        price: "0",
+        priceCurrency: "USD",
+        description: "Pay-per-call via x402 (USDC on Base)",
+      },
+      author: {
+        "@type": "Organization",
+        name: "Primitive Shell",
+        url: "https://prim.sh",
+      },
+    },
+    {
+      "@context": "https://schema.org",
+      "@type": "BreadcrumbList",
+      itemListElement: [
+        { "@type": "ListItem", position: 1, name: "prim.sh", item: "https://prim.sh" },
+        { "@type": "ListItem", position: 2, name: cfg.name, item: url },
+      ],
+    },
+  ];
+
+  return `<script type="application/ld+json">\n${JSON.stringify(data)}\n</script>`;
+}
+
 // ── main render ───────────────────────────────────────────────────────────────
 
 export function render(cfg: PrimConfig): string {
@@ -789,6 +832,7 @@ export function render(cfg: PrimConfig): string {
 <title>${esc(cfg.name)} — ${esc(cfg.tagline)}</title>
 ${headMeta(cfg)}
 ${inlineCSS(cfg)}
+${renderJsonLd(cfg)}
 </head>
 <body>
 <div class="hero">

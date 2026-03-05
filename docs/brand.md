@@ -66,11 +66,14 @@ No exclamation marks. No "we're excited." No "getting started is easy." State wh
 | Domain (org, reserved) | `primitiveshell.org` | Reserved for potential future foundation use. |
 | GitHub org | `primsh` | Slug. Display name set to **Primitive Shell**. Main repo: `primsh/prim` |
 | npm | `@primsh` | All packages: `@primsh/wallet`, `@primsh/store`, etc. |
-| X | `@useprim` | Handle. Display name: **Prim** (not "Prim.sh" or "Primitive Shell") |
+| X | `@primitiveshell` | Handle. Display name: **Prim** (not "Prim.sh" or "Primitive Shell") |
+| Instagram | `@primitiveshell` | Same handle across all social platforms. |
+| YouTube | `@primitiveshell` | Same handle across all social platforms. |
+| TikTok | `@primitiveshell` | Same handle across all social platforms. |
 | Discord | Prim | Server display name. Proper noun, capitalized. |
 
 `primsh` is the URL-safe slug of `prim.sh`. Used where dots aren't allowed.
-`useprim` is the social handle. Direct and imperative — matches the brand voice.
+`primitiveshell` is the social handle across all platforms.
 
 ## Usage
 
