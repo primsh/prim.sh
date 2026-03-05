@@ -103,11 +103,15 @@ jobs:
 
       - name: Build platform binaries
         run: |
-          for target in darwin-arm64 darwin-x64 linux-x64 linux-arm64; do
+          for target in darwin-arm64 darwin-x64 linux-x64 linux-arm64 windows-x64; do
             echo "Building bun-${target}..."
+            outfile="dist/prim-${target}"
+            if [[ "$target" == windows-* ]]; then
+              outfile="${outfile}.exe"
+            fi
             bun build packages/cli/src/cli.ts \
               --compile --target=bun-${target} \
-              --outfile dist/prim-${target}
+              --outfile "$outfile"
           done
 
       - name: Generate checksums
@@ -127,7 +131,7 @@ jobs:
           bun scripts/upload-release.ts dist/cli.js "latest/cli.js"
           bun scripts/upload-release.ts dist/cli.js.sha256 "$VERSION/cli.js.sha256"
           bun scripts/upload-release.ts dist/cli.js.sha256 "latest/cli.js.sha256"
-          for bin in prim-darwin-arm64 prim-darwin-x64 prim-linux-x64 prim-linux-arm64; do
+          for bin in prim-darwin-arm64 prim-darwin-x64 prim-linux-x64 prim-linux-arm64 prim-windows-x64.exe; do
             bun scripts/upload-release.ts "dist/${bin}" "$VERSION/${bin}"
             bun scripts/upload-release.ts "dist/${bin}" "latest/${bin}"
           done
@@ -146,6 +150,7 @@ jobs:
             dist/prim-darwin-x64 \
             dist/prim-linux-x64 \
             dist/prim-linux-arm64 \
+            dist/prim-windows-x64.exe \
             dist/cli.js \
             dist/checksums.sha256
 
