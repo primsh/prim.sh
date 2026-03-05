@@ -1,0 +1,230 @@
+{
+  "schema": "prim-manifest/v1",
+  "name": "prim.sh",
+  "description": "Agent infrastructure primitives. Pay with USDC on Base.",
+  "facilitator": "https://facilitator.payai.network",
+  "token": {
+    "symbol": "USDC",
+    "address": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+    "network": "eip155:8453",
+    "decimals": 6
+  },
+  "endpoints": [
+    {
+      "url": "https://wallet.prim.sh/v1/wallets",
+      "method": "POST",
+      "price": "0.001",
+      "currency": "USDC",
+      "network": "eip155:8453",
+      "description": "Register a wallet via EIP-191 signature"
+    },
+    {
+      "url": "https://wallet.prim.sh/v1/wallets",
+      "method": "GET",
+      "price": "0.001",
+      "currency": "USDC",
+      "network": "eip155:8453",
+      "description": "List registered wallets owned by the calling wallet"
+    },
+    {
+      "url": "https://wallet.prim.sh/v1/wallets/{address}",
+      "method": "GET",
+      "price": "0.001",
+      "currency": "USDC",
+      "network": "eip155:8453",
+      "description": "Get full wallet details including balance, policy, and status"
+    },
+    {
+      "url": "https://wallet.prim.sh/v1/wallets/{address}",
+      "method": "DELETE",
+      "price": "0.001",
+      "currency": "USDC",
+      "network": "eip155:8453",
+      "description": "Permanently deactivate a wallet. Irreversible. Pending fund requests cancelled."
+    },
+    {
+      "url": "https://wallet.prim.sh/v1/wallets/{address}/fund-request",
+      "method": "POST",
+      "price": "0.001",
+      "currency": "USDC",
+      "network": "eip155:8453",
+      "description": "Request USDC funding for a wallet. A human operator can approve or deny."
+    },
+    {
+      "url": "https://wallet.prim.sh/v1/wallets/{address}/fund-requests",
+      "method": "GET",
+      "price": "0.001",
+      "currency": "USDC",
+      "network": "eip155:8453",
+      "description": "List all fund requests for a wallet"
+    },
+    {
+      "url": "https://wallet.prim.sh/v1/fund-requests/{id}/approve",
+      "method": "POST",
+      "price": "0.001",
+      "currency": "USDC",
+      "network": "eip155:8453",
+      "description": "Approve a pending fund request. Returns the address to send USDC to."
+    },
+    {
+      "url": "https://wallet.prim.sh/v1/fund-requests/{id}/deny",
+      "method": "POST",
+      "price": "0.001",
+      "currency": "USDC",
+      "network": "eip155:8453",
+      "description": "Deny a pending fund request"
+    },
+    {
+      "url": "https://wallet.prim.sh/v1/wallets/{address}/policy",
+      "method": "GET",
+      "price": "0.001",
+      "currency": "USDC",
+      "network": "eip155:8453",
+      "description": "Get the spending policy for a wallet"
+    },
+    {
+      "url": "https://wallet.prim.sh/v1/wallets/{address}/policy",
+      "method": "PUT",
+      "price": "0.001",
+      "currency": "USDC",
+      "network": "eip155:8453",
+      "description": "Update spending policy for a wallet. All fields optional. Pass null to remove a limit."
+    },
+    {
+      "url": "https://wallet.prim.sh/v1/wallets/{address}/pause",
+      "method": "POST",
+      "price": "0.001",
+      "currency": "USDC",
+      "network": "eip155:8453",
+      "description": "Pause operations for a wallet. Temporarily halts spending without deactivating."
+    },
+    {
+      "url": "https://wallet.prim.sh/v1/wallets/{address}/resume",
+      "method": "POST",
+      "price": "0.001",
+      "currency": "USDC",
+      "network": "eip155:8453",
+      "description": "Resume operations for a paused wallet"
+    },
+    {
+      "url": "https://store.prim.sh/v1/buckets",
+      "method": "POST",
+      "price": "0.015/GB/mo",
+      "currency": "USDC",
+      "network": "eip155:8453",
+      "description": "Create a new storage bucket"
+    },
+    {
+      "url": "https://store.prim.sh/v1/buckets",
+      "method": "GET",
+      "price": "0.001",
+      "currency": "USDC",
+      "network": "eip155:8453",
+      "description": "List all buckets owned by the calling wallet"
+    },
+    {
+      "url": "https://store.prim.sh/v1/buckets/{id}",
+      "method": "GET",
+      "price": "0.001",
+      "currency": "USDC",
+      "network": "eip155:8453",
+      "description": "Get details for a single bucket. Caller must own the bucket."
+    },
+    {
+      "url": "https://store.prim.sh/v1/buckets/{id}",
+      "method": "DELETE",
+      "price": "0.001",
+      "currency": "USDC",
+      "network": "eip155:8453",
+      "description": "Delete a bucket. Bucket must be empty first."
+    },
+    {
+      "url": "https://store.prim.sh/v1/buckets/{id}/objects/{key}",
+      "method": "PUT",
+      "price": "free",
+      "currency": "USDC",
+      "network": "eip155:8453",
+      "description": "Upload an object. Key may include slashes. Content-Length header required."
+    },
+    {
+      "url": "https://store.prim.sh/v1/buckets/{id}/objects",
+      "method": "GET",
+      "price": "0.001",
+      "currency": "USDC",
+      "network": "eip155:8453",
+      "description": "List objects in a bucket. Cursor-based pagination."
+    },
+    {
+      "url": "https://store.prim.sh/v1/buckets/{id}/objects/{key}",
+      "method": "GET",
+      "price": "0.001",
+      "currency": "USDC",
+      "network": "eip155:8453",
+      "description": "Download an object. Response body is streamed directly."
+    },
+    {
+      "url": "https://store.prim.sh/v1/buckets/{id}/objects/{key}",
+      "method": "DELETE",
+      "price": "0.001",
+      "currency": "USDC",
+      "network": "eip155:8453",
+      "description": "Delete an object from a bucket"
+    },
+    {
+      "url": "https://store.prim.sh/v1/buckets/{id}/quota",
+      "method": "GET",
+      "price": "0.001",
+      "currency": "USDC",
+      "network": "eip155:8453",
+      "description": "Get quota and usage for a bucket"
+    },
+    {
+      "url": "https://store.prim.sh/v1/buckets/{id}/quota",
+      "method": "PUT",
+      "price": "0.015/GB/mo",
+      "currency": "USDC",
+      "network": "eip155:8453",
+      "description": "Set the storage quota for a bucket. Pass null to reset to default (100 MB)."
+    },
+    {
+      "url": "https://store.prim.sh/v1/buckets/{id}/quota/reconcile",
+      "method": "POST",
+      "price": "0.015/GB/mo",
+      "currency": "USDC",
+      "network": "eip155:8453",
+      "description": "Recompute bucket usage by scanning actual R2 storage. Use when usage_bytes appears incorrect."
+    },
+    {
+      "url": "https://store.prim.sh/v1/buckets/{id}/presign",
+      "method": "POST",
+      "price": "0.001",
+      "currency": "USDC",
+      "network": "eip155:8453",
+      "description": "Generate a presigned URL for direct GET or PUT access to an object. GET presign requires object to exist."
+    },
+    {
+      "url": "https://search.prim.sh/v1/search",
+      "method": "POST",
+      "price": "0.001",
+      "currency": "USDC",
+      "network": "eip155:8453",
+      "description": "Search the web and return ranked results with optional AI-generated answer"
+    },
+    {
+      "url": "https://search.prim.sh/v1/search/news",
+      "method": "POST",
+      "price": "0.001",
+      "currency": "USDC",
+      "network": "eip155:8453",
+      "description": "Search for recent news articles, ordered by recency"
+    },
+    {
+      "url": "https://search.prim.sh/v1/extract",
+      "method": "POST",
+      "price": "0.001",
+      "currency": "USDC",
+      "network": "eip155:8453",
+      "description": "Extract readable content from one or more URLs as markdown or plain text"
+    }
+  ]
+}
