@@ -23,6 +23,9 @@ pnpm -r lint                             # Biome lint
 
 # Landing pages
 bun run site/serve.ts                         # Serves locally on :3000
+
+# Local CI (Docker, requires act + Docker Desktop)
+act pull_request --container-architecture linux/arm64 --artifact-server-path /tmp/act-out --no-cache-server
 ```
 
 ## Project Structure (after P-3 monorepo setup)
