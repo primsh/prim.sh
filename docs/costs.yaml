@@ -32,7 +32,7 @@ infrastructure:
     provider: x.com
     monthly_usd: 8.00
     billing: fixed
-    reason: "@useprim verified account, marketing (X Premium web)"
+    reason: "@primitiveshell verified account, marketing (X Premium web)"
     as_of: "2026-02"
   - item: github
     provider: github

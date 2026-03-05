@@ -386,7 +386,7 @@ export function renderFooter(crumb: string): string {
     <a href="/search" style="color:var(--cat-intelligence)">search</a>
   </div>
   <div class="links">
-    <a href="https://x.com/useprim">x</a>
+    <a href="https://x.com/primitiveshell">x</a>
     <a href="https://github.com/primsh">github</a>
     <a href="https://discord.gg/VbFseNDZ">discord</a>
     <a href="/access">access</a>
@@ -613,7 +613,7 @@ function headMeta(cfg: PrimConfig): string {
 <meta property="og:image" content="https://prim.sh/assets/og/${esc(cfg.id)}.png">
 <meta property="og:url" content="https://prim.sh/${esc(cfg.id)}">
 <meta name="twitter:card" content="summary_large_image">
-<meta name="twitter:site" content="@useprim">
+<meta name="twitter:site" content="@primitiveshell">
 <meta name="twitter:title" content="${title}">
 <meta name="twitter:description" content="${desc}">
 <meta name="twitter:image" content="https://prim.sh/assets/og/${esc(cfg.id)}.png">
@@ -643,7 +643,7 @@ export function renderLegal(cfg: LegalConfig): string {
 <meta property="og:description" content="${desc}">
 <meta property="og:url" content="https://prim.sh/${esc(cfg.id)}">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:site" content="@useprim">
+<meta name="twitter:site" content="@primitiveshell">
 <link rel="canonical" href="https://prim.sh/${esc(cfg.id)}">
 <link rel="icon" type="image/svg+xml" href="/assets/favicon.svg">
 <link rel="icon" type="image/png" href="/assets/favicon-192.png">

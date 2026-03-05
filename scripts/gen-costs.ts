@@ -208,7 +208,7 @@ ${rows}
 <meta property="og:description" content="Zero markup. One mill ($0.001) floor. Infinite primitives. Full cost breakdown for every prim.sh primitive.">
 <meta property="og:url" content="https://prim.sh/costs">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:site" content="@useprim">
+<meta name="twitter:site" content="@primitiveshell">
 <link rel="canonical" href="https://prim.sh/costs">
 <link rel="icon" type="image/svg+xml" href="/assets/favicon.svg">
 <link rel="icon" type="image/png" href="/assets/favicon-192.png">
