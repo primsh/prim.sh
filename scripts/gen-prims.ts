@@ -579,7 +579,7 @@ ${urls.join("\n")}
 
   const manifest = `${JSON.stringify(
     {
-      schema: "x402-manifest/v1",
+      schema: "prim-manifest/v1",
       name: "prim.sh",
       description: "Agent infrastructure primitives. Pay with USDC on Base.",
       facilitator: "https://facilitator.payai.network",
