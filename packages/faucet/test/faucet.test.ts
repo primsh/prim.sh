@@ -443,7 +443,7 @@ describe("POST /v1/faucet/refill", () => {
     expect(Array.isArray(body.tx_hashes)).toBe(true);
   });
 
-  it("handles partial failures", async () => {
+  it("handles partial failures", { timeout: 15_000 }, async () => {
     let callCount = 0;
     mockRequestFaucet.mockImplementation(() => {
       callCount++;

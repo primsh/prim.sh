@@ -386,9 +386,9 @@ export function renderFooter(crumb: string): string {
     <a href="/search" style="color:var(--cat-intelligence)">search</a>
   </div>
   <div class="links">
-    <a href="https://x.com/primitiveshell">x</a>
-    <a href="https://github.com/primsh">github</a>
-    <a href="https://discord.gg/VbFseNDZ">discord</a>
+    <a href="${BRAND.social.x}">x</a>
+    <a href="${BRAND.social.github}">github</a>
+    <a href="${BRAND.social.discord}">discord</a>
     <a href="/access">access</a>
     <a href="/llms.txt">llms.txt</a>
   </div>

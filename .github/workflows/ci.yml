@@ -276,8 +276,12 @@ jobs:
           curl -sSfL "https://github.com/gitleaks/gitleaks/releases/download/${VERSION}/gitleaks_${VERSION#v}_linux_x64.tar.gz" | tar -xz gitleaks
           sudo mv gitleaks /usr/local/bin/
           if [ "${{ github.event_name }}" = "pull_request" ]; then
-            git fetch origin ${{ github.event.pull_request.base.ref }} --depth=1
-            gitleaks detect --config .gitleaks.toml --source . --log-opts="origin/${{ github.event.pull_request.base.ref }}..HEAD" --redact --verbose
+            if git fetch origin ${{ github.event.pull_request.base.ref }} --depth=1 2>/dev/null; then
+              gitleaks detect --config .gitleaks.toml --source . --log-opts="origin/${{ github.event.pull_request.base.ref }}..HEAD" --redact --verbose
+            else
+              echo "::warning::Could not fetch base ref, scanning HEAD~1..HEAD"
+              gitleaks detect --config .gitleaks.toml --source . --log-opts="HEAD~1..HEAD" --redact --verbose
+            fi
           else
             gitleaks detect --config .gitleaks.toml --source . --log-opts="HEAD~1..HEAD" --redact --verbose
           fi

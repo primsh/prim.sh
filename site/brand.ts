@@ -14,4 +14,12 @@ export const BRAND = {
     "Use it. Build it. Ship it. Agents don't just consume primitives — they create them. One command scaffolds a new service. The CI pipeline ships it. The catalog grows because the users grow it.",
   description:
     "The agent-native stack. Zero signup. One payment token. Infinite primitives. Just add mcp.prim.sh, pay with USDC, use every service.",
+  social: {
+    x: "https://x.com/primitiveshell",
+    github: "https://github.com/primsh",
+    discord: "https://discord.gg/9NYYCDqY",
+    instagram: "https://instagram.com/primitiveshell",
+    youtube: "https://youtube.com/@primitiveshell",
+    tiktok: "https://tiktok.com/@primitiveshell",
+  },
 } as const;
