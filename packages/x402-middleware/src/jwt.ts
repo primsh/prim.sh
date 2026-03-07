@@ -1,9 +1,5 @@
 // SPDX-License-Identifier: Apache-2.0
-import {
-  type Hex,
-  hashMessage,
-  recoverAddress,
-} from "viem";
+import { type Hex, hashMessage, recoverAddress } from "viem";
 import { privateKeyToAccount } from "viem/accounts";
 import type { ServiceResult } from "./types.js";
 
@@ -53,9 +49,7 @@ export async function signSessionJwt(
  * Verify a session JWT. Returns the wallet address on success.
  * Stateless: no database or session storage needed.
  */
-export async function verifySessionJwt(
-  token: string,
-): Promise<ServiceResult<{ address: string }>> {
+export async function verifySessionJwt(token: string): Promise<ServiceResult<{ address: string }>> {
   let parsed: SignedJwt;
   try {
     const decoded = atob(token);

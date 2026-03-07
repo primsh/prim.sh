@@ -118,9 +118,7 @@ describe("Middleware identity routes with JWT", () => {
       ),
     );
     app.get("/", (c) => c.json({ status: "ok" }));
-    app.post("/v1/chat", (c) =>
-      c.json({ route: "chat", wallet_address: c.get("walletAddress") }),
-    );
+    app.post("/v1/chat", (c) => c.json({ route: "chat", wallet_address: c.get("walletAddress") }));
     app.post("/v1/expensive", (c) =>
       c.json({ route: "expensive", wallet_address: c.get("walletAddress") }),
     );
