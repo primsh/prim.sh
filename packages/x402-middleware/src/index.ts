@@ -9,6 +9,7 @@ export * from "./pagination";
 export * from "./rate-limit";
 export * from "./errors";
 export * from "./feedback-url";
+export * from "./jwt";
 export * from "./helpers";
 export * from "./create-prim-app";
 export * from "./provider";

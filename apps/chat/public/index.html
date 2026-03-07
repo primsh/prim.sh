@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<title>prim</title>
+<meta name="description" content="Chat with prim.sh primitives. Deploy servers, send emails, manage wallets — all through conversation.">
+<meta name="theme-color" content="#0a0a0a">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="prim">
+<meta name="mobile-web-app-capable" content="yes">
+<meta property="og:type" content="website">
+<meta property="og:title" content="prim — chat">
+<meta property="og:description" content="Chat with prim.sh primitives.">
+<meta property="og:url" content="https://chat.prim.sh">
+<link rel="manifest" href="/manifest.json">
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>%3E</text></svg>">
+<link rel="apple-touch-icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect fill='%230a0a0a' width='100' height='100'/><text y='.9em' font-size='90' fill='%2300ff88'>%3E</text></svg>">
+<link rel="stylesheet" href="/style.css">
+</head>
+<body>
+  <!-- Auth screen -->
+  <div id="auth-screen" class="screen">
+    <div class="auth-container">
+      <div class="auth-logo">&gt;_</div>
+      <h1 class="auth-title">prim<span class="accent">.sh</span></h1>
+      <p class="auth-sub">Infrastructure through conversation.</p>
+      <p class="auth-desc">Deploy servers. Send emails. Manage wallets. All through chat, paid per use with USDC.</p>
+      <button id="auth-btn" class="btn-primary">Get started</button>
+      <p id="auth-error" class="auth-error" hidden></p>
+      <p class="auth-hint">Uses passkey authentication. No passwords.</p>
+    </div>
+  </div>
+
+  <!-- Chat screen -->
+  <div id="chat-screen" class="screen" hidden>
+    <!-- Sidebar -->
+    <div id="sidebar" class="sidebar">
+      <div class="sidebar-header">
+        <span class="sidebar-logo">&gt;_</span>
+        <span class="sidebar-title">prim</span>
+        <button id="new-chat-btn" class="btn-icon" title="New chat">+</button>
+      </div>
+      <div id="conversations" class="conversations"></div>
+      <div class="sidebar-footer">
+        <button id="add-funds-btn" class="btn-text">Add funds</button>
+      </div>
+    </div>
+    <div id="sidebar-overlay" class="sidebar-overlay" hidden></div>
+
+    <!-- Main chat area -->
+    <div class="chat-main">
+      <div class="chat-header">
+        <button id="menu-btn" class="btn-icon menu-btn">&#9776;</button>
+        <span class="chat-header-title">prim</span>
+        <div id="balance" class="balance" title="USDC balance">--</div>
+      </div>
+
+      <div id="messages" class="messages">
+        <div class="empty-state">
+          <div class="empty-logo">&gt;_</div>
+          <p>What would you like to build?</p>
+        </div>
+      </div>
+
+      <div class="input-area">
+        <div class="input-row">
+          <textarea id="input" class="chat-input" placeholder="Message prim..." rows="1"></textarea>
+          <button id="send-btn" class="btn-send" disabled>
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="/app.js" type="module"></script>
+</body>
+</html>

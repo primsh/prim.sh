@@ -46,6 +46,28 @@ export async function chat(body: ChatRequest): Promise<ServiceResult<ChatRespons
   }
 }
 
+export async function chatStream(body: ChatRequest): Promise<ServiceResult<Response>> {
+  if (!body.model?.trim()) {
+    return { ok: false, status: 400, code: "invalid_request", message: "model is required" };
+  }
+  if (!Array.isArray(body.messages) || body.messages.length === 0) {
+    return {
+      ok: false,
+      status: 400,
+      code: "invalid_request",
+      message: "messages is required and must be non-empty",
+    };
+  }
+
+  try {
+    const client = getClient();
+    const data = await client.chatStream(body);
+    return { ok: true, data };
+  } catch (err) {
+    return handleProviderError(err);
+  }
+}
+
 export async function embed(body: EmbedRequest): Promise<ServiceResult<EmbedResponse>> {
   if (!body.model?.trim()) {
     return { ok: false, status: 400, code: "invalid_request", message: "model is required" };

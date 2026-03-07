@@ -93,6 +93,41 @@ export class OpenrouterClient implements InferProvider {
     return this.post<ChatResponse>("/chat/completions", req as unknown as Record<string, unknown>);
   }
 
+  async chatStream(req: ChatRequest): Promise<Response> {
+    const body = { ...req, stream: true } as unknown as Record<string, unknown>;
+    const resp = await fetch(`${BASE_URL}/chat/completions`, {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${this.apiKey}`,
+        "Content-Type": "application/json",
+        "HTTP-Referer": "https://prim.sh",
+        "X-Title": "infer.prim.sh",
+      },
+      body: JSON.stringify(body),
+    });
+
+    if (resp.status === 429) {
+      const retryAfter = Number(resp.headers.get("Retry-After") ?? "60");
+      throw new ProviderError("OpenRouter rate limit exceeded", "rate_limited", retryAfter);
+    }
+
+    if (!resp.ok) {
+      let message = `OpenRouter API error: ${resp.status}`;
+      try {
+        const data = (await resp.json()) as { error?: { message?: string }; detail?: string };
+        message = data.error?.message ?? data.detail ?? message;
+      } catch {
+        /* ignore parse errors */
+      }
+      if (resp.status === 404) {
+        throw new ProviderError(message, "not_found");
+      }
+      throw new ProviderError(message, "provider_error");
+    }
+
+    return resp;
+  }
+
   async embed(req: EmbedRequest): Promise<EmbedResponse> {
     try {
       return await this.post<EmbedResponse>(
