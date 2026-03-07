@@ -57,11 +57,58 @@ if (existsSync(accessPath)) {
 
 // ── discord redirect page ───────────────────────────────────────────────────
 
-const discordPath = resolve(ROOT, "site/discord/index.html");
-if (existsSync(discordPath)) {
+{
+  const discordUrl = BRAND.social.discord;
+  const html = `<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Join prim.sh on Discord</title>
+  <meta name="description" content="Join the prim.sh community on Discord. Build agent infrastructure together.">
+  <meta name="theme-color" content="#0a0a0a">
+
+  <!-- Open Graph -->
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="Join prim.sh on Discord">
+  <meta property="og:description" content="Build agent infrastructure together. ${BRAND.tagline}">
+  <meta property="og:image" content="https://prim.sh/assets/og/discord.png">
+  <meta property="og:url" content="https://prim.sh/discord">
+
+  <!-- Twitter card -->
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:site" content="@primitiveshell">
+  <meta name="twitter:title" content="Join prim.sh on Discord">
+  <meta name="twitter:description" content="Build agent infrastructure together. ${BRAND.tagline}">
+  <meta name="twitter:image" content="https://prim.sh/assets/og/discord.png">
+
+  <link rel="canonical" href="https://prim.sh/discord">
+  <link rel="icon" type="image/svg+xml" href="/assets/favicon.svg">
+
+  <!-- Redirect to Discord invite -->
+  <meta http-equiv="refresh" content="0;url=${discordUrl}">
+  <style>
+    body {
+      background: #0a0a0a;
+      color: #e0e0e0;
+      font-family: 'SF Mono', SFMono-Regular, 'Cascadia Code', Consolas, monospace;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+      margin: 0;
+    }
+    a { color: #5865F2; }
+  </style>
+</head>
+<body>
+  <p>Redirecting to <a href="${discordUrl}">Discord</a>\u2026</p>
+  <script>window.location.href="${discordUrl}";</script>
+</body>
+</html>`;
   mkdirSync(resolve(ROOT, "site-dist/discord"), { recursive: true });
-  cpSync(discordPath, resolve(ROOT, "site-dist/discord/index.html"));
-  console.log("[build] site-dist/discord/index.html copied");
+  writeFileSync(resolve(ROOT, "site-dist/discord/index.html"), html);
+  console.log("[build] site-dist/discord/index.html generated");
 }
 
 // ── prim subpages from prim.yaml ─────────────────────────────────────────────

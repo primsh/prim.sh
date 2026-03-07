@@ -155,7 +155,7 @@ function discordCard(): string {
 
   <line x1="80" y1="520" x2="1120" y2="520" stroke="#1a1a1a" stroke-width="1"/>
   <text x="80" y="565" font-family="${FONT}" font-size="22" fill="#666">prim.sh</text>
-  <text x="1120" y="565" font-family="${FONT}" font-size="18" fill="#444" text-anchor="end">discord.gg/9NYYCDqY</text>
+  <text x="1120" y="565" font-family="${FONT}" font-size="18" fill="#444" text-anchor="end">${BRAND.social.discord.replace("https://", "")}</text>
 </svg>`;
 }
 
