@@ -11,12 +11,6 @@ import type { Primitive, RouteMapping } from "./primitives.js";
 
 // ── Helpers ────────────────────────────────────────────────────────────────────
 
-function fieldRow(f: ParsedField): string {
-  const opt = f.optional ? "optional" : "required";
-  const desc = f.description ? ` — ${f.description}` : "";
-  return `| \`${f.name}\` | \`${f.type}\` | ${opt} |${desc}`;
-}
-
 function resolveFields(name: string, api: ParsedApi): ParsedField[] {
   const iface = api.interfaces.get(name);
   if (!iface) return [];
@@ -31,7 +25,7 @@ function resolveFields(name: string, api: ParsedApi): ParsedField[] {
 function lookupPrice(
   route: string,
   prices: Map<string, string>,
-  pricing?: Primitive["pricing"],
+  _pricing?: Primitive["pricing"],
 ): string {
   // Try direct lookup
   // biome-ignore lint/style/noNonNullAssertion: guarded by .has() check
@@ -80,7 +74,7 @@ function renderIntro(): string {
   return "Part of [prim.sh](https://prim.sh) — zero signup, one payment token, infinite primitives. x402 payment (USDC on Base) is the sole auth.";
 }
 
-function renderRoutes(p: Primitive, api: ParsedApi | null, prices: Map<string, string>): string {
+function renderRoutes(p: Primitive, _api: ParsedApi | null, prices: Map<string, string>): string {
   const routes = p.routes_map ?? [];
   if (routes.length === 0) return "";
 

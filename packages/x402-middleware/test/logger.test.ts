@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: Apache-2.0
 import { Hono } from "hono";
-import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { type Logger, createLogger } from "../src/logger.ts";
+import { afterEach, beforeEach, describe, expect, it } from "vitest";
+import { createLogger } from "../src/logger.ts";
 import { getRequestId, requestIdMiddleware } from "../src/request-id.ts";
 
 // Capture stdout writes for assertions

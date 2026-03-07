@@ -261,6 +261,46 @@ jobs:
             fi
           done
 
+  security-alerts:
+    name: Security alerts
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+
+    steps:
+      - name: Check for open vulnerability alerts
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          echo "## Security Alert Summary" >> $GITHUB_STEP_SUMMARY
+
+          # Code scanning alerts
+          code_alerts=$(gh api repos/${{ github.repository }}/code-scanning/alerts \
+            --jq '[.[] | select(.state=="open")] | length' 2>/dev/null || echo "0")
+          echo "Code scanning: $code_alerts open" >> $GITHUB_STEP_SUMMARY
+
+          # Dependabot alerts
+          dependabot_alerts=$(gh api repos/${{ github.repository }}/dependabot/alerts \
+            --jq '[.[] | select(.state=="open")] | length' 2>/dev/null || echo "0")
+          echo "Dependabot: $dependabot_alerts open" >> $GITHUB_STEP_SUMMARY
+
+          # Secret scanning alerts
+          secret_alerts=$(gh api repos/${{ github.repository }}/secret-scanning/alerts \
+            --jq '[.[] | select(.state=="open")] | length' 2>/dev/null || echo "0")
+          echo "Secret scanning: $secret_alerts open" >> $GITHUB_STEP_SUMMARY
+
+          total=$((code_alerts + dependabot_alerts + secret_alerts))
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Total: $total open alerts**" >> $GITHUB_STEP_SUMMARY
+
+          if [ "$secret_alerts" -gt 0 ]; then
+            echo "::error::$secret_alerts secret scanning alert(s) detected — fix immediately"
+            exit 1
+          fi
+
+          if [ "$total" -gt 0 ]; then
+            echo "::warning::$total open security alert(s) — review at https://github.com/${{ github.repository }}/security"
+          fi
+
   secret-scan:
     name: Secret scan
     runs-on: ubuntu-latest

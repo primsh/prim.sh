@@ -14,7 +14,6 @@
  */
 
 import { existsSync, readFileSync } from "node:fs";
-import { resolve } from "node:path";
 import { Hono } from "hono";
 import type { MiddlewareHandler } from "hono";
 import { bodyLimit } from "hono/body-limit";

@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: Apache-2.0
-import { describe, expect, it, vi } from "vitest";
+import { describe, it, vi } from "vitest";
 
 vi.hoisted(() => {
   process.env.PRIM_NETWORK = "eip155:84532";
@@ -39,16 +39,16 @@ vi.mock("../src/db.ts", () => ({
 vi.mock("viem");
 
 import {
-  registerWallet,
-  listWallets,
-  getWallet,
-  deactivateWallet,
-  createFundRequest,
-  listFundRequests,
-  approveFundRequest,
-  denyFundRequest,
-  pauseWallet,
-  resumeWallet,
+  registerWallet as _registerWallet,
+  listWallets as _listWallets,
+  getWallet as _getWallet,
+  deactivateWallet as _deactivateWallet,
+  createFundRequest as _createFundRequest,
+  listFundRequests as _listFundRequests,
+  approveFundRequest as _approveFundRequest,
+  denyFundRequest as _denyFundRequest,
+  pauseWallet as _pauseWallet,
+  resumeWallet as _resumeWallet,
 } from "../src/service.ts";
 
 // BEGIN:GENERATED:UNIT

@@ -1,11 +1,11 @@
 // SPDX-License-Identifier: Apache-2.0
-import { describe, expect, it, vi } from "vitest";
+import { describe, it, vi } from "vitest";
 
 vi.hoisted(() => {
   process.env.PRIM_NETWORK = "eip155:84532";
 });
 
-import { trackPackage } from "../src/service.ts";
+import { trackPackage as _trackPackage } from "../src/service.ts";
 
 // BEGIN:GENERATED:UNIT
 describe("track.sh service", () => {

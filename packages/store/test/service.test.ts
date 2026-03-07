@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: Apache-2.0
-import { describe, expect, it, vi } from "vitest";
+import { describe, it, vi } from "vitest";
 
 vi.hoisted(() => {
   process.env.PRIM_NETWORK = "eip155:84532";
@@ -28,17 +28,17 @@ vi.mock("../src/db.ts", () => ({
 }));
 
 import {
-  isValidBucketName,
-  isValidObjectKey,
-  createBucket,
-  listBuckets,
-  getBucket,
-  deleteBucket,
-  putObject,
-  getObject,
-  deleteObject,
-  listObjects,
-  presignObject,
+  isValidBucketName as _isValidBucketName,
+  isValidObjectKey as _isValidObjectKey,
+  createBucket as _createBucket,
+  listBuckets as _listBuckets,
+  getBucket as _getBucket,
+  deleteBucket as _deleteBucket,
+  putObject as _putObject,
+  getObject as _getObject,
+  deleteObject as _deleteObject,
+  listObjects as _listObjects,
+  presignObject as _presignObject,
 } from "../src/service.ts";
 
 // BEGIN:GENERATED:UNIT

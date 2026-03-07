@@ -446,8 +446,6 @@ function generateMarkedContent(
   if (primary) {
     const { method, path } = parseRoute(primary.route);
     const expectedStatus = primary.status ?? 200;
-    const responseType = primary.response_type;
-
     // Build minimal valid body for Check 4 (not empty {} — include required fields)
     const minimalBody =
       method !== "GET" ? buildMinimalBody(primary.request_type, apiInterfaces) : null;
@@ -561,7 +559,7 @@ const MARKER_CLOSE_LIVE = "// END:GENERATED:SMOKE_LIVE";
  * Generate the full smoke-live.test.ts file content.
  */
 function generateSmokeLiveFile(ctx: GenContext): string {
-  const { p, routes, isFreeService } = ctx;
+  const { p, routes: _routes, isFreeService } = ctx;
   const idUpper = p.id.toUpperCase();
   const endpoint = p.endpoint ?? `${p.id}.prim.sh`;
 
@@ -727,7 +725,7 @@ function buildRouteOpMap(
  * Generate the full service.test.ts file content.
  */
 function generateUnitFile(ctx: GenContext): string {
-  const { p, routes, serviceExports, hasDbFile, needsBunSqliteMock, apiInterfaces } = ctx;
+  const { p, routes, serviceExports, hasDbFile, needsBunSqliteMock, apiInterfaces: _apiInterfaces } = ctx;
   const lines: string[] = [];
   const servicePath = join(ROOT, "packages", p.id, "src/service.ts");
   const providerImports = detectProviderImports(servicePath);
@@ -812,7 +810,7 @@ function generateUnitMarkedContent(
   testable: string[],
   routeOpMap: Map<string, { route: RouteMapping; method: string; path: string }>,
 ): string {
-  const { p, serviceUsesOkWrapper, apiInterfaces } = ctx;
+  const { p, serviceUsesOkWrapper } = ctx;
   const lines: string[] = [];
 
   lines.push(`describe("${p.name} service", () => {`);
@@ -841,8 +839,6 @@ function generateUnitMarkedContent(
     lines.push(`  describe("${fn}", () => {`);
 
     // Happy path — use .todo since mocks need manual setup
-    const requestTypeName = matchedRoute?.request_type ?? matchedRoute?.request;
-    const minimalBody = buildMinimalBody(requestTypeName, apiInterfaces);
     const hasCaller = matchedRoute && !ctx.isFreeService;
 
     if (serviceUsesOkWrapper) {
@@ -920,7 +916,7 @@ function processGeneratedFile(
   generateFull: () => string,
   generateMarked: () => string,
   injectFn: (existing: string, content: string) => { result: string; hadMarkers: boolean; changed: boolean },
-  label: string,
+  _label: string,
 ): void {
   if (!existsSync(filePath)) {
     const content = generateFull();

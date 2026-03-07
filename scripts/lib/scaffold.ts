@@ -636,10 +636,8 @@ export function getClient(): ${className} {
   };
 }
 
-function genSmokeTestTs(prim: PrimYaml, routePrices: Record<string, string>): string {
+function genSmokeTestTs(prim: PrimYaml, _routePrices: Record<string, string>): string {
   const routes = (prim.routes_map ?? []).map(normalizeRoute);
-  const constName = routesConstName(prim.id);
-
   const firstRoute = routes[0];
   if (!firstRoute) {
     return `import { describe, expect, it, vi } from "vitest";

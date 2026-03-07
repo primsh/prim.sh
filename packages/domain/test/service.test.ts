@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: Apache-2.0
-import { describe, expect, it, vi } from "vitest";
+import { describe, it, vi } from "vitest";
 
 vi.hoisted(() => {
   process.env.PRIM_NETWORK = "eip155:84532";
@@ -35,20 +35,20 @@ vi.mock("../src/db.ts", () => ({
 }));
 
 import {
-  createZone,
-  listZones,
-  getZone,
-  deleteZone,
-  createRecord,
-  listRecords,
-  getRecord,
-  updateRecord,
-  deleteRecord,
-  batchRecords,
-  quoteDomain,
-  verifyZone,
-  activateZone,
-  searchDomains,
+  createZone as _createZone,
+  listZones as _listZones,
+  getZone as _getZone,
+  deleteZone as _deleteZone,
+  createRecord as _createRecord,
+  listRecords as _listRecords,
+  getRecord as _getRecord,
+  updateRecord as _updateRecord,
+  deleteRecord as _deleteRecord,
+  batchRecords as _batchRecords,
+  quoteDomain as _quoteDomain,
+  verifyZone as _verifyZone,
+  activateZone as _activateZone,
+  searchDomains as _searchDomains,
 } from "../src/service.ts";
 
 // BEGIN:GENERATED:UNIT

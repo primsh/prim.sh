@@ -110,7 +110,6 @@ function primCard(cfg: {
 /** Brand card for the main prim.sh landing page */
 function brandCard(): string {
   const green = CATEGORY_COLORS.crypto;
-  const cyan = CATEGORY_COLORS.compute;
 
   return `<svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="${H}">
   <rect width="${W}" height="${H}" fill="${BG}"/>

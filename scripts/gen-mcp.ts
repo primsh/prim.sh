@@ -253,7 +253,7 @@ interface Operation {
   bodySchema: OpenApiSchema | null;
 }
 
-function genCaseBody(op: Operation, prim: string, indent: string): string {
+function genCaseBody(op: Operation, _prim: string, indent: string): string {
   const { method, pathParams, queryParams, hasBody } = op;
   const urlExpr = fillPathTemplate(op.path, pathParams);
   const lines: string[] = [];
@@ -261,8 +261,6 @@ function genCaseBody(op: Operation, prim: string, indent: string): string {
 
   // Determine non-path, non-query body params (for POST/PUT/PATCH)
   // Body params are everything that's not a path or query param
-  const nonBodyParams = new Set([...pathParams, ...queryParams.map((q) => q.name)]);
-
   if (method === "GET" || method === "DELETE") {
     if (queryParams.length > 0) {
       // Use URL object for query params
@@ -491,7 +489,7 @@ function generateSections(prim: string, spec: OpenApiSpec): GeneratedSection {
   const handlerDef = [
     `export async function ${handlerName}(`,
     "  name: string,",
-    "  args: Record<string, unknown>,",
+    `  ${caseBlocks.some((l) => l.includes("args")) ? "args" : "_args"}: Record<string, unknown>,`,
     `  ${fetchParam}`,
     "): Promise<CallToolResult> {",
     "  try {",

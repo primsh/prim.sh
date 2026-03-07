@@ -738,10 +738,7 @@ ${renderFooter(`<a href="/">${BRAND.name}</a> / ${esc(cfg.id)}`)}
 // ── JSON-LD structured data ───────────────────────────────────────────────
 
 function renderJsonLd(cfg: PrimConfig): string {
-  const appName = esc(cfg.name);
-  const desc = esc(cfg.description ?? cfg.sub);
   const url = `https://prim.sh/${cfg.id}`;
-  const { label } = statusInfo(cfg.status);
 
   const data = [
     {

@@ -14,7 +14,7 @@ import { generatePrivateKey, privateKeyToAccount } from "viem/accounts";
 import { getDefaultAddress, setDefaultAddress } from "./config.ts";
 import { decryptFromV3, encryptToV3 } from "./crypto.ts";
 import { getOrCreateDeviceKey } from "./device.ts";
-import { getKeyPath, getKeysDir, getPrimDir } from "./paths.ts";
+import { getKeyPath, getKeysDir } from "./paths.ts";
 import type { KeyInfo, KeystoreFile } from "./types.ts";
 
 /**

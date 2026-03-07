@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: Apache-2.0
 import { decodePaymentRequiredHeader, encodePaymentSignatureHeader } from "@x402/core/http";
 import { Hono } from "hono";
-import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
+import { afterAll, afterEach, beforeAll, describe, expect, it, vi } from "vitest";
 import { type AgentStackRouteConfig, createAgentStackMiddleware } from "../src/middleware.ts";
 import type { AgentStackMiddlewareOptions } from "../src/types.ts";
 

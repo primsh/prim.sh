@@ -1,10 +1,9 @@
 // SPDX-License-Identifier: Apache-2.0
 import { ProviderError } from "./provider.ts";
-import type { ImagineProvider, ImagineProviderData } from "./provider.ts";
+import type { ImagineProvider } from "./provider.ts";
 
 export class GoogleGeminiClient implements ImagineProvider {
-  private apiKey: string;
-
+  readonly apiKey: string;
   constructor(apiKey: string) {
     this.apiKey = apiKey;
   }

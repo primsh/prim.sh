@@ -19,7 +19,7 @@
 
 import { spawn } from "node:child_process";
 import type { ChildProcess } from "node:child_process";
-import { appendFileSync, existsSync, readFileSync, writeFileSync } from "node:fs";
+import { appendFileSync, existsSync } from "node:fs";
 import { getAddress } from "viem";
 import { generatePrivateKey, privateKeyToAccount } from "viem/accounts";
 

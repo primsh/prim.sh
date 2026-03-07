@@ -1761,7 +1761,7 @@ describe("domain.sh", () => {
       const q = await quoteDomain({ domain: "example.com" }, CALLER);
       if (!q.ok) throw new Error("Failed to create quote");
       // Simulate NameSilo success + CF failure → leaves recovery_token
-      const { NameSiloError } = await import("../src/namesilo.ts");
+      const { NameSiloError: _NameSiloError } = await import("../src/namesilo.ts");
       mockFetch
         .mockImplementationOnce(
           async () =>
@@ -1827,7 +1827,7 @@ describe("domain.sh", () => {
       const q = await quoteDomain({ domain: "example.com" }, CALLER);
       if (!q.ok) throw new Error("Failed to create quote");
       // Intercept the NS change to fail
-      const origMockImpl = mockFetch.getMockImplementation();
+      mockFetch.getMockImplementation();
       mockFetch
         .mockImplementationOnce(
           async () =>

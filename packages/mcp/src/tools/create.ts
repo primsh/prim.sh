@@ -46,7 +46,7 @@ export const createTools: Tool[] = [
 // BEGIN:GENERATED:HANDLER
 export async function handleCreateTool(
   name: string,
-  args: Record<string, unknown>,
+  _args: Record<string, unknown>,
   primFetch: typeof fetch,
   baseUrl: string,
 ): Promise<CallToolResult> {

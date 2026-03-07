@@ -3,8 +3,15 @@
 # Regenerate: pnpm gen:deploy
 
 chat.prim.sh {
-    import security_headers
-    header Content-Security-Policy "default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data:; connect-src 'self'; frame-ancestors 'none'"
+    header {
+        Strict-Transport-Security "max-age=31536000; includeSubDomains; preload"
+        X-Frame-Options "DENY"
+        X-Content-Type-Options "nosniff"
+        Referrer-Policy "strict-origin-when-cross-origin"
+        Content-Security-Policy "default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data:; connect-src 'self'; frame-ancestors 'none'"
+        Permissions-Policy "geolocation=(), microphone=(), camera=()"
+        -Server
+    }
     request_body {
         max_size 1MB
     }

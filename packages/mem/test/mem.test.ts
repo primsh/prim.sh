@@ -11,7 +11,7 @@ process.env.MEM_DB_PATH = ":memory:";
 process.env.GOOGLE_API_KEY = "test-google-key";
 process.env.QDRANT_URL = "http://localhost:6333";
 
-import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import { deleteExpiredEntries, getCacheEntry, resetDb } from "../src/db.ts";
 import { resetEmbeddingProvider } from "../src/embeddings.ts";
 import {

@@ -384,7 +384,7 @@ app.get("/v1/wallets/:address/policy", (c) => {
 
   const result = getSpendingPolicy(address, caller);
   if (!result.ok) {
-    const { status, code, message } = result;
+    const { status, code: _code, message } = result;
     if (status === 404) return c.json(notFound(message), 404);
     return c.json(forbidden(message), 403);
   }
@@ -441,7 +441,7 @@ app.post("/v1/wallets/:address/pause", async (c) => {
 
   const result = pauseWallet(address, caller, effectiveScope);
   if (!result.ok) {
-    const { status, code, message } = result;
+    const { status, code: _code, message } = result;
     if (status === 404) return c.json(notFound(message), 404);
     return c.json(forbidden(message), 403);
   }
@@ -475,7 +475,7 @@ app.post("/v1/wallets/:address/resume", async (c) => {
 
   const result = resumeWallet(address, caller, effectiveScope);
   if (!result.ok) {
-    const { status, code, message } = result;
+    const { status, code: _code, message } = result;
     if (status === 404) return c.json(notFound(message), 404);
     return c.json(forbidden(message), 403);
   }

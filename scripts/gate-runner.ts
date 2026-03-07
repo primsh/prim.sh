@@ -40,7 +40,6 @@ import {
   formatUnits,
   getAddress,
   http,
-  parseUnits,
 } from "viem";
 import type { Address, Hex } from "viem";
 import { privateKeyToAccount } from "viem/accounts";
