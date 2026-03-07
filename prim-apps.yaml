@@ -15,6 +15,7 @@ apps:
     port: 3020
     entry: apps/chat/src/serve.ts
     max_body_size: 1MB
+    csp: "default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data:; connect-src 'self'; frame-ancestors 'none'"
     env:
       - CHAT_ENCRYPTION_KEY
       - CHAT_SESSION_SECRET
