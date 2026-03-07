@@ -141,7 +141,11 @@ function buildMark(id: string, h: number, sw: number): MarkGeometry {
       const parenX = barX + gap;
       const parenW = h * 0.22;
       const paren = `<path d="M${parenX} ${oy} Q${parenX + parenW} ${oy + h / 2} ${parenX} ${oy + h}" fill="none" stroke-width="${sw}"/>`;
-      return { content: chevron + bar + paren, width: parenX + parenW * 0.5 + half, height: chevVisualH };
+      return {
+        content: chevron + bar + paren,
+        width: parenX + parenW * 0.5 + half,
+        height: chevVisualH,
+      };
     }
 
     case "glob": {
@@ -369,15 +373,7 @@ function renderAvatar(size: number): string {
 
 // ── Mark definitions ─────────────────────────────────────────────────────────
 
-const MARKS = [
-  "chevron",
-  "bar",
-  "underscore",
-  "append",
-  "bang",
-  "dekey",
-  "glob",
-] as const;
+const MARKS = ["chevron", "bar", "underscore", "append", "bang", "dekey", "glob"] as const;
 
 // ── Main ─────────────────────────────────────────────────────────────────────
 
@@ -422,7 +418,11 @@ async function main(): Promise<void> {
   // ── Social cards ────────────────────────────────────────────────────────
   console.log("[gen-brand] social/");
   await writePng(join(OUT, "social", "preview-1280x640.png"), renderSocialCard(1280, 640), 1280);
-  await writePng(join(OUT, "social", "readme-hero-1200x400.png"), renderSocialCard(1200, 400), 1200);
+  await writePng(
+    join(OUT, "social", "readme-hero-1200x400.png"),
+    renderSocialCard(1200, 400),
+    1200,
+  );
   await writePng(join(OUT, "social", "x-banner-1500x500.png"), renderBanner(1500, 500), 1500);
 
   // ── Wordmark + Lockup ──────────────────────────────────────────────────
@@ -433,7 +433,13 @@ async function main(): Promise<void> {
   // ── Copy favicons to site/assets/ for serving ───────────────────────────
   if (!CHECK_MODE) {
     console.log("[gen-brand] copying favicons → site/assets/");
-    for (const f of ["favicon.svg", "favicon-32.png", "favicon-180.png", "favicon-192.png", "favicon-512.png"]) {
+    for (const f of [
+      "favicon.svg",
+      "favicon-32.png",
+      "favicon-180.png",
+      "favicon-192.png",
+      "favicon-512.png",
+    ]) {
       try {
         copyFileSync(join(OUT, "favicon", f), join(SITE_ASSETS, f));
       } catch {
@@ -445,7 +451,9 @@ async function main(): Promise<void> {
   // ── Summary ─────────────────────────────────────────────────────────────
   if (CHECK_MODE) {
     if (anyFailed) {
-      console.error("\n[gen-brand] Some assets are stale or missing. Run: bun scripts/gen-brand-assets.ts");
+      console.error(
+        "\n[gen-brand] Some assets are stale or missing. Run: bun scripts/gen-brand-assets.ts",
+      );
       process.exit(1);
     }
     console.log("[gen-brand] All brand assets up to date.");

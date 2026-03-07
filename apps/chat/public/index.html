@@ -27,7 +27,7 @@
       <h1 class="auth-title">prim<span class="accent">.sh</span></h1>
       <p class="auth-sub">Infrastructure through conversation.</p>
       <p class="auth-desc">Deploy servers. Send emails. Manage wallets. All through chat, paid per use with USDC.</p>
-      <button id="auth-btn" class="btn-primary">Get started</button>
+      <button id="auth-btn" type="button" class="btn-primary">Get started</button>
       <p id="auth-error" class="auth-error" hidden></p>
       <p class="auth-hint">Uses passkey authentication. No passwords.</p>
     </div>
@@ -40,11 +40,11 @@
       <div class="sidebar-header">
         <span class="sidebar-logo">&gt;_</span>
         <span class="sidebar-title">prim</span>
-        <button id="new-chat-btn" class="btn-icon" title="New chat">+</button>
+        <button id="new-chat-btn" type="button" class="btn-icon" title="New chat">+</button>
       </div>
       <div id="conversations" class="conversations"></div>
       <div class="sidebar-footer">
-        <button id="add-funds-btn" class="btn-text">Add funds</button>
+        <button id="add-funds-btn" type="button" class="btn-text">Add funds</button>
       </div>
     </div>
     <div id="sidebar-overlay" class="sidebar-overlay" hidden></div>
@@ -52,7 +52,7 @@
     <!-- Main chat area -->
     <div class="chat-main">
       <div class="chat-header">
-        <button id="menu-btn" class="btn-icon menu-btn">&#9776;</button>
+        <button id="menu-btn" type="button" class="btn-icon menu-btn">&#9776;</button>
         <span class="chat-header-title">prim</span>
         <div id="balance" class="balance" title="USDC balance">--</div>
       </div>
@@ -67,8 +67,8 @@
       <div class="input-area">
         <div class="input-row">
           <textarea id="input" class="chat-input" placeholder="Message prim..." rows="1"></textarea>
-          <button id="send-btn" class="btn-send" disabled>
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>
+          <button id="send-btn" type="button" class="btn-send" disabled>
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><title>Send</title><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>
           </button>
         </div>
       </div>

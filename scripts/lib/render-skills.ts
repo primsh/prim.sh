@@ -57,8 +57,7 @@ export function renderSkillsJson(prims: Primitive[]): string {
         name: `${p.id}.sh`,
         endpoint: p.endpoint ?? `https://${p.id}.prim.sh`,
         description: p.description,
-        status:
-          p.status === "mainnet" || p.status === "testnet" ? "live" : "planned",
+        status: p.status === "mainnet" || p.status === "testnet" ? "live" : "planned",
         interfaces: {
           mcp: p.interfaces?.mcp ?? true,
           cli: p.interfaces?.cli ?? true,

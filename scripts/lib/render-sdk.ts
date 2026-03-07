@@ -568,9 +568,7 @@ export function renderSdkClient(primId: string, spec: OpenApiSpec): string {
 
   const clientName = `create${pascalCase(primId)}Client`;
   out.push(`export function ${clientName}(`);
-  out.push(
-    `  primFetch: (input: RequestInfo | URL, init?: RequestInit) => Promise<Response>,`,
-  );
+  out.push(`  primFetch: (input: RequestInfo | URL, init?: RequestInit) => Promise<Response>,`);
   out.push(`  baseUrl = "${baseUrl}",`);
   out.push(`) {`);
   out.push("  return {");

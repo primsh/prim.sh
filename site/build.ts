@@ -9,7 +9,14 @@ import { cpSync, existsSync, mkdirSync, readFileSync, readdirSync, writeFileSync
 import { join, resolve } from "node:path";
 import { parse } from "yaml";
 import { BRAND } from "./brand.ts";
-import { type LegalConfig, type PrimConfig, render, renderFooter, renderLegal, setBuildHash } from "./template.ts";
+import {
+  type LegalConfig,
+  type PrimConfig,
+  render,
+  renderFooter,
+  renderLegal,
+  setBuildHash,
+} from "./template.ts";
 
 // Set cache-bust hash for template CSS references
 const buildHash = process.env.GITHUB_SHA?.slice(0, 8) ?? Date.now().toString(36);

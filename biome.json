@@ -1,14 +1,28 @@
 {
-  "$schema": "https://biomejs.dev/schemas/1.9.0/schema.json",
-  "organizeImports": { "enabled": true },
+  "$schema": "https://biomejs.dev/schemas/2.4.6/schema.json",
+  "assist": { "actions": { "source": { "organizeImports": "on" } } },
   "files": {
-    "ignore": ["node_modules", "dist", "**/test/smoke-live.test.ts", "**/*.timestamp-*"]
+    "includes": [
+      "**",
+      "!**/node_modules",
+      "!**/dist",
+      "!**/test/smoke-live.test.ts",
+      "!**/*.timestamp-*"
+    ]
   },
   "formatter": {
     "indentStyle": "space",
     "indentWidth": 2,
     "lineWidth": 100,
-    "ignore": ["**/src/tools/*.ts", "**/*-commands.ts", "**/tools/*.json", "site/skills.json"]
+    "includes": [
+      "**",
+      "!**/src/tools/**/*.ts",
+      "!**/*-commands.ts",
+      "!**/tools/**/*.json",
+      "!**/site/skills.json",
+      "!**/scripts/pre-deploy.ts",
+      "!**/packages/sdk/src/**"
+    ]
   },
   "linter": {
     "enabled": true,

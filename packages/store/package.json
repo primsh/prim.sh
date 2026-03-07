@@ -12,7 +12,13 @@
   },
   "license": "Apache-2.0",
   "author": "Prim (https://prim.sh)",
-  "keywords": ["prim", "x402", "storage", "r2", "s3"],
+  "keywords": [
+    "prim",
+    "x402",
+    "storage",
+    "r2",
+    "s3"
+  ],
   "scripts": {
     "dev": "bun run src/index.ts",
     "start": "bun run src/index.ts",
