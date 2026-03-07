@@ -214,6 +214,8 @@ const ENV_COMMENTS: Record<string, string> = {
   CHAT_ENCRYPTION_KEY: "# AES-256-GCM key for encrypting custodial wallet private keys (64 hex chars)",
   CHAT_SESSION_SECRET: "# HMAC secret for signing session cookies",
   CHAT_DB_PATH: "# Path to chat SQLite database (e.g. /opt/prim/data/chat.db)",
+  CHAT_RP_ID: "# WebAuthn Relying Party ID (e.g. chat.prim.sh)",
+  CHAT_RP_ORIGIN: "# WebAuthn origin URL (e.g. https://chat.prim.sh)",
   INFER_BASE_URL: "# Base URL for infer.sh (e.g. https://infer.prim.sh)",
   PRIM_BASE_URL: "# Base URL template for prim services (e.g. https://{service}.prim.sh)",
 };
