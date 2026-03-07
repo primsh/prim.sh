@@ -20,6 +20,8 @@ apps:
       - CHAT_ENCRYPTION_KEY
       - CHAT_SESSION_SECRET
       - CHAT_DB_PATH
+      - CHAT_RP_ID
+      - CHAT_RP_ORIGIN
       - INFER_BASE_URL
       - PRIM_BASE_URL
 
