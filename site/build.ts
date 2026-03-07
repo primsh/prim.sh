@@ -55,6 +55,15 @@ if (existsSync(accessPath)) {
   console.log("[build] site-dist/access/index.html written");
 }
 
+// ── discord redirect page ───────────────────────────────────────────────────
+
+const discordPath = resolve(ROOT, "site/discord/index.html");
+if (existsSync(discordPath)) {
+  mkdirSync(resolve(ROOT, "site-dist/discord"), { recursive: true });
+  cpSync(discordPath, resolve(ROOT, "site-dist/discord/index.html"));
+  console.log("[build] site-dist/discord/index.html copied");
+}
+
 // ── prim subpages from prim.yaml ─────────────────────────────────────────────
 
 function loadPrimYaml(id: string): PrimConfig | null {
