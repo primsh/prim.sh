@@ -174,6 +174,11 @@ const server = Bun.serve({
 
     // Static exact routes (strip trailing slash for matching)
     const clean = pathname.length > 1 && pathname.endsWith("/") ? pathname.slice(0, -1) : pathname;
+
+    // Discord redirect — in prod this is a generated HTML page with OG tags
+    if (clean === "/discord") {
+      return Response.redirect(BRAND.social.discord, 302);
+    }
     if (STATIC_ROUTES[clean]) {
       return serveFile(STATIC_ROUTES[clean]);
     }
