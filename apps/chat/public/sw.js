@@ -4,20 +4,18 @@ const SHELL_ASSETS = ["/", "/index.html", "/style.css", "/app.js"];
 
 // Install: cache app shell
 self.addEventListener("install", (e) => {
-  e.waitUntil(
-    caches.open(CACHE_NAME).then((cache) => cache.addAll(SHELL_ASSETS))
-  );
+  e.waitUntil(caches.open(CACHE_NAME).then((cache) => cache.addAll(SHELL_ASSETS)));
   self.skipWaiting();
 });
 
 // Activate: purge old caches
 self.addEventListener("activate", (e) => {
   e.waitUntil(
-    caches.keys().then((keys) =>
-      Promise.all(
-        keys.filter((k) => k !== CACHE_NAME).map((k) => caches.delete(k))
-      )
-    )
+    caches
+      .keys()
+      .then((keys) =>
+        Promise.all(keys.filter((k) => k !== CACHE_NAME).map((k) => caches.delete(k))),
+      ),
   );
   self.clients.claim();
 });
@@ -42,6 +40,6 @@ self.addEventListener("fetch", (e) => {
         })
         .catch(() => cached);
       return cached || fetched;
-    })
+    }),
   );
 });

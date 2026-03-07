@@ -144,14 +144,10 @@ function encodeCredential(cred) {
     result.response.clientDataJSON = bufferToBase64url(response.clientDataJSON);
   }
   if (response.attestationObject) {
-    result.response.attestationObject = bufferToBase64url(
-      response.attestationObject
-    );
+    result.response.attestationObject = bufferToBase64url(response.attestationObject);
   }
   if (response.authenticatorData) {
-    result.response.authenticatorData = bufferToBase64url(
-      response.authenticatorData
-    );
+    result.response.authenticatorData = bufferToBase64url(response.authenticatorData);
   }
   if (response.signature) {
     result.response.signature = bufferToBase64url(response.signature);
@@ -376,7 +372,7 @@ async function sendMessage() {
             scrollToBottom();
           } else if (event.type === "tool_end") {
             const indicators = bubble.querySelectorAll(
-              `.tool-indicator[data-tool="${event.data.id}"]`
+              `.tool-indicator[data-tool="${event.data.id}"]`,
             );
             for (const ind of indicators) ind.classList.add("done");
           } else if (event.type === "conversation_id") {

@@ -1,7 +1,9 @@
 /* style.css — chat.prim.sh */
 
 /* ── Reset + Tokens ─────────────────────────────────────────────────── */
-*, *::before, *::after {
+*,
+*::before,
+*::after {
   margin: 0;
   padding: 0;
   box-sizing: border-box;
@@ -30,7 +32,8 @@
   --safe-bottom: env(safe-area-inset-bottom, 0px);
 }
 
-html, body {
+html,
+body {
   height: 100%;
   overflow: hidden;
   background: var(--bg);
@@ -54,7 +57,9 @@ html, body {
   display: none !important;
 }
 
-.accent { color: var(--accent); }
+.accent {
+  color: var(--accent);
+}
 
 /* ── Auth Screen ────────────────────────────────────────────────────── */
 #auth-screen {
@@ -124,8 +129,12 @@ html, body {
   cursor: pointer;
   transition: opacity 0.15s, transform 0.1s;
 }
-.btn-primary:hover { opacity: 0.9; }
-.btn-primary:active { transform: scale(0.98); }
+.btn-primary:hover {
+  opacity: 0.9;
+}
+.btn-primary:active {
+  transform: scale(0.98);
+}
 .btn-primary:disabled {
   opacity: 0.4;
   cursor: not-allowed;
@@ -143,7 +152,9 @@ html, body {
   border-radius: 4px;
   transition: background 0.1s;
 }
-.btn-icon:hover { background: var(--surface-2); }
+.btn-icon:hover {
+  background: var(--surface-2);
+}
 
 .btn-text {
   background: none;
@@ -215,7 +226,9 @@ html, body {
   text-overflow: ellipsis;
   transition: background 0.1s;
 }
-.conv-item:hover { background: var(--surface-2); }
+.conv-item:hover {
+  background: var(--surface-2);
+}
 .conv-item.active {
   background: var(--surface-2);
   color: var(--text);
@@ -252,7 +265,9 @@ html, body {
   flex-shrink: 0;
 }
 
-.menu-btn { display: none; }
+.menu-btn {
+  display: none;
+}
 
 .chat-header-title {
   flex: 1;
@@ -310,8 +325,14 @@ html, body {
 }
 
 @keyframes fadeIn {
-  from { opacity: 0; transform: translateY(4px); }
-  to { opacity: 1; transform: translateY(0); }
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 .msg-user {
@@ -379,8 +400,13 @@ html, body {
 }
 
 @keyframes blink {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0; }
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0;
+  }
 }
 
 /* ── Tool indicators ────────────────────────────────────────────────── */
@@ -406,10 +432,18 @@ html, body {
 }
 
 @keyframes termActivity {
-  0% { content: "|"; }
-  25% { content: "/"; }
-  50% { content: "-"; }
-  75% { content: "\\"; }
+  0% {
+    content: "|";
+  }
+  25% {
+    content: "/";
+  }
+  50% {
+    content: "-";
+  }
+  75% {
+    content: "\\";
+  }
 }
 
 .tool-spinner::before {
@@ -418,10 +452,18 @@ html, body {
 }
 
 @keyframes spin {
-  0% { content: "|"; }
-  25% { content: "/"; }
-  50% { content: "-"; }
-  75% { content: "\\"; }
+  0% {
+    content: "|";
+  }
+  25% {
+    content: "/";
+  }
+  50% {
+    content: "-";
+  }
+  75% {
+    content: "\\";
+  }
 }
 
 .tool-indicator.done {
@@ -498,8 +540,12 @@ html, body {
   transition: opacity 0.15s, transform 0.1s;
 }
 
-.btn-send:hover { opacity: 0.9; }
-.btn-send:active { transform: scale(0.95); }
+.btn-send:hover {
+  opacity: 0.9;
+}
+.btn-send:active {
+  transform: scale(0.95);
+}
 .btn-send:disabled {
   opacity: 0.2;
   cursor: not-allowed;

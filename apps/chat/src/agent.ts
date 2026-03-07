@@ -107,9 +107,7 @@ export async function streamChat(
           stopWhen: stepCountIs(20),
           onChunk: ({ chunk }) => {
             if (chunk.type === "text-delta") {
-              controller.enqueue(
-                encoder.encode(sseEvent({ type: "token", data: chunk.text })),
-              );
+              controller.enqueue(encoder.encode(sseEvent({ type: "token", data: chunk.text })));
             } else if (chunk.type === "tool-call") {
               controller.enqueue(
                 encoder.encode(
@@ -121,9 +119,7 @@ export async function streamChat(
               );
             } else if (chunk.type === "tool-result") {
               controller.enqueue(
-                encoder.encode(
-                  sseEvent({ type: "tool_end", data: { id: chunk.toolCallId } }),
-                ),
+                encoder.encode(sseEvent({ type: "tool_end", data: { id: chunk.toolCallId } })),
               );
             }
           },
@@ -136,9 +132,7 @@ export async function streamChat(
           },
           onError: ({ error }) => {
             const message = error instanceof Error ? error.message : String(error);
-            controller.enqueue(
-              encoder.encode(sseEvent({ type: "error", data: message })),
-            );
+            controller.enqueue(encoder.encode(sseEvent({ type: "error", data: message })));
             controller.enqueue(encoder.encode("data: [DONE]\n\n"));
             controller.close();
           },
@@ -150,9 +144,7 @@ export async function streamChat(
         }
       } catch (err) {
         const message = err instanceof Error ? err.message : String(err);
-        controller.enqueue(
-          encoder.encode(sseEvent({ type: "error", data: message })),
-        );
+        controller.enqueue(encoder.encode(sseEvent({ type: "error", data: message })));
         controller.enqueue(encoder.encode("data: [DONE]\n\n"));
         controller.close();
       }

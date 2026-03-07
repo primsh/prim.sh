@@ -24,10 +24,7 @@ interface Message {
   created_at: string;
 }
 
-export function createConversation(
-  accountId: string,
-  title?: string,
-): ServiceResult<Conversation> {
+export function createConversation(accountId: string, title?: string): ServiceResult<Conversation> {
   const db = getDb();
   const now = new Date().toISOString();
   const id = `conv_${randomUUID().replace(/-/g, "").slice(0, 12)}`;
@@ -39,7 +36,13 @@ export function createConversation(
 
   return {
     ok: true,
-    data: { id, account_id: accountId, title: title ?? "New conversation", created_at: now, updated_at: now },
+    data: {
+      id,
+      account_id: accountId,
+      title: title ?? "New conversation",
+      created_at: now,
+      updated_at: now,
+    },
   };
 }
 

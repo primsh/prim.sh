@@ -88,10 +88,7 @@ app.post("/api/chat", async (c) => {
   });
 
   if (!result.ok) {
-    return c.json(
-      { error: { code: result.code, message: result.message } },
-      result.status as 500,
-    );
+    return c.json({ error: { code: result.code, message: result.message } }, result.status as 500);
   }
 
   return new Response(result.data, {

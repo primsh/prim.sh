@@ -7,7 +7,12 @@ vi.hoisted(() => {
   process.env.CHAT_DB_PATH = ":memory:";
 });
 
-import { createAccount, decryptWalletKey, getAccount, getAccountByPasskey } from "../src/accounts.ts";
+import {
+  createAccount,
+  decryptWalletKey,
+  getAccount,
+  getAccountByPasskey,
+} from "../src/accounts.ts";
 import { resetDb } from "../src/db.ts";
 
 describe("accounts", () => {

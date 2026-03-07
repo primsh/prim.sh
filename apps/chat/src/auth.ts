@@ -116,7 +116,10 @@ export function registerAuthRoutes(app: Hono): void {
       const result = createAccount(regCredential.id, regCredential.publicKey);
 
       if (!result.ok) {
-        return c.json({ error: { code: result.code, message: result.message } }, result.status as 409);
+        return c.json(
+          { error: { code: result.code, message: result.message } },
+          result.status as 409,
+        );
       }
 
       const token = createSessionToken(result.data.id);

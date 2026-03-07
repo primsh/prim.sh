@@ -11,7 +11,11 @@ vi.hoisted(() => {
 
 import { createPrimTools } from "../src/tools.ts";
 
-const execCtx = { toolCallId: "call_1", messages: [] as never[], abortSignal: new AbortController().signal };
+const execCtx = {
+  toolCallId: "call_1",
+  messages: [] as never[],
+  abortSignal: new AbortController().signal,
+};
 
 // biome-ignore lint/suspicious/noExplicitAny: test helper wrapping optional execute
 function exec(t: { execute?: (...args: any[]) => any }, input: unknown) {
@@ -50,7 +54,10 @@ describe("tools", () => {
     const mockFetch = vi.fn();
     const tools = createPrimTools(mockFetch as unknown as typeof fetch);
     for (const [name, t] of Object.entries(tools)) {
-      expect((t as { description?: string }).description, `${name} missing description`).toBeTruthy();
+      expect(
+        (t as { description?: string }).description,
+        `${name} missing description`,
+      ).toBeTruthy();
     }
   });
 
@@ -128,7 +135,12 @@ describe("tools", () => {
       }),
     );
     const tools = createPrimTools(mockFetch as unknown as typeof fetch);
-    await exec(tools.email_send, { mailbox_id: "mb_1", to: "a@b.com", subject: "Hi", body: "Hello" });
+    await exec(tools.email_send, {
+      mailbox_id: "mb_1",
+      to: "a@b.com",
+      subject: "Hi",
+      body: "Hello",
+    });
 
     const [url, opts] = mockFetch.mock.calls[0];
     expect(url).toBe("https://email.prim.sh/v1/mailboxes/mb_1/send");

@@ -51,9 +51,7 @@ export function getDb(): Database {
     )
   `);
 
-  _db.run(
-    "CREATE INDEX IF NOT EXISTS idx_accounts_passkey ON accounts(passkey_credential_id)",
-  );
+  _db.run("CREATE INDEX IF NOT EXISTS idx_accounts_passkey ON accounts(passkey_credential_id)");
 
   _db.run(`
     CREATE TABLE IF NOT EXISTS conversations (
@@ -65,9 +63,7 @@ export function getDb(): Database {
     )
   `);
 
-  _db.run(
-    "CREATE INDEX IF NOT EXISTS idx_conversations_account ON conversations(account_id)",
-  );
+  _db.run("CREATE INDEX IF NOT EXISTS idx_conversations_account ON conversations(account_id)");
 
   _db.run(`
     CREATE TABLE IF NOT EXISTS messages (
@@ -80,9 +76,7 @@ export function getDb(): Database {
     )
   `);
 
-  _db.run(
-    "CREATE INDEX IF NOT EXISTS idx_messages_conversation ON messages(conversation_id)",
-  );
+  _db.run("CREATE INDEX IF NOT EXISTS idx_messages_conversation ON messages(conversation_id)");
 
   return _db;
 }

@@ -54,9 +54,7 @@ export function createAccount(
   const db = getDb();
 
   const existing = db
-    .query<AccountRow, [string]>(
-      "SELECT * FROM accounts WHERE passkey_credential_id = ?",
-    )
+    .query<AccountRow, [string]>("SELECT * FROM accounts WHERE passkey_credential_id = ?")
     .get(passkeyCredentialId) as AccountRow | null;
 
   if (existing) {
@@ -72,7 +70,14 @@ export function createAccount(
   db.query(
     `INSERT INTO accounts (id, passkey_credential_id, passkey_public_key, wallet_address, encrypted_private_key, created_at)
      VALUES (?, ?, ?, ?, ?, ?)`,
-  ).run(id, passkeyCredentialId, Buffer.from(passkeyPublicKey), viemAccount.address, encryptedKey, now);
+  ).run(
+    id,
+    passkeyCredentialId,
+    Buffer.from(passkeyPublicKey),
+    viemAccount.address,
+    encryptedKey,
+    now,
+  );
 
   return {
     ok: true,
@@ -99,9 +104,7 @@ export function getAccount(id: string): ServiceResult<Account> {
 export function getAccountByPasskey(credentialId: string): ServiceResult<AccountRow> {
   const db = getDb();
   const row = db
-    .query<AccountRow, [string]>(
-      "SELECT * FROM accounts WHERE passkey_credential_id = ?",
-    )
+    .query<AccountRow, [string]>("SELECT * FROM accounts WHERE passkey_credential_id = ?")
     .get(credentialId) as AccountRow | null;
 
   if (!row) {

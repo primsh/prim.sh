@@ -102,7 +102,7 @@ describe("infer.sh app", () => {
 
   // Check 4b: streaming — handler returns SSE response
   it("POST /v1/chat with stream:true returns text/event-stream", async () => {
-    const sseBody = "data: {\"choices\":[{\"delta\":{\"content\":\"Hi\"}}]}\n\ndata: [DONE]\n\n";
+    const sseBody = 'data: {"choices":[{"delta":{"content":"Hi"}}]}\n\ndata: [DONE]\n\n';
     const mockResponse = new Response(sseBody, {
       headers: { "Content-Type": "text/event-stream" },
     });

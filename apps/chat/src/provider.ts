@@ -18,7 +18,9 @@ export function createInferModel(
     baseURL: `${INFER_BASE_URL}/v1`,
     // x402 handles auth — no API key needed
     apiKey: "x402",
-    fetch: primFetch as Parameters<typeof createOpenAICompatible>[0] extends { fetch?: infer F } ? F : never,
+    fetch: primFetch as Parameters<typeof createOpenAICompatible>[0] extends { fetch?: infer F }
+      ? F
+      : never,
   });
 
   return provider.chatModel(modelId);
