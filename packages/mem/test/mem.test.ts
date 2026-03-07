@@ -62,6 +62,7 @@ const mockFetch = vi.fn(async (input: RequestInfo | URL, init?: RequestInit) => 
   const method = (init?.method ?? (input instanceof Request ? input.method : "GET")).toUpperCase();
 
   // Google batchEmbedContents
+  // lgtm[js/incomplete-url-substring-sanitization] — test mock
   if (url.includes("generativelanguage.googleapis.com") && url.includes("batchEmbedContents")) {
     let count = 1;
     try {

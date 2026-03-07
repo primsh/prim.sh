@@ -199,6 +199,7 @@ const mockFetch = vi.fn(async (input: RequestInfo | URL, _init?: RequestInit) =>
   }
 
   // NameSilo: checkRegisterAvailability — default: available at $9.95
+  // lgtm[js/incomplete-url-substring-sanitization] — test mock, not production URL validation
   if (url.includes("namesilo.com") && url.includes("checkRegisterAvailability")) {
     const urlObj = new URL(url);
     const domains = urlObj.searchParams.get("domains")?.split(",") ?? [];
@@ -222,6 +223,7 @@ const mockFetch = vi.fn(async (input: RequestInfo | URL, _init?: RequestInit) =>
   }
 
   // NameSilo: registerDomain — default: success
+  // lgtm[js/incomplete-url-substring-sanitization] — test mock
   if (url.includes("namesilo.com") && url.includes("registerDomain")) {
     return new Response(
       JSON.stringify({
@@ -233,6 +235,7 @@ const mockFetch = vi.fn(async (input: RequestInfo | URL, _init?: RequestInit) =>
   }
 
   // NameSilo: changeNameServers — default: success
+  // lgtm[js/incomplete-url-substring-sanitization] — test mock
   if (url.includes("namesilo.com") && url.includes("changeNameServers")) {
     return new Response(
       JSON.stringify({

@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: Apache-2.0
-import { createHash, randomBytes } from "node:crypto";
+import { randomBytes, scryptSync } from "node:crypto";
 import { createLogger } from "@primsh/x402-middleware";
 import type { PaginatedList, ServiceResult } from "@primsh/x402-middleware";
 
@@ -126,7 +126,9 @@ function generatePassword(): string {
 }
 
 function hashPassword(password: string): string {
-  return createHash("sha256").update(password).digest("hex");
+  const salt = randomBytes(16).toString("hex");
+  const hash = scryptSync(password, salt, 64).toString("hex");
+  return `${salt}:${hash}`;
 }
 
 function rowToResponse(row: MailboxRow): MailboxResponse {
