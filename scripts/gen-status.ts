@@ -23,21 +23,21 @@ const CHECK_MODE = process.argv.includes("--check");
 // ── Helpers ────────────────────────────────────────────────────────────────
 
 function applyOrCheck(filePath: string, content: string): void {
-	const existing = existsSync(filePath) ? readFileSync(filePath, "utf8") : null;
-	const changed = existing !== content;
-	if (CHECK_MODE) {
-		if (changed) {
-			console.error(`  ✗ ${filePath} is out of date — run pnpm gen:status`);
-			process.exitCode = 1;
-		} else {
-			console.log(`  ✓ ${filePath}`);
-		}
-	} else {
-		const dir = filePath.replace(/\/[^/]+$/, "");
-		if (!existsSync(dir)) mkdirSync(dir, { recursive: true });
-		writeFileSync(filePath, content);
-		console.log(`  ${changed ? "↺" : "✓"} ${filePath}`);
-	}
+  const existing = existsSync(filePath) ? readFileSync(filePath, "utf8") : null;
+  const changed = existing !== content;
+  if (CHECK_MODE) {
+    if (changed) {
+      console.error(`  ✗ ${filePath} is out of date — run pnpm gen:status`);
+      process.exitCode = 1;
+    } else {
+      console.log(`  ✓ ${filePath}`);
+    }
+  } else {
+    const dir = filePath.replace(/\/[^/]+$/, "");
+    if (!existsSync(dir)) mkdirSync(dir, { recursive: true });
+    writeFileSync(filePath, content);
+    console.log(`  ${changed ? "↺" : "✓"} ${filePath}`);
+  }
 }
 
 // ── Load data ──────────────────────────────────────────────────────────────
@@ -45,21 +45,21 @@ function applyOrCheck(filePath: string, content: string): void {
 const prims = loadPrimitives(ROOT);
 
 interface StatusRow {
-	name: string;
-	id: string;
-	endpoint: string;
-	description: string;
-	status: string;
-	category: string;
+  name: string;
+  id: string;
+  endpoint: string;
+  description: string;
+  status: string;
+  category: string;
 }
 
 const rows: StatusRow[] = prims.map((p) => ({
-	name: p.name,
-	id: p.id,
-	endpoint: p.endpoint ?? `${p.id}.prim.sh`,
-	description: p.description ?? "",
-	status: p.status ?? "hold",
-	category: p.category ?? "meta",
+  name: p.name,
+  id: p.id,
+  endpoint: p.endpoint ?? `${p.id}.prim.sh`,
+  description: p.description ?? "",
+  status: p.status ?? "hold",
+  category: p.category ?? "meta",
 }));
 
 const live = rows.filter((r) => r.status === "mainnet" || r.status === "testnet");
@@ -68,37 +68,35 @@ const hold = rows.filter((r) => r.status === "hold");
 // ── Render HTML ────────────────────────────────────────────────────────────
 
 function statusDot(status: string): string {
-	switch (status) {
-		case "mainnet":
-		case "testnet":
-			return '<span class="dot dot-live">●</span>';
-		default:
-			return '<span class="dot dot-hold">○</span>';
-	}
+  switch (status) {
+    case "mainnet":
+    case "testnet":
+      return '<span class="dot dot-live">●</span>';
+    default:
+      return '<span class="dot dot-hold">○</span>';
+  }
 }
 
 function statusLabel(status: string): string {
-	switch (status) {
-		case "mainnet":
-			return "mainnet";
-		case "testnet":
-			return "testnet";
-		default:
-			return "";
-	}
+  switch (status) {
+    case "mainnet":
+      return "mainnet";
+    case "testnet":
+      return "testnet";
+    default:
+      return "";
+  }
 }
 
 function renderRow(r: StatusRow): string {
-	const isLive = r.status === "mainnet" || r.status === "testnet";
-	const endpoint = isLive
-		? `<a href="https://${r.endpoint}">${r.endpoint}</a>`
-		: `<span class="muted">${r.endpoint}</span>`;
-	const nameLink = isLive
-		? `<a href="/${r.id}">${r.name}</a>`
-		: `<span>${r.name}</span>`;
-	const label = statusLabel(r.status);
-	const labelHtml = label ? ` <span class="net-label">${label}</span>` : "";
-	return `      <tr>
+  const isLive = r.status === "mainnet" || r.status === "testnet";
+  const endpoint = isLive
+    ? `<a href="https://${r.endpoint}">${r.endpoint}</a>`
+    : `<span class="muted">${r.endpoint}</span>`;
+  const nameLink = isLive ? `<a href="/${r.id}">${r.name}</a>` : `<span>${r.name}</span>`;
+  const label = statusLabel(r.status);
+  const labelHtml = label ? ` <span class="net-label">${label}</span>` : "";
+  return `      <tr>
         <td>${statusDot(r.status)}</td>
         <td>${nameLink}${labelHtml}</td>
         <td>${endpoint}</td>
@@ -107,9 +105,9 @@ function renderRow(r: StatusRow): string {
 }
 
 function renderSection(title: string, _label: string, items: StatusRow[]): string {
-	if (items.length === 0) return "";
-	const rowsHtml = items.map(renderRow).join("\n");
-	return `
+  if (items.length === 0) return "";
+  const rowsHtml = items.map(renderRow).join("\n");
+  return `
 <h2>${title} <span class="count">${items.length}</span></h2>
 <table>
   <thead>
@@ -122,12 +120,12 @@ ${rowsHtml}
 }
 
 function renderHtml(): string {
-	const liveSection = renderSection("Live", "live", live);
-	const holdSection = renderSection("Coming soon", "hold", hold);
+  const liveSection = renderSection("Live", "live", live);
+  const holdSection = renderSection("Coming soon", "hold", hold);
 
-	const footer = renderFooter(`<a href="/">${BRAND.name}</a> / status`);
+  const footer = renderFooter(`<a href="/">${BRAND.name}</a> / status`);
 
-	return `<!DOCTYPE html>
+  return `<!DOCTYPE html>
 <!-- Generated by scripts/gen-status.ts — do not edit -->
 <html lang="en">
 <head>
@@ -203,9 +201,9 @@ console.log(CHECK_MODE ? "Mode: check\n" : "Mode: generate\n");
 applyOrCheck(resolve(ROOT, "site/status/index.html"), renderHtml());
 
 if (CHECK_MODE && process.exitCode) {
-	console.error("\nStatus page is out of date. Run: pnpm gen:status");
+  console.error("\nStatus page is out of date. Run: pnpm gen:status");
 } else if (CHECK_MODE) {
-	console.log("\nStatus page is up to date.");
+  console.log("\nStatus page is up to date.");
 } else {
-	console.log("\nDone.");
+  console.log("\nDone.");
 }

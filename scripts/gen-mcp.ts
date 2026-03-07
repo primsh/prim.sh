@@ -622,7 +622,10 @@ for (const prim of PRIMS) {
     // File already has markers — inject into existing file
     let injected = injectMarkers(existing, toolsDef, handlerDef);
     // Ensure generated header is present at top of file
-    if (!injected.startsWith("// SPDX-License-Identifier") && !injected.startsWith("// THIS FILE IS GENERATED")) {
+    if (
+      !injected.startsWith("// SPDX-License-Identifier") &&
+      !injected.startsWith("// THIS FILE IS GENERATED")
+    ) {
       injected = GEN_HEADER + injected;
     }
     finalContent = injected;

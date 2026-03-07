@@ -147,10 +147,7 @@
   // ── Parent window communication (for iframe embed in chat.prim.sh) ─────
   function notifyParent(status) {
     if (window.parent && window.parent !== window) {
-      window.parent.postMessage(
-        { source: "pay.prim.sh", status, amount: selectedAmount },
-        "*",
-      );
+      window.parent.postMessage({ source: "pay.prim.sh", status, amount: selectedAmount }, "*");
     }
   }
 })();

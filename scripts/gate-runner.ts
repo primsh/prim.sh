@@ -34,13 +34,7 @@ import {
 import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
 import { parseArgs } from "node:util";
-import {
-  createPublicClient,
-  createWalletClient,
-  formatUnits,
-  getAddress,
-  http,
-} from "viem";
+import { createPublicClient, createWalletClient, formatUnits, getAddress, http } from "viem";
 import type { Address, Hex } from "viem";
 import { privateKeyToAccount } from "viem/accounts";
 import { base, baseSepolia } from "viem/chains";
@@ -1016,13 +1010,9 @@ async function sweepTestWallet(privateKey: string, address: string): Promise<voi
         functionName: "transfer",
         args: [gateAddress, usdcBalance],
       });
-      console.log(
-        c.green(`  Sweep: ${formatUnits(usdcBalance, 6)} USDC → ${gateAddress} (${tx})`),
-      );
+      console.log(c.green(`  Sweep: ${formatUnits(usdcBalance, 6)} USDC → ${gateAddress} (${tx})`));
     } catch (err) {
-      console.warn(
-        `  Sweep USDC failed: ${err instanceof Error ? err.message : String(err)}`,
-      );
+      console.warn(`  Sweep USDC failed: ${err instanceof Error ? err.message : String(err)}`);
     }
   } else {
     console.log(c.dim("  Sweep: 0 USDC — nothing to reclaim"));
@@ -1051,7 +1041,11 @@ async function cleanupOnboardingE2e(ctx: SetupContext): Promise<void> {
     } else if (configRaw.includes("network = ")) {
       const match = configRaw.match(/network = "([^"]+)"/);
       const actual = match?.[1] ?? "(unknown)";
-      console.log(c.red(`  Verify: config.toml network MISMATCH — expected "${expectedNetwork}", got "${actual}"`));
+      console.log(
+        c.red(
+          `  Verify: config.toml network MISMATCH — expected "${expectedNetwork}", got "${actual}"`,
+        ),
+      );
     } else {
       console.log(c.yellow("  Verify: config.toml has no network field"));
     }
@@ -1767,7 +1761,9 @@ async function main() {
       console.log(`\n${c.bold("Gate Runner — Canary Dry Run")}`);
       console.log(`Plan: ${plan.plan}`);
       console.log(`Network: ${plan.network}`);
-      console.log(`Backend: ${execEnv}${execEnv === "remote" ? " (spawn.sh / DigitalOcean)" : execEnv === "docker" ? " (Docker)" : ""}`);
+      console.log(
+        `Backend: ${execEnv}${execEnv === "remote" ? " (spawn.sh / DigitalOcean)" : execEnv === "docker" ? " (Docker)" : ""}`,
+      );
       console.log(`Mode: ${c.cyan("canary")} — agent drives LLM inference via infer.prim.sh\n`);
 
       for (const group of groups) {
@@ -1844,7 +1840,9 @@ async function main() {
     console.log(`Plan: ${plan.plan}`);
     console.log(`Network: ${plan.network}`);
     console.log(`Infer: ${inferEndpoint}`);
-    console.log(`Backend: ${execEnv}${execEnv === "remote" ? " (spawn.sh / DigitalOcean)" : execEnv === "docker" ? " (Docker)" : ""}`);
+    console.log(
+      `Backend: ${execEnv}${execEnv === "remote" ? " (spawn.sh / DigitalOcean)" : execEnv === "docker" ? " (Docker)" : ""}`,
+    );
     console.log(`Mode: ${args.ci ? "CI" : "local"}\n`);
 
     const canaryResults: CanaryGroupResult[] = [];

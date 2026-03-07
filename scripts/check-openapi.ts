@@ -308,7 +308,9 @@ function routeMatches(route: string, pattern: string): boolean {
 
 // ── Main ──────────────────────────────────────────────────────────────────
 
-const prims = primsForInterface("rest").map((p) => p.id).sort();
+const prims = primsForInterface("rest")
+  .map((p) => p.id)
+  .sort();
 let hasErrors = false;
 
 console.log(`Checking ${prims.length} OpenAPI specs...\n`);

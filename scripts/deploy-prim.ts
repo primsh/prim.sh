@@ -139,8 +139,10 @@ const ENV_COMMENTS: Record<string, string> = {
   PRIM_NETWORK: "# Chain: eip155:8453 (Base mainnet) or eip155:84532 (Base Sepolia)",
   PRIM_INTERNAL_KEY: "# Shared secret for internal API calls between services",
   TESTNET_WALLET: "# Treasury wallet private key (hex, no 0x prefix) for faucet drips",
-  FAUCET_RESERVE_USDC: "# Reserve floor — refuse treasury fallback below this USDC amount (default: 10.00)",
-  FAUCET_RESERVE_ETH: "# Reserve floor — refuse treasury fallback below this ETH amount (default: 0.005)",
+  FAUCET_RESERVE_USDC:
+    "# Reserve floor — refuse treasury fallback below this USDC amount (default: 10.00)",
+  FAUCET_RESERVE_ETH:
+    "# Reserve floor — refuse treasury fallback below this ETH amount (default: 0.005)",
   DO_API_TOKEN: "# DigitalOcean API token",
   WALLET_INTERNAL_URL: "# URL of the wallet service internal API",
   CLOUDFLARE_ACCOUNT_ID: "# Cloudflare account ID",

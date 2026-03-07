@@ -171,8 +171,15 @@ const MARKER_CLOSE = "// END:GENERATED:SMOKE";
 
 /** Names that collide with vitest globals — skip as service test imports */
 const VITEST_GLOBALS = new Set([
-  "describe", "it", "expect", "vi", "test",
-  "beforeEach", "afterEach", "beforeAll", "afterAll",
+  "describe",
+  "it",
+  "expect",
+  "vi",
+  "test",
+  "beforeEach",
+  "afterEach",
+  "beforeAll",
+  "afterAll",
 ]);
 
 /**
@@ -314,9 +321,7 @@ function generateFullFile(ctx: GenContext): string {
     lines.push("  return {");
     lines.push("    ...original,");
     lines.push("    createAgentStackMiddleware: createAgentStackMiddlewareSpy,");
-    lines.push(
-      "    createWalletAllowlistChecker: vi.fn(mocks.createWalletAllowlistChecker),",
-    );
+    lines.push("    createWalletAllowlistChecker: vi.fn(mocks.createWalletAllowlistChecker),");
     lines.push("  };");
     lines.push("});");
   } else {
@@ -328,9 +333,7 @@ function generateFullFile(ctx: GenContext): string {
     lines.push("  return {");
     lines.push("    ...original,");
     lines.push("    createAgentStackMiddleware: vi.fn(mocks.createAgentStackMiddleware),");
-    lines.push(
-      "    createWalletAllowlistChecker: vi.fn(mocks.createWalletAllowlistChecker),",
-    );
+    lines.push("    createWalletAllowlistChecker: vi.fn(mocks.createWalletAllowlistChecker),");
     lines.push("  };");
     lines.push("});");
   }
@@ -622,9 +625,7 @@ function generateSmokeLiveMarkedContent(ctx: GenContext): string {
       testNum++;
       const { method, path } = parseRoute(r.route);
       lines.push("");
-      lines.push(
-        `  it("${testNum}. ${method} ${path} — requires x402 payment", async () => {`,
-      );
+      lines.push(`  it("${testNum}. ${method} ${path} — requires x402 payment", async () => {`);
       lines.push(`    const res = await fetch(\`\${BASE_URL}${path}\`, {`);
       lines.push(`      method: "${method}",`);
       lines.push(`      headers: { "Content-Type": "application/json" },`);
@@ -641,9 +642,7 @@ function generateSmokeLiveMarkedContent(ctx: GenContext): string {
     testNum++;
     const path = parseRoute(firstPost.route).path;
     lines.push("");
-    lines.push(
-      `  it("${testNum}. POST ${path} — missing fields returns 400", async () => {`,
-    );
+    lines.push(`  it("${testNum}. POST ${path} — missing fields returns 400", async () => {`);
     lines.push(`    const res = await fetch(\`\${BASE_URL}${path}\`, {`);
     lines.push(`      method: "POST",`);
     lines.push(`      headers: { "Content-Type": "application/json" },`);
@@ -725,7 +724,14 @@ function buildRouteOpMap(
  * Generate the full service.test.ts file content.
  */
 function generateUnitFile(ctx: GenContext): string {
-  const { p, routes, serviceExports, hasDbFile, needsBunSqliteMock, apiInterfaces: _apiInterfaces } = ctx;
+  const {
+    p,
+    routes,
+    serviceExports,
+    hasDbFile,
+    needsBunSqliteMock,
+    apiInterfaces: _apiInterfaces,
+  } = ctx;
   const lines: string[] = [];
   const servicePath = join(ROOT, "packages", p.id, "src/service.ts");
   const providerImports = detectProviderImports(servicePath);
@@ -915,7 +921,10 @@ function processGeneratedFile(
   filePath: string,
   generateFull: () => string,
   generateMarked: () => string,
-  injectFn: (existing: string, content: string) => { result: string; hadMarkers: boolean; changed: boolean },
+  injectFn: (
+    existing: string,
+    content: string,
+  ) => { result: string; hadMarkers: boolean; changed: boolean },
   _label: string,
 ): void {
   if (!existsSync(filePath)) {

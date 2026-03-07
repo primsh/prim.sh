@@ -189,8 +189,10 @@ const ENV_COMMENTS: Record<string, string> = {
   PRIM_NETWORK: "# Chain: eip155:8453 (Base mainnet) or eip155:84532 (Base Sepolia)",
   PRIM_INTERNAL_KEY: "# Shared secret for internal API calls between services",
   TESTNET_WALLET: "# Treasury wallet private key (hex, no 0x prefix) for faucet drips",
-  FAUCET_RESERVE_USDC: "# Reserve floor — refuse treasury fallback below this USDC amount (default: 10.00)",
-  FAUCET_RESERVE_ETH: "# Reserve floor — refuse treasury fallback below this ETH amount (default: 0.005)",
+  FAUCET_RESERVE_USDC:
+    "# Reserve floor — refuse treasury fallback below this USDC amount (default: 10.00)",
+  FAUCET_RESERVE_ETH:
+    "# Reserve floor — refuse treasury fallback below this ETH amount (default: 0.005)",
   DO_API_TOKEN: "# DigitalOcean API token",
   WALLET_INTERNAL_URL: "# URL of the wallet service internal API",
   CLOUDFLARE_ACCOUNT_ID: "# Cloudflare account ID",
@@ -211,7 +213,8 @@ const ENV_COMMENTS: Record<string, string> = {
   TRACKINGMORE_API_KEY: "# TrackingMore API key (https://www.trackingmore.com)",
   FEEDBACK_DB_PATH: "# Path to feedback SQLite database",
   PRIM_FEEDBACK_URL: "# URL for feedback submission endpoint",
-  CHAT_ENCRYPTION_KEY: "# AES-256-GCM key for encrypting custodial wallet private keys (64 hex chars)",
+  CHAT_ENCRYPTION_KEY:
+    "# AES-256-GCM key for encrypting custodial wallet private keys (64 hex chars)",
   CHAT_SESSION_SECRET: "# HMAC secret for signing session cookies",
   CHAT_DB_PATH: "# Path to chat SQLite database (e.g. /opt/prim/data/chat.db)",
   CHAT_RP_ID: "# WebAuthn Relying Party ID (e.g. chat.prim.sh)",
@@ -417,12 +420,7 @@ if (apps.size > 0) {
     );
 
     // 3. Env template
-    const envContent = genEnvTemplate(
-      id,
-      `prim-apps.yaml (app: ${id})`,
-      app.port,
-      app.env,
-    );
+    const envContent = genEnvTemplate(id, `prim-apps.yaml (app: ${id})`, app.port, app.env);
     writeIfChanged(
       join(GENERATED_DIR, `${id}.env.template`),
       envContent,

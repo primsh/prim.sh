@@ -19,7 +19,8 @@
   --success: #00ff88;
 }
 
-html, body {
+html,
+body {
   height: 100%;
 }
 
@@ -105,7 +106,9 @@ body {
   font-size: 0.9rem;
   font-weight: 600;
   cursor: pointer;
-  transition: border-color 0.15s, background 0.15s;
+  transition:
+    border-color 0.15s,
+    background 0.15s;
 }
 
 .amount-btn:hover {
@@ -269,7 +272,9 @@ body {
 }
 
 @keyframes spin {
-  to { transform: rotate(360deg); }
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 /* ── Responsive ─────────────────────────────────────────────────────────── */
