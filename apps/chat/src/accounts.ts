@@ -16,7 +16,6 @@ interface Account {
 
 const ALGORITHM = "aes-256-gcm";
 const IV_LENGTH = 12;
-const AUTH_TAG_LENGTH = 16;
 
 function getEncryptionKey(): Buffer {
   const key = process.env.CHAT_ENCRYPTION_KEY;
