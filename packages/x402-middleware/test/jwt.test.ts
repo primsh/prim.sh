@@ -40,8 +40,16 @@ describe("JWT sign/verify", () => {
   it("rejects token with tampered address", async () => {
     const token = await signSessionJwt(TEST_PRIVATE_KEY);
     const decoded = JSON.parse(atob(token));
-    decoded.payload.sub = "0x0000000000000000000000000000000000000001";
-    const tampered = btoa(JSON.stringify(decoded));
+    // Tamper the payload but keep the original signature — signature won't match
+    const tampered = btoa(
+      JSON.stringify({
+        payload: {
+          ...decoded.payload,
+          sub: "0x0000000000000000000000000000000000000001",
+        },
+        signature: decoded.signature,
+      }),
+    );
 
     const result = await verifySessionJwt(tampered);
     expect(result.ok).toBe(false);
@@ -55,6 +63,17 @@ describe("JWT sign/verify", () => {
     expect(result.ok).toBe(false);
     if (result.ok) return;
     expect(result.code).toBe("invalid_jwt");
+  });
+
+  it("rejects token with invalid field types", async () => {
+    const token = btoa(
+      JSON.stringify({
+        payload: { sub: "0x1", iat: "not-a-number", exp: "also-not-a-number" },
+        signature: "0x2",
+      }),
+    );
+    const result = await verifySessionJwt(token);
+    expect(result.ok).toBe(false);
   });
 
   it("respects custom TTL", async () => {

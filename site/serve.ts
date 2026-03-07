@@ -14,8 +14,13 @@ import {
   renderLegal,
 } from "./template.ts";
 
-const PORT = Number(process.env.PORT ?? 3000);
+const PORT = Number.parseInt(process.env.PORT ?? "3000", 10);
 const ROOT = resolve(import.meta.dir, "..");
+
+/** Validate route path segments to prevent directory traversal */
+function isSafeId(id: string): boolean {
+  return /^[a-zA-Z0-9_-]+$/.test(id);
+}
 
 // ── static pages (not converted to YAML) ─────────────────────────────────────
 
@@ -202,6 +207,12 @@ const server = Bun.serve({
     const llmsMatch = pathname.match(/^\/([^/]+)\/llms\.txt$/);
     if (llmsMatch) {
       const [, id] = llmsMatch;
+      if (!isSafeId(id)) {
+        return new Response(NOT_FOUND_HTML, {
+          status: 404,
+          headers: { "Content-Type": "text/html; charset=utf-8" },
+        });
+      }
       return serveFile(join(ROOT, `site/${id}/llms.txt`));
     }
 
@@ -209,6 +220,12 @@ const server = Bun.serve({
     const installMatch = pathname.match(/^\/([^/]+)\/install\.sh$/);
     if (installMatch) {
       const [, id] = installMatch;
+      if (!isSafeId(id)) {
+        return new Response(NOT_FOUND_HTML, {
+          status: 404,
+          headers: { "Content-Type": "text/html; charset=utf-8" },
+        });
+      }
       const pkgPath = join(ROOT, `packages/${id}/install.sh`);
       const sitePath = join(ROOT, `site/${id}/install.sh`);
       return serveFile(existsSync(pkgPath) ? pkgPath : sitePath);
@@ -218,6 +235,12 @@ const server = Bun.serve({
     const pageMatch = pathname.match(/^\/([^/]+)\/?$/);
     if (pageMatch) {
       const [, id] = pageMatch;
+      if (!isSafeId(id)) {
+        return new Response(NOT_FOUND_HTML, {
+          status: 404,
+          headers: { "Content-Type": "text/html; charset=utf-8" },
+        });
+      }
 
       // Legal pages (terms, privacy)
       const legal = legalCache.get(id);
