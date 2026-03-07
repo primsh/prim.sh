@@ -24,13 +24,13 @@
     "check": "pnpm lint && pnpm typecheck && pnpm test"
   },
   "dependencies": {
-    "@coinbase/cdp-sdk": "^1.44.0",
+    "@coinbase/cdp-sdk": "^1.45.0",
     "@primsh/x402-middleware": "workspace:*",
     "hono": "^4.12.4",
-    "viem": "^2.21.0"
+    "viem": "^2.47.0"
   },
   "devDependencies": {
-    "@types/node": "^25.3.0",
+    "@types/node": "^25.3.5",
     "typescript": "^5.6.3",
     "vitest": "^1.6.1"
   }
