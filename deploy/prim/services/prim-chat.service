@@ -1,0 +1,19 @@
+# THIS FILE IS GENERATED — DO NOT EDIT
+# Source: prim-apps.yaml (app: chat)
+# Regenerate: pnpm gen:deploy
+
+[Unit]
+Description=prim.sh chat.prim.sh service
+After=network.target
+
+[Service]
+Type=simple
+User=prim
+WorkingDirectory=/opt/prim
+EnvironmentFile=/etc/prim/chat.env
+ExecStart=/home/prim/.bun/bin/bun run apps/chat/src/serve.ts
+Restart=on-failure
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target

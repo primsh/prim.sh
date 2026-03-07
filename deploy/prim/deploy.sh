@@ -9,7 +9,7 @@ set -euo pipefail
 # shellcheck source=prim-env.sh
 source "$(dirname "${BASH_SOURCE[0]}")/prim-env.sh"
 # BEGIN:PRIM:SERVICES
-SERVICES=(wallet faucet gate store search feedback)
+SERVICES=(wallet faucet gate store search feedback chat pay)
 # END:PRIM:SERVICES
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"

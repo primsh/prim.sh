@@ -4,7 +4,7 @@ import { join } from "node:path";
 import { Hono } from "hono";
 
 const app = new Hono();
-const PORT = Number(process.env.PORT ?? 3020);
+const PORT = Number(process.env.PORT ?? 3021);
 const PUBLIC_DIR = join(import.meta.dir, "..", "public");
 
 function serveFile(name: string, contentType: string) {
