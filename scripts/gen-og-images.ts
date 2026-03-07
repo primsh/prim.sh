@@ -133,6 +133,32 @@ function brandCard(): string {
 </svg>`;
 }
 
+/** Discord community invite card */
+function discordCard(): string {
+  const discord = "#5865F2";
+
+  return `<svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="${H}">
+  <rect width="${W}" height="${H}" fill="${BG}"/>
+  <defs>
+    <radialGradient id="glow" cx="35%" cy="40%" r="50%">
+      <stop offset="0%" stop-color="${discord}" stop-opacity="0.10"/>
+      <stop offset="100%" stop-color="${discord}" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+  <rect width="${W}" height="${H}" fill="url(#glow)"/>
+
+  ${logoMark(discord)}
+
+  <text x="420" y="210" font-family="${FONT}" font-size="60" font-weight="700" fill="${discord}">Join the community</text>
+  <text x="420" y="270" font-family="${FONT}" font-size="28" fill="#999">Build agent infrastructure together.</text>
+  <text x="420" y="320" font-family="${FONT}" font-size="22" fill="#666">prim.sh Discord</text>
+
+  <line x1="80" y1="520" x2="1120" y2="520" stroke="#1a1a1a" stroke-width="1"/>
+  <text x="80" y="565" font-family="${FONT}" font-size="22" fill="#666">prim.sh</text>
+  <text x="1120" y="565" font-family="${FONT}" font-size="18" fill="#444" text-anchor="end">${BRAND.social.discord.replace("https://", "")}</text>
+</svg>`;
+}
+
 // ── Renderer ─────────────────────────────────────────────────────────────────
 
 function svgToPng(svg: string): Buffer {
@@ -168,6 +194,10 @@ mkdirSync(OUT_DIR, { recursive: true });
 console.log("[gen-og] brand.png");
 writeOrCheck(join(OUT_DIR, "brand.png"), svgToPng(brandCard()));
 
+// Discord invite card
+console.log("[gen-og] discord.png");
+writeOrCheck(join(OUT_DIR, "discord.png"), svgToPng(discordCard()));
+
 // Per-prim cards
 const prims = loadPrimitives(ROOT);
 for (const p of prims) {
@@ -195,5 +225,5 @@ if (CHECK_MODE) {
     console.log("[gen-og] All OG images up to date.");
   }
 } else {
-  console.log(`[gen-og] Done. ${prims.length + 1} images written to site/assets/og/`);
+  console.log(`[gen-og] Done. ${prims.length + 2} images written to site/assets/og/`);
 }
