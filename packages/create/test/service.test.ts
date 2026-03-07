@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: Apache-2.0
-import { describe, expect, it, vi } from "vitest";
+import { describe, it, vi } from "vitest";
 
 vi.hoisted(() => {
   process.env.PRIM_NETWORK = "eip155:84532";
@@ -7,7 +7,7 @@ vi.hoisted(() => {
 
 vi.mock("yaml");
 
-import { scaffold, validate } from "../src/service.ts";
+import { scaffold as _scaffold, validate as _validate } from "../src/service.ts";
 
 // BEGIN:GENERATED:UNIT
 describe("create.sh service", () => {

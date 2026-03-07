@@ -238,29 +238,8 @@ function classifyRoute(
 
   if (segments.length === 0) return { subgroup: null, leafName };
 
-  // Find the base resource (first segment, no curly braces)
-  const baseSegment = segments[0]; // e.g. "tokens", "ssh-keys", "zones"
-
   // Count non-param segments after the base resource
   const afterBase = segments.slice(1);
-
-  // Identify candidate subgroup: a non-param segment that is NOT an action word
-  // that maps directly to a top-level CLI verb (start/stop/reboot etc.)
-  const actionWords = new Set([
-    "start",
-    "stop",
-    "reboot",
-    "rebuild",
-    "resize",
-    "activate",
-    "verify",
-    "renew",
-    "send",
-    "quota",
-    "reconcile",
-    "mail-setup",
-    "configure-ns",
-  ]);
 
   // Check if there's a non-param segment after the first path param
   let foundPathParam = false;
@@ -323,7 +302,7 @@ function singularizeSubgroup(seg: string): string {
   return known[seg] ?? seg;
 }
 
-function deriveLeafName(opId: string, method: string, path: string): string {
+function deriveLeafName(opId: string, method: string, _path: string): string {
   if (!opId) return method.toLowerCase();
 
   // Direct operationId → CLI name mappings
@@ -789,7 +768,7 @@ function buildUsageString(
   pathParams: string[],
   positionalField: string | null,
   bodyProps: PropInfo[],
-  argvOffset: number,
+  _argvOffset: number,
 ): string {
   const parts = ["prim", prim.id];
   if (route.subgroup) parts.push(route.subgroup);
@@ -965,7 +944,7 @@ function generateCommandFile(spec: OpenAPISpec, id: string, routesMap?: RouteMap
     const u = buildUsageString(r, prim, r.pathParams, null, getBodyProps(spec, r.bodySchema), 2);
     lines.push(`    console.log("  ${u}");`);
   }
-  for (const [sg, sgRoutes] of subgroupMap) {
+  for (const [_sg, sgRoutes] of subgroupMap) {
     for (const r of sgRoutes) {
       const u = buildUsageString(r, prim, r.pathParams, null, getBodyProps(spec, r.bodySchema), 3);
       lines.push(`    console.log("  ${u}");`);

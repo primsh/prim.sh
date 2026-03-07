@@ -304,7 +304,7 @@ function syntheticValue(field: ParsedField): unknown {
  * - Paid routes with path params: depend on the create test for that resource
  */
 function inferDependsOn(
-  prim: Primitive,
+  _prim: Primitive,
   route: RouteMapping,
   healthTestId: string,
   testIndex: Map<string, string>, // route key → test ID
@@ -346,7 +346,7 @@ function inferDependsOn(
  * typically return an ID field that downstream tests need.
  */
 function inferCaptures(
-  prim: Primitive,
+  _prim: Primitive,
   route: RouteMapping,
   interfaces: Map<string, ParsedInterface>,
 ): Record<string, string> {

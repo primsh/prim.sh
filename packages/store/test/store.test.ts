@@ -81,7 +81,6 @@ const mockFetch = vi.fn(async (input: RequestInfo | URL, _init?: RequestInit) =>
     /^https:\/\/test-cf-account\.r2\.cloudflarestorage\.com\/([^/?]+)(\/(.+?))?(\?.*)?$/,
   );
   if (s3Match) {
-    const _bucketName = s3Match[1];
     const objectKey = s3Match[3];
 
     // S3: HEAD /{bucket}/{key} — head object

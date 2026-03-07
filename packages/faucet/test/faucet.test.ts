@@ -5,7 +5,7 @@
  * IMPORTANT: env vars must be set before any module import that touches network config.
  */
 
-import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 
 // Set testnet env before any imports
 process.env.PRIM_NETWORK = "eip155:84532";

@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: Apache-2.0
-import { describe, expect, it, vi } from "vitest";
+import { describe, it, vi } from "vitest";
 
 vi.hoisted(() => {
   process.env.PRIM_NETWORK = "eip155:84532";
@@ -26,17 +26,17 @@ vi.mock("../src/db.ts", () => ({
 }));
 
 import {
-  createServer,
-  listServers,
-  getServer,
-  deleteServer,
-  startServer,
-  stopServer,
-  rebootServer,
-  resizeServer,
-  rebuildServer,
-  listSshKeys,
-  deleteSshKey,
+  createServer as _createServer,
+  listServers as _listServers,
+  getServer as _getServer,
+  deleteServer as _deleteServer,
+  startServer as _startServer,
+  stopServer as _stopServer,
+  rebootServer as _rebootServer,
+  resizeServer as _resizeServer,
+  rebuildServer as _rebuildServer,
+  listSshKeys as _listSshKeys,
+  deleteSshKey as _deleteSshKey,
 } from "../src/service.ts";
 
 // BEGIN:GENERATED:UNIT

@@ -18,7 +18,6 @@ const PRIMITIVES = [
   "domain",
   "token",
 ] as const;
-type Primitive = (typeof PRIMITIVES)[number];
 
 const META_SKILLS = ["onboard"] as const;
 const ALL_SKILLS = [...PRIMITIVES, ...META_SKILLS] as const;

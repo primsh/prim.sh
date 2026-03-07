@@ -85,16 +85,12 @@ export function parseProviderInterface(providerTsPath: string): ProviderInterfac
  * provider interface with a singleton pattern.
  */
 export function genVendorTs(
-  primId: string,
+  _primId: string,
   providerInterfaceName: string,
   vendorName: string,
   envKey: string,
 ): string {
   const className = `${toPascalCase(vendorName)}Client`;
-
-  // Build import list — always import the interface, optionally import data type
-  const prefix = providerInterfaceName.replace(/Provider$/, "");
-  const dataTypeName = `${prefix}ProviderData`;
 
   // We import ProviderError as a value and the interface + data type as types.
   // The data type may not exist, but the generated file will reference it as a

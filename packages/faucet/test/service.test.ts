@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: Apache-2.0
-import { describe, expect, it, vi } from "vitest";
+import { describe, it, vi } from "vitest";
 
 vi.hoisted(() => {
   process.env.PRIM_NETWORK = "eip155:84532";
@@ -20,7 +20,11 @@ vi.mock("viem");
 vi.mock("viem/accounts");
 vi.mock("viem/chains");
 
-import { refillTreasury, dripUsdc, dripEth } from "../src/service.ts";
+import {
+  refillTreasury as _refillTreasury,
+  dripUsdc as _dripUsdc,
+  dripEth as _dripEth,
+} from "../src/service.ts";
 
 // BEGIN:GENERATED:UNIT
 describe("faucet.sh service", () => {

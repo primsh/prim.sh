@@ -78,15 +78,6 @@ interface MarkGeometry {
 }
 
 /**
- * Build the base chevron path.
- * h = full height, w = horizontal depth of the chevron.
- * Wider w = wider angle (~90° opening).
- */
-function chevronPath(h: number, w: number): string {
-  return `M0 0 L${w} ${h / 2} L0 ${h}`;
-}
-
-/**
  * Build mark geometry for a given mark ID.
  *
  * Width/height returned are VISUAL bounds (includes stroke overshoot).
@@ -217,7 +208,6 @@ function renderFavicon(): string {
 
   // Chevron centered in circle
   const contentH = R * 1.2;
-  const cw = contentH * 0.55;
   const mark = buildMark("chevron", contentH, sw);
   const tx = cx - mark.width / 2;
   const ty = cy - mark.height / 2;

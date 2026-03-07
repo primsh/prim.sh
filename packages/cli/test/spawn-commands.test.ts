@@ -158,8 +158,6 @@ let mockFetch: ReturnType<typeof vi.fn>;
 let consoleLogSpy: MockInstance<any[], any>;
 // biome-ignore lint/suspicious/noExplicitAny: spy types vary per target
 let stderrSpy: MockInstance<any[], any>;
-// biome-ignore lint/suspicious/noExplicitAny: spy types vary per target
-let exitSpy: MockInstance<any[], never>;
 
 beforeEach(() => {
   mockFetch = vi.fn();
@@ -167,7 +165,7 @@ beforeEach(() => {
   vi.mocked(getConfig).mockResolvedValue({});
   consoleLogSpy = vi.spyOn(console, "log").mockImplementation(() => {});
   stderrSpy = vi.spyOn(process.stderr, "write").mockImplementation(() => true);
-  exitSpy = vi.spyOn(process, "exit").mockImplementation((_code) => {
+  vi.spyOn(process, "exit").mockImplementation((_code) => {
     throw new Error(`process.exit(${_code})`);
   });
   // biome-ignore lint/performance/noDelete: env var must be absent, not the string "undefined"

@@ -66,7 +66,7 @@ export class Database {
     this.db.exec(sql);
   }
 
-  query<T = QueryResult, _P = unknown[]>(sql: string): PreparedStatement {
+  query<_T = QueryResult, _P = unknown[]>(sql: string): PreparedStatement {
     return new PreparedStatement(this.db.prepare(sql));
   }
 

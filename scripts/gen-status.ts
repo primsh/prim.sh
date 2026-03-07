@@ -106,7 +106,7 @@ function renderRow(r: StatusRow): string {
       </tr>`;
 }
 
-function renderSection(title: string, label: string, items: StatusRow[]): string {
+function renderSection(title: string, _label: string, items: StatusRow[]): string {
 	if (items.length === 0) return "";
 	const rowsHtml = items.map(renderRow).join("\n");
 	return `

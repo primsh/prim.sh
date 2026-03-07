@@ -47,6 +47,7 @@ interface AppConfig {
   port: number;
   entry: string;
   max_body_size?: string;
+  csp?: string;
   env: string[];
 }
 
@@ -159,7 +160,20 @@ function genAppCaddyFragment(id: string, app: AppConfig): string {
   lines.push(`# Regenerate: pnpm gen:deploy`);
   lines.push(``);
   lines.push(`${app.endpoint} {`);
-  lines.push("    import security_headers");
+  if (app.csp) {
+    // Apps with custom CSP inline all security headers (can't override snippet's header block)
+    lines.push("    header {");
+    lines.push('        Strict-Transport-Security "max-age=31536000; includeSubDomains; preload"');
+    lines.push('        X-Frame-Options "DENY"');
+    lines.push('        X-Content-Type-Options "nosniff"');
+    lines.push('        Referrer-Policy "strict-origin-when-cross-origin"');
+    lines.push(`        Content-Security-Policy "${app.csp}"`);
+    lines.push('        Permissions-Policy "geolocation=(), microphone=(), camera=()"');
+    lines.push("        -Server");
+    lines.push("    }");
+  } else {
+    lines.push("    import security_headers");
+  }
   lines.push("    request_body {");
   lines.push(`        max_size ${app.max_body_size ?? "1MB"}`);
   lines.push("    }");

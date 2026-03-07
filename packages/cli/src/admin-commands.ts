@@ -1,5 +1,4 @@
 // SPDX-License-Identifier: Apache-2.0
-import { getConfig } from "@primsh/keystore";
 import { getFlag } from "./flags.ts";
 
 function resolveAdminKey(): string {

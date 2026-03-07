@@ -50,7 +50,6 @@ vi.stubGlobal(
 
 import {
   getPolicy,
-  incrementDailySpent,
   resetDailySpentIfNeeded,
   resetDb,
   setPauseState,

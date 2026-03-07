@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: Apache-2.0
-import { describe, expect, it, vi } from "vitest";
+import { describe, it, vi } from "vitest";
 
 vi.hoisted(() => {
   process.env.PRIM_NETWORK = "eip155:84532";
@@ -19,7 +19,7 @@ vi.mock("../src/db.ts", () => ({
   revokeCode: vi.fn(),
 }));
 
-import { redeemInvite } from "../src/service.ts";
+import { redeemInvite as _redeemInvite } from "../src/service.ts";
 
 // BEGIN:GENERATED:UNIT
 describe("gate.sh service", () => {

@@ -68,19 +68,16 @@ function mockTtyStdin(): void {
 
 let mockFetch: ReturnType<typeof vi.fn>;
 // biome-ignore lint/suspicious/noExplicitAny: spy types vary per target
-let consoleLogSpy: MockInstance<any[], any>;
 // biome-ignore lint/suspicious/noExplicitAny: spy types vary per target
 let stderrSpy: MockInstance<any[], any>;
-// biome-ignore lint/suspicious/noExplicitAny: spy types vary per target
-let exitSpy: MockInstance<any[], never>;
 
 beforeEach(() => {
   mockFetch = vi.fn();
   vi.mocked(createPrimFetch).mockReturnValue(mockFetch as typeof fetch);
   vi.mocked(getConfig).mockResolvedValue({});
-  consoleLogSpy = vi.spyOn(console, "log").mockImplementation(() => {});
+  vi.spyOn(console, "log").mockImplementation(() => {});
   stderrSpy = vi.spyOn(process.stderr, "write").mockImplementation(() => true);
-  exitSpy = vi.spyOn(process, "exit").mockImplementation((_code) => {
+  vi.spyOn(process, "exit").mockImplementation((_code) => {
     throw new Error(`process.exit(${_code})`);
   });
 });

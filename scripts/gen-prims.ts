@@ -409,7 +409,6 @@ ${urls.join("\n")}
         for (const pr of p.pricing!) {
           const opLower = pr.op.toLowerCase();
           const descLower = rm.description.toLowerCase();
-          const routeLower = rm.route.toLowerCase();
           if (
             descLower.includes(opLower) ||
             opLower.includes(method.toLowerCase()) ||

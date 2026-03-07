@@ -161,7 +161,7 @@ const ENV_COMMENTS: Record<string, string> = {
   TRACKINGMORE_API_KEY: "# TrackingMore API key (https://www.trackingmore.com)",
 };
 
-function genEnvTemplate(id: string, name: string, port: number, envVars: string[]): string {
+function genEnvTemplate(id: string, _name: string, port: number, envVars: string[]): string {
   const lines: string[] = [
     `# Required env vars for prim-${id}.service`,
     `# Docs: packages/${id}/src/index.ts`,

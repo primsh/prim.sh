@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: Apache-2.0
-import { describe, expect, it, vi } from "vitest";
+import { describe, it, vi } from "vitest";
 
 vi.hoisted(() => {
   process.env.PRIM_NETWORK = "eip155:84532";
@@ -23,14 +23,14 @@ vi.mock("../src/db.ts", () => ({
 vi.mock("viem");
 
 import {
-  validateCreateToken,
-  deployToken,
-  listTokens,
-  getToken,
-  mintTokens,
-  createPool,
-  getPool,
-  getLiquidityParams,
+  validateCreateToken as _validateCreateToken,
+  deployToken as _deployToken,
+  listTokens as _listTokens,
+  getToken as _getToken,
+  mintTokens as _mintTokens,
+  createPool as _createPool,
+  getPool as _getPool,
+  getLiquidityParams as _getLiquidityParams,
 } from "../src/service.ts";
 
 // BEGIN:GENERATED:UNIT
