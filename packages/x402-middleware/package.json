@@ -17,7 +17,8 @@
   "dependencies": {
     "@x402/core": "^2.4.0",
     "@x402/evm": "^2.4.0",
-    "@x402/hono": "^2.4.0"
+    "@x402/hono": "^2.4.0",
+    "viem": "^2.21.0"
   },
   "exports": {
     ".": {
@@ -39,6 +40,10 @@
     "./testing": {
       "import": "./src/testing.ts",
       "types": "./src/testing.ts"
+    },
+    "./jwt": {
+      "import": "./src/jwt.ts",
+      "types": "./src/jwt.ts"
     }
   },
   "scripts": {

@@ -1,0 +1,39 @@
+{
+  "name": "@primsh/chat",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "main": "src/index.ts",
+  "description": "Chat interface for prim.sh — passkey auth, wallet generation, conversation persistence",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/primsh/prim",
+    "directory": "apps/chat"
+  },
+  "license": "Apache-2.0",
+  "author": "Prim (https://prim.sh)",
+  "scripts": {
+    "dev": "bun run src/serve.ts",
+    "start": "bun run src/serve.ts",
+    "lint": "biome lint .",
+    "format": "biome format .",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "test": "vitest --run --exclude test/smoke-live.test.ts",
+    "check": "pnpm lint && pnpm typecheck && pnpm test"
+  },
+  "dependencies": {
+    "@ai-sdk/openai-compatible": "^2.0.35",
+    "@ai-sdk/provider": "^3.0.8",
+    "@ai-sdk/provider-utils": "^4.0.19",
+    "@primsh/x402-client": "workspace:*",
+    "@primsh/x402-middleware": "workspace:*",
+    "@simplewebauthn/server": "^13.2.3",
+    "ai": "^6.0.116",
+    "hono": "^4.12.4",
+    "viem": "^2.21.0"
+  },
+  "devDependencies": {
+    "typescript": "^5.6.3",
+    "vitest": "^1.6.1"
+  }
+}

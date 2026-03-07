@@ -9,7 +9,7 @@ import {
 import type { ApiError } from "@primsh/x402-middleware";
 import { createPrimApp } from "@primsh/x402-middleware/create-prim-app";
 import type { ChatRequest, EmbedRequest } from "./api.ts";
-import { chat, embed, models } from "./service.ts";
+import { chat, chatStream, embed, models } from "./service.ts";
 
 const INFER_ROUTES = {
   "POST /v1/chat": "$0.01",
@@ -66,6 +66,33 @@ app.post("/v1/chat", async (c) => {
   const bodyOrRes = await parseJsonBody<ChatRequest>(c, logger, "POST /v1/chat");
   if (bodyOrRes instanceof Response) return bodyOrRes;
   const body = bodyOrRes;
+
+  if (body.stream) {
+    const result = await chatStream(body);
+
+    if (!result.ok) {
+      if (result.code === "invalid_request") return c.json(invalidRequest(result.message), 400);
+      if (result.code === "rate_limited") {
+        return new Response(JSON.stringify(rateLimited(result.message)), {
+          status: 429,
+          headers: {
+            "Content-Type": "application/json",
+            "Retry-After": String(result.retryAfter ?? "60"),
+          },
+        });
+      }
+      return c.json(providerError(result.message), 502);
+    }
+
+    return new Response(result.data.body, {
+      status: 200,
+      headers: {
+        "Content-Type": "text/event-stream",
+        "Cache-Control": "no-cache",
+        Connection: "keep-alive",
+      },
+    });
+  }
 
   const result = await chat(body);
 

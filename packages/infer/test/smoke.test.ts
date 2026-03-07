@@ -28,6 +28,7 @@ vi.mock("../src/service.ts", async (importOriginal) => {
   return {
     ...original,
     chat: vi.fn(),
+    chatStream: vi.fn(),
     embed: vi.fn(),
     models: vi.fn(),
   };
@@ -35,7 +36,7 @@ vi.mock("../src/service.ts", async (importOriginal) => {
 
 import type { ChatResponse } from "../src/api.ts";
 import app from "../src/index.ts";
-import { chat } from "../src/service.ts";
+import { chat, chatStream } from "../src/service.ts";
 
 const MOCK_RESPONSE: ChatResponse = {
   id: "gen-abc123",
@@ -55,6 +56,7 @@ const MOCK_RESPONSE: ChatResponse = {
 describe("infer.sh app", () => {
   beforeEach(() => {
     vi.mocked(chat).mockReset();
+    vi.mocked(chatStream).mockReset();
   });
 
   // Check 1: default export defined
@@ -96,6 +98,26 @@ describe("infer.sh app", () => {
     });
 
     expect(res.status).toBe(200);
+  });
+
+  // Check 4b: streaming — handler returns SSE response
+  it("POST /v1/chat with stream:true returns text/event-stream", async () => {
+    const sseBody = 'data: {"choices":[{"delta":{"content":"Hi"}}]}\n\ndata: [DONE]\n\n';
+    const mockResponse = new Response(sseBody, {
+      headers: { "Content-Type": "text/event-stream" },
+    });
+    vi.mocked(chatStream).mockResolvedValueOnce({ ok: true, data: mockResponse });
+
+    const res = await app.request("/v1/chat", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ stream: true }),
+    });
+
+    expect(res.status).toBe(200);
+    expect(res.headers.get("Content-Type")).toBe("text/event-stream");
+    const text = await res.text();
+    expect(text).toContain("data: [DONE]");
   });
 
   // Check 5: 400 on invalid input — service returns invalid_request → handler maps to 400

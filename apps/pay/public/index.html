@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Add Funds — prim.sh</title>
+<meta name="robots" content="noindex">
+<link rel="icon" type="image/svg+xml" href="https://prim.sh/assets/favicon.svg">
+<link rel="stylesheet" href="/style.css">
+</head>
+<body>
+
+<div class="pay-container">
+  <div class="pay-header">
+    <div class="pay-logo"><span>prim</span>.sh</div>
+  </div>
+
+  <div class="pay-card">
+    <div id="form-section">
+      <div class="pay-title">Add funds to your account</div>
+      <div class="pay-subtitle">Choose an amount to add to your balance.</div>
+
+      <div style="margin-top:1.25rem">
+        <div class="amount-label">Amount</div>
+        <div class="amount-presets">
+          <button class="amount-btn" data-amount="1">$1</button>
+          <button class="amount-btn" data-amount="5">$5</button>
+          <button class="amount-btn active" data-amount="10">$10</button>
+          <button class="amount-btn" data-amount="25">$25</button>
+        </div>
+        <div class="amount-custom">
+          <span class="amount-custom-prefix">$</span>
+          <input type="number" class="amount-input" id="custom-amount" placeholder="Other amount" min="1" step="1">
+        </div>
+      </div>
+
+      <button class="pay-btn" id="fund-btn">Add $10 to balance</button>
+    </div>
+
+    <div class="onramp-container" id="onramp-container">
+      <iframe id="onramp-iframe" title="Add funds" allow="payment"></iframe>
+    </div>
+
+    <div class="pay-status success" id="success-state">
+      <div class="pay-status-icon">&#10003;</div>
+      <div class="pay-status-title">Funds added</div>
+      <div class="pay-status-msg">Your balance has been updated. You can close this page.</div>
+    </div>
+
+    <div class="pay-status error" id="error-state">
+      <div class="pay-status-icon">!</div>
+      <div class="pay-status-title">Something went wrong</div>
+      <div class="pay-status-msg" id="error-msg">Please try again.</div>
+    </div>
+  </div>
+
+  <div class="pay-footer">
+    <a href="https://prim.sh">prim.sh</a> &middot; Powered by Coinbase
+  </div>
+</div>
+
+<script src="/pay.js"></script>
+</body>
+</html>

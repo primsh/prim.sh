@@ -6,6 +6,7 @@ import { ExactEvmScheme } from "@x402/evm/exact/server";
 import { paymentMiddlewareFromConfig } from "@x402/hono";
 import type { SchemeRegistration } from "@x402/hono";
 import type { MiddlewareHandler } from "hono";
+import { verifySessionJwt } from "./jwt.js";
 import { createLogger } from "./logger.js";
 import { RateLimiter } from "./rate-limit.js";
 import type {
@@ -123,6 +124,7 @@ export function createAgentStackMiddleware(
   const network: Network = (options.network ?? DEFAULT_NETWORK) as Network;
   const facilitatorUrl = options.facilitatorUrl ?? DEFAULT_FACILITATOR_URL;
   const freeRoutes = new Set(options.freeRoutes ?? []);
+  const identityRoutes = new Set(options.identityRoutes ?? []);
   const allowlist = buildAllowlist(options);
   const accessUrl = options.accessUrl ?? process.env.PRIM_ACCESS_URL;
   const rateLimiter = options.rateLimit
@@ -178,6 +180,20 @@ export function createAgentStackMiddleware(
     return true;
   }
 
+  function getRouteKey(c: Parameters<MiddlewareHandler>[0]): string {
+    return `${c.req.method} ${new URL(c.req.url).pathname}`;
+  }
+
+  async function tryJwtAuth(c: Parameters<MiddlewareHandler>[0]): Promise<boolean> {
+    const authHeader = c.req.header("authorization");
+    if (!authHeader?.startsWith("Bearer ")) return false;
+    const token = authHeader.slice(7);
+    const result = await verifySessionJwt(token);
+    if (!result.ok) return false;
+    c.set(WALLET_ADDRESS_KEY, result.data.address);
+    return true;
+  }
+
   function checkRateLimit(c: Parameters<MiddlewareHandler>[0]): Response | null {
     if (!rateLimiter) return null;
     const wallet = c.get(WALLET_ADDRESS_KEY) as string | undefined;
@@ -201,6 +217,15 @@ export function createAgentStackMiddleware(
 
   if (Object.keys(effectiveRoutes).length === 0) {
     return async (c: Parameters<MiddlewareHandler>[0], next: Parameters<MiddlewareHandler>[1]) => {
+      // For identity routes, try JWT auth first
+      if (identityRoutes.has(getRouteKey(c))) {
+        if (await tryJwtAuth(c)) {
+          const rateLimitResponse = checkRateLimit(c);
+          if (rateLimitResponse) return rateLimitResponse;
+          await next();
+          return;
+        }
+      }
       extractWalletAddress(c);
       if (await denyWallet(c)) {
         return c.json(
@@ -227,6 +252,15 @@ export function createAgentStackMiddleware(
   const payment = paymentMiddlewareFromConfig(effectiveRoutes, facilitatorClient, schemes);
 
   return async (c, next) => {
+    // For identity routes, try JWT auth first — skip x402 if valid
+    if (identityRoutes.has(getRouteKey(c))) {
+      if (await tryJwtAuth(c)) {
+        const rateLimitResponse = checkRateLimit(c);
+        if (rateLimitResponse) return rateLimitResponse;
+        await next();
+        return;
+      }
+    }
     extractWalletAddress(c);
     if (await denyWallet(c)) {
       return c.json(

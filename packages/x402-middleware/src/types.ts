@@ -18,6 +18,12 @@ export interface AgentStackMiddlewareOptions {
   accessUrl?: string;
   /** Per-wallet rate limiting. Pass `true` for defaults (60 req/min) or a config object. */
   rateLimit?: boolean | { max?: number; windowMs?: number };
+  /**
+   * Routes that accept a session JWT (Authorization: Bearer) as alternative to x402.
+   * If a valid JWT is present, walletAddress is set and x402 is skipped.
+   * If no JWT, falls through to x402 payment flow.
+   */
+  identityRoutes?: string[];
 }
 
 export type ServiceResult<T> =
