@@ -489,7 +489,7 @@ function generateSections(prim: string, spec: OpenApiSpec): GeneratedSection {
   const handlerDef = [
     `export async function ${handlerName}(`,
     "  name: string,",
-    "  args: Record<string, unknown>,",
+    `  ${caseBlocks.some((l) => l.includes("args")) ? "args" : "_args"}: Record<string, unknown>,`,
     `  ${fetchParam}`,
     "): Promise<CallToolResult> {",
     "  try {",
