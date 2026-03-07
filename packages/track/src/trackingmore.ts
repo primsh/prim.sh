@@ -101,13 +101,10 @@ export class TrackingMoreClient implements TrackProvider {
 
     if (!resp.ok) {
       // "Tracking No. already exists" → fall back to GET to retrieve the cached result
-      let shouldFallbackToGet = false;
       try {
         const errBody = (await resp.json()) as { meta?: { message?: string; code?: number } };
         const msg = errBody.meta?.message ?? "";
-        if (/already exists/i.test(msg)) {
-          shouldFallbackToGet = true;
-        } else {
+        if (!/already exists/i.test(msg)) {
           throw new ProviderError(
             msg || `TrackingMore API error: ${resp.status}`,
             "provider_error",
@@ -118,11 +115,7 @@ export class TrackingMoreClient implements TrackProvider {
         throw new ProviderError(`TrackingMore API error: ${resp.status}`, "provider_error");
       }
 
-      if (shouldFallbackToGet) {
-        d = await this.getExisting(trackingNumber, carrier);
-      } else {
-        throw new ProviderError(`TrackingMore API error: ${resp.status}`, "provider_error");
-      }
+      d = await this.getExisting(trackingNumber, carrier);
     } else {
       const body = (await resp.json()) as TrackingMoreResponse;
       if (body.meta.code !== 200) {

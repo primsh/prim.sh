@@ -13,7 +13,12 @@ const WALLET_API = process.env.WALLET_API ?? "https://wallet.prim.sh";
 const FAUCET_API = process.env.FAUCET_API ?? "https://faucet.prim.sh";
 const SPAWN_API = process.env.SPAWN_API ?? "https://spawn.prim.sh";
 
-const AGENT_COUNT = Number(process.argv.find((_, i, a) => a[i - 1] === "--agents") ?? "3");
+const agentsFlagIndex = process.argv.indexOf("--agents");
+const AGENT_COUNT = Number(
+  agentsFlagIndex >= 0 && agentsFlagIndex + 1 < process.argv.length
+    ? process.argv[agentsFlagIndex + 1]
+    : "3",
+);
 
 interface AgentResult {
   id: number;
@@ -77,7 +82,9 @@ async function runAgent(id: number): Promise<AgentResult> {
     steps.drip_usdc = {
       ok,
       ms,
-      detail: ok ? `${body.amount} USDC` : `${res.status} ${(body as any).error?.code}`,
+      detail: ok
+        ? `${body.amount} USDC`
+        : `${res.status} ${(body as Record<string, Record<string, unknown>>).error?.code}`,
     };
     console.log(`${tag} drip_usdc: ${steps.drip_usdc.detail} (${ms}ms)`);
     if (!ok) return finish();
@@ -110,7 +117,12 @@ async function runAgent(id: number): Promise<AgentResult> {
         }),
       }),
     );
-    const body = (await res.json()) as Record<string, any>;
+    interface SpawnResponse {
+      server?: { id?: string; status?: string; public_net?: { ipv4?: { ip?: string } } };
+      status?: string;
+      error?: { code?: string; message?: string };
+    }
+    const body = (await res.json()) as SpawnResponse;
     const ok = res.status === 200 || res.status === 201;
     serverId = body.server?.id;
     steps.spawn = {
@@ -126,7 +138,7 @@ async function runAgent(id: number): Promise<AgentResult> {
       for (let i = 0; i < 30; i++) {
         await new Promise((r) => setTimeout(r, 5_000));
         const pollRes = await primFetch(`${SPAWN_API}/v1/servers/${serverId}`);
-        const pollBody = (await pollRes.json()) as Record<string, any>;
+        const pollBody = (await pollRes.json()) as SpawnResponse;
         const status = pollBody.server?.status ?? pollBody.status;
         const ip = pollBody.server?.public_net?.ipv4?.ip;
         if (status === "active") {
@@ -175,10 +187,18 @@ const results = await Promise.allSettled(
   Array.from({ length: AGENT_COUNT }, (_, i) => runAgent(i + 1)),
 );
 
+function makeFailedResult(reason: unknown): AgentResult {
+  return {
+    id: -1,
+    address: "?",
+    steps: { error: { ok: false, ms: 0, detail: String(reason) } },
+    totalMs: 0,
+    passed: false,
+  };
+}
+
 const agents = results.map((r) =>
-  r.status === "fulfilled"
-    ? r.value
-    : { id: -1, address: "?", steps: {}, totalMs: 0, passed: false },
+  r.status === "fulfilled" ? r.value : makeFailedResult(r.reason),
 );
 
 console.log("\n=== Results ===\n");

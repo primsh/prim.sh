@@ -866,26 +866,24 @@ describe("Cache TTL behavior", () => {
   });
 
   it("get after expiry returns 404 and deletes row", () => {
-    // Insert with ttl:0 → expires_at ≈ Date.now()
-    // Advance system time by overriding Date.now for the expiry check
+    vi.useFakeTimers();
+    const baseTime = Date.now();
+    vi.setSystemTime(baseTime);
     cacheSet("ns", "expired", { value: "bye", ttl: 0 }, WALLET);
-    // Wait 2ms so expires_at < Date.now()
-    const expires_at_approx = Date.now();
-    // Directly check — at the moment of set, expires_at == Date.now() (not yet expired per `< now` check).
-    // Wait at least 1ms to ensure expiry triggers
-    const spin = Date.now() + 2;
-    while (Date.now() < spin) {
-      /* busy wait */
-    }
+    // Advance time so expires_at < Date.now()
+    vi.setSystemTime(baseTime + 2);
 
     const result = cacheGet("ns", "expired", WALLET);
     expect(result.ok).toBe(false);
-    if (result.ok) return;
+    if (result.ok) {
+      vi.useRealTimers();
+      return;
+    }
     expect(result.code).toBe("not_found");
     // Row should be deleted from DB
     const row = getCacheEntry(WALLET, "ns", "expired");
     expect(row).toBeNull();
-    void expires_at_approx; // suppress unused warning
+    vi.useRealTimers();
   });
 
   it("null TTL is permanent (never expires)", () => {
@@ -905,17 +903,17 @@ describe("Cache TTL behavior", () => {
   });
 
   it("deleteExpiredEntries cleans up expired rows", () => {
+    vi.useFakeTimers();
+    const baseTime = Date.now();
+    vi.setSystemTime(baseTime);
     cacheSet("ns", "will-expire", { value: "x", ttl: 0 }, WALLET);
-    // Busy-wait 2ms
-    const spin = Date.now() + 2;
-    while (Date.now() < spin) {
-      /* busy wait */
-    }
+    vi.setSystemTime(baseTime + 2);
 
     deleteExpiredEntries(Date.now());
 
     const row = getCacheEntry(WALLET, "ns", "will-expire");
     expect(row).toBeNull();
+    vi.useRealTimers();
   });
 
   it("deleteExpiredEntries does not remove unexpired rows", () => {
@@ -933,16 +931,16 @@ describe("Cache TTL behavior", () => {
   });
 
   it("opportunistic cleanup observable: expired entry is gone after cleanup", () => {
-    // Insert an entry that will expire
+    vi.useFakeTimers();
+    const baseTime = Date.now();
+    vi.setSystemTime(baseTime);
     cacheSet("ns", "soon-gone", { value: "x", ttl: 0 }, WALLET);
-    const spin = Date.now() + 2;
-    while (Date.now() < spin) {
-      /* busy wait 2ms so expires_at < Date.now() */
-    }
+    vi.setSystemTime(baseTime + 2);
 
     // Directly invoke cleanup (same code path triggered at 10% probability in cacheSet)
     deleteExpiredEntries(Date.now());
     expect(getCacheEntry(WALLET, "ns", "soon-gone")).toBeNull();
+    vi.useRealTimers();
   });
 });
 
