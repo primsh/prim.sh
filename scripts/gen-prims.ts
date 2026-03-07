@@ -481,9 +481,7 @@ ${urls.join("\n")}
 
 // 14. site/discovery.json — full primitive registry for agent discovery
 {
-  const builtPrims = prims.filter(
-    (p) => p.status === "mainnet" || p.status === "testnet",
-  );
+  const builtPrims = prims.filter((p) => p.status === "mainnet" || p.status === "testnet");
 
   const primitives = builtPrims.map((p) => {
     const endpoint = p.endpoint ?? `${p.id}.prim.sh`;

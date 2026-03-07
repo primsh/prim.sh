@@ -12,7 +12,13 @@
   },
   "license": "Apache-2.0",
   "author": "Prim (https://prim.sh)",
-  "keywords": ["prim", "x402", "keystore", "crypto", "wallet"],
+  "keywords": [
+    "prim",
+    "x402",
+    "keystore",
+    "crypto",
+    "wallet"
+  ],
   "scripts": {
     "lint": "biome lint .",
     "format": "biome format .",

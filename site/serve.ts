@@ -6,7 +6,13 @@ import { existsSync, readFileSync, readdirSync } from "node:fs";
 import { join, resolve } from "node:path";
 import { parse } from "yaml";
 import { BRAND } from "./brand.ts";
-import { type LegalConfig, type PrimConfig, render, renderFooter, renderLegal } from "./template.ts";
+import {
+  type LegalConfig,
+  type PrimConfig,
+  render,
+  renderFooter,
+  renderLegal,
+} from "./template.ts";
 
 const PORT = Number(process.env.PORT ?? 3000);
 const ROOT = resolve(import.meta.dir, "..");
@@ -115,7 +121,9 @@ for (const dir of readdirSync(join(ROOT, "site"))) {
   }
 }
 
-console.log(`[serve] ${primCache.size} prims, ${legalCache.size} legal pages loaded, listening on :${PORT}`);
+console.log(
+  `[serve] ${primCache.size} prims, ${legalCache.size} legal pages loaded, listening on :${PORT}`,
+);
 
 // ── MIME types ────────────────────────────────────────────────────────────────
 

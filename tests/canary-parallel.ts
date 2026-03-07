@@ -74,7 +74,11 @@ async function runAgent(id: number): Promise<AgentResult> {
     );
     const body = (await res.json()) as Record<string, unknown>;
     const ok = res.status === 200;
-    steps.drip_usdc = { ok, ms, detail: ok ? `${body.amount} USDC` : `${res.status} ${(body as any).error?.code}` };
+    steps.drip_usdc = {
+      ok,
+      ms,
+      detail: ok ? `${body.amount} USDC` : `${res.status} ${(body as any).error?.code}`,
+    };
     console.log(`${tag} drip_usdc: ${steps.drip_usdc.detail} (${ms}ms)`);
     if (!ok) return finish();
   } catch (e) {
@@ -109,7 +113,11 @@ async function runAgent(id: number): Promise<AgentResult> {
     const body = (await res.json()) as Record<string, any>;
     const ok = res.status === 200 || res.status === 201;
     serverId = body.server?.id;
-    steps.spawn = { ok, ms, detail: ok ? serverId : `${res.status} ${body.error?.code ?? body.error?.message}` };
+    steps.spawn = {
+      ok,
+      ms,
+      detail: ok ? serverId : `${res.status} ${body.error?.code ?? body.error?.message}`,
+    };
     console.log(`${tag} spawn: ${steps.spawn.detail} (${ms}ms)`);
     if (!ok) return finish();
 
@@ -168,7 +176,9 @@ const results = await Promise.allSettled(
 );
 
 const agents = results.map((r) =>
-  r.status === "fulfilled" ? r.value : { id: -1, address: "?", steps: {}, totalMs: 0, passed: false },
+  r.status === "fulfilled"
+    ? r.value
+    : { id: -1, address: "?", steps: {}, totalMs: 0, passed: false },
 );
 
 console.log("\n=== Results ===\n");

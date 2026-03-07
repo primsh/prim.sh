@@ -882,9 +882,7 @@ function genSmokeLiveTestTs(prim: PrimYaml): string {
       const method = r.route.split(" ")[0];
       const path = r.route.replace(/^[A-Z]+\s+/, "");
       lines.push("");
-      lines.push(
-        `  it("${testNum}. ${method} ${path} — requires x402 payment", async () => {`,
-      );
+      lines.push(`  it("${testNum}. ${method} ${path} — requires x402 payment", async () => {`);
       lines.push(`    const res = await fetch(\`\${BASE_URL}${path}\`, {`);
       lines.push(`      method: "${method}",`);
       lines.push(`      headers: { "Content-Type": "application/json" },`);
@@ -901,9 +899,7 @@ function genSmokeLiveTestTs(prim: PrimYaml): string {
     testNum++;
     const path = firstPost.route.replace(/^[A-Z]+\s+/, "");
     lines.push("");
-    lines.push(
-      `  it("${testNum}. POST ${path} — missing fields returns 400", async () => {`,
-    );
+    lines.push(`  it("${testNum}. POST ${path} — missing fields returns 400", async () => {`);
     lines.push(`    const res = await fetch(\`\${BASE_URL}${path}\`, {`);
     lines.push(`      method: "POST",`);
     lines.push(`      headers: { "Content-Type": "application/json" },`);

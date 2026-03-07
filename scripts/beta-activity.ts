@@ -219,9 +219,7 @@ for (const invite of redeemed) {
 if (redeemed.length === 0) {
   console.log("\nNo invite codes have been redeemed yet.");
 } else {
-  console.log(
-    `\nSummary: ${goldenPathComplete}/${redeemed.length} testers completed golden path`,
-  );
+  console.log(`\nSummary: ${goldenPathComplete}/${redeemed.length} testers completed golden path`);
 }
 
 // ─── Cleanup ────────────────────────────────────────────────────────────────

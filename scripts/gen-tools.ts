@@ -516,9 +516,7 @@ if (CHECK_MODE) {
       JSON.stringify(existingParsed.prims) === JSON.stringify(manifest.prims) &&
       existingParsed.tool_count === manifest.tool_count;
     if (!matches) {
-      console.error(
-        `  ✗ ${join(OUTPUT_DIR, "manifest.json")} is out of date — run pnpm gen:tools`,
-      );
+      console.error(`  ✗ ${join(OUTPUT_DIR, "manifest.json")} is out of date — run pnpm gen:tools`);
       anyFailed = true;
     } else {
       console.log(`  ✓ ${join(OUTPUT_DIR, "manifest.json")}`);

@@ -209,10 +209,13 @@ a:hover {
   box-shadow: 0 0 30px color-mix(in srgb, var(--accent) 25%, transparent);
 }
 a.badge {
-  transition: transform 0.15s ease, box-shadow 0.15s ease;
+  transition:
+    transform 0.15s ease,
+    box-shadow 0.15s ease;
   cursor: pointer;
 }
-a.badge:hover, a.badge:focus {
+a.badge:hover,
+a.badge:focus {
   transform: translateY(-2px);
   box-shadow: 0 4px 20px color-mix(in srgb, var(--accent) 40%, transparent);
 }
@@ -311,7 +314,9 @@ pre {
   font-size: 0.75rem;
   padding: 0.2rem 0.5rem;
   cursor: pointer;
-  transition: color 0.15s, border-color 0.15s;
+  transition:
+    color 0.15s,
+    border-color 0.15s;
   white-space: nowrap;
 }
 .copy-btn:hover {

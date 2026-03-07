@@ -19,7 +19,12 @@
 import { existsSync, readFileSync, writeFileSync } from "node:fs";
 import { join, resolve } from "node:path";
 import { parse as parseYaml } from "yaml";
-import { type RouteMapping, loadPrimitives, primsForInterface, specPath } from "./lib/primitives.js";
+import {
+  type RouteMapping,
+  loadPrimitives,
+  primsForInterface,
+  specPath,
+} from "./lib/primitives.js";
 
 const ROOT = resolve(import.meta.dir, "..");
 const CHECK_MODE = process.argv.includes("--check");
@@ -907,7 +912,6 @@ function generateCommandFile(spec: OpenAPISpec, id: string, routesMap?: RouteMap
   lines.push("}");
   lines.push("");
 
-
   // Main command function
   lines.push(
     `export async function ${prim.funcName}(sub: string, argv: string[]): Promise<void> {`,
@@ -1067,9 +1071,7 @@ for (const id of primsToProcess) {
     } else if (!isGenerated) {
       console.log(`  – packages/cli/src/${id}-commands.ts (manually maintained, skipped)`);
     } else if (changed) {
-      console.error(
-        `  ✗ packages/cli/src/${id}-commands.ts is out of date — run pnpm gen:cli`,
-      );
+      console.error(`  ✗ packages/cli/src/${id}-commands.ts is out of date — run pnpm gen:cli`);
       anyFailed = true;
     } else {
       console.log(`  ✓ packages/cli/src/${id}-commands.ts`);

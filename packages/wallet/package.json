@@ -12,7 +12,14 @@
   },
   "license": "Apache-2.0",
   "author": "Prim (https://prim.sh)",
-  "keywords": ["prim", "x402", "crypto", "wallet", "usdc", "base"],
+  "keywords": [
+    "prim",
+    "x402",
+    "crypto",
+    "wallet",
+    "usdc",
+    "base"
+  ],
   "scripts": {
     "dev": "bun run src/index.ts",
     "start": "bun run src/index.ts",

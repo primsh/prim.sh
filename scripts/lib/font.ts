@@ -59,11 +59,7 @@ export function cmdToD(commands: any[], scale: number, ox: number, oy: number): 
 }
 
 /** Extract a single glyph from SF Mono, scaled and centered in the viewport. */
-export function extractGlyph(
-  font: opentype.Font,
-  char: string,
-  viewport: Viewport,
-): string {
+export function extractGlyph(font: opentype.Font, char: string, viewport: Viewport): string {
   const { w, h, pad } = viewport;
   const cx = viewport.cx ?? w / 2;
   const cy = viewport.cy ?? h / 2;
@@ -87,11 +83,7 @@ export function extractGlyph(
  * Extract multiple characters as a single composed path.
  * Characters are placed with monospace spacing, then the group is centered in the viewport.
  */
-export function extractGlyphs(
-  font: opentype.Font,
-  chars: string,
-  viewport: Viewport,
-): string {
+export function extractGlyphs(font: opentype.Font, chars: string, viewport: Viewport): string {
   const { w, h, pad } = viewport;
   const cx = viewport.cx ?? w / 2;
   const cy = viewport.cy ?? h / 2;
@@ -110,8 +102,7 @@ export function extractGlyphs(
 
   // Compute total width using advance width for all but last char
   const lastBb = glyphData[glyphData.length - 1].bb;
-  const totalWidth =
-    advanceWidth * (chars.length - 1) + (lastBb.x2 - lastBb.x1);
+  const totalWidth = advanceWidth * (chars.length - 1) + (lastBb.x2 - lastBb.x1);
 
   // Get max height across all glyphs
   let minY = Number.POSITIVE_INFINITY;
