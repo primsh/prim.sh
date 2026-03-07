@@ -3,7 +3,11 @@
 /**
  * gen-deploy.ts — Deploy artifact generator
  *
- * Generates deploy artifacts for all deployed primitives from prim.yaml:
+ * Generates deploy artifacts from two sources:
+ *   - prim.yaml (per-package, for primitives)
+ *   - prim-apps.yaml (repo root, for consumer apps)
+ *
+ * Output:
  *   1. Caddy fragments → deploy/prim/generated/<id>.caddy
  *   2. Systemd units   → deploy/prim/services/prim-<id>.service
  *   3. Env templates   → deploy/prim/generated/<id>.env.template
@@ -16,6 +20,7 @@
 
 import { existsSync, mkdirSync, readFileSync, readdirSync, writeFileSync } from "node:fs";
 import { join, resolve } from "node:path";
+import { parse as parseYaml } from "yaml";
 import { getDeployConfig, loadPrimitives, withPackage } from "./lib/primitives.js";
 import type { Primitive, PrimStatus } from "./lib/primitives.js";
 
@@ -33,6 +38,17 @@ const PRIM_ETC = "/etc/prim";
 const BUN_PATH = "/home/prim/.bun/bin/bun";
 
 let anyFailed = false;
+
+// ── Types ─────────────────────────────────────────────────────────────────
+
+interface AppConfig {
+  name: string;
+  endpoint: string;
+  port: number;
+  entry: string;
+  max_body_size?: string;
+  env: string[];
+}
 
 // ── Helpers ────────────────────────────────────────────────────────────────
 
@@ -56,12 +72,18 @@ function writeIfChanged(filePath: string, content: string, label: string): void 
   }
 }
 
-// ── Generators ─────────────────────────────────────────────────────────────
+// ── Generators (primitives) ───────────────────────────────────────────────
 
-function genSystemdUnit(id: string, name: string, systemdAfter: string[]): string {
+function genSystemdUnit(
+  id: string,
+  name: string,
+  execStart: string,
+  source: string,
+  systemdAfter: string[],
+): string {
   const afterUnits = ["network.target", ...systemdAfter].join(" ");
   return `# THIS FILE IS GENERATED — DO NOT EDIT
-# Source: packages/${id}/prim.yaml
+# Source: ${source}
 # Regenerate: pnpm gen:deploy
 
 [Unit]
@@ -73,7 +95,7 @@ Type=simple
 User=prim
 WorkingDirectory=${PRIM_ROOT}
 EnvironmentFile=${PRIM_ETC}/${id}.env
-ExecStart=${BUN_PATH} run packages/${id}/src/index.ts
+ExecStart=${execStart}
 Restart=on-failure
 RestartSec=5
 
@@ -130,6 +152,24 @@ function genCaddyFragment(prim: Primitive, hasInstallSh: boolean): string {
   return `${parts.join("\n\n")}\n`;
 }
 
+function genAppCaddyFragment(id: string, app: AppConfig): string {
+  const lines: string[] = [];
+  lines.push(`# THIS FILE IS GENERATED — DO NOT EDIT`);
+  lines.push(`# Source: prim-apps.yaml (app: ${id})`);
+  lines.push(`# Regenerate: pnpm gen:deploy`);
+  lines.push(``);
+  lines.push(`${app.endpoint} {`);
+  lines.push("    import security_headers");
+  lines.push("    request_body {");
+  lines.push(`        max_size ${app.max_body_size ?? "1MB"}`);
+  lines.push("    }");
+  lines.push("    handle {");
+  lines.push(`        reverse_proxy localhost:${app.port}`);
+  lines.push("    }");
+  lines.push("}");
+  return `${lines.join("\n")}\n`;
+}
+
 const ENV_COMMENTS: Record<string, string> = {
   REVENUE_WALLET: "# x402 payment recipient address",
   PRIM_NETWORK: "# Chain: eip155:8453 (Base mainnet) or eip155:84532 (Base Sepolia)",
@@ -157,16 +197,27 @@ const ENV_COMMENTS: Record<string, string> = {
   TRACKINGMORE_API_KEY: "# TrackingMore API key (https://www.trackingmore.com)",
   FEEDBACK_DB_PATH: "# Path to feedback SQLite database",
   PRIM_FEEDBACK_URL: "# URL for feedback submission endpoint",
+  CHAT_ENCRYPTION_KEY: "# AES-256-GCM key for encrypting custodial wallet private keys (64 hex chars)",
+  CHAT_SESSION_SECRET: "# HMAC secret for signing session cookies",
+  CHAT_DB_PATH: "# Path to chat SQLite database (e.g. /opt/prim/data/chat.db)",
+  INFER_BASE_URL: "# Base URL for infer.sh (e.g. https://infer.prim.sh)",
+  PRIM_BASE_URL: "# Base URL template for prim services (e.g. https://{service}.prim.sh)",
 };
 
-function genEnvTemplate(id: string, name: string, port: number, envVars: string[]): string {
+function genEnvTemplate(
+  id: string,
+  source: string,
+  port: number,
+  envVars: string[],
+  docsPath?: string,
+): string {
   const lines: string[] = [
     `# THIS FILE IS GENERATED — DO NOT EDIT`,
-    `# Source: packages/${id}/prim.yaml`,
+    `# Source: ${source}`,
     `# Regenerate: pnpm gen:deploy`,
     ``,
     `# Required env vars for prim-${id}.service`,
-    `# Docs: packages/${id}/src/index.ts`,
+    ...(docsPath ? [`# Docs: ${docsPath}`] : []),
     "",
     `PORT=${port}`,
     "",
@@ -180,6 +231,19 @@ function genEnvTemplate(id: string, name: string, port: number, envVars: string[
   }
 
   return lines.join("\n");
+}
+
+// ── Load apps from prim-apps.yaml ─────────────────────────────────────────
+
+function loadApps(): Map<string, AppConfig> {
+  const appsFile = join(ROOT, "prim-apps.yaml");
+  if (!existsSync(appsFile)) return new Map();
+
+  const raw = readFileSync(appsFile, "utf-8");
+  const parsed = parseYaml(raw) as { apps?: Record<string, AppConfig> };
+  if (!parsed?.apps) return new Map();
+
+  return new Map(Object.entries(parsed.apps));
 }
 
 // ── Caddyfile assembly ─────────────────────────────────────────────────────
@@ -208,7 +272,7 @@ function assembleCaddyfile(): void {
 
   const caddyfileHeader = [
     "# THIS FILE IS GENERATED — DO NOT EDIT",
-    "# Source: packages/<id>/prim.yaml (all deployed prims) + deploy/prim/Caddyfile.header",
+    "# Source: packages/<id>/prim.yaml + prim-apps.yaml + deploy/prim/Caddyfile.header",
     "# Regenerate: pnpm gen:deploy",
   ].join("\n");
 
@@ -240,8 +304,12 @@ const prims = loadPrimitives(ROOT);
 const deployable = withPackage(prims, ROOT).filter(
   (p) => DEPLOYABLE_STATUSES.has(p.status) && p.endpoint && p.port,
 );
+const apps = loadApps();
 
-console.log(`Loaded ${prims.length} primitives (${deployable.length} deployed with packages)`);
+console.log(
+  `Loaded ${prims.length} primitives (${deployable.length} deployed with packages)` +
+    (apps.size > 0 ? `, ${apps.size} app(s)` : ""),
+);
 console.log(`Mode: ${CHECK_MODE ? "check" : "generate"}\n`);
 
 // Ensure output dirs exist
@@ -249,6 +317,11 @@ if (!CHECK_MODE) {
   mkdirSync(GENERATED_DIR, { recursive: true });
   mkdirSync(SERVICES_DIR, { recursive: true });
 }
+
+// Collect all service IDs for the SERVICES array in deploy.sh
+const allServiceIds: string[] = [];
+
+// ── Process primitives ────────────────────────────────────────────────────
 
 for (const prim of deployable) {
   if (!prim.endpoint || !prim.port) {
@@ -269,24 +342,96 @@ for (const prim of deployable) {
     );
   }
 
-  // 2. Systemd unit
-  const unitContent = genSystemdUnit(prim.id, prim.name, deployConfig.systemd_after);
+  // 2. Systemd unit — keep original source line for backward compat
+  const primUnitContent = genSystemdUnit(
+    prim.id,
+    prim.name,
+    `${BUN_PATH} run packages/${prim.id}/src/index.ts`,
+    `packages/${prim.id}/prim.yaml`,
+    deployConfig.systemd_after,
+  );
   writeIfChanged(
     join(SERVICES_DIR, `prim-${prim.id}.service`),
-    unitContent,
+    primUnitContent,
     `deploy/prim/services/prim-${prim.id}.service`,
   );
 
   // 3. Env template
-  const envContent = genEnvTemplate(prim.id, prim.name, prim.port, prim.env ?? []);
+  const envContent = genEnvTemplate(
+    prim.id,
+    `packages/${prim.id}/prim.yaml`,
+    prim.port,
+    prim.env ?? [],
+    `packages/${prim.id}/src/index.ts`,
+  );
   writeIfChanged(
     join(GENERATED_DIR, `${prim.id}.env.template`),
     envContent,
     `deploy/prim/generated/${prim.id}.env.template`,
   );
+
+  allServiceIds.push(prim.id);
 }
 
-// 4. Assemble Caddyfile
+// ── Process apps ──────────────────────────────────────────────────────────
+
+if (apps.size > 0) {
+  console.log("");
+  for (const [id, app] of apps) {
+    // 1. Caddy fragment
+    const caddyContent = genAppCaddyFragment(id, app);
+    writeIfChanged(
+      join(GENERATED_DIR, `${id}.caddy`),
+      caddyContent,
+      `deploy/prim/generated/${id}.caddy`,
+    );
+
+    // 2. Systemd unit
+    const unitContent = genSystemdUnit(
+      id,
+      app.name,
+      `${BUN_PATH} run ${app.entry}`,
+      `prim-apps.yaml (app: ${id})`,
+      [],
+    );
+    writeIfChanged(
+      join(SERVICES_DIR, `prim-${id}.service`),
+      unitContent,
+      `deploy/prim/services/prim-${id}.service`,
+    );
+
+    // 3. Env template
+    const envContent = genEnvTemplate(
+      id,
+      `prim-apps.yaml (app: ${id})`,
+      app.port,
+      app.env,
+    );
+    writeIfChanged(
+      join(GENERATED_DIR, `${id}.env.template`),
+      envContent,
+      `deploy/prim/generated/${id}.env.template`,
+    );
+
+    allServiceIds.push(id);
+  }
+}
+
+// ── Update SERVICES array in deploy.sh ────────────────────────────────────
+
+const deployShPath = join(ROOT, "deploy/prim/deploy.sh");
+if (existsSync(deployShPath)) {
+  const deployShContent = readFileSync(deployShPath, "utf-8");
+  const servicesLine = `SERVICES=(${allServiceIds.join(" ")})`;
+  const updated = deployShContent.replace(
+    /# BEGIN:PRIM:SERVICES\n.*\n# END:PRIM:SERVICES/,
+    `# BEGIN:PRIM:SERVICES\n${servicesLine}\n# END:PRIM:SERVICES`,
+  );
+  writeIfChanged(deployShPath, updated, "deploy/prim/deploy.sh [SERVICES]");
+}
+
+// ── Assemble Caddyfile ────────────────────────────────────────────────────
+
 assembleCaddyfile();
 
 if (CHECK_MODE && anyFailed) {

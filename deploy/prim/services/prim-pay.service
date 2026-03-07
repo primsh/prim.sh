@@ -1,0 +1,19 @@
+# THIS FILE IS GENERATED — DO NOT EDIT
+# Source: prim-apps.yaml (app: pay)
+# Regenerate: pnpm gen:deploy
+
+[Unit]
+Description=prim.sh pay.prim.sh service
+After=network.target
+
+[Service]
+Type=simple
+User=prim
+WorkingDirectory=/opt/prim
+EnvironmentFile=/etc/prim/pay.env
+ExecStart=/home/prim/.bun/bin/bun run apps/pay/src/index.ts
+Restart=on-failure
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target

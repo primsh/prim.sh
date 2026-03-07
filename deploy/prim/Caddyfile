@@ -1,5 +1,5 @@
 # THIS FILE IS GENERATED — DO NOT EDIT
-# Source: packages/<id>/prim.yaml (all deployed prims) + deploy/prim/Caddyfile.header
+# Source: packages/<id>/prim.yaml + prim-apps.yaml + deploy/prim/Caddyfile.header
 # Regenerate: pnpm gen:deploy
 
 {
@@ -24,6 +24,20 @@
         Permissions-Policy "geolocation=(), microphone=(), camera=()"
         Server ""
         -Server
+    }
+}
+
+# THIS FILE IS GENERATED — DO NOT EDIT
+# Source: prim-apps.yaml (app: chat)
+# Regenerate: pnpm gen:deploy
+
+chat.prim.sh {
+    import security_headers
+    request_body {
+        max_size 1MB
+    }
+    handle {
+        reverse_proxy localhost:3020
     }
 }
 
@@ -170,6 +184,20 @@ mem.prim.sh {
     }
     handle {
         reverse_proxy localhost:3008
+    }
+}
+
+# THIS FILE IS GENERATED — DO NOT EDIT
+# Source: prim-apps.yaml (app: pay)
+# Regenerate: pnpm gen:deploy
+
+pay.prim.sh {
+    import security_headers
+    request_body {
+        max_size 1MB
+    }
+    handle {
+        reverse_proxy localhost:3021
     }
 }
 

@@ -255,8 +255,8 @@ applyOrCheck(join(ROOT, "README.md"), "PRIMS", genReadmeTable(prims));
 // 4. scripts/pre-deploy.ts — env arrays
 applyOrCheck(join(ROOT, "scripts/pre-deploy.ts"), "ENV", genPreDeployEnvs(prims), "js");
 
-// 5. deploy/prim/deploy.sh — SERVICES array
-applyOrCheck(join(ROOT, "deploy/prim/deploy.sh"), "SERVICES", genBashServices(prims), "bash");
+// 5. deploy/prim/deploy.sh — SERVICES array is now owned by gen-deploy.ts
+//    (includes both prims and apps from prim-apps.yaml)
 
 // 6. deploy/prim/setup.sh — SERVICES array
 applyOrCheck(join(ROOT, "deploy/prim/setup.sh"), "SERVICES", genBashServices(prims), "bash");

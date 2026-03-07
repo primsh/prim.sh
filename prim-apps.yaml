@@ -1,0 +1,31 @@
+# prim-apps.yaml — Deploy config for consumer apps (not primitives)
+# These are full apps built on top of prims. They get the same deploy
+# treatment (systemd, Caddy, env template) but have no prim.yaml,
+# no x402 middleware, and no OpenAPI spec.
+#
+# Read by: scripts/gen-deploy.ts
+# Output:  deploy/prim/services/prim-<id>.service
+#          deploy/prim/generated/<id>.caddy
+#          deploy/prim/generated/<id>.env.template
+
+apps:
+  chat:
+    name: chat.prim.sh
+    endpoint: chat.prim.sh
+    port: 3020
+    entry: apps/chat/src/serve.ts
+    max_body_size: 1MB
+    env:
+      - CHAT_ENCRYPTION_KEY
+      - CHAT_SESSION_SECRET
+      - CHAT_DB_PATH
+      - INFER_BASE_URL
+      - PRIM_BASE_URL
+
+  pay:
+    name: pay.prim.sh
+    endpoint: pay.prim.sh
+    port: 3021
+    entry: apps/pay/src/index.ts
+    max_body_size: 1MB
+    env: []

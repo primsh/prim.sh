@@ -1,0 +1,13 @@
+# THIS FILE IS GENERATED — DO NOT EDIT
+# Source: prim-apps.yaml (app: chat)
+# Regenerate: pnpm gen:deploy
+
+chat.prim.sh {
+    import security_headers
+    request_body {
+        max_size 1MB
+    }
+    handle {
+        reverse_proxy localhost:3020
+    }
+}
