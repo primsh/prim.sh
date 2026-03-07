@@ -47,6 +47,7 @@ interface AppConfig {
   port: number;
   entry: string;
   max_body_size?: string;
+  csp?: string;
   env: string[];
 }
 
@@ -160,6 +161,9 @@ function genAppCaddyFragment(id: string, app: AppConfig): string {
   lines.push(``);
   lines.push(`${app.endpoint} {`);
   lines.push("    import security_headers");
+  if (app.csp) {
+    lines.push("    header Content-Security-Policy \"" + app.csp + "\"");
+  }
   lines.push("    request_body {");
   lines.push(`        max_size ${app.max_body_size ?? "1MB"}`);
   lines.push("    }");

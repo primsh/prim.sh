@@ -33,6 +33,7 @@
 
 chat.prim.sh {
     import security_headers
+    header Content-Security-Policy "default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data:; connect-src 'self'; frame-ancestors 'none'"
     request_body {
         max_size 1MB
     }
