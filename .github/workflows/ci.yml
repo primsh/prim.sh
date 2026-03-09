@@ -334,7 +334,7 @@ jobs:
 
   windows-install:
     name: Windows install
-    if: github.event_name != 'schedule'
+    if: github.event_name == 'pull_request'
     runs-on: windows-latest
 
     steps:
