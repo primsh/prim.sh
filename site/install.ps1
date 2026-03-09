@@ -7,7 +7,7 @@ $InviteCode = if ($args.Count -gt 0) { $args[0] } else { $null }
 
 $BinDir = "$env:USERPROFILE\.prim\bin"
 $Bin = "$BinDir\prim.exe"
-$BaseUrl = "https://dl.prim.sh/latest"
+$BaseUrl = if ($env:PRIM_DOWNLOAD_URL) { $env:PRIM_DOWNLOAD_URL } else { "https://dl.prim.sh/latest" }
 $Binary = "prim-windows-x64.exe"
 
 Write-Host "Installing prim (windows-x64)..."
