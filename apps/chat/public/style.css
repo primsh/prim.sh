@@ -103,6 +103,31 @@ body {
   line-height: 1.6;
 }
 
+.invite-input {
+  display: block;
+  width: 100%;
+  max-width: 280px;
+  margin: 0 auto 1.5rem;
+  padding: 0.6rem 0.8rem;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  color: var(--text);
+  font-family: var(--font);
+  font-size: 0.85rem;
+  text-align: center;
+  letter-spacing: 0.05em;
+}
+
+.invite-input::placeholder {
+  color: var(--muted);
+}
+
+.invite-input:focus {
+  outline: none;
+  border-color: var(--accent-dim);
+}
+
 .auth-error {
   color: #ff6b6b;
   font-size: 0.8rem;

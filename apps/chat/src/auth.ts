@@ -90,7 +90,7 @@ export function registerAuthRoutes(app: Hono): void {
   // POST /auth/register/verify
   app.post("/auth/register/verify", async (c) => {
     const body = await c.req.json();
-    const { credential, challenge_id } = body;
+    const { credential, challenge_id, invite_code } = body;
 
     const stored = challengeStore.get(challenge_id);
     if (!stored || Date.now() > stored.expires) {
@@ -123,6 +123,27 @@ export function registerAuthRoutes(app: Hono): void {
         );
       }
 
+      // Redeem invite code via gate.sh (allowlist + fund wallet)
+      let gateWarning: string | undefined;
+      if (invite_code && typeof invite_code === "string") {
+        const gateUrl = process.env.GATE_BASE_URL ?? "https://gate.prim.sh";
+        try {
+          const gateRes = await fetch(`${gateUrl}/v1/redeem`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ code: invite_code, wallet: result.data.wallet_address }),
+          });
+          if (!gateRes.ok) {
+            const err = (await gateRes.json().catch(() => ({}))) as {
+              error?: { message?: string };
+            };
+            gateWarning = err.error?.message ?? "Invite code redemption failed";
+          }
+        } catch {
+          gateWarning = "Could not reach gate service";
+        }
+      }
+
       const token = createSessionToken(result.data.id);
       setCookie(c, "session", token, {
         httpOnly: true,
@@ -132,7 +153,10 @@ export function registerAuthRoutes(app: Hono): void {
         path: "/",
       });
 
-      return c.json({ account: result.data });
+      return c.json({
+        account: result.data,
+        ...(gateWarning ? { gate_warning: gateWarning } : {}),
+      });
     } catch {
       return c.json(
         { error: { code: "verification_failed", message: "Registration verification failed" } },

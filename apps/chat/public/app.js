@@ -10,6 +10,7 @@ const authScreen = document.getElementById("auth-screen");
 const chatScreen = document.getElementById("chat-screen");
 const authBtn = document.getElementById("auth-btn");
 const authError = document.getElementById("auth-error");
+const inviteCodeInput = document.getElementById("invite-code");
 const sidebar = document.getElementById("sidebar");
 const sidebarOverlay = document.getElementById("sidebar-overlay");
 const menuBtn = document.getElementById("menu-btn");
@@ -89,10 +90,11 @@ async function register() {
     });
     if (!credential) throw new Error("Registration cancelled");
 
+    const inviteCode = inviteCodeInput?.value?.trim() || undefined;
     const verifyRes = await fetch("/auth/register/verify", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ credential: encodeCredential(credential), challenge_id }),
+      body: JSON.stringify({ credential: encodeCredential(credential), challenge_id, invite_code: inviteCode }),
     });
     if (!verifyRes.ok) {
       const err = await verifyRes.json().catch(() => ({}));
