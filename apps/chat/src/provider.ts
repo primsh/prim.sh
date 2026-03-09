@@ -9,10 +9,7 @@ const INFER_BASE_URL = process.env.INFER_BASE_URL ?? "https://infer.prim.sh";
  * Creates an AI SDK language model backed by infer.prim.sh.
  * `primFetch` is a fetch function pre-configured with x402 payment signing.
  */
-export function createInferModel(
-  primFetch: typeof fetch,
-  modelId = "openrouter/auto",
-) {
+export function createInferModel(primFetch: typeof fetch, modelId = "openrouter/auto") {
   const provider = createOpenAICompatible({
     name: "prim-infer",
     baseURL: `${INFER_BASE_URL}/v1`,
