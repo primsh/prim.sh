@@ -331,3 +331,109 @@ jobs:
           else
             gitleaks detect --config .gitleaks.toml --source . --log-opts="HEAD~1..HEAD" --redact --verbose
           fi
+
+  windows-install:
+    name: Windows install
+    if: github.event_name != 'schedule'
+    runs-on: windows-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: "1.3.8"
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - uses: pnpm/action-setup@v4
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Build x402-middleware
+        run: pnpm --filter @primsh/x402-middleware build
+
+      - name: Build Windows binary
+        run: bun build packages/cli/src/cli.ts --compile --target=bun-windows-x64 --outfile dist/prim-windows-x64.exe
+
+      - name: Create checksums
+        shell: pwsh
+        run: |
+          $hash = (Get-FileHash dist/prim-windows-x64.exe -Algorithm SHA256).Hash.ToLower()
+          "$hash  prim-windows-x64.exe" | Out-File -Encoding utf8NoBOM dist/checksums.sha256
+
+      - name: Start local download server
+        shell: pwsh
+        run: |
+          $script = @'
+          $listener = New-Object System.Net.HttpListener
+          $listener.Prefixes.Add("http://localhost:9877/")
+          $listener.Start()
+          while ($listener.IsListening) {
+            $ctx = $listener.GetContext()
+            $filename = $ctx.Request.Url.Segments[-1]
+            $filePath = Join-Path "$env:GITHUB_WORKSPACE\dist" $filename
+            if (Test-Path $filePath) {
+              $bytes = [System.IO.File]::ReadAllBytes($filePath)
+              $ctx.Response.ContentLength64 = $bytes.Length
+              $ctx.Response.OutputStream.Write($bytes, 0, $bytes.Length)
+            } else {
+              $ctx.Response.StatusCode = 404
+            }
+            $ctx.Response.Close()
+          }
+          '@
+          $script | Out-File -Encoding utf8NoBOM serve.ps1
+          Start-Process pwsh -ArgumentList "-File", "serve.ps1" -WindowStyle Hidden
+          Start-Sleep -Seconds 2
+
+      - name: Test install (no invite code)
+        shell: pwsh
+        env:
+          PRIM_DOWNLOAD_URL: "http://localhost:9877"
+        run: |
+          & ([scriptblock]::Create((Get-Content site/install.ps1 -Raw)))
+          if (!(Test-Path "$env:USERPROFILE\.prim\bin\prim.exe")) {
+            Write-Error "prim.exe not found after install"
+            exit 1
+          }
+          $v = & "$env:USERPROFILE\.prim\bin\prim.exe" --version 2>$null
+          Write-Host "Installed version: $v"
+          if (!$v) {
+            Write-Error "prim.exe --version returned nothing"
+            exit 1
+          }
+
+      - name: Test install with invite code argument
+        shell: pwsh
+        env:
+          PRIM_DOWNLOAD_URL: "http://localhost:9877"
+        run: |
+          # Remove existing install to test fresh
+          Remove-Item -Recurse -Force "$env:USERPROFILE\.prim" -ErrorAction SilentlyContinue
+          # Run with invite code — onboard will fail (no server) but script should get that far
+          try {
+            & ([scriptblock]::Create((Get-Content site/install.ps1 -Raw))) PRIM-TEST1234
+          } catch {
+            # Expected: onboard command fails since there's no real gate server
+            Write-Host "Onboard failed as expected (no gate server): $_"
+          }
+          # Binary should still be installed
+          if (!(Test-Path "$env:USERPROFILE\.prim\bin\prim.exe")) {
+            Write-Error "prim.exe not found after install with invite code"
+            exit 1
+          }
+          Write-Host "Install with invite code: binary placed correctly"
+
+      - name: Verify PATH update
+        shell: pwsh
+        run: |
+          $userPath = [Environment]::GetEnvironmentVariable("Path", "User")
+          if ($userPath -notlike "*\.prim\bin*") {
+            Write-Error "PATH not updated with .prim\bin"
+            exit 1
+          }
+          Write-Host "PATH correctly includes .prim\bin"
