@@ -11,7 +11,7 @@ const INFER_BASE_URL = process.env.INFER_BASE_URL ?? "https://infer.prim.sh";
  */
 export function createInferModel(
   primFetch: typeof fetch,
-  modelId = "anthropic/claude-sonnet-4-20250514",
+  modelId = "openrouter/auto",
 ) {
   const provider = createOpenAICompatible({
     name: "prim-infer",
