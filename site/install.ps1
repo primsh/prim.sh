@@ -1,6 +1,9 @@
 # Install script for the prim CLI on Windows
 # Usage: irm prim.sh/install.ps1 | iex
+# With invite code: & ([scriptblock]::Create((irm prim.sh/install.ps1))) PRIM-XXXXXXXX
 $ErrorActionPreference = "Stop"
+
+$InviteCode = if ($args.Count -gt 0) { $args[0] } else { $null }
 
 $BinDir = "$env:USERPROFILE\.prim\bin"
 $Bin = "$BinDir\prim.exe"
@@ -43,9 +46,22 @@ if ($UserPath -notlike "*\.prim\bin*") {
     Write-Host "Added $BinDir to your PATH."
 }
 
+# Also add to current session PATH so chained commands work
+if ($env:PATH -notlike "*\.prim\bin*") {
+    $env:PATH = "$BinDir;$env:PATH"
+}
+
 $Version = try { & $Bin --version 2>$null } catch { "unknown" }
 Write-Host ""
 Write-Host "prim v$Version installed to $Bin"
-Write-Host ""
-Write-Host "Open a new terminal, then:"
-Write-Host "  prim wallet create"
+
+if ($InviteCode) {
+    Write-Host ""
+    Write-Host "Running onboarding with code $InviteCode..."
+    & $Bin skill onboard --code $InviteCode
+}
+else {
+    Write-Host ""
+    Write-Host "Open a new terminal, then:"
+    Write-Host "  prim wallet create"
+}
