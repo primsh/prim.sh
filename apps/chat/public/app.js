@@ -94,7 +94,11 @@ async function register() {
     const verifyRes = await fetch("/auth/register/verify", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ credential: encodeCredential(credential), challenge_id, invite_code: inviteCode }),
+      body: JSON.stringify({
+        credential: encodeCredential(credential),
+        challenge_id,
+        invite_code: inviteCode,
+      }),
     });
     if (!verifyRes.ok) {
       const err = await verifyRes.json().catch(() => ({}));
