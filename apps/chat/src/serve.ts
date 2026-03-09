@@ -24,4 +24,5 @@ const port = Number(process.env.CHAT_PORT ?? 3020);
 export default {
   port,
   fetch: serve.fetch,
+  idleTimeout: 120,
 };

@@ -106,7 +106,11 @@ export async function streamChat(
           tools,
           stopWhen: stepCountIs(20),
           onChunk: ({ chunk }) => {
-            if (chunk.type === "text-delta") {
+            if (chunk.type === "reasoning-delta") {
+              controller.enqueue(
+                encoder.encode(sseEvent({ type: "reasoning", data: chunk.text })),
+              );
+            } else if (chunk.type === "text-delta") {
               controller.enqueue(encoder.encode(sseEvent({ type: "token", data: chunk.text })));
             } else if (chunk.type === "tool-call") {
               controller.enqueue(

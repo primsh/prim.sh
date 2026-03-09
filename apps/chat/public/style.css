@@ -438,6 +438,40 @@ body {
   }
 }
 
+/* ── Reasoning block ───────────────────────────────────────────────── */
+.reasoning-block {
+  margin-bottom: 12px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.reasoning-block summary {
+  padding: 8px 12px;
+  font-size: 0.8rem;
+  color: var(--muted);
+  cursor: pointer;
+  user-select: none;
+  background: var(--surface-2);
+}
+
+.reasoning-block summary:hover {
+  color: var(--text-dim);
+}
+
+.reasoning-content {
+  padding: 10px 12px;
+  font-size: 0.85rem;
+  color: var(--text-dim);
+  border-top: 1px solid var(--border);
+  max-height: 300px;
+  overflow-y: auto;
+}
+
+.reasoning-content p {
+  margin-bottom: 0.5em;
+}
+
 /* ── Tool indicators ────────────────────────────────────────────────── */
 .tool-indicator {
   display: inline-flex;
