@@ -8,11 +8,13 @@ import {
 } from "@primsh/x402-middleware";
 import type { ApiError } from "@primsh/x402-middleware";
 import { createPrimApp } from "@primsh/x402-middleware/create-prim-app";
+import type { Context } from "hono";
 import type { ChatRequest, EmbedRequest } from "./api.ts";
 import { chat, chatStream, embed, models } from "./service.ts";
 
 const INFER_ROUTES = {
   "POST /v1/chat": "$0.01",
+  "POST /v1/chat/completions": "$0.01",
   "POST /v1/embed": "$0.0001",
   "GET /v1/models": "$0.001",
 } as const;
@@ -43,6 +45,12 @@ const app = createPrimApp(
         },
         {
           method: "POST",
+          path: "/v1/chat/completions",
+          price_usdc: "0.01",
+          description: "OpenAI-compatible chat completion alias.",
+        },
+        {
+          method: "POST",
           path: "/v1/embed",
           price_usdc: "0.0001",
           description: "Generate embeddings for text input. Returns vector array.",
@@ -61,8 +69,9 @@ const app = createPrimApp(
 
 const logger = app.logger;
 
-// POST /v1/chat — Chat completion. Supports streaming, tool use, structured output.
-app.post("/v1/chat", async (c) => {
+// POST /v1/chat + /v1/chat/completions (OpenAI-compatible alias)
+// Chat completion. Supports streaming, tool use, structured output.
+async function handleChat(c: Context) {
   const bodyOrRes = await parseJsonBody<ChatRequest>(c, logger, "POST /v1/chat");
   if (bodyOrRes instanceof Response) return bodyOrRes;
   const body = bodyOrRes;
@@ -111,7 +120,10 @@ app.post("/v1/chat", async (c) => {
   }
 
   return c.json(result.data, 200);
-});
+}
+
+app.post("/v1/chat", handleChat);
+app.post("/v1/chat/completions", handleChat);
 
 // POST /v1/embed — Generate embeddings for text input. Returns vector array.
 app.post("/v1/embed", async (c) => {
