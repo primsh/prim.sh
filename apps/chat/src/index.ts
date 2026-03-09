@@ -1,5 +1,7 @@
 // SPDX-License-Identifier: Apache-2.0
+import { getUsdcBalance } from "@primsh/wallet/balance";
 import { Hono } from "hono";
+import type { Address } from "viem";
 import { streamChat } from "./agent.ts";
 import { getAccount } from "./accounts.ts";
 import { getSessionAccountId, registerAuthRoutes } from "./auth.ts";
@@ -102,7 +104,7 @@ app.post("/api/chat", async (c) => {
 });
 
 // GET /api/balance
-app.get("/api/balance", (c) => {
+app.get("/api/balance", async (c) => {
   const accountId = getSessionAccountId(c);
   if (!accountId) {
     return c.json({ error: { code: "unauthorized", message: "Not authenticated" } }, 401);
@@ -116,10 +118,11 @@ app.get("/api/balance", (c) => {
     );
   }
 
-  // Balance is fetched client-side via wallet tool or API; return address for now
+  const { balance } = await getUsdcBalance(accountResult.data.wallet_address as Address);
+
   return c.json({
     wallet_address: accountResult.data.wallet_address,
-    balance_usdc: "0.00",
+    balance_usdc: balance,
   });
 });
 
