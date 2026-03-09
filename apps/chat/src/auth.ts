@@ -72,8 +72,9 @@ export function registerAuthRoutes(app: Hono): void {
       userName: `user_${randomBytes(4).toString("hex")}`,
       attestationType: "none",
       authenticatorSelection: {
+        authenticatorAttachment: "platform",
         residentKey: "required",
-        userVerification: "preferred",
+        userVerification: "required",
       },
     });
 
