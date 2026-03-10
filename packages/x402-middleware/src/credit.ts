@@ -1,5 +1,8 @@
 // SPDX-License-Identifier: Apache-2.0
 import { Database } from "bun:sqlite";
+import type { CreditLedger, CreditTx } from "./types.js";
+
+export type { CreditLedger, CreditTx };
 
 const INIT_SQL = `
 CREATE TABLE IF NOT EXISTS credit_balance (
@@ -20,25 +23,6 @@ CREATE TABLE IF NOT EXISTS credit_tx (
 CREATE INDEX IF NOT EXISTS idx_credit_tx_wallet ON credit_tx(wallet_address);
 CREATE INDEX IF NOT EXISTS idx_credit_tx_created ON credit_tx(created_at);
 `;
-
-interface CreditTx {
-  id: number;
-  wallet_address: string;
-  amount_usdc: string;
-  reason: string;
-  request_id: string | null;
-  created_at: string;
-}
-
-export interface CreditLedger {
-  getBalance(wallet: string): string;
-  addCredit(wallet: string, amount: string, requestId?: string): void;
-  deductCredit(wallet: string, amount: string, requestId?: string): void;
-  settle(wallet: string, estimated: string, actual: string, requestId?: string): void;
-  expireInactive(days: number): number;
-  getHistory(wallet: string, limit?: number): CreditTx[];
-  close(): void;
-}
 
 function subtract(a: string, b: string): string {
   // Use integer arithmetic on micro-cents (6 decimal places) to avoid float issues

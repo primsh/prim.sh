@@ -12,6 +12,7 @@ import { RateLimiter } from "./rate-limit.js";
 import type {
   AgentStackMiddlewareOptions,
   AgentStackRouteConfig,
+  CreditLedger,
   RouteConfig as AgentStackRouteConfigEntry,
 } from "./types.js";
 
@@ -85,10 +86,24 @@ function getEstimateCacheKey(pattern: string, requestId: string): string {
   return `${pattern}:${requestId}`;
 }
 
+/** Map of route pattern → static price string, used by credit check for static routes. */
+const routePrices = new Map<string, string>();
+
+function makeDynamicPriceReader(
+  pattern: string,
+): (ctx: { adapter: { getUrl: () => string } }) => string {
+  return (ctx) => {
+    const key = getEstimateCacheKey(pattern, ctx.adapter.getUrl());
+    const cached = estimateCache.get(key);
+    if (!cached) throw new Error(`No cached estimate for route "${pattern}"`);
+    return cached;
+  };
+}
+
 function normalizeRouteConfigEntry(
   pattern: string,
   value: string | AgentStackRouteConfigEntry,
-  options: { payTo: string; network: Network },
+  options: { payTo: string; network: Network; creditLedger?: CreditLedger },
 ): [string, RouteConfig] {
   const rawPrice = typeof value === "string" ? value : value.price;
 
@@ -104,13 +119,14 @@ function normalizeRouteConfigEntry(
   let price: string | ((ctx: { adapter: { getUrl: () => string } }) => string);
   if (typeof rawPrice === "function") {
     meteredEstimators.set(pattern, rawPrice);
-    price = (ctx: { adapter: { getUrl: () => string } }) => {
-      const key = getEstimateCacheKey(pattern, ctx.adapter.getUrl());
-      const cached = estimateCache.get(key);
-      if (!cached) throw new Error(`No cached estimate for metered route "${pattern}"`);
-      return cached;
-    };
+    price = makeDynamicPriceReader(pattern);
+  } else if (options.creditLedger) {
+    // When credit ledger is active, static routes also use DynamicPrice so the
+    // credit check can reduce the price by mutating the estimate cache.
+    routePrices.set(pattern, rawPrice);
+    price = makeDynamicPriceReader(pattern);
   } else {
+    routePrices.set(pattern, rawPrice);
     price = rawPrice;
   }
 
@@ -164,6 +180,8 @@ export function createAgentStackMiddleware(
     ? new RateLimiter(typeof options.rateLimit === "object" ? options.rateLimit : {})
     : null;
 
+  const creditLedger = options.creditLedger ?? null;
+
   const effectiveRoutes: Record<string, RouteConfig> = {};
 
   for (const [pattern, value] of Object.entries(routes)) {
@@ -174,6 +192,7 @@ export function createAgentStackMiddleware(
     const [routeKey, config] = normalizeRouteConfigEntry(pattern, value, {
       payTo: options.payTo,
       network,
+      creditLedger: creditLedger ?? undefined,
     });
 
     effectiveRoutes[routeKey] = config;
@@ -248,6 +267,60 @@ export function createAgentStackMiddleware(
     return null;
   }
 
+  /**
+   * Check credit balance and decide: skip x402 (full credit), reduce price
+   * (partial credit), or fall through (no credit). Returns "skip" with a
+   * resolved `next()` promise when fully covered, "reduced" after deducting
+   * partial credit and mutating the estimate cache, or null for normal x402.
+   */
+  /** Strip leading "$" from price strings (e.g. "$0.005" → "0.005"). */
+  function parsePrice(price: string): number {
+    return Number.parseFloat(price.replace(/^\$/, ""));
+  }
+
+  async function checkCredit(
+    c: Parameters<MiddlewareHandler>[0],
+    routeKey: string,
+    cacheKey: string,
+    next: Parameters<MiddlewareHandler>[1],
+  ): Promise<Response | null> {
+    if (!creditLedger) return null;
+    const wallet = c.get(WALLET_ADDRESS_KEY) as string | undefined;
+    if (!wallet) return null;
+
+    // Resolve price: metered routes set estimatedPrice, static routes use routePrices
+    const rawPrice = (c.get("estimatedPrice") as string | undefined) ?? routePrices.get(routeKey);
+    if (!rawPrice) return null;
+
+    const priceNum = parsePrice(rawPrice);
+    if (Number.isNaN(priceNum) || priceNum <= 0) return null;
+
+    const balance = creditLedger.getBalance(wallet);
+    const balanceNum = Number.parseFloat(balance);
+
+    if (balanceNum <= 0) return null; // No credit — normal x402
+
+    const requestId = c.get("requestId") as string | undefined;
+    const priceStr = priceNum.toFixed(6);
+
+    if (balanceNum >= priceNum) {
+      // Full credit: skip x402 entirely
+      creditLedger.deductCredit(wallet, priceStr, requestId);
+      c.set("paidVia" as never, "credit");
+      c.set("estimatedPrice", rawPrice);
+      await next();
+      return c.res;
+    }
+
+    // Partial credit: deduct all credit, reduce x402 price
+    creditLedger.deductCredit(wallet, balance, requestId);
+    const scale = 1_000_000;
+    const reduced = `$${((Math.round(priceNum * scale) - Math.round(balanceNum * scale)) / scale).toFixed(6)}`;
+    estimateCache.set(cacheKey, reduced);
+    c.set("paidVia" as never, "partial");
+    return null; // Fall through to x402 with reduced price
+  }
+
   if (Object.keys(effectiveRoutes).length === 0) {
     return async (c: Parameters<MiddlewareHandler>[0], next: Parameters<MiddlewareHandler>[1]) => {
       // For identity routes, try JWT auth first
@@ -313,12 +386,28 @@ export function createAgentStackMiddleware(
     // Run cost estimation for metered routes before x402 payment gate
     const routeKey = getRouteKey(c);
     const estimator = meteredEstimators.get(routeKey);
+    const cacheKey = getEstimateCacheKey(routeKey, c.req.url);
+
     if (estimator) {
       const estimate = await estimator(c);
-      const cacheKey = getEstimateCacheKey(routeKey, c.req.url);
       estimateCache.set(cacheKey, estimate);
       c.set("estimatedPrice", estimate);
       try {
+        const creditResult = await checkCredit(c, routeKey, cacheKey, next);
+        if (creditResult) return creditResult;
+        return await payment(c, next);
+      } finally {
+        estimateCache.delete(cacheKey);
+      }
+    }
+
+    // Static route: populate cache if credit ledger needs dynamic pricing
+    if (creditLedger && routePrices.has(routeKey)) {
+      const staticPrice = routePrices.get(routeKey)!;
+      estimateCache.set(cacheKey, staticPrice);
+      try {
+        const creditResult = await checkCredit(c, routeKey, cacheKey, next);
+        if (creditResult) return creditResult;
         return await payment(c, next);
       } finally {
         estimateCache.delete(cacheKey);
