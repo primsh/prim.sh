@@ -12,6 +12,7 @@ import { RateLimiter } from "./rate-limit.js";
 import type {
   AgentStackMiddlewareOptions,
   AgentStackRouteConfig,
+  CostCalculator,
   CreditLedger,
   RouteConfig as AgentStackRouteConfigEntry,
 } from "./types.js";
@@ -89,6 +90,9 @@ function getEstimateCacheKey(pattern: string, requestId: string): string {
 /** Map of route pattern → static price string, used by credit check for static routes. */
 const routePrices = new Map<string, string>();
 
+/** Maps route patterns to their CostCalculator functions for post-response settlement. */
+const routeCalculators = new Map<string, CostCalculator>();
+
 function makeDynamicPriceReader(
   pattern: string,
 ): (ctx: { adapter: { getUrl: () => string } }) => string {
@@ -112,6 +116,11 @@ function normalizeRouteConfigEntry(
   }
 
   const description = typeof value === "string" ? undefined : value.description;
+
+  // Extract calculator for post-response settlement (MB-5)
+  if (typeof value !== "string" && value.calculator) {
+    routeCalculators.set(pattern, value.calculator);
+  }
 
   // For function prices (CostEstimator): the estimation middleware runs the estimator
   // and stores the result in estimateCache before x402 runs. The DynamicPrice function
@@ -267,28 +276,26 @@ export function createAgentStackMiddleware(
     return null;
   }
 
-  /**
-   * Check credit balance and decide: skip x402 (full credit), reduce price
-   * (partial credit), or fall through (no credit). Returns "skip" with a
-   * resolved `next()` promise when fully covered, "reduced" after deducting
-   * partial credit and mutating the estimate cache, or null for normal x402.
-   */
   /** Strip leading "$" from price strings (e.g. "$0.005" → "0.005"). */
   function parsePrice(price: string): number {
     return Number.parseFloat(price.replace(/^\$/, ""));
   }
 
-  async function checkCredit(
+  /**
+   * Check credit balance. Returns:
+   * - "skip"    — full credit covers the request, deducted. Caller calls next() directly.
+   * - "reduced" — partial credit deducted, estimate cache updated. Caller calls payment().
+   * - null      — no credit. Caller calls payment().
+   */
+  function checkCredit(
     c: Parameters<MiddlewareHandler>[0],
     routeKey: string,
     cacheKey: string,
-    next: Parameters<MiddlewareHandler>[1],
-  ): Promise<Response | null> {
+  ): "skip" | "reduced" | null {
     if (!creditLedger) return null;
     const wallet = c.get(WALLET_ADDRESS_KEY) as string | undefined;
     if (!wallet) return null;
 
-    // Resolve price: metered routes set estimatedPrice, static routes use routePrices
     const rawPrice = (c.get("estimatedPrice") as string | undefined) ?? routePrices.get(routeKey);
     if (!rawPrice) return null;
 
@@ -298,27 +305,73 @@ export function createAgentStackMiddleware(
     const balance = creditLedger.getBalance(wallet);
     const balanceNum = Number.parseFloat(balance);
 
-    if (balanceNum <= 0) return null; // No credit — normal x402
+    if (balanceNum <= 0) return null;
 
     const requestId = c.get("requestId") as string | undefined;
     const priceStr = priceNum.toFixed(6);
 
     if (balanceNum >= priceNum) {
-      // Full credit: skip x402 entirely
       creditLedger.deductCredit(wallet, priceStr, requestId);
       c.set("paidVia" as never, "credit");
       c.set("estimatedPrice", rawPrice);
-      await next();
-      return c.res;
+      return "skip";
     }
 
-    // Partial credit: deduct all credit, reduce x402 price
     creditLedger.deductCredit(wallet, balance, requestId);
     const scale = 1_000_000;
     const reduced = `$${((Math.round(priceNum * scale) - Math.round(balanceNum * scale)) / scale).toFixed(6)}`;
     estimateCache.set(cacheKey, reduced);
     c.set("paidVia" as never, "partial");
-    return null; // Fall through to x402 with reduced price
+    return "reduced";
+  }
+
+  /**
+   * Post-response settlement: if the route has a CostCalculator, compute the
+   * actual cost and reconcile with the credit ledger. Sets X-Prim-* headers
+   * on non-streaming responses.
+   */
+  async function settleResponse(
+    c: Parameters<MiddlewareHandler>[0],
+    routeKey: string,
+  ): Promise<void> {
+    if (!creditLedger) return;
+    const calculator = routeCalculators.get(routeKey);
+    if (!calculator) return;
+    // Skip settlement if no response (e.g. x402 returned 402 before handler ran)
+    if (!c.res || c.res.status === 402) return;
+    const wallet = c.get(WALLET_ADDRESS_KEY) as string | undefined;
+    if (!wallet) return;
+    const estimated = c.get("estimatedPrice") as string | undefined;
+    if (!estimated) return;
+    const requestId = c.get("requestId") as string | undefined;
+
+    const estimatedNum = parsePrice(estimated);
+    const estimatedStr = estimatedNum.toFixed(6);
+
+    const isStreaming = c.res.headers.get("content-type")?.includes("text/event-stream");
+
+    let actualStr: string;
+    if (c.res.status >= 400) {
+      // Error response: full refund
+      actualStr = "0.000000";
+    } else {
+      // Wait for streaming usage if handler set a promise
+      const usagePromise = c.get("usagePromise" as never) as Promise<unknown> | undefined;
+      if (usagePromise) {
+        await usagePromise;
+      }
+      const rawActual = await calculator(c, c.res);
+      actualStr = parsePrice(rawActual).toFixed(6);
+    }
+
+    creditLedger.settle(wallet, estimatedStr, actualStr, requestId);
+
+    // Set informational headers on non-streaming responses
+    if (!isStreaming) {
+      c.header("X-Prim-Cost", actualStr);
+      c.header("X-Prim-Estimated", estimatedStr);
+      c.header("X-Prim-Credit", creditLedger.getBalance(wallet));
+    }
   }
 
   if (Object.keys(effectiveRoutes).length === 0) {
@@ -388,14 +441,23 @@ export function createAgentStackMiddleware(
     const estimator = meteredEstimators.get(routeKey);
     const cacheKey = getEstimateCacheKey(routeKey, c.req.url);
 
+    // Wrap next() to run settlement after the handler completes
+    const nextWithSettlement = async () => {
+      await next();
+      await settleResponse(c, routeKey);
+    };
+
     if (estimator) {
       const estimate = await estimator(c);
       estimateCache.set(cacheKey, estimate);
       c.set("estimatedPrice", estimate);
       try {
-        const creditResult = await checkCredit(c, routeKey, cacheKey, next);
-        if (creditResult) return creditResult;
-        return await payment(c, next);
+        const credit = checkCredit(c, routeKey, cacheKey);
+        if (credit === "skip") {
+          await nextWithSettlement();
+          return;
+        }
+        return await payment(c, nextWithSettlement);
       } finally {
         estimateCache.delete(cacheKey);
       }
@@ -406,14 +468,17 @@ export function createAgentStackMiddleware(
       const staticPrice = routePrices.get(routeKey)!;
       estimateCache.set(cacheKey, staticPrice);
       try {
-        const creditResult = await checkCredit(c, routeKey, cacheKey, next);
-        if (creditResult) return creditResult;
-        return await payment(c, next);
+        const credit = checkCredit(c, routeKey, cacheKey);
+        if (credit === "skip") {
+          await nextWithSettlement();
+          return;
+        }
+        return await payment(c, nextWithSettlement);
       } finally {
         estimateCache.delete(cacheKey);
       }
     }
 
-    return payment(c, next);
+    return payment(c, nextWithSettlement);
   };
 }

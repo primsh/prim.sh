@@ -656,7 +656,12 @@ function createMockLedger(initialBalances: Record<string, string> = {}): CreditL
       const current = Number.parseFloat(balances.get(addr) ?? "0");
       balances.set(addr, (current - Number.parseFloat(amount)).toFixed(6));
     },
-    settle(): void {},
+    settle(wallet: string, estimated: string, actual: string): void {
+      const delta = Number.parseFloat(estimated) - Number.parseFloat(actual);
+      const addr = wallet.toLowerCase();
+      const current = Number.parseFloat(balances.get(addr) ?? "0");
+      balances.set(addr, (current + delta).toFixed(6));
+    },
     expireInactive(): number {
       return 0;
     },
@@ -919,5 +924,275 @@ describe("credit check", () => {
 
     // Normal x402 flow — 402
     expect(res.status).toBe(402);
+  });
+});
+
+// ── Post-response settlement tests ──────────────────────────────────────────
+
+describe("post-response settlement", () => {
+  it("settles overpayment as credit with X-Prim-* headers", async () => {
+    const ledger = createMockLedger({ [TEST_WALLET]: "0.100000" });
+    const estimator = vi.fn(async () => "$0.050");
+    const calculator = vi.fn(async () => "$0.020");
+    const app = new Hono();
+
+    app.use(
+      "*",
+      createAgentStackMiddleware(
+        {
+          payTo: TEST_PAY_TO,
+          network: TEST_NETWORK,
+          facilitatorUrl: "https://x402.example",
+          freeRoutes: ["GET /free"],
+          creditLedger: ledger,
+        },
+        {
+          "GET /free": "$0.00",
+          "POST /v1/chat": { price: estimator, calculator, description: "Chat" },
+        },
+      ),
+    );
+
+    app.post("/v1/chat", (c) => c.json({ ok: true }));
+
+    const res = await app.request("/v1/chat", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "PAYMENT-SIGNATURE": PAYMENT_HEADER_WITH_WALLET,
+      },
+      body: JSON.stringify({}),
+    });
+
+    expect(res.status).toBe(200);
+    expect(calculator).toHaveBeenCalled();
+    // Estimated $0.05, actual $0.02 → overpaid $0.03 → credit
+    // Started with $0.10, deducted $0.05 (credit check), then settled +$0.03
+    expect(res.headers.get("X-Prim-Cost")).toBe("0.020000");
+    expect(res.headers.get("X-Prim-Estimated")).toBe("0.050000");
+    // Balance: 0.10 - 0.05 + 0.03 = 0.08
+    expect(Number.parseFloat(ledger.getBalance(TEST_WALLET))).toBeCloseTo(0.08, 5);
+    expect(res.headers.get("X-Prim-Credit")).toBe(ledger.getBalance(TEST_WALLET));
+  });
+
+  it("settles underpayment by deducting from credit", async () => {
+    const ledger = createMockLedger({ [TEST_WALLET]: "0.100000" });
+    const estimator = vi.fn(async () => "$0.010");
+    const calculator = vi.fn(async () => "$0.030");
+    const app = new Hono();
+
+    app.use(
+      "*",
+      createAgentStackMiddleware(
+        {
+          payTo: TEST_PAY_TO,
+          network: TEST_NETWORK,
+          facilitatorUrl: "https://x402.example",
+          freeRoutes: ["GET /free"],
+          creditLedger: ledger,
+        },
+        {
+          "GET /free": "$0.00",
+          "POST /v1/chat": { price: estimator, calculator, description: "Chat" },
+        },
+      ),
+    );
+
+    app.post("/v1/chat", (c) => c.json({ ok: true }));
+
+    const res = await app.request("/v1/chat", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "PAYMENT-SIGNATURE": PAYMENT_HEADER_WITH_WALLET,
+      },
+      body: JSON.stringify({}),
+    });
+
+    expect(res.status).toBe(200);
+    // Estimated $0.01, actual $0.03 → underpaid $0.02 → deducted
+    // Started with $0.10, deducted $0.01 (credit check), then settled -$0.02
+    // Balance: 0.10 - 0.01 - 0.02 = 0.07
+    expect(Number.parseFloat(ledger.getBalance(TEST_WALLET))).toBeCloseTo(0.07, 5);
+  });
+
+  it("refunds full estimate on error response", async () => {
+    const ledger = createMockLedger({ [TEST_WALLET]: "0.100000" });
+    const estimator = vi.fn(async () => "$0.050");
+    const calculator = vi.fn(async () => "$0.050"); // shouldn't be called with this value
+    const app = new Hono();
+
+    app.use(
+      "*",
+      createAgentStackMiddleware(
+        {
+          payTo: TEST_PAY_TO,
+          network: TEST_NETWORK,
+          facilitatorUrl: "https://x402.example",
+          freeRoutes: ["GET /free"],
+          creditLedger: ledger,
+        },
+        {
+          "GET /free": "$0.00",
+          "POST /v1/chat": { price: estimator, calculator, description: "Chat" },
+        },
+      ),
+    );
+
+    app.post("/v1/chat", (c) => c.json({ error: "internal" }, 500));
+
+    const res = await app.request("/v1/chat", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "PAYMENT-SIGNATURE": PAYMENT_HEADER_WITH_WALLET,
+      },
+      body: JSON.stringify({}),
+    });
+
+    expect(res.status).toBe(500);
+    // Estimated $0.05 deducted by credit check, then error → settle(0.05, 0) → +$0.05 credit
+    // Net: $0.10 - $0.05 + $0.05 = $0.10 (full refund)
+    expect(Number.parseFloat(ledger.getBalance(TEST_WALLET))).toBeCloseTo(0.1, 5);
+  });
+
+  it("skips settlement when no calculator configured", async () => {
+    const ledger = createMockLedger({ [TEST_WALLET]: "0.100000" });
+    const app = new Hono();
+
+    app.use(
+      "*",
+      createAgentStackMiddleware(
+        {
+          payTo: TEST_PAY_TO,
+          network: TEST_NETWORK,
+          facilitatorUrl: "https://x402.example",
+          freeRoutes: ["GET /free"],
+          creditLedger: ledger,
+        },
+        {
+          "GET /free": "$0.00",
+          "POST /v1/action": "$0.005",
+        },
+      ),
+    );
+
+    app.post("/v1/action", (c) => c.json({ ok: true }));
+
+    const res = await app.request("/v1/action", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "PAYMENT-SIGNATURE": PAYMENT_HEADER_WITH_WALLET,
+      },
+      body: JSON.stringify({}),
+    });
+
+    expect(res.status).toBe(200);
+    // No calculator → no settlement headers
+    expect(res.headers.get("X-Prim-Cost")).toBeNull();
+    expect(res.headers.get("X-Prim-Estimated")).toBeNull();
+    // Credit check deducted $0.005, no settlement to change it
+    expect(Number.parseFloat(ledger.getBalance(TEST_WALLET))).toBeCloseTo(0.095, 5);
+  });
+
+  it("skips settlement headers on streaming responses", async () => {
+    const ledger = createMockLedger({ [TEST_WALLET]: "0.100000" });
+    const estimator = vi.fn(async () => "$0.050");
+    const calculator = vi.fn(async () => "$0.020");
+    const app = new Hono();
+
+    app.use(
+      "*",
+      createAgentStackMiddleware(
+        {
+          payTo: TEST_PAY_TO,
+          network: TEST_NETWORK,
+          facilitatorUrl: "https://x402.example",
+          freeRoutes: ["GET /free"],
+          creditLedger: ledger,
+        },
+        {
+          "GET /free": "$0.00",
+          "POST /v1/stream": { price: estimator, calculator, description: "Stream" },
+        },
+      ),
+    );
+
+    app.post("/v1/stream", (c) => {
+      c.header("Content-Type", "text/event-stream");
+      return c.body("data: hello\n\n");
+    });
+
+    const res = await app.request("/v1/stream", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "PAYMENT-SIGNATURE": PAYMENT_HEADER_WITH_WALLET,
+      },
+      body: JSON.stringify({}),
+    });
+
+    expect(res.status).toBe(200);
+    // Settlement ran (ledger updated) but headers NOT set for streaming
+    expect(res.headers.get("X-Prim-Cost")).toBeNull();
+    // Ledger was still settled: 0.10 - 0.05 + 0.03 = 0.08
+    expect(Number.parseFloat(ledger.getBalance(TEST_WALLET))).toBeCloseTo(0.08, 5);
+  });
+
+  it("awaits usagePromise before running calculator for streaming", async () => {
+    const ledger = createMockLedger({ [TEST_WALLET]: "0.100000" });
+    const estimator = vi.fn(async () => "$0.050");
+    let usageResolved = false;
+    const calculator = vi.fn(async (c) => {
+      // Verify the promise was resolved before calculator runs
+      const usage = c.get("streamUsage" as never) as { cost: string } | undefined;
+      return usage?.cost ?? "$0.050";
+    });
+    const app = new Hono();
+
+    app.use(
+      "*",
+      createAgentStackMiddleware(
+        {
+          payTo: TEST_PAY_TO,
+          network: TEST_NETWORK,
+          facilitatorUrl: "https://x402.example",
+          freeRoutes: ["GET /free"],
+          creditLedger: ledger,
+        },
+        {
+          "GET /free": "$0.00",
+          "POST /v1/stream": { price: estimator, calculator, description: "Stream" },
+        },
+      ),
+    );
+
+    app.post("/v1/stream", (c) => {
+      // Simulate streaming: set a usagePromise that resolves with usage data
+      const promise = Promise.resolve().then(() => {
+        usageResolved = true;
+        c.set("streamUsage" as never, { cost: "$0.015" });
+      });
+      c.set("usagePromise" as never, promise);
+      c.header("Content-Type", "text/event-stream");
+      return c.body("data: hello\n\n");
+    });
+
+    const res = await app.request("/v1/stream", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "PAYMENT-SIGNATURE": PAYMENT_HEADER_WITH_WALLET,
+      },
+      body: JSON.stringify({}),
+    });
+
+    expect(res.status).toBe(200);
+    expect(usageResolved).toBe(true);
+    expect(calculator).toHaveBeenCalled();
+    // Estimated $0.05, actual $0.015 → overpaid $0.035
+    // Balance: 0.10 - 0.05 + 0.035 = 0.085
+    expect(Number.parseFloat(ledger.getBalance(TEST_WALLET))).toBeCloseTo(0.085, 5);
   });
 });
