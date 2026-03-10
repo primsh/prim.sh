@@ -2,7 +2,7 @@
 import { decodePaymentRequiredHeader, encodePaymentSignatureHeader } from "@x402/core/http";
 import { Hono } from "hono";
 import { afterAll, afterEach, beforeAll, describe, expect, it, vi } from "vitest";
-import type { CreditLedger } from "../src/credit.ts";
+import type { CreditLedger } from "../src/types.ts";
 import { type AgentStackRouteConfig, createAgentStackMiddleware } from "../src/middleware.ts";
 import type { AgentStackMiddlewareOptions } from "../src/types.ts";
 

@@ -14,7 +14,6 @@ export * from "./helpers";
 export * from "./create-prim-app";
 export * from "./provider";
 export * from "./provider-registry";
-export * from "./credit";
 
 export { x402ResourceServer } from "@x402/core/server";
 export { HTTPFacilitatorClient } from "@x402/core/http";

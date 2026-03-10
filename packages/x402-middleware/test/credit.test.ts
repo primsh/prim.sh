@@ -4,7 +4,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { createCreditLedger } from "../src/credit.ts";
-import type { CreditLedger } from "../src/credit.ts";
+import type { CreditLedger } from "../src/types.ts";
 
 let tempDir: string;
 let ledger: CreditLedger;

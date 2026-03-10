@@ -9,10 +9,10 @@ import type { MiddlewareHandler } from "hono";
 import { verifySessionJwt } from "./jwt.js";
 import { createLogger } from "./logger.js";
 import { RateLimiter } from "./rate-limit.js";
-import type { CreditLedger } from "./credit.js";
 import type {
   AgentStackMiddlewareOptions,
   AgentStackRouteConfig,
+  CreditLedger,
   RouteConfig as AgentStackRouteConfigEntry,
 } from "./types.js";
 

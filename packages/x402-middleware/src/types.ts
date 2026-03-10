@@ -46,7 +46,28 @@ export interface AgentStackMiddlewareOptions {
    */
   identityRoutes?: string[];
   /** Credit ledger for metered billing. When present, credit is checked before x402. */
-  creditLedger?: import("./credit.js").CreditLedger;
+  creditLedger?: CreditLedger;
+}
+
+// ─── Credit ledger types ──────────────────────────────────────────────────────
+
+export interface CreditTx {
+  id: number;
+  wallet_address: string;
+  amount_usdc: string;
+  reason: string;
+  request_id: string | null;
+  created_at: string;
+}
+
+export interface CreditLedger {
+  getBalance(wallet: string): string;
+  addCredit(wallet: string, amount: string, requestId?: string): void;
+  deductCredit(wallet: string, amount: string, requestId?: string): void;
+  settle(wallet: string, estimated: string, actual: string, requestId?: string): void;
+  expireInactive(days: number): number;
+  getHistory(wallet: string, limit?: number): CreditTx[];
+  close(): void;
 }
 
 export type ServiceResult<T> =
