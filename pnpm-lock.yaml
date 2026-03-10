@@ -68,6 +68,9 @@ importers:
       '@ai-sdk/provider-utils':
         specifier: ^4.0.19
         version: 4.0.19(zod@3.25.76)
+      '@primsh/wallet':
+        specifier: workspace:*
+        version: link:../../packages/wallet
       '@primsh/x402-client':
         specifier: workspace:*
         version: link:../../packages/x402-client

@@ -25,6 +25,7 @@
     "@ai-sdk/openai-compatible": "^2.0.35",
     "@ai-sdk/provider": "^3.0.8",
     "@ai-sdk/provider-utils": "^4.0.19",
+    "@primsh/wallet": "workspace:*",
     "@primsh/x402-client": "workspace:*",
     "@primsh/x402-middleware": "workspace:*",
     "@simplewebauthn/server": "^13.2.3",
