@@ -24,15 +24,21 @@ import { metricsHandler, metricsMiddleware } from "./metrics.js";
 import { createAgentStackMiddleware, createWalletAllowlistChecker } from "./middleware.js";
 import { getNetworkConfig } from "./network-config.js";
 import { requestIdMiddleware } from "./request-id.js";
-import type { AgentStackRouteConfig } from "./types.js";
+import type { AgentStackRouteConfig, CreditLedger, MeteredConfig } from "./types.js";
 
 export type AppVariables = { walletAddress: string | undefined };
 
-export type PrimApp = Hono<{ Variables: AppVariables }> & { logger: Logger };
+export type PrimApp = Hono<{ Variables: AppVariables }> & {
+  logger: Logger;
+  /** Credit ledger instance, available when metered config is provided. */
+  creditLedger?: CreditLedger;
+};
 
 export interface PrimAppDeps {
   createAgentStackMiddleware?: typeof createAgentStackMiddleware;
   createWalletAllowlistChecker?: typeof createWalletAllowlistChecker;
+  /** Pre-initialized credit ledger for metered billing. Required when config.metered is set. */
+  creditLedger?: CreditLedger;
 }
 
 export interface PrimAppConfig {
@@ -89,6 +95,12 @@ export interface PrimAppConfig {
   feedbackUrl?: string;
   /** Custom body size limit in bytes. Defaults to 1 MB. Ignored when skipBodyLimit is true. */
   bodyLimitBytes?: number;
+  /**
+   * Enable metered billing with a credit ledger.
+   * When present: initializes credit ledger, wires credit check before x402,
+   * adds GET /v1/credit free route, starts daily credit expiry interval.
+   */
+  metered?: MeteredConfig;
 }
 
 /**
@@ -122,6 +134,7 @@ export function createPrimApp(config: PrimAppConfig, deps: PrimAppDeps = {}): Pr
     skipHealthCheck = false,
     feedbackUrl,
     bodyLimitBytes,
+    metered,
   } = config;
 
   const _createAgentStackMiddleware = deps.createAgentStackMiddleware ?? createAgentStackMiddleware;
@@ -130,6 +143,27 @@ export function createPrimApp(config: PrimAppConfig, deps: PrimAppDeps = {}): Pr
 
   const LLMS_TXT = llmsTxtPath && existsSync(llmsTxtPath) ? readFileSync(llmsTxtPath, "utf-8") : "";
   const logger = createLogger(serviceName);
+
+  // Initialize credit ledger for metered billing.
+  // credit.ts uses bun:sqlite — load via variable-path dynamic import to prevent
+  // vitest/vite from statically resolving it (same pattern as access-log).
+  const creditLedger: CreditLedger | undefined = deps.creditLedger;
+  if (metered && creditLedger) {
+    const expiryDays = metered.creditExpiryDays ?? 30;
+    const ONE_DAY_MS = 24 * 60 * 60 * 1000;
+    const expiryInterval = setInterval(() => {
+      try {
+        const expired = creditLedger.expireInactive(expiryDays);
+        if (expired > 0) {
+          logger.info(`Expired ${expired} inactive credit balance(s)`);
+        }
+      } catch (err) {
+        logger.error("Credit expiry failed", { error: String(err) });
+      }
+    }, ONE_DAY_MS);
+    // Don't block process exit
+    expiryInterval.unref();
+  }
 
   // Validate REVENUE_WALLET unless this is a free service
   if (!freeService) {
@@ -199,6 +233,11 @@ export function createPrimApp(config: PrimAppConfig, deps: PrimAppDeps = {}): Pr
       ...extraFreeRoutes,
     ];
 
+    // Add /v1/credit as a free route when metered billing is active
+    if (creditLedger) {
+      standardFreeRoutes.push("GET /v1/credit");
+    }
+
     app.use(
       "*",
       _createAgentStackMiddleware(
@@ -207,6 +246,7 @@ export function createPrimApp(config: PrimAppConfig, deps: PrimAppDeps = {}): Pr
           network: NETWORK,
           freeRoutes: standardFreeRoutes,
           checkAllowlist,
+          creditLedger,
         },
         { ...routes },
       ),
@@ -247,9 +287,27 @@ export function createPrimApp(config: PrimAppConfig, deps: PrimAppDeps = {}): Pr
     });
   }
 
-  // Expose logger so callers can use the same logger instance
+  // Credit balance endpoint — free route, returns balance for a given wallet
+  if (creditLedger) {
+    app.get("/v1/credit", (c) => {
+      const wallet = c.req.query("wallet");
+      if (!wallet || !/^0x[0-9a-fA-F]{40}$/.test(wallet)) {
+        return c.json(
+          { error: { code: "invalid_request", message: "Missing or invalid ?wallet=0x... param" } },
+          400,
+        );
+      }
+      const balance = creditLedger.getBalance(wallet);
+      return c.json({ balance_usdc: balance, updated_at: new Date().toISOString() });
+    });
+  }
+
+  // Expose logger and credit ledger so callers can use the same instances
   const primApp = app as PrimApp;
   primApp.logger = logger;
+  if (creditLedger) {
+    primApp.creditLedger = creditLedger;
+  }
 
   return primApp;
 }
