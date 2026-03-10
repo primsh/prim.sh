@@ -107,10 +107,10 @@ describe("createPrimApp metered billing", () => {
     vi.stubEnv("REVENUE_WALLET", "0xPayTo");
     const ledger = createMockLedger();
 
-    const app = createPrimApp(
-      baseConfig({ metered: { dbPath: "/tmp/test-credit.db" } }),
-      { ...passthroughDeps, creditLedger: ledger },
-    );
+    const app = createPrimApp(baseConfig({ metered: { dbPath: "/tmp/test-credit.db" } }), {
+      ...passthroughDeps,
+      creditLedger: ledger,
+    });
 
     expect(app).toBeDefined();
     expect(app.creditLedger).toBe(ledger);
@@ -120,33 +120,30 @@ describe("createPrimApp metered billing", () => {
     vi.stubEnv("REVENUE_WALLET", "0xPayTo");
     const ledger = createMockLedger("1.500000");
 
-    const app = createPrimApp(
-      baseConfig({ metered: { dbPath: "/tmp/test-credit.db" } }),
-      { ...passthroughDeps, creditLedger: ledger },
-    );
+    const app = createPrimApp(baseConfig({ metered: { dbPath: "/tmp/test-credit.db" } }), {
+      ...passthroughDeps,
+      creditLedger: ledger,
+    });
 
-    const res = await app.request(
-      "/v1/credit?wallet=0x1234567890abcdef1234567890abcdef12345678",
-      { method: "GET" },
-    );
+    const res = await app.request("/v1/credit?wallet=0x1234567890abcdef1234567890abcdef12345678", {
+      method: "GET",
+    });
 
     expect(res.status).toBe(200);
     const body = await res.json();
     expect(body.balance_usdc).toBe("1.500000");
     expect(body.updated_at).toBeDefined();
-    expect(ledger.getBalance).toHaveBeenCalledWith(
-      "0x1234567890abcdef1234567890abcdef12345678",
-    );
+    expect(ledger.getBalance).toHaveBeenCalledWith("0x1234567890abcdef1234567890abcdef12345678");
   });
 
   it("GET /v1/credit returns 400 for missing wallet param", async () => {
     vi.stubEnv("REVENUE_WALLET", "0xPayTo");
     const ledger = createMockLedger();
 
-    const app = createPrimApp(
-      baseConfig({ metered: { dbPath: "/tmp/test-credit.db" } }),
-      { ...passthroughDeps, creditLedger: ledger },
-    );
+    const app = createPrimApp(baseConfig({ metered: { dbPath: "/tmp/test-credit.db" } }), {
+      ...passthroughDeps,
+      creditLedger: ledger,
+    });
 
     const res = await app.request("/v1/credit", { method: "GET" });
     expect(res.status).toBe(400);
@@ -158,10 +155,10 @@ describe("createPrimApp metered billing", () => {
     vi.stubEnv("REVENUE_WALLET", "0xPayTo");
     const ledger = createMockLedger();
 
-    const app = createPrimApp(
-      baseConfig({ metered: { dbPath: "/tmp/test-credit.db" } }),
-      { ...passthroughDeps, creditLedger: ledger },
-    );
+    const app = createPrimApp(baseConfig({ metered: { dbPath: "/tmp/test-credit.db" } }), {
+      ...passthroughDeps,
+      creditLedger: ledger,
+    });
 
     const res = await app.request("/v1/credit?wallet=not-a-wallet", { method: "GET" });
     expect(res.status).toBe(400);
@@ -172,10 +169,9 @@ describe("createPrimApp metered billing", () => {
 
     const app = createPrimApp(baseConfig(), passthroughDeps);
 
-    const res = await app.request(
-      "/v1/credit?wallet=0x1234567890abcdef1234567890abcdef12345678",
-      { method: "GET" },
-    );
+    const res = await app.request("/v1/credit?wallet=0x1234567890abcdef1234567890abcdef12345678", {
+      method: "GET",
+    });
 
     expect(res.status).toBe(404);
   });
@@ -189,14 +185,12 @@ describe("createPrimApp metered billing", () => {
       return handler;
     });
 
-    createPrimApp(
-      baseConfig({ metered: { dbPath: "/tmp/test-credit.db" } }),
-      {
-        createAgentStackMiddleware: spyMiddleware as unknown as PrimAppDeps["createAgentStackMiddleware"],
-        createWalletAllowlistChecker: passthroughDeps.createWalletAllowlistChecker,
-        creditLedger: ledger,
-      },
-    );
+    createPrimApp(baseConfig({ metered: { dbPath: "/tmp/test-credit.db" } }), {
+      createAgentStackMiddleware:
+        spyMiddleware as unknown as PrimAppDeps["createAgentStackMiddleware"],
+      createWalletAllowlistChecker: passthroughDeps.createWalletAllowlistChecker,
+      creditLedger: ledger,
+    });
 
     expect(spyMiddleware).toHaveBeenCalledTimes(1);
     const opts = spyMiddleware.mock.calls[0][0];
