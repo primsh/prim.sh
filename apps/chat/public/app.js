@@ -243,8 +243,8 @@ async function loadConversations() {
   try {
     const res = await fetch("/api/conversations");
     if (!res.ok) return;
-    const convs = await res.json();
-    renderConversations(convs);
+    const data = await res.json();
+    renderConversations(data.conversations || []);
   } catch {
     // silent
   }
@@ -267,7 +267,7 @@ async function loadConversation(id) {
   clearMessages();
 
   try {
-    const res = await fetch(`/api/conversations/${id}`);
+    const res = await fetch(`/api/conversations/${id}/messages`);
     if (!res.ok) return;
     const data = await res.json();
     for (const msg of data.messages || []) {
@@ -351,6 +351,8 @@ async function sendMessage() {
     const decoder = new TextDecoder();
     let buffer = "";
     let fullText = "";
+    let reasoningText = "";
+    let reasoningEl = null;
 
     while (true) {
       const { done, value } = await reader.read();
@@ -368,9 +370,31 @@ async function sendMessage() {
 
         try {
           const event = JSON.parse(payload);
-          if (event.type === "token") {
+          if (event.type === "reasoning") {
+            if (!reasoningEl) {
+              reasoningEl = document.createElement("details");
+              reasoningEl.className = "reasoning-block";
+              reasoningEl.open = true;
+              const summary = document.createElement("summary");
+              summary.textContent = "Thinking\u2026";
+              reasoningEl.appendChild(summary);
+              const content = document.createElement("div");
+              content.className = "reasoning-content";
+              reasoningEl.appendChild(content);
+              bubble.appendChild(reasoningEl);
+            }
+            reasoningText += event.data;
+            reasoningEl.querySelector(".reasoning-content").innerHTML =
+              renderMarkdown(reasoningText);
+            scrollToBottom();
+          } else if (event.type === "token") {
+            if (reasoningEl) {
+              reasoningEl.open = false;
+              reasoningEl.querySelector("summary").textContent = "Thought process";
+              reasoningEl = null;
+            }
             fullText += event.data;
-            bubble.innerHTML = renderMarkdown(fullText);
+            rebuildBubble(bubble, reasoningText, fullText);
             scrollToBottom();
           } else if (event.type === "tool_start") {
             const indicator = createToolIndicator(event.data);
@@ -385,7 +409,7 @@ async function sendMessage() {
             currentConversationId = event.data;
           } else if (event.type === "error") {
             fullText += `\n\n_Error: ${event.data}_`;
-            bubble.innerHTML = renderMarkdown(fullText);
+            rebuildBubble(bubble, reasoningText, fullText);
           }
         } catch {
           // malformed JSON, skip
@@ -394,8 +418,8 @@ async function sendMessage() {
     }
 
     assistantEl.classList.remove("streaming");
-    if (fullText) {
-      bubble.innerHTML = renderMarkdown(fullText);
+    if (fullText || reasoningText) {
+      rebuildBubble(bubble, reasoningText, fullText);
     }
   } catch (e) {
     bubble.textContent = "Connection lost. Please try again.";
@@ -406,6 +430,18 @@ async function sendMessage() {
   sendBtn.disabled = !inputEl.value.trim();
   loadBalance();
   loadConversations();
+}
+
+function rebuildBubble(bubble, reasoning, text) {
+  let html = "";
+  if (reasoning) {
+    html += `<details class="reasoning-block"><summary>Thought process</summary>`;
+    html += `<div class="reasoning-content">${renderMarkdown(reasoning)}</div></details>`;
+  }
+  if (text) {
+    html += renderMarkdown(text);
+  }
+  bubble.innerHTML = html;
 }
 
 // ── Message rendering ──────────────────────────────────────────────────────────
