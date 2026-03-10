@@ -2,7 +2,9 @@
 import type { Context } from "hono";
 
 export interface RouteConfig {
-  price: string;
+  price: string | CostEstimator;
+  calculator?: CostCalculator;
+  floor?: string;
   description?: string;
 }
 
@@ -15,14 +17,6 @@ export type CostEstimator = (c: Context) => Promise<string>;
 
 /** Calculates the actual cost after the response. Returns a decimal USDC string. */
 export type CostCalculator = (c: Context, response: Response) => Promise<string>;
-
-/** Route config for metered (variable-cost) routes. */
-export interface MeteredRouteConfig {
-  price: string | CostEstimator;
-  calculator?: CostCalculator;
-  floor?: string;
-  description?: string;
-}
 
 /** Configuration for the credit ledger system. */
 export interface MeteredConfig {

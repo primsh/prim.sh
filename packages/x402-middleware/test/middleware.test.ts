@@ -563,3 +563,73 @@ describe("Per-wallet rate limiting", () => {
     );
   });
 });
+
+// ── Metered route (CostEstimator) tests ─────────────────────────────────────
+
+describe("metered routes with CostEstimator", () => {
+  it("calls the estimator and caches the result on context", async () => {
+    const estimator = vi.fn(async () => "$0.025");
+    const app = new Hono();
+
+    app.use(
+      "*",
+      createAgentStackMiddleware(
+        {
+          payTo: TEST_PAY_TO,
+          network: TEST_NETWORK,
+          facilitatorUrl: "https://x402.example",
+          freeRoutes: ["GET /free"],
+        },
+        {
+          "GET /free": "$0.00",
+          "POST /v1/chat": { price: estimator, description: "Chat" },
+        },
+      ),
+    );
+
+    app.post("/v1/chat", (c) => {
+      const estimated = c.get("estimatedPrice");
+      return c.json({ estimated });
+    });
+
+    // Without payment, x402 should return 402 with the estimated price
+    const res = await app.request("/v1/chat", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ model: "test", messages: [] }),
+    });
+
+    // x402 returns 402 since no payment was made
+    expect(res.status).toBe(402);
+    expect(estimator).toHaveBeenCalled();
+  });
+
+  it("passes static routes through unchanged", async () => {
+    const app = new Hono();
+
+    app.use(
+      "*",
+      createAgentStackMiddleware(
+        {
+          payTo: TEST_PAY_TO,
+          network: TEST_NETWORK,
+          facilitatorUrl: "https://x402.example",
+          freeRoutes: ["GET /free"],
+        },
+        {
+          "GET /free": "$0.00",
+          "GET /static": "$0.01",
+        },
+      ),
+    );
+
+    app.get("/static", (c) => {
+      const estimated = c.get("estimatedPrice");
+      return c.json({ estimated: estimated ?? null });
+    });
+
+    // Static route: x402 returns 402 with static price
+    const res = await app.request("/static");
+    expect(res.status).toBe(402);
+  });
+});
