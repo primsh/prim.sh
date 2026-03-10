@@ -232,7 +232,7 @@ async function loadBalance() {
     const res = await fetch("/api/balance");
     if (!res.ok) return;
     const data = await res.json();
-    balanceEl.textContent = `$${Number.parseFloat(data.balance || "0").toFixed(2)}`;
+    balanceEl.textContent = `$${Number.parseFloat(data.balance_usdc || "0").toFixed(2)}`;
   } catch {
     balanceEl.textContent = "--";
   }
