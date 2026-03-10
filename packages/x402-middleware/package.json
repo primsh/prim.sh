@@ -50,6 +50,10 @@
     "./jwt": {
       "import": "./src/jwt.ts",
       "types": "./src/jwt.ts"
+    },
+    "./credit": {
+      "import": "./src/credit.ts",
+      "types": "./src/credit.ts"
     }
   },
   "scripts": {

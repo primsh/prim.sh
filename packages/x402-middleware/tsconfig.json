@@ -7,5 +7,5 @@
     "declaration": true
   },
   "include": ["src"],
-  "exclude": ["src/allowlist-db.ts", "src/access-log.ts", "src/usage-endpoint.ts"]
+  "exclude": ["src/allowlist-db.ts", "src/access-log.ts", "src/usage-endpoint.ts", "src/credit.ts"]
 }
