@@ -68,18 +68,51 @@ export function createWalletAllowlistChecker(
   };
 }
 
+/**
+ * Per-request cache for estimated prices. Keyed by route pattern + request URL
+ * to avoid cross-request contamination. The estimation middleware populates this
+ * before x402 runs; the DynamicPrice function reads it.
+ */
+const estimateCache = new Map<string, string>();
+
+/** Maps route patterns to their CostEstimator functions. */
+const meteredEstimators = new Map<
+  string,
+  (c: Parameters<MiddlewareHandler>[0]) => Promise<string>
+>();
+
+function getEstimateCacheKey(pattern: string, requestId: string): string {
+  return `${pattern}:${requestId}`;
+}
+
 function normalizeRouteConfigEntry(
   pattern: string,
   value: string | AgentStackRouteConfigEntry,
   options: { payTo: string; network: Network },
 ): [string, RouteConfig] {
-  const price = typeof value === "string" ? value : value.price;
+  const rawPrice = typeof value === "string" ? value : value.price;
 
-  if (!price) {
+  if (!rawPrice) {
     throw new Error(`Missing price for route "${pattern}"`);
   }
 
   const description = typeof value === "string" ? undefined : value.description;
+
+  // For function prices (CostEstimator): the estimation middleware runs the estimator
+  // and stores the result in estimateCache before x402 runs. The DynamicPrice function
+  // retrieves it via the request URL as a correlation key.
+  let price: string | ((ctx: { adapter: { getUrl: () => string } }) => string);
+  if (typeof rawPrice === "function") {
+    meteredEstimators.set(pattern, rawPrice);
+    price = (ctx: { adapter: { getUrl: () => string } }) => {
+      const key = getEstimateCacheKey(pattern, ctx.adapter.getUrl());
+      const cached = estimateCache.get(key);
+      if (!cached) throw new Error(`No cached estimate for metered route "${pattern}"`);
+      return cached;
+    };
+  } else {
+    price = rawPrice;
+  }
 
   return [
     pattern,
@@ -276,6 +309,22 @@ export function createAgentStackMiddleware(
     }
     const rateLimitResponse = checkRateLimit(c);
     if (rateLimitResponse) return rateLimitResponse;
+
+    // Run cost estimation for metered routes before x402 payment gate
+    const routeKey = getRouteKey(c);
+    const estimator = meteredEstimators.get(routeKey);
+    if (estimator) {
+      const estimate = await estimator(c);
+      const cacheKey = getEstimateCacheKey(routeKey, c.req.url);
+      estimateCache.set(cacheKey, estimate);
+      c.set("estimatedPrice", estimate);
+      try {
+        return await payment(c, next);
+      } finally {
+        estimateCache.delete(cacheKey);
+      }
+    }
+
     return payment(c, next);
   };
 }
