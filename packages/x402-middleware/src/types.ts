@@ -1,10 +1,37 @@
 // SPDX-License-Identifier: Apache-2.0
+import type { Context } from "hono";
+
 export interface RouteConfig {
   price: string;
   description?: string;
 }
 
 export type AgentStackRouteConfig = Record<string, string | RouteConfig>;
+
+// ─── Metered billing types ───────────────────────────────────────────────────
+
+/** Estimates the cost of a request before processing. Returns a decimal USDC string. */
+export type CostEstimator = (c: Context) => Promise<string>;
+
+/** Calculates the actual cost after the response. Returns a decimal USDC string. */
+export type CostCalculator = (c: Context, response: Response) => Promise<string>;
+
+/** Route config for metered (variable-cost) routes. */
+export interface MeteredRouteConfig {
+  price: string | CostEstimator;
+  calculator?: CostCalculator;
+  floor?: string;
+  description?: string;
+}
+
+/** Configuration for the credit ledger system. */
+export interface MeteredConfig {
+  dbPath: string;
+  /** Maximum negative balance allowed per wallet (decimal USDC, default "0.05"). */
+  negativeCap?: string;
+  /** Days of inactivity before positive credits expire (default 30). */
+  creditExpiryDays?: number;
+}
 
 export interface AgentStackMiddlewareOptions {
   payTo: string;
