@@ -45,6 +45,8 @@ export interface AgentStackMiddlewareOptions {
    * If no JWT, falls through to x402 payment flow.
    */
   identityRoutes?: string[];
+  /** Credit ledger for metered billing. When present, credit is checked before x402. */
+  creditLedger?: import("./credit.js").CreditLedger;
 }
 
 export type ServiceResult<T> =

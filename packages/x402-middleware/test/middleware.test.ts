@@ -2,6 +2,7 @@
 import { decodePaymentRequiredHeader, encodePaymentSignatureHeader } from "@x402/core/http";
 import { Hono } from "hono";
 import { afterAll, afterEach, beforeAll, describe, expect, it, vi } from "vitest";
+import type { CreditLedger } from "../src/credit.ts";
 import { type AgentStackRouteConfig, createAgentStackMiddleware } from "../src/middleware.ts";
 import type { AgentStackMiddlewareOptions } from "../src/types.ts";
 
@@ -630,6 +631,293 @@ describe("metered routes with CostEstimator", () => {
 
     // Static route: x402 returns 402 with static price
     const res = await app.request("/static");
+    expect(res.status).toBe(402);
+  });
+});
+
+// ── Credit check tests ──────────────────────────────────────────────────────
+
+function createMockLedger(initialBalances: Record<string, string> = {}): CreditLedger {
+  const balances = new Map<string, string>(
+    Object.entries(initialBalances).map(([k, v]) => [k.toLowerCase(), v]),
+  );
+
+  return {
+    getBalance(wallet: string): string {
+      return balances.get(wallet.toLowerCase()) ?? "0.000000";
+    },
+    addCredit(wallet: string, amount: string): void {
+      const addr = wallet.toLowerCase();
+      const current = Number.parseFloat(balances.get(addr) ?? "0");
+      balances.set(addr, (current + Number.parseFloat(amount)).toFixed(6));
+    },
+    deductCredit(wallet: string, amount: string): void {
+      const addr = wallet.toLowerCase();
+      const current = Number.parseFloat(balances.get(addr) ?? "0");
+      balances.set(addr, (current - Number.parseFloat(amount)).toFixed(6));
+    },
+    settle(): void {},
+    expireInactive(): number {
+      return 0;
+    },
+    getHistory(): never[] {
+      return [];
+    },
+    close(): void {},
+  };
+}
+
+const TEST_WALLET = "0xCreditTestWallet";
+const PAYMENT_HEADER_WITH_WALLET = encodePaymentSignatureHeader({
+  x402Version: 2,
+  scheme: "exact",
+  network: TEST_NETWORK,
+  payload: {
+    authorization: {
+      from: TEST_WALLET,
+      to: TEST_PAY_TO,
+      value: "1000",
+      validAfter: "0",
+      validBefore: "9999999999",
+      nonce: "0xnonce",
+    },
+    signature: "0xsignature",
+  },
+} as unknown as never);
+
+describe("credit check", () => {
+  it("full credit covers request — x402 skipped", async () => {
+    const ledger = createMockLedger({ [TEST_WALLET]: "0.010000" });
+    const app = new Hono();
+
+    app.use(
+      "*",
+      createAgentStackMiddleware(
+        {
+          payTo: TEST_PAY_TO,
+          network: TEST_NETWORK,
+          facilitatorUrl: "https://x402.example",
+          freeRoutes: ["GET /free"],
+          creditLedger: ledger,
+        },
+        {
+          "GET /free": "$0.00",
+          "POST /v1/action": "$0.005",
+        },
+      ),
+    );
+
+    app.post("/v1/action", (c) => {
+      return c.json({
+        paidVia: c.get("paidVia" as never),
+        walletAddress: c.get("walletAddress"),
+      });
+    });
+
+    const res = await app.request("/v1/action", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "PAYMENT-SIGNATURE": PAYMENT_HEADER_WITH_WALLET,
+      },
+      body: JSON.stringify({}),
+    });
+
+    expect(res.status).toBe(200);
+    const body = await res.json();
+    expect(body.paidVia).toBe("credit");
+    expect(body.walletAddress).toBe(TEST_WALLET);
+    // Balance should be reduced by 0.005
+    expect(Number.parseFloat(ledger.getBalance(TEST_WALLET))).toBeCloseTo(0.005, 6);
+  });
+
+  it("partial credit — x402 charges remainder", async () => {
+    const ledger = createMockLedger({ [TEST_WALLET]: "0.003000" });
+    const app = new Hono();
+
+    app.use(
+      "*",
+      createAgentStackMiddleware(
+        {
+          payTo: TEST_PAY_TO,
+          network: TEST_NETWORK,
+          facilitatorUrl: "https://x402.example",
+          freeRoutes: ["GET /free"],
+          creditLedger: ledger,
+        },
+        {
+          "GET /free": "$0.00",
+          "POST /v1/action": "$0.005",
+        },
+      ),
+    );
+
+    app.post("/v1/action", (c) => c.json({ ok: true }));
+
+    const res = await app.request("/v1/action", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "PAYMENT-SIGNATURE": PAYMENT_HEADER_WITH_WALLET,
+      },
+      body: JSON.stringify({}),
+    });
+
+    // x402 should return 402 with reduced price (0.005 - 0.003 = 0.002)
+    expect(res.status).toBe(402);
+    // All credit deducted
+    expect(Number.parseFloat(ledger.getBalance(TEST_WALLET))).toBeCloseTo(0, 6);
+  });
+
+  it("no credit — normal x402 flow", async () => {
+    const ledger = createMockLedger();
+    const app = new Hono();
+
+    app.use(
+      "*",
+      createAgentStackMiddleware(
+        {
+          payTo: TEST_PAY_TO,
+          network: TEST_NETWORK,
+          facilitatorUrl: "https://x402.example",
+          freeRoutes: ["GET /free"],
+          creditLedger: ledger,
+        },
+        {
+          "GET /free": "$0.00",
+          "POST /v1/action": "$0.005",
+        },
+      ),
+    );
+
+    app.post("/v1/action", (c) => c.json({ ok: true }));
+
+    const res = await app.request("/v1/action", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "PAYMENT-SIGNATURE": PAYMENT_HEADER_WITH_WALLET,
+      },
+      body: JSON.stringify({}),
+    });
+
+    // No credit → normal x402 → 402
+    expect(res.status).toBe(402);
+  });
+
+  it("no wallet (no payment header) — falls through to x402", async () => {
+    const ledger = createMockLedger({ [TEST_WALLET]: "1.000000" });
+    const app = new Hono();
+
+    app.use(
+      "*",
+      createAgentStackMiddleware(
+        {
+          payTo: TEST_PAY_TO,
+          network: TEST_NETWORK,
+          facilitatorUrl: "https://x402.example",
+          freeRoutes: ["GET /free"],
+          creditLedger: ledger,
+        },
+        {
+          "GET /free": "$0.00",
+          "POST /v1/action": "$0.005",
+        },
+      ),
+    );
+
+    app.post("/v1/action", (c) => c.json({ ok: true }));
+
+    // No payment header → no wallet extracted → x402 returns 402
+    const res = await app.request("/v1/action", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({}),
+    });
+
+    expect(res.status).toBe(402);
+    // Credit should be untouched
+    expect(ledger.getBalance(TEST_WALLET)).toBe("1.000000");
+  });
+
+  it("credit check with metered route — uses estimated price", async () => {
+    const ledger = createMockLedger({ [TEST_WALLET]: "0.050000" });
+    const estimator = vi.fn(async () => "$0.020");
+    const app = new Hono();
+
+    app.use(
+      "*",
+      createAgentStackMiddleware(
+        {
+          payTo: TEST_PAY_TO,
+          network: TEST_NETWORK,
+          facilitatorUrl: "https://x402.example",
+          freeRoutes: ["GET /free"],
+          creditLedger: ledger,
+        },
+        {
+          "GET /free": "$0.00",
+          "POST /v1/chat": { price: estimator, description: "Chat" },
+        },
+      ),
+    );
+
+    app.post("/v1/chat", (c) => {
+      return c.json({
+        paidVia: c.get("paidVia" as never),
+        estimated: c.get("estimatedPrice"),
+      });
+    });
+
+    const res = await app.request("/v1/chat", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "PAYMENT-SIGNATURE": PAYMENT_HEADER_WITH_WALLET,
+      },
+      body: JSON.stringify({ model: "test", messages: [] }),
+    });
+
+    expect(res.status).toBe(200);
+    const body = await res.json();
+    expect(body.paidVia).toBe("credit");
+    expect(estimator).toHaveBeenCalled();
+    // Deducted $0.02 from $0.05 → $0.03 remaining
+    expect(Number.parseFloat(ledger.getBalance(TEST_WALLET))).toBeCloseTo(0.03, 6);
+  });
+
+  it("no credit ledger configured — middleware unchanged", async () => {
+    const app = new Hono();
+
+    app.use(
+      "*",
+      createAgentStackMiddleware(
+        {
+          payTo: TEST_PAY_TO,
+          network: TEST_NETWORK,
+          facilitatorUrl: "https://x402.example",
+          freeRoutes: ["GET /free"],
+          // No creditLedger
+        },
+        {
+          "GET /free": "$0.00",
+          "POST /v1/action": "$0.005",
+        },
+      ),
+    );
+
+    app.post("/v1/action", (c) => c.json({ ok: true }));
+
+    const res = await app.request("/v1/action", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "PAYMENT-SIGNATURE": PAYMENT_HEADER_WITH_WALLET,
+      },
+      body: JSON.stringify({}),
+    });
+
+    // Normal x402 flow — 402
     expect(res.status).toBe(402);
   });
 });
