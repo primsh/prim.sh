@@ -10,7 +10,7 @@ import type { CallToolResult } from "@modelcontextprotocol/sdk/types.js";
 export const inferTools: Tool[] = [
   {
     name: "infer_chat",
-    description: "Chat completion. Supports streaming, tool use, structured output. | Price: $0.01",
+    description: "Chat completion. Supports streaming, tool use, structured output.",
     inputSchema: {
         type: "object",
         properties: {
@@ -151,7 +151,7 @@ export const inferTools: Tool[] = [
   },
   {
     name: "infer_embed",
-    description: "Generate embeddings for text input. Returns vector array. | Price: $0.0001",
+    description: "Generate embeddings for text input. Returns vector array.",
     inputSchema: {
         type: "object",
         properties: {
@@ -177,7 +177,7 @@ export const inferTools: Tool[] = [
   },
   {
     name: "infer_list_models",
-    description: "List available models with pricing and capabilities. | Price: $0.001",
+    description: "List available models with pricing and capabilities.",
     inputSchema: {
         type: "object",
         properties: {},

@@ -13,8 +13,8 @@ Part of [prim.sh](https://prim.sh) — zero signup, one payment token, infinite 
 | Route | Description | Price | Request | Response |
 |-------|-------------|-------|---------|----------|
 | `POST /v1/chat` | Chat completion. Supports streaming, tool use, structured output. | $0.01 | `ChatRequest` | `ChatResponse` |
-| `POST /v1/embed` | Generate embeddings for text input. Returns vector array. | $0.0001 | `EmbedRequest` | `EmbedResponse` |
-| `GET /v1/models` | List available models with pricing and capabilities. | $0.001 | `—` | `ModelsResponse` |
+| `POST /v1/embed` | Generate embeddings for text input. Returns vector array. | $0.01 | `EmbedRequest` | `EmbedResponse` |
+| `GET /v1/models` | List available models with pricing and capabilities. | $0.01 | `—` | `ModelsResponse` |
 
 ## Pricing
 

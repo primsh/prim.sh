@@ -34,6 +34,15 @@ vi.mock("../src/service.ts", async (importOriginal) => {
   };
 });
 
+// Mock pricing init so tests don't call OpenRouter
+vi.mock("../src/pricing.ts", async (importOriginal) => {
+  const original = await importOriginal<typeof import("../src/pricing.ts")>();
+  return {
+    ...original,
+    initModelPricing: vi.fn().mockResolvedValue(undefined),
+  };
+});
+
 import type { ChatResponse } from "../src/api.ts";
 import app from "../src/index.ts";
 import { chat, chatStream } from "../src/service.ts";
@@ -80,7 +89,10 @@ describe("infer.sh app", () => {
         freeRoutes: expect.arrayContaining(["GET /"]),
       }),
       expect.objectContaining({
-        "POST /v1/chat": expect.any(String),
+        "POST /v1/chat": expect.objectContaining({
+          price: expect.any(Function),
+          calculator: expect.any(Function),
+        }),
         "POST /v1/embed": expect.any(String),
         "GET /v1/models": expect.any(String),
       }),

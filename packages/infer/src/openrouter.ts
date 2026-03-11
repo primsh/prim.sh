@@ -94,7 +94,11 @@ export class OpenrouterClient implements InferProvider {
   }
 
   async chatStream(req: ChatRequest): Promise<Response> {
-    const body = { ...req, stream: true } as unknown as Record<string, unknown>;
+    const body = {
+      ...req,
+      stream: true,
+      stream_options: { include_usage: true },
+    } as unknown as Record<string, unknown>;
     const resp = await fetch(`${BASE_URL}/chat/completions`, {
       method: "POST",
       headers: {
