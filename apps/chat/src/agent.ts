@@ -66,9 +66,15 @@ export async function streamChat(
 
   const privateKey = decryptWalletKey(account.encrypted_private_key) as Hex;
 
+  const t0 = Date.now();
+
   const primFetch = createPrimFetch({
     privateKey,
     maxPayment: "0.50",
+    onPayment: ({ amount, route }) => {
+      const elapsed = Date.now() - t0;
+      console.log(`[chat] payment: ${amount} USDC → ${route} (${elapsed}ms into request)`);
+    },
   });
 
   const model = createInferModel(primFetch);
@@ -103,6 +109,13 @@ export async function streamChat(
       await writer.write(
         encoder.encode(sseEvent({ type: "conversation_id", data: conversationId })),
       );
+      await writer.write(encoder.encode(sseEvent({ type: "status", data: "Thinking..." })));
+
+      console.log(
+        `[chat] conv=${conversationId} user="${userMessage.slice(0, 60)}" starting streamText`,
+      );
+      const streamStart = Date.now();
+      let firstChunkLogged = false;
 
       const result = streamText({
         model,
@@ -111,6 +124,13 @@ export async function streamChat(
         tools,
         stopWhen: stepCountIs(20),
         onChunk: ({ chunk }) => {
+          if (chunk.type === "reasoning-delta" || chunk.type === "text-delta") {
+            if (!firstChunkLogged) {
+              firstChunkLogged = true;
+              const ttfb = Date.now() - streamStart;
+              console.log(`[chat] conv=${conversationId} first_chunk=${chunk.type} ttfb=${ttfb}ms`);
+            }
+          }
           if (chunk.type === "reasoning-delta") {
             writer.write(encoder.encode(sseEvent({ type: "reasoning", data: chunk.text })));
           } else if (chunk.type === "text-delta") {
@@ -131,6 +151,10 @@ export async function streamChat(
           }
         },
         onFinish: async ({ text }) => {
+          const totalMs = Date.now() - streamStart;
+          console.log(
+            `[chat] conv=${conversationId} done total=${totalMs}ms text_len=${text?.length ?? 0}`,
+          );
           if (text) {
             addMessage(conversationId, "assistant", text);
           }

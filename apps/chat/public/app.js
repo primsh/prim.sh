@@ -405,6 +405,9 @@ async function sendMessage() {
               `.tool-indicator[data-tool="${event.data.id}"]`,
             );
             for (const ind of indicators) ind.classList.add("done");
+          } else if (event.type === "status") {
+            bubble.textContent = event.data;
+            scrollToBottom();
           } else if (event.type === "conversation_id") {
             currentConversationId = event.data;
           } else if (event.type === "error") {
