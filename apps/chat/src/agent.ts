@@ -73,9 +73,7 @@ export async function streamChat(
     maxPayment: "0.50",
     onPayment: ({ amount, route }) => {
       const elapsed = Date.now() - t0;
-      console.log(
-        `[chat] payment: ${amount} USDC → ${route} (${elapsed}ms into request)`,
-      );
+      console.log(`[chat] payment: ${amount} USDC → ${route} (${elapsed}ms into request)`);
     },
   });
 
@@ -111,11 +109,11 @@ export async function streamChat(
       await writer.write(
         encoder.encode(sseEvent({ type: "conversation_id", data: conversationId })),
       );
-      await writer.write(
-        encoder.encode(sseEvent({ type: "status", data: "Thinking..." })),
-      );
+      await writer.write(encoder.encode(sseEvent({ type: "status", data: "Thinking..." })));
 
-      console.log(`[chat] conv=${conversationId} user="${userMessage.slice(0, 60)}" starting streamText`);
+      console.log(
+        `[chat] conv=${conversationId} user="${userMessage.slice(0, 60)}" starting streamText`,
+      );
       const streamStart = Date.now();
       let firstChunkLogged = false;
 
@@ -154,7 +152,9 @@ export async function streamChat(
         },
         onFinish: async ({ text }) => {
           const totalMs = Date.now() - streamStart;
-          console.log(`[chat] conv=${conversationId} done total=${totalMs}ms text_len=${text?.length ?? 0}`);
+          console.log(
+            `[chat] conv=${conversationId} done total=${totalMs}ms text_len=${text?.length ?? 0}`,
+          );
           if (text) {
             addMessage(conversationId, "assistant", text);
           }
