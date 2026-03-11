@@ -47,6 +47,7 @@ interface AppConfig {
   port: number;
   entry: string;
   max_body_size?: string;
+  streaming?: boolean;
   csp?: string;
   env: string[];
 }
@@ -178,7 +179,13 @@ function genAppCaddyFragment(id: string, app: AppConfig): string {
   lines.push(`        max_size ${app.max_body_size ?? "1MB"}`);
   lines.push("    }");
   lines.push("    handle {");
-  lines.push(`        reverse_proxy localhost:${app.port}`);
+  if (app.streaming) {
+    lines.push(`        reverse_proxy localhost:${app.port} {`);
+    lines.push("            flush_interval -1");
+    lines.push("        }");
+  } else {
+    lines.push(`        reverse_proxy localhost:${app.port}`);
+  }
   lines.push("    }");
   lines.push("}");
   return `${lines.join("\n")}\n`;

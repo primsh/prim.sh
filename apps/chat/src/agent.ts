@@ -91,67 +91,75 @@ export async function streamChat(
 
   const encoder = new TextEncoder();
 
-  const stream = new ReadableStream<Uint8Array>({
-    async start(controller) {
-      // Send conversation ID first
-      controller.enqueue(
+  // Use TransformStream so the readable side is returned immediately.
+  // Bun buffers ReadableStream chunks until start() resolves, which
+  // defeats SSE streaming when start() is long-running.
+  const { readable, writable } = new TransformStream<Uint8Array, Uint8Array>();
+  const writer = writable.getWriter();
+
+  // Kick off streaming in the background — don't await
+  (async () => {
+    try {
+      await writer.write(
         encoder.encode(sseEvent({ type: "conversation_id", data: conversationId })),
       );
 
-      try {
-        const result = streamText({
-          model,
-          system: SYSTEM_PROMPT,
-          messages,
-          tools,
-          stopWhen: stepCountIs(20),
-          onChunk: ({ chunk }) => {
-            if (chunk.type === "reasoning-delta") {
-              controller.enqueue(encoder.encode(sseEvent({ type: "reasoning", data: chunk.text })));
-            } else if (chunk.type === "text-delta") {
-              controller.enqueue(encoder.encode(sseEvent({ type: "token", data: chunk.text })));
-            } else if (chunk.type === "tool-call") {
-              controller.enqueue(
-                encoder.encode(
-                  sseEvent({
-                    type: "tool_start",
-                    data: { name: chunk.toolName, id: chunk.toolCallId },
-                  }),
-                ),
-              );
-            } else if (chunk.type === "tool-result") {
-              controller.enqueue(
-                encoder.encode(sseEvent({ type: "tool_end", data: { id: chunk.toolCallId } })),
-              );
-            }
-          },
-          onFinish: ({ text }) => {
-            if (text) {
-              addMessage(conversationId, "assistant", text);
-            }
-            controller.enqueue(encoder.encode("data: [DONE]\n\n"));
-            controller.close();
-          },
-          onError: ({ error }) => {
-            const message = error instanceof Error ? error.message : String(error);
-            controller.enqueue(encoder.encode(sseEvent({ type: "error", data: message })));
-            controller.enqueue(encoder.encode("data: [DONE]\n\n"));
-            controller.close();
-          },
-        });
+      const result = streamText({
+        model,
+        system: SYSTEM_PROMPT,
+        messages,
+        tools,
+        stopWhen: stepCountIs(20),
+        onChunk: ({ chunk }) => {
+          if (chunk.type === "reasoning-delta") {
+            writer.write(encoder.encode(sseEvent({ type: "reasoning", data: chunk.text })));
+          } else if (chunk.type === "text-delta") {
+            writer.write(encoder.encode(sseEvent({ type: "token", data: chunk.text })));
+          } else if (chunk.type === "tool-call") {
+            writer.write(
+              encoder.encode(
+                sseEvent({
+                  type: "tool_start",
+                  data: { name: chunk.toolName, id: chunk.toolCallId },
+                }),
+              ),
+            );
+          } else if (chunk.type === "tool-result") {
+            writer.write(
+              encoder.encode(sseEvent({ type: "tool_end", data: { id: chunk.toolCallId } })),
+            );
+          }
+        },
+        onFinish: async ({ text }) => {
+          if (text) {
+            addMessage(conversationId, "assistant", text);
+          }
+          await writer.write(encoder.encode("data: [DONE]\n\n"));
+          await writer.close();
+        },
+        onError: async ({ error }) => {
+          const message = error instanceof Error ? error.message : String(error);
+          await writer.write(encoder.encode(sseEvent({ type: "error", data: message })));
+          await writer.write(encoder.encode("data: [DONE]\n\n"));
+          await writer.close();
+        },
+      });
 
-        // Consume the stream to drive callbacks
-        for await (const _ of result.textStream) {
-          // Callbacks handle emission; we just need to drain the stream
-        }
-      } catch (err) {
-        const message = err instanceof Error ? err.message : String(err);
-        controller.enqueue(encoder.encode(sseEvent({ type: "error", data: message })));
-        controller.enqueue(encoder.encode("data: [DONE]\n\n"));
-        controller.close();
+      // Consume the stream to drive callbacks
+      for await (const _ of result.textStream) {
+        // Callbacks handle emission; we just need to drain the stream
       }
-    },
-  });
+    } catch (err) {
+      const message = err instanceof Error ? err.message : String(err);
+      try {
+        await writer.write(encoder.encode(sseEvent({ type: "error", data: message })));
+        await writer.write(encoder.encode("data: [DONE]\n\n"));
+        await writer.close();
+      } catch {
+        // Writer may already be closed
+      }
+    }
+  })();
 
-  return { ok: true, data: stream };
+  return { ok: true, data: readable };
 }
