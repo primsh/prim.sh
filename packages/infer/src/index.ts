@@ -6,18 +6,36 @@ import {
   invalidRequest,
   parseJsonBody,
 } from "@primsh/x402-middleware";
-import type { ApiError } from "@primsh/x402-middleware";
+import type { ApiError, CreditLedger, RouteConfig } from "@primsh/x402-middleware";
 import { createPrimApp } from "@primsh/x402-middleware/create-prim-app";
 import type { Context } from "hono";
 import type { ChatRequest, EmbedRequest } from "./api.ts";
+import { createInferCalculator, createInferEstimator, initModelPricing } from "./pricing.ts";
 import { chat, chatStream, embed, models } from "./service.ts";
 
-const INFER_ROUTES = {
-  "POST /v1/chat": "$0.01",
-  "POST /v1/chat/completions": "$0.01",
+const chatRouteConfig: RouteConfig = {
+  price: createInferEstimator(),
+  calculator: createInferCalculator(),
+  floor: "0.001",
+};
+
+const INFER_ROUTES: Record<string, string | RouteConfig> = {
+  "POST /v1/chat": chatRouteConfig,
+  "POST /v1/chat/completions": chatRouteConfig,
   "POST /v1/embed": "$0.0001",
   "GET /v1/models": "$0.001",
-} as const;
+};
+
+// Initialize credit ledger for metered billing.
+// credit.ts uses bun:sqlite — variable-path import prevents vitest from resolving it.
+let creditLedger: CreditLedger | undefined;
+const dbPath =
+  process.env.INFER_CREDIT_DB_PATH ?? resolve(process.env.PRIM_HOME ?? ".", "data/infer-credit.db");
+if (!process.env.VITEST) {
+  const creditModule = "@primsh/x402-middleware/credit";
+  const { createCreditLedger } = await import(/* @vite-ignore */ creditModule);
+  creditLedger = createCreditLedger(dbPath);
+}
 
 function providerError(message: string): ApiError {
   return { error: { code: "provider_error", message } };
@@ -35,19 +53,20 @@ const app = createPrimApp(
       : undefined,
     routes: INFER_ROUTES,
     metricsName: "infer.prim.sh",
+    metered: { dbPath },
     pricing: {
       routes: [
         {
           method: "POST",
           path: "/v1/chat",
-          price_usdc: "0.01",
-          description: "Chat completion. Supports streaming, tool use, structured output.",
+          price_usdc: "metered",
+          description: "Chat completion (metered). Price varies by model and token count.",
         },
         {
           method: "POST",
           path: "/v1/chat/completions",
-          price_usdc: "0.01",
-          description: "OpenAI-compatible chat completion alias.",
+          price_usdc: "metered",
+          description: "OpenAI-compatible chat completion alias (metered).",
         },
         {
           method: "POST",
@@ -64,13 +83,80 @@ const app = createPrimApp(
       ],
     },
   },
-  { createAgentStackMiddleware, createWalletAllowlistChecker },
+  { createAgentStackMiddleware, createWalletAllowlistChecker, creditLedger },
 );
 
 const logger = app.logger;
 
+// Initialize model pricing cache on startup
+initModelPricing().catch((err) => {
+  logger.error("Failed to initialize model pricing cache", { error: String(err) });
+});
+
+interface StreamUsage {
+  model: string;
+  prompt_tokens: number;
+  completion_tokens: number;
+  cost?: number;
+}
+
+/**
+ * Extract usage data from an SSE stream without consuming it.
+ * Returns a TransformStream that passes data through unchanged,
+ * plus a promise that resolves with usage data from the final chunk.
+ */
+function createUsageExtractor(): {
+  transform: TransformStream<Uint8Array, Uint8Array>;
+  usage: Promise<StreamUsage | null>;
+} {
+  let usageResolve: (v: StreamUsage | null) => void;
+  const usage = new Promise<StreamUsage | null>((r) => {
+    usageResolve = r;
+  });
+
+  let buffer = "";
+  let lastUsage: StreamUsage | null = null;
+
+  const decoder = new TextDecoder();
+  const transform = new TransformStream<Uint8Array, Uint8Array>({
+    transform(chunk, controller) {
+      controller.enqueue(chunk);
+
+      buffer += decoder.decode(chunk, { stream: true });
+
+      // Parse complete SSE lines
+      const lines = buffer.split("\n");
+      buffer = lines.pop() ?? "";
+
+      for (const line of lines) {
+        if (!line.startsWith("data: ") || line === "data: [DONE]") continue;
+        try {
+          const parsed = JSON.parse(line.slice(6)) as {
+            model?: string;
+            usage?: { prompt_tokens: number; completion_tokens: number; cost?: number };
+          };
+          if (parsed.usage) {
+            lastUsage = {
+              model: parsed.model ?? "",
+              prompt_tokens: parsed.usage.prompt_tokens,
+              completion_tokens: parsed.usage.completion_tokens,
+              cost: parsed.usage.cost,
+            };
+          }
+        } catch {
+          // Not valid JSON — skip
+        }
+      }
+    },
+    flush() {
+      usageResolve(lastUsage);
+    },
+  });
+
+  return { transform, usage };
+}
+
 // POST /v1/chat + /v1/chat/completions (OpenAI-compatible alias)
-// Chat completion. Supports streaming, tool use, structured output.
 async function handleChat(c: Context) {
   const bodyOrRes = await parseJsonBody<ChatRequest>(c, logger, "POST /v1/chat");
   if (bodyOrRes instanceof Response) return bodyOrRes;
@@ -93,7 +179,20 @@ async function handleChat(c: Context) {
       return c.json(providerError(result.message), 502);
     }
 
-    return new Response(result.data.body, {
+    // Extract usage from SSE stream for metered billing settlement
+    const { transform, usage } = createUsageExtractor();
+    const transformedBody = result.data.body?.pipeThrough(transform) ?? null;
+
+    // Store the usage promise on context so the settlement hook can await it
+    c.set("inferModel" as never, body.model);
+    usage.then((u) => {
+      if (u) {
+        c.set("inferUsage" as never, u);
+      }
+    });
+    c.set("usagePromise" as never, usage);
+
+    return new Response(transformedBody, {
       status: 200,
       headers: {
         "Content-Type": "text/event-stream",
@@ -118,6 +217,13 @@ async function handleChat(c: Context) {
     }
     return c.json(providerError(result.message), 502);
   }
+
+  // Set usage data on context for metered billing settlement
+  c.set("inferModel" as never, result.data.model);
+  c.set("inferUsage" as never, {
+    prompt_tokens: result.data.usage.prompt_tokens,
+    completion_tokens: result.data.usage.completion_tokens,
+  });
 
   return c.json(result.data, 200);
 }
