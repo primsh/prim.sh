@@ -101,6 +101,7 @@ curl -X POST https://infer.prim.sh/v1/chat \
 - `PRIM_NETWORK`
 - `OPENROUTER_API_KEY`
 - `WALLET_INTERNAL_URL`
+- `PRIM_INTERNAL_KEY`
 
 ## Development
 

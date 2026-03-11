@@ -30,6 +30,8 @@ export interface RedeemResponse {
   funded: FundingDetail;
   /** Whether the wallet was auto-registered on wallet.sh. */
   wallet_registered: boolean;
+  /** Whether infer.sh credit was seeded for instant responses. */
+  credit_seeded: boolean;
 }
 
 // ─── Code management ─────────────────────────────────────────────────────────
