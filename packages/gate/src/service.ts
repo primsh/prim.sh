@@ -14,6 +14,7 @@ import type { CodeRow } from "./db.ts";
 import { validateAndBurn } from "./db.ts";
 import { fundWallet } from "./fund.ts";
 import { registerWalletOnService } from "./register-wallet.ts";
+import { seedInferCredit } from "./seed-credit.ts";
 
 const log = createLogger("gate.sh", { module: "service" });
 
@@ -54,6 +55,9 @@ export async function redeemInvite(
     // 4. Auto-register wallet on wallet.sh (non-blocking)
     const walletRegistered = await registerWalletOnService(wallet);
 
+    // 5. Seed infer.sh credit for instant responses (non-blocking)
+    const creditSeeded = await seedInferCredit(wallet);
+
     return {
       ok: true,
       data: {
@@ -67,6 +71,7 @@ export async function redeemInvite(
           eth_tx: funded.eth_tx,
         },
         wallet_registered: walletRegistered,
+        credit_seeded: creditSeeded,
       },
     };
   } catch (err) {

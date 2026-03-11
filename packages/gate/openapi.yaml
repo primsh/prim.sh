@@ -86,6 +86,7 @@ components:
         - network
         - funded
         - wallet_registered
+        - credit_seeded
       properties:
         status:
           type: string
@@ -104,6 +105,9 @@ components:
         wallet_registered:
           type: boolean
           description: Whether the wallet was auto-registered on wallet.sh.
+        credit_seeded:
+          type: boolean
+          description: Whether infer.sh credit was seeded for instant responses.
 paths:
   /:
     get:

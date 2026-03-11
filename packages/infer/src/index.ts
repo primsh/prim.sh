@@ -13,6 +13,8 @@ import type { ChatRequest, EmbedRequest } from "./api.ts";
 import { createInferCalculator, createInferEstimator, initModelPricing } from "./pricing.ts";
 import { chat, chatStream, embed, models } from "./service.ts";
 
+const INTERNAL_KEY = process.env.PRIM_INTERNAL_KEY;
+
 const chatRouteConfig: RouteConfig = {
   price: createInferEstimator(),
   calculator: createInferCalculator(),
@@ -52,6 +54,7 @@ const app = createPrimApp(
       ? resolve(import.meta.dir, "../../../site/infer/llms.txt")
       : undefined,
     routes: INFER_ROUTES,
+    extraFreeRoutes: ["POST /internal/credit/add"],
     metricsName: "infer.prim.sh",
     metered: { dbPath },
     pricing: {
@@ -275,6 +278,55 @@ app.get("/v1/models", async (c) => {
   }
 
   return c.json(result.data, 200);
+});
+
+// ── Internal endpoints ─────────────────────────────────────────────────────────
+
+function internalAuth(c: Context): Response | null {
+  if (!INTERNAL_KEY) {
+    return c.json(
+      { error: { code: "not_configured", message: "Internal API not configured" } },
+      501,
+    );
+  }
+  const key = c.req.header("x-internal-key");
+  if (key !== INTERNAL_KEY) {
+    return c.json({ error: { code: "unauthorized", message: "Invalid internal key" } }, 401);
+  }
+  return null;
+}
+
+// POST /internal/credit/add — Seed credit for a wallet (used by gate.sh on redemption)
+app.post("/internal/credit/add", async (c) => {
+  const denied = internalAuth(c);
+  if (denied) return denied;
+
+  if (!creditLedger) {
+    return c.json(
+      { error: { code: "not_configured", message: "Credit ledger not initialized" } },
+      501,
+    );
+  }
+
+  const body = await c.req.json<{ wallet: string; amount: string }>().catch(() => null);
+  if (!body?.wallet || !body?.amount) {
+    return c.json(invalidRequest("wallet and amount are required"), 400);
+  }
+
+  const amount = Number.parseFloat(body.amount);
+  if (Number.isNaN(amount) || amount <= 0 || amount > 100) {
+    return c.json(invalidRequest("amount must be a positive number (max 100)"), 400);
+  }
+
+  creditLedger.addCredit(body.wallet, body.amount, `gate-seed-${Date.now()}`);
+  const balance = creditLedger.getBalance(body.wallet);
+  logger.info("Credit seeded via internal API", {
+    wallet: body.wallet,
+    amount: body.amount,
+    balance,
+  });
+
+  return c.json({ wallet: body.wallet, amount_added: body.amount, balance }, 200);
 });
 
 export default app;
