@@ -45,7 +45,9 @@ chat.prim.sh {
         max_size 1MB
     }
     handle {
-        reverse_proxy localhost:3020
+        reverse_proxy localhost:3020 {
+            flush_interval -1
+        }
     }
 }
 
