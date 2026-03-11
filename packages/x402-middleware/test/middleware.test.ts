@@ -1190,6 +1190,9 @@ describe("post-response settlement", () => {
 
     expect(res.status).toBe(200);
     expect(usageResolved).toBe(true);
+    // Settlement is deferred for streaming responses to avoid deadlocking the
+    // response. Flush the microtask queue so the deferred .then() runs.
+    await new Promise((r) => setTimeout(r, 0));
     expect(calculator).toHaveBeenCalled();
     // Estimated $0.05, actual $0.015 → overpaid $0.035
     // Balance: 0.10 - 0.05 + 0.035 = 0.085
