@@ -330,6 +330,12 @@ export function createAgentStackMiddleware(
    * actual cost and reconcile with the credit ledger. Sets X-Prim-* headers
    * on non-streaming responses.
    */
+  /**
+   * Post-response settlement. For streaming responses with a usagePromise,
+   * settlement is deferred until the stream ends to avoid deadlocking — the
+   * middleware must return the response before the client can consume it, so
+   * we cannot await stream completion inline.
+   */
   async function settleResponse(
     c: Parameters<MiddlewareHandler>[0],
     routeKey: string,
@@ -337,7 +343,6 @@ export function createAgentStackMiddleware(
     if (!creditLedger) return;
     const calculator = routeCalculators.get(routeKey);
     if (!calculator) return;
-    // Skip settlement if no response (e.g. x402 returned 402 before handler ran)
     if (!c.res || c.res.status === 402) return;
     const wallet = c.get(WALLET_ADDRESS_KEY) as string | undefined;
     if (!wallet) return;
@@ -350,23 +355,43 @@ export function createAgentStackMiddleware(
 
     const isStreaming = c.res.headers.get("content-type")?.includes("text/event-stream");
 
-    let actualStr: string;
     if (c.res.status >= 400) {
-      // Error response: full refund
-      actualStr = "0.000000";
-    } else {
-      // Wait for streaming usage if handler set a promise
-      const usagePromise = c.get("usagePromise" as never) as Promise<unknown> | undefined;
-      if (usagePromise) {
-        await usagePromise;
+      creditLedger.settle(wallet, estimatedStr, "0.000000", requestId);
+      if (!isStreaming) {
+        c.header("X-Prim-Cost", "0.000000");
+        c.header("X-Prim-Estimated", estimatedStr);
+        c.header("X-Prim-Credit", creditLedger.getBalance(wallet));
       }
-      const rawActual = await calculator(c, c.res);
-      actualStr = parsePrice(rawActual).toFixed(6);
+      return;
     }
 
+    // For streaming: the usagePromise resolves after the client consumes the
+    // stream. Awaiting it here would deadlock (response can't be sent while
+    // the middleware blocks). Instead, schedule settlement to run after the
+    // stream completes.
+    const usagePromise = c.get("usagePromise" as never) as Promise<unknown> | undefined;
+    if (isStreaming && usagePromise) {
+      usagePromise
+        .then(async () => {
+          const rawActual = await calculator(c, c.res);
+          const actualStr = parsePrice(rawActual).toFixed(6);
+          creditLedger.settle(wallet, estimatedStr, actualStr, requestId);
+        })
+        .catch(() => {
+          // Stream errored — settle at estimated cost (no refund)
+          creditLedger.settle(wallet, estimatedStr, estimatedStr, requestId);
+        });
+      return;
+    }
+
+    // Non-streaming: safe to await inline
+    if (usagePromise) {
+      await usagePromise;
+    }
+    const rawActual = await calculator(c, c.res);
+    const actualStr = parsePrice(rawActual).toFixed(6);
     creditLedger.settle(wallet, estimatedStr, actualStr, requestId);
 
-    // Set informational headers on non-streaming responses
     if (!isStreaming) {
       c.header("X-Prim-Cost", actualStr);
       c.header("X-Prim-Estimated", estimatedStr);
