@@ -17,7 +17,7 @@ export const BRAND = {
   social: {
     x: "https://x.com/primitiveshell",
     github: "https://github.com/primsh",
-    discord: "https://discord.gg/9NYYCDqY",
+    discord: "https://discord.gg/vEeeBq3AJg",
     instagram: "https://instagram.com/primitiveshell",
     youtube: "https://youtube.com/@primitiveshell",
     tiktok: "https://tiktok.com/@primitiveshell",
