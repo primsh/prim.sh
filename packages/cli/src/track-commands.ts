@@ -33,26 +33,26 @@ export async function runTrackCommand(sub: string, argv: string[]): Promise<void
   const client = createTrackClient(primFetch, baseUrl);
 
   if (!sub || sub === "--help" || sub === "-h") {
-    console.log("Usage: prim track <package> [args] [flags]");
+    console.log("Usage: prim track <track> [args] [flags]");
     console.log("");
-    console.log("  Usage: prim track package --tracking-number TRACKING_NUMBER [--carrier VALUE]");
+    console.log("  Usage: prim track track --tracking-number TRACKING_NUMBER [--carrier VALUE]");
     process.exit(1);
   }
 
   switch (sub) {
-    case "package": {
+    case "track": {
       const trackingNumber = getFlag("tracking-number", argv);
       const carrier = getFlag("carrier", argv);
       if (!trackingNumber) {
         process.stderr.write(
-          "Usage: prim track package --tracking-number TRACKING_NUMBER [--carrier VALUE]\n",
+          "Usage: prim track track --tracking-number TRACKING_NUMBER [--carrier VALUE]\n",
         );
         process.exit(1);
       }
       const reqBody: Record<string, unknown> = {};
       reqBody.tracking_number = trackingNumber;
       if (carrier) reqBody.carrier = carrier;
-      const data = await client.trackPackage(reqBody as never);
+      const data = await client.track(reqBody as never);
       if (quiet) {
         console.log(JSON.stringify(data));
       } else {
@@ -62,7 +62,7 @@ export async function runTrackCommand(sub: string, argv: string[]): Promise<void
     }
 
     default:
-      console.log("Usage: prim track <package>");
+      console.log("Usage: prim track <track>");
       process.exit(1);
   }
 }

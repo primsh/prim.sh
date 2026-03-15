@@ -47,7 +47,7 @@ export function createGateClient(
   baseUrl = "https://gate.prim.sh",
 ) {
   return {
-    async redeemInvite(req: RedeemRequest): Promise<RedeemResponse> {
+    async redeem(req: RedeemRequest): Promise<RedeemResponse> {
       const url = `${baseUrl}/v1/redeem`;
       const res = await primFetch(url, {
         method: "POST",

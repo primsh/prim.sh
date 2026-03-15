@@ -147,7 +147,7 @@ paths:
                     example: ok
   /v1/track:
     post:
-      operationId: trackPackage
+      operationId: track
       summary: Track a package by tracking number and carrier. Returns status, ETA, and full event history.
       security:
         - x402: []

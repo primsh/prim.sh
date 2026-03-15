@@ -12,6 +12,20 @@ export interface GetSchemaResponse {
   schema: string;
 }
 
+export interface ListPortsResponse {
+  /** Currently allocated ports */
+  allocated: PortAllocation[];
+  /** Next available port number */
+  next_available: number;
+}
+
+export interface PortAllocation {
+  /** Primitive ID */
+  id: string;
+  /** Port number */
+  port: number;
+}
+
 export interface ScaffoldFile {
   /** Relative file path (e.g. "packages/foo/src/index.ts") */
   path: string;
@@ -43,8 +57,6 @@ export interface ValidateResponse {
   errors: string[];
 }
 
-export type GetPortsResponse = Record<string, unknown>;
-
 // ── Client ─────────────────────────────────────────────────────────────────
 
 export function createCreateClient(
@@ -75,10 +87,10 @@ export function createCreateClient(
       const res = await primFetch(url);
       return unwrap<GetSchemaResponse>(res);
     },
-    async getPorts(): Promise<GetPortsResponse> {
+    async listPorts(): Promise<ListPortsResponse> {
       const url = `${baseUrl}/v1/ports`;
       const res = await primFetch(url);
-      return unwrap<GetPortsResponse>(res);
+      return unwrap<ListPortsResponse>(res);
     },
   };
 }

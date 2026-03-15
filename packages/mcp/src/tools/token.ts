@@ -17,7 +17,7 @@ export const tokenTools: Tool[] = [
       },
   },
   {
-    name: "token_deploy_token",
+    name: "token_create_token",
     description: "Deploy a new ERC-20 token. Returns immediately with deployStatus: 'pending'. | Price: $0.10",
     inputSchema: {
         type: "object",
@@ -65,7 +65,7 @@ export const tokenTools: Tool[] = [
       },
   },
   {
-    name: "token_mint_tokens",
+    name: "token_mint",
     description: "Mint additional tokens to an address. Requires mintable=true at deploy time. | Price: $0.01",
     inputSchema: {
         type: "object",
@@ -87,7 +87,7 @@ export const tokenTools: Tool[] = [
       },
   },
   {
-    name: "token_get_token_supply",
+    name: "token_get_supply",
     description: "Live on-chain total supply from contract | Price: $0.001",
     inputSchema: {
         type: "object",
@@ -177,7 +177,7 @@ export async function handleTokenTool(
         return { content: [{ type: "text", text: JSON.stringify(data, null, 2) }] };
       }
 
-      case "token_deploy_token": {
+      case "token_create_token": {
         const res = await primFetch(`${baseUrl}/v1/tokens`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -195,7 +195,7 @@ export async function handleTokenTool(
         return { content: [{ type: "text", text: JSON.stringify(data, null, 2) }] };
       }
 
-      case "token_mint_tokens": {
+      case "token_mint": {
         const { id, ...body } = args;
         const res = await primFetch(`${baseUrl}/v1/tokens/${args.id}/mint`, {
           method: "POST",
@@ -207,7 +207,7 @@ export async function handleTokenTool(
         return { content: [{ type: "text", text: JSON.stringify(data, null, 2) }] };
       }
 
-      case "token_get_token_supply": {
+      case "token_get_supply": {
         const res = await primFetch(`${baseUrl}/v1/tokens/${args.id}/supply`);
         const data = await res.json();
         if (!res.ok) return errorResult(data);

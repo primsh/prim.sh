@@ -123,30 +123,5 @@ describe("mem.sh service", () => {
 
     it.todo("scopes to caller wallet address");
   });
-
-  describe("upsertDocuments", () => {
-    // TODO: set up db/provider mocks to return valid data, then replace .todo with .test
-    it.todo("returns ok:true with valid input");
-
-    // TODO: set up mocks to trigger invalid_request
-    it.todo("returns invalid_request on error");
-
-    // TODO: set up mocks to trigger payment_required
-    it.todo("returns payment_required on error");
-
-    // TODO: set up mocks to trigger forbidden
-    it.todo("returns forbidden on error");
-
-    // TODO: set up mocks to trigger not_found
-    it.todo("returns not_found on error");
-
-    // TODO: set up mocks to trigger qdrant_error
-    it.todo("returns qdrant_error on error");
-
-    // TODO: set up mocks to trigger embedding_error
-    it.todo("returns embedding_error on error");
-
-    it.todo("scopes to caller wallet address");
-  });
 });
 // END:GENERATED:UNIT

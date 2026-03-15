@@ -233,7 +233,7 @@
   {
     "type": "function",
     "function": {
-      "name": "store_quota_reconcile",
+      "name": "store_reconcile_storage",
       "description": "Recompute bucket usage by scanning actual R2 storage. Use when usage_bytes appears incorrect. Price: $0.001 via x402 (USDC on Base).",
       "parameters": {
         "type": "object",
@@ -252,7 +252,7 @@
   {
     "type": "function",
     "function": {
-      "name": "store_presign_object",
+      "name": "store_create_presign",
       "description": "Generate a presigned URL for direct GET or PUT access to an object. GET presign requires object to exist. Price: $0.001 via x402 (USDC on Base).",
       "parameters": {
         "type": "object",

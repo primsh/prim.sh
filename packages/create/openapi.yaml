@@ -52,6 +52,32 @@ components:
         schema:
           type: string
           description: JSON Schema for prim.yaml
+    ListPortsResponse:
+      type: object
+      required:
+        - allocated
+        - next_available
+      properties:
+        allocated:
+          type: array
+          items:
+            $ref: "#/components/schemas/PortAllocation"
+          description: Currently allocated ports
+        next_available:
+          type: number
+          description: Next available port number
+    PortAllocation:
+      type: object
+      required:
+        - id
+        - port
+      properties:
+        id:
+          type: string
+          description: Primitive ID
+        port:
+          type: number
+          description: Port number
     ScaffoldFile:
       type: object
       required:
@@ -200,7 +226,7 @@ paths:
                 $ref: "#/components/schemas/GetSchemaResponse"
   /v1/ports:
     get:
-      operationId: getPorts
+      operationId: listPorts
       summary: Return allocated ports and next available port number.
       security:
         - x402: []
@@ -211,4 +237,4 @@ paths:
           content:
             application/json:
               schema:
-                type: object
+                $ref: "#/components/schemas/ListPortsResponse"

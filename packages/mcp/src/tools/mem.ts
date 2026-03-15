@@ -77,7 +77,7 @@ export const memTools: Tool[] = [
       },
   },
   {
-    name: "mem_upsert_documents",
+    name: "mem_upsert",
     description: "Embed and store documents. Each document: {id?, text, metadata?}. Existing IDs are replaced. | Price: $0.0001",
     inputSchema: {
         type: "object",
@@ -113,7 +113,7 @@ export const memTools: Tool[] = [
       },
   },
   {
-    name: "mem_query_collection",
+    name: "mem_query",
     description: "Semantic search. Fields: text (required), top_k, filter (Qdrant native format). | Price: $0.0001",
     inputSchema: {
         type: "object",
@@ -247,7 +247,7 @@ export async function handleMemTool(
         return { content: [{ type: "text", text: JSON.stringify(data, null, 2) }] };
       }
 
-      case "mem_upsert_documents": {
+      case "mem_upsert": {
         const { id, ...body } = args;
         const res = await primFetch(`${baseUrl}/v1/collections/${args.id}/upsert`, {
           method: "POST",
@@ -259,7 +259,7 @@ export async function handleMemTool(
         return { content: [{ type: "text", text: JSON.stringify(data, null, 2) }] };
       }
 
-      case "mem_query_collection": {
+      case "mem_query": {
         const { id, ...body } = args;
         const res = await primFetch(`${baseUrl}/v1/collections/${args.id}/query`, {
           method: "POST",

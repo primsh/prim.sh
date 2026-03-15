@@ -237,22 +237,6 @@ describe("domain.sh service", () => {
     it.todo("scopes to caller wallet address");
   });
 
-  describe("quoteDomain", () => {
-    // TODO: set up db/provider mocks to return valid data, then replace .todo with .test
-    it.todo("returns ok:true with valid input");
-
-    // TODO: set up mocks to trigger invalid_request
-    it.todo("returns invalid_request on error");
-
-    // TODO: set up mocks to trigger payment_required
-    it.todo("returns payment_required on error");
-
-    // TODO: set up mocks to trigger registrar_error
-    it.todo("returns registrar_error on error");
-
-    it.todo("scopes to caller wallet address");
-  });
-
   describe("verifyZone", () => {
     // TODO: set up db/provider mocks to return valid data, then replace .todo with .test
     it.todo("returns ok:true with valid input");
@@ -284,19 +268,6 @@ describe("domain.sh service", () => {
 
     // TODO: set up mocks to trigger rate_limited
     it.todo("returns rate_limited on error");
-
-    it.todo("scopes to caller wallet address");
-  });
-
-  describe("searchDomains", () => {
-    // TODO: set up db/provider mocks to return valid data, then replace .todo with .test
-    it.todo("returns ok:true with valid input");
-
-    // TODO: set up mocks to trigger payment_required
-    it.todo("returns payment_required on error");
-
-    // TODO: set up mocks to trigger registrar_error
-    it.todo("returns registrar_error on error");
 
     it.todo("scopes to caller wallet address");
   });

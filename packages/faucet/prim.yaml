@@ -96,8 +96,6 @@ routes_map:
     description: "Dispense 10 test USDC on Base Sepolia. Rate limit: once per 2 hours per address."
     notes: "Free. No x402 payment required."
     operation_id: drip_usdc
-    request_type: DripRequest
-    response_type: DripResponse
     errors:
       - { status: 400, code: invalid_request, description: "Missing or invalid address" }
       - { status: 403, code: wallet_not_allowed, description: "Wallet not on allowlist (private beta)" }
@@ -111,8 +109,6 @@ routes_map:
     description: "Dispense 0.01 test ETH on Base Sepolia. Rate limit: once per 1 hour per address."
     notes: "Free. No x402 payment required."
     operation_id: drip_eth
-    request_type: DripRequest
-    response_type: DripResponse
     errors:
       - { status: 400, code: invalid_request, description: "Missing or invalid address" }
       - { status: 403, code: wallet_not_allowed, description: "Wallet not on allowlist (private beta)" }
@@ -121,38 +117,28 @@ routes_map:
       - { status: 503, code: treasury_low, description: "Treasury ETH too low. Call POST /v1/faucet/refill." }
       - { status: 502, code: faucet_error, description: "Treasury wallet failed to send ETH" }
   - route: "GET /v1/faucet/status"
-    request: null
-    response: GetFaucetStatusResponse
     status: 200
     description: "Check rate limit status for a wallet address across both faucets."
     notes: "Free. Call this before dripping to avoid 429s."
     operation_id: get_faucet_status
-    request_type: null
-    response_type: GetFaucetStatusResponse
     query_params:
       - { name: address, type: string, description: "EVM wallet address (required)" }
     errors:
       - { status: 400, code: invalid_request, description: "Missing or invalid address query param" }
   - route: "GET /v1/faucet/treasury"
-    request: null
     response: TreasuryStatus
     status: 200
     description: "Check treasury wallet ETH balance and refill status."
     notes: "Free. No allowlist required."
     operation_id: get_treasury_status
-    request_type: null
-    response_type: TreasuryStatus
     errors:
       - { status: 502, code: faucet_error, description: "TESTNET_WALLET not configured" }
   - route: "POST /v1/faucet/refill"
-    request: null
     response: RefillResult
     status: 200
     description: "Batch-claim testnet ETH from Coinbase CDP faucet into treasury. Rate limited to once per 10 minutes."
     notes: "Free. No allowlist required. Requires CDP_API_KEY_ID and CDP_API_KEY_SECRET."
     operation_id: refill_treasury
-    request_type: null
-    response_type: RefillResult
     errors:
       - { status: 429, code: rate_limited, description: "Refill called within 10 minutes. retryAfter in response." }
       - { status: 502, code: faucet_error, description: "CDP API keys not configured" }

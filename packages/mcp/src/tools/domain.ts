@@ -9,7 +9,7 @@ import type { CallToolResult } from "@modelcontextprotocol/sdk/types.js";
 // BEGIN:GENERATED:TOOLS
 export const domainTools: Tool[] = [
   {
-    name: "domain_search_domains",
+    name: "domain_search_domain",
     description: "Check availability and pricing for a domain query | Price: $0.001",
     inputSchema: {
         type: "object",
@@ -26,7 +26,7 @@ export const domainTools: Tool[] = [
       },
   },
   {
-    name: "domain_quote_domain",
+    name: "domain_quote",
     description: "Get a 15-minute price quote for a domain | Price: $0.001",
     inputSchema: {
         type: "object",
@@ -412,7 +412,7 @@ export async function handleDomainTool(
 ): Promise<CallToolResult> {
   try {
     switch (name) {
-      case "domain_search_domains": {
+      case "domain_search_domain": {
         const url = new URL(`${baseUrl}/v1/domains/search`);
         if (args.query !== undefined) url.searchParams.set("query", String(args.query));
         if (args.tlds !== undefined) url.searchParams.set("tlds", String(args.tlds));
@@ -422,7 +422,7 @@ export async function handleDomainTool(
         return { content: [{ type: "text", text: JSON.stringify(data, null, 2) }] };
       }
 
-      case "domain_quote_domain": {
+      case "domain_quote": {
         const res = await primFetch(`${baseUrl}/v1/domains/quote`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },

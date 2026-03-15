@@ -48,7 +48,7 @@ export async function runGateCommand(sub: string, argv: string[]): Promise<void>
       const reqBody: Record<string, unknown> = {};
       reqBody.code = code;
       reqBody.wallet = wallet;
-      const data = await client.redeemInvite(reqBody as never);
+      const data = await client.redeem(reqBody as never);
 
       // Always save network from gate response — this is the authoritative chain.
       if (data.network) {

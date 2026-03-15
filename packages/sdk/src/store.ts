@@ -164,12 +164,12 @@ export interface SetQuotaParams {
   id: string;
 }
 
-export interface ReconcileQuotaParams {
+export interface ReconcileStorageParams {
   /** id parameter */
   id: string;
 }
 
-export interface PresignObjectParams {
+export interface CreatePresignParams {
   /** id parameter */
   id: string;
 }
@@ -262,14 +262,14 @@ export function createStoreClient(
       });
       return unwrap<GetQuotaResponse>(res);
     },
-    async reconcileQuota(params: ReconcileQuotaParams): Promise<ReconcileStorageResponse> {
+    async reconcileStorage(params: ReconcileStorageParams): Promise<ReconcileStorageResponse> {
       const url = `${baseUrl}/v1/buckets/${encodeURIComponent(params.id)}/quota/reconcile`;
       const res = await primFetch(url, {
         method: "POST",
       });
       return unwrap<ReconcileStorageResponse>(res);
     },
-    async presignObject(params: PresignObjectParams, req: CreatePresignRequest): Promise<CreatePresignResponse> {
+    async createPresign(params: CreatePresignParams, req: CreatePresignRequest): Promise<CreatePresignResponse> {
       const url = `${baseUrl}/v1/buckets/${encodeURIComponent(params.id)}/presign`;
       const res = await primFetch(url, {
         method: "POST",

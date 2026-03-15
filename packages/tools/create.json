@@ -51,7 +51,7 @@
   {
     "type": "function",
     "function": {
-      "name": "create_get_ports",
+      "name": "create_list_ports",
       "description": "Return allocated ports and next available port number. Price: $0.01 via x402 (USDC on Base).",
       "parameters": {
         "type": "object",

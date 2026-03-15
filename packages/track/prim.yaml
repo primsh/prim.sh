@@ -81,13 +81,9 @@ ownership: "Stateless. No package data is stored per wallet. Each request is an 
 
 routes_map:
   - route: "POST /v1/track"
-    request: TrackRequest
-    response: TrackResponse
     status: 200
     description: "Track a package by tracking number and carrier. Returns status, ETA, and full event history."
-    operation_id: track_package
-    request_type: TrackRequest
-    response_type: TrackResponse
+    operation_id: track
     errors:
       - { status: 400, code: invalid_request, description: "Missing tracking_number or invalid carrier" }
       - { status: 402, code: payment_required, description: "x402 payment needed" }

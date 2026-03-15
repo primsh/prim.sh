@@ -188,7 +188,8 @@ Price: $0.001
 Request:
   domain  string  required  Domain name to create a zone for (e.g. "example.com").
 
-Response (201): CreateGetZoneResponse
+Response (201):
+  zone  GetZoneResponse  The created zone.
 
 Errors:
   400  invalid_request   Missing domain or invalid domain name

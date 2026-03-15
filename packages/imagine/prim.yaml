@@ -67,8 +67,6 @@ factory:
 
 routes_map:
   - route: "POST /v1/generate"
-    request: GenerateRequest
-    response: GenerateResponse
     status: 200
     description: "Generate an image from a text prompt. Returns base64 or URL."
     operation_id: generate
@@ -79,8 +77,6 @@ routes_map:
       - { status: 429, code: rate_limited, description: "Too many requests" }
       - { status: 502, code: provider_error, description: "Upstream provider error" }
   - route: "POST /v1/describe"
-    request: DescribeRequest
-    response: DescribeResponse
     status: 200
     description: "Describe an image. Accepts base64 or URL. Returns text description."
     operation_id: describe
@@ -90,8 +86,6 @@ routes_map:
       - { status: 429, code: rate_limited, description: "Too many requests" }
       - { status: 502, code: provider_error, description: "Upstream provider error" }
   - route: "POST /v1/upscale"
-    request: UpscaleRequest
-    response: UpscaleResponse
     status: 200
     description: "Upscale an image to higher resolution. Accepts base64 or URL."
     operation_id: upscale
@@ -101,8 +95,6 @@ routes_map:
       - { status: 429, code: rate_limited, description: "Too many requests" }
       - { status: 502, code: provider_error, description: "Upstream provider error" }
   - route: "GET /v1/models"
-    request: null
-    response: ListModelsResponse
     status: 200
     description: "List available image models with capabilities and pricing."
     operation_id: list_models

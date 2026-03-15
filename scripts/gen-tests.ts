@@ -452,7 +452,7 @@ function generateMarkedContent(
     const expectedStatus = primary.status ?? 200;
     // Build minimal valid body for Check 4 (not empty {} — include required fields)
     const requestType =
-      primary.request_type ?? inferTypeNames(primary.operation_id, apiInterfaces).request;
+      primary.request_type ?? primary.request ?? inferTypeNames(primary.operation_id, apiInterfaces).request;
     const minimalBody = method !== "GET" ? buildMinimalBody(requestType, apiInterfaces) : null;
 
     lines.push(

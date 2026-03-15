@@ -41,22 +41,6 @@ describe("token.sh service", () => {
     it.todo("returns false for invalid input");
   });
 
-  describe("deployToken", () => {
-    // TODO: set up db/provider mocks to return valid data, then replace .todo with .test
-    it.todo("returns ok:true with valid input");
-
-    // TODO: set up mocks to trigger invalid_request
-    it.todo("returns invalid_request on error");
-
-    // TODO: set up mocks to trigger payment_required
-    it.todo("returns payment_required on error");
-
-    // TODO: set up mocks to trigger rpc_error
-    it.todo("returns rpc_error on error");
-
-    it.todo("scopes to caller wallet address");
-  });
-
   describe("listTokens", () => {
     // TODO: set up db/provider mocks to return valid data, then replace .todo with .test
     it.todo("returns ok:true with valid input");
@@ -86,12 +70,9 @@ describe("token.sh service", () => {
     it.todo("scopes to caller wallet address");
   });
 
-  describe("mintTokens", () => {
+  describe("getSupply", () => {
     // TODO: set up db/provider mocks to return valid data, then replace .todo with .test
     it.todo("returns ok:true with valid input");
-
-    // TODO: set up mocks to trigger not_mintable
-    it.todo("returns not_mintable on error");
 
     // TODO: set up mocks to trigger payment_required
     it.todo("returns payment_required on error");
@@ -101,9 +82,6 @@ describe("token.sh service", () => {
 
     // TODO: set up mocks to trigger not_found
     it.todo("returns not_found on error");
-
-    // TODO: set up mocks to trigger exceeds_max_supply
-    it.todo("returns exceeds_max_supply on error");
 
     // TODO: set up mocks to trigger rpc_error
     it.todo("returns rpc_error on error");

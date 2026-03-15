@@ -2,7 +2,7 @@
   {
     "type": "function",
     "function": {
-      "name": "domain_search",
+      "name": "domain_search_domain",
       "description": "Check availability and pricing for a domain query. Price: $0.001 via x402 (USDC on Base).",
       "parameters": {
         "type": "object",
