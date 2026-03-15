@@ -9,6 +9,7 @@
 import { existsSync, readFileSync } from "node:fs";
 import type { ParsedApi, ParsedField } from "./parse-api.js";
 import type { Primitive, RouteMapping } from "./primitives.js";
+import { inferTypeNames } from "./render-openapi.js";
 
 // ── Route price extraction ────────────────────────────────────────────────────
 
@@ -352,9 +353,14 @@ function renderRoute(rm: RouteMapping, api: ParsedApi, prices: Map<string, strin
     lines.push("");
   }
 
+  // Resolve type names (explicit prim.yaml value wins, then inference)
+  const inferred = inferTypeNames(rm.operation_id, api.interfaces);
+  const resolvedReq = rm.request ?? inferred.request;
+  const resolvedRes = rm.response ?? inferred.response;
+
   // Request body
-  if (rm.request) {
-    const reqFields = resolveFields(rm.request, api);
+  if (resolvedReq) {
+    const reqFields = resolveFields(resolvedReq, api);
     if (reqFields.length > 0) {
       lines.push("Request:");
       lines.push(renderFields(reqFields, "  ", true));
@@ -363,8 +369,8 @@ function renderRoute(rm: RouteMapping, api: ParsedApi, prices: Map<string, strin
   }
 
   // Response
-  const respStr = rm.response ?? "null";
-  const respFields = resolveFields(rm.response, api);
+  const respStr = resolvedRes ?? "null";
+  const respFields = resolveFields(resolvedRes, api);
   // Check if it's a raw string description (not a type name)
   const isRawResponse =
     respStr.includes(" ") ||
@@ -372,7 +378,7 @@ function renderRoute(rm: RouteMapping, api: ParsedApi, prices: Map<string, strin
     respStr === "EmptyResponse" ||
     (!api.interfaces.has(respStr) && respStr !== "null");
 
-  if (respStr === "EmptyResponse" || respStr === "null" || respStr === "" || rm.response == null) {
+  if (respStr === "EmptyResponse" || respStr === "null" || respStr === "" || resolvedRes == null) {
     lines.push(`Response (${rm.status}): {} (empty object)`);
     lines.push("");
   } else if (isRawResponse && respFields.length === 0) {

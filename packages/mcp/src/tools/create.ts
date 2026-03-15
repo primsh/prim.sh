@@ -13,7 +13,13 @@ export const createTools: Tool[] = [
     description: "Generate a complete prim package from a prim.yaml spec. Returns file manifest with contents. | Price: $0.01",
     inputSchema: {
         type: "object",
-        properties: {},
+        properties: {
+          "spec": {
+            type: "string",
+            description: "prim.yaml spec as YAML string",
+          },
+        },
+        required: ["spec"],
       },
   },
   {
@@ -21,7 +27,13 @@ export const createTools: Tool[] = [
     description: "Validate a prim.yaml spec against the schema without generating files. | Price: $0.01",
     inputSchema: {
         type: "object",
-        properties: {},
+        properties: {
+          "spec": {
+            type: "string",
+            description: "prim.yaml spec as YAML string",
+          },
+        },
+        required: ["spec"],
       },
   },
   {
@@ -46,21 +58,29 @@ export const createTools: Tool[] = [
 // BEGIN:GENERATED:HANDLER
 export async function handleCreateTool(
   name: string,
-  _args: Record<string, unknown>,
+  args: Record<string, unknown>,
   primFetch: typeof fetch,
   baseUrl: string,
 ): Promise<CallToolResult> {
   try {
     switch (name) {
       case "create_scaffold": {
-        const res = await primFetch(`${baseUrl}/v1/scaffold`, { method: "POST" });
+        const res = await primFetch(`${baseUrl}/v1/scaffold`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(args),
+        });
         const data = await res.json();
         if (!res.ok) return errorResult(data);
         return { content: [{ type: "text", text: JSON.stringify(data, null, 2) }] };
       }
 
       case "create_validate": {
-        const res = await primFetch(`${baseUrl}/v1/validate`, { method: "POST" });
+        const res = await primFetch(`${baseUrl}/v1/validate`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(args),
+        });
         const data = await res.json();
         if (!res.ok) return errorResult(data);
         return { content: [{ type: "text", text: JSON.stringify(data, null, 2) }] };

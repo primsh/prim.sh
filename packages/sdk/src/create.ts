@@ -7,11 +7,41 @@ import { unwrap } from "./shared.js";
 
 // ── Types ──────────────────────────────────────────────────────────────────
 
-export type ScaffoldResponse = Record<string, unknown>;
+export interface GetSchemaResponse {
+  /** JSON Schema for prim.yaml */
+  schema: string;
+}
 
-export type ValidateResponse = Record<string, unknown>;
+export interface ScaffoldFile {
+  /** Relative file path (e.g. "packages/foo/src/index.ts") */
+  path: string;
+  /** File content */
+  content: string;
+}
 
-export type GetSchemaResponse = Record<string, unknown>;
+export interface ScaffoldRequest {
+  /** prim.yaml spec as YAML string */
+  spec: string;
+}
+
+export interface ScaffoldResponse {
+  /** Primitive ID */
+  id: string;
+  /** Generated files */
+  files: ScaffoldFile[];
+}
+
+export interface ValidateRequest {
+  /** prim.yaml spec as YAML string */
+  spec: string;
+}
+
+export interface ValidateResponse {
+  /** Whether the spec is valid */
+  valid: boolean;
+  /** Validation errors (empty if valid) */
+  errors: string[];
+}
 
 export type GetPortsResponse = Record<string, unknown>;
 
@@ -22,17 +52,21 @@ export function createCreateClient(
   baseUrl = "https://create.prim.sh",
 ) {
   return {
-    async scaffold(): Promise<ScaffoldResponse> {
+    async scaffold(req: ScaffoldRequest): Promise<ScaffoldResponse> {
       const url = `${baseUrl}/v1/scaffold`;
       const res = await primFetch(url, {
         method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(req),
       });
       return unwrap<ScaffoldResponse>(res);
     },
-    async validate(): Promise<ValidateResponse> {
+    async validate(req: ValidateRequest): Promise<ValidateResponse> {
       const url = `${baseUrl}/v1/validate`;
       const res = await primFetch(url, {
         method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(req),
       });
       return unwrap<ValidateResponse>(res);
     },

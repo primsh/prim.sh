@@ -23,6 +23,7 @@ import {
   loadPrimitives,
   withPackage,
 } from "./lib/primitives.js";
+import { inferTypeNames } from "./lib/render-openapi.js";
 
 const ROOT = resolve(import.meta.dir, "..");
 const PLAN_PATH = join(ROOT, "tests", "smoke-test-plan.json");
@@ -358,7 +359,8 @@ function inferCaptures(
   // Skip if path has params (it's an action, not a create)
   if (path.includes(":")) return {};
 
-  const respType = route.response_type ?? route.response;
+  const respInferred = inferTypeNames(route.operation_id, interfaces);
+  const respType = route.response_type ?? route.response ?? respInferred.response;
   if (!respType) return {};
 
   const iface = interfaces.get(respType);
@@ -518,11 +520,12 @@ function main() {
       const endpoint = routeToEndpoint(prim, path);
 
       // Build expected shape from response type
-      const respType = route.response_type ?? route.response;
+      const inferred = inferTypeNames(route.operation_id, interfaces);
+      const respType = route.response_type ?? route.response ?? inferred.response;
       const expectedBody = buildExpectedShape(respType, interfaces);
 
       // Build synthetic input
-      const reqType = route.request_type ?? route.request;
+      const reqType = route.request_type ?? route.request ?? inferred.request;
       const input =
         method === "POST" || method === "PUT" ? buildSyntheticInput(reqType, interfaces) : null;
 
