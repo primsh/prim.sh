@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: Apache-2.0
 // THIS FILE IS GENERATED — DO NOT EDIT
-// Source: packages/infer/openapi.yaml
+// Source: packages/infer/generated/openapi.yaml
 // Regenerate: pnpm gen:sdk
 
 import { unwrap } from "./shared.js";

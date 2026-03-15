@@ -526,7 +526,7 @@ function buildFullFile(prim: string, toolsDef: string, handlerDef: string): stri
   return [
     "// SPDX-License-Identifier: Apache-2.0",
     `// THIS FILE IS GENERATED — DO NOT EDIT`,
-    `// Source: packages/${prim}/openapi.yaml`,
+    `// Source: packages/${prim}/generated/openapi.yaml`,
     `// Regenerate: pnpm gen:mcp`,
     ``,
     `import type { Tool } from "@modelcontextprotocol/sdk/types.js";`,
@@ -616,7 +616,7 @@ for (const prim of PRIMS) {
   let finalContent: string;
   const existing = existsSync(outPath) ? readFileSync(outPath, "utf8") : null;
 
-  const GEN_HEADER = `// SPDX-License-Identifier: Apache-2.0\n// THIS FILE IS GENERATED — DO NOT EDIT\n// Source: packages/${prim}/openapi.yaml\n// Regenerate: pnpm gen:mcp\n\n`;
+  const GEN_HEADER = `// SPDX-License-Identifier: Apache-2.0\n// THIS FILE IS GENERATED — DO NOT EDIT\n// Source: packages/${prim}/generated/openapi.yaml\n// Regenerate: pnpm gen:mcp\n\n`;
 
   if (existing?.includes("// BEGIN:GENERATED:TOOLS")) {
     // File already has markers — inject into existing file

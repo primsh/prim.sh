@@ -496,7 +496,7 @@ export function renderSdkClient(primId: string, spec: OpenApiSpec): string {
 
   out.push("// SPDX-License-Identifier: Apache-2.0");
   out.push("// THIS FILE IS GENERATED — DO NOT EDIT");
-  out.push(`// Source: packages/${primId}/openapi.yaml`);
+  out.push(`// Source: packages/${primId}/generated/openapi.yaml`);
   out.push("// Regenerate: pnpm gen:sdk");
   out.push("");
 

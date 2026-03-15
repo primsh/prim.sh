@@ -847,7 +847,7 @@ function generateCommandFile(spec: OpenAPISpec, id: string, routesMap?: RouteMap
     return [
       "// SPDX-License-Identifier: Apache-2.0",
       "// THIS FILE IS GENERATED — DO NOT EDIT",
-      `// Source: packages/${id}/openapi.yaml`,
+      `// Source: packages/${id}/generated/openapi.yaml`,
       "// Regenerate: pnpm gen:cli",
       "// BEGIN:PRIM:CLI",
       "",
@@ -880,7 +880,7 @@ function generateCommandFile(spec: OpenAPISpec, id: string, routesMap?: RouteMap
 
   lines.push("// SPDX-License-Identifier: Apache-2.0");
   lines.push("// THIS FILE IS GENERATED — DO NOT EDIT");
-  lines.push(`// Source: packages/${id}/openapi.yaml`);
+  lines.push(`// Source: packages/${id}/generated/openapi.yaml`);
   lines.push("// Regenerate: pnpm gen:cli");
   lines.push("");
 
