@@ -248,7 +248,11 @@ app.post("/v1/servers/:id/resize", async (c) => {
   if (callerOrRes instanceof Response) return callerOrRes;
   const caller = callerOrRes;
 
-  const bodyOrRes = await parseJsonBody<ResizeServerRequest>(c, logger, "POST /v1/servers/:id/resize");
+  const bodyOrRes = await parseJsonBody<ResizeServerRequest>(
+    c,
+    logger,
+    "POST /v1/servers/:id/resize",
+  );
   if (bodyOrRes instanceof Response) return bodyOrRes;
   const body = bodyOrRes;
 
@@ -268,7 +272,11 @@ app.post("/v1/servers/:id/rebuild", async (c) => {
   if (callerOrRes instanceof Response) return callerOrRes;
   const caller = callerOrRes;
 
-  const bodyOrRes = await parseJsonBody<RebuildServerRequest>(c, logger, "POST /v1/servers/:id/rebuild");
+  const bodyOrRes = await parseJsonBody<RebuildServerRequest>(
+    c,
+    logger,
+    "POST /v1/servers/:id/rebuild",
+  );
   if (bodyOrRes instanceof Response) return bodyOrRes;
   const body = bodyOrRes;
 
