@@ -122,7 +122,7 @@ function buildRoutePriceMap(
     const paidPricing = (pricing ?? []).filter((p) => p.price !== "free");
     const row = paidPricing[i];
     const price = row ? row.price.replace(/\$/g, "") : "0.01";
-    map[r.route] = price.startsWith("$") ? price : `$${price}`;
+    map[r.route] = `$${price}`;
   }
 
   return map;
