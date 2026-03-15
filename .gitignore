@@ -72,3 +72,6 @@ Thumbs.db
 *.swp
 *.swo
 *~
+
+# Claude Code local settings (machine-specific)
+.claude/*.local.json
