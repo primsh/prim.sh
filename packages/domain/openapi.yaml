@@ -195,6 +195,14 @@ components:
         domain:
           type: string
           description: Domain name to create a zone for (e.g. "example.com").
+    CreateZoneResponse:
+      type: object
+      required:
+        - zone
+      properties:
+        zone:
+          $ref: "#/components/schemas/GetZoneResponse"
+          description: The created zone.
     DomainSearchPrice:
       type: object
       required:
@@ -584,7 +592,7 @@ paths:
                     example: ok
   /v1/domains/search:
     get:
-      operationId: searchDomains
+      operationId: searchDomain
       summary: Check availability and pricing for a domain query
       security:
         - x402: []
@@ -617,7 +625,7 @@ paths:
                 $ref: "#/components/schemas/Error"
   /v1/domains/quote:
     post:
-      operationId: quoteDomain
+      operationId: quote
       summary: Get a 15-minute price quote for a domain
       security:
         - x402: []
@@ -697,7 +705,7 @@ paths:
           content:
             application/json:
               schema:
-                type: object
+                $ref: "#/components/schemas/CreateZoneResponse"
         "400":
           description: Missing domain or invalid domain name
           content:

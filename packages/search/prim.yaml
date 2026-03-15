@@ -104,8 +104,6 @@ routes_map:
     status: 200
     description: "Search the web and return ranked results with optional AI-generated answer"
     operation_id: search_web
-    request_type: SearchRequest
-    response_type: SearchResponse
     errors:
       - { status: 400, code: invalid_request, description: "Missing or invalid query" }
       - { status: 402, code: payment_required, description: "x402 payment needed" }
@@ -117,22 +115,18 @@ routes_map:
     status: 200
     description: "Search for recent news articles, ordered by recency"
     operation_id: search_news
-    request_type: SearchRequest
-    response_type: SearchResponse
     errors:
       - { status: 400, code: invalid_request, description: "Missing or invalid query" }
       - { status: 402, code: payment_required, description: "x402 payment needed" }
       - { status: 429, code: rate_limited, description: "Too many requests" }
       - { status: 502, code: provider_error, description: "Upstream search provider unavailable" }
   - route: "POST /v1/extract"
-    request: ExtractRequest
-    response: ExtractResponse
     status: 200
     description: "Extract readable content from one or more URLs as markdown or plain text"
     notes: "Failed extractions are in the failed array. Request succeeds if at least one URL was attempted."
+    request: ExtractRequest
+    response: ExtractResponse
     operation_id: extract_url
-    request_type: ExtractRequest
-    response_type: ExtractResponse
     errors:
       - { status: 400, code: invalid_request, description: "Missing urls field or invalid URL format" }
       - { status: 402, code: payment_required, description: "x402 payment needed" }

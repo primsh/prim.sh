@@ -108,49 +108,35 @@ ownership: "Tokens are scoped to the wallet address extracted from the x402 paym
 
 routes_map:
   - route: "POST /v1/tokens"
-    request: CreateTokenRequest
     response: GetTokenResponse
     status: 201
     description: "Deploy a new ERC-20 token. Returns immediately with deployStatus: 'pending'."
     notes: "Poll GET /v1/tokens/:id until deployStatus is 'confirmed' before minting or pooling."
-    operation_id: deploy_token
-    request_type: CreateTokenRequest
-    response_type: GetTokenResponse
+    operation_id: create_token
     errors:
       - { status: 400, code: invalid_request, description: "Missing required fields or invalid values" }
       - { status: 402, code: payment_required, description: "x402 payment needed" }
       - { status: 502, code: rpc_error, description: "Base RPC error" }
   - route: "GET /v1/tokens"
-    request: null
     response: TokenListResponse
     status: 200
     description: "List tokens deployed by the authenticated wallet"
     operation_id: list_tokens
-    request_type: null
-    response_type: TokenListResponse
     errors:
       - { status: 402, code: payment_required, description: "x402 payment needed" }
       - { status: 403, code: forbidden, description: "Missing wallet in payment" }
   - route: "GET /v1/tokens/:id"
-    request: null
-    response: GetTokenResponse
     status: 200
     description: "Get token details: deployStatus, contractAddress, supply, pool"
     operation_id: get_token
-    request_type: null
-    response_type: GetTokenResponse
     errors:
       - { status: 402, code: payment_required, description: "x402 payment needed" }
       - { status: 403, code: forbidden, description: "Token belongs to a different wallet" }
       - { status: 404, code: not_found, description: "Token ID does not exist" }
   - route: "POST /v1/tokens/:id/mint"
-    request: MintRequest
-    response: MintResponse
     status: 200
     description: "Mint additional tokens to an address. Requires mintable=true at deploy time."
-    operation_id: mint_tokens
-    request_type: MintRequest
-    response_type: MintResponse
+    operation_id: mint
     errors:
       - { status: 400, code: not_mintable, description: "Token deployed with mintable=false" }
       - { status: 402, code: payment_required, description: "x402 payment needed" }
@@ -159,26 +145,19 @@ routes_map:
       - { status: 422, code: exceeds_max_supply, description: "Mint would exceed maxSupply" }
       - { status: 502, code: rpc_error, description: "Base RPC error" }
   - route: "GET /v1/tokens/:id/supply"
-    request: null
-    response: GetSupplyResponse
     status: 200
     description: "Live on-chain total supply from contract"
-    operation_id: get_token_supply
-    request_type: null
-    response_type: GetSupplyResponse
+    operation_id: get_supply
     errors:
       - { status: 402, code: payment_required, description: "x402 payment needed" }
       - { status: 403, code: forbidden, description: "Token belongs to a different wallet" }
       - { status: 404, code: not_found, description: "Token ID does not exist" }
       - { status: 502, code: rpc_error, description: "Base RPC error" }
   - route: "POST /v1/tokens/:id/pool"
-    request: CreatePoolRequest
     response: GetPoolResponse
     status: 201
     description: "Create and initialize a Uniswap V3 pool paired with USDC. One pool per token."
     operation_id: create_pool
-    request_type: CreatePoolRequest
-    response_type: GetPoolResponse
     errors:
       - { status: 400, code: invalid_request, description: "Missing pricePerToken or invalid feeTier" }
       - { status: 402, code: payment_required, description: "x402 payment needed" }
@@ -187,26 +166,18 @@ routes_map:
       - { status: 409, code: pool_exists, description: "Pool already exists for this token" }
       - { status: 502, code: rpc_error, description: "Base RPC error" }
   - route: "GET /v1/tokens/:id/pool"
-    request: null
-    response: GetPoolResponse
     status: 200
     description: "Get pool details: poolAddress, token0, token1, fee, sqrtPriceX96, tick"
     operation_id: get_pool
-    request_type: null
-    response_type: GetPoolResponse
     errors:
       - { status: 402, code: payment_required, description: "x402 payment needed" }
       - { status: 403, code: forbidden, description: "Token belongs to a different wallet" }
       - { status: 404, code: not_found, description: "Token or pool not found" }
       - { status: 502, code: rpc_error, description: "Base RPC error" }
   - route: "GET /v1/tokens/:id/pool/liquidity-params"
-    request: null
-    response: GetLiquidityParamsResponse
     status: 200
     description: "Get calldata for adding liquidity. Returns approvals[] and position manager params."
     operation_id: get_liquidity_params
-    request_type: null
-    response_type: GetLiquidityParamsResponse
     query_params:
       - { name: tokenAmount, type: string, description: "Raw token amount to add as liquidity" }
       - { name: usdcAmount, type: string, description: "Raw USDC amount to pair (6 decimals)" }

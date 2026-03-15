@@ -134,7 +134,7 @@ paths:
                     example: ok
   /v1/redeem:
     post:
-      operationId: redeemInvite
+      operationId: redeem
       summary: Redeem an invite code. Wallet is allowlisted and funded with USDC + ETH.
       description: Free. No x402 payment required. One-time per code.
       security:

@@ -73,14 +73,10 @@ ownership: "Invite codes are not tied to a wallet. Any valid EVM address can red
 
 routes_map:
   - route: "POST /v1/redeem"
-    request: RedeemRequest
-    response: RedeemResponse
     status: 200
     description: "Redeem an invite code. Wallet is allowlisted and funded with USDC + ETH."
     notes: "Free. No x402 payment required. One-time per code."
-    operation_id: redeem_invite
-    request_type: RedeemRequest
-    response_type: RedeemResponse
+    operation_id: redeem
     errors:
       - { status: 400, code: invalid_request, description: "Missing or invalid wallet address" }
       - { status: 400, code: invalid_code, description: "Invite code not recognized" }

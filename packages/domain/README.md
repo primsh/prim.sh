@@ -15,7 +15,7 @@ Part of [prim.sh](https://prim.sh) — zero signup, one payment token, infinite 
 | `GET /v1/domains/search` | Check availability and pricing for a domain query | $0.001 | `—` | `SearchDomainResponse` |
 | `POST /v1/domains/quote` | Get a 15-minute price quote for a domain | $0.001 | `QuoteRequest` | `QuoteResponse` |
 | `GET /v1/domains/:domain/status` | Full post-registration pipeline status (ns_propagated, zone_active, all_ready) | $0.001 | `—` | `GetRegistrationStatusResponse` |
-| `POST /v1/zones` | Create a Cloudflare DNS zone. Returns nameservers to set at your registrar. | $0.001 | `CreateZoneRequest` | `CreateGetZoneResponse` |
+| `POST /v1/zones` | Create a Cloudflare DNS zone. Returns nameservers to set at your registrar. | $0.001 | `CreateZoneRequest` | `CreateZoneResponse` |
 | `GET /v1/zones` | List DNS zones owned by the calling wallet (paginated) | $0.001 | `—` | `ZoneListResponse` |
 | `GET /v1/zones/:id` | Get zone details | $0.001 | `—` | `GetZoneResponse` |
 | `DELETE /v1/zones/:id` | Delete zone and all records. Irreversible. | $0.001 | `—` | `—` |
@@ -87,6 +87,12 @@ Part of [prim.sh](https://prim.sh) — zero signup, one payment token, infinite 
 | Field | Type | Required |
 |-------|------|----------|
 | `domain` | `string` | required |
+
+### `CreateZoneResponse`
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `zone` | `GetZoneResponse` | The created zone. |
 
 ### `GetZoneResponse`
 

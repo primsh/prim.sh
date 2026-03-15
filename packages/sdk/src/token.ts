@@ -145,12 +145,12 @@ export interface GetTokenParams {
   id: string;
 }
 
-export interface MintTokensParams {
+export interface MintParams {
   /** id parameter */
   id: string;
 }
 
-export interface GetTokenSupplyParams {
+export interface GetSupplyParams {
   /** id parameter */
   id: string;
 }
@@ -183,7 +183,7 @@ export function createTokenClient(
   baseUrl = "https://token.prim.sh",
 ) {
   return {
-    async deployToken(req: CreateTokenRequest): Promise<GetTokenResponse> {
+    async createToken(req: CreateTokenRequest): Promise<GetTokenResponse> {
       const url = `${baseUrl}/v1/tokens`;
       const res = await primFetch(url, {
         method: "POST",
@@ -202,7 +202,7 @@ export function createTokenClient(
       const res = await primFetch(url);
       return unwrap<GetTokenResponse>(res);
     },
-    async mintTokens(params: MintTokensParams, req: MintRequest): Promise<MintResponse> {
+    async mint(params: MintParams, req: MintRequest): Promise<MintResponse> {
       const url = `${baseUrl}/v1/tokens/${encodeURIComponent(params.id)}/mint`;
       const res = await primFetch(url, {
         method: "POST",
@@ -211,7 +211,7 @@ export function createTokenClient(
       });
       return unwrap<MintResponse>(res);
     },
-    async getTokenSupply(params: GetTokenSupplyParams): Promise<GetSupplyResponse> {
+    async getSupply(params: GetSupplyParams): Promise<GetSupplyResponse> {
       const url = `${baseUrl}/v1/tokens/${encodeURIComponent(params.id)}/supply`;
       const res = await primFetch(url);
       return unwrap<GetSupplyResponse>(res);

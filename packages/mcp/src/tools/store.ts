@@ -188,7 +188,7 @@ export const storeTools: Tool[] = [
       },
   },
   {
-    name: "store_reconcile_quota",
+    name: "store_reconcile_storage",
     description: "Recompute bucket usage by scanning actual R2 storage. Use when usage_bytes appears incorrect. | Price: $0.001",
     inputSchema: {
         type: "object",
@@ -202,7 +202,7 @@ export const storeTools: Tool[] = [
       },
   },
   {
-    name: "store_presign_object",
+    name: "store_create_presign",
     description: "Generate a presigned URL for direct GET or PUT access to an object. GET presign requires object to exist. | Price: $0.001",
     inputSchema: {
         type: "object",
@@ -326,14 +326,14 @@ export async function handleStoreTool(
         return { content: [{ type: "text", text: JSON.stringify(data, null, 2) }] };
       }
 
-      case "store_reconcile_quota": {
+      case "store_reconcile_storage": {
         const res = await primFetch(`${baseUrl}/v1/buckets/${args.id}/quota/reconcile`, { method: "POST" });
         const data = await res.json();
         if (!res.ok) return errorResult(data);
         return { content: [{ type: "text", text: JSON.stringify(data, null, 2) }] };
       }
 
-      case "store_presign_object": {
+      case "store_create_presign": {
         const { id, ...body } = args;
         const res = await primFetch(`${baseUrl}/v1/buckets/${args.id}/presign`, {
           method: "POST",

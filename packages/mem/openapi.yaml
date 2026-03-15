@@ -395,7 +395,7 @@ paths:
                 $ref: "#/components/schemas/Error"
   /v1/collections/{id}/upsert:
     post:
-      operationId: upsertDocuments
+      operationId: upsert
       summary: "Embed and store documents. Each document: {id?, text, metadata?}. Existing IDs are replaced."
       security:
         - x402: []
@@ -448,7 +448,7 @@ paths:
                 $ref: "#/components/schemas/Error"
   /v1/collections/{id}/query:
     post:
-      operationId: queryCollection
+      operationId: query
       summary: "Semantic search. Fields: text (required), top_k, filter (Qdrant native format)."
       security:
         - x402: []

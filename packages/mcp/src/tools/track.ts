@@ -9,7 +9,7 @@ import type { CallToolResult } from "@modelcontextprotocol/sdk/types.js";
 // BEGIN:GENERATED:TOOLS
 export const trackTools: Tool[] = [
   {
-    name: "track_package",
+    name: "track_track",
     description: "Track a package by tracking number and carrier. Returns status, ETA, and full event history. | Price: $0.04",
     inputSchema: {
         type: "object",
@@ -38,7 +38,7 @@ export async function handleTrackTool(
 ): Promise<CallToolResult> {
   try {
     switch (name) {
-      case "track_package": {
+      case "track_track": {
         const res = await primFetch(`${baseUrl}/v1/track`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },

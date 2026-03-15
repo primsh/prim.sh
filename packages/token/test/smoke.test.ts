@@ -41,7 +41,7 @@ vi.mock("../src/service.ts", async (importOriginal) => {
 
 import app from "../src/index.ts";
 import { deployToken } from "../src/service.ts";
-// BEGIN:GENERATED:SMOKE
+
 describe("token.sh app", () => {
   beforeEach(() => {
     vi.mocked(deployToken).mockReset();
@@ -102,4 +102,3 @@ describe("token.sh app", () => {
     expect(res.status).toBe(400);
   });
 });
-// END:GENERATED:SMOKE

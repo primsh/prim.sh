@@ -59,8 +59,6 @@ factory:
 
 routes_map:
   - route: "POST /v1/chat"
-    request: ChatRequest
-    response: ChatResponse
     status: 200
     description: "Chat completion. Supports streaming, tool use, structured output."
     operation_id: chat
@@ -71,8 +69,6 @@ routes_map:
       - { status: 429, code: rate_limited, description: "Too many requests" }
       - { status: 502, code: provider_error, description: "Upstream model provider error" }
   - route: "POST /v1/embed"
-    request: EmbedRequest
-    response: EmbedResponse
     status: 200
     description: "Generate embeddings for text input. Returns vector array."
     operation_id: embed
@@ -83,8 +79,6 @@ routes_map:
       - { status: 429, code: rate_limited, description: "Too many requests" }
       - { status: 502, code: provider_error, description: "Upstream provider error" }
   - route: "GET /v1/models"
-    request: null
-    response: ListModelsResponse
     status: 200
     description: "List available models with pricing and capabilities."
     operation_id: list_models

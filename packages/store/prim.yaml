@@ -116,26 +116,19 @@ ownership: "All buckets and objects are scoped to the wallet address extracted f
 
 routes_map:
   - route: "POST /v1/buckets"
-    request: CreateBucketRequest
-    response: CreateBucketResponse
     status: 201
     description: "Create a new storage bucket"
     operation_id: create_bucket
-    request_type: CreateBucketRequest
-    response_type: CreateBucketResponse
     errors:
       - { status: 400, code: invalid_request, description: "Invalid bucket name or name already taken" }
       - { status: 402, code: payment_required, description: "x402 payment needed" }
       - { status: 403, code: bucket_limit_exceeded, description: "Wallet has reached 10 bucket limit" }
       - { status: 502, code: r2_error, description: "Upstream R2 error" }
   - route: "GET /v1/buckets"
-    request: null
     response: BucketListResponse
     status: 200
     description: "List all buckets owned by the calling wallet"
     operation_id: list_buckets
-    request_type: null
-    response_type: BucketListResponse
     query_params:
       - { name: limit, type: integer, description: "1-100, default 20" }
       - { name: page, type: integer, description: "1-based page number, default 1" }
@@ -143,39 +136,28 @@ routes_map:
       - { status: 402, code: payment_required, description: "x402 payment needed" }
       - { status: 403, code: forbidden, description: "Missing wallet address in payment" }
   - route: "GET /v1/buckets/:id"
-    request: null
-    response: GetBucketResponse
     status: 200
     description: "Get details for a single bucket. Caller must own the bucket."
     operation_id: get_bucket
-    request_type: null
-    response_type: GetBucketResponse
     errors:
       - { status: 402, code: payment_required, description: "x402 payment needed" }
       - { status: 403, code: forbidden, description: "Bucket belongs to a different wallet" }
       - { status: 404, code: not_found, description: "Bucket not found" }
   - route: "DELETE /v1/buckets/:id"
-    request: null
     response: null
     status: 200
     description: "Delete a bucket. Bucket must be empty first."
     operation_id: delete_bucket
-    request_type: null
-    response_type: null
     errors:
       - { status: 402, code: payment_required, description: "x402 payment needed" }
       - { status: 403, code: forbidden, description: "Bucket belongs to a different wallet" }
       - { status: 404, code: not_found, description: "Bucket not found" }
       - { status: 502, code: r2_error, description: "Upstream R2 error" }
   - route: "PUT /v1/buckets/:id/objects/:key"
-    request: null
-    response: PutObjectResponse
     status: 200
     description: "Upload an object. Key may include slashes. Content-Length header required."
     notes: "Request body is raw bytes (NOT JSON-wrapped). Set Content-Type to match the file (e.g. text/plain, image/png). Fails with 413 if upload exceeds quota."
     operation_id: put_object
-    request_type: null
-    response_type: PutObjectResponse
     errors:
       - { status: 400, code: invalid_request, description: "Missing or invalid body" }
       - { status: 402, code: payment_required, description: "x402 payment needed" }
@@ -185,13 +167,10 @@ routes_map:
       - { status: 413, code: storage_limit_exceeded, description: "Upload would exceed wallet 1 GB limit" }
       - { status: 502, code: r2_error, description: "Upstream R2 error" }
   - route: "GET /v1/buckets/:id/objects"
-    request: null
     response: ObjectListResponse
     status: 200
     description: "List objects in a bucket. Cursor-based pagination."
     operation_id: list_objects
-    request_type: null
-    response_type: ObjectListResponse
     query_params:
       - { name: prefix, type: string, description: "Filter by key prefix (e.g. notes/)" }
       - { name: limit, type: integer, description: "1-1000, default 100" }
@@ -202,51 +181,37 @@ routes_map:
       - { status: 404, code: not_found, description: "Bucket not found" }
       - { status: 502, code: r2_error, description: "Upstream R2 error" }
   - route: "GET /v1/buckets/:id/objects/:key"
-    request: null
     response: "Raw bytes (application/octet-stream)"
     status: 200
     description: "Download an object. Response body is streamed directly."
     operation_id: get_object
-    request_type: null
-    response_type: null
     errors:
       - { status: 402, code: payment_required, description: "x402 payment needed" }
       - { status: 403, code: forbidden, description: "Bucket belongs to a different wallet" }
       - { status: 404, code: not_found, description: "Bucket or object not found" }
       - { status: 502, code: r2_error, description: "Upstream R2 error" }
   - route: "DELETE /v1/buckets/:id/objects/:key"
-    request: null
-    response: DeleteObjectResponse
     status: 200
     description: "Delete an object from a bucket"
     operation_id: delete_object
-    request_type: null
-    response_type: DeleteObjectResponse
     errors:
       - { status: 402, code: payment_required, description: "x402 payment needed" }
       - { status: 403, code: forbidden, description: "Bucket belongs to a different wallet" }
       - { status: 404, code: not_found, description: "Bucket or object not found" }
       - { status: 502, code: r2_error, description: "Upstream R2 error" }
   - route: "GET /v1/buckets/:id/quota"
-    request: null
-    response: GetQuotaResponse
     status: 200
     description: "Get quota and usage for a bucket"
     operation_id: get_quota
-    request_type: null
-    response_type: GetQuotaResponse
     errors:
       - { status: 402, code: payment_required, description: "x402 payment needed" }
       - { status: 403, code: forbidden, description: "Bucket belongs to a different wallet" }
       - { status: 404, code: not_found, description: "Bucket not found" }
   - route: "PUT /v1/buckets/:id/quota"
-    request: SetQuotaRequest
     response: GetQuotaResponse
     status: 200
     description: "Set the storage quota for a bucket. Pass null to reset to default (100 MB)."
     operation_id: set_quota
-    request_type: SetQuotaRequest
-    response_type: GetQuotaResponse
     errors:
       - { status: 400, code: invalid_request, description: "Invalid quota value" }
       - { status: 402, code: payment_required, description: "x402 payment needed" }
@@ -254,26 +219,18 @@ routes_map:
       - { status: 404, code: not_found, description: "Bucket not found" }
       - { status: 502, code: r2_error, description: "Upstream R2 error" }
   - route: "POST /v1/buckets/:id/quota/reconcile"
-    request: null
-    response: ReconcileStorageResponse
     status: 200
     description: "Recompute bucket usage by scanning actual R2 storage. Use when usage_bytes appears incorrect."
-    operation_id: reconcile_quota
-    request_type: null
-    response_type: ReconcileStorageResponse
+    operation_id: reconcile_storage
     errors:
       - { status: 402, code: payment_required, description: "x402 payment needed" }
       - { status: 403, code: forbidden, description: "Bucket belongs to a different wallet" }
       - { status: 404, code: not_found, description: "Bucket not found" }
       - { status: 502, code: r2_error, description: "Upstream R2 error" }
   - route: "POST /v1/buckets/:id/presign"
-    request: CreatePresignRequest
-    response: CreatePresignResponse
     status: 200
     description: "Generate a presigned URL for direct GET or PUT access to an object. GET presign requires object to exist."
-    operation_id: presign_object
-    request_type: CreatePresignRequest
-    response_type: CreatePresignResponse
+    operation_id: create_presign
     errors:
       - { status: 400, code: invalid_request, description: "Invalid key, method, or expires_in" }
       - { status: 402, code: payment_required, description: "x402 payment needed" }

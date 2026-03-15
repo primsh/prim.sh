@@ -16,30 +16,22 @@ routes_map:
   - route: "POST /v1/scaffold"
     description: "Generate a complete prim package from a prim.yaml spec. Returns file manifest with contents."
     operation_id: scaffold
-    request_type: ScaffoldRequest
-    response_type: ScaffoldResponse
     status: 200
     errors:
       - { status: 400, code: invalid_request, description: "Invalid or missing prim.yaml spec" }
   - route: "POST /v1/validate"
     description: "Validate a prim.yaml spec against the schema without generating files."
     operation_id: validate
-    request_type: ValidateRequest
-    response_type: ValidateResponse
     status: 200
     errors:
       - { status: 400, code: invalid_request, description: "Invalid YAML" }
   - route: "GET /v1/schema"
     description: "Return the prim.yaml JSON schema for agents to reference when writing specs."
     operation_id: get_schema
-    request_type: null
-    response_type: GetSchemaResponse
     status: 200
   - route: "GET /v1/ports"
     description: "Return allocated ports and next available port number."
-    operation_id: get_ports
-    request_type: null
-    response_type: ListPortsResponse
+    operation_id: list_ports
     status: 200
 pricing:
   - op: "Scaffold"

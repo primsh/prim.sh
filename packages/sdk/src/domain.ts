@@ -91,6 +91,11 @@ export interface CreateZoneRequest {
   domain: string;
 }
 
+export interface CreateZoneResponse {
+  /** The created zone. */
+  zone: GetZoneResponse;
+}
+
 export interface DomainSearchPrice {
   /** Registration cost in USD. */
   register: number;
@@ -278,7 +283,7 @@ export interface VerifyDomainResponse {
   zone_status: string | null;
 }
 
-export interface SearchDomainsParams {
+export interface SearchDomainParams {
   /** Domain name or keyword to search */
   query?: string;
   /** Comma-separated TLDs (e.g. com,xyz,io) */
@@ -358,8 +363,6 @@ export interface DeleteRecordParams {
   id: string;
 }
 
-export type CreateZoneResponse = Record<string, unknown>;
-
 export type ListZonesResponse = Record<string, unknown>;
 
 export type DeleteZoneResponse = Record<string, unknown>;
@@ -375,7 +378,7 @@ export function createDomainClient(
   baseUrl = "https://domain.prim.sh",
 ) {
   return {
-    async searchDomains(params: SearchDomainsParams): Promise<SearchDomainResponse> {
+    async searchDomain(params: SearchDomainParams): Promise<SearchDomainResponse> {
       const qs = new URLSearchParams();
       if (params.query !== undefined) qs.set("query", String(params.query));
       if (params.tlds !== undefined) qs.set("tlds", String(params.tlds));
@@ -384,7 +387,7 @@ export function createDomainClient(
       const res = await primFetch(url);
       return unwrap<SearchDomainResponse>(res);
     },
-    async quoteDomain(req: QuoteRequest): Promise<QuoteResponse> {
+    async quote(req: QuoteRequest): Promise<QuoteResponse> {
       const url = `${baseUrl}/v1/domains/quote`;
       const res = await primFetch(url, {
         method: "POST",

@@ -133,25 +133,19 @@ ownership: "All mailboxes and domains are scoped to the wallet address extracted
 
 routes_map:
   - route: "POST /v1/mailboxes"
-    request: CreateMailboxRequest
     response: GetMailboxResponse
     status: 201
     description: "Create a mailbox. Optional: username, domain, ttl_ms."
     operation_id: create_mailbox
-    request_type: CreateMailboxRequest
-    response_type: GetMailboxResponse
     errors:
       - { status: 400, code: invalid_request, description: "Missing fields or invalid characters" }
       - { status: 402, code: payment_required, description: "x402 payment needed" }
       - { status: 409, code: username_taken, description: "Username already in use on that domain" }
   - route: "GET /v1/mailboxes"
-    request: null
     response: MailboxListResponse
     status: 200
     description: "List mailboxes owned by the calling wallet (paginated)"
     operation_id: list_mailboxes
-    request_type: null
-    response_type: MailboxListResponse
     query_params:
       - { name: limit, type: integer, description: "1-100, default 20" }
       - { name: after, type: string, description: "Cursor from previous response" }
@@ -159,50 +153,36 @@ routes_map:
       - { status: 402, code: payment_required, description: "x402 payment needed" }
       - { status: 403, code: forbidden, description: "Resource owned by a different wallet" }
   - route: "GET /v1/mailboxes/:id"
-    request: null
-    response: GetMailboxResponse
     status: 200
     description: "Get mailbox metadata including expires_at"
     operation_id: get_mailbox
-    request_type: null
-    response_type: GetMailboxResponse
     errors:
       - { status: 402, code: payment_required, description: "x402 payment needed" }
       - { status: 403, code: forbidden, description: "Resource owned by a different wallet" }
       - { status: 404, code: not_found, description: "Mailbox not found" }
   - route: "DELETE /v1/mailboxes/:id"
-    request: null
-    response: DeleteMailboxResponse
     status: 200
     description: "Permanently delete a mailbox and all messages"
     operation_id: delete_mailbox
-    request_type: null
-    response_type: DeleteMailboxResponse
     errors:
       - { status: 402, code: payment_required, description: "x402 payment needed" }
       - { status: 403, code: forbidden, description: "Resource owned by a different wallet" }
       - { status: 404, code: not_found, description: "Mailbox not found" }
   - route: "POST /v1/mailboxes/:id/renew"
-    request: RenewMailboxRequest
     response: GetMailboxResponse
     status: 200
     description: "Extend mailbox TTL by ttl_ms milliseconds"
     operation_id: renew_mailbox
-    request_type: RenewMailboxRequest
-    response_type: GetMailboxResponse
     errors:
       - { status: 402, code: payment_required, description: "x402 payment needed" }
       - { status: 403, code: forbidden, description: "Resource owned by a different wallet" }
       - { status: 404, code: not_found, description: "Mailbox not found" }
       - { status: 410, code: expired, description: "Mailbox already expired" }
   - route: "GET /v1/mailboxes/:id/messages"
-    request: null
     response: EmailListResponse
     status: 200
     description: "List messages in a mailbox, newest first"
     operation_id: list_messages
-    request_type: null
-    response_type: EmailListResponse
     query_params:
       - { name: limit, type: integer, description: "1-100, default 20" }
       - { name: after, type: integer, description: "Position-based cursor for pagination" }
@@ -211,25 +191,18 @@ routes_map:
       - { status: 403, code: forbidden, description: "Resource owned by a different wallet" }
       - { status: 404, code: not_found, description: "Mailbox not found" }
   - route: "GET /v1/mailboxes/:id/messages/:msgId"
-    request: null
     response: EmailDetail
     status: 200
     description: "Get full message including textBody and htmlBody"
     operation_id: get_message
-    request_type: null
-    response_type: EmailDetail
     errors:
       - { status: 402, code: payment_required, description: "x402 payment needed" }
       - { status: 403, code: forbidden, description: "Resource owned by a different wallet" }
       - { status: 404, code: not_found, description: "Mailbox or message not found" }
   - route: "POST /v1/mailboxes/:id/send"
-    request: SendMessageRequest
-    response: SendMessageResponse
     status: 200
     description: "Send email from a mailbox. Requires to, subject, and body or html."
     operation_id: send_message
-    request_type: SendMessageRequest
-    response_type: SendMessageResponse
     errors:
       - { status: 400, code: invalid_request, description: "Missing required fields" }
       - { status: 402, code: payment_required, description: "x402 payment needed" }
@@ -237,13 +210,10 @@ routes_map:
       - { status: 404, code: not_found, description: "Mailbox not found" }
       - { status: 502, code: stalwart_error, description: "Upstream Stalwart mail server error" }
   - route: "POST /v1/mailboxes/:id/webhooks"
-    request: RegisterWebhookRequest
     response: GetWebhookResponse
     status: 201
     description: "Register a webhook URL for message.received events. Optional secret for HMAC signing."
     operation_id: register_webhook
-    request_type: RegisterWebhookRequest
-    response_type: GetWebhookResponse
     errors:
       - { status: 400, code: invalid_request, description: "Missing or invalid webhook URL" }
       - { status: 402, code: payment_required, description: "x402 payment needed" }
@@ -251,49 +221,36 @@ routes_map:
       - { status: 404, code: not_found, description: "Mailbox not found" }
       - { status: 409, code: conflict, description: "Duplicate webhook URL" }
   - route: "GET /v1/mailboxes/:id/webhooks"
-    request: null
     response: WebhookListResponse
     status: 200
     description: "List webhooks for a mailbox"
     operation_id: list_webhooks
-    request_type: null
-    response_type: WebhookListResponse
     errors:
       - { status: 402, code: payment_required, description: "x402 payment needed" }
       - { status: 403, code: forbidden, description: "Resource owned by a different wallet" }
       - { status: 404, code: not_found, description: "Mailbox not found" }
   - route: "DELETE /v1/mailboxes/:id/webhooks/:whId"
-    request: null
-    response: DeleteWebhookResponse
     status: 200
     description: "Delete a webhook"
     operation_id: delete_webhook
-    request_type: null
-    response_type: DeleteWebhookResponse
     errors:
       - { status: 402, code: payment_required, description: "x402 payment needed" }
       - { status: 403, code: forbidden, description: "Resource owned by a different wallet" }
       - { status: 404, code: not_found, description: "Mailbox or webhook not found" }
   - route: "POST /v1/domains"
-    request: RegisterDomainRequest
     response: GetDomainResponse
     status: 201
     description: "Register a custom domain. Returns required_records for DNS."
     operation_id: register_domain
-    request_type: RegisterDomainRequest
-    response_type: GetDomainResponse
     errors:
       - { status: 400, code: invalid_request, description: "Invalid domain name" }
       - { status: 402, code: payment_required, description: "x402 payment needed" }
       - { status: 409, code: conflict, description: "Domain already registered" }
   - route: "GET /v1/domains"
-    request: null
     response: DomainListResponse
     status: 200
     description: "List registered custom domains (paginated)"
     operation_id: list_domains
-    request_type: null
-    response_type: DomainListResponse
     query_params:
       - { name: limit, type: integer, description: "1-100, default 20" }
       - { name: after, type: string, description: "Cursor from previous response" }
@@ -301,38 +258,26 @@ routes_map:
       - { status: 402, code: payment_required, description: "x402 payment needed" }
       - { status: 403, code: forbidden, description: "Resource owned by a different wallet" }
   - route: "GET /v1/domains/:id"
-    request: null
-    response: GetDomainResponse
     status: 200
     description: "Get domain details and verification status"
     operation_id: get_domain
-    request_type: null
-    response_type: GetDomainResponse
     errors:
       - { status: 402, code: payment_required, description: "x402 payment needed" }
       - { status: 403, code: forbidden, description: "Resource owned by a different wallet" }
       - { status: 404, code: not_found, description: "Domain not found" }
   - route: "POST /v1/domains/:id/verify"
-    request: null
-    response: VerifyDomainResponse
     status: 200
     description: "Verify DNS records. On success: status → verified, dkim_records returned."
     operation_id: verify_domain
-    request_type: null
-    response_type: VerifyDomainResponse
     errors:
       - { status: 402, code: payment_required, description: "x402 payment needed" }
       - { status: 403, code: forbidden, description: "Resource owned by a different wallet" }
       - { status: 404, code: not_found, description: "Domain not found" }
       - { status: 502, code: stalwart_error, description: "DNS verification failed" }
   - route: "DELETE /v1/domains/:id"
-    request: null
-    response: DeleteDomainResponse
     status: 200
     description: "Remove a custom domain registration"
     operation_id: delete_domain
-    request_type: null
-    response_type: DeleteDomainResponse
     errors:
       - { status: 402, code: payment_required, description: "x402 payment needed" }
       - { status: 403, code: forbidden, description: "Resource owned by a different wallet" }

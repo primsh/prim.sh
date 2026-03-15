@@ -60,7 +60,7 @@ export function createTrackClient(
   baseUrl = "https://track.prim.sh",
 ) {
   return {
-    async trackPackage(req: TrackRequest): Promise<TrackResponse> {
+    async track(req: TrackRequest): Promise<TrackResponse> {
       const url = `${baseUrl}/v1/track`;
       const res = await primFetch(url, {
         method: "POST",

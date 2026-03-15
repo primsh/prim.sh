@@ -45,7 +45,7 @@ export const createTools: Tool[] = [
       },
   },
   {
-    name: "create_get_ports",
+    name: "create_list_ports",
     description: "Return allocated ports and next available port number. | Price: $0.01",
     inputSchema: {
         type: "object",
@@ -93,7 +93,7 @@ export async function handleCreateTool(
         return { content: [{ type: "text", text: JSON.stringify(data, null, 2) }] };
       }
 
-      case "create_get_ports": {
+      case "create_list_ports": {
         const res = await primFetch(`${baseUrl}/v1/ports`);
         const data = await res.json();
         if (!res.ok) return errorResult(data);

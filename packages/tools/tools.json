@@ -598,7 +598,7 @@
   {
     "type": "function",
     "function": {
-      "name": "store_quota_reconcile",
+      "name": "store_reconcile_storage",
       "description": "Recompute bucket usage by scanning actual R2 storage. Use when usage_bytes appears incorrect. Price: $0.001 via x402 (USDC on Base).",
       "parameters": {
         "type": "object",
@@ -617,7 +617,7 @@
   {
     "type": "function",
     "function": {
-      "name": "store_presign_object",
+      "name": "store_create_presign",
       "description": "Generate a presigned URL for direct GET or PUT access to an object. GET presign requires object to exist. Price: $0.001 via x402 (USDC on Base).",
       "parameters": {
         "type": "object",
@@ -1455,7 +1455,7 @@
   {
     "type": "function",
     "function": {
-      "name": "token_deploy",
+      "name": "token_create_token",
       "description": "Deploy a new ERC-20 token. Returns immediately with deployStatus: 'pending'. Poll GET /v1/tokens/:id until deployStatus is 'confirmed' before minting or pooling. Price: $0.10 via x402 (USDC on Base).",
       "parameters": {
         "type": "object",
@@ -1555,7 +1555,7 @@
   {
     "type": "function",
     "function": {
-      "name": "token_supply",
+      "name": "token_get_supply",
       "description": "Live on-chain total supply from contract. Price: $0.001 via x402 (USDC on Base).",
       "parameters": {
         "type": "object",
@@ -1878,7 +1878,7 @@
   {
     "type": "function",
     "function": {
-      "name": "domain_search",
+      "name": "domain_search_domain",
       "description": "Check availability and pricing for a domain query. Price: $0.001 via x402 (USDC on Base).",
       "parameters": {
         "type": "object",
@@ -2289,7 +2289,7 @@
   {
     "type": "function",
     "function": {
-      "name": "track_track_package",
+      "name": "track_track",
       "description": "Track a package by tracking number and carrier. Returns status, ETA, and full event history. Price: $0.04 via x402 (USDC on Base).",
       "parameters": {
         "type": "object",
@@ -2463,7 +2463,7 @@
   {
     "type": "function",
     "function": {
-      "name": "create_get_ports",
+      "name": "create_list_ports",
       "description": "Return allocated ports and next available port number. Price: $0.01 via x402 (USDC on Base).",
       "parameters": {
         "type": "object",
