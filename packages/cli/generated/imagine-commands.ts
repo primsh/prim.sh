@@ -6,7 +6,7 @@
 import { createPrimFetch } from "@primsh/x402-client";
 import { getConfig } from "@primsh/keystore";
 import { createImagineClient } from "@primsh/sdk";
-import { getFlag, hasFlag, resolvePassphrase } from "./flags.ts";
+import { getFlag, hasFlag, resolvePassphrase } from "../src/flags.ts";
 
 export function resolveImagineUrl(argv: string[]): string {
   const flag = getFlag("url", argv);

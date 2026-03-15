@@ -3,7 +3,7 @@
 // Source: packages/imagine/generated/openapi.yaml
 // Regenerate: pnpm gen:sdk
 
-import { unwrap } from "./shared.js";
+import { unwrap } from "../src/shared.js";
 
 // ── Types ──────────────────────────────────────────────────────────────────
 

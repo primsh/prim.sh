@@ -22,7 +22,7 @@ import { parse as parseYaml } from "yaml";
 import { primsForInterface, specPath } from "./lib/primitives.js";
 
 const ROOT = resolve(import.meta.dir, "..");
-const OUTPUT_DIR = join(ROOT, "packages", "tools");
+const OUTPUT_DIR = join(ROOT, "packages", "tools", "generated");
 const CHECK_MODE = process.argv.includes("--check");
 
 let anyFailed = false;
@@ -94,7 +94,7 @@ interface OpenAiFunction {
 
 // ── operationId → tool name mapping ────────────────────────────────────────
 //
-// These match the MCP tool names exactly (from packages/mcp/src/tools/).
+// These match the MCP tool names exactly (from packages/mcp/generated/tools/).
 // Grouped by prim. healthCheck and free-only ops (getLlmsTxt, llmsTxt) are excluded.
 
 const OPERATION_ID_TO_TOOL_NAME: Record<string, string> = {

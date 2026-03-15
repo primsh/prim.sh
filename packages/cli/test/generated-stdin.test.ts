@@ -12,13 +12,13 @@ import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
 
-const CLI_SRC = resolve(dirname(fileURLToPath(import.meta.url)), "../src");
+const CLI_GEN = resolve(dirname(fileURLToPath(import.meta.url)), "../generated");
 
 describe("infer-commands.ts (generated)", () => {
-  const source = readFileSync(resolve(CLI_SRC, "infer-commands.ts"), "utf-8");
+  const source = readFileSync(resolve(CLI_GEN, "infer-commands.ts"), "utf-8");
 
   it("imports readStdin", () => {
-    expect(source).toContain('import { readStdin } from "./stdin.ts"');
+    expect(source).toContain('import { readStdin } from "../src/stdin.ts"');
   });
 
   it("uses let for messages (stdin-enabled field)", () => {
@@ -45,7 +45,7 @@ describe("infer-commands.ts (generated)", () => {
 });
 
 describe("imagine-commands.ts (generated, no body props)", () => {
-  const source = readFileSync(resolve(CLI_SRC, "imagine-commands.ts"), "utf-8");
+  const source = readFileSync(resolve(CLI_GEN, "imagine-commands.ts"), "utf-8");
 
   it("does NOT import readStdin when stdin_field has no matching body prop", () => {
     expect(source).not.toContain("readStdin");

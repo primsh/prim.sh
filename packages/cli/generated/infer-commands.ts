@@ -6,8 +6,8 @@
 import { createPrimFetch } from "@primsh/x402-client";
 import { getConfig } from "@primsh/keystore";
 import { createInferClient } from "@primsh/sdk";
-import { getFlag, hasFlag, resolvePassphrase } from "./flags.ts";
-import { readStdin } from "./stdin.ts";
+import { getFlag, hasFlag, resolvePassphrase } from "../src/flags.ts";
+import { readStdin } from "../src/stdin.ts";
 
 export function resolveInferUrl(argv: string[]): string {
   const flag = getFlag("url", argv);

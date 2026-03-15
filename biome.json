@@ -16,12 +16,12 @@
     "lineWidth": 100,
     "includes": [
       "**",
-      "!**/src/tools/**/*.ts",
+      "!**/generated/tools/**/*.ts",
       "!**/*-commands.ts",
-      "!**/tools/**/*.json",
+      "!**/tools/generated/**/*.json",
       "!**/site/skills.json",
       "!**/scripts/pre-deploy.ts",
-      "!**/packages/sdk/src/**"
+      "!**/packages/sdk/generated/**"
     ]
   },
   "linter": {

@@ -5,20 +5,20 @@
 
 import { createPrimFetch } from "@primsh/x402-client";
 import type { CreatePrimFetchConfig } from "@primsh/x402-client";
-import { createCreateClient } from "./create.ts";
-import { createDomainClient } from "./domain.ts";
-import { createEmailClient } from "./email.ts";
-import { createFaucetClient } from "./faucet.ts";
-import { createGateClient } from "./gate.ts";
-import { createImagineClient } from "./imagine.ts";
-import { createInferClient } from "./infer.ts";
-import { createMemClient } from "./mem.ts";
-import { createSearchClient } from "./search.ts";
-import { createSpawnClient } from "./spawn.ts";
-import { createStoreClient } from "./store.ts";
-import { createTokenClient } from "./token.ts";
-import { createTrackClient } from "./track.ts";
-import { createWalletClient } from "./wallet.ts";
+import { createCreateClient } from "../generated/create.ts";
+import { createDomainClient } from "../generated/domain.ts";
+import { createEmailClient } from "../generated/email.ts";
+import { createFaucetClient } from "../generated/faucet.ts";
+import { createGateClient } from "../generated/gate.ts";
+import { createImagineClient } from "../generated/imagine.ts";
+import { createInferClient } from "../generated/infer.ts";
+import { createMemClient } from "../generated/mem.ts";
+import { createSearchClient } from "../generated/search.ts";
+import { createSpawnClient } from "../generated/spawn.ts";
+import { createStoreClient } from "../generated/store.ts";
+import { createTokenClient } from "../generated/token.ts";
+import { createTrackClient } from "../generated/track.ts";
+import { createWalletClient } from "../generated/wallet.ts";
 
 /** Configuration for createPrimClient(). Passes through all CreatePrimFetchConfig fields. */
 export type PrimClientConfig = CreatePrimFetchConfig;

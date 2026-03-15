@@ -6,7 +6,7 @@
 import { createPrimFetch } from "@primsh/x402-client";
 import { getConfig } from "@primsh/keystore";
 import { createTrackClient } from "@primsh/sdk";
-import { getFlag, hasFlag, resolvePassphrase } from "./flags.ts";
+import { getFlag, hasFlag, resolvePassphrase } from "../src/flags.ts";
 
 export function resolveTrackUrl(argv: string[]): string {
   const flag = getFlag("url", argv);

@@ -4,12 +4,12 @@
   "description": "Function calling tool definitions for prim.sh primitives",
   "license": "MIT",
   "type": "module",
-  "main": "tools.json",
+  "main": "generated/tools.json",
   "exports": {
-    ".": "./tools.json",
-    "./tools.json": "./tools.json",
-    "./manifest.json": "./manifest.json",
-    "./*.json": "./*.json"
+    ".": "./generated/tools.json",
+    "./tools.json": "./generated/tools.json",
+    "./manifest.json": "./generated/manifest.json",
+    "./*.json": "./generated/*.json"
   },
-  "files": ["*.json"]
+  "files": ["generated/*.json"]
 }

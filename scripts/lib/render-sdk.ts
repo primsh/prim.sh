@@ -502,7 +502,7 @@ export function renderSdkClient(primId: string, spec: OpenApiSpec): string {
 
   // ── Types ──────────────────────────────────────────────────────────────
 
-  out.push('import { unwrap } from "./shared.js";');
+  out.push('import { unwrap } from "../src/shared.js";');
   out.push("");
   out.push("// ── Types ──────────────────────────────────────────────────────────────────");
   out.push("");

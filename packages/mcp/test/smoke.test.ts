@@ -4,9 +4,9 @@ import { describe, expect, it, vi } from "vitest";
 // Check 1: startMcpServer export defined
 import { isPrimitive, startMcpServer } from "../src/server.ts";
 
-import { faucetTools, handleFaucetTool } from "../src/tools/faucet.ts";
+import { faucetTools, handleFaucetTool } from "../generated/tools/faucet.ts";
 // Check 3: Tool arrays
-import { handleWalletTool, walletTools } from "../src/tools/wallet.ts";
+import { handleWalletTool, walletTools } from "../generated/tools/wallet.ts";
 
 describe("MCP package smoke tests", () => {
   // Check 1: startMcpServer export is defined
