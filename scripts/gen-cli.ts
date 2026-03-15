@@ -16,7 +16,7 @@
  *   bun scripts/gen-cli.ts search   # regenerate one prim by id
  */
 
-import { existsSync, readFileSync, writeFileSync } from "node:fs";
+import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { join, resolve } from "node:path";
 import { parse as parseYaml } from "yaml";
 import {
@@ -891,15 +891,15 @@ function generateCommandFile(spec: OpenAPISpec, id: string, routesMap?: RouteMap
   if (prim.isFaucetLike) {
     lines.push(`import { getDefaultAddress } from "@primsh/keystore";`);
     lines.push(`import { ${sdkClientName} } from "@primsh/sdk";`);
-    lines.push(`import { getFlag, hasFlag } from "./flags.ts";`);
+    lines.push(`import { getFlag, hasFlag } from "../src/flags.ts";`);
   } else {
     lines.push(`import { createPrimFetch } from "@primsh/x402-client";`);
     lines.push(`import { getConfig } from "@primsh/keystore";`);
     lines.push(`import { ${sdkClientName} } from "@primsh/sdk";`);
-    lines.push(`import { getFlag, hasFlag, resolvePassphrase } from "./flags.ts";`);
+    lines.push(`import { getFlag, hasFlag, resolvePassphrase } from "../src/flags.ts";`);
   }
   if (hasStdin) {
-    lines.push(`import { readStdin } from "./stdin.ts";`);
+    lines.push(`import { readStdin } from "../src/stdin.ts";`);
   }
   lines.push("");
 
@@ -1013,7 +1013,7 @@ function generateCommandFile(spec: OpenAPISpec, id: string, routesMap?: RouteMap
 // ── Main ──────────────────────────────────────────────────────────────────────
 
 let anyFailed = false;
-const cliSrcDir = join(ROOT, "packages/cli/src");
+const cliGenDir = join(ROOT, "packages/cli/generated");
 
 // Load all primitives to get routes_map (for stdin_field)
 const allPrims = loadPrimitives(ROOT);
@@ -1037,7 +1037,7 @@ for (const id of primsToProcess) {
     continue;
   }
 
-  const outPath = join(cliSrcDir, `${id}-commands.ts`);
+  const outPath = join(cliGenDir, `${id}-commands.ts`);
 
   let spec: OpenAPISpec;
   try {
@@ -1059,31 +1059,31 @@ for (const id of primsToProcess) {
     continue;
   }
 
+  // Check for manually maintained file in src/ (old location)
+  const srcPath = join(ROOT, "packages/cli/src", `${id}-commands.ts`);
+  const hasSrcFile = existsSync(srcPath);
+  const srcIsManual = hasSrcFile && !readFileSync(srcPath, "utf8").includes("// THIS FILE IS GENERATED");
+
   const existing = existsSync(outPath) ? readFileSync(outPath, "utf8") : null;
-  const isGenerated = existing?.includes("// THIS FILE IS GENERATED") ?? false;
   const isNew = existing === null;
   const changed = existing !== generated;
 
-  if (CHECK_MODE) {
+  if (srcIsManual) {
+    // Manually maintained in src/ — don't generate
+    console.log(`  – packages/cli/src/${id}-commands.ts (manually maintained — skipping)`);
+  } else if (CHECK_MODE) {
     if (isNew) {
-      // New file doesn't exist yet — not a check failure
-      console.log(`  – packages/cli/src/${id}-commands.ts (new — run pnpm gen:cli)`);
-    } else if (!isGenerated) {
-      console.log(`  – packages/cli/src/${id}-commands.ts (manually maintained, skipped)`);
+      console.log(`  – packages/cli/generated/${id}-commands.ts (new — run pnpm gen:cli)`);
     } else if (changed) {
-      console.error(`  ✗ packages/cli/src/${id}-commands.ts is out of date — run pnpm gen:cli`);
+      console.error(`  ✗ packages/cli/generated/${id}-commands.ts is out of date — run pnpm gen:cli`);
       anyFailed = true;
     } else {
-      console.log(`  ✓ packages/cli/src/${id}-commands.ts`);
+      console.log(`  ✓ packages/cli/generated/${id}-commands.ts`);
     }
   } else {
-    if (!isNew && !isGenerated) {
-      console.log(`  – packages/cli/src/${id}-commands.ts (manually maintained — skipping)`);
-      console.log(`    Tip: add "// BEGIN:PRIM:CLI" as first line to opt in to generation`);
-    } else {
-      writeFileSync(outPath, generated);
-      console.log(`  ${changed ? "↺" : "✓"} packages/cli/src/${id}-commands.ts`);
-    }
+    mkdirSync(cliGenDir, { recursive: true });
+    writeFileSync(outPath, generated);
+    console.log(`  ${changed ? "↺" : "✓"} packages/cli/generated/${id}-commands.ts`);
   }
 }
 

@@ -1,3 +1,7 @@
 # Generated files — collapsed in GitHub PR diffs
 packages/*/generated/** linguist-generated=true
 packages/*/README.md linguist-generated=true
+packages/sdk/generated/** linguist-generated=true
+packages/mcp/generated/** linguist-generated=true
+packages/cli/generated/** linguist-generated=true
+packages/tools/generated/** linguist-generated=true

@@ -2,11 +2,11 @@
 import { Server } from "@modelcontextprotocol/sdk/server/index.js";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
 import { CallToolRequestSchema, ListToolsRequestSchema } from "@modelcontextprotocol/sdk/types.js";
-import { faucetTools, handleFaucetTool } from "./tools/faucet.js";
-import { handleReportTool, reportTools } from "./tools/report.js";
-import { handleSearchTool, searchTools } from "./tools/search.js";
-import { handleStoreTool, storeTools } from "./tools/store.js";
-import { handleWalletTool, walletTools } from "./tools/wallet.js";
+import { faucetTools, handleFaucetTool } from "../generated/tools/faucet.js";
+import { handleReportTool, reportTools } from "../generated/tools/report.js";
+import { handleSearchTool, searchTools } from "../generated/tools/search.js";
+import { handleStoreTool, storeTools } from "../generated/tools/store.js";
+import { handleWalletTool, walletTools } from "../generated/tools/wallet.js";
 import { createMcpFetch, getBaseUrl } from "./x402.js";
 
 /** Only primitives that are actually deployed. Update when new primitives go live. */

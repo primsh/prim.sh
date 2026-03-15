@@ -20,7 +20,7 @@ import { renderSdkClient } from "./lib/render-sdk.js";
 import type { OpenApiSpec } from "./lib/render-sdk.js";
 
 const ROOT = resolve(import.meta.dir, "..");
-const OUTPUT_DIR = join(ROOT, "packages", "sdk", "src");
+const OUTPUT_DIR = join(ROOT, "packages", "sdk", "generated");
 const CHECK_MODE = process.argv.includes("--check");
 
 // Optional positional arg: single prim filter
@@ -146,9 +146,9 @@ if (generatedIds.length > 0) {
     "// Source: packages/<id>/generated/openapi.yaml (all prims with rest interface)",
     "// Regenerate: pnpm gen:sdk",
     "",
-    'export { unwrap, PrimError } from "./shared.js";',
-    'export { createPrimClient } from "./client.js";',
-    'export type { PrimClientConfig } from "./client.js";',
+    'export { unwrap, PrimError } from "../src/shared.js";',
+    'export { createPrimClient } from "../src/client.js";',
+    'export type { PrimClientConfig } from "../src/client.js";',
   ];
 
   for (const id of allBarrelIds) {
@@ -191,12 +191,12 @@ if (generatedIds.length > 0) {
   const pkgPath = join(ROOT, "packages", "sdk", "package.json");
   const pkg = JSON.parse(readFileSync(pkgPath, "utf8"));
   const exports: Record<string, string> = {
-    ".": "./src/index.ts",
+    ".": "./generated/index.ts",
     "./client": "./src/client.ts",
     "./shared": "./src/shared.ts",
   };
   for (const id of allBarrelIds) {
-    exports[`./${id}`] = `./src/${id}.ts`;
+    exports[`./${id}`] = `./generated/${id}.ts`;
   }
   pkg.exports = exports;
   applyFile(pkgPath, `${JSON.stringify(pkg, null, 2)}\n`);

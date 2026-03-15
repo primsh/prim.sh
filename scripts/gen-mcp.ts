@@ -3,7 +3,7 @@
 /**
  * gen-mcp.ts — MCP tool generator
  *
- * Reads packages/<id>/openapi.yaml and generates packages/mcp/src/tools/<id>.ts.
+ * Reads packages/<id>/openapi.yaml and generates packages/mcp/generated/tools/<id>.ts.
  * OpenAPI is the single source of truth for tool names, descriptions, and schemas.
  *
  * Usage:
@@ -18,13 +18,13 @@
  *   Files without markers are fully written on first run.
  */
 
-import { existsSync, readFileSync, writeFileSync } from "node:fs";
-import { join, resolve } from "node:path";
+import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
+import { dirname, join, resolve } from "node:path";
 import { parse as parseYaml } from "yaml";
 import { primsForInterface, specPath } from "./lib/primitives.js";
 
 const ROOT = resolve(import.meta.dir, "..");
-const TOOLS_DIR = join(ROOT, "packages/mcp/src/tools");
+const TOOLS_DIR = join(ROOT, "packages/mcp/generated/tools");
 const CHECK_MODE = process.argv.includes("--check");
 
 let anyFailed = false;
@@ -583,6 +583,7 @@ function applyOrCheck(filePath: string, content: string, label: string): void {
       console.log(`  ✓ ${label}`);
     }
   } else {
+    mkdirSync(dirname(filePath), { recursive: true });
     writeFileSync(filePath, content);
     console.log(`  ${changed ? "↺" : "✓"} ${label}`);
   }
@@ -634,7 +635,7 @@ for (const prim of PRIMS) {
     finalContent = buildFullFile(prim, toolsDef, handlerDef);
   }
 
-  applyOrCheck(outPath, finalContent, `packages/mcp/src/tools/${prim}.ts`);
+  applyOrCheck(outPath, finalContent, `packages/mcp/generated/tools/${prim}.ts`);
 }
 
 if (CHECK_MODE && anyFailed) {

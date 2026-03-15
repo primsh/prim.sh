@@ -3,9 +3,9 @@
 // Source: packages/<id>/generated/openapi.yaml (all prims with rest interface)
 // Regenerate: pnpm gen:sdk
 
-export { unwrap, PrimError } from "./shared.js";
-export { createPrimClient } from "./client.js";
-export type { PrimClientConfig } from "./client.js";
+export { unwrap, PrimError } from "../src/shared.js";
+export { createPrimClient } from "../src/client.js";
+export type { PrimClientConfig } from "../src/client.js";
 export * from "./wallet.js";
 export * from "./faucet.js";
 export * from "./gate.js";
