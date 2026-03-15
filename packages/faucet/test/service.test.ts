@@ -1,4 +1,6 @@
 // SPDX-License-Identifier: Apache-2.0
+// THIS FILE IS GENERATED — DO NOT EDIT
+// Regenerate: pnpm gen:tests
 import { describe, it, vi } from "vitest";
 
 vi.hoisted(() => {
@@ -26,7 +28,6 @@ import {
   dripEth as _dripEth,
 } from "../src/service.ts";
 
-// BEGIN:GENERATED:UNIT
 describe("faucet.sh service", () => {
   describe("refillTreasury", () => {
     // TODO: set up db/provider mocks to return valid data, then replace .todo with .test
@@ -43,4 +44,3 @@ describe("faucet.sh service", () => {
     it.todo("resolves with valid input");
   });
 });
-// END:GENERATED:UNIT

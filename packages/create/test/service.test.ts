@@ -1,4 +1,6 @@
 // SPDX-License-Identifier: Apache-2.0
+// THIS FILE IS GENERATED — DO NOT EDIT
+// Regenerate: pnpm gen:tests
 import { describe, it, vi } from "vitest";
 
 vi.hoisted(() => {
@@ -9,7 +11,6 @@ vi.mock("yaml");
 
 import { scaffold as _scaffold, validate as _validate } from "../src/service.ts";
 
-// BEGIN:GENERATED:UNIT
 describe("create.sh service", () => {
   describe("scaffold", () => {
     // TODO: set up db/provider mocks to return valid data, then replace .todo with .test
@@ -27,4 +28,3 @@ describe("create.sh service", () => {
     it.todo("returns invalid_request on error");
   });
 });
-// END:GENERATED:UNIT

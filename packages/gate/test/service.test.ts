@@ -1,4 +1,8 @@
 // SPDX-License-Identifier: Apache-2.0
+// THIS FILE IS GENERATED — DO NOT EDIT
+// Regenerate: pnpm gen:tests
+// THIS FILE IS GENERATED — DO NOT EDIT
+// Regenerate: pnpm gen:tests
 import { describe, it, vi } from "vitest";
 
 vi.hoisted(() => {
@@ -21,7 +25,6 @@ vi.mock("../src/db.ts", () => ({
 
 import { redeemInvite as _redeemInvite } from "../src/service.ts";
 
-// BEGIN:GENERATED:UNIT
 describe("gate.sh service", () => {
   describe("redeemInvite", () => {
     // TODO: set up db/provider mocks to return valid data, then replace .todo with .test
@@ -43,4 +46,3 @@ describe("gate.sh service", () => {
     it.todo("returns fund_error on error");
   });
 });
-// END:GENERATED:UNIT
