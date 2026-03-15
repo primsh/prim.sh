@@ -126,10 +126,10 @@ Request:
   user_data  string    optional  Cloud-init script to run on first boot.
 
 Response (201):
-  server             ServerResponse  Created server object (initial status: "initializing").
-  action             ActionResponse  Action object tracking the provisioning progress.
-  deposit_charged    string          USDC charged for this server as a decimal string.
-  deposit_remaining  string          Remaining USDC deposit balance as a decimal string.
+  server             GetServerResponse  Created server object (initial status: "initializing").
+  action             GetActionResponse  Action object tracking the provisioning progress.
+  deposit_charged    string             USDC charged for this server as a decimal string.
+  deposit_remaining  string             Remaining USDC deposit balance as a decimal string.
 
 Errors:
   400  invalid_request        Missing required fields
@@ -217,7 +217,7 @@ Path params:
   id  string  required  id parameter
 
 Response (200):
-  action  ActionResponse  Action object for the requested operation.
+  action  GetActionResponse  Action object for the requested operation.
 
 Errors:
   402  payment_required  x402 payment needed
@@ -237,7 +237,7 @@ Path params:
   id  string  required  id parameter
 
 Response (200):
-  action  ActionResponse  Action object for the requested operation.
+  action  GetActionResponse  Action object for the requested operation.
 
 Errors:
   402  payment_required  x402 payment needed
@@ -257,7 +257,7 @@ Path params:
   id  string  required  id parameter
 
 Response (200):
-  action  ActionResponse  Action object for the requested operation.
+  action  GetActionResponse  Action object for the requested operation.
 
 Errors:
   402  payment_required  x402 payment needed
@@ -281,9 +281,9 @@ Request:
   upgrade_disk  boolean  optional  Upgrade disk along with CPU/RAM. Irreversible if true. Default false.
 
 Response (200):
-  action         ActionResponse  Action object (command: "resize").
-  new_type       string          Target server type after resize.
-  deposit_delta  string          USDC deposit change as a decimal string. Positive = charged, negative = refunded.
+  action         GetActionResponse  Action object (command: "resize").
+  new_type       string             Target server type after resize.
+  deposit_delta  string             USDC deposit change as a decimal string. Positive = charged, negative = refunded.
 
 Errors:
   400  invalid_request   Missing type field or invalid value
@@ -307,8 +307,8 @@ Request:
   image  string  required  OS image slug to rebuild with (e.g. "debian-12").
 
 Response (200):
-  action         ActionResponse  Action object (command: "rebuild").
-  root_password  string | null   New root password if no SSH keys configured. Null if SSH keys are installed.
+  action         GetActionResponse  Action object (command: "rebuild").
+  root_password  string | null      New root password if no SSH keys configured. Null if SSH keys are installed.
 
 Errors:
   400  invalid_request   Missing image field

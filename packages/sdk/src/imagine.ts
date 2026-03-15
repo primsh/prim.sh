@@ -15,7 +15,7 @@ export type GenerateRequest = Record<string, unknown>;
 
 export type GenerateResponse = Record<string, unknown>;
 
-export type ModelsResponse = Record<string, unknown>;
+export type ListModelsResponse = Record<string, unknown>;
 
 export type UpscaleRequest = Record<string, unknown>;
 
@@ -55,10 +55,10 @@ export function createImagineClient(
       });
       return unwrap<UpscaleResponse>(res);
     },
-    async listModels(): Promise<ModelsResponse> {
+    async listModels(): Promise<ListModelsResponse> {
       const url = `${baseUrl}/v1/models`;
       const res = await primFetch(url);
-      return unwrap<ModelsResponse>(res);
+      return unwrap<ListModelsResponse>(res);
     },
   };
 }

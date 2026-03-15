@@ -14,8 +14,8 @@ Part of [prim.sh](https://prim.sh) — zero signup, one payment token, infinite 
 |-------|-------------|-------|---------|----------|
 | `POST /v1/scaffold` | Generate a complete prim package from a prim.yaml spec. Returns file manifest with contents. | $0.01 | `ScaffoldRequest` | `ScaffoldResponse` |
 | `POST /v1/validate` | Validate a prim.yaml spec against the schema without generating files. | $0.01 | `ValidateRequest` | `ValidateResponse` |
-| `GET /v1/schema` | Return the prim.yaml JSON schema for agents to reference when writing specs. | $0.01 | `—` | `SchemaResponse` |
-| `GET /v1/ports` | Return allocated ports and next available port number. | $0.01 | `—` | `PortsResponse` |
+| `GET /v1/schema` | Return the prim.yaml JSON schema for agents to reference when writing specs. | $0.01 | `—` | `GetSchemaResponse` |
+| `GET /v1/ports` | Return allocated ports and next available port number. | $0.01 | `—` | `ListPortsResponse` |
 
 ## Pricing
 
@@ -51,13 +51,13 @@ Part of [prim.sh](https://prim.sh) — zero signup, one payment token, infinite 
 | `valid` | `boolean` | Whether the spec is valid |
 | `errors` | `string[]` | Validation errors (empty if valid) |
 
-### `SchemaResponse`
+### `GetSchemaResponse`
 
 | Field | Type | Description |
 |-------|------|-------------|
 | `schema` | `Record<string, unknown>` | JSON Schema for prim.yaml |
 
-### `PortsResponse`
+### `ListPortsResponse`
 
 | Field | Type | Description |
 |-------|------|-------------|

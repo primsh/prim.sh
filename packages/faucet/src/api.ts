@@ -75,7 +75,7 @@ export interface FaucetAvailability {
   retry_after_ms: number;
 }
 
-export interface FaucetStatusResponse {
+export interface GetFaucetStatusResponse {
   /** The queried wallet address (checksummed). */
   address: string;
   /** USDC faucet availability (2-hour cooldown). */

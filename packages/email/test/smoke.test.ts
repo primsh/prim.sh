@@ -34,11 +34,11 @@ vi.mock("../src/service.ts", async (importOriginal) => {
   };
 });
 
-import type { MailboxResponse } from "../src/api.ts";
+import type { GetMailboxResponse } from "../src/api.ts";
 import app from "../src/index.ts";
 import { createMailbox } from "../src/service.ts";
 
-const MOCK_MAILBOX: MailboxResponse = {
+const MOCK_MAILBOX: GetMailboxResponse = {
   id: "mbx_abc123",
   address: "abc123@email.prim.sh",
   username: "abc123",
@@ -88,7 +88,7 @@ describe("email.sh app", () => {
     });
 
     expect(res.status).toBe(201);
-    const body = (await res.json()) as MailboxResponse;
+    const body = (await res.json()) as GetMailboxResponse;
     expect(body.id).toBe("mbx_abc123");
     expect(body.address).toBe("abc123@email.prim.sh");
     expect(body.status).toBe("active");

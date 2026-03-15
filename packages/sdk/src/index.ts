@@ -12,12 +12,13 @@ export * from "./gate.js";
 export * from "./store.js";
 export * from "./search.js";
 export * from "./spawn.js";
-export * from "./email.js";
+export { CreateMailboxRequest, DeleteDomainResponse, DeleteMailboxResponse, DeleteWebhookResponse, DnsRecord, EmailAddress, EmailDetail, EmailMessage, GetDomainResponse, GetMailboxResponse, GetWebhookResponse, RegisterDomainRequest, RegisterWebhookRequest, RenewMailboxRequest, SendMessageRequest, SendMessageResponse, VerificationResult, VerifyDomainResponse, ListMailboxesParams, GetMailboxParams, DeleteMailboxParams, RenewMailboxParams, ListMessagesParams, GetMessageParams, SendMessageParams, RegisterWebhookParams, ListWebhooksParams, DeleteWebhookParams, ListDomainsParams, GetDomainParams, DeleteDomainParams, VerifyDomainParams, ListMailboxesResponse, ListMessagesResponse, ListWebhooksResponse, ListDomainsResponse, createEmailClient } from "./email.js";
 export * from "./token.js";
 export * from "./mem.js";
-export * from "./domain.js";
+export { ActivateDomainResponse, BatchCreateEntry, BatchDeleteEntry, BatchRecordsRequest, BatchRecordsResponse, BatchUpdateEntry, CreateRecordRequest, CreateZoneRequest, DomainSearchPrice, DomainSearchResult, GetRecordResponse, GetRegistrationStatusResponse, GetZoneResponse, MailSetupRecordResult, NsVerifyResult, QuoteRequest, QuoteResponse, RecordVerifyResult, SearchDomainResponse, SetupMailRequest, SetupMailResponse, UpdateRecordRequest, SearchDomainsParams, GetDomainStatusParams, ListZonesParams, GetZoneParams, DeleteZoneParams, ActivateZoneParams, VerifyZoneParams, SetupMailParams, BatchRecordsParams, CreateRecordParams, ListRecordsParams, GetRecordParams, UpdateRecordParams, DeleteRecordParams, CreateZoneResponse, ListZonesResponse, DeleteZoneResponse, ListRecordsResponse, DeleteRecordResponse, createDomainClient } from "./domain.js";
+// Skipped from domain: VerifyDomainResponse (name collision)
 export * from "./track.js";
-export { ChatRequest, ChatResponse, Choice, ContentPart, EmbedRequest, EmbedResponse, EmbeddingData, Message, ModelInfo, ModelPricing, ModelsResponse, Tool, ToolCall, Usage, createInferClient } from "./infer.js";
+export { ChatRequest, ChatResponse, Choice, ContentPart, EmbedRequest, EmbedResponse, EmbeddingData, ListModelsResponse, Message, ModelInfo, ModelPricing, Tool, ToolCall, Usage, createInferClient } from "./infer.js";
 export * from "./create.js";
 export { DescribeRequest, DescribeResponse, GenerateRequest, GenerateResponse, UpscaleRequest, UpscaleResponse, createImagineClient } from "./imagine.js";
-// Skipped from imagine: ModelsResponse (name collision)
+// Skipped from imagine: ListModelsResponse (name collision)

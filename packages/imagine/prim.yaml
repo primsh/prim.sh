@@ -102,7 +102,7 @@ routes_map:
       - { status: 502, code: provider_error, description: "Upstream provider error" }
   - route: "GET /v1/models"
     request: null
-    response: ModelsResponse
+    response: ListModelsResponse
     status: 200
     description: "List available image models with capabilities and pricing."
     operation_id: list_models

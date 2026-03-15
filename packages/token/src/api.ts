@@ -43,7 +43,7 @@ export interface CreateTokenRequest {
   maxSupply?: string | null;
 }
 
-export interface TokenResponse {
+export interface GetTokenResponse {
   /** Token ID (e.g. "tok_abc123"). */
   id: string;
   /** Deployed contract address. Null while deploy_status is "pending". */
@@ -90,7 +90,7 @@ export interface MintResponse {
   status: "pending";
 }
 
-export interface SupplyResponse {
+export interface GetSupplyResponse {
   /** Token ID. */
   token_id: string;
   /** Deployed contract address. */
@@ -108,7 +108,7 @@ export interface CreatePoolRequest {
   feeTier?: number;
 }
 
-export interface PoolResponse {
+export interface GetPoolResponse {
   /** Uniswap V3 pool contract address. */
   pool_address: string;
   /** First token address in the pool pair. */
@@ -134,7 +134,7 @@ export interface LiquidityApproval {
   amount: string;
 }
 
-export interface LiquidityParamsResponse {
+export interface GetLiquidityParamsResponse {
   /** Uniswap V3 NonfungiblePositionManager contract address. */
   position_manager_address: string;
   /** First token address. */

@@ -32,7 +32,7 @@ export interface ValidateResponse {
   errors: string[];
 }
 
-export interface SchemaResponse {
+export interface GetSchemaResponse {
   /** JSON Schema for prim.yaml */
   schema: Record<string, unknown>;
 }
@@ -44,7 +44,7 @@ export interface PortAllocation {
   port: number;
 }
 
-export interface PortsResponse {
+export interface ListPortsResponse {
   /** Currently allocated ports */
   allocated: PortAllocation[];
   /** Next available port number */

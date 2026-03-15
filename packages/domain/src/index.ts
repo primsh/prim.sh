@@ -18,26 +18,26 @@ import {
   encodePaymentRequiredHeader,
 } from "@x402/core/http";
 import type {
-  ActivateResponse,
+  ActivateDomainResponse,
   BatchRecordsRequest,
   BatchRecordsResponse,
-  ConfigureNsResponse,
+  ConfigureNameserversResponse,
   CreateRecordRequest,
   CreateZoneRequest,
   CreateZoneResponse,
-  DomainSearchResponse,
-  MailSetupRequest,
-  MailSetupResponse,
+  SearchDomainResponse,
+  SetupMailRequest,
+  SetupMailResponse,
   QuoteRequest,
   QuoteResponse,
-  RecordResponse,
+  GetRecordResponse,
   RecoverRequest,
   RecoverResponse,
   RegisterResponse,
-  RegistrationStatusResponse,
+  GetRegistrationStatusResponse,
   UpdateRecordRequest,
-  VerifyResponse,
-  ZoneResponse,
+  VerifyDomainResponse,
+  GetZoneResponse,
 } from "./api.ts";
 import { getQuoteById } from "./db.ts";
 import {
@@ -303,7 +303,7 @@ app.post("/v1/domains/:domain/configure-ns", async (c) => {
       result.status as 502 | 503,
     );
   }
-  return c.json(result.data as ConfigureNsResponse, 200);
+  return c.json(result.data as ConfigureNameserversResponse, 200);
 });
 
 // GET /v1/domains/:domain/status — Registration status (post-registration pipeline)
@@ -319,7 +319,7 @@ app.get("/v1/domains/:domain/status", async (c) => {
     if (result.status === 403) return c.json(forbidden(result.message), 403);
     return c.json({ error: { code: result.code, message: result.message } }, result.status as 400);
   }
-  return c.json(result.data as RegistrationStatusResponse, 200);
+  return c.json(result.data as GetRegistrationStatusResponse, 200);
 });
 
 // GET /v1/domains/search — Check availability + pricing for domains
@@ -340,7 +340,7 @@ app.get("/v1/domains/search", async (c) => {
     if (result.status === 503) return c.json(serviceUnavailable(result.message), 503);
     return c.json(invalidRequest(result.message), 400);
   }
-  return c.json(result.data as DomainSearchResponse, 200);
+  return c.json(result.data as SearchDomainResponse, 200);
 });
 
 // POST /v1/zones — Create zone
@@ -374,7 +374,7 @@ app.get("/v1/zones", (c) => {
   const page = Math.max(Number(c.req.query("page")) || 1, 1);
 
   const data = listZones(caller, limit, page);
-  return c.json(data as PaginatedList<ZoneResponse>, 200);
+  return c.json(data as PaginatedList<GetZoneResponse>, 200);
 });
 
 // GET /v1/zones/:id — Get zone
@@ -388,7 +388,7 @@ app.get("/v1/zones/:id", async (c) => {
     if (result.status === 404) return c.json(notFound(result.message), 404);
     return c.json(forbidden(result.message), 403);
   }
-  return c.json(result.data as ZoneResponse, 200);
+  return c.json(result.data as GetZoneResponse, 200);
 });
 
 // DELETE /v1/zones/:id — Delete zone
@@ -417,7 +417,7 @@ app.get("/v1/zones/:zone_id/verify", async (c) => {
     if (result.status === 404) return c.json(notFound(result.message), 404);
     return c.json(forbidden(result.message), 403);
   }
-  return c.json(result.data as VerifyResponse, 200);
+  return c.json(result.data as VerifyDomainResponse, 200);
 });
 
 // PUT /v1/zones/:zone_id/activate — Request CF to immediately re-check NS activation
@@ -434,7 +434,7 @@ app.put("/v1/zones/:zone_id/activate", async (c) => {
       return c.json({ error: { code: result.code, message: result.message } }, 429);
     return c.json(cloudflareError(result.message), result.status as 502);
   }
-  return c.json(result.data as ActivateResponse, 200);
+  return c.json(result.data as ActivateDomainResponse, 200);
 });
 
 // POST /v1/zones/:zone_id/mail-setup — Configure mail DNS records (MX+SPF+DMARC+DKIM)
@@ -443,7 +443,7 @@ app.post("/v1/zones/:zone_id/mail-setup", async (c) => {
   if (callerOrRes instanceof Response) return callerOrRes;
   const caller = callerOrRes;
 
-  const bodyOrRes = await parseJsonBody<MailSetupRequest>(
+  const bodyOrRes = await parseJsonBody<SetupMailRequest>(
     c,
     logger,
     "POST /v1/zones/:zone_id/mail-setup",
@@ -458,7 +458,7 @@ app.post("/v1/zones/:zone_id/mail-setup", async (c) => {
     if (result.status === 403) return c.json(forbidden(result.message), 403);
     return c.json(cloudflareError(result.message), result.status as 502);
   }
-  return c.json(result.data as MailSetupResponse, 200);
+  return c.json(result.data as SetupMailResponse, 200);
 });
 
 // POST /v1/zones/:zone_id/records/batch — Batch create/update/delete records
@@ -508,7 +508,7 @@ app.post("/v1/zones/:zone_id/records", async (c) => {
     if (result.status === 403) return c.json(forbidden(result.message), 403);
     return c.json(cloudflareError(result.message), result.status as 502);
   }
-  return c.json(result.data as RecordResponse, 201);
+  return c.json(result.data as GetRecordResponse, 201);
 });
 
 // GET /v1/zones/:zone_id/records — List records
@@ -522,7 +522,7 @@ app.get("/v1/zones/:zone_id/records", (c) => {
     if (result.status === 404) return c.json(notFound(result.message), 404);
     return c.json(forbidden(result.message), 403);
   }
-  return c.json(result.data as PaginatedList<RecordResponse>, 200);
+  return c.json(result.data as PaginatedList<GetRecordResponse>, 200);
 });
 
 // GET /v1/zones/:zone_id/records/:id — Get record
@@ -536,7 +536,7 @@ app.get("/v1/zones/:zone_id/records/:id", (c) => {
     if (result.status === 404) return c.json(notFound(result.message), 404);
     return c.json(forbidden(result.message), 403);
   }
-  return c.json(result.data as RecordResponse, 200);
+  return c.json(result.data as GetRecordResponse, 200);
 });
 
 // PUT /v1/zones/:zone_id/records/:id — Update record
@@ -560,7 +560,7 @@ app.put("/v1/zones/:zone_id/records/:id", async (c) => {
     if (result.status === 403) return c.json(forbidden(result.message), 403);
     return c.json(cloudflareError(result.message), result.status as 502);
   }
-  return c.json(result.data as RecordResponse, 200);
+  return c.json(result.data as GetRecordResponse, 200);
 });
 
 // DELETE /v1/zones/:zone_id/records/:id — Delete record

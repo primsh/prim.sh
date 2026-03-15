@@ -12,14 +12,14 @@ Part of [prim.sh](https://prim.sh) — zero signup, one payment token, infinite 
 
 | Route | Description | Price | Request | Response |
 |-------|-------------|-------|---------|----------|
-| `POST /v1/tokens` | Deploy a new ERC-20 token. Returns immediately with deployStatus: 'pending'. | $0.10 | `CreateTokenRequest` | `TokenResponse` |
+| `POST /v1/tokens` | Deploy a new ERC-20 token. Returns immediately with deployStatus: 'pending'. | $0.10 | `CreateTokenRequest` | `GetTokenResponse` |
 | `GET /v1/tokens` | List tokens deployed by the authenticated wallet | $0.001 | `—` | `TokenListResponse` |
-| `GET /v1/tokens/:id` | Get token details: deployStatus, contractAddress, supply, pool | $0.001 | `—` | `TokenResponse` |
+| `GET /v1/tokens/:id` | Get token details: deployStatus, contractAddress, supply, pool | $0.001 | `—` | `GetTokenResponse` |
 | `POST /v1/tokens/:id/mint` | Mint additional tokens to an address. Requires mintable=true at deploy time. | $0.01 | `MintRequest` | `MintResponse` |
-| `GET /v1/tokens/:id/supply` | Live on-chain total supply from contract | $0.001 | `—` | `SupplyResponse` |
-| `POST /v1/tokens/:id/pool` | Create and initialize a Uniswap V3 pool paired with USDC. One pool per token. | $0.05 | `CreatePoolRequest` | `PoolResponse` |
-| `GET /v1/tokens/:id/pool` | Get pool details: poolAddress, token0, token1, fee, sqrtPriceX96, tick | $0.001 | `—` | `PoolResponse` |
-| `GET /v1/tokens/:id/pool/liquidity-params` | Get calldata for adding liquidity. Returns approvals[] and position manager params. | $0.001 | `—` | `LiquidityParamsResponse` |
+| `GET /v1/tokens/:id/supply` | Live on-chain total supply from contract | $0.001 | `—` | `GetSupplyResponse` |
+| `POST /v1/tokens/:id/pool` | Create and initialize a Uniswap V3 pool paired with USDC. One pool per token. | $0.05 | `CreatePoolRequest` | `GetPoolResponse` |
+| `GET /v1/tokens/:id/pool` | Get pool details: poolAddress, token0, token1, fee, sqrtPriceX96, tick | $0.001 | `—` | `GetPoolResponse` |
+| `GET /v1/tokens/:id/pool/liquidity-params` | Get calldata for adding liquidity. Returns approvals[] and position manager params. | $0.001 | `—` | `GetLiquidityParamsResponse` |
 
 ## Pricing
 
@@ -43,7 +43,7 @@ Part of [prim.sh](https://prim.sh) — zero signup, one payment token, infinite 
 | `mintable` | `boolean` | optional |
 | `maxSupply` | `string | null` | optional |
 
-### `TokenResponse`
+### `GetTokenResponse`
 
 | Field | Type | Description |
 |-------|------|-------------|
@@ -77,7 +77,7 @@ Part of [prim.sh](https://prim.sh) — zero signup, one payment token, infinite 
 | `amount` | `string` | Amount minted as a raw integer string. |
 | `status` | `"pending"` | Always "pending" — mint is submitted on-chain asynchronously. |
 
-### `SupplyResponse`
+### `GetSupplyResponse`
 
 | Field | Type | Description |
 |-------|------|-------------|
@@ -92,7 +92,7 @@ Part of [prim.sh](https://prim.sh) — zero signup, one payment token, infinite 
 | `pricePerToken` | `string` | required |
 | `feeTier` | `number` | optional |
 
-### `PoolResponse`
+### `GetPoolResponse`
 
 | Field | Type | Description |
 |-------|------|-------------|
@@ -104,7 +104,7 @@ Part of [prim.sh](https://prim.sh) — zero signup, one payment token, infinite 
 | `tick` | `number` | Initial tick. |
 | `tx_hash` | `string` | Pool creation transaction hash. |
 
-### `LiquidityParamsResponse`
+### `GetLiquidityParamsResponse`
 
 | Field | Type | Description |
 |-------|------|-------------|

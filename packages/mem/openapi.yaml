@@ -47,40 +47,6 @@ components:
             message:
               type: string
               description: Human-readable error message.
-    CollectionResponse:
-      type: object
-      required:
-        - id
-        - name
-        - owner_wallet
-        - dimension
-        - distance
-        - document_count
-        - created_at
-      properties:
-        id:
-          type: string
-          description: Collection ID (UUID).
-        name:
-          type: string
-          description: Collection name. Unique per wallet.
-        owner_wallet:
-          type: string
-          description: Ethereum address of the collection owner.
-        dimension:
-          type: number
-          description: Embedding vector dimension (e.g. 1536 for text-embedding-3-small).
-        distance:
-          type: string
-          description: 'Distance metric: "Cosine" | "Euclid" | "Dot".'
-        document_count:
-          type:
-            - number
-            - "null"
-          description: Live Qdrant points_count — null in list responses to avoid N+1 calls.
-        created_at:
-          type: string
-          description: ISO 8601 timestamp when the collection was created.
     CreateCollectionRequest:
       type: object
       required:
@@ -121,6 +87,40 @@ components:
             - string
             - "null"
           description: ISO string expiry time, or null if permanent.
+    GetCollectionResponse:
+      type: object
+      required:
+        - id
+        - name
+        - owner_wallet
+        - dimension
+        - distance
+        - document_count
+        - created_at
+      properties:
+        id:
+          type: string
+          description: Collection ID (UUID).
+        name:
+          type: string
+          description: Collection name. Unique per wallet.
+        owner_wallet:
+          type: string
+          description: Ethereum address of the collection owner.
+        dimension:
+          type: number
+          description: Embedding vector dimension (e.g. 1536 for text-embedding-3-small).
+        distance:
+          type: string
+          description: 'Distance metric: "Cosine" | "Euclid" | "Dot".'
+        document_count:
+          type:
+            - number
+            - "null"
+          description: Live Qdrant points_count — null in list responses to avoid N+1 calls.
+        created_at:
+          type: string
+          description: ISO 8601 timestamp when the collection was created.
     QueryMatch:
       type: object
       required:
@@ -259,7 +259,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/CollectionResponse"
+                $ref: "#/components/schemas/GetCollectionResponse"
         "400":
           description: Missing name or invalid fields
           content:
@@ -332,7 +332,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/CollectionResponse"
+                $ref: "#/components/schemas/GetCollectionResponse"
         "402":
           description: x402 payment required.
         "403":

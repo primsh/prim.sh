@@ -118,47 +118,6 @@ components:
         priority:
           type: number
           description: MX priority. Only present for MX records.
-    DomainResponse:
-      type: object
-      required:
-        - id
-        - domain
-        - status
-        - owner_wallet
-        - created_at
-        - verified_at
-        - required_records
-      properties:
-        id:
-          type: string
-          description: Domain registration ID.
-        domain:
-          type: string
-          description: Registered domain name.
-        status:
-          type: string
-          description: Verification status ("pending" | "verified").
-        owner_wallet:
-          type: string
-          description: Ethereum address of the domain owner.
-        created_at:
-          type: string
-          description: ISO 8601 timestamp when the domain was registered.
-        verified_at:
-          type:
-            - string
-            - "null"
-          description: ISO 8601 timestamp when the domain was verified. Null if unverified.
-        required_records:
-          type: array
-          items:
-            $ref: "#/components/schemas/DnsRecord"
-          description: DNS records that must be added to verify the domain.
-        dkim_records:
-          type: array
-          items:
-            $ref: "#/components/schemas/DnsRecord"
-          description: DKIM DNS records. Only present after successful verification.
     EmailAddress:
       type: object
       required:
@@ -267,7 +226,48 @@ components:
         preview:
           type: string
           description: Short preview text (first ~100 chars of body).
-    MailboxResponse:
+    GetDomainResponse:
+      type: object
+      required:
+        - id
+        - domain
+        - status
+        - owner_wallet
+        - created_at
+        - verified_at
+        - required_records
+      properties:
+        id:
+          type: string
+          description: Domain registration ID.
+        domain:
+          type: string
+          description: Registered domain name.
+        status:
+          type: string
+          description: Verification status ("pending" | "verified").
+        owner_wallet:
+          type: string
+          description: Ethereum address of the domain owner.
+        created_at:
+          type: string
+          description: ISO 8601 timestamp when the domain was registered.
+        verified_at:
+          type:
+            - string
+            - "null"
+          description: ISO 8601 timestamp when the domain was verified. Null if unverified.
+        required_records:
+          type: array
+          items:
+            $ref: "#/components/schemas/DnsRecord"
+          description: DNS records that must be added to verify the domain.
+        dkim_records:
+          type: array
+          items:
+            $ref: "#/components/schemas/DnsRecord"
+          description: DKIM DNS records. Only present after successful verification.
+    GetMailboxResponse:
       type: object
       required:
         - id
@@ -301,6 +301,32 @@ components:
             - string
             - "null"
           description: ISO 8601 timestamp when the mailbox expires. Null if permanent.
+    GetWebhookResponse:
+      type: object
+      required:
+        - id
+        - url
+        - events
+        - status
+        - created_at
+      properties:
+        id:
+          type: string
+          description: Webhook ID (e.g. "wh_abc123").
+        url:
+          type: string
+          description: Webhook endpoint URL.
+        events:
+          type: array
+          items:
+            type: string
+          description: Subscribed events.
+        status:
+          type: string
+          description: Webhook status.
+        created_at:
+          type: string
+          description: ISO 8601 timestamp when the webhook was created.
     RegisterDomainRequest:
       type: object
       required:
@@ -427,32 +453,6 @@ components:
           items:
             $ref: "#/components/schemas/DnsRecord"
           description: DKIM records to add to DNS. Only present on successful verification.
-    WebhookResponse:
-      type: object
-      required:
-        - id
-        - url
-        - events
-        - status
-        - created_at
-      properties:
-        id:
-          type: string
-          description: Webhook ID (e.g. "wh_abc123").
-        url:
-          type: string
-          description: Webhook endpoint URL.
-        events:
-          type: array
-          items:
-            type: string
-          description: Subscribed events.
-        status:
-          type: string
-          description: Webhook status.
-        created_at:
-          type: string
-          description: ISO 8601 timestamp when the webhook was created.
 paths:
   /:
     get:
@@ -496,7 +496,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/MailboxResponse"
+                $ref: "#/components/schemas/GetMailboxResponse"
         "400":
           description: Missing fields or invalid characters
           content:
@@ -563,7 +563,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/MailboxResponse"
+                $ref: "#/components/schemas/GetMailboxResponse"
         "402":
           description: x402 payment required.
         "403":
@@ -638,7 +638,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/MailboxResponse"
+                $ref: "#/components/schemas/GetMailboxResponse"
         "402":
           description: x402 payment required.
         "403":
@@ -824,7 +824,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/WebhookResponse"
+                $ref: "#/components/schemas/GetWebhookResponse"
         "400":
           description: Missing or invalid webhook URL
           content:
@@ -945,7 +945,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/DomainResponse"
+                $ref: "#/components/schemas/GetDomainResponse"
         "400":
           description: Invalid domain name
           content:
@@ -1012,7 +1012,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/DomainResponse"
+                $ref: "#/components/schemas/GetDomainResponse"
         "402":
           description: x402 payment required.
         "403":

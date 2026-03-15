@@ -28,7 +28,7 @@ export type ErrorCode = (typeof ERROR_CODES)[number];
 
 // ─── Bucket types ─────────────────────────────────────────────────────────
 
-export interface BucketResponse {
+export interface GetBucketResponse {
   /** Bucket ID (UUID). */
   id: string;
   /** Bucket name. Unique per wallet. Alphanumeric, hyphens, underscores. */
@@ -65,12 +65,12 @@ export interface UpdateBucketRequest {
 
 export interface CreateBucketResponse {
   /** The created bucket. */
-  bucket: BucketResponse;
+  bucket: GetBucketResponse;
 }
 
 // ─── Object types ─────────────────────────────────────────────────────────
 
-export interface ObjectResponse {
+export interface GetObjectResponse {
   /** Object key (path within bucket, slashes allowed). */
   key: string;
   /** Object size in bytes. */
@@ -99,7 +99,7 @@ export interface DeleteObjectResponse {
 
 // ─── Quota types ──────────────────────────────────────────────────────────
 
-export interface QuotaResponse {
+export interface GetQuotaResponse {
   /** Bucket ID. */
   bucket_id: string;
   /** Per-bucket quota in bytes. Null = default (100 MB). */
@@ -115,7 +115,7 @@ export interface SetQuotaRequest {
   quota_bytes: number | null;
 }
 
-export interface ReconcileResponse {
+export interface ReconcileStorageResponse {
   /** Bucket ID. */
   bucket_id: string;
   /** Storage usage recorded before reconciliation, in bytes. */
@@ -128,7 +128,7 @@ export interface ReconcileResponse {
 
 // ─── Presign types ─────────────────────────────────────────────────────────
 
-export interface PresignRequest {
+export interface CreatePresignRequest {
   /** Object key to presign. */
   key: string;
   /** HTTP method: "GET" for download, "PUT" for upload. */
@@ -137,7 +137,7 @@ export interface PresignRequest {
   expires_in?: number;
 }
 
-export interface PresignResponse {
+export interface CreatePresignResponse {
   /** Presigned URL for direct R2 access. */
   url: string;
   /** HTTP method this URL was signed for. */

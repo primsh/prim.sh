@@ -15,7 +15,7 @@ Part of [prim.sh](https://prim.sh) — zero signup, one payment token, infinite 
 | `POST /v1/generate` | Generate an image from a text prompt. Returns base64 or URL. | $0.02 | `GenerateRequest` | `GenerateResponse` |
 | `POST /v1/describe` | Describe an image. Accepts base64 or URL. Returns text description. | $0.005 | `DescribeRequest` | `DescribeResponse` |
 | `POST /v1/upscale` | Upscale an image to higher resolution. Accepts base64 or URL. | $0.02 | `UpscaleRequest` | `UpscaleResponse` |
-| `GET /v1/models` | List available image models with capabilities and pricing. | $0.001 | `—` | `ModelsResponse` |
+| `GET /v1/models` | List available image models with capabilities and pricing. | $0.001 | `—` | `ListModelsResponse` |
 
 ## Pricing
 

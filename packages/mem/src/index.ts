@@ -12,7 +12,7 @@ import {
 import type { ApiError, PaginatedList } from "@primsh/x402-middleware";
 import { createPrimApp } from "@primsh/x402-middleware/create-prim-app";
 import type {
-  CollectionResponse,
+  GetCollectionResponse,
   CreateCollectionRequest,
   GetCacheResponse,
   QueryRequest,
@@ -88,7 +88,7 @@ app.post("/v1/collections", async (c) => {
     if (result.status === 403) return c.json(forbidden(result.message), 403);
     return c.json(backendError(result.code, result.message), result.status as 502);
   }
-  return c.json(result.data as CollectionResponse, 201);
+  return c.json(result.data as GetCollectionResponse, 201);
 });
 
 // GET /v1/collections — List collections
@@ -101,7 +101,7 @@ app.get("/v1/collections", (c) => {
   const page = Math.max(Number(c.req.query("page")) || 1, 1);
 
   const data = listCollections(caller, limit, page);
-  return c.json(data as PaginatedList<CollectionResponse>, 200);
+  return c.json(data as PaginatedList<GetCollectionResponse>, 200);
 });
 
 // GET /v1/collections/:id — Get collection (live document_count)
@@ -115,7 +115,7 @@ app.get("/v1/collections/:id", async (c) => {
     if (result.status === 404) return c.json(notFound(result.message), 404);
     return c.json(forbidden(result.message), 403);
   }
-  return c.json(result.data as CollectionResponse, 200);
+  return c.json(result.data as GetCollectionResponse, 200);
 });
 
 // DELETE /v1/collections/:id — Delete collection

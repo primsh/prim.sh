@@ -33,13 +33,13 @@ routes_map:
     description: "Return the prim.yaml JSON schema for agents to reference when writing specs."
     operation_id: get_schema
     request_type: null
-    response_type: SchemaResponse
+    response_type: GetSchemaResponse
     status: 200
   - route: "GET /v1/ports"
     description: "Return allocated ports and next available port number."
     operation_id: get_ports
     request_type: null
-    response_type: PortsResponse
+    response_type: ListPortsResponse
     status: 200
 pricing:
   - op: "Scaffold"

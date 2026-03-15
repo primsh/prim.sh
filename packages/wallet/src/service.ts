@@ -10,15 +10,15 @@ import type {
   CreateFundRequestRequest,
   DeactivateWalletResponse,
   DenyFundRequestResponse,
-  FundRequestResponse,
-  PauseResponse,
+  GetFundRequestResponse,
+  GetPolicyResponse,
+  GetWalletResponse,
   PauseScope,
-  PolicyResponse,
-  PolicyUpdateRequest,
+  PauseWalletResponse,
   RegisterWalletRequest,
   RegisterWalletResponse,
-  ResumeResponse,
-  WalletDetailResponse,
+  ResumeWalletResponse,
+  UpdatePolicyRequest,
   WalletListItem,
 } from "./api.ts";
 import { getEthBalance, getUsdcBalance } from "./balance.ts";
@@ -262,7 +262,7 @@ export async function getWallet(
   address: string,
   caller: string,
 ): Promise<
-  | { ok: true; data: WalletDetailResponse }
+  | { ok: true; data: GetWalletResponse }
   | { ok: false; status: 403 | 404; code: string; message: string }
 > {
   const check = checkOwnership(address, caller);
@@ -334,7 +334,7 @@ type FundRequestResult<T> =
   | { ok: true; data: T }
   | { ok: false; status: number; code: string; message: string };
 
-function fundRequestToResponse(row: import("./db.ts").FundRequestRow): FundRequestResponse {
+function fundRequestToResponse(row: import("./db.ts").FundRequestRow): GetFundRequestResponse {
   return {
     id: row.id,
     wallet_address: row.wallet_address,
@@ -349,7 +349,7 @@ export function createFundRequest(
   walletAddress: string,
   request: CreateFundRequestRequest,
   caller: string,
-): FundRequestResult<FundRequestResponse> {
+): FundRequestResult<GetFundRequestResponse> {
   const check = checkOwnership(walletAddress, caller);
   if (!check.ok) return check;
 
@@ -393,7 +393,7 @@ export function listFundRequests(
   caller: string,
   limit: number,
   after?: string,
-): FundRequestResult<PaginatedList<FundRequestResponse>> {
+): FundRequestResult<PaginatedList<GetFundRequestResponse>> {
   const check = checkOwnership(walletAddress, caller);
   if (!check.ok) return check;
 
@@ -504,7 +504,7 @@ function parsePrimitivesList(walletAddress: string, raw: string): string[] | nul
 function policyRowToResponse(
   walletAddress: string,
   row: ReturnType<typeof getPolicy>,
-): PolicyResponse {
+): GetPolicyResponse {
   return {
     wallet_address: walletAddress,
     max_per_tx: row?.max_per_tx ?? null,
@@ -517,7 +517,10 @@ function policyRowToResponse(
   };
 }
 
-export function getSpendingPolicy(address: string, caller: string): PolicyResult<PolicyResponse> {
+export function getSpendingPolicy(
+  address: string,
+  caller: string,
+): PolicyResult<GetPolicyResponse> {
   const check = checkOwnership(address, caller);
   if (!check.ok) return check;
 
@@ -529,8 +532,8 @@ export function getSpendingPolicy(address: string, caller: string): PolicyResult
 export function updateSpendingPolicy(
   address: string,
   caller: string,
-  updates: PolicyUpdateRequest,
-): PolicyResult<PolicyResponse> {
+  updates: UpdatePolicyRequest,
+): PolicyResult<GetPolicyResponse> {
   const check = checkOwnership(address, caller);
   if (!check.ok) return check;
 
@@ -575,7 +578,7 @@ export function pauseWallet(
   address: string,
   caller: string,
   scope: PauseScope,
-): PolicyResult<PauseResponse> {
+): PolicyResult<PauseWalletResponse> {
   const check = checkOwnership(address, caller);
   if (!check.ok) return check;
 
@@ -592,7 +595,7 @@ export function resumeWallet(
   address: string,
   caller: string,
   scope: PauseScope,
-): PolicyResult<ResumeResponse> {
+): PolicyResult<ResumeWalletResponse> {
   const check = checkOwnership(address, caller);
   if (!check.ok) return check;
 

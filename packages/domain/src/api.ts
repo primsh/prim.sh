@@ -32,7 +32,7 @@ export type ErrorCode = (typeof ERROR_CODES)[number];
 
 export type ZoneStatus = "pending" | "active" | "moved";
 
-export interface ZoneResponse {
+export interface GetZoneResponse {
   /** Cloudflare zone ID. */
   id: string;
   /** Domain name (e.g. "example.com"). */
@@ -54,14 +54,14 @@ export interface CreateZoneRequest {
 
 export interface CreateZoneResponse {
   /** The created zone. */
-  zone: ZoneResponse;
+  zone: GetZoneResponse;
 }
 
 // ─── Record types ────────────────────────────────────────────────────────
 
 export type RecordType = "A" | "AAAA" | "CNAME" | "MX" | "TXT" | "SRV" | "CAA" | "NS";
 
-export interface RecordResponse {
+export interface GetRecordResponse {
   /** DNS record ID. */
   id: string;
   /** Zone ID this record belongs to. */
@@ -136,7 +136,7 @@ export interface DomainSearchResult {
   premium?: boolean;
 }
 
-export interface DomainSearchResponse {
+export interface SearchDomainResponse {
   /** Search results for each queried domain. */
   results: DomainSearchResult[];
 }
@@ -191,9 +191,9 @@ export interface BatchRecordsRequest {
 
 export interface BatchRecordsResponse {
   /** Successfully created records. */
-  created: RecordResponse[];
+  created: GetRecordResponse[];
   /** Successfully updated records. */
-  updated: RecordResponse[];
+  updated: GetRecordResponse[];
   /** IDs of deleted records. */
   deleted: { id: string }[];
 }
@@ -264,7 +264,7 @@ export interface RecoverResponse {
   ns_configured: boolean;
 }
 
-export interface ConfigureNsResponse {
+export interface ConfigureNameserversResponse {
   /** Domain name. */
   domain: string;
   /** Cloudflare nameservers configured. */
@@ -297,7 +297,7 @@ export interface RecordVerifyResult {
   propagated: boolean;
 }
 
-export interface VerifyResponse {
+export interface VerifyDomainResponse {
   /** Domain name. */
   domain: string;
   /** Nameserver propagation result. */
@@ -312,7 +312,7 @@ export interface VerifyResponse {
 
 // ─── Registration status types ─────────────────────────────────────────────
 
-export interface RegistrationStatusResponse {
+export interface GetRegistrationStatusResponse {
   /** Domain name. */
   domain: string;
   /** Always true — only returned for registered domains. */
@@ -337,7 +337,7 @@ export interface RegistrationStatusResponse {
   next_action: string | null;
 }
 
-export interface ActivateResponse {
+export interface ActivateDomainResponse {
   /** Cloudflare zone ID. */
   zone_id: string;
   /** Updated zone status. */
@@ -355,7 +355,7 @@ export interface DkimKey {
   public_key: string;
 }
 
-export interface MailSetupRequest {
+export interface SetupMailRequest {
   /** Mail server hostname (e.g. "mail.prim.sh"). */
   mail_server: string;
   /** Mail server IPv4 address (used for SPF record). */
@@ -378,7 +378,7 @@ export interface MailSetupRecordResult {
   action: "created" | "updated";
 }
 
-export interface MailSetupResponse {
+export interface SetupMailResponse {
   /** DNS records created or updated by the mail setup. */
   records: MailSetupRecordResult[];
 }

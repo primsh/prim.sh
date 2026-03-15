@@ -7,24 +7,6 @@ import { unwrap } from "./shared.js";
 
 // ── Types ──────────────────────────────────────────────────────────────────
 
-export interface ActionOnlyResponse {
-  /** Action object for the requested operation. */
-  action: ActionResponse;
-}
-
-export interface ActionResponse {
-  /** Action ID. */
-  id: string;
-  /** Action name (e.g. "create", "start", "stop"). */
-  command: string;
-  /** Action status: "running" | "success" | "error". */
-  status: string;
-  /** ISO 8601 timestamp when the action started. */
-  started_at: string;
-  /** ISO 8601 timestamp when the action finished. Null if still running. */
-  finished_at: string | null;
-}
-
 export interface CreateServerRequest {
   /** Server name (provider-level label). */
   name: string;
@@ -44,9 +26,9 @@ export interface CreateServerRequest {
 
 export interface CreateServerResponse {
   /** Created server object (initial status: "initializing"). */
-  server: ServerResponse;
+  server: GetServerResponse;
   /** Action object tracking the provisioning progress. */
-  action: ActionResponse;
+  action: GetActionResponse;
   /** USDC charged for this server as a decimal string. */
   deposit_charged: string;
   /** Remaining USDC deposit balance as a decimal string. */
@@ -67,42 +49,25 @@ export interface DeleteServerResponse {
   deposit_refunded: string;
 }
 
-export interface PublicNet {
-  /** IPv4 address info. Null until assigned. */
-  ipv4: Record<string, unknown>;
-  /** IPv6 address info. Null until assigned. */
-  ipv6: Record<string, unknown>;
+export interface GetActionOnlyResponse {
+  /** Action object for the requested operation. */
+  action: GetActionResponse;
 }
 
-export interface RebuildRequest {
-  /** OS image slug to rebuild with (e.g. "debian-12"). */
-  image: string;
+export interface GetActionResponse {
+  /** Action ID. */
+  id: string;
+  /** Action name (e.g. "create", "start", "stop"). */
+  command: string;
+  /** Action status: "running" | "success" | "error". */
+  status: string;
+  /** ISO 8601 timestamp when the action started. */
+  started_at: string;
+  /** ISO 8601 timestamp when the action finished. Null if still running. */
+  finished_at: string | null;
 }
 
-export interface RebuildResponse {
-  /** Action object (command: "rebuild"). */
-  action: ActionResponse;
-  /** New root password if no SSH keys configured. Null if SSH keys are installed. */
-  root_password: string | null;
-}
-
-export interface ResizeRequest {
-  /** Target server type slug. */
-  type: string;
-  /** Upgrade disk along with CPU/RAM. Irreversible if true. Default false. */
-  upgrade_disk?: boolean;
-}
-
-export interface ResizeResponse {
-  /** Action object (command: "resize"). */
-  action: ActionResponse;
-  /** Target server type after resize. */
-  new_type: string;
-  /** USDC deposit change as a decimal string. Positive = charged, negative = refunded. */
-  deposit_delta: string;
-}
-
-export interface ServerResponse {
+export interface GetServerResponse {
   /** Prim server ID (e.g. "srv_abc123"). */
   id: string;
   /** Cloud provider (e.g. "digitalocean"). */
@@ -127,7 +92,7 @@ export interface ServerResponse {
   created_at: string;
 }
 
-export interface SshKeyResponse {
+export interface GetSshKeyResponse {
   /** Prim SSH key ID (e.g. "key_abc123"). */
   id: string;
   /** Cloud provider. */
@@ -142,6 +107,41 @@ export interface SshKeyResponse {
   owner_wallet: string;
   /** ISO 8601 timestamp when the key was registered. */
   created_at: string;
+}
+
+export interface PublicNet {
+  /** IPv4 address info. Null until assigned. */
+  ipv4: Record<string, unknown>;
+  /** IPv6 address info. Null until assigned. */
+  ipv6: Record<string, unknown>;
+}
+
+export interface RebuildServerRequest {
+  /** OS image slug to rebuild with (e.g. "debian-12"). */
+  image: string;
+}
+
+export interface RebuildServerResponse {
+  /** Action object (command: "rebuild"). */
+  action: GetActionResponse;
+  /** New root password if no SSH keys configured. Null if SSH keys are installed. */
+  root_password: string | null;
+}
+
+export interface ResizeServerRequest {
+  /** Target server type slug. */
+  type: string;
+  /** Upgrade disk along with CPU/RAM. Irreversible if true. Default false. */
+  upgrade_disk?: boolean;
+}
+
+export interface ResizeServerResponse {
+  /** Action object (command: "resize"). */
+  action: GetActionResponse;
+  /** Target server type after resize. */
+  new_type: string;
+  /** USDC deposit change as a decimal string. Positive = charged, negative = refunded. */
+  deposit_delta: string;
 }
 
 export interface ListServersParams {
@@ -222,10 +222,10 @@ export function createSpawnClient(
       const res = await primFetch(url);
       return unwrap<ListServersResponse>(res);
     },
-    async getServer(params: GetServerParams): Promise<ServerResponse> {
+    async getServer(params: GetServerParams): Promise<GetServerResponse> {
       const url = `${baseUrl}/v1/servers/${encodeURIComponent(params.id)}`;
       const res = await primFetch(url);
-      return unwrap<ServerResponse>(res);
+      return unwrap<GetServerResponse>(res);
     },
     async deleteServer(params: DeleteServerParams): Promise<DeleteServerResponse> {
       const url = `${baseUrl}/v1/servers/${encodeURIComponent(params.id)}`;
@@ -234,53 +234,53 @@ export function createSpawnClient(
       });
       return unwrap<DeleteServerResponse>(res);
     },
-    async startServer(params: StartServerParams): Promise<ActionOnlyResponse> {
+    async startServer(params: StartServerParams): Promise<GetActionOnlyResponse> {
       const url = `${baseUrl}/v1/servers/${encodeURIComponent(params.id)}/start`;
       const res = await primFetch(url, {
         method: "POST",
       });
-      return unwrap<ActionOnlyResponse>(res);
+      return unwrap<GetActionOnlyResponse>(res);
     },
-    async stopServer(params: StopServerParams): Promise<ActionOnlyResponse> {
+    async stopServer(params: StopServerParams): Promise<GetActionOnlyResponse> {
       const url = `${baseUrl}/v1/servers/${encodeURIComponent(params.id)}/stop`;
       const res = await primFetch(url, {
         method: "POST",
       });
-      return unwrap<ActionOnlyResponse>(res);
+      return unwrap<GetActionOnlyResponse>(res);
     },
-    async rebootServer(params: RebootServerParams): Promise<ActionOnlyResponse> {
+    async rebootServer(params: RebootServerParams): Promise<GetActionOnlyResponse> {
       const url = `${baseUrl}/v1/servers/${encodeURIComponent(params.id)}/reboot`;
       const res = await primFetch(url, {
         method: "POST",
       });
-      return unwrap<ActionOnlyResponse>(res);
+      return unwrap<GetActionOnlyResponse>(res);
     },
-    async resizeServer(params: ResizeServerParams, req: ResizeRequest): Promise<ResizeResponse> {
+    async resizeServer(params: ResizeServerParams, req: ResizeServerRequest): Promise<ResizeServerResponse> {
       const url = `${baseUrl}/v1/servers/${encodeURIComponent(params.id)}/resize`;
       const res = await primFetch(url, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(req),
       });
-      return unwrap<ResizeResponse>(res);
+      return unwrap<ResizeServerResponse>(res);
     },
-    async rebuildServer(params: RebuildServerParams, req: RebuildRequest): Promise<RebuildResponse> {
+    async rebuildServer(params: RebuildServerParams, req: RebuildServerRequest): Promise<RebuildServerResponse> {
       const url = `${baseUrl}/v1/servers/${encodeURIComponent(params.id)}/rebuild`;
       const res = await primFetch(url, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(req),
       });
-      return unwrap<RebuildResponse>(res);
+      return unwrap<RebuildServerResponse>(res);
     },
-    async createSshKey(req: CreateSshKeyRequest): Promise<SshKeyResponse> {
+    async createSshKey(req: CreateSshKeyRequest): Promise<GetSshKeyResponse> {
       const url = `${baseUrl}/v1/ssh-keys`;
       const res = await primFetch(url, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(req),
       });
-      return unwrap<SshKeyResponse>(res);
+      return unwrap<GetSshKeyResponse>(res);
     },
     async listSshKeys(): Promise<ListSshKeysResponse> {
       const url = `${baseUrl}/v1/ssh-keys`;

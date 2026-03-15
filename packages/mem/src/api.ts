@@ -28,7 +28,7 @@ export type ErrorCode = (typeof ERROR_CODES)[number];
 
 // ─── Collection types ─────────────────────────────────────────────────────
 
-export interface CollectionResponse {
+export interface GetCollectionResponse {
   /** Collection ID (UUID). */
   id: string;
   /** Collection name. Unique per wallet. */

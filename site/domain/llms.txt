@@ -188,8 +188,7 @@ Price: $0.001
 Request:
   domain  string  required  Domain name to create a zone for (e.g. "example.com").
 
-Response (201):
-  zone  ZoneResponse  The created zone.
+Response (201): CreateGetZoneResponse
 
 Errors:
   400  invalid_request   Missing domain or invalid domain name
@@ -346,9 +345,9 @@ Request:
   delete  BatchDeleteEntry[]  optional  Records to delete.
 
 Response (200):
-  created  RecordResponse[]  Successfully created records.
-  updated  RecordResponse[]  Successfully updated records.
-  deleted  object            IDs of deleted records.
+  created  GetRecordResponse[]  Successfully created records.
+  updated  GetRecordResponse[]  Successfully updated records.
+  deleted  object               IDs of deleted records.
 
 Errors:
   400  invalid_request   Invalid record fields or values

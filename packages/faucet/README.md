@@ -14,7 +14,7 @@ Part of [prim.sh](https://prim.sh) — zero signup, one payment token, infinite 
 |-------|-------------|-------|---------|----------|
 | `POST /v1/faucet/usdc` | Dispense 10 test USDC on Base Sepolia. Rate limit: once per 2 hours per address. | $0.01 | `DripRequest` | `DripResponse` |
 | `POST /v1/faucet/eth` | Dispense 0.01 test ETH on Base Sepolia. Rate limit: once per 1 hour per address. | $0.01 | `DripRequest` | `DripResponse` |
-| `GET /v1/faucet/status` | Check rate limit status for a wallet address across both faucets. | $0.01 | `—` | `FaucetStatusResponse` |
+| `GET /v1/faucet/status` | Check rate limit status for a wallet address across both faucets. | $0.01 | `—` | `GetFaucetStatusResponse` |
 | `GET /v1/faucet/treasury` | Check treasury wallet ETH balance and refill status. | $0.01 | `—` | `TreasuryStatus` |
 | `POST /v1/faucet/refill` | Batch-claim testnet ETH from Coinbase CDP faucet into treasury. Rate limited to once per 10 minutes. | $0.01 | `—` | `RefillResult` |
 
@@ -43,7 +43,7 @@ Part of [prim.sh](https://prim.sh) — zero signup, one payment token, infinite 
 | `chain` | `string` | CAIP-2 chain identifier (e.g. "eip155:84532"). |
 | `source` | `string` | Backend that dispensed the tokens. "cdp" | "treasury". |
 
-### `FaucetStatusResponse`
+### `GetFaucetStatusResponse`
 
 | Field | Type | Description |
 |-------|------|-------------|

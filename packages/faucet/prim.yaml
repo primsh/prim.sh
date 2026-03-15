@@ -122,13 +122,13 @@ routes_map:
       - { status: 502, code: faucet_error, description: "Treasury wallet failed to send ETH" }
   - route: "GET /v1/faucet/status"
     request: null
-    response: FaucetStatusResponse
+    response: GetFaucetStatusResponse
     status: 200
     description: "Check rate limit status for a wallet address across both faucets."
     notes: "Free. Call this before dripping to avoid 429s."
     operation_id: get_faucet_status
     request_type: null
-    response_type: FaucetStatusResponse
+    response_type: GetFaucetStatusResponse
     query_params:
       - { name: address, type: string, description: "EVM wallet address (required)" }
     errors:

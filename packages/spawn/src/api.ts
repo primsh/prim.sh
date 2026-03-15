@@ -65,7 +65,7 @@ export interface PublicNet {
   ipv6: { ip: string | null } | null;
 }
 
-export interface ServerResponse {
+export interface GetServerResponse {
   /** Prim server ID (e.g. "srv_abc123"). */
   id: string;
   /** Cloud provider (e.g. "digitalocean"). */
@@ -90,7 +90,7 @@ export interface ServerResponse {
   created_at: string;
 }
 
-export interface ActionResponse {
+export interface GetActionResponse {
   /** Action ID. */
   id: string;
   /** Action name (e.g. "create", "start", "stop"). */
@@ -105,9 +105,9 @@ export interface ActionResponse {
 
 export interface CreateServerResponse {
   /** Created server object (initial status: "initializing"). */
-  server: ServerResponse;
+  server: GetServerResponse;
   /** Action object tracking the provisioning progress. */
-  action: ActionResponse;
+  action: GetActionResponse;
   /** USDC charged for this server as a decimal string. */
   deposit_charged: string;
   /** Remaining USDC deposit balance as a decimal string. */
@@ -136,35 +136,35 @@ export interface DeleteServerResponse {
 
 // ─── VM actions ───────────────────────────────────────────────────────────
 
-export interface ActionOnlyResponse {
+export interface GetActionOnlyResponse {
   /** Action object for the requested operation. */
-  action: ActionResponse;
+  action: GetActionResponse;
 }
 
-export interface ResizeRequest {
+export interface ResizeServerRequest {
   /** Target server type slug. */
   type: string;
   /** Upgrade disk along with CPU/RAM. Irreversible if true. Default false. */
   upgrade_disk?: boolean;
 }
 
-export interface ResizeResponse {
+export interface ResizeServerResponse {
   /** Action object (command: "resize"). */
-  action: ActionResponse;
+  action: GetActionResponse;
   /** Target server type after resize. */
   new_type: string;
   /** USDC deposit change as a decimal string. Positive = charged, negative = refunded. */
   deposit_delta: string;
 }
 
-export interface RebuildRequest {
+export interface RebuildServerRequest {
   /** OS image slug to rebuild with (e.g. "debian-12"). */
   image: string;
 }
 
-export interface RebuildResponse {
+export interface RebuildServerResponse {
   /** Action object (command: "rebuild"). */
-  action: ActionResponse;
+  action: GetActionResponse;
   /** New root password if no SSH keys configured. Null if SSH keys are installed. */
   root_password: string | null;
 }
@@ -178,7 +178,7 @@ export interface CreateSshKeyRequest {
   public_key: string;
 }
 
-export interface SshKeyResponse {
+export interface GetSshKeyResponse {
   /** Prim SSH key ID (e.g. "key_abc123"). */
   id: string;
   /** Cloud provider. */

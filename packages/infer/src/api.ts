@@ -102,7 +102,7 @@ export interface ModelInfo {
   pricing: ModelPricing;
 }
 
-export interface ModelsResponse {
+export interface ListModelsResponse {
   data: ModelInfo[];
 }
 

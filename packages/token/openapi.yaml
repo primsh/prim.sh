@@ -85,23 +85,7 @@ components:
             - string
             - "null"
           description: Maximum mintable supply as a raw integer string. Null = unlimited. Only applies if mintable is true.
-    LiquidityApproval:
-      type: object
-      required:
-        - token
-        - spender
-        - amount
-      properties:
-        token:
-          type: string
-          description: Token contract address to approve.
-        spender:
-          type: string
-          description: Spender address (position manager).
-        amount:
-          type: string
-          description: Amount to approve as a raw integer string.
-    LiquidityParamsResponse:
+    GetLiquidityParamsResponse:
       type: object
       required:
         - position_manager_address
@@ -159,41 +143,7 @@ components:
           items:
             $ref: "#/components/schemas/LiquidityApproval"
           description: ERC-20 approvals to submit on-chain before calling addLiquidity.
-    MintRequest:
-      type: object
-      required:
-        - to
-        - amount
-      properties:
-        to:
-          type: string
-          description: Recipient address to mint tokens to.
-        amount:
-          type: string
-          description: Amount to mint as a raw integer string.
-    MintResponse:
-      type: object
-      required:
-        - tx_hash
-        - to
-        - amount
-        - status
-      properties:
-        tx_hash:
-          type: string
-          description: Mint transaction hash.
-        to:
-          type: string
-          description: Recipient address.
-        amount:
-          type: string
-          description: Amount minted as a raw integer string.
-        status:
-          type: string
-          enum:
-            - pending
-          description: Always "pending" — mint is submitted on-chain asynchronously.
-    PoolResponse:
+    GetPoolResponse:
       type: object
       required:
         - pool_address
@@ -225,7 +175,7 @@ components:
         tx_hash:
           type: string
           description: Pool creation transaction hash.
-    SupplyResponse:
+    GetSupplyResponse:
       type: object
       required:
         - token_id
@@ -241,7 +191,7 @@ components:
         total_supply:
           type: string
           description: Live on-chain total supply as a raw integer string.
-    TokenResponse:
+    GetTokenResponse:
       type: object
       required:
         - id
@@ -305,6 +255,56 @@ components:
         created_at:
           type: string
           description: ISO 8601 timestamp when the token was created.
+    LiquidityApproval:
+      type: object
+      required:
+        - token
+        - spender
+        - amount
+      properties:
+        token:
+          type: string
+          description: Token contract address to approve.
+        spender:
+          type: string
+          description: Spender address (position manager).
+        amount:
+          type: string
+          description: Amount to approve as a raw integer string.
+    MintRequest:
+      type: object
+      required:
+        - to
+        - amount
+      properties:
+        to:
+          type: string
+          description: Recipient address to mint tokens to.
+        amount:
+          type: string
+          description: Amount to mint as a raw integer string.
+    MintResponse:
+      type: object
+      required:
+        - tx_hash
+        - to
+        - amount
+        - status
+      properties:
+        tx_hash:
+          type: string
+          description: Mint transaction hash.
+        to:
+          type: string
+          description: Recipient address.
+        amount:
+          type: string
+          description: Amount minted as a raw integer string.
+        status:
+          type: string
+          enum:
+            - pending
+          description: Always "pending" — mint is submitted on-chain asynchronously.
 paths:
   /:
     get:
@@ -349,7 +349,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/TokenResponse"
+                $ref: "#/components/schemas/GetTokenResponse"
         "400":
           description: Missing required fields or invalid values
           content:
@@ -405,7 +405,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/TokenResponse"
+                $ref: "#/components/schemas/GetTokenResponse"
         "402":
           description: x402 payment required.
         "403":
@@ -499,7 +499,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/SupplyResponse"
+                $ref: "#/components/schemas/GetSupplyResponse"
         "402":
           description: x402 payment required.
         "403":
@@ -546,7 +546,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/PoolResponse"
+                $ref: "#/components/schemas/GetPoolResponse"
         "400":
           description: Missing pricePerToken or invalid feeTier
           content:
@@ -598,7 +598,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/PoolResponse"
+                $ref: "#/components/schemas/GetPoolResponse"
         "402":
           description: x402 payment required.
         "403":
@@ -649,7 +649,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/LiquidityParamsResponse"
+                $ref: "#/components/schemas/GetLiquidityParamsResponse"
         "400":
           description: Missing tokenAmount or usdcAmount
           content:

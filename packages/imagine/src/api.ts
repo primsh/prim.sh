@@ -20,7 +20,7 @@ export interface UpscaleRequest {}
 export interface UpscaleResponse {}
 
 // biome-ignore lint/suspicious/noEmptyInterface: scaffold — fields added when provider is implemented
-export interface ModelsResponse {}
+export interface ListModelsResponse {}
 
 // ─── Error ────────────────────────────────────────────────────────────────────
 

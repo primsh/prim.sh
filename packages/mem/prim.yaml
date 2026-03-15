@@ -104,12 +104,12 @@ ownership: "All collections and cache entries are scoped to the wallet address e
 routes_map:
   - route: "POST /v1/collections"
     request: CreateCollectionRequest
-    response: CollectionResponse
+    response: GetCollectionResponse
     status: 201
     description: "Create a vector collection"
     operation_id: create_collection
     request_type: CreateCollectionRequest
-    response_type: CollectionResponse
+    response_type: GetCollectionResponse
     errors:
       - { status: 400, code: invalid_request, description: "Missing name or invalid fields" }
       - { status: 402, code: payment_required, description: "x402 payment needed" }
@@ -131,12 +131,12 @@ routes_map:
       - { status: 403, code: forbidden, description: "Resource belongs to a different wallet" }
   - route: "GET /v1/collections/:id"
     request: null
-    response: CollectionResponse
+    response: GetCollectionResponse
     status: 200
     description: "Get collection with live document_count from Qdrant"
     operation_id: get_collection
     request_type: null
-    response_type: CollectionResponse
+    response_type: GetCollectionResponse
     errors:
       - { status: 402, code: payment_required, description: "x402 payment needed" }
       - { status: 403, code: forbidden, description: "Resource belongs to a different wallet" }

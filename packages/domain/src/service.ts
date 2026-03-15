@@ -5,27 +5,27 @@ import type { PaginatedList, ServiceResult } from "@primsh/x402-middleware";
 
 const log = createLogger("domain.sh");
 import type {
-  ActivateResponse,
+  ActivateDomainResponse,
   BatchRecordsRequest,
   BatchRecordsResponse,
-  ConfigureNsResponse,
+  ConfigureNameserversResponse,
   CreateRecordRequest,
   CreateZoneRequest,
   CreateZoneResponse,
-  DomainSearchResponse,
+  SearchDomainResponse,
   MailSetupRecordResult,
-  MailSetupRequest,
-  MailSetupResponse,
+  SetupMailRequest,
+  SetupMailResponse,
   QuoteRequest,
   QuoteResponse,
-  RecordResponse,
+  GetRecordResponse,
   RecordType,
   RecoverResponse,
   RegisterResponse,
-  RegistrationStatusResponse,
+  GetRegistrationStatusResponse,
   UpdateRecordRequest,
-  VerifyResponse,
-  ZoneResponse,
+  VerifyDomainResponse,
+  GetZoneResponse,
   ZoneStatus,
 } from "./api.ts";
 import {
@@ -82,18 +82,18 @@ function generateRecordId(): string {
   return `r_${randomBytes(4).toString("hex")}`;
 }
 
-function rowToZoneResponse(row: ZoneRow): ZoneResponse {
+function rowToGetZoneResponse(row: ZoneRow): GetZoneResponse {
   return {
     id: row.id,
     domain: row.domain,
-    status: row.status as ZoneResponse["status"],
+    status: row.status as GetZoneResponse["status"],
     name_servers: JSON.parse(row.nameservers) as string[],
     owner_wallet: row.owner_wallet,
     created_at: new Date(row.created_at).toISOString(),
   };
 }
 
-function rowToRecordResponse(row: RecordRow): RecordResponse {
+function rowToGetRecordResponse(row: RecordRow): GetRecordResponse {
   return {
     id: row.id,
     zone_id: row.zone_id,
@@ -184,7 +184,7 @@ export async function createZone(
     const row = getZoneById(zoneId);
     if (!row) throw new Error("Failed to retrieve zone after insert");
 
-    return { ok: true, data: { zone: rowToZoneResponse(row) } };
+    return { ok: true, data: { zone: rowToGetZoneResponse(row) } };
   } catch (err) {
     if (err instanceof CloudflareError) {
       return { ok: false, status: err.statusCode, code: err.code, message: err.message };
@@ -197,13 +197,13 @@ export function listZones(
   callerWallet: string,
   limit: number,
   page: number,
-): PaginatedList<ZoneResponse> {
+): PaginatedList<GetZoneResponse> {
   const offset = (page - 1) * limit;
   const rows = getZonesByOwner(callerWallet, limit, offset);
   const total = countZonesByOwner(callerWallet);
 
   return {
-    data: rows.map(rowToZoneResponse),
+    data: rows.map(rowToGetZoneResponse),
     pagination: {
       total,
       page,
@@ -217,13 +217,13 @@ export function listZones(
 export async function refreshZoneStatus(
   zoneId: string,
   callerWallet: string,
-): Promise<ServiceResult<ZoneResponse>> {
+): Promise<ServiceResult<GetZoneResponse>> {
   const check = checkZoneOwnership(zoneId, callerWallet);
   if (!check.ok) return check;
 
   // Skip CF call if already active (avoid unnecessary API hits)
   if (check.row.status === "active") {
-    return { ok: true, data: rowToZoneResponse(check.row) };
+    return { ok: true, data: rowToGetZoneResponse(check.row) };
   }
 
   try {
@@ -233,7 +233,7 @@ export async function refreshZoneStatus(
     }
     const updatedRow = getZoneById(zoneId);
     if (!updatedRow) throw new Error("Zone not found after status update");
-    return { ok: true, data: rowToZoneResponse(updatedRow) };
+    return { ok: true, data: rowToGetZoneResponse(updatedRow) };
   } catch (err) {
     if (err instanceof CloudflareError) {
       return { ok: false, status: err.statusCode, code: err.code, message: err.message };
@@ -245,7 +245,7 @@ export async function refreshZoneStatus(
 export async function getZone(
   zoneId: string,
   callerWallet: string,
-): Promise<ServiceResult<ZoneResponse>> {
+): Promise<ServiceResult<GetZoneResponse>> {
   const check = checkZoneOwnership(zoneId, callerWallet);
   if (!check.ok) return check;
 
@@ -254,7 +254,7 @@ export async function getZone(
     return refreshZoneStatus(zoneId, callerWallet);
   }
 
-  return { ok: true, data: rowToZoneResponse(check.row) };
+  return { ok: true, data: rowToGetZoneResponse(check.row) };
 }
 
 export async function deleteZone(
@@ -285,7 +285,7 @@ export async function createRecord(
   zoneId: string,
   request: CreateRecordRequest,
   callerWallet: string,
-): Promise<ServiceResult<RecordResponse>> {
+): Promise<ServiceResult<GetRecordResponse>> {
   const check = checkZoneOwnership(zoneId, callerWallet);
   if (!check.ok) return check;
 
@@ -349,7 +349,7 @@ export async function createRecord(
     const row = getRecordById(recordId);
     if (!row) throw new Error("Failed to retrieve record after insert");
 
-    return { ok: true, data: rowToRecordResponse(row) };
+    return { ok: true, data: rowToGetRecordResponse(row) };
   } catch (err) {
     if (err instanceof CloudflareError) {
       return { ok: false, status: err.statusCode, code: err.code, message: err.message };
@@ -361,7 +361,7 @@ export async function createRecord(
 export function listRecords(
   zoneId: string,
   callerWallet: string,
-): ServiceResult<PaginatedList<RecordResponse>> {
+): ServiceResult<PaginatedList<GetRecordResponse>> {
   const check = checkZoneOwnership(zoneId, callerWallet);
   if (!check.ok) return check;
 
@@ -369,7 +369,7 @@ export function listRecords(
   return {
     ok: true,
     data: {
-      data: rows.map(rowToRecordResponse),
+      data: rows.map(rowToGetRecordResponse),
       pagination: {
         total: rows.length,
         page: 1,
@@ -385,7 +385,7 @@ export function getRecord(
   zoneId: string,
   recordId: string,
   callerWallet: string,
-): ServiceResult<RecordResponse> {
+): ServiceResult<GetRecordResponse> {
   const check = checkZoneOwnership(zoneId, callerWallet);
   if (!check.ok) return check;
 
@@ -394,7 +394,7 @@ export function getRecord(
     return { ok: false, status: 404, code: "not_found", message: "Record not found" };
   }
 
-  return { ok: true, data: rowToRecordResponse(row) };
+  return { ok: true, data: rowToGetRecordResponse(row) };
 }
 
 export async function updateRecord(
@@ -402,7 +402,7 @@ export async function updateRecord(
   recordId: string,
   request: UpdateRecordRequest,
   callerWallet: string,
-): Promise<ServiceResult<RecordResponse>> {
+): Promise<ServiceResult<GetRecordResponse>> {
   const check = checkZoneOwnership(zoneId, callerWallet);
   if (!check.ok) return check;
 
@@ -450,7 +450,7 @@ export async function updateRecord(
     const updated = getRecordById(recordId);
     if (!updated) throw new Error("Failed to retrieve record after update");
 
-    return { ok: true, data: rowToRecordResponse(updated) };
+    return { ok: true, data: rowToGetRecordResponse(updated) };
   } catch (err) {
     if (err instanceof CloudflareError) {
       return { ok: false, status: err.statusCode, code: err.code, message: err.message };
@@ -490,9 +490,9 @@ export async function deleteRecord(
 
 export async function mailSetup(
   zoneId: string,
-  request: MailSetupRequest,
+  request: SetupMailRequest,
   callerWallet: string,
-): Promise<ServiceResult<MailSetupResponse>> {
+): Promise<ServiceResult<SetupMailResponse>> {
   const check = checkZoneOwnership(zoneId, callerWallet);
   if (!check.ok) return check;
 
@@ -841,8 +841,8 @@ export async function batchRecords(
   return {
     ok: true,
     data: {
-      created: createdRows.map(rowToRecordResponse),
-      updated: updatedRows.map(rowToRecordResponse),
+      created: createdRows.map(rowToGetRecordResponse),
+      updated: updatedRows.map(rowToGetRecordResponse),
       deleted: deleteRows.map(({ primId }) => ({ id: primId })),
     },
   };
@@ -1150,7 +1150,7 @@ export async function recoverRegistration(
 export async function configureNs(
   domain: string,
   callerWallet: string,
-): Promise<ServiceResult<ConfigureNsResponse>> {
+): Promise<ServiceResult<ConfigureNameserversResponse>> {
   const reg = getRegistrationByDomain(domain);
   if (!reg) {
     return { ok: false, status: 404, code: "not_found", message: "Registration not found" };
@@ -1206,7 +1206,7 @@ export async function configureNs(
 export async function verifyZone(
   zoneId: string,
   callerWallet: string,
-): Promise<ServiceResult<VerifyResponse>> {
+): Promise<ServiceResult<VerifyDomainResponse>> {
   const check = checkZoneOwnership(zoneId, callerWallet);
   if (!check.ok) return check;
 
@@ -1252,7 +1252,7 @@ export async function verifyZone(
 export async function getRegistrationStatus(
   domain: string,
   callerWallet: string,
-): Promise<ServiceResult<RegistrationStatusResponse>> {
+): Promise<ServiceResult<GetRegistrationStatusResponse>> {
   const reg = getRegistrationByDomain(domain);
   if (!reg) {
     return { ok: false, status: 404, code: "not_found", message: "Registration not found" };
@@ -1347,7 +1347,7 @@ export async function getRegistrationStatus(
 export async function activateZone(
   zoneId: string,
   callerWallet: string,
-): Promise<ServiceResult<ActivateResponse>> {
+): Promise<ServiceResult<ActivateDomainResponse>> {
   const check = checkZoneOwnership(zoneId, callerWallet);
   if (!check.ok) return check;
 
@@ -1380,7 +1380,7 @@ const DEFAULT_TLDS = ["com", "net", "org", "io", "dev", "sh"];
 export async function searchDomains(
   query: string,
   tlds: string[],
-): Promise<ServiceResult<DomainSearchResponse>> {
+): Promise<ServiceResult<SearchDomainResponse>> {
   const registrar = getRegistrar();
   if (!registrar) {
     return {

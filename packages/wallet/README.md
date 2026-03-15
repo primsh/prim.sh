@@ -14,16 +14,16 @@ Part of [prim.sh](https://prim.sh) — zero signup, one payment token, infinite 
 |-------|-------------|-------|---------|----------|
 | `POST /v1/wallets` | Register a wallet via EIP-191 signature | $0.01 | `RegisterWalletRequest` | `RegisterWalletResponse` |
 | `GET /v1/wallets` | List registered wallets owned by the calling wallet | $0.001 | `—` | `WalletListResponse` |
-| `GET /v1/wallets/:address` | Get full wallet details including balance, policy, and status | $0.001 | `—` | `WalletDetailResponse` |
+| `GET /v1/wallets/:address` | Get full wallet details including balance, policy, and status | $0.001 | `—` | `GetWalletResponse` |
 | `DELETE /v1/wallets/:address` | Permanently deactivate a wallet. Irreversible. Pending fund requests cancelled. | $0.01 | `—` | `DeactivateWalletResponse` |
-| `POST /v1/wallets/:address/fund-request` | Request USDC funding for a wallet. A human operator can approve or deny. | $0.001 | `CreateFundRequestRequest` | `FundRequestResponse` |
+| `POST /v1/wallets/:address/fund-request` | Request USDC funding for a wallet. A human operator can approve or deny. | $0.001 | `CreateFundRequestRequest` | `GetFundRequestResponse` |
 | `GET /v1/wallets/:address/fund-requests` | List all fund requests for a wallet | $0.001 | `—` | `FundRequestListResponse` |
 | `POST /v1/fund-requests/:id/approve` | Approve a pending fund request. Returns the address to send USDC to. | $0.01 | `—` | `ApproveFundRequestResponse` |
 | `POST /v1/fund-requests/:id/deny` | Deny a pending fund request | $0.001 | `DenyFundRequestRequest` | `DenyFundRequestResponse` |
-| `GET /v1/wallets/:address/policy` | Get the spending policy for a wallet | $0.001 | `—` | `PolicyResponse` |
-| `PUT /v1/wallets/:address/policy` | Update spending policy for a wallet. All fields optional. Pass null to remove a limit. | $0.005 | `PolicyUpdateRequest` | `PolicyResponse` |
-| `POST /v1/wallets/:address/pause` | Pause operations for a wallet. Temporarily halts spending without deactivating. | $0.001 | `PauseRequest` | `PauseResponse` |
-| `POST /v1/wallets/:address/resume` | Resume operations for a paused wallet | $0.001 | `ResumeRequest` | `ResumeResponse` |
+| `GET /v1/wallets/:address/policy` | Get the spending policy for a wallet | $0.001 | `—` | `GetPolicyResponse` |
+| `PUT /v1/wallets/:address/policy` | Update spending policy for a wallet. All fields optional. Pass null to remove a limit. | $0.005 | `UpdatePolicyRequest` | `GetPolicyResponse` |
+| `POST /v1/wallets/:address/pause` | Pause operations for a wallet. Temporarily halts spending without deactivating. | $0.001 | `PauseWalletRequest` | `PauseWalletResponse` |
+| `POST /v1/wallets/:address/resume` | Resume operations for a paused wallet | $0.001 | `ResumeWalletRequest` | `ResumeWalletResponse` |
 
 ## Pricing
 
@@ -55,7 +55,7 @@ Part of [prim.sh](https://prim.sh) — zero signup, one payment token, infinite 
 | `registered_at` | `string` | ISO 8601 timestamp when the wallet was registered. |
 | `created_at` | `string` | ISO 8601 timestamp when the record was created. |
 
-### `WalletDetailResponse`
+### `GetWalletResponse`
 
 | Field | Type | Description |
 |-------|------|-------------|
@@ -84,7 +84,7 @@ Part of [prim.sh](https://prim.sh) — zero signup, one payment token, infinite 
 | `amount` | `string` | required |
 | `reason` | `string` | required |
 
-### `FundRequestResponse`
+### `GetFundRequestResponse`
 
 | Field | Type | Description |
 |-------|------|-------------|
@@ -121,7 +121,7 @@ Part of [prim.sh](https://prim.sh) — zero signup, one payment token, infinite 
 | `reason` | `string | null` | Denial reason if provided, null otherwise. |
 | `denied_at` | `string` | ISO 8601 timestamp when the request was denied. |
 
-### `PolicyResponse`
+### `GetPolicyResponse`
 
 | Field | Type | Description |
 |-------|------|-------------|
@@ -132,7 +132,7 @@ Part of [prim.sh](https://prim.sh) — zero signup, one payment token, infinite 
 | `daily_spent` | `string` | USDC spent today as a decimal string. |
 | `daily_reset_at` | `string` | ISO 8601 timestamp when the daily counter resets. |
 
-### `PolicyUpdateRequest`
+### `UpdatePolicyRequest`
 
 | Field | Type | Required |
 |-------|------|----------|
@@ -140,13 +140,13 @@ Part of [prim.sh](https://prim.sh) — zero signup, one payment token, infinite 
 | `maxPerDay` | `string | null` | optional |
 | `allowedPrimitives` | `string[] | null` | optional |
 
-### `PauseRequest`
+### `PauseWalletRequest`
 
 | Field | Type | Required |
 |-------|------|----------|
 | `scope` | `PauseScope` | optional |
 
-### `PauseResponse`
+### `PauseWalletResponse`
 
 | Field | Type | Description |
 |-------|------|-------------|
@@ -155,13 +155,13 @@ Part of [prim.sh](https://prim.sh) — zero signup, one payment token, infinite 
 | `scope` | `PauseScope` | Scope that was paused. |
 | `paused_at` | `string` | ISO 8601 timestamp when the wallet was paused. |
 
-### `ResumeRequest`
+### `ResumeWalletRequest`
 
 | Field | Type | Required |
 |-------|------|----------|
 | `scope` | `PauseScope` | optional |
 
-### `ResumeResponse`
+### `ResumeWalletResponse`
 
 | Field | Type | Description |
 |-------|------|-------------|

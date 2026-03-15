@@ -10,11 +10,11 @@ import type {
   DeleteMailboxResponse,
   DeleteWebhookResponse,
   DnsRecord,
-  DomainResponse,
+  GetDomainResponse,
   EmailAddress,
   EmailDetail,
   EmailMessage,
-  MailboxResponse,
+  GetMailboxResponse,
   RegisterDomainRequest,
   RegisterWebhookRequest,
   RenewMailboxRequest,
@@ -23,7 +23,7 @@ import type {
   VerificationResult,
   VerifyDomainResponse,
   WebhookPayload,
-  WebhookResponse,
+  GetWebhookResponse,
 } from "./api.ts";
 import { getJmapContext } from "./context.ts";
 import { encryptPassword } from "./crypto.ts";
@@ -131,13 +131,13 @@ function hashPassword(password: string): string {
   return `${salt}:${hash}`;
 }
 
-function rowToResponse(row: MailboxRow): MailboxResponse {
+function rowToResponse(row: MailboxRow): GetMailboxResponse {
   return {
     id: row.id,
     address: row.address,
     username: row.stalwart_name,
     domain: row.domain,
-    status: row.status as MailboxResponse["status"],
+    status: row.status as GetMailboxResponse["status"],
     created_at: new Date(row.created_at).toISOString(),
     expires_at: row.expires_at !== null ? new Date(row.expires_at).toISOString() : null,
   };
@@ -189,7 +189,7 @@ function validateTtl(ttlMs: number | undefined): ServiceResult<number | null> {
 export async function createMailbox(
   request: CreateMailboxRequest,
   callerWallet: string,
-): Promise<ServiceResult<MailboxResponse>> {
+): Promise<ServiceResult<GetMailboxResponse>> {
   const domain = request.domain ?? DEFAULT_DOMAIN;
 
   if (domain !== DEFAULT_DOMAIN) {
@@ -324,7 +324,7 @@ async function finalizeMailbox(
   passwordEnc: string,
   now: number,
   expiresAt: number | null,
-): Promise<ServiceResult<MailboxResponse>> {
+): Promise<ServiceResult<GetMailboxResponse>> {
   // Bootstrap JMAP session (best-effort — don't fail mailbox creation if JMAP is unreachable)
   let jmapData: {
     jmap_api_url: string | null;
@@ -395,7 +395,7 @@ export function listMailboxes(
   page: number,
   perPage: number,
   includeExpired = false,
-): PaginatedList<MailboxResponse> {
+): PaginatedList<GetMailboxResponse> {
   const offset = (page - 1) * perPage;
   const rows = includeExpired
     ? getMailboxesByOwnerAll(callerWallet, perPage, offset)
@@ -419,7 +419,7 @@ export function listMailboxes(
 export async function getMailbox(
   id: string,
   callerWallet: string,
-): Promise<ServiceResult<MailboxResponse>> {
+): Promise<ServiceResult<GetMailboxResponse>> {
   const check = checkOwnership(id, callerWallet);
   if (!check.ok) return check;
 
@@ -640,7 +640,7 @@ export async function renewMailbox(
   id: string,
   callerWallet: string,
   request: RenewMailboxRequest,
-): Promise<ServiceResult<MailboxResponse>> {
+): Promise<ServiceResult<GetMailboxResponse>> {
   const check = checkOwnership(id, callerWallet);
   if (!check.ok) return check;
 
@@ -670,7 +670,7 @@ export async function renewMailbox(
 
 // ─── Webhooks (R-7) ──────────────────────────────────────────────────
 
-function webhookToResponse(row: import("./db.ts").WebhookRow): WebhookResponse {
+function webhookToResponse(row: import("./db.ts").WebhookRow): GetWebhookResponse {
   let events: string[];
   try {
     events = JSON.parse(row.events) as string[];
@@ -691,7 +691,7 @@ export async function registerWebhook(
   mailboxId: string,
   callerWallet: string,
   request: RegisterWebhookRequest,
-): Promise<ServiceResult<WebhookResponse>> {
+): Promise<ServiceResult<GetWebhookResponse>> {
   const check = checkOwnership(mailboxId, callerWallet);
   if (!check.ok) return check;
 
@@ -741,7 +741,7 @@ export async function registerWebhook(
 export function listWebhooks(
   mailboxId: string,
   callerWallet: string,
-): ServiceResult<PaginatedList<WebhookResponse>> {
+): ServiceResult<PaginatedList<GetWebhookResponse>> {
   const check = checkOwnership(mailboxId, callerWallet);
   if (!check.ok) return check;
 
@@ -869,8 +869,8 @@ function buildRequiredRecords(domain: string): DnsRecord[] {
   ];
 }
 
-function domainToResponse(row: DomainRow): DomainResponse {
-  const resp: DomainResponse = {
+function domainToResponse(row: DomainRow): GetDomainResponse {
+  const resp: GetDomainResponse = {
     id: row.id,
     domain: row.domain,
     status: row.status,
@@ -902,7 +902,7 @@ function domainToResponse(row: DomainRow): DomainResponse {
 export async function registerDomain(
   request: RegisterDomainRequest,
   callerWallet: string,
-): Promise<ServiceResult<DomainResponse>> {
+): Promise<ServiceResult<GetDomainResponse>> {
   const domain = request.domain?.trim().toLowerCase();
   if (!domain || !isValidDomain(domain)) {
     return { ok: false, status: 400, code: "invalid_request", message: "Invalid domain format" };
@@ -930,7 +930,7 @@ export function listDomains(
   callerWallet: string,
   page: number,
   perPage: number,
-): PaginatedList<DomainResponse> {
+): PaginatedList<GetDomainResponse> {
   const offset = (page - 1) * perPage;
   const rows = getDomainsByOwner(callerWallet, perPage, offset);
   const total = countDomainsByOwner(callerWallet);
@@ -946,7 +946,7 @@ export function listDomains(
   };
 }
 
-export function getDomain(id: string, callerWallet: string): ServiceResult<DomainResponse> {
+export function getDomain(id: string, callerWallet: string): ServiceResult<GetDomainResponse> {
   const row = getDomainById(id);
   if (!row || row.owner_wallet !== callerWallet) {
     return { ok: false, status: 404, code: "not_found", message: "Domain not found" };

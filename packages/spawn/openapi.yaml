@@ -49,40 +49,6 @@ components:
             message:
               type: string
               description: Human-readable error message.
-    ActionOnlyResponse:
-      type: object
-      required:
-        - action
-      properties:
-        action:
-          $ref: "#/components/schemas/ActionResponse"
-          description: Action object for the requested operation.
-    ActionResponse:
-      type: object
-      required:
-        - id
-        - command
-        - status
-        - started_at
-        - finished_at
-      properties:
-        id:
-          type: string
-          description: Action ID.
-        command:
-          type: string
-          description: Action name (e.g. "create", "start", "stop").
-        status:
-          type: string
-          description: 'Action status: "running" | "success" | "error".'
-        started_at:
-          type: string
-          description: ISO 8601 timestamp when the action started.
-        finished_at:
-          type:
-            - string
-            - "null"
-          description: ISO 8601 timestamp when the action finished. Null if still running.
     CreateServerRequest:
       type: object
       required:
@@ -123,10 +89,10 @@ components:
         - deposit_remaining
       properties:
         server:
-          $ref: "#/components/schemas/ServerResponse"
+          $ref: "#/components/schemas/GetServerResponse"
           description: 'Created server object (initial status: "initializing").'
         action:
-          $ref: "#/components/schemas/ActionResponse"
+          $ref: "#/components/schemas/GetActionResponse"
           description: Action object tracking the provisioning progress.
         deposit_charged:
           type: string
@@ -160,68 +126,41 @@ components:
         deposit_refunded:
           type: string
           description: USDC refunded to wallet as a decimal string.
-    PublicNet:
-      type: object
-      required:
-        - ipv4
-        - ipv6
-      properties:
-        ipv4:
-          type: object
-          description: IPv4 address info. Null until assigned.
-        ipv6:
-          type: object
-          description: IPv6 address info. Null until assigned.
-    RebuildRequest:
-      type: object
-      required:
-        - image
-      properties:
-        image:
-          type: string
-          description: OS image slug to rebuild with (e.g. "debian-12").
-    RebuildResponse:
+    GetActionOnlyResponse:
       type: object
       required:
         - action
-        - root_password
       properties:
         action:
-          $ref: "#/components/schemas/ActionResponse"
-          description: 'Action object (command: "rebuild").'
-        root_password:
+          $ref: "#/components/schemas/GetActionResponse"
+          description: Action object for the requested operation.
+    GetActionResponse:
+      type: object
+      required:
+        - id
+        - command
+        - status
+        - started_at
+        - finished_at
+      properties:
+        id:
+          type: string
+          description: Action ID.
+        command:
+          type: string
+          description: Action name (e.g. "create", "start", "stop").
+        status:
+          type: string
+          description: 'Action status: "running" | "success" | "error".'
+        started_at:
+          type: string
+          description: ISO 8601 timestamp when the action started.
+        finished_at:
           type:
             - string
             - "null"
-          description: New root password if no SSH keys configured. Null if SSH keys are installed.
-    ResizeRequest:
-      type: object
-      required:
-        - type
-      properties:
-        type:
-          type: string
-          description: Target server type slug.
-        upgrade_disk:
-          type: boolean
-          description: Upgrade disk along with CPU/RAM. Irreversible if true. Default false.
-    ResizeResponse:
-      type: object
-      required:
-        - action
-        - new_type
-        - deposit_delta
-      properties:
-        action:
-          $ref: "#/components/schemas/ActionResponse"
-          description: 'Action object (command: "resize").'
-        new_type:
-          type: string
-          description: Target server type after resize.
-        deposit_delta:
-          type: string
-          description: USDC deposit change as a decimal string. Positive = charged, negative = refunded.
-    ServerResponse:
+          description: ISO 8601 timestamp when the action finished. Null if still running.
+    GetServerResponse:
       type: object
       required:
         - id
@@ -269,7 +208,7 @@ components:
         created_at:
           type: string
           description: ISO 8601 timestamp when the server was created.
-    SshKeyResponse:
+    GetSshKeyResponse:
       type: object
       required:
         - id
@@ -301,6 +240,67 @@ components:
         created_at:
           type: string
           description: ISO 8601 timestamp when the key was registered.
+    PublicNet:
+      type: object
+      required:
+        - ipv4
+        - ipv6
+      properties:
+        ipv4:
+          type: object
+          description: IPv4 address info. Null until assigned.
+        ipv6:
+          type: object
+          description: IPv6 address info. Null until assigned.
+    RebuildServerRequest:
+      type: object
+      required:
+        - image
+      properties:
+        image:
+          type: string
+          description: OS image slug to rebuild with (e.g. "debian-12").
+    RebuildServerResponse:
+      type: object
+      required:
+        - action
+        - root_password
+      properties:
+        action:
+          $ref: "#/components/schemas/GetActionResponse"
+          description: 'Action object (command: "rebuild").'
+        root_password:
+          type:
+            - string
+            - "null"
+          description: New root password if no SSH keys configured. Null if SSH keys are installed.
+    ResizeServerRequest:
+      type: object
+      required:
+        - type
+      properties:
+        type:
+          type: string
+          description: Target server type slug.
+        upgrade_disk:
+          type: boolean
+          description: Upgrade disk along with CPU/RAM. Irreversible if true. Default false.
+    ResizeServerResponse:
+      type: object
+      required:
+        - action
+        - new_type
+        - deposit_delta
+      properties:
+        action:
+          $ref: "#/components/schemas/GetActionResponse"
+          description: 'Action object (command: "resize").'
+        new_type:
+          type: string
+          description: Target server type after resize.
+        deposit_delta:
+          type: string
+          description: USDC deposit change as a decimal string. Positive = charged, negative = refunded.
 paths:
   /:
     get:
@@ -418,7 +418,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ServerResponse"
+                $ref: "#/components/schemas/GetServerResponse"
         "402":
           description: x402 payment required.
         "403":
@@ -493,7 +493,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ActionOnlyResponse"
+                $ref: "#/components/schemas/GetActionOnlyResponse"
         "402":
           description: x402 payment required.
         "403":
@@ -534,7 +534,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ActionOnlyResponse"
+                $ref: "#/components/schemas/GetActionOnlyResponse"
         "402":
           description: x402 payment required.
         "403":
@@ -575,7 +575,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ActionOnlyResponse"
+                $ref: "#/components/schemas/GetActionOnlyResponse"
         "402":
           description: x402 payment required.
         "403":
@@ -615,14 +615,14 @@ paths:
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/ResizeRequest"
+              $ref: "#/components/schemas/ResizeServerRequest"
       responses:
         "200":
           description: Change server type (CPU/RAM). Server must be stopped first. Deposit adjusted.
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ResizeResponse"
+                $ref: "#/components/schemas/ResizeServerResponse"
         "400":
           description: Missing type field or invalid value
           content:
@@ -668,14 +668,14 @@ paths:
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/RebuildRequest"
+              $ref: "#/components/schemas/RebuildServerRequest"
       responses:
         "200":
           description: Reinstall from a fresh OS image. All data on server is destroyed.
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/RebuildResponse"
+                $ref: "#/components/schemas/RebuildServerResponse"
         "400":
           description: Missing image field
           content:
@@ -721,7 +721,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/SshKeyResponse"
+                $ref: "#/components/schemas/GetSshKeyResponse"
         "400":
           description: Missing name or public_key
           content:

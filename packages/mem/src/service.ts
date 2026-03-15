@@ -2,7 +2,7 @@
 import { createHash, randomBytes } from "node:crypto";
 import type { PaginatedList, ServiceResult } from "@primsh/x402-middleware";
 import type {
-  CollectionResponse,
+  GetCollectionResponse,
   CreateCollectionRequest,
   GetCacheResponse,
   QueryRequest,
@@ -68,10 +68,10 @@ function generateId(): string {
   return `c_${randomBytes(4).toString("hex")}`;
 }
 
-function rowToCollectionResponse(
+function rowToGetCollectionResponse(
   row: CollectionRow,
   documentCount: number | null,
-): CollectionResponse {
+): GetCollectionResponse {
   return {
     id: row.id,
     name: row.name,
@@ -114,7 +114,7 @@ function checkCollectionOwnership(collectionId: string, caller: string): Collect
 export async function createCollection(
   request: CreateCollectionRequest,
   callerWallet: string,
-): Promise<ServiceResult<CollectionResponse>> {
+): Promise<ServiceResult<GetCollectionResponse>> {
   if (!isValidCollectionName(request.name)) {
     return {
       ok: false,
@@ -161,20 +161,20 @@ export async function createCollection(
   const row = getCollectionById(id);
   if (!row) throw new Error("Failed to retrieve collection after insert");
 
-  return { ok: true, data: rowToCollectionResponse(row, null) };
+  return { ok: true, data: rowToGetCollectionResponse(row, null) };
 }
 
 export function listCollections(
   callerWallet: string,
   limit: number,
   page: number,
-): PaginatedList<CollectionResponse> {
+): PaginatedList<GetCollectionResponse> {
   const offset = (page - 1) * limit;
   const rows = getCollectionsByOwner(callerWallet, limit, offset);
   const total = countCollectionsByOwner(callerWallet);
 
   return {
-    data: rows.map((r) => rowToCollectionResponse(r, null)),
+    data: rows.map((r) => rowToGetCollectionResponse(r, null)),
     pagination: {
       total,
       page,
@@ -188,7 +188,7 @@ export function listCollections(
 export async function getCollection(
   id: string,
   callerWallet: string,
-): Promise<ServiceResult<CollectionResponse>> {
+): Promise<ServiceResult<GetCollectionResponse>> {
   const check = checkCollectionOwnership(id, callerWallet);
   if (!check.ok) return check;
 
@@ -201,7 +201,7 @@ export async function getCollection(
     // Qdrant info failure → document_count stays null
   }
 
-  return { ok: true, data: rowToCollectionResponse(check.row, documentCount) };
+  return { ok: true, data: rowToGetCollectionResponse(check.row, documentCount) };
 }
 
 export async function deleteCollection(

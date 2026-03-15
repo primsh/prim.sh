@@ -149,12 +149,12 @@ routes_map:
       - { status: 403, code: forbidden, description: "Missing wallet in payment" }
   - route: "GET /v1/servers/:id"
     request: null
-    response: ServerResponse
+    response: GetServerResponse
     status: 200
     description: "Get full details for a single server. Poll this until status='running'."
     operation_id: get_server
     request_type: null
-    response_type: ServerResponse
+    response_type: GetServerResponse
     errors:
       - { status: 402, code: payment_required, description: "x402 payment needed" }
       - { status: 403, code: forbidden, description: "Server belongs to a different wallet" }
@@ -174,12 +174,12 @@ routes_map:
       - { status: 502, code: provider_error, description: "Cloud provider API error" }
   - route: "POST /v1/servers/:id/start"
     request: null
-    response: ActionOnlyResponse
+    response: GetActionOnlyResponse
     status: 200
     description: "Start a stopped server"
     operation_id: start_server
     request_type: null
-    response_type: ActionOnlyResponse
+    response_type: GetActionOnlyResponse
     errors:
       - { status: 402, code: payment_required, description: "x402 payment needed" }
       - { status: 403, code: forbidden, description: "Server belongs to a different wallet" }
@@ -187,12 +187,12 @@ routes_map:
       - { status: 502, code: provider_error, description: "Cloud provider API error" }
   - route: "POST /v1/servers/:id/stop"
     request: null
-    response: ActionOnlyResponse
+    response: GetActionOnlyResponse
     status: 200
     description: "Stop a running server (graceful shutdown)"
     operation_id: stop_server
     request_type: null
-    response_type: ActionOnlyResponse
+    response_type: GetActionOnlyResponse
     errors:
       - { status: 402, code: payment_required, description: "x402 payment needed" }
       - { status: 403, code: forbidden, description: "Server belongs to a different wallet" }
@@ -200,25 +200,25 @@ routes_map:
       - { status: 502, code: provider_error, description: "Cloud provider API error" }
   - route: "POST /v1/servers/:id/reboot"
     request: null
-    response: ActionOnlyResponse
+    response: GetActionOnlyResponse
     status: 200
     description: "Reboot a running server"
     operation_id: reboot_server
     request_type: null
-    response_type: ActionOnlyResponse
+    response_type: GetActionOnlyResponse
     errors:
       - { status: 402, code: payment_required, description: "x402 payment needed" }
       - { status: 403, code: forbidden, description: "Server belongs to a different wallet" }
       - { status: 404, code: not_found, description: "Server not found" }
       - { status: 502, code: provider_error, description: "Cloud provider API error" }
   - route: "POST /v1/servers/:id/resize"
-    request: ResizeRequest
-    response: ResizeResponse
+    request: ResizeServerRequest
+    response: ResizeServerResponse
     status: 200
     description: "Change server type (CPU/RAM). Server must be stopped first. Deposit adjusted."
     operation_id: resize_server
-    request_type: ResizeRequest
-    response_type: ResizeResponse
+    request_type: ResizeServerRequest
+    response_type: ResizeServerResponse
     errors:
       - { status: 400, code: invalid_request, description: "Missing type field or invalid value" }
       - { status: 402, code: payment_required, description: "x402 payment needed" }
@@ -226,13 +226,13 @@ routes_map:
       - { status: 404, code: not_found, description: "Server not found" }
       - { status: 502, code: provider_error, description: "Cloud provider API error" }
   - route: "POST /v1/servers/:id/rebuild"
-    request: RebuildRequest
-    response: RebuildResponse
+    request: RebuildServerRequest
+    response: RebuildServerResponse
     status: 200
     description: "Reinstall from a fresh OS image. All data on server is destroyed."
     operation_id: rebuild_server
-    request_type: RebuildRequest
-    response_type: RebuildResponse
+    request_type: RebuildServerRequest
+    response_type: RebuildServerResponse
     errors:
       - { status: 400, code: invalid_request, description: "Missing image field" }
       - { status: 402, code: payment_required, description: "x402 payment needed" }
@@ -241,12 +241,12 @@ routes_map:
       - { status: 502, code: provider_error, description: "Cloud provider API error" }
   - route: "POST /v1/ssh-keys"
     request: CreateSshKeyRequest
-    response: SshKeyResponse
+    response: GetSshKeyResponse
     status: 201
     description: "Register a public SSH key. Returned ID can be used in ssh_keys when creating a server."
     operation_id: create_ssh_key
     request_type: CreateSshKeyRequest
-    response_type: SshKeyResponse
+    response_type: GetSshKeyResponse
     errors:
       - { status: 400, code: invalid_request, description: "Missing name or public_key" }
       - { status: 402, code: payment_required, description: "x402 payment needed" }

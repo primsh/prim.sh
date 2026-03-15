@@ -5,7 +5,7 @@ import type {
   EmbedRequest,
   EmbedResponse,
   ModelInfo,
-  ModelsResponse,
+  ListModelsResponse,
 } from "./api.ts";
 import { ProviderError } from "./provider.ts";
 import type { InferProvider } from "./provider.ts";
@@ -146,7 +146,7 @@ export class OpenrouterClient implements InferProvider {
     }
   }
 
-  async models(): Promise<ModelsResponse> {
+  async models(): Promise<ListModelsResponse> {
     const raw = await this.get<{ data: OpenRouterModel[] }>("/models");
     const data: ModelInfo[] = raw.data.map((m) => ({
       id: m.id,
