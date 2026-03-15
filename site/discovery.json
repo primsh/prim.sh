@@ -10,8 +10,7 @@
       "status": "mainnet",
       "endpoint": "https://wallet.prim.sh",
       "description": "Agent wallets. Generate keys, hold USDC on Base, and pay any x402 invoice.",
-      "llms_txt": "https://prim.sh/wallet/llms.txt",
-      "openapi": "https://prim.sh/openapi/wallet.yaml"
+      "llms_txt": "https://prim.sh/wallet/llms.txt"
     },
     {
       "id": "faucet",
@@ -19,16 +18,14 @@
       "status": "testnet",
       "endpoint": "https://faucet.prim.sh",
       "description": "Free testnet USDC and ETH on demand. Fund your agent wallet and start building.",
-      "llms_txt": "https://prim.sh/faucet/llms.txt",
-      "openapi": "https://prim.sh/openapi/faucet.yaml"
+      "llms_txt": "https://prim.sh/faucet/llms.txt"
     },
     {
       "id": "gate",
       "name": "gate.sh",
       "status": "mainnet",
       "endpoint": "https://gate.prim.sh",
-      "description": "Access control and onboarding for agents. Invite codes, allowlisting, wallet funding.",
-      "openapi": "https://prim.sh/openapi/gate.yaml"
+      "description": "Access control and onboarding for agents. Invite codes, allowlisting, wallet funding."
     },
     {
       "id": "store",
@@ -36,8 +33,7 @@
       "status": "mainnet",
       "endpoint": "https://store.prim.sh",
       "description": "Object storage. Persist artifacts across ephemeral VMs. S3-compatible.",
-      "llms_txt": "https://prim.sh/store/llms.txt",
-      "openapi": "https://prim.sh/openapi/store.yaml"
+      "llms_txt": "https://prim.sh/store/llms.txt"
     },
     {
       "id": "search",
@@ -45,8 +41,7 @@
       "status": "mainnet",
       "endpoint": "https://search.prim.sh",
       "description": "Search for agents. Zero ads, zero SEO spam. Just facts and clean markdown.",
-      "llms_txt": "https://prim.sh/search/llms.txt",
-      "openapi": "https://prim.sh/openapi/search.yaml"
+      "llms_txt": "https://prim.sh/search/llms.txt"
     },
     {
       "id": "feedback",
