@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: Apache-2.0
 // THIS FILE IS GENERATED — DO NOT EDIT
-// Source: packages/<id>/openapi.yaml (all prims with rest interface)
+// Source: packages/<id>/generated/openapi.yaml (all prims with rest interface)
 // Regenerate: pnpm gen:sdk
 
 export { unwrap, PrimError } from "./shared.js";

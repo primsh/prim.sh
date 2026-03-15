@@ -253,10 +253,10 @@ export function getGateOverrides(p: Primitive): Required<GateConfig> {
 
 // ── OpenAPI spec paths ─────────────────────────────────────────────────────
 
-/** Path to a prim's colocated OpenAPI spec: packages/<id>/openapi.yaml */
+/** Path to a prim's generated OpenAPI spec: packages/<id>/generated/openapi.yaml */
 export function specPath(primId: string, root?: string): string {
   const ROOT = root ?? resolve(new URL("../..", import.meta.url).pathname);
-  return join(ROOT, "packages", primId, "openapi.yaml");
+  return join(ROOT, "packages", primId, "generated", "openapi.yaml");
 }
 
 // ── Filters ────────────────────────────────────────────────────────────────

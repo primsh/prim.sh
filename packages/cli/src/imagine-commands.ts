@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: Apache-2.0
 // THIS FILE IS GENERATED — DO NOT EDIT
-// Source: packages/imagine/openapi.yaml
+// Source: packages/imagine/generated/openapi.yaml
 // Regenerate: pnpm gen:cli
 
 import { createPrimFetch } from "@primsh/x402-client";

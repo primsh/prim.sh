@@ -13,8 +13,8 @@
  *   bun scripts/gen-openapi.ts track          # generate for a single prim
  */
 
-import { existsSync, readFileSync, writeFileSync } from "node:fs";
-import { join, resolve } from "node:path";
+import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
+import { dirname, join, resolve } from "node:path";
 import { parseApiFile } from "./lib/parse-api.js";
 import { loadPrimitives, specPath, withPackage } from "./lib/primitives.js";
 import { parseRoutePrices } from "./lib/render-llms-txt.js";
@@ -47,6 +47,7 @@ function applyFullFile(filePath: string, content: string): void {
       console.log(`  ✓ ${filePath}`);
     }
   } else {
+    mkdirSync(dirname(filePath), { recursive: true });
     writeFileSync(filePath, content);
     console.log(`  ${changed ? "↺" : "✓"} ${filePath}`);
   }
