@@ -368,7 +368,11 @@ app.post("/v1/buckets/:id/presign", async (c) => {
   if (callerOrRes instanceof Response) return callerOrRes;
   const caller = callerOrRes;
 
-  const bodyOrRes = await parseJsonBody<CreatePresignRequest>(c, logger, "POST /v1/buckets/:id/presign");
+  const bodyOrRes = await parseJsonBody<CreatePresignRequest>(
+    c,
+    logger,
+    "POST /v1/buckets/:id/presign",
+  );
   if (bodyOrRes instanceof Response) return bodyOrRes;
   const body = bodyOrRes;
 

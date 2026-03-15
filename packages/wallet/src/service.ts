@@ -517,7 +517,10 @@ function policyRowToResponse(
   };
 }
 
-export function getSpendingPolicy(address: string, caller: string): PolicyResult<GetPolicyResponse> {
+export function getSpendingPolicy(
+  address: string,
+  caller: string,
+): PolicyResult<GetPolicyResponse> {
   const check = checkOwnership(address, caller);
   if (!check.ok) return check;
 

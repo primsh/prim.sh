@@ -199,7 +199,10 @@ export function listBuckets(
   };
 }
 
-export function getBucket(bucketId: string, callerWallet: string): ServiceResult<GetBucketResponse> {
+export function getBucket(
+  bucketId: string,
+  callerWallet: string,
+): ServiceResult<GetBucketResponse> {
   const check = checkBucketOwnership(bucketId, callerWallet);
   if (!check.ok) return check;
   return { ok: true, data: rowToBucketResponse(check.row) };
