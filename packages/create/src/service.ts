@@ -4,7 +4,12 @@ import { join, resolve } from "node:path";
 import type { ServiceResult } from "@primsh/x402-middleware";
 import { parse as parseYaml } from "yaml";
 import { type PrimYaml, scaffoldPure } from "../../../scripts/lib/scaffold.ts";
-import type { ListPortsResponse, ScaffoldResponse, GetSchemaResponse, ValidateResponse } from "./api.ts";
+import type {
+  ListPortsResponse,
+  ScaffoldResponse,
+  GetSchemaResponse,
+  ValidateResponse,
+} from "./api.ts";
 import primYamlSchema from "./prim-yaml-schema.json";
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
