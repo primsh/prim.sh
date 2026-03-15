@@ -35,18 +35,28 @@ prim/
 ├── packages/
 │   ├── x402-middleware/      # @primsh/x402-middleware (shared)
 │   ├── wallet/               # @primsh/wallet (wallet.sh)
-│   │   └── openapi.yaml     # Generated OpenAPI spec (colocated)
+│   │   ├── src/              # Hand-written source (api.ts, service.ts, index.ts)
+│   │   └── generated/        # Generated files (openapi.yaml)
 │   ├── email/                # @primsh/email (email.sh)
 │   ├── spawn/                # @primsh/spawn (spawn.sh)
-│   ├── sdk/                  # @primsh/sdk (generated typed clients)
-│   ├── mcp/                  # @primsh/mcp (generated MCP tools)
-│   └── tools/                # @primsh/tools (function-calling tool definitions)
+│   ├── sdk/                  # @primsh/sdk
+│   │   ├── src/              # Hand-written (client.ts, shared.ts)
+│   │   └── generated/        # Generated typed clients (wallet.ts, etc.)
+│   ├── mcp/                  # @primsh/mcp
+│   │   ├── src/              # Hand-written (server.ts, x402.ts)
+│   │   └── generated/tools/  # Generated MCP tool handlers
+│   ├── cli/                  # @primsh/cli
+│   │   ├── src/              # Hand-written + manually maintained commands
+│   │   └── generated/        # Generated CLI commands
+│   └── tools/                # @primsh/tools
+│       └── generated/        # Generated function-calling tool definitions (JSON)
 ├── site/                     # Landing pages (HTML, moved from root)
 │   ├── serve.ts              # Dev server (Bun)
 │   └── <primitive>/index.html
 ├── tasks/
 │   ├── tasks.json            # SOT for all task data
 │   └── tasks.schema.json     # JSON Schema draft 2020-12
+├── .gitattributes            # Marks generated/ dirs as linguist-generated
 ├── package.json              # Workspace root
 ├── pnpm-workspace.yaml
 ├── tsconfig.base.json
@@ -149,6 +159,14 @@ Every primitive package has two test files:
 
 - **`test/smoke.test.ts`** — Unit-level smoke tests. Included in `pnpm test`. Uses Hono test client + `vi.mock` (no real API keys). Must pass in CI.
 - **`test/smoke-live.test.ts`** — Live integration tests against real providers. Excluded from default `pnpm test`. Run via `pnpm test:smoke`.
+
+### Generated vs hand-maintained tests
+
+Test files use a **header-guard pattern** (same as gen-openapi):
+- Files with `// THIS FILE IS GENERATED` header → fully overwritten by `pnpm gen:tests`
+- Files without the header → manually maintained, gen-tests skips them
+
+To take manual ownership of a generated test: remove the `GENERATED` header line. Gen-tests will skip it from then on.
 
 ### 5-check contract (`smoke.test.ts`)
 
@@ -290,4 +308,48 @@ pnpm gen:docs              # Regenerate READMEs from prim.yaml + api.ts
 pnpm gen:docs --check      # Verify READMEs are fresh (CI gate)
 ```
 <!-- END:PRIM:FACTORY -->
+
+## Generated File Conventions
+
+Every generated file has **3 signals**:
+1. **`generated/` dir** — lives in a `generated/` subdirectory, separate from hand-written `src/`
+2. **`GENERATED` header** — first lines include `// THIS FILE IS GENERATED — DO NOT EDIT`
+3. **`.gitattributes`** — marked `linguist-generated=true` so GitHub collapses diffs
+
+**Never hand-edit files in `generated/` dirs.** Run `pnpm gen` to regenerate. If you need custom logic, put it in a separate file in `src/` and import from the generated file.
+
+### Type inference from operation_id
+
+Generators infer request/response type names from `operation_id` + `api.ts` exports:
+- `operation_id: create_bucket` → looks for `CreateBucketRequest` / `CreateBucketResponse` in api.ts
+- If found → used automatically (no need to specify in prim.yaml)
+- If not found → falls back to explicit `request:` / `response:` fields in prim.yaml
+
+Most routes work by inference. Explicit type fields are only needed for:
+- **Paginated lists** — response is a `*ListResponse` wrapper
+- **Shared response types** — create/update returns the `Get*Response` of the resource
+- **Non-standard naming** — operation_id doesn't match the interface name convention
+
+### Interface naming convention
+
+All api.ts interfaces use **verb-first** naming: `<Verb><Noun><Request|Response>`
+- `GetBucketResponse`, `CreateServerRequest`, `DeleteMailboxResponse`
+- `operation_id` maps to PascalCase: `create_bucket` → `CreateBucket` → `CreateBucketRequest`/`CreateBucketResponse`
+
+### Data flow
+
+```
+prim.yaml (routes, pricing, operation_id)
+    +
+api.ts (interface definitions — SOT for types)
+    ↓
+gen-openapi → packages/<id>/generated/openapi.yaml
+    ↓
+gen-sdk   → packages/sdk/generated/<id>.ts
+gen-mcp   → packages/mcp/generated/tools/<id>.ts
+gen-cli   → packages/cli/generated/<id>-commands.ts
+gen-tools → packages/tools/generated/<id>.json
+gen-docs  → packages/<id>/README.md
+gen-tests → packages/<id>/test/*.test.ts
+```
 
