@@ -99,7 +99,7 @@ export interface SpendingPolicy {
   daily_reset_at: string;
 }
 
-export interface WalletDetailResponse {
+export interface GetWalletResponse {
   /** Ethereum address. */
   address: string;
   /** Chain identifier. */
@@ -142,7 +142,7 @@ export interface CreateFundRequestRequest {
 
 export type FundRequestStatus = "pending" | "approved" | "denied";
 
-export interface FundRequestResponse {
+export interface GetFundRequestResponse {
   /** Fund request ID (e.g. "fr_abc123"). */
   id: string;
   /** Wallet address the request is for. */
@@ -190,7 +190,7 @@ export interface DenyFundRequestResponse {
 
 // ─── Policy ────────────────────────────────────────────────────────────────
 
-export interface PolicyResponse {
+export interface GetPolicyResponse {
   /** Wallet address this policy applies to. */
   wallet_address: string;
   /** Max USDC per transaction, null = no limit. */
@@ -205,7 +205,7 @@ export interface PolicyResponse {
   daily_reset_at: string;
 }
 
-export interface PolicyUpdateRequest {
+export interface UpdatePolicyRequest {
   /** Max USDC per transaction. Pass null to remove the limit. */
   maxPerTx?: string | null;
   /** Max USDC per day. Pass null to remove the limit. */
@@ -218,12 +218,12 @@ export interface PolicyUpdateRequest {
 
 export type PauseScope = "all" | "send" | "swap";
 
-export interface PauseRequest {
+export interface PauseWalletRequest {
   /** Scope to pause. "all" | "send" | "swap". Default "all". */
   scope?: PauseScope;
 }
 
-export interface PauseResponse {
+export interface PauseWalletResponse {
   /** Wallet address that was paused. */
   wallet_address: string;
   /** Always true on success. */
@@ -234,12 +234,12 @@ export interface PauseResponse {
   paused_at: string;
 }
 
-export interface ResumeRequest {
+export interface ResumeWalletRequest {
   /** Scope to resume. "all" | "send" | "swap". Default "all". */
   scope?: PauseScope;
 }
 
-export interface ResumeResponse {
+export interface ResumeWalletResponse {
   /** Wallet address that was resumed. */
   wallet_address: string;
   /** Always false on success (wallet is unpaused). */

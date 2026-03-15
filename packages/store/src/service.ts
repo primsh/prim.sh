@@ -22,15 +22,15 @@ const DEFAULT_BUCKET_QUOTA = Number(process.env.STORE_DEFAULT_BUCKET_QUOTA ?? 10
 const MAX_STORAGE_PER_WALLET = Number(process.env.STORE_MAX_STORAGE_PER_WALLET ?? 1073741824); // 1GB
 import type { PaginatedList, ServiceResult } from "@primsh/x402-middleware";
 import type {
-  BucketResponse,
   CreateBucketRequest,
   CreateBucketResponse,
+  CreatePresignResponse,
   DeleteObjectResponse,
-  ObjectResponse,
-  PresignResponse,
+  GetBucketResponse,
+  GetObjectResponse,
+  GetQuotaResponse,
   PutObjectResponse,
-  QuotaResponse,
-  ReconcileResponse,
+  ReconcileStorageResponse,
   UpdateBucketRequest,
 } from "./api.ts";
 import {
@@ -58,9 +58,9 @@ function generateBucketId(): string {
   return `b_${randomBytes(4).toString("hex")}`;
 }
 
-function rowToBucketResponse(row: BucketRow): BucketResponse {
+function rowToBucketResponse(row: BucketRow): GetBucketResponse {
   const isPublic = row.is_public === 1;
-  const response: BucketResponse = {
+  const response: GetBucketResponse = {
     id: row.id,
     name: row.name,
     location: row.location,
@@ -182,7 +182,7 @@ export function listBuckets(
   callerWallet: string,
   limit: number,
   page: number,
-): PaginatedList<BucketResponse> {
+): PaginatedList<GetBucketResponse> {
   const offset = (page - 1) * limit;
   const rows = getBucketsByOwner(callerWallet, limit, offset);
   const total = countBucketsByOwner(callerWallet);
@@ -199,7 +199,7 @@ export function listBuckets(
   };
 }
 
-export function getBucket(bucketId: string, callerWallet: string): ServiceResult<BucketResponse> {
+export function getBucket(bucketId: string, callerWallet: string): ServiceResult<GetBucketResponse> {
   const check = checkBucketOwnership(bucketId, callerWallet);
   if (!check.ok) return check;
   return { ok: true, data: rowToBucketResponse(check.row) };
@@ -230,7 +230,7 @@ export function updateBucket(
   bucketId: string,
   callerWallet: string,
   updates: UpdateBucketRequest,
-): ServiceResult<BucketResponse> {
+): ServiceResult<GetBucketResponse> {
   const check = checkBucketOwnership(bucketId, callerWallet);
   if (!check.ok) return check;
 
@@ -445,7 +445,7 @@ export async function listObjects(
   prefix?: string,
   limit?: number,
   cursor?: string,
-): Promise<ServiceResult<PaginatedList<ObjectResponse>>> {
+): Promise<ServiceResult<PaginatedList<GetObjectResponse>>> {
   const check = checkBucketOwnership(bucketId, callerWallet);
   if (!check.ok) return check;
 
@@ -491,7 +491,7 @@ export async function presignObject(
   key: string,
   method: "GET" | "PUT",
   expiresIn?: number,
-): Promise<ServiceResult<PresignResponse>> {
+): Promise<ServiceResult<CreatePresignResponse>> {
   const check = checkBucketOwnership(bucketId, callerWallet);
   if (!check.ok) return check;
 
@@ -539,7 +539,7 @@ function computeUsagePct(usageBytes: number, quotaBytes: number | null): number 
   return Math.round((usageBytes / quotaBytes) * 100 * 100) / 100;
 }
 
-export function getUsage(bucketId: string, callerWallet: string): ServiceResult<QuotaResponse> {
+export function getUsage(bucketId: string, callerWallet: string): ServiceResult<GetQuotaResponse> {
   const check = checkBucketOwnership(bucketId, callerWallet);
   if (!check.ok) return check;
 
@@ -558,7 +558,7 @@ export function setQuotaForBucket(
   bucketId: string,
   callerWallet: string,
   quotaBytes: number | null,
-): ServiceResult<QuotaResponse> {
+): ServiceResult<GetQuotaResponse> {
   const check = checkBucketOwnership(bucketId, callerWallet);
   if (!check.ok) return check;
 
@@ -590,7 +590,7 @@ export function setQuotaForBucket(
 export async function reconcileUsage(
   bucketId: string,
   callerWallet: string,
-): Promise<ServiceResult<ReconcileResponse>> {
+): Promise<ServiceResult<ReconcileStorageResponse>> {
   const check = checkBucketOwnership(bucketId, callerWallet);
   if (!check.ok) return check;
 

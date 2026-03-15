@@ -32,7 +32,7 @@ export interface FaucetAvailability {
   retry_after_ms: number;
 }
 
-export interface FaucetStatusResponse {
+export interface GetFaucetStatusResponse {
   /** The queried wallet address (checksummed). */
   address: string;
   /** USDC faucet availability (2-hour cooldown). */
@@ -88,13 +88,13 @@ export function createFaucetClient(
       });
       return unwrap<DripResponse>(res);
     },
-    async getFaucetStatus(params: GetFaucetStatusParams): Promise<FaucetStatusResponse> {
+    async getFaucetStatus(params: GetFaucetStatusParams): Promise<GetFaucetStatusResponse> {
       const qs = new URLSearchParams();
       if (params.address !== undefined) qs.set("address", String(params.address));
       const query = qs.toString();
       const url = `${baseUrl}/v1/faucet/status${query ? `?${query}` : ""}`;
       const res = await primFetch(url);
-      return unwrap<FaucetStatusResponse>(res);
+      return unwrap<GetFaucetStatusResponse>(res);
     },
     async getTreasuryStatus(): Promise<TreasuryStatus> {
       const url = `${baseUrl}/v1/faucet/treasury`;

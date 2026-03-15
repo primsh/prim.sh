@@ -50,25 +50,6 @@ export interface DnsRecord {
   priority?: number;
 }
 
-export interface DomainResponse {
-  /** Domain registration ID. */
-  id: string;
-  /** Registered domain name. */
-  domain: string;
-  /** Verification status ("pending" | "verified"). */
-  status: string;
-  /** Ethereum address of the domain owner. */
-  owner_wallet: string;
-  /** ISO 8601 timestamp when the domain was registered. */
-  created_at: string;
-  /** ISO 8601 timestamp when the domain was verified. Null if unverified. */
-  verified_at: string | null;
-  /** DNS records that must be added to verify the domain. */
-  required_records: DnsRecord[];
-  /** DKIM DNS records. Only present after successful verification. */
-  dkim_records?: DnsRecord[];
-}
-
 export interface EmailAddress {
   /** Display name. Null if not present. */
   name: string | null;
@@ -120,7 +101,26 @@ export interface EmailMessage {
   preview: string;
 }
 
-export interface MailboxResponse {
+export interface GetDomainResponse {
+  /** Domain registration ID. */
+  id: string;
+  /** Registered domain name. */
+  domain: string;
+  /** Verification status ("pending" | "verified"). */
+  status: string;
+  /** Ethereum address of the domain owner. */
+  owner_wallet: string;
+  /** ISO 8601 timestamp when the domain was registered. */
+  created_at: string;
+  /** ISO 8601 timestamp when the domain was verified. Null if unverified. */
+  verified_at: string | null;
+  /** DNS records that must be added to verify the domain. */
+  required_records: DnsRecord[];
+  /** DKIM DNS records. Only present after successful verification. */
+  dkim_records?: DnsRecord[];
+}
+
+export interface GetMailboxResponse {
   /** Mailbox ID (e.g. "mbx_abc123"). */
   id: string;
   /** Full email address (e.g. "abc123@mail.prim.sh"). */
@@ -135,6 +135,19 @@ export interface MailboxResponse {
   created_at: string;
   /** ISO 8601 timestamp when the mailbox expires. Null if permanent. */
   expires_at: string | null;
+}
+
+export interface GetWebhookResponse {
+  /** Webhook ID (e.g. "wh_abc123"). */
+  id: string;
+  /** Webhook endpoint URL. */
+  url: string;
+  /** Subscribed events. */
+  events: string[];
+  /** Webhook status. */
+  status: string;
+  /** ISO 8601 timestamp when the webhook was created. */
+  created_at: string;
 }
 
 export interface RegisterDomainRequest {
@@ -204,19 +217,6 @@ export interface VerifyDomainResponse {
   verification_results?: VerificationResult[];
   /** DKIM records to add to DNS. Only present on successful verification. */
   dkim_records?: DnsRecord[];
-}
-
-export interface WebhookResponse {
-  /** Webhook ID (e.g. "wh_abc123"). */
-  id: string;
-  /** Webhook endpoint URL. */
-  url: string;
-  /** Subscribed events. */
-  events: string[];
-  /** Webhook status. */
-  status: string;
-  /** ISO 8601 timestamp when the webhook was created. */
-  created_at: string;
 }
 
 export interface ListMailboxesParams {
@@ -316,14 +316,14 @@ export function createEmailClient(
   baseUrl = "https://email.prim.sh",
 ) {
   return {
-    async createMailbox(req: CreateMailboxRequest): Promise<MailboxResponse> {
+    async createMailbox(req: CreateMailboxRequest): Promise<GetMailboxResponse> {
       const url = `${baseUrl}/v1/mailboxes`;
       const res = await primFetch(url, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(req),
       });
-      return unwrap<MailboxResponse>(res);
+      return unwrap<GetMailboxResponse>(res);
     },
     async listMailboxes(params: ListMailboxesParams): Promise<ListMailboxesResponse> {
       const qs = new URLSearchParams();
@@ -334,10 +334,10 @@ export function createEmailClient(
       const res = await primFetch(url);
       return unwrap<ListMailboxesResponse>(res);
     },
-    async getMailbox(params: GetMailboxParams): Promise<MailboxResponse> {
+    async getMailbox(params: GetMailboxParams): Promise<GetMailboxResponse> {
       const url = `${baseUrl}/v1/mailboxes/${encodeURIComponent(params.id)}`;
       const res = await primFetch(url);
-      return unwrap<MailboxResponse>(res);
+      return unwrap<GetMailboxResponse>(res);
     },
     async deleteMailbox(params: DeleteMailboxParams): Promise<DeleteMailboxResponse> {
       const url = `${baseUrl}/v1/mailboxes/${encodeURIComponent(params.id)}`;
@@ -346,14 +346,14 @@ export function createEmailClient(
       });
       return unwrap<DeleteMailboxResponse>(res);
     },
-    async renewMailbox(params: RenewMailboxParams, req: RenewMailboxRequest): Promise<MailboxResponse> {
+    async renewMailbox(params: RenewMailboxParams, req: RenewMailboxRequest): Promise<GetMailboxResponse> {
       const url = `${baseUrl}/v1/mailboxes/${encodeURIComponent(params.id)}/renew`;
       const res = await primFetch(url, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(req),
       });
-      return unwrap<MailboxResponse>(res);
+      return unwrap<GetMailboxResponse>(res);
     },
     async listMessages(params: ListMessagesParams): Promise<ListMessagesResponse> {
       const qs = new URLSearchParams();
@@ -378,14 +378,14 @@ export function createEmailClient(
       });
       return unwrap<SendMessageResponse>(res);
     },
-    async registerWebhook(params: RegisterWebhookParams, req: RegisterWebhookRequest): Promise<WebhookResponse> {
+    async registerWebhook(params: RegisterWebhookParams, req: RegisterWebhookRequest): Promise<GetWebhookResponse> {
       const url = `${baseUrl}/v1/mailboxes/${encodeURIComponent(params.id)}/webhooks`;
       const res = await primFetch(url, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(req),
       });
-      return unwrap<WebhookResponse>(res);
+      return unwrap<GetWebhookResponse>(res);
     },
     async listWebhooks(params: ListWebhooksParams): Promise<ListWebhooksResponse> {
       const url = `${baseUrl}/v1/mailboxes/${encodeURIComponent(params.id)}/webhooks`;
@@ -399,14 +399,14 @@ export function createEmailClient(
       });
       return unwrap<DeleteWebhookResponse>(res);
     },
-    async registerDomain(req: RegisterDomainRequest): Promise<DomainResponse> {
+    async registerDomain(req: RegisterDomainRequest): Promise<GetDomainResponse> {
       const url = `${baseUrl}/v1/domains`;
       const res = await primFetch(url, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(req),
       });
-      return unwrap<DomainResponse>(res);
+      return unwrap<GetDomainResponse>(res);
     },
     async listDomains(params: ListDomainsParams): Promise<ListDomainsResponse> {
       const qs = new URLSearchParams();
@@ -417,10 +417,10 @@ export function createEmailClient(
       const res = await primFetch(url);
       return unwrap<ListDomainsResponse>(res);
     },
-    async getDomain(params: GetDomainParams): Promise<DomainResponse> {
+    async getDomain(params: GetDomainParams): Promise<GetDomainResponse> {
       const url = `${baseUrl}/v1/domains/${encodeURIComponent(params.id)}`;
       const res = await primFetch(url);
-      return unwrap<DomainResponse>(res);
+      return unwrap<GetDomainResponse>(res);
     },
     async deleteDomain(params: DeleteDomainParams): Promise<DeleteDomainResponse> {
       const url = `${baseUrl}/v1/domains/${encodeURIComponent(params.id)}`;

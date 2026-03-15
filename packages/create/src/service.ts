@@ -4,7 +4,7 @@ import { join, resolve } from "node:path";
 import type { ServiceResult } from "@primsh/x402-middleware";
 import { parse as parseYaml } from "yaml";
 import { type PrimYaml, scaffoldPure } from "../../../scripts/lib/scaffold.ts";
-import type { PortsResponse, ScaffoldResponse, SchemaResponse, ValidateResponse } from "./api.ts";
+import type { ListPortsResponse, ScaffoldResponse, GetSchemaResponse, ValidateResponse } from "./api.ts";
 import primYamlSchema from "./prim-yaml-schema.json";
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
@@ -152,14 +152,14 @@ export async function validate(
   };
 }
 
-export async function schema(): Promise<ServiceResult<SchemaResponse>> {
+export async function schema(): Promise<ServiceResult<GetSchemaResponse>> {
   return {
     ok: true,
     data: { schema: primYamlSchema as Record<string, unknown> },
   };
 }
 
-export async function ports(): Promise<ServiceResult<PortsResponse>> {
+export async function ports(): Promise<ServiceResult<ListPortsResponse>> {
   try {
     const root = getRoot();
     const packagesDir = join(root, "packages");

@@ -123,12 +123,12 @@ routes_map:
       - { status: 429, code: rate_limited, description: "Too many requests" }
   - route: "GET /v1/wallets/:address"
     request: null
-    response: WalletDetailResponse
+    response: GetWalletResponse
     status: 200
     description: "Get full wallet details including balance, policy, and status"
     operation_id: get_wallet
     request_type: null
-    response_type: WalletDetailResponse
+    response_type: GetWalletResponse
     errors:
       - { status: 402, code: payment_required, description: "x402 payment needed" }
       - { status: 403, code: forbidden, description: "Caller does not own this wallet" }
@@ -147,12 +147,12 @@ routes_map:
       - { status: 404, code: not_found, description: "Wallet not found" }
   - route: "POST /v1/wallets/:address/fund-request"
     request: CreateFundRequestRequest
-    response: FundRequestResponse
+    response: GetFundRequestResponse
     status: 200
     description: "Request USDC funding for a wallet. A human operator can approve or deny."
     operation_id: create_fund_request
     request_type: CreateFundRequestRequest
-    response_type: FundRequestResponse
+    response_type: GetFundRequestResponse
     errors:
       - { status: 400, code: invalid_request, description: "Missing amount or reason" }
       - { status: 402, code: payment_required, description: "x402 payment needed" }
@@ -201,50 +201,50 @@ routes_map:
       - { status: 409, code: duplicate_request, description: "Already approved or denied" }
   - route: "GET /v1/wallets/:address/policy"
     request: null
-    response: PolicyResponse
+    response: GetPolicyResponse
     status: 200
     description: "Get the spending policy for a wallet"
     operation_id: get_policy
     request_type: null
-    response_type: PolicyResponse
+    response_type: GetPolicyResponse
     errors:
       - { status: 402, code: payment_required, description: "x402 payment needed" }
       - { status: 403, code: forbidden, description: "Caller does not own this wallet" }
       - { status: 404, code: not_found, description: "Wallet not found" }
   - route: "PUT /v1/wallets/:address/policy"
-    request: PolicyUpdateRequest
-    response: PolicyResponse
+    request: UpdatePolicyRequest
+    response: GetPolicyResponse
     status: 200
     description: "Update spending policy for a wallet. All fields optional. Pass null to remove a limit."
     operation_id: update_policy
-    request_type: PolicyUpdateRequest
-    response_type: PolicyResponse
+    request_type: UpdatePolicyRequest
+    response_type: GetPolicyResponse
     errors:
       - { status: 400, code: invalid_request, description: "Invalid JSON body or field values" }
       - { status: 402, code: payment_required, description: "x402 payment needed" }
       - { status: 403, code: forbidden, description: "Caller does not own this wallet" }
       - { status: 404, code: not_found, description: "Wallet not found" }
   - route: "POST /v1/wallets/:address/pause"
-    request: PauseRequest
-    response: PauseResponse
+    request: PauseWalletRequest
+    response: PauseWalletResponse
     status: 200
     description: "Pause operations for a wallet. Temporarily halts spending without deactivating."
     operation_id: pause_wallet
-    request_type: PauseRequest
-    response_type: PauseResponse
+    request_type: PauseWalletRequest
+    response_type: PauseWalletResponse
     errors:
       - { status: 400, code: invalid_request, description: "Invalid scope value" }
       - { status: 402, code: payment_required, description: "x402 payment needed" }
       - { status: 403, code: forbidden, description: "Caller does not own this wallet" }
       - { status: 404, code: not_found, description: "Wallet not found" }
   - route: "POST /v1/wallets/:address/resume"
-    request: ResumeRequest
-    response: ResumeResponse
+    request: ResumeWalletRequest
+    response: ResumeWalletResponse
     status: 200
     description: "Resume operations for a paused wallet"
     operation_id: resume_wallet
-    request_type: ResumeRequest
-    response_type: ResumeResponse
+    request_type: ResumeWalletRequest
+    response_type: ResumeWalletResponse
     errors:
       - { status: 400, code: invalid_request, description: "Invalid scope value" }
       - { status: 402, code: payment_required, description: "x402 payment needed" }

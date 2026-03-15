@@ -4,7 +4,7 @@ import type {
   ChatResponse,
   EmbedRequest,
   EmbedResponse,
-  ModelsResponse,
+  ListModelsResponse,
 } from "./api.ts";
 
 // ─── Provider interface ───────────────────────────────────────────────────────
@@ -12,7 +12,7 @@ import type {
 export interface InferProvider {
   chat(req: ChatRequest): Promise<ChatResponse>;
   embed(req: EmbedRequest): Promise<EmbedResponse>;
-  models(): Promise<ModelsResponse>;
+  models(): Promise<ListModelsResponse>;
 }
 
 // ─── Error ────────────────────────────────────────────────────────────────────

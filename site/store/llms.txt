@@ -116,7 +116,7 @@ Request:
   is_public  boolean  optional  Whether the bucket should be publicly readable. Defaults to false.
 
 Response (201):
-  bucket  BucketResponse  The created bucket.
+  bucket  GetBucketResponse  The created bucket.
 
 Errors:
   400  invalid_request        Invalid bucket name or name already taken

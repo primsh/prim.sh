@@ -13,16 +13,16 @@ import type { ApiError, PaginatedList } from "@primsh/x402-middleware";
 import { createPrimApp } from "@primsh/x402-middleware/create-prim-app";
 import { bodyLimit } from "hono/body-limit";
 import type {
-  BucketResponse,
   CreateBucketRequest,
   CreateBucketResponse,
+  CreatePresignRequest,
+  CreatePresignResponse,
   DeleteObjectResponse,
-  ObjectResponse,
-  PresignRequest,
-  PresignResponse,
+  GetBucketResponse,
+  GetObjectResponse,
+  GetQuotaResponse,
   PutObjectResponse,
-  QuotaResponse,
-  ReconcileResponse,
+  ReconcileStorageResponse,
   SetQuotaRequest,
   UpdateBucketRequest,
 } from "./api.ts";
@@ -215,7 +215,7 @@ app.get("/v1/buckets", (c) => {
   const page = Math.max(Number(c.req.query("page")) || 1, 1);
 
   const data = listBuckets(caller, limit, page);
-  return c.json(data as PaginatedList<BucketResponse>, 200);
+  return c.json(data as PaginatedList<GetBucketResponse>, 200);
 });
 
 // GET /v1/buckets/:id — Get bucket
@@ -229,7 +229,7 @@ app.get("/v1/buckets/:id", (c) => {
     if (result.status === 404) return c.json(notFound(result.message), 404);
     return c.json(forbidden(result.message), 403);
   }
-  return c.json(result.data as BucketResponse, 200);
+  return c.json(result.data as GetBucketResponse, 200);
 });
 
 // PUT /v1/buckets/:id — Update bucket (e.g. toggle public visibility)
@@ -251,7 +251,7 @@ app.put("/v1/buckets/:id", async (c) => {
     if (result.status === 404) return c.json(notFound(result.message), 404);
     return c.json(forbidden(result.message), 403);
   }
-  return c.json(result.data as BucketResponse, 200);
+  return c.json(result.data as GetBucketResponse, 200);
 });
 
 // DELETE /v1/buckets/:id — Delete bucket
@@ -315,7 +315,7 @@ app.get("/v1/buckets/:id/objects", async (c) => {
     if (result.status === 403) return c.json(forbidden(result.message), 403);
     return c.json(r2Error(result.message), result.status as 502);
   }
-  return c.json(result.data as PaginatedList<ObjectResponse>, 200);
+  return c.json(result.data as PaginatedList<GetObjectResponse>, 200);
 });
 
 // GET /v1/buckets/:id/objects/* — Download object (streaming)
@@ -368,7 +368,7 @@ app.post("/v1/buckets/:id/presign", async (c) => {
   if (callerOrRes instanceof Response) return callerOrRes;
   const caller = callerOrRes;
 
-  const bodyOrRes = await parseJsonBody<PresignRequest>(c, logger, "POST /v1/buckets/:id/presign");
+  const bodyOrRes = await parseJsonBody<CreatePresignRequest>(c, logger, "POST /v1/buckets/:id/presign");
   if (bodyOrRes instanceof Response) return bodyOrRes;
   const body = bodyOrRes;
 
@@ -389,7 +389,7 @@ app.post("/v1/buckets/:id/presign", async (c) => {
     if (result.status === 403) return c.json(forbidden(result.message), 403);
     return c.json(r2Error(result.message), result.status as 502);
   }
-  return c.json(result.data as PresignResponse, 200);
+  return c.json(result.data as CreatePresignResponse, 200);
 });
 
 // ─── Quota routes ───────────────────────────────────────────────────────
@@ -405,7 +405,7 @@ app.get("/v1/buckets/:id/quota", (c) => {
     if (result.status === 404) return c.json(notFound(result.message), 404);
     return c.json(forbidden(result.message), 403);
   }
-  return c.json(result.data as QuotaResponse, 200);
+  return c.json(result.data as GetQuotaResponse, 200);
 });
 
 // PUT /v1/buckets/:id/quota — Set quota
@@ -425,7 +425,7 @@ app.put("/v1/buckets/:id/quota", async (c) => {
     if (result.status === 403) return c.json(forbidden(result.message), 403);
     return c.json(r2Error(result.message), result.status as 502);
   }
-  return c.json(result.data as QuotaResponse, 200);
+  return c.json(result.data as GetQuotaResponse, 200);
 });
 
 // POST /v1/buckets/:id/quota/reconcile — Reconcile usage
@@ -440,7 +440,7 @@ app.post("/v1/buckets/:id/quota/reconcile", async (c) => {
     if (result.status === 403) return c.json(forbidden(result.message), 403);
     return c.json(r2Error(result.message), result.status as 502);
   }
-  return c.json(result.data as ReconcileResponse, 200);
+  return c.json(result.data as ReconcileStorageResponse, 200);
 });
 
 // ─── Public object routes ────────────────────────────────────────────────

@@ -2,17 +2,17 @@
 import { randomBytes } from "node:crypto";
 import type { PaginatedList, ServiceResult } from "@primsh/x402-middleware";
 import type {
-  ActionOnlyResponse,
+  GetActionOnlyResponse,
   CreateServerRequest,
   CreateServerResponse,
   CreateSshKeyRequest,
   DeleteServerResponse,
-  RebuildRequest,
-  RebuildResponse,
-  ResizeRequest,
-  ResizeResponse,
-  ServerResponse,
-  SshKeyResponse,
+  RebuildServerRequest,
+  RebuildServerResponse,
+  ResizeServerRequest,
+  ResizeServerResponse,
+  GetServerResponse,
+  GetSshKeyResponse,
 } from "./api.ts";
 import {
   countActiveServersByOwner,
@@ -58,14 +58,14 @@ function generateSshKeyId(): string {
   return `sk_${randomBytes(4).toString("hex")}`;
 }
 
-function rowToServerResponse(row: ServerRow): ServerResponse {
+function rowToServerResponse(row: ServerRow): GetServerResponse {
   return {
     id: row.id,
     provider: row.provider,
     provider_id: row.provider_resource_id,
     name: row.name,
     type: row.type,
-    status: row.status as ServerResponse["status"],
+    status: row.status as GetServerResponse["status"],
     image: row.image,
     location: row.location,
     public_net: {
@@ -77,7 +77,7 @@ function rowToServerResponse(row: ServerRow): ServerResponse {
   };
 }
 
-function rowToSshKeyResponse(row: SshKeyRow): SshKeyResponse {
+function rowToGetSshKeyResponse(row: SshKeyRow): GetSshKeyResponse {
   return {
     id: row.id,
     provider: row.provider,
@@ -284,7 +284,7 @@ export function listServers(
   callerWallet: string,
   limit: number,
   page: number,
-): PaginatedList<ServerResponse> {
+): PaginatedList<GetServerResponse> {
   const offset = (page - 1) * limit;
   const rows = getServersByOwner(callerWallet, limit, offset);
   const total = countServersByOwner(callerWallet);
@@ -304,7 +304,7 @@ export function listServers(
 export async function getServer(
   serverId: string,
   callerWallet: string,
-): Promise<ServiceResult<ServerResponse>> {
+): Promise<ServiceResult<GetServerResponse>> {
   const check = checkServerOwnership(serverId, callerWallet);
   if (!check.ok) return check;
 
@@ -371,7 +371,7 @@ export async function deleteServer(
 export async function startServer(
   serverId: string,
   callerWallet: string,
-): Promise<ServiceResult<ActionOnlyResponse>> {
+): Promise<ServiceResult<GetActionOnlyResponse>> {
   const check = checkServerOwnership(serverId, callerWallet);
   if (!check.ok) return check;
 
@@ -401,7 +401,7 @@ export async function startServer(
 export async function stopServer(
   serverId: string,
   callerWallet: string,
-): Promise<ServiceResult<ActionOnlyResponse>> {
+): Promise<ServiceResult<GetActionOnlyResponse>> {
   const check = checkServerOwnership(serverId, callerWallet);
   if (!check.ok) return check;
 
@@ -431,7 +431,7 @@ export async function stopServer(
 export async function rebootServer(
   serverId: string,
   callerWallet: string,
-): Promise<ServiceResult<ActionOnlyResponse>> {
+): Promise<ServiceResult<GetActionOnlyResponse>> {
   const check = checkServerOwnership(serverId, callerWallet);
   if (!check.ok) return check;
 
@@ -461,8 +461,8 @@ export async function rebootServer(
 export async function resizeServer(
   serverId: string,
   callerWallet: string,
-  request: ResizeRequest,
-): Promise<ServiceResult<ResizeResponse>> {
+  request: ResizeServerRequest,
+): Promise<ServiceResult<ResizeServerResponse>> {
   const check = checkServerOwnership(serverId, callerWallet);
   if (!check.ok) return check;
 
@@ -511,8 +511,8 @@ export async function resizeServer(
 export async function rebuildServer(
   serverId: string,
   callerWallet: string,
-  request: RebuildRequest,
-): Promise<ServiceResult<RebuildResponse>> {
+  request: RebuildServerRequest,
+): Promise<ServiceResult<RebuildServerResponse>> {
   const check = checkServerOwnership(serverId, callerWallet);
   if (!check.ok) return check;
 
@@ -558,7 +558,7 @@ export async function registerSshKey(
   request: CreateSshKeyRequest,
   callerWallet: string,
   providerName?: string,
-): Promise<ServiceResult<SshKeyResponse>> {
+): Promise<ServiceResult<GetSshKeyResponse>> {
   if (!request.name || !request.public_key) {
     return {
       ok: false,
@@ -602,7 +602,7 @@ export async function registerSshKey(
     const row = getSshKeyById(skId);
     if (!row) throw new Error("Failed to retrieve ssh key after insert");
 
-    return { ok: true, data: rowToSshKeyResponse(row) };
+    return { ok: true, data: rowToGetSshKeyResponse(row) };
   } catch (err) {
     if (err instanceof ProviderError) {
       return { ok: false, status: 502, code: err.code, message: err.message };
@@ -611,10 +611,10 @@ export async function registerSshKey(
   }
 }
 
-export function listSshKeys(callerWallet: string): PaginatedList<SshKeyResponse> {
+export function listSshKeys(callerWallet: string): PaginatedList<GetSshKeyResponse> {
   const rows = getSshKeysByOwner(callerWallet);
   return {
-    data: rows.map(rowToSshKeyResponse),
+    data: rows.map(rowToGetSshKeyResponse),
     pagination: {
       total: rows.length,
       page: 1,

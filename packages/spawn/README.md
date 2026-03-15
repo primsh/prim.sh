@@ -14,14 +14,14 @@ Part of [prim.sh](https://prim.sh) — zero signup, one payment token, infinite 
 |-------|-------------|-------|---------|----------|
 | `POST /v1/servers` | Provision a new VPS. Returns immediately with status 'initializing'. | $0.01 | `CreateServerRequest` | `CreateServerResponse` |
 | `GET /v1/servers` | List all servers owned by the calling wallet | $0.001 | `—` | `ServerListResponse` |
-| `GET /v1/servers/:id` | Get full details for a single server. Poll this until status='running'. | $0.001 | `—` | `ServerResponse` |
+| `GET /v1/servers/:id` | Get full details for a single server. Poll this until status='running'. | $0.001 | `—` | `GetServerResponse` |
 | `DELETE /v1/servers/:id` | Destroy a server and release its resources. Unused deposit is refunded. | $0.005 | `—` | `DeleteServerResponse` |
-| `POST /v1/servers/:id/start` | Start a stopped server | $0.002 | `—` | `ActionOnlyResponse` |
-| `POST /v1/servers/:id/stop` | Stop a running server (graceful shutdown) | $0.002 | `—` | `ActionOnlyResponse` |
-| `POST /v1/servers/:id/reboot` | Reboot a running server | $0.002 | `—` | `ActionOnlyResponse` |
-| `POST /v1/servers/:id/resize` | Change server type (CPU/RAM). Server must be stopped first. Deposit adjusted. | $0.01 | `ResizeRequest` | `ResizeResponse` |
-| `POST /v1/servers/:id/rebuild` | Reinstall from a fresh OS image. All data on server is destroyed. | $0.005 | `RebuildRequest` | `RebuildResponse` |
-| `POST /v1/ssh-keys` | Register a public SSH key. Returned ID can be used in ssh_keys when creating a server. | $0.001 | `CreateSshKeyRequest` | `SshKeyResponse` |
+| `POST /v1/servers/:id/start` | Start a stopped server | $0.002 | `—` | `GetActionOnlyResponse` |
+| `POST /v1/servers/:id/stop` | Stop a running server (graceful shutdown) | $0.002 | `—` | `GetActionOnlyResponse` |
+| `POST /v1/servers/:id/reboot` | Reboot a running server | $0.002 | `—` | `GetActionOnlyResponse` |
+| `POST /v1/servers/:id/resize` | Change server type (CPU/RAM). Server must be stopped first. Deposit adjusted. | $0.01 | `ResizeServerRequest` | `ResizeServerResponse` |
+| `POST /v1/servers/:id/rebuild` | Reinstall from a fresh OS image. All data on server is destroyed. | $0.005 | `RebuildServerRequest` | `RebuildServerResponse` |
+| `POST /v1/ssh-keys` | Register a public SSH key. Returned ID can be used in ssh_keys when creating a server. | $0.001 | `CreateSshKeyRequest` | `GetSshKeyResponse` |
 | `GET /v1/ssh-keys` | List all SSH keys registered by the calling wallet | $0.001 | `—` | `SshKeyListResponse` |
 | `DELETE /v1/ssh-keys/:id` | Remove an SSH key. Keys in use by active servers remain until server is rebuilt. | $0.001 | `—` | `—` |
 
@@ -53,12 +53,12 @@ Part of [prim.sh](https://prim.sh) — zero signup, one payment token, infinite 
 
 | Field | Type | Description |
 |-------|------|-------------|
-| `server` | `ServerResponse` | Created server object (initial status: "initializing"). |
-| `action` | `ActionResponse` | Action object tracking the provisioning progress. |
+| `server` | `GetServerResponse` | Created server object (initial status: "initializing"). |
+| `action` | `GetActionResponse` | Action object tracking the provisioning progress. |
 | `deposit_charged` | `string` | USDC charged for this server as a decimal string. |
 | `deposit_remaining` | `string` | Remaining USDC deposit balance as a decimal string. |
 
-### `ServerResponse`
+### `GetServerResponse`
 
 | Field | Type | Description |
 |-------|------|-------------|
@@ -81,38 +81,38 @@ Part of [prim.sh](https://prim.sh) — zero signup, one payment token, infinite 
 | `status` | `"deleted"` | Always "deleted" on success. |
 | `deposit_refunded` | `string` | USDC refunded to wallet as a decimal string. |
 
-### `ActionOnlyResponse`
+### `GetActionOnlyResponse`
 
 | Field | Type | Description |
 |-------|------|-------------|
-| `action` | `ActionResponse` | Action object for the requested operation. |
+| `action` | `GetActionResponse` | Action object for the requested operation. |
 
-### `ResizeRequest`
+### `ResizeServerRequest`
 
 | Field | Type | Required |
 |-------|------|----------|
 | `type` | `string` | required |
 | `upgrade_disk` | `boolean` | optional |
 
-### `ResizeResponse`
+### `ResizeServerResponse`
 
 | Field | Type | Description |
 |-------|------|-------------|
-| `action` | `ActionResponse` | Action object (command: "resize"). |
+| `action` | `GetActionResponse` | Action object (command: "resize"). |
 | `new_type` | `string` | Target server type after resize. |
 | `deposit_delta` | `string` | USDC deposit change as a decimal string. Positive = charged, negative = refunded. |
 
-### `RebuildRequest`
+### `RebuildServerRequest`
 
 | Field | Type | Required |
 |-------|------|----------|
 | `image` | `string` | required |
 
-### `RebuildResponse`
+### `RebuildServerResponse`
 
 | Field | Type | Description |
 |-------|------|-------------|
-| `action` | `ActionResponse` | Action object (command: "rebuild"). |
+| `action` | `GetActionResponse` | Action object (command: "rebuild"). |
 | `root_password` | `string | null` | New root password if no SSH keys configured. Null if SSH keys are installed. |
 
 ### `CreateSshKeyRequest`
@@ -122,7 +122,7 @@ Part of [prim.sh](https://prim.sh) — zero signup, one payment token, infinite 
 | `name` | `string` | required |
 | `public_key` | `string` | required |
 
-### `SshKeyResponse`
+### `GetSshKeyResponse`
 
 | Field | Type | Description |
 |-------|------|-------------|

@@ -5,7 +5,7 @@ import type {
   DescribeResponse,
   GenerateRequest,
   GenerateResponse,
-  ModelsResponse,
+  ListModelsResponse,
   UpscaleRequest,
   UpscaleResponse,
 } from "./api.ts";
@@ -26,6 +26,6 @@ export async function upscale(_body: UpscaleRequest): Promise<ServiceResult<Upsc
   return { ok: false, status: 501, code: "not_implemented", message: "Not implemented" };
 }
 
-export async function models(): Promise<ServiceResult<ModelsResponse>> {
+export async function models(): Promise<ServiceResult<ListModelsResponse>> {
   return { ok: false, status: 501, code: "not_implemented", message: "Not implemented" };
 }

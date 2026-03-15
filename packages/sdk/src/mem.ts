@@ -7,23 +7,6 @@ import { unwrap } from "./shared.js";
 
 // ── Types ──────────────────────────────────────────────────────────────────
 
-export interface CollectionResponse {
-  /** Collection ID (UUID). */
-  id: string;
-  /** Collection name. Unique per wallet. */
-  name: string;
-  /** Ethereum address of the collection owner. */
-  owner_wallet: string;
-  /** Embedding vector dimension (e.g. 1536 for text-embedding-3-small). */
-  dimension: number;
-  /** Distance metric: "Cosine" | "Euclid" | "Dot". */
-  distance: string;
-  /** Live Qdrant points_count — null in list responses to avoid N+1 calls. */
-  document_count: number | null;
-  /** ISO 8601 timestamp when the collection was created. */
-  created_at: string;
-}
-
 export interface CreateCollectionRequest {
   /** Collection name. Unique per wallet. */
   name: string;
@@ -42,6 +25,23 @@ export interface GetCacheResponse {
   value: string;
   /** ISO string expiry time, or null if permanent. */
   expires_at: string | null;
+}
+
+export interface GetCollectionResponse {
+  /** Collection ID (UUID). */
+  id: string;
+  /** Collection name. Unique per wallet. */
+  name: string;
+  /** Ethereum address of the collection owner. */
+  owner_wallet: string;
+  /** Embedding vector dimension (e.g. 1536 for text-embedding-3-small). */
+  dimension: number;
+  /** Distance metric: "Cosine" | "Euclid" | "Dot". */
+  distance: string;
+  /** Live Qdrant points_count — null in list responses to avoid N+1 calls. */
+  document_count: number | null;
+  /** ISO 8601 timestamp when the collection was created. */
+  created_at: string;
 }
 
 export interface QueryMatch {
@@ -160,14 +160,14 @@ export function createMemClient(
   baseUrl = "https://mem.prim.sh",
 ) {
   return {
-    async createCollection(req: CreateCollectionRequest): Promise<CollectionResponse> {
+    async createCollection(req: CreateCollectionRequest): Promise<GetCollectionResponse> {
       const url = `${baseUrl}/v1/collections`;
       const res = await primFetch(url, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(req),
       });
-      return unwrap<CollectionResponse>(res);
+      return unwrap<GetCollectionResponse>(res);
     },
     async listCollections(params: ListCollectionsParams): Promise<ListCollectionsResponse> {
       const qs = new URLSearchParams();
@@ -178,10 +178,10 @@ export function createMemClient(
       const res = await primFetch(url);
       return unwrap<ListCollectionsResponse>(res);
     },
-    async getCollection(params: GetCollectionParams): Promise<CollectionResponse> {
+    async getCollection(params: GetCollectionParams): Promise<GetCollectionResponse> {
       const url = `${baseUrl}/v1/collections/${encodeURIComponent(params.id)}`;
       const res = await primFetch(url);
-      return unwrap<CollectionResponse>(res);
+      return unwrap<GetCollectionResponse>(res);
     },
     async deleteCollection(params: DeleteCollectionParams): Promise<DeleteCollectionResponse> {
       const url = `${baseUrl}/v1/collections/${encodeURIComponent(params.id)}`;

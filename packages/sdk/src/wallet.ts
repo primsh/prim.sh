@@ -54,7 +54,7 @@ export interface DenyFundRequestResponse {
   denied_at: string;
 }
 
-export interface FundRequestResponse {
+export interface GetFundRequestResponse {
   /** Fund request ID (e.g. "fr_abc123"). */
   id: string;
   /** Wallet address the request is for. */
@@ -69,23 +69,7 @@ export interface FundRequestResponse {
   created_at: string;
 }
 
-export interface PauseRequest {
-  /** Scope to pause. "all" | "send" | "swap". Default "all". */
-  scope?: string;
-}
-
-export interface PauseResponse {
-  /** Wallet address that was paused. */
-  wallet_address: string;
-  /** Always true on success. */
-  paused: boolean;
-  /** Scope that was paused. */
-  scope: string;
-  /** ISO 8601 timestamp when the wallet was paused. */
-  paused_at: string;
-}
-
-export interface PolicyResponse {
+export interface GetPolicyResponse {
   /** Wallet address this policy applies to. */
   wallet_address: string;
   /** Max USDC per transaction, null = no limit. */
@@ -100,13 +84,41 @@ export interface PolicyResponse {
   daily_reset_at: string;
 }
 
-export interface PolicyUpdateRequest {
-  /** Max USDC per transaction. Pass null to remove the limit. */
-  maxPerTx?: string | null;
-  /** Max USDC per day. Pass null to remove the limit. */
-  maxPerDay?: string | null;
-  /** Allowed primitive hostnames. Pass null to allow all. */
-  allowedPrimitives?: unknown | null;
+export interface GetWalletResponse {
+  /** Ethereum address. */
+  address: string;
+  /** Chain identifier. */
+  chain: string;
+  /** USDC balance as a decimal string. */
+  balance: string;
+  /** ETH balance as a decimal string (e.g. "0.000100"). */
+  eth_balance: string;
+  /** Whether the wallet has ever been funded. */
+  funded: boolean;
+  /** Whether the wallet is currently paused. */
+  paused: boolean;
+  /** Address that registered this wallet (or self). */
+  created_by: string;
+  /** Spending policy, null if none configured. */
+  policy: SpendingPolicy | null;
+  /** ISO 8601 timestamp when the wallet was created. */
+  created_at: string;
+}
+
+export interface PauseWalletRequest {
+  /** Scope to pause. "all" | "send" | "swap". Default "all". */
+  scope?: string;
+}
+
+export interface PauseWalletResponse {
+  /** Wallet address that was paused. */
+  wallet_address: string;
+  /** Always true on success. */
+  paused: boolean;
+  /** Scope that was paused. */
+  scope: string;
+  /** ISO 8601 timestamp when the wallet was paused. */
+  paused_at: string;
 }
 
 export interface RegisterWalletRequest {
@@ -135,12 +147,12 @@ export interface RegisterWalletResponse {
   created_at: string;
 }
 
-export interface ResumeRequest {
+export interface ResumeWalletRequest {
   /** Scope to resume. "all" | "send" | "swap". Default "all". */
   scope?: string;
 }
 
-export interface ResumeResponse {
+export interface ResumeWalletResponse {
   /** Wallet address that was resumed. */
   wallet_address: string;
   /** Always false on success (wallet is unpaused). */
@@ -162,25 +174,13 @@ export interface SpendingPolicy {
   daily_reset_at: string;
 }
 
-export interface WalletDetailResponse {
-  /** Ethereum address. */
-  address: string;
-  /** Chain identifier. */
-  chain: string;
-  /** USDC balance as a decimal string. */
-  balance: string;
-  /** ETH balance as a decimal string (e.g. "0.000100"). */
-  eth_balance: string;
-  /** Whether the wallet has ever been funded. */
-  funded: boolean;
-  /** Whether the wallet is currently paused. */
-  paused: boolean;
-  /** Address that registered this wallet (or self). */
-  created_by: string;
-  /** Spending policy, null if none configured. */
-  policy: SpendingPolicy | null;
-  /** ISO 8601 timestamp when the wallet was created. */
-  created_at: string;
+export interface UpdatePolicyRequest {
+  /** Max USDC per transaction. Pass null to remove the limit. */
+  maxPerTx?: string | null;
+  /** Max USDC per day. Pass null to remove the limit. */
+  maxPerDay?: string | null;
+  /** Allowed primitive hostnames. Pass null to allow all. */
+  allowedPrimitives?: unknown | null;
 }
 
 export interface ListWalletsParams {
@@ -273,10 +273,10 @@ export function createWalletClient(
       const res = await primFetch(url);
       return unwrap<ListWalletsResponse>(res);
     },
-    async getWallet(params: GetWalletParams): Promise<WalletDetailResponse> {
+    async getWallet(params: GetWalletParams): Promise<GetWalletResponse> {
       const url = `${baseUrl}/v1/wallets/${encodeURIComponent(params.address)}`;
       const res = await primFetch(url);
-      return unwrap<WalletDetailResponse>(res);
+      return unwrap<GetWalletResponse>(res);
     },
     async deactivateWallet(params: DeactivateWalletParams): Promise<DeactivateWalletResponse> {
       const url = `${baseUrl}/v1/wallets/${encodeURIComponent(params.address)}`;
@@ -285,14 +285,14 @@ export function createWalletClient(
       });
       return unwrap<DeactivateWalletResponse>(res);
     },
-    async createFundRequest(params: CreateFundRequestParams, req: CreateFundRequestRequest): Promise<FundRequestResponse> {
+    async createFundRequest(params: CreateFundRequestParams, req: CreateFundRequestRequest): Promise<GetFundRequestResponse> {
       const url = `${baseUrl}/v1/wallets/${encodeURIComponent(params.address)}/fund-request`;
       const res = await primFetch(url, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(req),
       });
-      return unwrap<FundRequestResponse>(res);
+      return unwrap<GetFundRequestResponse>(res);
     },
     async listFundRequests(params: ListFundRequestsParams): Promise<ListFundRequestsResponse> {
       const qs = new URLSearchParams();
@@ -319,37 +319,37 @@ export function createWalletClient(
       });
       return unwrap<DenyFundRequestResponse>(res);
     },
-    async getPolicy(params: GetPolicyParams): Promise<PolicyResponse> {
+    async getPolicy(params: GetPolicyParams): Promise<GetPolicyResponse> {
       const url = `${baseUrl}/v1/wallets/${encodeURIComponent(params.address)}/policy`;
       const res = await primFetch(url);
-      return unwrap<PolicyResponse>(res);
+      return unwrap<GetPolicyResponse>(res);
     },
-    async updatePolicy(params: UpdatePolicyParams, req: PolicyUpdateRequest): Promise<PolicyResponse> {
+    async updatePolicy(params: UpdatePolicyParams, req: UpdatePolicyRequest): Promise<GetPolicyResponse> {
       const url = `${baseUrl}/v1/wallets/${encodeURIComponent(params.address)}/policy`;
       const res = await primFetch(url, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(req),
       });
-      return unwrap<PolicyResponse>(res);
+      return unwrap<GetPolicyResponse>(res);
     },
-    async pauseWallet(params: PauseWalletParams, req: PauseRequest): Promise<PauseResponse> {
+    async pauseWallet(params: PauseWalletParams, req: PauseWalletRequest): Promise<PauseWalletResponse> {
       const url = `${baseUrl}/v1/wallets/${encodeURIComponent(params.address)}/pause`;
       const res = await primFetch(url, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(req),
       });
-      return unwrap<PauseResponse>(res);
+      return unwrap<PauseWalletResponse>(res);
     },
-    async resumeWallet(params: ResumeWalletParams, req: ResumeRequest): Promise<ResumeResponse> {
+    async resumeWallet(params: ResumeWalletParams, req: ResumeWalletRequest): Promise<ResumeWalletResponse> {
       const url = `${baseUrl}/v1/wallets/${encodeURIComponent(params.address)}/resume`;
       const res = await primFetch(url, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(req),
       });
-      return unwrap<ResumeResponse>(res);
+      return unwrap<ResumeWalletResponse>(res);
     },
   };
 }

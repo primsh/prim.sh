@@ -5,7 +5,7 @@ import type {
   ChatResponse,
   EmbedRequest,
   EmbedResponse,
-  ModelsResponse,
+  ListModelsResponse,
 } from "./api.ts";
 import { getClient } from "./openrouter.ts";
 import { ProviderError } from "./provider.ts";
@@ -95,7 +95,7 @@ export async function embed(body: EmbedRequest): Promise<ServiceResult<EmbedResp
   }
 }
 
-export async function models(): Promise<ServiceResult<ModelsResponse>> {
+export async function models(): Promise<ServiceResult<ListModelsResponse>> {
   try {
     const client = getClient();
     const data = await client.models();

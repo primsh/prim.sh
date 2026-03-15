@@ -144,12 +144,12 @@ routes_map:
       - { status: 403, code: forbidden, description: "Missing wallet address in payment" }
   - route: "GET /v1/buckets/:id"
     request: null
-    response: BucketResponse
+    response: GetBucketResponse
     status: 200
     description: "Get details for a single bucket. Caller must own the bucket."
     operation_id: get_bucket
     request_type: null
-    response_type: BucketResponse
+    response_type: GetBucketResponse
     errors:
       - { status: 402, code: payment_required, description: "x402 payment needed" }
       - { status: 403, code: forbidden, description: "Bucket belongs to a different wallet" }
@@ -229,24 +229,24 @@ routes_map:
       - { status: 502, code: r2_error, description: "Upstream R2 error" }
   - route: "GET /v1/buckets/:id/quota"
     request: null
-    response: QuotaResponse
+    response: GetQuotaResponse
     status: 200
     description: "Get quota and usage for a bucket"
     operation_id: get_quota
     request_type: null
-    response_type: QuotaResponse
+    response_type: GetQuotaResponse
     errors:
       - { status: 402, code: payment_required, description: "x402 payment needed" }
       - { status: 403, code: forbidden, description: "Bucket belongs to a different wallet" }
       - { status: 404, code: not_found, description: "Bucket not found" }
   - route: "PUT /v1/buckets/:id/quota"
     request: SetQuotaRequest
-    response: QuotaResponse
+    response: GetQuotaResponse
     status: 200
     description: "Set the storage quota for a bucket. Pass null to reset to default (100 MB)."
     operation_id: set_quota
     request_type: SetQuotaRequest
-    response_type: QuotaResponse
+    response_type: GetQuotaResponse
     errors:
       - { status: 400, code: invalid_request, description: "Invalid quota value" }
       - { status: 402, code: payment_required, description: "x402 payment needed" }
@@ -255,25 +255,25 @@ routes_map:
       - { status: 502, code: r2_error, description: "Upstream R2 error" }
   - route: "POST /v1/buckets/:id/quota/reconcile"
     request: null
-    response: ReconcileResponse
+    response: ReconcileStorageResponse
     status: 200
     description: "Recompute bucket usage by scanning actual R2 storage. Use when usage_bytes appears incorrect."
     operation_id: reconcile_quota
     request_type: null
-    response_type: ReconcileResponse
+    response_type: ReconcileStorageResponse
     errors:
       - { status: 402, code: payment_required, description: "x402 payment needed" }
       - { status: 403, code: forbidden, description: "Bucket belongs to a different wallet" }
       - { status: 404, code: not_found, description: "Bucket not found" }
       - { status: 502, code: r2_error, description: "Upstream R2 error" }
   - route: "POST /v1/buckets/:id/presign"
-    request: PresignRequest
-    response: PresignResponse
+    request: CreatePresignRequest
+    response: CreatePresignResponse
     status: 200
     description: "Generate a presigned URL for direct GET or PUT access to an object. GET presign requires object to exist."
     operation_id: presign_object
-    request_type: PresignRequest
-    response_type: PresignResponse
+    request_type: CreatePresignRequest
+    response_type: CreatePresignResponse
     errors:
       - { status: 400, code: invalid_request, description: "Invalid key, method, or expires_in" }
       - { status: 402, code: payment_required, description: "x402 payment needed" }

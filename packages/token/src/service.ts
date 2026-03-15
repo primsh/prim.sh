@@ -6,12 +6,12 @@ import type { PaginatedList, ServiceResult } from "@primsh/x402-middleware";
 import type {
   CreatePoolRequest,
   CreateTokenRequest,
-  LiquidityParamsResponse,
+  GetLiquidityParamsResponse,
   MintRequest,
   MintResponse,
-  PoolResponse,
-  SupplyResponse,
-  TokenResponse,
+  GetPoolResponse,
+  GetSupplyResponse,
+  GetTokenResponse,
 } from "./api.ts";
 import { AGENT_TOKEN_ABI, AGENT_TOKEN_BYTECODE, ERC20_ABI } from "./contracts.ts";
 import {
@@ -39,7 +39,7 @@ function generateTokenId(): string {
   return `tk_${randomBytes(4).toString("hex")}`;
 }
 
-function rowToTokenResponse(row: DeploymentRow): TokenResponse {
+function rowToGetTokenResponse(row: DeploymentRow): GetTokenResponse {
   return {
     id: row.id,
     contract_address: row.contract_address,
@@ -147,7 +147,7 @@ export function validateCreateToken(
 export async function deployToken(
   request: CreateTokenRequest,
   callerWallet: string,
-): Promise<ServiceResult<{ token: TokenResponse }>> {
+): Promise<ServiceResult<{ token: GetTokenResponse }>> {
   const validationError = validateCreateToken(request);
   if (validationError) return validationError;
 
@@ -217,15 +217,15 @@ export async function deployToken(
   const row = getDeploymentById(tokenId);
   if (!row) throw new Error("Failed to retrieve deployment after insert");
 
-  return { ok: true, data: { token: rowToTokenResponse(row) } };
+  return { ok: true, data: { token: rowToGetTokenResponse(row) } };
 }
 
-export function listTokens(callerWallet: string): ServiceResult<PaginatedList<TokenResponse>> {
+export function listTokens(callerWallet: string): ServiceResult<PaginatedList<GetTokenResponse>> {
   const rows = getDeploymentsByOwner(callerWallet);
   return {
     ok: true,
     data: {
-      data: rows.map(rowToTokenResponse),
+      data: rows.map(rowToGetTokenResponse),
       pagination: {
         total: rows.length,
         page: 1,
@@ -240,7 +240,7 @@ export function listTokens(callerWallet: string): ServiceResult<PaginatedList<To
 export function getToken(
   tokenId: string,
   callerWallet: string,
-): ServiceResult<{ token: TokenResponse }> {
+): ServiceResult<{ token: GetTokenResponse }> {
   const row = getDeploymentById(tokenId);
   if (!row) {
     return { ok: false, status: 404, code: "not_found", message: "Token not found" };
@@ -248,7 +248,7 @@ export function getToken(
   if (row.owner_wallet !== callerWallet) {
     return { ok: false, status: 403, code: "forbidden", message: "Forbidden" };
   }
-  return { ok: true, data: { token: rowToTokenResponse(row) } };
+  return { ok: true, data: { token: rowToGetTokenResponse(row) } };
 }
 
 export async function mintTokens(
@@ -361,7 +361,7 @@ export async function mintTokens(
 export async function getSupply(
   tokenId: string,
   callerWallet: string,
-): Promise<ServiceResult<SupplyResponse>> {
+): Promise<ServiceResult<GetSupplyResponse>> {
   const row = getDeploymentById(tokenId);
   if (!row) {
     return { ok: false, status: 404, code: "not_found", message: "Token not found" };
@@ -404,7 +404,7 @@ export async function getSupply(
 
 // ─── Pool service ─────────────────────────────────────────────────────────
 
-function poolRowToResponse(pool: PoolRow): PoolResponse {
+function poolRowToResponse(pool: PoolRow): GetPoolResponse {
   return {
     pool_address: pool.pool_address,
     token0: pool.token0,
@@ -422,7 +422,7 @@ export async function createPool(
   tokenId: string,
   request: CreatePoolRequest,
   callerWallet: string,
-): Promise<ServiceResult<PoolResponse>> {
+): Promise<ServiceResult<GetPoolResponse>> {
   const token = getDeploymentById(tokenId);
   if (!token) {
     return { ok: false, status: 404, code: "not_found", message: "Token not found" };
@@ -577,7 +577,7 @@ export async function createPool(
   }
 }
 
-export function getPool(tokenId: string, callerWallet: string): ServiceResult<PoolResponse> {
+export function getPool(tokenId: string, callerWallet: string): ServiceResult<GetPoolResponse> {
   const token = getDeploymentById(tokenId);
   if (!token) {
     return { ok: false, status: 404, code: "not_found", message: "Token not found" };
@@ -597,7 +597,7 @@ export function getLiquidityParams(
   tokenAmount: string,
   usdcAmount: string,
   callerWallet: string,
-): ServiceResult<LiquidityParamsResponse> {
+): ServiceResult<GetLiquidityParamsResponse> {
   const token = getDeploymentById(tokenId);
   if (!token) {
     return { ok: false, status: 404, code: "not_found", message: "Token not found" };

@@ -40,7 +40,7 @@ vi.mock("../src/service.ts", async (importOriginal) => {
   };
 });
 
-import type { CollectionResponse as _CollectionResponse } from "../src/api.ts";
+import type { GetCollectionResponse as _GetCollectionResponse } from "../src/api.ts";
 import app from "../src/index.ts";
 import { createCollection } from "../src/service.ts";
 

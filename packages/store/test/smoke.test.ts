@@ -43,7 +43,7 @@ vi.mock("../src/service.ts", async (importOriginal) => {
   };
 });
 
-import type { BucketResponse, CreateBucketResponse, PresignResponse } from "../src/api.ts";
+import type { CreateBucketResponse, CreatePresignResponse, GetBucketResponse } from "../src/api.ts";
 import app from "../src/index.ts";
 import { createBucket, getPublicObject, presignObject, updateBucket } from "../src/service.ts";
 
@@ -132,7 +132,7 @@ describe("store.sh app", () => {
 
   // Check 6: PUT /v1/buckets/:id — update bucket visibility
   it("PUT /v1/buckets/:id with is_public returns 200 with updated bucket", async () => {
-    const mockBucket: BucketResponse = {
+    const mockBucket: GetBucketResponse = {
       ...MOCK_BUCKET.bucket,
       is_public: true,
       public_url: "https://store.prim.sh/public/b_abcd1234",
@@ -146,7 +146,7 @@ describe("store.sh app", () => {
     });
 
     expect(res.status).toBe(200);
-    const body = (await res.json()) as BucketResponse;
+    const body = (await res.json()) as GetBucketResponse;
     expect(body.is_public).toBe(true);
     expect(body.public_url).toContain("/public/b_abcd1234");
   });
@@ -171,7 +171,7 @@ describe("store.sh app", () => {
 
   // Check 8: presign happy path — POST /v1/buckets/:id/presign returns 200 with presign shape
   it("POST /v1/buckets/:id/presign returns 200 with presigned URL", async () => {
-    const mockPresign: PresignResponse = {
+    const mockPresign: CreatePresignResponse = {
       url: "https://test-cf-account.r2.cloudflarestorage.com/cf-bucket/file.txt?X-Amz-Signature=abc",
       method: "GET",
       key: "file.txt",
@@ -186,7 +186,7 @@ describe("store.sh app", () => {
     });
 
     expect(res.status).toBe(200);
-    const body = (await res.json()) as PresignResponse;
+    const body = (await res.json()) as CreatePresignResponse;
     expect(body.url).toContain("X-Amz-Signature");
     expect(body.method).toBe("GET");
     expect(body.key).toBe("file.txt");

@@ -7,7 +7,7 @@ import { unwrap } from "./shared.js";
 
 // ── Types ──────────────────────────────────────────────────────────────────
 
-export interface ActivateResponse {
+export interface ActivateDomainResponse {
   /** Cloudflare zone ID. */
   zone_id: string;
   /** Updated zone status. */
@@ -47,9 +47,9 @@ export interface BatchRecordsRequest {
 
 export interface BatchRecordsResponse {
   /** Successfully created records. */
-  created: RecordResponse[];
+  created: GetRecordResponse[];
   /** Successfully updated records. */
-  updated: RecordResponse[];
+  updated: GetRecordResponse[];
   /** IDs of deleted records. */
   deleted: Record<string, unknown>;
 }
@@ -91,11 +91,6 @@ export interface CreateZoneRequest {
   domain: string;
 }
 
-export interface CreateZoneResponse {
-  /** The created zone. */
-  zone: ZoneResponse;
-}
-
 export interface DomainSearchPrice {
   /** Registration cost in USD. */
   register: number;
@@ -103,11 +98,6 @@ export interface DomainSearchPrice {
   renew?: number;
   /** Currency code (e.g. "USD"). */
   currency: string;
-}
-
-export interface DomainSearchResponse {
-  /** Search results for each queried domain. */
-  results: DomainSearchResult[];
 }
 
 export interface DomainSearchResult {
@@ -121,6 +111,69 @@ export interface DomainSearchResult {
   premium?: boolean;
 }
 
+export interface GetRecordResponse {
+  /** DNS record ID. */
+  id: string;
+  /** Zone ID this record belongs to. */
+  zone_id: string;
+  /** DNS record type. */
+  type: string;
+  /** DNS record name (hostname, relative to zone). */
+  name: string;
+  /** DNS record value. */
+  content: string;
+  /** TTL in seconds. */
+  ttl: number;
+  /** Whether Cloudflare proxying is enabled. */
+  proxied: boolean;
+  /** Priority for MX and SRV records. Null for other types. */
+  priority: number | null;
+  /** ISO 8601 timestamp when the record was created. */
+  created_at: string;
+  /** ISO 8601 timestamp when the record was last updated. */
+  updated_at: string;
+}
+
+export interface GetRegistrationStatusResponse {
+  /** Domain name. */
+  domain: string;
+  /** Always true — only returned for registered domains. */
+  purchased: string;
+  /** Cloudflare zone ID. Null if zone not yet created. */
+  zone_id: string | null;
+  /** Current zone status. Null if zone not yet created. */
+  zone_status: string | null;
+  /** Whether nameservers are configured at the registrar. */
+  ns_configured_at_registrar: boolean;
+  /** Whether nameservers have propagated in DNS. */
+  ns_propagated: boolean;
+  /** Expected Cloudflare nameservers. */
+  ns_expected: string[];
+  /** Nameservers currently found in DNS. */
+  ns_actual: string[];
+  /** Whether the Cloudflare zone is active. */
+  zone_active: boolean;
+  /** Whether the domain is fully set up and ready. */
+  all_ready: boolean;
+  /** Human-readable next action required. Null if all_ready is true. */
+  next_action: string | null;
+}
+
+export interface GetZoneResponse {
+  /** Cloudflare zone ID. */
+  id: string;
+  /** Domain name (e.g. "example.com"). */
+  domain: string;
+  /** Zone status: "pending" | "active" | "moved". */
+  status: string;
+  /** Cloudflare nameservers to delegate to. */
+  name_servers: string[];
+  /** Ethereum address of the zone owner. */
+  owner_wallet: string;
+  /** ISO 8601 timestamp when the zone was created. */
+  created_at: string;
+}
+
 export interface MailSetupRecordResult {
   /** DNS record type. */
   type: string;
@@ -128,20 +181,6 @@ export interface MailSetupRecordResult {
   name: string;
   /** Whether the record was created or updated. */
   action: "created" | "updated";
-}
-
-export interface MailSetupRequest {
-  /** Mail server hostname (e.g. "mail.prim.sh"). */
-  mail_server: string;
-  /** Mail server IPv4 address (used for SPF record). */
-  mail_server_ip: string;
-  /** DKIM keys to configure. Provide rsa and/or ed25519. */
-  dkim?: Record<string, unknown>;
-}
-
-export interface MailSetupResponse {
-  /** DNS records created or updated by the mail setup. */
-  records: MailSetupRecordResult[];
 }
 
 export interface NsVerifyResult {
@@ -179,29 +218,6 @@ export interface QuoteResponse {
   expires_at: string;
 }
 
-export interface RecordResponse {
-  /** DNS record ID. */
-  id: string;
-  /** Zone ID this record belongs to. */
-  zone_id: string;
-  /** DNS record type. */
-  type: string;
-  /** DNS record name (hostname, relative to zone). */
-  name: string;
-  /** DNS record value. */
-  content: string;
-  /** TTL in seconds. */
-  ttl: number;
-  /** Whether Cloudflare proxying is enabled. */
-  proxied: boolean;
-  /** Priority for MX and SRV records. Null for other types. */
-  priority: number | null;
-  /** ISO 8601 timestamp when the record was created. */
-  created_at: string;
-  /** ISO 8601 timestamp when the record was last updated. */
-  updated_at: string;
-}
-
 export interface RecordVerifyResult {
   /** DNS record type. */
   type: string;
@@ -215,29 +231,23 @@ export interface RecordVerifyResult {
   propagated: boolean;
 }
 
-export interface RegistrationStatusResponse {
-  /** Domain name. */
-  domain: string;
-  /** Always true — only returned for registered domains. */
-  purchased: string;
-  /** Cloudflare zone ID. Null if zone not yet created. */
-  zone_id: string | null;
-  /** Current zone status. Null if zone not yet created. */
-  zone_status: string | null;
-  /** Whether nameservers are configured at the registrar. */
-  ns_configured_at_registrar: boolean;
-  /** Whether nameservers have propagated in DNS. */
-  ns_propagated: boolean;
-  /** Expected Cloudflare nameservers. */
-  ns_expected: string[];
-  /** Nameservers currently found in DNS. */
-  ns_actual: string[];
-  /** Whether the Cloudflare zone is active. */
-  zone_active: boolean;
-  /** Whether the domain is fully set up and ready. */
-  all_ready: boolean;
-  /** Human-readable next action required. Null if all_ready is true. */
-  next_action: string | null;
+export interface SearchDomainResponse {
+  /** Search results for each queried domain. */
+  results: DomainSearchResult[];
+}
+
+export interface SetupMailRequest {
+  /** Mail server hostname (e.g. "mail.prim.sh"). */
+  mail_server: string;
+  /** Mail server IPv4 address (used for SPF record). */
+  mail_server_ip: string;
+  /** DKIM keys to configure. Provide rsa and/or ed25519. */
+  dkim?: Record<string, unknown>;
+}
+
+export interface SetupMailResponse {
+  /** DNS records created or updated by the mail setup. */
+  records: MailSetupRecordResult[];
 }
 
 export interface UpdateRecordRequest {
@@ -255,7 +265,7 @@ export interface UpdateRecordRequest {
   priority?: number;
 }
 
-export interface VerifyResponse {
+export interface VerifyDomainResponse {
   /** Domain name. */
   domain: string;
   /** Nameserver propagation result. */
@@ -266,21 +276,6 @@ export interface VerifyResponse {
   all_propagated: boolean;
   /** Current Cloudflare zone status. Null if zone not found. */
   zone_status: string | null;
-}
-
-export interface ZoneResponse {
-  /** Cloudflare zone ID. */
-  id: string;
-  /** Domain name (e.g. "example.com"). */
-  domain: string;
-  /** Zone status: "pending" | "active" | "moved". */
-  status: string;
-  /** Cloudflare nameservers to delegate to. */
-  name_servers: string[];
-  /** Ethereum address of the zone owner. */
-  owner_wallet: string;
-  /** ISO 8601 timestamp when the zone was created. */
-  created_at: string;
 }
 
 export interface SearchDomainsParams {
@@ -363,6 +358,8 @@ export interface DeleteRecordParams {
   id: string;
 }
 
+export type CreateZoneResponse = Record<string, unknown>;
+
 export type ListZonesResponse = Record<string, unknown>;
 
 export type DeleteZoneResponse = Record<string, unknown>;
@@ -378,14 +375,14 @@ export function createDomainClient(
   baseUrl = "https://domain.prim.sh",
 ) {
   return {
-    async searchDomains(params: SearchDomainsParams): Promise<DomainSearchResponse> {
+    async searchDomains(params: SearchDomainsParams): Promise<SearchDomainResponse> {
       const qs = new URLSearchParams();
       if (params.query !== undefined) qs.set("query", String(params.query));
       if (params.tlds !== undefined) qs.set("tlds", String(params.tlds));
       const query = qs.toString();
       const url = `${baseUrl}/v1/domains/search${query ? `?${query}` : ""}`;
       const res = await primFetch(url);
-      return unwrap<DomainSearchResponse>(res);
+      return unwrap<SearchDomainResponse>(res);
     },
     async quoteDomain(req: QuoteRequest): Promise<QuoteResponse> {
       const url = `${baseUrl}/v1/domains/quote`;
@@ -396,10 +393,10 @@ export function createDomainClient(
       });
       return unwrap<QuoteResponse>(res);
     },
-    async getDomainStatus(params: GetDomainStatusParams): Promise<RegistrationStatusResponse> {
+    async getDomainStatus(params: GetDomainStatusParams): Promise<GetRegistrationStatusResponse> {
       const url = `${baseUrl}/v1/domains/${encodeURIComponent(params.domain)}/status`;
       const res = await primFetch(url);
-      return unwrap<RegistrationStatusResponse>(res);
+      return unwrap<GetRegistrationStatusResponse>(res);
     },
     async createZone(req: CreateZoneRequest): Promise<CreateZoneResponse> {
       const url = `${baseUrl}/v1/zones`;
@@ -419,10 +416,10 @@ export function createDomainClient(
       const res = await primFetch(url);
       return unwrap<ListZonesResponse>(res);
     },
-    async getZone(params: GetZoneParams): Promise<ZoneResponse> {
+    async getZone(params: GetZoneParams): Promise<GetZoneResponse> {
       const url = `${baseUrl}/v1/zones/${encodeURIComponent(params.id)}`;
       const res = await primFetch(url);
-      return unwrap<ZoneResponse>(res);
+      return unwrap<GetZoneResponse>(res);
     },
     async deleteZone(params: DeleteZoneParams): Promise<DeleteZoneResponse> {
       const url = `${baseUrl}/v1/zones/${encodeURIComponent(params.id)}`;
@@ -431,26 +428,26 @@ export function createDomainClient(
       });
       return unwrap<DeleteZoneResponse>(res);
     },
-    async activateZone(params: ActivateZoneParams): Promise<ActivateResponse> {
+    async activateZone(params: ActivateZoneParams): Promise<ActivateDomainResponse> {
       const url = `${baseUrl}/v1/zones/${encodeURIComponent(params.zone_id)}/activate`;
       const res = await primFetch(url, {
         method: "PUT",
       });
-      return unwrap<ActivateResponse>(res);
+      return unwrap<ActivateDomainResponse>(res);
     },
-    async verifyZone(params: VerifyZoneParams): Promise<VerifyResponse> {
+    async verifyZone(params: VerifyZoneParams): Promise<VerifyDomainResponse> {
       const url = `${baseUrl}/v1/zones/${encodeURIComponent(params.zone_id)}/verify`;
       const res = await primFetch(url);
-      return unwrap<VerifyResponse>(res);
+      return unwrap<VerifyDomainResponse>(res);
     },
-    async setupMail(params: SetupMailParams, req: MailSetupRequest): Promise<MailSetupResponse> {
+    async setupMail(params: SetupMailParams, req: SetupMailRequest): Promise<SetupMailResponse> {
       const url = `${baseUrl}/v1/zones/${encodeURIComponent(params.zone_id)}/mail-setup`;
       const res = await primFetch(url, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(req),
       });
-      return unwrap<MailSetupResponse>(res);
+      return unwrap<SetupMailResponse>(res);
     },
     async batchRecords(params: BatchRecordsParams, req: BatchRecordsRequest): Promise<BatchRecordsResponse> {
       const url = `${baseUrl}/v1/zones/${encodeURIComponent(params.zone_id)}/records/batch`;
@@ -461,33 +458,33 @@ export function createDomainClient(
       });
       return unwrap<BatchRecordsResponse>(res);
     },
-    async createRecord(params: CreateRecordParams, req: CreateRecordRequest): Promise<RecordResponse> {
+    async createRecord(params: CreateRecordParams, req: CreateRecordRequest): Promise<GetRecordResponse> {
       const url = `${baseUrl}/v1/zones/${encodeURIComponent(params.zone_id)}/records`;
       const res = await primFetch(url, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(req),
       });
-      return unwrap<RecordResponse>(res);
+      return unwrap<GetRecordResponse>(res);
     },
     async listRecords(params: ListRecordsParams): Promise<ListRecordsResponse> {
       const url = `${baseUrl}/v1/zones/${encodeURIComponent(params.zone_id)}/records`;
       const res = await primFetch(url);
       return unwrap<ListRecordsResponse>(res);
     },
-    async getRecord(params: GetRecordParams): Promise<RecordResponse> {
+    async getRecord(params: GetRecordParams): Promise<GetRecordResponse> {
       const url = `${baseUrl}/v1/zones/${encodeURIComponent(params.zone_id)}/records/${encodeURIComponent(params.id)}`;
       const res = await primFetch(url);
-      return unwrap<RecordResponse>(res);
+      return unwrap<GetRecordResponse>(res);
     },
-    async updateRecord(params: UpdateRecordParams, req: UpdateRecordRequest): Promise<RecordResponse> {
+    async updateRecord(params: UpdateRecordParams, req: UpdateRecordRequest): Promise<GetRecordResponse> {
       const url = `${baseUrl}/v1/zones/${encodeURIComponent(params.zone_id)}/records/${encodeURIComponent(params.id)}`;
       const res = await primFetch(url, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(req),
       });
-      return unwrap<RecordResponse>(res);
+      return unwrap<GetRecordResponse>(res);
     },
     async deleteRecord(params: DeleteRecordParams): Promise<DeleteRecordResponse> {
       const url = `${baseUrl}/v1/zones/${encodeURIComponent(params.zone_id)}/records/${encodeURIComponent(params.id)}`;

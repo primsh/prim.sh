@@ -12,20 +12,20 @@ Part of [prim.sh](https://prim.sh) — zero signup, one payment token, infinite 
 
 | Route | Description | Price | Request | Response |
 |-------|-------------|-------|---------|----------|
-| `POST /v1/mailboxes` | Create a mailbox. Optional: username, domain, ttl_ms. | $0.05 | `CreateMailboxRequest` | `MailboxResponse` |
+| `POST /v1/mailboxes` | Create a mailbox. Optional: username, domain, ttl_ms. | $0.05 | `CreateMailboxRequest` | `GetMailboxResponse` |
 | `GET /v1/mailboxes` | List mailboxes owned by the calling wallet (paginated) | $0.001 | `—` | `MailboxListResponse` |
-| `GET /v1/mailboxes/:id` | Get mailbox metadata including expires_at | $0.001 | `—` | `MailboxResponse` |
+| `GET /v1/mailboxes/:id` | Get mailbox metadata including expires_at | $0.001 | `—` | `GetMailboxResponse` |
 | `DELETE /v1/mailboxes/:id` | Permanently delete a mailbox and all messages | $0.01 | `—` | `DeleteMailboxResponse` |
-| `POST /v1/mailboxes/:id/renew` | Extend mailbox TTL by ttl_ms milliseconds | $0.01 | `RenewMailboxRequest` | `MailboxResponse` |
+| `POST /v1/mailboxes/:id/renew` | Extend mailbox TTL by ttl_ms milliseconds | $0.01 | `RenewMailboxRequest` | `GetMailboxResponse` |
 | `GET /v1/mailboxes/:id/messages` | List messages in a mailbox, newest first | $0.001 | `—` | `EmailListResponse` |
 | `GET /v1/mailboxes/:id/messages/:msgId` | Get full message including textBody and htmlBody | $0.001 | `—` | `EmailDetail` |
 | `POST /v1/mailboxes/:id/send` | Send email from a mailbox. Requires to, subject, and body or html. | $0.01 | `SendMessageRequest` | `SendMessageResponse` |
-| `POST /v1/mailboxes/:id/webhooks` | Register a webhook URL for message.received events. Optional secret for HMAC signing. | $0.01 | `RegisterWebhookRequest` | `WebhookResponse` |
+| `POST /v1/mailboxes/:id/webhooks` | Register a webhook URL for message.received events. Optional secret for HMAC signing. | $0.01 | `RegisterWebhookRequest` | `GetWebhookResponse` |
 | `GET /v1/mailboxes/:id/webhooks` | List webhooks for a mailbox | $0.001 | `—` | `WebhookListResponse` |
 | `DELETE /v1/mailboxes/:id/webhooks/:whId` | Delete a webhook | $0.001 | `—` | `DeleteWebhookResponse` |
-| `POST /v1/domains` | Register a custom domain. Returns required_records for DNS. | $0.05 | `RegisterDomainRequest` | `DomainResponse` |
+| `POST /v1/domains` | Register a custom domain. Returns required_records for DNS. | $0.05 | `RegisterDomainRequest` | `GetDomainResponse` |
 | `GET /v1/domains` | List registered custom domains (paginated) | $0.001 | `—` | `DomainListResponse` |
-| `GET /v1/domains/:id` | Get domain details and verification status | $0.001 | `—` | `DomainResponse` |
+| `GET /v1/domains/:id` | Get domain details and verification status | $0.001 | `—` | `GetDomainResponse` |
 | `POST /v1/domains/:id/verify` | Verify DNS records. On success: status → verified, dkim_records returned. | $0.01 | `—` | `VerifyDomainResponse` |
 | `DELETE /v1/domains/:id` | Remove a custom domain registration | $0.01 | `—` | `DeleteDomainResponse` |
 
@@ -49,7 +49,7 @@ Part of [prim.sh](https://prim.sh) — zero signup, one payment token, infinite 
 | `domain` | `string` | optional |
 | `ttl_ms` | `number` | optional |
 
-### `MailboxResponse`
+### `GetMailboxResponse`
 
 | Field | Type | Description |
 |-------|------|-------------|
@@ -116,7 +116,7 @@ Part of [prim.sh](https://prim.sh) — zero signup, one payment token, infinite 
 | `secret` | `string` | optional |
 | `events` | `string[]` | optional |
 
-### `WebhookResponse`
+### `GetWebhookResponse`
 
 | Field | Type | Description |
 |-------|------|-------------|
@@ -139,7 +139,7 @@ Part of [prim.sh](https://prim.sh) — zero signup, one payment token, infinite 
 |-------|------|----------|
 | `domain` | `string` | required |
 
-### `DomainResponse`
+### `GetDomainResponse`
 
 | Field | Type | Description |
 |-------|------|-------------|

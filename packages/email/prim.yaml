@@ -134,12 +134,12 @@ ownership: "All mailboxes and domains are scoped to the wallet address extracted
 routes_map:
   - route: "POST /v1/mailboxes"
     request: CreateMailboxRequest
-    response: MailboxResponse
+    response: GetMailboxResponse
     status: 201
     description: "Create a mailbox. Optional: username, domain, ttl_ms."
     operation_id: create_mailbox
     request_type: CreateMailboxRequest
-    response_type: MailboxResponse
+    response_type: GetMailboxResponse
     errors:
       - { status: 400, code: invalid_request, description: "Missing fields or invalid characters" }
       - { status: 402, code: payment_required, description: "x402 payment needed" }
@@ -160,12 +160,12 @@ routes_map:
       - { status: 403, code: forbidden, description: "Resource owned by a different wallet" }
   - route: "GET /v1/mailboxes/:id"
     request: null
-    response: MailboxResponse
+    response: GetMailboxResponse
     status: 200
     description: "Get mailbox metadata including expires_at"
     operation_id: get_mailbox
     request_type: null
-    response_type: MailboxResponse
+    response_type: GetMailboxResponse
     errors:
       - { status: 402, code: payment_required, description: "x402 payment needed" }
       - { status: 403, code: forbidden, description: "Resource owned by a different wallet" }
@@ -184,12 +184,12 @@ routes_map:
       - { status: 404, code: not_found, description: "Mailbox not found" }
   - route: "POST /v1/mailboxes/:id/renew"
     request: RenewMailboxRequest
-    response: MailboxResponse
+    response: GetMailboxResponse
     status: 200
     description: "Extend mailbox TTL by ttl_ms milliseconds"
     operation_id: renew_mailbox
     request_type: RenewMailboxRequest
-    response_type: MailboxResponse
+    response_type: GetMailboxResponse
     errors:
       - { status: 402, code: payment_required, description: "x402 payment needed" }
       - { status: 403, code: forbidden, description: "Resource owned by a different wallet" }
@@ -238,12 +238,12 @@ routes_map:
       - { status: 502, code: stalwart_error, description: "Upstream Stalwart mail server error" }
   - route: "POST /v1/mailboxes/:id/webhooks"
     request: RegisterWebhookRequest
-    response: WebhookResponse
+    response: GetWebhookResponse
     status: 201
     description: "Register a webhook URL for message.received events. Optional secret for HMAC signing."
     operation_id: register_webhook
     request_type: RegisterWebhookRequest
-    response_type: WebhookResponse
+    response_type: GetWebhookResponse
     errors:
       - { status: 400, code: invalid_request, description: "Missing or invalid webhook URL" }
       - { status: 402, code: payment_required, description: "x402 payment needed" }
@@ -276,12 +276,12 @@ routes_map:
       - { status: 404, code: not_found, description: "Mailbox or webhook not found" }
   - route: "POST /v1/domains"
     request: RegisterDomainRequest
-    response: DomainResponse
+    response: GetDomainResponse
     status: 201
     description: "Register a custom domain. Returns required_records for DNS."
     operation_id: register_domain
     request_type: RegisterDomainRequest
-    response_type: DomainResponse
+    response_type: GetDomainResponse
     errors:
       - { status: 400, code: invalid_request, description: "Invalid domain name" }
       - { status: 402, code: payment_required, description: "x402 payment needed" }
@@ -302,12 +302,12 @@ routes_map:
       - { status: 403, code: forbidden, description: "Resource owned by a different wallet" }
   - route: "GET /v1/domains/:id"
     request: null
-    response: DomainResponse
+    response: GetDomainResponse
     status: 200
     description: "Get domain details and verification status"
     operation_id: get_domain
     request_type: null
-    response_type: DomainResponse
+    response_type: GetDomainResponse
     errors:
       - { status: 402, code: payment_required, description: "x402 payment needed" }
       - { status: 403, code: forbidden, description: "Resource owned by a different wallet" }

@@ -23,20 +23,20 @@ import type {
   ApproveFundRequestResponse,
   DeactivateWalletResponse,
   DenyFundRequestResponse,
-  FundRequestResponse,
-  PauseResponse,
-  PolicyResponse,
+  GetFundRequestResponse,
+  GetPolicyResponse,
+  GetWalletResponse,
+  PauseWalletResponse,
   RegisterWalletRequest,
-  ResumeResponse,
-  WalletDetailResponse,
+  ResumeWalletResponse,
   WalletListItem,
 } from "./api.ts";
 import type {
   CreateFundRequestRequest,
   DenyFundRequestRequest,
-  PauseRequest,
-  PolicyUpdateRequest,
-  ResumeRequest,
+  PauseWalletRequest,
+  UpdatePolicyRequest,
+  ResumeWalletRequest,
 } from "./api.ts";
 import { getState, pause, resume } from "./circuit-breaker.ts";
 import {
@@ -265,7 +265,7 @@ app.get("/v1/wallets/:address", async (c) => {
     if (status === 404) return c.json(notFound(result.message), 404);
     return c.json(forbidden(result.message), 403);
   }
-  return c.json(result.data as WalletDetailResponse, 200);
+  return c.json(result.data as GetWalletResponse, 200);
 });
 
 // DELETE /v1/wallets/:address — Deactivate
@@ -314,7 +314,7 @@ app.post("/v1/wallets/:address/fund-request", async (c) => {
     const { status, code, message } = result;
     return c.json({ error: { code, message } } as ApiError, status as 400 | 403 | 404 | 500);
   }
-  return c.json(result.data as FundRequestResponse, 200);
+  return c.json(result.data as GetFundRequestResponse, 200);
 });
 
 // GET /v1/wallets/:address/fund-requests
@@ -333,7 +333,7 @@ app.get("/v1/wallets/:address/fund-requests", (c) => {
     const { status, code, message } = result;
     return c.json({ error: { code, message } } as ApiError, status as 403 | 404);
   }
-  return c.json(result.data as PaginatedList<FundRequestResponse>, 200);
+  return c.json(result.data as PaginatedList<GetFundRequestResponse>, 200);
 });
 
 // POST /v1/fund-requests/:id/approve
@@ -388,7 +388,7 @@ app.get("/v1/wallets/:address/policy", (c) => {
     if (status === 404) return c.json(notFound(message), 404);
     return c.json(forbidden(message), 403);
   }
-  return c.json(result.data as PolicyResponse, 200);
+  return c.json(result.data as GetPolicyResponse, 200);
 });
 
 // PUT /v1/wallets/:address/policy
@@ -398,7 +398,7 @@ app.put("/v1/wallets/:address/policy", async (c) => {
   if (callerOrRes instanceof Response) return callerOrRes;
   const caller = callerOrRes;
 
-  const bodyOrRes = await parseJsonBody<Partial<PolicyUpdateRequest>>(
+  const bodyOrRes = await parseJsonBody<Partial<UpdatePolicyRequest>>(
     c,
     logger,
     "PUT /v1/wallets/:address/policy",
@@ -411,7 +411,7 @@ app.put("/v1/wallets/:address/policy", async (c) => {
     const { status, code, message } = result;
     return c.json({ error: { code, message } } as ApiError, status as 400 | 403 | 404);
   }
-  return c.json(result.data as PolicyResponse, 200);
+  return c.json(result.data as GetPolicyResponse, 200);
 });
 
 // POST /v1/wallets/:address/pause
@@ -423,7 +423,7 @@ app.post("/v1/wallets/:address/pause", async (c) => {
 
   let scope: string | undefined;
   try {
-    const body = await c.req.json<Partial<PauseRequest>>();
+    const body = await c.req.json<Partial<PauseWalletRequest>>();
     scope = body.scope;
   } catch (err) {
     logger.warn("JSON parse failed on POST /v1/wallets/:address/pause", { error: String(err) });
@@ -445,7 +445,7 @@ app.post("/v1/wallets/:address/pause", async (c) => {
     if (status === 404) return c.json(notFound(message), 404);
     return c.json(forbidden(message), 403);
   }
-  return c.json(result.data as PauseResponse, 200);
+  return c.json(result.data as PauseWalletResponse, 200);
 });
 
 // POST /v1/wallets/:address/resume
@@ -457,7 +457,7 @@ app.post("/v1/wallets/:address/resume", async (c) => {
 
   let scope: string | undefined;
   try {
-    const body = await c.req.json<Partial<ResumeRequest>>();
+    const body = await c.req.json<Partial<ResumeWalletRequest>>();
     scope = body.scope;
   } catch (err) {
     logger.warn("JSON parse failed on POST /v1/wallets/:address/resume", { error: String(err) });
@@ -479,7 +479,7 @@ app.post("/v1/wallets/:address/resume", async (c) => {
     if (status === 404) return c.json(notFound(message), 404);
     return c.json(forbidden(message), 403);
   }
-  return c.json(result.data as ResumeResponse, 200);
+  return c.json(result.data as ResumeWalletResponse, 200);
 });
 
 // ─── Admin: circuit breaker ────────────────────────────────────────────────

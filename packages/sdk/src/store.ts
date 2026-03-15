@@ -7,7 +7,46 @@ import { unwrap } from "./shared.js";
 
 // ── Types ──────────────────────────────────────────────────────────────────
 
-export interface BucketResponse {
+export interface CreateBucketRequest {
+  /** Bucket name. Unique per wallet. 3-63 chars, alphanumeric + hyphens. */
+  name: string;
+  /** Storage region (e.g. "us-east-1"). Defaults to primary region. */
+  location?: string;
+  /** Whether the bucket should be publicly readable. Defaults to false. */
+  is_public?: boolean;
+}
+
+export interface CreateBucketResponse {
+  /** The created bucket. */
+  bucket: GetBucketResponse;
+}
+
+export interface CreatePresignRequest {
+  /** Object key to presign. */
+  key: string;
+  /** HTTP method: "GET" for download, "PUT" for upload. */
+  method: "GET" | "PUT";
+  /** URL lifetime in seconds (60–86400). Defaults to 3600. */
+  expires_in?: number;
+}
+
+export interface CreatePresignResponse {
+  /** Presigned URL for direct R2 access. */
+  url: string;
+  /** HTTP method this URL was signed for. */
+  method: "GET" | "PUT";
+  /** Object key. */
+  key: string;
+  /** ISO 8601 timestamp when the URL expires. */
+  expires_at: string;
+}
+
+export interface DeleteObjectResponse {
+  /** Always "deleted" on success. */
+  status: "deleted";
+}
+
+export interface GetBucketResponse {
   /** Bucket ID (UUID). */
   id: string;
   /** Bucket name. Unique per wallet. Alphanumeric, hyphens, underscores. */
@@ -28,43 +67,15 @@ export interface BucketResponse {
   created_at: string;
 }
 
-export interface CreateBucketRequest {
-  /** Bucket name. Unique per wallet. 3-63 chars, alphanumeric + hyphens. */
-  name: string;
-  /** Storage region (e.g. "us-east-1"). Defaults to primary region. */
-  location?: string;
-  /** Whether the bucket should be publicly readable. Defaults to false. */
-  is_public?: boolean;
-}
-
-export interface CreateBucketResponse {
-  /** The created bucket. */
-  bucket: BucketResponse;
-}
-
-export interface DeleteObjectResponse {
-  /** Always "deleted" on success. */
-  status: "deleted";
-}
-
-export interface PresignRequest {
-  /** Object key to presign. */
-  key: string;
-  /** HTTP method: "GET" for download, "PUT" for upload. */
-  method: "GET" | "PUT";
-  /** URL lifetime in seconds (60–86400). Defaults to 3600. */
-  expires_in?: number;
-}
-
-export interface PresignResponse {
-  /** Presigned URL for direct R2 access. */
-  url: string;
-  /** HTTP method this URL was signed for. */
-  method: "GET" | "PUT";
-  /** Object key. */
-  key: string;
-  /** ISO 8601 timestamp when the URL expires. */
-  expires_at: string;
+export interface GetQuotaResponse {
+  /** Bucket ID. */
+  bucket_id: string;
+  /** Per-bucket quota in bytes. Null = default (100 MB). */
+  quota_bytes: number | null;
+  /** Current storage usage in bytes. */
+  usage_bytes: number;
+  /** Usage as a percentage (0-100). Null if quota_bytes is null. */
+  usage_pct: number | null;
 }
 
 export interface PutObjectResponse {
@@ -78,18 +89,7 @@ export interface PutObjectResponse {
   public_url?: string;
 }
 
-export interface QuotaResponse {
-  /** Bucket ID. */
-  bucket_id: string;
-  /** Per-bucket quota in bytes. Null = default (100 MB). */
-  quota_bytes: number | null;
-  /** Current storage usage in bytes. */
-  usage_bytes: number;
-  /** Usage as a percentage (0-100). Null if quota_bytes is null. */
-  usage_pct: number | null;
-}
-
-export interface ReconcileResponse {
+export interface ReconcileStorageResponse {
   /** Bucket ID. */
   bucket_id: string;
   /** Storage usage recorded before reconciliation, in bytes. */
@@ -207,10 +207,10 @@ export function createStoreClient(
       const res = await primFetch(url);
       return unwrap<ListBucketsResponse>(res);
     },
-    async getBucket(params: GetBucketParams): Promise<BucketResponse> {
+    async getBucket(params: GetBucketParams): Promise<GetBucketResponse> {
       const url = `${baseUrl}/v1/buckets/${encodeURIComponent(params.id)}`;
       const res = await primFetch(url);
-      return unwrap<BucketResponse>(res);
+      return unwrap<GetBucketResponse>(res);
     },
     async deleteBucket(params: DeleteBucketParams): Promise<DeleteBucketResponse> {
       const url = `${baseUrl}/v1/buckets/${encodeURIComponent(params.id)}`;
@@ -248,35 +248,35 @@ export function createStoreClient(
       const res = await primFetch(url);
       return unwrap<ListObjectsResponse>(res);
     },
-    async getQuota(params: GetQuotaParams): Promise<QuotaResponse> {
+    async getQuota(params: GetQuotaParams): Promise<GetQuotaResponse> {
       const url = `${baseUrl}/v1/buckets/${encodeURIComponent(params.id)}/quota`;
       const res = await primFetch(url);
-      return unwrap<QuotaResponse>(res);
+      return unwrap<GetQuotaResponse>(res);
     },
-    async setQuota(params: SetQuotaParams, req: SetQuotaRequest): Promise<QuotaResponse> {
+    async setQuota(params: SetQuotaParams, req: SetQuotaRequest): Promise<GetQuotaResponse> {
       const url = `${baseUrl}/v1/buckets/${encodeURIComponent(params.id)}/quota`;
       const res = await primFetch(url, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(req),
       });
-      return unwrap<QuotaResponse>(res);
+      return unwrap<GetQuotaResponse>(res);
     },
-    async reconcileQuota(params: ReconcileQuotaParams): Promise<ReconcileResponse> {
+    async reconcileQuota(params: ReconcileQuotaParams): Promise<ReconcileStorageResponse> {
       const url = `${baseUrl}/v1/buckets/${encodeURIComponent(params.id)}/quota/reconcile`;
       const res = await primFetch(url, {
         method: "POST",
       });
-      return unwrap<ReconcileResponse>(res);
+      return unwrap<ReconcileStorageResponse>(res);
     },
-    async presignObject(params: PresignObjectParams, req: PresignRequest): Promise<PresignResponse> {
+    async presignObject(params: PresignObjectParams, req: CreatePresignRequest): Promise<CreatePresignResponse> {
       const url = `${baseUrl}/v1/buckets/${encodeURIComponent(params.id)}/presign`;
       const res = await primFetch(url, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(req),
       });
-      return unwrap<PresignResponse>(res);
+      return unwrap<CreatePresignResponse>(res);
     },
   };
 }

@@ -29,16 +29,7 @@ export interface CreateTokenRequest {
   maxSupply?: string | null;
 }
 
-export interface LiquidityApproval {
-  /** Token contract address to approve. */
-  token: string;
-  /** Spender address (position manager). */
-  spender: string;
-  /** Amount to approve as a raw integer string. */
-  amount: string;
-}
-
-export interface LiquidityParamsResponse {
+export interface GetLiquidityParamsResponse {
   /** Uniswap V3 NonfungiblePositionManager contract address. */
   position_manager_address: string;
   /** First token address. */
@@ -67,25 +58,7 @@ export interface LiquidityParamsResponse {
   approvals: LiquidityApproval[];
 }
 
-export interface MintRequest {
-  /** Recipient address to mint tokens to. */
-  to: string;
-  /** Amount to mint as a raw integer string. */
-  amount: string;
-}
-
-export interface MintResponse {
-  /** Mint transaction hash. */
-  tx_hash: string;
-  /** Recipient address. */
-  to: string;
-  /** Amount minted as a raw integer string. */
-  amount: string;
-  /** Always "pending" — mint is submitted on-chain asynchronously. */
-  status: "pending";
-}
-
-export interface PoolResponse {
+export interface GetPoolResponse {
   /** Uniswap V3 pool contract address. */
   pool_address: string;
   /** First token address in the pool pair. */
@@ -102,7 +75,7 @@ export interface PoolResponse {
   tx_hash: string;
 }
 
-export interface SupplyResponse {
+export interface GetSupplyResponse {
   /** Token ID. */
   token_id: string;
   /** Deployed contract address. */
@@ -111,7 +84,7 @@ export interface SupplyResponse {
   total_supply: string;
 }
 
-export interface TokenResponse {
+export interface GetTokenResponse {
   /** Token ID (e.g. "tok_abc123"). */
   id: string;
   /** Deployed contract address. Null while deploy_status is "pending". */
@@ -138,6 +111,33 @@ export interface TokenResponse {
   deploy_status: "pending" | "confirmed" | "failed";
   /** ISO 8601 timestamp when the token was created. */
   created_at: string;
+}
+
+export interface LiquidityApproval {
+  /** Token contract address to approve. */
+  token: string;
+  /** Spender address (position manager). */
+  spender: string;
+  /** Amount to approve as a raw integer string. */
+  amount: string;
+}
+
+export interface MintRequest {
+  /** Recipient address to mint tokens to. */
+  to: string;
+  /** Amount to mint as a raw integer string. */
+  amount: string;
+}
+
+export interface MintResponse {
+  /** Mint transaction hash. */
+  tx_hash: string;
+  /** Recipient address. */
+  to: string;
+  /** Amount minted as a raw integer string. */
+  amount: string;
+  /** Always "pending" — mint is submitted on-chain asynchronously. */
+  status: "pending";
 }
 
 export interface GetTokenParams {
@@ -183,24 +183,24 @@ export function createTokenClient(
   baseUrl = "https://token.prim.sh",
 ) {
   return {
-    async deployToken(req: CreateTokenRequest): Promise<TokenResponse> {
+    async deployToken(req: CreateTokenRequest): Promise<GetTokenResponse> {
       const url = `${baseUrl}/v1/tokens`;
       const res = await primFetch(url, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(req),
       });
-      return unwrap<TokenResponse>(res);
+      return unwrap<GetTokenResponse>(res);
     },
     async listTokens(): Promise<ListTokensResponse> {
       const url = `${baseUrl}/v1/tokens`;
       const res = await primFetch(url);
       return unwrap<ListTokensResponse>(res);
     },
-    async getToken(params: GetTokenParams): Promise<TokenResponse> {
+    async getToken(params: GetTokenParams): Promise<GetTokenResponse> {
       const url = `${baseUrl}/v1/tokens/${encodeURIComponent(params.id)}`;
       const res = await primFetch(url);
-      return unwrap<TokenResponse>(res);
+      return unwrap<GetTokenResponse>(res);
     },
     async mintTokens(params: MintTokensParams, req: MintRequest): Promise<MintResponse> {
       const url = `${baseUrl}/v1/tokens/${encodeURIComponent(params.id)}/mint`;
@@ -211,33 +211,33 @@ export function createTokenClient(
       });
       return unwrap<MintResponse>(res);
     },
-    async getTokenSupply(params: GetTokenSupplyParams): Promise<SupplyResponse> {
+    async getTokenSupply(params: GetTokenSupplyParams): Promise<GetSupplyResponse> {
       const url = `${baseUrl}/v1/tokens/${encodeURIComponent(params.id)}/supply`;
       const res = await primFetch(url);
-      return unwrap<SupplyResponse>(res);
+      return unwrap<GetSupplyResponse>(res);
     },
-    async createPool(params: CreatePoolParams, req: CreatePoolRequest): Promise<PoolResponse> {
+    async createPool(params: CreatePoolParams, req: CreatePoolRequest): Promise<GetPoolResponse> {
       const url = `${baseUrl}/v1/tokens/${encodeURIComponent(params.id)}/pool`;
       const res = await primFetch(url, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(req),
       });
-      return unwrap<PoolResponse>(res);
+      return unwrap<GetPoolResponse>(res);
     },
-    async getPool(params: GetPoolParams): Promise<PoolResponse> {
+    async getPool(params: GetPoolParams): Promise<GetPoolResponse> {
       const url = `${baseUrl}/v1/tokens/${encodeURIComponent(params.id)}/pool`;
       const res = await primFetch(url);
-      return unwrap<PoolResponse>(res);
+      return unwrap<GetPoolResponse>(res);
     },
-    async getLiquidityParams(params: GetLiquidityParamsParams): Promise<LiquidityParamsResponse> {
+    async getLiquidityParams(params: GetLiquidityParamsParams): Promise<GetLiquidityParamsResponse> {
       const qs = new URLSearchParams();
       if (params.tokenAmount !== undefined) qs.set("tokenAmount", String(params.tokenAmount));
       if (params.usdcAmount !== undefined) qs.set("usdcAmount", String(params.usdcAmount));
       const query = qs.toString();
       const url = `${baseUrl}/v1/tokens/${encodeURIComponent(params.id)}/pool/liquidity-params${query ? `?${query}` : ""}`;
       const res = await primFetch(url);
-      return unwrap<LiquidityParamsResponse>(res);
+      return unwrap<GetLiquidityParamsResponse>(res);
     },
   };
 }

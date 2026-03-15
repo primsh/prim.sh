@@ -47,7 +47,80 @@ components:
             message:
               type: string
               description: Human-readable error message.
-    BucketResponse:
+    CreateBucketRequest:
+      type: object
+      required:
+        - name
+      properties:
+        name:
+          type: string
+          description: Bucket name. Unique per wallet. 3-63 chars, alphanumeric + hyphens.
+        location:
+          type: string
+          description: Storage region (e.g. "us-east-1"). Defaults to primary region.
+        is_public:
+          type: boolean
+          description: Whether the bucket should be publicly readable. Defaults to false.
+    CreateBucketResponse:
+      type: object
+      required:
+        - bucket
+      properties:
+        bucket:
+          $ref: "#/components/schemas/GetBucketResponse"
+          description: The created bucket.
+    CreatePresignRequest:
+      type: object
+      required:
+        - key
+        - method
+      properties:
+        key:
+          type: string
+          description: Object key to presign.
+        method:
+          type: string
+          enum:
+            - GET
+            - PUT
+          description: 'HTTP method: "GET" for download, "PUT" for upload.'
+        expires_in:
+          type: number
+          description: URL lifetime in seconds (60–86400). Defaults to 3600.
+    CreatePresignResponse:
+      type: object
+      required:
+        - url
+        - method
+        - key
+        - expires_at
+      properties:
+        url:
+          type: string
+          description: Presigned URL for direct R2 access.
+        method:
+          type: string
+          enum:
+            - GET
+            - PUT
+          description: HTTP method this URL was signed for.
+        key:
+          type: string
+          description: Object key.
+        expires_at:
+          type: string
+          description: ISO 8601 timestamp when the URL expires.
+    DeleteObjectResponse:
+      type: object
+      required:
+        - status
+      properties:
+        status:
+          type: string
+          enum:
+            - deleted
+          description: Always "deleted" on success.
+    GetBucketResponse:
       type: object
       required:
         - id
@@ -90,99 +163,7 @@ components:
         created_at:
           type: string
           description: ISO 8601 timestamp when the bucket was created.
-    CreateBucketRequest:
-      type: object
-      required:
-        - name
-      properties:
-        name:
-          type: string
-          description: Bucket name. Unique per wallet. 3-63 chars, alphanumeric + hyphens.
-        location:
-          type: string
-          description: Storage region (e.g. "us-east-1"). Defaults to primary region.
-        is_public:
-          type: boolean
-          description: Whether the bucket should be publicly readable. Defaults to false.
-    CreateBucketResponse:
-      type: object
-      required:
-        - bucket
-      properties:
-        bucket:
-          $ref: "#/components/schemas/BucketResponse"
-          description: The created bucket.
-    DeleteObjectResponse:
-      type: object
-      required:
-        - status
-      properties:
-        status:
-          type: string
-          enum:
-            - deleted
-          description: Always "deleted" on success.
-    PresignRequest:
-      type: object
-      required:
-        - key
-        - method
-      properties:
-        key:
-          type: string
-          description: Object key to presign.
-        method:
-          type: string
-          enum:
-            - GET
-            - PUT
-          description: 'HTTP method: "GET" for download, "PUT" for upload.'
-        expires_in:
-          type: number
-          description: URL lifetime in seconds (60–86400). Defaults to 3600.
-    PresignResponse:
-      type: object
-      required:
-        - url
-        - method
-        - key
-        - expires_at
-      properties:
-        url:
-          type: string
-          description: Presigned URL for direct R2 access.
-        method:
-          type: string
-          enum:
-            - GET
-            - PUT
-          description: HTTP method this URL was signed for.
-        key:
-          type: string
-          description: Object key.
-        expires_at:
-          type: string
-          description: ISO 8601 timestamp when the URL expires.
-    PutObjectResponse:
-      type: object
-      required:
-        - key
-        - size
-        - etag
-      properties:
-        key:
-          type: string
-          description: Object key as stored.
-        size:
-          type: number
-          description: Object size in bytes.
-        etag:
-          type: string
-          description: ETag (MD5 hash).
-        public_url:
-          type: string
-          description: Stable public URL for this object. Only present when bucket is public.
-    QuotaResponse:
+    GetQuotaResponse:
       type: object
       required:
         - bucket_id
@@ -206,7 +187,26 @@ components:
             - number
             - "null"
           description: Usage as a percentage (0-100). Null if quota_bytes is null.
-    ReconcileResponse:
+    PutObjectResponse:
+      type: object
+      required:
+        - key
+        - size
+        - etag
+      properties:
+        key:
+          type: string
+          description: Object key as stored.
+        size:
+          type: number
+          description: Object size in bytes.
+        etag:
+          type: string
+          description: ETag (MD5 hash).
+        public_url:
+          type: string
+          description: Stable public URL for this object. Only present when bucket is public.
+    ReconcileStorageResponse:
       type: object
       required:
         - bucket_id
@@ -352,7 +352,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/BucketResponse"
+                $ref: "#/components/schemas/GetBucketResponse"
         "402":
           description: x402 payment required.
         "403":
@@ -636,7 +636,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/QuotaResponse"
+                $ref: "#/components/schemas/GetQuotaResponse"
         "402":
           description: x402 payment required.
         "403":
@@ -676,7 +676,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/QuotaResponse"
+                $ref: "#/components/schemas/GetQuotaResponse"
         "400":
           description: Invalid quota value
           content:
@@ -723,7 +723,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ReconcileResponse"
+                $ref: "#/components/schemas/ReconcileStorageResponse"
         "402":
           description: x402 payment required.
         "403":
@@ -763,14 +763,14 @@ paths:
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/PresignRequest"
+              $ref: "#/components/schemas/CreatePresignRequest"
       responses:
         "200":
           description: Generate a presigned URL for direct GET or PUT access to an object. GET presign requires object to exist.
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/PresignResponse"
+                $ref: "#/components/schemas/CreatePresignResponse"
         "400":
           description: Invalid key, method, or expires_in
           content:

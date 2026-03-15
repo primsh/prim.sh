@@ -89,7 +89,7 @@ components:
         retry_after_ms:
           type: number
           description: Milliseconds until rate limit resets. 0 if available.
-    FaucetStatusResponse:
+    GetFaucetStatusResponse:
       type: object
       required:
         - address
@@ -285,7 +285,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/FaucetStatusResponse"
+                $ref: "#/components/schemas/GetFaucetStatusResponse"
         "400":
           description: Missing or invalid address query param
           content:

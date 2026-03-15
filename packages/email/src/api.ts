@@ -31,7 +31,7 @@ export type ErrorCode = (typeof ERROR_CODES)[number];
 
 export type MailboxStatus = "active" | "expired" | "deleted";
 
-export interface MailboxResponse {
+export interface GetMailboxResponse {
   /** Mailbox ID (e.g. "mbx_abc123"). */
   id: string;
   /** Full email address (e.g. "abc123@mail.prim.sh"). */
@@ -141,7 +141,7 @@ export interface RegisterWebhookRequest {
   events?: string[];
 }
 
-export interface WebhookResponse {
+export interface GetWebhookResponse {
   /** Webhook ID (e.g. "wh_abc123"). */
   id: string;
   /** Webhook endpoint URL. */
@@ -204,7 +204,7 @@ export interface RegisterDomainRequest {
   domain: string;
 }
 
-export interface DomainResponse {
+export interface GetDomainResponse {
   /** Domain registration ID. */
   id: string;
   /** Registered domain name. */

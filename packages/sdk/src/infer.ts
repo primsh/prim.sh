@@ -61,6 +61,10 @@ export interface EmbeddingData {
   embedding: number[];
 }
 
+export interface ListModelsResponse {
+  data: ModelInfo[];
+}
+
 export interface Message {
   role: "system" | "user" | "assistant" | "tool";
   content: string | ContentPart[] | null;
@@ -79,10 +83,6 @@ export interface ModelInfo {
 export interface ModelPricing {
   prompt: string;
   completion: string;
-}
-
-export interface ModelsResponse {
-  data: ModelInfo[];
 }
 
 export interface Tool {
@@ -127,10 +127,10 @@ export function createInferClient(
       });
       return unwrap<EmbedResponse>(res);
     },
-    async listModels(): Promise<ModelsResponse> {
+    async listModels(): Promise<ListModelsResponse> {
       const url = `${baseUrl}/v1/models`;
       const res = await primFetch(url);
-      return unwrap<ModelsResponse>(res);
+      return unwrap<ListModelsResponse>(res);
     },
   };
 }

@@ -12,9 +12,9 @@ Part of [prim.sh](https://prim.sh) — zero signup, one payment token, infinite 
 
 | Route | Description | Price | Request | Response |
 |-------|-------------|-------|---------|----------|
-| `POST /v1/collections` | Create a vector collection | $0.001 | `CreateCollectionRequest` | `CollectionResponse` |
+| `POST /v1/collections` | Create a vector collection | $0.001 | `CreateCollectionRequest` | `GetCollectionResponse` |
 | `GET /v1/collections` | List collections owned by the calling wallet (paginated). document_count is null — use GET :id. | $0.001 | `—` | `CollectionListResponse` |
-| `GET /v1/collections/:id` | Get collection with live document_count from Qdrant | $0.001 | `—` | `CollectionResponse` |
+| `GET /v1/collections/:id` | Get collection with live document_count from Qdrant | $0.001 | `—` | `GetCollectionResponse` |
 | `DELETE /v1/collections/:id` | Delete collection and all documents. Irreversible. | $0.001 | `—` | `—` |
 | `POST /v1/collections/:id/upsert` | Embed and store documents. Each document: {id?, text, metadata?}. Existing IDs are replaced. | $0.0001 | `UpsertRequest` | `UpsertResponse` |
 | `POST /v1/collections/:id/query` | Semantic search. Fields: text (required), top_k, filter (Qdrant native format). | $0.0001 | `QueryRequest` | `QueryResponse` |
@@ -41,7 +41,7 @@ Part of [prim.sh](https://prim.sh) — zero signup, one payment token, infinite 
 | `distance` | `"Cosine" | "Euclid" | "Dot"` | optional |
 | `dimension` | `number` | optional |
 
-### `CollectionResponse`
+### `GetCollectionResponse`
 
 | Field | Type | Description |
 |-------|------|-------------|

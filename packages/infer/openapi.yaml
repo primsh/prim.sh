@@ -199,6 +199,15 @@ components:
           type: array
           items:
             type: number
+    ListModelsResponse:
+      type: object
+      required:
+        - data
+      properties:
+        data:
+          type: array
+          items:
+            $ref: "#/components/schemas/ModelInfo"
     Message:
       type: object
       required:
@@ -253,15 +262,6 @@ components:
           type: string
         completion:
           type: string
-    ModelsResponse:
-      type: object
-      required:
-        - data
-      properties:
-        data:
-          type: array
-          items:
-            $ref: "#/components/schemas/ModelInfo"
     Tool:
       type: object
       required:
@@ -416,7 +416,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ModelsResponse"
+                $ref: "#/components/schemas/ListModelsResponse"
         "502":
           description: Unable to fetch model list
           content:

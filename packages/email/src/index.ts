@@ -16,17 +16,17 @@ import type {
   DeleteDomainResponse,
   DeleteMailboxResponse,
   DeleteWebhookResponse,
-  DomainResponse,
+  GetDomainResponse,
   EmailDetail,
   EmailMessage,
-  MailboxResponse,
+  GetMailboxResponse,
   RegisterDomainRequest,
   RegisterWebhookRequest,
   RenewMailboxRequest,
   SendMessageRequest,
   SendMessageResponse,
   VerifyDomainResponse,
-  WebhookResponse,
+  GetWebhookResponse,
 } from "./api.ts";
 import {
   createMailbox,
@@ -199,7 +199,7 @@ app.post("/v1/mailboxes", async (c) => {
       return c.json(stalwartError(result.message), (result.status ?? 503) as 503);
     return c.json(stalwartError(result.message), result.status as 502);
   }
-  return c.json(result.data as MailboxResponse, 201);
+  return c.json(result.data as GetMailboxResponse, 201);
 });
 
 // GET /v1/mailboxes — List mailboxes
@@ -213,7 +213,7 @@ app.get("/v1/mailboxes", (c) => {
   const includeExpired = c.req.query("include_expired") === "true";
 
   const data = listMailboxes(caller, page, perPage, includeExpired);
-  return c.json(data as PaginatedList<MailboxResponse>, 200);
+  return c.json(data as PaginatedList<GetMailboxResponse>, 200);
 });
 
 // GET /v1/mailboxes/:id — Get mailbox
@@ -224,7 +224,7 @@ app.get("/v1/mailboxes/:id", async (c) => {
 
   const result = await getMailbox(c.req.param("id"), caller);
   if (!result.ok) return c.json(notFound(result.message), 404);
-  return c.json(result.data as MailboxResponse, 200);
+  return c.json(result.data as GetMailboxResponse, 200);
 });
 
 // DELETE /v1/mailboxes/:id — Delete mailbox
@@ -262,7 +262,7 @@ app.post("/v1/mailboxes/:id/renew", async (c) => {
     if (result.code === "invalid_request") return c.json(invalidRequest(result.message), 400);
     return c.json(serviceError(result.code, result.message), result.status as 502);
   }
-  return c.json(result.data as MailboxResponse, 200);
+  return c.json(result.data as GetMailboxResponse, 200);
 });
 
 // GET /v1/mailboxes/:id/messages — List messages
@@ -346,7 +346,7 @@ app.post("/v1/mailboxes/:id/webhooks", async (c) => {
     if (result.code === "invalid_request") return c.json(invalidRequest(result.message), 400);
     return c.json(serviceError(result.code, result.message), result.status as 502);
   }
-  return c.json(result.data as WebhookResponse, 201);
+  return c.json(result.data as GetWebhookResponse, 201);
 });
 
 // GET /v1/mailboxes/:id/webhooks — List webhooks
@@ -360,7 +360,7 @@ app.get("/v1/mailboxes/:id/webhooks", (c) => {
     if (result.code === "not_found") return c.json(notFound(result.message), 404);
     return c.json(serviceError(result.code, result.message), result.status as 502);
   }
-  return c.json(result.data as PaginatedList<WebhookResponse>, 200);
+  return c.json(result.data as PaginatedList<GetWebhookResponse>, 200);
 });
 
 // DELETE /v1/mailboxes/:id/webhooks/:whId — Delete webhook
@@ -394,7 +394,7 @@ app.post("/v1/domains", async (c) => {
       return c.json(serviceError("domain_taken", result.message), 409);
     return c.json(serviceError(result.code, result.message), result.status as 502);
   }
-  return c.json(result.data as DomainResponse, 201);
+  return c.json(result.data as GetDomainResponse, 201);
 });
 
 // GET /v1/domains — List caller's domains
@@ -407,7 +407,7 @@ app.get("/v1/domains", (c) => {
   const page = Math.max(Number(c.req.query("page")) || 1, 1);
 
   const data = listDomains(caller, page, perPage);
-  return c.json(data as PaginatedList<DomainResponse>, 200);
+  return c.json(data as PaginatedList<GetDomainResponse>, 200);
 });
 
 // GET /v1/domains/:id — Get domain details
@@ -418,7 +418,7 @@ app.get("/v1/domains/:id", (c) => {
 
   const result = getDomain(c.req.param("id"), caller);
   if (!result.ok) return c.json(notFound(result.message), 404);
-  return c.json(result.data as DomainResponse, 200);
+  return c.json(result.data as GetDomainResponse, 200);
 });
 
 // POST /v1/domains/:id/verify — Verify DNS and provision

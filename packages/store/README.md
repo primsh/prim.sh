@@ -14,16 +14,16 @@ Part of [prim.sh](https://prim.sh) — zero signup, one payment token, infinite 
 |-------|-------------|-------|---------|----------|
 | `POST /v1/buckets` | Create a new storage bucket | $0.001 | `CreateBucketRequest` | `CreateBucketResponse` |
 | `GET /v1/buckets` | List all buckets owned by the calling wallet | $0.001 | `—` | `BucketListResponse` |
-| `GET /v1/buckets/:id` | Get details for a single bucket. Caller must own the bucket. | $0.001 | `—` | `BucketResponse` |
+| `GET /v1/buckets/:id` | Get details for a single bucket. Caller must own the bucket. | $0.001 | `—` | `GetBucketResponse` |
 | `DELETE /v1/buckets/:id` | Delete a bucket. Bucket must be empty first. | $0.001 | `—` | `—` |
 | `PUT /v1/buckets/:id/objects/:key` | Upload an object. Key may include slashes. Content-Length header required. | $0.001 | `—` | `PutObjectResponse` |
 | `GET /v1/buckets/:id/objects` | List objects in a bucket. Cursor-based pagination. | $0.001 | `—` | `ObjectListResponse` |
 | `GET /v1/buckets/:id/objects/:key` | Download an object. Response body is streamed directly. | $0.001 | `—` | `Raw bytes (application/octet-stream)` |
 | `DELETE /v1/buckets/:id/objects/:key` | Delete an object from a bucket | $0.001 | `—` | `DeleteObjectResponse` |
-| `GET /v1/buckets/:id/quota` | Get quota and usage for a bucket | $0.001 | `—` | `QuotaResponse` |
-| `PUT /v1/buckets/:id/quota` | Set the storage quota for a bucket. Pass null to reset to default (100 MB). | $0.001 | `SetQuotaRequest` | `QuotaResponse` |
-| `POST /v1/buckets/:id/quota/reconcile` | Recompute bucket usage by scanning actual R2 storage. Use when usage_bytes appears incorrect. | $0.001 | `—` | `ReconcileResponse` |
-| `POST /v1/buckets/:id/presign` | Generate a presigned URL for direct GET or PUT access to an object. GET presign requires object to exist. | $0.001 | `PresignRequest` | `PresignResponse` |
+| `GET /v1/buckets/:id/quota` | Get quota and usage for a bucket | $0.001 | `—` | `GetQuotaResponse` |
+| `PUT /v1/buckets/:id/quota` | Set the storage quota for a bucket. Pass null to reset to default (100 MB). | $0.001 | `SetQuotaRequest` | `GetQuotaResponse` |
+| `POST /v1/buckets/:id/quota/reconcile` | Recompute bucket usage by scanning actual R2 storage. Use when usage_bytes appears incorrect. | $0.001 | `—` | `ReconcileStorageResponse` |
+| `POST /v1/buckets/:id/presign` | Generate a presigned URL for direct GET or PUT access to an object. GET presign requires object to exist. | $0.001 | `CreatePresignRequest` | `CreatePresignResponse` |
 
 ## Pricing
 
@@ -48,9 +48,9 @@ Part of [prim.sh](https://prim.sh) — zero signup, one payment token, infinite 
 
 | Field | Type | Description |
 |-------|------|-------------|
-| `bucket` | `BucketResponse` | The created bucket. |
+| `bucket` | `GetBucketResponse` | The created bucket. |
 
-### `BucketResponse`
+### `GetBucketResponse`
 
 | Field | Type | Description |
 |-------|------|-------------|
@@ -79,7 +79,7 @@ Part of [prim.sh](https://prim.sh) — zero signup, one payment token, infinite 
 |-------|------|-------------|
 | `status` | `"deleted"` | Always "deleted" on success. |
 
-### `QuotaResponse`
+### `GetQuotaResponse`
 
 | Field | Type | Description |
 |-------|------|-------------|
@@ -94,7 +94,7 @@ Part of [prim.sh](https://prim.sh) — zero signup, one payment token, infinite 
 |-------|------|----------|
 | `quota_bytes` | `number | null` | required |
 
-### `ReconcileResponse`
+### `ReconcileStorageResponse`
 
 | Field | Type | Description |
 |-------|------|-------------|
@@ -103,7 +103,7 @@ Part of [prim.sh](https://prim.sh) — zero signup, one payment token, infinite 
 | `actual_bytes` | `number` | Actual storage usage recomputed from R2, in bytes. |
 | `delta_bytes` | `number` | Difference (actual - previous). Negative means recorded was overstated. |
 
-### `PresignRequest`
+### `CreatePresignRequest`
 
 | Field | Type | Required |
 |-------|------|----------|
@@ -111,7 +111,7 @@ Part of [prim.sh](https://prim.sh) — zero signup, one payment token, infinite 
 | `method` | `"GET" | "PUT"` | required |
 | `expires_in` | `number` | optional |
 
-### `PresignResponse`
+### `CreatePresignResponse`
 
 | Field | Type | Description |
 |-------|------|-------------|

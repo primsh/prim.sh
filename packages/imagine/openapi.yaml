@@ -52,7 +52,7 @@ components:
       type: object
     GenerateResponse:
       type: object
-    ModelsResponse:
+    ListModelsResponse:
       type: object
     UpscaleRequest:
       type: object
@@ -215,7 +215,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ModelsResponse"
+                $ref: "#/components/schemas/ListModelsResponse"
         "502":
           description: Unable to fetch model list
           content:
