@@ -10,6 +10,37 @@ import { stringify } from "yaml";
 import type { ParsedApi, ParsedInterface } from "./parse-api.js";
 import type { Primitive, RouteMapping } from "./primitives.js";
 
+// ── Type inference from operation_id ─────────────────────────────────────────
+
+/**
+ * Convert snake_case operation_id to PascalCase.
+ * "create_bucket" → "CreateBucket"
+ */
+function opIdToPascal(opId: string): string {
+  return opId
+    .split("_")
+    .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
+    .join("");
+}
+
+/**
+ * Infer request/response type names from operation_id + api.ts exports.
+ * Returns null for each slot if no matching interface is found.
+ */
+export function inferTypeNames(
+  operationId: string | undefined,
+  interfaces: Map<string, ParsedInterface>,
+): { request: string | null; response: string | null } {
+  if (!operationId) return { request: null, response: null };
+  const pascal = opIdToPascal(operationId);
+  const reqName = `${pascal}Request`;
+  const resName = `${pascal}Response`;
+  return {
+    request: interfaces.has(reqName) ? reqName : null,
+    response: interfaces.has(resName) ? resName : null,
+  };
+}
+
 // ── Helpers ──────────────────────────────────────────────────────────────────
 
 type Schema = Record<string, unknown>;
@@ -316,6 +347,7 @@ function buildOperation(
   prices: Map<string, string>,
   method: string,
   pathParams: string[],
+  resolved: { request: string | null; response: string | null },
 ): Schema {
   const operation: Schema = {};
 
@@ -351,12 +383,12 @@ function buildOperation(
   if (parameters.length > 0) operation.parameters = parameters;
 
   // Request body (POST/PUT/PATCH only)
-  if (rm.request && ["post", "put", "patch"].includes(method)) {
+  if (resolved.request && ["post", "put", "patch"].includes(method)) {
     operation.requestBody = {
       required: true,
       content: {
         "application/json": {
-          schema: { $ref: `#/components/schemas/${rm.request}` },
+          schema: { $ref: `#/components/schemas/${resolved.request}` },
         },
       },
     };
@@ -366,12 +398,12 @@ function buildOperation(
   const responses: Record<string, Schema> = {};
   const successStatus = String(rm.status);
 
-  if (rm.response && api.interfaces.has(rm.response)) {
+  if (resolved.response && api.interfaces.has(resolved.response)) {
     responses[successStatus] = {
       description: rm.description,
       content: {
         "application/json": {
-          schema: { $ref: `#/components/schemas/${rm.response}` },
+          schema: { $ref: `#/components/schemas/${resolved.response}` },
         },
       },
     };
@@ -412,6 +444,7 @@ function buildPaths(
   p: Primitive,
   api: ParsedApi,
   prices: Map<string, string>,
+  resolvedRoutes: Map<RouteMapping, { request: string | null; response: string | null }>,
 ): Record<string, Schema> {
   const paths: Record<string, Schema> = {};
 
@@ -424,7 +457,8 @@ function buildPaths(
     const openApiPath = rawPath.replace(/:([A-Za-z_][A-Za-z0-9_]*)/g, "{$1}");
     const pathParams = extractPathParams(rm.route);
 
-    const operation = buildOperation(rm, api, prices, method, pathParams);
+    const resolved = resolvedRoutes.get(rm) ?? { request: rm.request, response: rm.response };
+    const operation = buildOperation(rm, api, prices, method, pathParams, resolved);
     if (!paths[openApiPath]) paths[openApiPath] = {};
     (paths[openApiPath] as Record<string, Schema>)[method] = operation;
   }
@@ -434,13 +468,28 @@ function buildPaths(
 
 // ── Main renderer ────────────────────────────────────────────────────────────
 
+/** Resolve request/response type names: explicit prim.yaml value wins, then inference from operation_id. */
+export function resolveRouteTypes(
+  rm: RouteMapping,
+  interfaces: Map<string, ParsedInterface>,
+): { request: string | null; response: string | null } {
+  const inferred = inferTypeNames(rm.operation_id, interfaces);
+  return {
+    request: rm.request ?? inferred.request,
+    response: rm.response ?? inferred.response,
+  };
+}
+
 export function renderOpenApi(p: Primitive, api: ParsedApi, prices: Map<string, string>): string {
   const endpoint = p.endpoint ?? `${p.id}.prim.sh`;
 
   const rootTypes: string[] = [];
+  const resolvedRoutes = new Map<RouteMapping, { request: string | null; response: string | null }>();
   for (const rm of p.routes_map ?? []) {
-    if (rm.request) rootTypes.push(rm.request);
-    if (rm.response) rootTypes.push(rm.response);
+    const resolved = resolveRouteTypes(rm, api.interfaces);
+    resolvedRoutes.set(rm, resolved);
+    if (resolved.request) rootTypes.push(resolved.request);
+    if (resolved.response) rootTypes.push(resolved.response);
   }
   const referenced = collectReferencedInterfaces(rootTypes, api.interfaces);
 
@@ -465,7 +514,7 @@ export function renderOpenApi(p: Primitive, api: ParsedApi, prices: Map<string, 
       },
       schemas: buildSchemas(api, referenced),
     },
-    paths: buildPaths(p, api, prices),
+    paths: buildPaths(p, api, prices, resolvedRoutes),
   };
 
   return stringify(spec, { lineWidth: 120 });

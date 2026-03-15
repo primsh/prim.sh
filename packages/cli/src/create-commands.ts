@@ -35,8 +35,8 @@ export async function runCreateCommand(sub: string, argv: string[]): Promise<voi
   if (!sub || sub === "--help" || sub === "-h") {
     console.log("Usage: prim create <scaffold|validate|schema|ports> [args] [flags]");
     console.log("");
-    console.log("  Usage: prim create scaffold");
-    console.log("  Usage: prim create validate");
+    console.log("  Usage: prim create scaffold --spec SPEC");
+    console.log("  Usage: prim create validate --spec SPEC");
     console.log("  Usage: prim create schema");
     console.log("  Usage: prim create ports");
     process.exit(1);
@@ -44,7 +44,16 @@ export async function runCreateCommand(sub: string, argv: string[]): Promise<voi
 
   switch (sub) {
     case "scaffold": {
-      const data = await client.scaffold();
+      const spec = getFlag("spec", argv);
+      if (!spec) {
+        process.stderr.write(
+          "Usage: prim create scaffold --spec SPEC\n",
+        );
+        process.exit(1);
+      }
+      const reqBody: Record<string, unknown> = {};
+      reqBody.spec = spec;
+      const data = await client.scaffold(reqBody as never);
       if (quiet) {
         console.log(JSON.stringify(data));
       } else {
@@ -54,7 +63,16 @@ export async function runCreateCommand(sub: string, argv: string[]): Promise<voi
     }
 
     case "validate": {
-      const data = await client.validate();
+      const spec = getFlag("spec", argv);
+      if (!spec) {
+        process.stderr.write(
+          "Usage: prim create validate --spec SPEC\n",
+        );
+        process.exit(1);
+      }
+      const reqBody: Record<string, unknown> = {};
+      reqBody.spec = spec;
+      const data = await client.validate(reqBody as never);
       if (quiet) {
         console.log(JSON.stringify(data));
       } else {

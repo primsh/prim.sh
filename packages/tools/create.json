@@ -6,7 +6,15 @@
       "description": "Generate a complete prim package from a prim.yaml spec. Returns file manifest with contents. Price: $0.01 via x402 (USDC on Base).",
       "parameters": {
         "type": "object",
-        "properties": {}
+        "properties": {
+          "spec": {
+            "type": "string",
+            "description": "prim.yaml spec as YAML string"
+          }
+        },
+        "required": [
+          "spec"
+        ]
       }
     }
   },
@@ -17,7 +25,15 @@
       "description": "Validate a prim.yaml spec against the schema without generating files. Price: $0.01 via x402 (USDC on Base).",
       "parameters": {
         "type": "object",
-        "properties": {}
+        "properties": {
+          "spec": {
+            "type": "string",
+            "description": "prim.yaml spec as YAML string"
+          }
+        },
+        "required": [
+          "spec"
+        ]
       }
     }
   },

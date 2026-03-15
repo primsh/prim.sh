@@ -52,8 +52,8 @@ export interface RouteError {
 
 export interface RouteMapping {
   route: string;
-  request: string | null;
-  response: string;
+  request?: string | null;
+  response?: string | null;
   status: number;
   description: string;
   notes?: string;

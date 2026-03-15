@@ -27,6 +27,7 @@ import {
   loadPrimitives,
   withPackage,
 } from "./lib/primitives.js";
+import { inferTypeNames } from "./lib/render-openapi.js";
 
 const ROOT = resolve(import.meta.dir, "..");
 const CHECK_MODE = process.argv.includes("--check");
@@ -450,8 +451,9 @@ function generateMarkedContent(
     const { method, path } = parseRoute(primary.route);
     const expectedStatus = primary.status ?? 200;
     // Build minimal valid body for Check 4 (not empty {} — include required fields)
-    const minimalBody =
-      method !== "GET" ? buildMinimalBody(primary.request_type, apiInterfaces) : null;
+    const requestType =
+      primary.request_type ?? inferTypeNames(primary.operation_id, apiInterfaces).request;
+    const minimalBody = method !== "GET" ? buildMinimalBody(requestType, apiInterfaces) : null;
 
     lines.push(
       `  // Check 4: happy path — handler returns ${expectedStatus} with mocked service response`,

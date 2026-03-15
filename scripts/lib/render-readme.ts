@@ -8,6 +8,7 @@
 
 import type { ParsedApi, ParsedField } from "./parse-api.js";
 import type { Primitive, RouteMapping } from "./primitives.js";
+import { inferTypeNames } from "./render-openapi.js";
 
 // ── Helpers ────────────────────────────────────────────────────────────────────
 
@@ -74,7 +75,7 @@ function renderIntro(): string {
   return "Part of [prim.sh](https://prim.sh) — zero signup, one payment token, infinite primitives. x402 payment (USDC on Base) is the sole auth.";
 }
 
-function renderRoutes(p: Primitive, _api: ParsedApi | null, prices: Map<string, string>): string {
+function renderRoutes(p: Primitive, api: ParsedApi | null, prices: Map<string, string>): string {
   const routes = p.routes_map ?? [];
   if (routes.length === 0) return "";
 
@@ -82,8 +83,9 @@ function renderRoutes(p: Primitive, _api: ParsedApi | null, prices: Map<string, 
     "| Route | Description | Price | Request | Response |\n|-------|-------------|-------|---------|----------|";
   const rows = routes.map((r) => {
     const price = lookupPrice(r.route, prices, p.pricing);
-    const reqType = r.request_type ?? r.request ?? "—";
-    const resType = r.response_type ?? r.response ?? "—";
+    const inferred = api ? inferTypeNames(r.operation_id, api.interfaces) : { request: null, response: null };
+    const reqType = r.request_type ?? r.request ?? inferred.request ?? "—";
+    const resType = r.response_type ?? r.response ?? inferred.response ?? "—";
     return `| \`${r.route}\` | ${r.description} | ${price} | \`${reqType}\` | \`${resType}\` |`;
   });
 
@@ -106,8 +108,9 @@ function renderTypes(p: Primitive, api: ParsedApi): string {
   const sections: string[] = [];
 
   for (const r of routes) {
-    const reqName = r.request_type ?? r.request;
-    const resName = r.response_type ?? r.response;
+    const inferred = inferTypeNames(r.operation_id, api.interfaces);
+    const reqName = r.request_type ?? r.request ?? inferred.request;
+    const resName = r.response_type ?? r.response ?? inferred.response;
 
     // Request type
     if (reqName && reqName !== "null") {

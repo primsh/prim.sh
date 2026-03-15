@@ -44,6 +44,70 @@ components:
             message:
               type: string
               description: Human-readable error message.
+    GetSchemaResponse:
+      type: object
+      required:
+        - schema
+      properties:
+        schema:
+          type: string
+          description: JSON Schema for prim.yaml
+    ScaffoldFile:
+      type: object
+      required:
+        - path
+        - content
+      properties:
+        path:
+          type: string
+          description: Relative file path (e.g. "packages/foo/src/index.ts")
+        content:
+          type: string
+          description: File content
+    ScaffoldRequest:
+      type: object
+      required:
+        - spec
+      properties:
+        spec:
+          type: string
+          description: prim.yaml spec as YAML string
+    ScaffoldResponse:
+      type: object
+      required:
+        - id
+        - files
+      properties:
+        id:
+          type: string
+          description: Primitive ID
+        files:
+          type: array
+          items:
+            $ref: "#/components/schemas/ScaffoldFile"
+          description: Generated files
+    ValidateRequest:
+      type: object
+      required:
+        - spec
+      properties:
+        spec:
+          type: string
+          description: prim.yaml spec as YAML string
+    ValidateResponse:
+      type: object
+      required:
+        - valid
+        - errors
+      properties:
+        valid:
+          type: boolean
+          description: Whether the spec is valid
+        errors:
+          type: array
+          items:
+            type: string
+          description: Validation errors (empty if valid)
 paths:
   /:
     get:
@@ -75,13 +139,19 @@ paths:
       security:
         - x402: []
       x-price: $0.01
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ScaffoldRequest"
       responses:
         "200":
           description: Generate a complete prim package from a prim.yaml spec. Returns file manifest with contents.
           content:
             application/json:
               schema:
-                type: object
+                $ref: "#/components/schemas/ScaffoldResponse"
         "400":
           description: Invalid or missing prim.yaml spec
           content:
@@ -95,13 +165,19 @@ paths:
       security:
         - x402: []
       x-price: $0.01
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ValidateRequest"
       responses:
         "200":
           description: Validate a prim.yaml spec against the schema without generating files.
           content:
             application/json:
               schema:
-                type: object
+                $ref: "#/components/schemas/ValidateResponse"
         "400":
           description: Invalid YAML
           content:
@@ -121,7 +197,7 @@ paths:
           content:
             application/json:
               schema:
-                type: object
+                $ref: "#/components/schemas/GetSchemaResponse"
   /v1/ports:
     get:
       operationId: getPorts
