@@ -1,4 +1,6 @@
 // SPDX-License-Identifier: Apache-2.0
+// THIS FILE IS GENERATED — DO NOT EDIT
+// Regenerate: pnpm gen:tests
 /**
  * Live smoke test against faucet.prim.sh.
  *
@@ -13,7 +15,6 @@ import { describe, expect, it } from "vitest";
 
 const BASE_URL = process.env.FAUCET_URL ?? "https://faucet.prim.sh";
 
-// BEGIN:GENERATED:SMOKE_LIVE
 describe("faucet.sh live smoke test", { timeout: 15_000 }, () => {
   it("0. GET / — health check returns service name", async () => {
     const res = await fetch(`${BASE_URL}/`);
@@ -32,4 +33,3 @@ describe("faucet.sh live smoke test", { timeout: 15_000 }, () => {
     expect(res.status).toBe(400);
   });
 });
-// END:GENERATED:SMOKE_LIVE

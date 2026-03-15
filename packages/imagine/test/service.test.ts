@@ -1,4 +1,6 @@
 // SPDX-License-Identifier: Apache-2.0
+// THIS FILE IS GENERATED — DO NOT EDIT
+// Regenerate: pnpm gen:tests
 import { describe, it, vi } from "vitest";
 
 vi.hoisted(() => {
@@ -7,7 +9,6 @@ vi.hoisted(() => {
 
 import { generate as _generate, upscale as _upscale } from "../src/service.ts";
 
-// BEGIN:GENERATED:UNIT
 describe("imagine.sh service", () => {
   describe("generate", () => {
     // TODO: set up db/provider mocks to return valid data, then replace .todo with .test
@@ -47,4 +48,3 @@ describe("imagine.sh service", () => {
     it.todo("scopes to caller wallet address");
   });
 });
-// END:GENERATED:UNIT

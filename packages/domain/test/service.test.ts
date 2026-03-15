@@ -1,4 +1,6 @@
 // SPDX-License-Identifier: Apache-2.0
+// THIS FILE IS GENERATED — DO NOT EDIT
+// Regenerate: pnpm gen:tests
 import { describe, it, vi } from "vitest";
 
 vi.hoisted(() => {
@@ -45,13 +47,10 @@ import {
   updateRecord as _updateRecord,
   deleteRecord as _deleteRecord,
   batchRecords as _batchRecords,
-  quoteDomain as _quoteDomain,
   verifyZone as _verifyZone,
   activateZone as _activateZone,
-  searchDomains as _searchDomains,
 } from "../src/service.ts";
 
-// BEGIN:GENERATED:UNIT
 describe("domain.sh service", () => {
   describe("createZone", () => {
     // TODO: set up db/provider mocks to return valid data, then replace .todo with .test
@@ -272,4 +271,3 @@ describe("domain.sh service", () => {
     it.todo("scopes to caller wallet address");
   });
 });
-// END:GENERATED:UNIT

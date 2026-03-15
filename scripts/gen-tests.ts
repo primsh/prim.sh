@@ -12,10 +12,9 @@
  *   bun scripts/gen-tests.ts --check  # diff against disk, exit 1 if any would change
  *
  * Generation strategy:
- *   - If smoke.test.ts does not exist: write full file
- *   - If smoke.test.ts exists:
- *       - If markers present: replace content between markers
- *       - If no markers: skip (do not overwrite manual tests without markers)
+ *   - If file does not exist: write full file (create)
+ *   - If file exists with GENERATED header: compare and overwrite if changed
+ *   - If file exists without GENERATED header: skip (manually maintained)
  */
 
 import { existsSync, readFileSync, writeFileSync } from "node:fs";
@@ -167,8 +166,13 @@ function syntheticValue(field: ParsedField): string {
 
 // ── Code generation ──────────────────────────────────────────────────────────
 
-const MARKER_OPEN = "// BEGIN:GENERATED:SMOKE";
-const MARKER_CLOSE = "// END:GENERATED:SMOKE";
+const GENERATED_HEADER = "// THIS FILE IS GENERATED";
+
+function isGenerated(filePath: string): boolean {
+  if (!existsSync(filePath)) return false;
+  const content = readFileSync(filePath, "utf8");
+  return content.includes(GENERATED_HEADER);
+}
 
 /** Names that collide with vitest globals — skip as service test imports */
 const VITEST_GLOBALS = new Set([
@@ -272,7 +276,7 @@ function buildContext(p: Primitive): GenContext {
 }
 
 /**
- * Generate the full smoke.test.ts file content (without markers on first generation).
+ * Generate the full smoke.test.ts file content.
  */
 function generateFullFile(ctx: GenContext): string {
   const lines: string[] = [];
@@ -280,6 +284,8 @@ function generateFullFile(ctx: GenContext): string {
 
   // Preamble
   lines.push("// SPDX-License-Identifier: Apache-2.0");
+  lines.push(`${GENERATED_HEADER} — DO NOT EDIT`);
+  lines.push("// Regenerate: pnpm gen:tests");
   lines.push(`import { beforeEach, describe, expect, it, vi } from "vitest";`);
   lines.push("");
 
@@ -375,17 +381,14 @@ function generateFullFile(ctx: GenContext): string {
 
   lines.push("");
 
-  // Marker open
-  lines.push(MARKER_OPEN);
   lines.push(generateMarkedContent(ctx, primary, primaryServiceFn));
-  lines.push(MARKER_CLOSE);
   lines.push("");
 
   return lines.join("\n");
 }
 
 /**
- * Generate the content that goes between the markers (the describe block + all checks).
+ * Generate the describe block with all smoke test checks.
  */
 function generateMarkedContent(
   ctx: GenContext,
@@ -532,33 +535,7 @@ function generateMarkedContent(
   return lines.join("\n");
 }
 
-// ── Marker injection ─────────────────────────────────────────────────────────
-
-/**
- * If smoke.test.ts exists with markers, replace the generated section.
- */
-function injectIntoExisting(
-  existing: string,
-  newContent: string,
-): { result: string; hadMarkers: boolean; changed: boolean } {
-  const openIdx = existing.indexOf(MARKER_OPEN);
-  const closeIdx = existing.indexOf(MARKER_CLOSE);
-
-  if (openIdx === -1 || closeIdx === -1) {
-    return { result: existing, hadMarkers: false, changed: false };
-  }
-
-  const before = existing.slice(0, openIdx + MARKER_OPEN.length);
-  const after = existing.slice(closeIdx);
-  const result = `${before}\n${newContent}\n${after}`;
-  const changed = result !== existing;
-  return { result, hadMarkers: true, changed };
-}
-
 // ── Smoke-live generation ─────────────────────────────────────────────────────
-
-const MARKER_OPEN_LIVE = "// BEGIN:GENERATED:SMOKE_LIVE";
-const MARKER_CLOSE_LIVE = "// END:GENERATED:SMOKE_LIVE";
 
 /**
  * Generate the full smoke-live.test.ts file content.
@@ -570,6 +547,8 @@ function generateSmokeLiveFile(ctx: GenContext): string {
 
   const lines: string[] = [];
   lines.push("// SPDX-License-Identifier: Apache-2.0");
+  lines.push(`${GENERATED_HEADER} — DO NOT EDIT`);
+  lines.push("// Regenerate: pnpm gen:tests");
   lines.push("/**");
   lines.push(` * Live smoke test against ${endpoint}.`);
   lines.push(" *");
@@ -589,16 +568,14 @@ function generateSmokeLiveFile(ctx: GenContext): string {
   lines.push(`const BASE_URL = process.env.${idUpper}_URL ?? "https://${endpoint}";`);
   lines.push("");
 
-  lines.push(MARKER_OPEN_LIVE);
   lines.push(generateSmokeLiveMarkedContent(ctx));
-  lines.push(MARKER_CLOSE_LIVE);
   lines.push("");
 
   return lines.join("\n");
 }
 
 /**
- * Generate the content between SMOKE_LIVE markers.
+ * Generate the describe block for live smoke tests.
  */
 function generateSmokeLiveMarkedContent(ctx: GenContext): string {
   const { p, routes, isFreeService } = ctx;
@@ -659,31 +636,7 @@ function generateSmokeLiveMarkedContent(ctx: GenContext): string {
   return lines.join("\n");
 }
 
-/**
- * Inject content between SMOKE_LIVE markers in an existing file.
- */
-function injectSmokeLiveMarkers(
-  existing: string,
-  newContent: string,
-): { result: string; hadMarkers: boolean; changed: boolean } {
-  const openIdx = existing.indexOf(MARKER_OPEN_LIVE);
-  const closeIdx = existing.indexOf(MARKER_CLOSE_LIVE);
-
-  if (openIdx === -1 || closeIdx === -1) {
-    return { result: existing, hadMarkers: false, changed: false };
-  }
-
-  const before = existing.slice(0, openIdx + MARKER_OPEN_LIVE.length);
-  const after = existing.slice(closeIdx);
-  const result = `${before}\n${newContent}\n${after}`;
-  const changed = result !== existing;
-  return { result, hadMarkers: true, changed };
-}
-
 // ── Unit test generation ──────────────────────────────────────────────────────
-
-const MARKER_OPEN_UNIT = "// BEGIN:GENERATED:UNIT";
-const MARKER_CLOSE_UNIT = "// END:GENERATED:UNIT";
 
 /**
  * Detect external provider modules imported by service.ts.
@@ -741,7 +694,9 @@ function generateUnitFile(ctx: GenContext): string {
 
   // Preamble
   lines.push("// SPDX-License-Identifier: Apache-2.0");
-  lines.push(`import { describe, expect, it, vi } from "vitest";`);
+  lines.push(`${GENERATED_HEADER} — DO NOT EDIT`);
+  lines.push("// Regenerate: pnpm gen:tests");
+  lines.push(`import { describe, it, vi } from "vitest";`);
   lines.push("");
 
   // Env setup
@@ -787,12 +742,13 @@ function generateUnitFile(ctx: GenContext): string {
   });
 
   if (testable.length > 0) {
-    const importLine = `import { ${testable.join(", ")} } from "../src/service.ts";`;
+    // Alias with _ prefix to avoid unused-import errors (tests are .todo stubs)
+    const aliased = testable.map((fn) => `${fn} as _${fn}`);
+    const importLine = `import { ${aliased.join(", ")} } from "../src/service.ts";`;
     if (importLine.length > 100) {
-      // Multi-line import for biome formatting
       lines.push(`import {`);
-      for (const fn of testable) {
-        lines.push(`  ${fn},`);
+      for (const a of aliased) {
+        lines.push(`  ${a},`);
       }
       lines.push(`} from "../src/service.ts";`);
     } else {
@@ -801,17 +757,14 @@ function generateUnitFile(ctx: GenContext): string {
     lines.push("");
   }
 
-  // Markers
-  lines.push(MARKER_OPEN_UNIT);
   lines.push(generateUnitMarkedContent(ctx, testable, routeOpMap));
-  lines.push(MARKER_CLOSE_UNIT);
   lines.push("");
 
   return lines.join("\n");
 }
 
 /**
- * Generate the content between UNIT markers.
+ * Generate the describe block for unit tests.
  */
 function generateUnitMarkedContent(
   ctx: GenContext,
@@ -893,41 +846,14 @@ function generateUnitMarkedContent(
   return lines.join("\n");
 }
 
-/**
- * Inject content between UNIT markers in an existing file.
- */
-function injectUnitMarkers(
-  existing: string,
-  newContent: string,
-): { result: string; hadMarkers: boolean; changed: boolean } {
-  const openIdx = existing.indexOf(MARKER_OPEN_UNIT);
-  const closeIdx = existing.indexOf(MARKER_CLOSE_UNIT);
-
-  if (openIdx === -1 || closeIdx === -1) {
-    return { result: existing, hadMarkers: false, changed: false };
-  }
-
-  const before = existing.slice(0, openIdx + MARKER_OPEN_UNIT.length);
-  const after = existing.slice(closeIdx);
-  const result = `${before}\n${newContent}\n${after}`;
-  const changed = result !== existing;
-  return { result, hadMarkers: true, changed };
-}
-
 // ── File processing helper ────────────────────────────────────────────────────
 
 /**
- * Process a generated file — create if missing, inject if markers exist, skip otherwise.
+ * Process a generated file — create if missing, overwrite if generated, skip if manually maintained.
  */
 function processGeneratedFile(
   filePath: string,
   generateFull: () => string,
-  generateMarked: () => string,
-  injectFn: (
-    existing: string,
-    content: string,
-  ) => { result: string; hadMarkers: boolean; changed: boolean },
-  _label: string,
 ): void {
   if (!existsSync(filePath)) {
     const content = generateFull();
@@ -942,14 +868,14 @@ function processGeneratedFile(
     return;
   }
 
-  const existing = readFileSync(filePath, "utf8");
-  const newMarkerContent = generateMarked();
-  const { result, hadMarkers, changed } = injectFn(existing, newMarkerContent);
-
-  if (!hadMarkers) {
-    console.log(`  – ${filePath} (no markers, skipping)`);
+  if (!isGenerated(filePath)) {
+    console.log(`  – ${filePath} (manually maintained, skipping)`);
     return;
   }
+
+  const existing = readFileSync(filePath, "utf8");
+  const content = generateFull();
+  const changed = content !== existing;
 
   if (CHECK_MODE) {
     if (changed) {
@@ -960,7 +886,7 @@ function processGeneratedFile(
     }
   } else {
     if (changed) {
-      writeFileSync(filePath, result);
+      writeFileSync(filePath, content);
       console.log(`  ↺ ${filePath} [updated]`);
     } else {
       console.log(`  ✓ ${filePath} (up to date)`);
@@ -988,38 +914,16 @@ console.log(CHECK_MODE ? "Mode: check\n" : "Mode: generate\n");
 
 for (const p of targets) {
   const ctx = buildContext(p);
-  const primary = primaryRoute(ctx.routes);
-
-  // Resolve primary service fn
-  let resolvedServiceFn: string | undefined;
-  if (primary && ctx.hasServiceFile) {
-    const matched = matchServiceFn(primary.operation_id, ctx.serviceExports);
-    if (matched && ctx.serviceExports.includes(matched)) {
-      resolvedServiceFn = matched;
-    }
-  }
 
   console.log(`  ${p.id}:`);
 
   // ── smoke.test.ts ──
   const smokeTestPath = join(ROOT, "packages", p.id, "test/smoke.test.ts");
-  processGeneratedFile(
-    smokeTestPath,
-    () => generateFullFile(ctx),
-    () => generateMarkedContent(ctx, primary, resolvedServiceFn),
-    injectIntoExisting,
-    "smoke",
-  );
+  processGeneratedFile(smokeTestPath, () => generateFullFile(ctx));
 
   // ── smoke-live.test.ts ──
   const smokeLivePath = join(ROOT, "packages", p.id, "test/smoke-live.test.ts");
-  processGeneratedFile(
-    smokeLivePath,
-    () => generateSmokeLiveFile(ctx),
-    () => generateSmokeLiveMarkedContent(ctx),
-    injectSmokeLiveMarkers,
-    "smoke-live",
-  );
+  processGeneratedFile(smokeLivePath, () => generateSmokeLiveFile(ctx));
 
   // ── service.test.ts (only if service.ts exists with route-matched exports) ──
   if (ctx.hasServiceFile) {
@@ -1035,13 +939,7 @@ for (const p of targets) {
 
     if (testable.length > 0) {
       const unitTestPath = join(ROOT, "packages", p.id, "test/service.test.ts");
-      processGeneratedFile(
-        unitTestPath,
-        () => generateUnitFile(ctx),
-        () => generateUnitMarkedContent(ctx, testable, routeOpMap),
-        injectUnitMarkers,
-        "unit",
-      );
+      processGeneratedFile(unitTestPath, () => generateUnitFile(ctx));
     }
   }
 }

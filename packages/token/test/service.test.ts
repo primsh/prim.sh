@@ -1,4 +1,6 @@
 // SPDX-License-Identifier: Apache-2.0
+// THIS FILE IS GENERATED — DO NOT EDIT
+// Regenerate: pnpm gen:tests
 import { describe, it, vi } from "vitest";
 
 vi.hoisted(() => {
@@ -24,16 +26,14 @@ vi.mock("viem");
 
 import {
   validateCreateToken as _validateCreateToken,
-  deployToken as _deployToken,
   listTokens as _listTokens,
   getToken as _getToken,
-  mintTokens as _mintTokens,
+  getSupply as _getSupply,
   createPool as _createPool,
   getPool as _getPool,
   getLiquidityParams as _getLiquidityParams,
 } from "../src/service.ts";
 
-// BEGIN:GENERATED:UNIT
 describe("token.sh service", () => {
   describe("validateCreateToken", () => {
     // TODO: replace with valid/invalid input for validateCreateToken
@@ -155,4 +155,3 @@ describe("token.sh service", () => {
     it.todo("scopes to caller wallet address");
   });
 });
-// END:GENERATED:UNIT

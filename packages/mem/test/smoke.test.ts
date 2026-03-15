@@ -1,4 +1,6 @@
 // SPDX-License-Identifier: Apache-2.0
+// THIS FILE IS GENERATED — DO NOT EDIT
+// Regenerate: pnpm gen:tests
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 vi.hoisted(() => {
@@ -40,11 +42,9 @@ vi.mock("../src/service.ts", async (importOriginal) => {
   };
 });
 
-import type { GetCollectionResponse as _GetCollectionResponse } from "../src/api.ts";
 import app from "../src/index.ts";
 import { createCollection } from "../src/service.ts";
 
-// BEGIN:GENERATED:SMOKE
 describe("mem.sh app", () => {
   beforeEach(() => {
     vi.mocked(createCollection).mockReset();
@@ -105,4 +105,3 @@ describe("mem.sh app", () => {
     expect(res.status).toBe(400);
   });
 });
-// END:GENERATED:SMOKE

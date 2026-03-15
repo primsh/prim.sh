@@ -1,4 +1,6 @@
 // SPDX-License-Identifier: Apache-2.0
+// THIS FILE IS GENERATED — DO NOT EDIT
+// Regenerate: pnpm gen:tests
 /**
  * Live smoke test against mem.prim.sh.
  *
@@ -12,7 +14,6 @@ import { describe, expect, it } from "vitest";
 
 const BASE_URL = process.env.MEM_URL ?? "https://mem.prim.sh";
 
-// BEGIN:GENERATED:SMOKE_LIVE
 describe("mem.sh live smoke test", { timeout: 15_000 }, () => {
   it("0. GET / — health check returns service name", async () => {
     const res = await fetch(`${BASE_URL}/`);
@@ -85,4 +86,3 @@ describe("mem.sh live smoke test", { timeout: 15_000 }, () => {
     expect(res.status).toBe(400);
   });
 });
-// END:GENERATED:SMOKE_LIVE

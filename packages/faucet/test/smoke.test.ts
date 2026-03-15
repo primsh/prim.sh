@@ -1,4 +1,6 @@
 // SPDX-License-Identifier: Apache-2.0
+// THIS FILE IS GENERATED — DO NOT EDIT
+// Regenerate: pnpm gen:tests
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 vi.hoisted(() => {
@@ -24,6 +26,8 @@ vi.mock("../src/service.ts", async (importOriginal) => {
   const original = await importOriginal<typeof import("../src/service.ts")>();
   return {
     ...original,
+    getTreasuryBalance: vi.fn(),
+    refillTreasury: vi.fn(),
     dripUsdc: vi.fn(),
     dripEth: vi.fn(),
   };
@@ -31,7 +35,7 @@ vi.mock("../src/service.ts", async (importOriginal) => {
 
 import app from "../src/index.ts";
 import { dripUsdc } from "../src/service.ts";
-// BEGIN:GENERATED:SMOKE
+
 describe("faucet.sh app", () => {
   beforeEach(() => {
     vi.mocked(dripUsdc).mockReset();
@@ -74,4 +78,3 @@ describe("faucet.sh app", () => {
     expect(res.status).toBe(400);
   });
 });
-// END:GENERATED:SMOKE
