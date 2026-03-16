@@ -193,7 +193,7 @@ export async function extractSchemas(apiPath: string): Promise<ExtractedSchemas>
 
   // Build ParsedApi for backward compat
   const interfaces = new Map<string, ParsedInterface>();
-  for (const [name, schema] of Object.entries(jsonSchemas)) {
+  for (const name of Object.keys(jsonSchemas)) {
     interfaces.set(name, {
       name,
       fields: jsonSchemaToFields(registryResult.schemas[name]),
