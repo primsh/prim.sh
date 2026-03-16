@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: Apache-2.0
 import { randomBytes } from "node:crypto";
+import { paginate } from "@primsh/x402-middleware";
 import type { PaginatedList, ServiceResult } from "@primsh/x402-middleware";
 import type {
   GetActionOnlyResponse,
@@ -16,7 +17,6 @@ import type {
 } from "./api.ts";
 import {
   countActiveServersByOwner,
-  countServersByOwner,
   deleteSshKeyRow,
   getServerById,
   getServersByOwner,
@@ -283,22 +283,10 @@ export async function createServer(
 export function listServers(
   callerWallet: string,
   limit: number,
-  page: number,
+  after?: string,
 ): PaginatedList<GetServerResponse> {
-  const offset = (page - 1) * limit;
-  const rows = getServersByOwner(callerWallet, limit, offset);
-  const total = countServersByOwner(callerWallet);
-
-  return {
-    data: rows.map(rowToServerResponse),
-    pagination: {
-      total,
-      page,
-      per_page: limit,
-      cursor: null,
-      has_more: offset + rows.length < total,
-    },
-  };
+  const rows = getServersByOwner(callerWallet, limit, after);
+  return paginate(rows.map(rowToServerResponse), limit, (r) => r.id);
 }
 
 export async function getServer(
@@ -617,9 +605,8 @@ export function listSshKeys(callerWallet: string): PaginatedList<GetSshKeyRespon
     data: rows.map(rowToGetSshKeyResponse),
     pagination: {
       total: rows.length,
-      page: 1,
       per_page: rows.length,
-      cursor: null,
+      next_cursor: null,
       has_more: false,
     },
   };

@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: Apache-2.0
 import { randomBytes } from "node:crypto";
-import { createLogger } from "@primsh/x402-middleware";
+import { createLogger, paginate } from "@primsh/x402-middleware";
 import type { PaginatedList, ServiceResult } from "@primsh/x402-middleware";
 
 const log = createLogger("domain.sh");
@@ -42,7 +42,6 @@ import {
 } from "./cloudflare.ts";
 import type { CfBatchResult, CfDnsRecord } from "./cloudflare.ts";
 import {
-  countZonesByOwner,
   deleteRecordRow,
   deleteRecordsByZone,
   deleteZoneRow,
@@ -196,22 +195,10 @@ export async function createZone(
 export function listZones(
   callerWallet: string,
   limit: number,
-  page: number,
+  after?: string,
 ): PaginatedList<GetZoneResponse> {
-  const offset = (page - 1) * limit;
-  const rows = getZonesByOwner(callerWallet, limit, offset);
-  const total = countZonesByOwner(callerWallet);
-
-  return {
-    data: rows.map(rowToGetZoneResponse),
-    pagination: {
-      total,
-      page,
-      per_page: limit,
-      cursor: null,
-      has_more: offset + rows.length < total,
-    },
-  };
+  const rows = getZonesByOwner(callerWallet, limit, after);
+  return paginate(rows.map(rowToGetZoneResponse), limit, (r) => r.id);
 }
 
 export async function refreshZoneStatus(
@@ -361,23 +348,29 @@ export async function createRecord(
 export function listRecords(
   zoneId: string,
   callerWallet: string,
+  limit?: number,
+  after?: string,
 ): ServiceResult<PaginatedList<GetRecordResponse>> {
   const check = checkZoneOwnership(zoneId, callerWallet);
   if (!check.ok) return check;
 
-  const rows = getRecordsByZone(zoneId);
+  const rows = getRecordsByZone(zoneId, limit, after);
+  const mapped = rows.map(rowToGetRecordResponse);
+
+  // When limit is undefined, all rows are returned (no pagination cursor)
+  if (limit === undefined) {
+    return {
+      ok: true,
+      data: {
+        data: mapped,
+        pagination: { total: null, per_page: mapped.length, next_cursor: null, has_more: false },
+      },
+    };
+  }
+
   return {
     ok: true,
-    data: {
-      data: rows.map(rowToGetRecordResponse),
-      pagination: {
-        total: rows.length,
-        page: 1,
-        per_page: rows.length,
-        cursor: null,
-        has_more: false,
-      },
-    },
+    data: paginate(mapped, limit, (r) => r.id),
   };
 }
 

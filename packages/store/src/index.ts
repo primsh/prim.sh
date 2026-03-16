@@ -212,9 +212,9 @@ app.get("/v1/buckets", (c) => {
   const caller = callerOrRes;
 
   const limit = Math.min(Number(c.req.query("limit")) || 20, 100);
-  const page = Math.max(Number(c.req.query("page")) || 1, 1);
+  const after = c.req.query("after") || undefined;
 
-  const data = listBuckets(caller, limit, page);
+  const data = listBuckets(caller, limit, after);
   return c.json(data as PaginatedList<GetBucketResponse>, 200);
 });
 

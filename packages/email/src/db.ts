@@ -209,23 +209,24 @@ export function getMailboxById(id: string): MailboxRow | null {
   return db.query<MailboxRow, [string]>("SELECT * FROM mailboxes WHERE id = ?").get(id) ?? null;
 }
 
-export function getMailboxesByOwner(owner: string, limit: number, offset: number): MailboxRow[] {
+export function getMailboxesByOwner(
+  owner: string,
+  limit: number,
+  after: string | undefined,
+): MailboxRow[] {
   const db = getDb();
+  if (after) {
+    return db
+      .query<MailboxRow, [string, string, number]>(
+        "SELECT * FROM mailboxes WHERE owner_wallet = ? AND status = 'active' AND id > ? ORDER BY id ASC LIMIT ?",
+      )
+      .all(owner, after, limit);
+  }
   return db
-    .query<MailboxRow, [string, number, number]>(
-      "SELECT * FROM mailboxes WHERE owner_wallet = ? AND status = 'active' ORDER BY created_at DESC LIMIT ? OFFSET ?",
+    .query<MailboxRow, [string, number]>(
+      "SELECT * FROM mailboxes WHERE owner_wallet = ? AND status = 'active' ORDER BY id ASC LIMIT ?",
     )
-    .all(owner, limit, offset);
-}
-
-export function countMailboxesByOwner(owner: string): number {
-  const db = getDb();
-  const row = db
-    .query<{ count: number }, [string]>(
-      "SELECT COUNT(*) as count FROM mailboxes WHERE owner_wallet = ? AND status = 'active'",
-    )
-    .get(owner) as { count: number } | null;
-  return row?.count ?? 0;
+    .all(owner, limit);
 }
 
 export function deleteMailboxRow(id: string): void {
@@ -281,23 +282,24 @@ export function incrementCleanupAttempts(id: string): void {
   db.query("UPDATE mailboxes SET cleanup_attempts = cleanup_attempts + 1 WHERE id = ?").run(id);
 }
 
-export function getMailboxesByOwnerAll(owner: string, limit: number, offset: number): MailboxRow[] {
+export function getMailboxesByOwnerAll(
+  owner: string,
+  limit: number,
+  after: string | undefined,
+): MailboxRow[] {
   const db = getDb();
+  if (after) {
+    return db
+      .query<MailboxRow, [string, string, number]>(
+        "SELECT * FROM mailboxes WHERE owner_wallet = ? AND status IN ('active', 'expired') AND id > ? ORDER BY id ASC LIMIT ?",
+      )
+      .all(owner, after, limit);
+  }
   return db
-    .query<MailboxRow, [string, number, number]>(
-      "SELECT * FROM mailboxes WHERE owner_wallet = ? AND status IN ('active', 'expired') ORDER BY created_at DESC LIMIT ? OFFSET ?",
+    .query<MailboxRow, [string, number]>(
+      "SELECT * FROM mailboxes WHERE owner_wallet = ? AND status IN ('active', 'expired') ORDER BY id ASC LIMIT ?",
     )
-    .all(owner, limit, offset);
-}
-
-export function countMailboxesByOwnerAll(owner: string): number {
-  const db = getDb();
-  const row = db
-    .query<{ count: number }, [string]>(
-      "SELECT COUNT(*) as count FROM mailboxes WHERE owner_wallet = ? AND status IN ('active', 'expired')",
-    )
-    .get(owner) as { count: number } | null;
-  return row?.count ?? 0;
+    .all(owner, limit);
 }
 
 export function getMailboxByAddress(address: string): MailboxRow | null {
@@ -462,23 +464,24 @@ export function getDomainByName(domain: string): DomainRow | null {
   );
 }
 
-export function getDomainsByOwner(owner: string, limit: number, offset: number): DomainRow[] {
+export function getDomainsByOwner(
+  owner: string,
+  limit: number,
+  after: string | undefined,
+): DomainRow[] {
   const db = getDb();
+  if (after) {
+    return db
+      .query<DomainRow, [string, string, number]>(
+        "SELECT * FROM domains WHERE owner_wallet = ? AND id > ? ORDER BY id ASC LIMIT ?",
+      )
+      .all(owner, after, limit);
+  }
   return db
-    .query<DomainRow, [string, number, number]>(
-      "SELECT * FROM domains WHERE owner_wallet = ? ORDER BY created_at DESC LIMIT ? OFFSET ?",
+    .query<DomainRow, [string, number]>(
+      "SELECT * FROM domains WHERE owner_wallet = ? ORDER BY id ASC LIMIT ?",
     )
-    .all(owner, limit, offset);
-}
-
-export function countDomainsByOwner(owner: string): number {
-  const db = getDb();
-  const row = db
-    .query<{ count: number }, [string]>(
-      "SELECT COUNT(*) as count FROM domains WHERE owner_wallet = ?",
-    )
-    .get(owner) as { count: number } | null;
-  return row?.count ?? 0;
+    .all(owner, limit);
 }
 
 export function updateDomainVerification(

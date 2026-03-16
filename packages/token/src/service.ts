@@ -228,9 +228,8 @@ export function listTokens(callerWallet: string): ServiceResult<PaginatedList<Ge
       data: rows.map(rowToGetTokenResponse),
       pagination: {
         total: rows.length,
-        page: 1,
         per_page: rows.length,
-        cursor: null,
+        next_cursor: null,
         has_more: false,
       },
     },

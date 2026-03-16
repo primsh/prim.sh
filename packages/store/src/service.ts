@@ -20,6 +20,7 @@ import {
 const MAX_BUCKETS_PER_WALLET = Number(process.env.STORE_MAX_BUCKETS_PER_WALLET ?? 10);
 const DEFAULT_BUCKET_QUOTA = Number(process.env.STORE_DEFAULT_BUCKET_QUOTA ?? 104857600); // 100MB
 const MAX_STORAGE_PER_WALLET = Number(process.env.STORE_MAX_STORAGE_PER_WALLET ?? 1073741824); // 1GB
+import { paginate } from "@primsh/x402-middleware";
 import type { PaginatedList, ServiceResult } from "@primsh/x402-middleware";
 import type {
   CreateBucketRequest,
@@ -181,22 +182,10 @@ export async function createBucket(
 export function listBuckets(
   callerWallet: string,
   limit: number,
-  page: number,
+  after?: string,
 ): PaginatedList<GetBucketResponse> {
-  const offset = (page - 1) * limit;
-  const rows = getBucketsByOwner(callerWallet, limit, offset);
-  const total = countBucketsByOwner(callerWallet);
-
-  return {
-    data: rows.map(rowToBucketResponse),
-    pagination: {
-      total,
-      page,
-      per_page: limit,
-      cursor: null,
-      has_more: offset + rows.length < total,
-    },
-  };
+  const rows = getBucketsByOwner(callerWallet, limit, after);
+  return paginate(rows.map(rowToBucketResponse), limit, (r) => r.id);
 }
 
 export function getBucket(
@@ -467,9 +456,8 @@ export async function listObjects(
         })),
         pagination: {
           total: null,
-          page: null,
           per_page: maxKeys,
-          cursor: result.nextToken,
+          next_cursor: result.nextToken,
           has_more: result.isTruncated,
         },
       },

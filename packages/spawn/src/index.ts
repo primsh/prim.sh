@@ -155,12 +155,10 @@ app.get("/v1/servers", (c) => {
   if (callerOrRes instanceof Response) return callerOrRes;
   const caller = callerOrRes;
 
-  const limitParam = c.req.query("limit");
-  const pageParam = c.req.query("page");
-  const limit = Math.min(Number(limitParam) || 20, 100);
-  const page = Math.max(Number(pageParam) || 1, 1);
+  const limit = Math.min(Number(c.req.query("limit")) || 20, 100);
+  const after = c.req.query("after") || undefined;
 
-  const data = listServers(caller, limit, page);
+  const data = listServers(caller, limit, after);
   return c.json(data as PaginatedList<GetServerResponse>, 200);
 });
 

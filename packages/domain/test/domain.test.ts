@@ -390,23 +390,24 @@ describe("domain.sh", () => {
       await createZone({ domain: "a-domain.com" }, CALLER);
       await createZone({ domain: "b-domain.com" }, OTHER);
 
-      const list = listZones(CALLER, 20, 1);
+      const list = listZones(CALLER, 20);
       expect(list.data).toHaveLength(1);
       expect(list.data[0].domain).toBe("a-domain.com");
-      expect(list.pagination.total).toBe(1);
     });
 
-    it("list zones — pagination works", async () => {
+    it("list zones — cursor pagination works", async () => {
       await createZone({ domain: "first.com" }, CALLER);
       await createZone({ domain: "second.com" }, CALLER);
       await createZone({ domain: "third.com" }, CALLER);
 
-      const page1 = listZones(CALLER, 2, 1);
+      const page1 = listZones(CALLER, 2);
       expect(page1.data).toHaveLength(2);
-      expect(page1.pagination.total).toBe(3);
+      expect(page1.pagination.has_more).toBe(true);
+      expect(page1.pagination.next_cursor).not.toBeNull();
 
-      const page2 = listZones(CALLER, 2, 2);
+      const page2 = listZones(CALLER, 2, page1.pagination.next_cursor!);
       expect(page2.data).toHaveLength(1);
+      expect(page2.pagination.has_more).toBe(false);
     });
 
     it("get zone — owner can access", async () => {

@@ -96,13 +96,20 @@ export function getBucketByNameAndOwner(name: string, owner: string): BucketRow 
   );
 }
 
-export function getBucketsByOwner(owner: string, limit: number, offset: number): BucketRow[] {
+export function getBucketsByOwner(owner: string, limit: number, after?: string): BucketRow[] {
   const db = getDb();
+  if (after) {
+    return db
+      .query<BucketRow, [string, string, number]>(
+        "SELECT * FROM buckets WHERE owner_wallet = ? AND id > ? ORDER BY id ASC LIMIT ?",
+      )
+      .all(owner, after, limit);
+  }
   return db
-    .query<BucketRow, [string, number, number]>(
-      "SELECT * FROM buckets WHERE owner_wallet = ? ORDER BY created_at DESC LIMIT ? OFFSET ?",
+    .query<BucketRow, [string, number]>(
+      "SELECT * FROM buckets WHERE owner_wallet = ? ORDER BY id ASC LIMIT ?",
     )
-    .all(owner, limit, offset);
+    .all(owner, limit);
 }
 
 export function countBucketsByOwner(owner: string): number {

@@ -388,12 +388,11 @@ describe("email service", () => {
       await createMailbox({}, WALLET_A);
       await createMailbox({}, WALLET_B);
 
-      const resultA = listMailboxes(WALLET_A, 1, 25);
-      expect(resultA.pagination.total).toBe(2);
+      const resultA = listMailboxes(WALLET_A, 25, undefined);
       expect(resultA.data.length).toBe(2);
 
-      const resultB = listMailboxes(WALLET_B, 1, 25);
-      expect(resultB.pagination.total).toBe(1);
+      const resultB = listMailboxes(WALLET_B, 25, undefined);
+      expect(resultB.data.length).toBe(1);
     });
 
     it("paginates correctly", async () => {
@@ -403,11 +402,11 @@ describe("email service", () => {
       await createMailbox({}, WALLET_A);
       await createMailbox({}, WALLET_A);
 
-      const result = listMailboxes(WALLET_A, 1, 2);
+      const result = listMailboxes(WALLET_A, 2, undefined);
       expect(result.data.length).toBe(2);
-      expect(result.pagination.total).toBe(3);
-      expect(result.pagination.page).toBe(1);
       expect(result.pagination.per_page).toBe(2);
+      expect(result.pagination.has_more).toBe(true);
+      expect(result.pagination.next_cursor).not.toBeNull();
     });
   });
 
@@ -541,7 +540,7 @@ describe("email service", () => {
       if (!result.ok) return;
       expect(result.data.data).toHaveLength(1);
       expect(result.data.data[0].from.email).toBe("[email protected]");
-      expect(result.data.pagination.total).toBe(1);
+      expect(result.data.pagination.has_more).toBe(false);
     });
 
     it("returns not_found for wrong wallet", async () => {
@@ -1075,7 +1074,7 @@ describe("email service", () => {
       expect(result.ok).toBe(true);
       if (!result.ok) return;
       expect(result.data.data).toHaveLength(2);
-      expect(result.data.pagination.total).toBe(2);
+      expect(result.data.pagination.has_more).toBe(false);
     });
 
     it("returns not_found for wrong wallet", () => {

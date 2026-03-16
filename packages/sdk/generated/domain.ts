@@ -340,6 +340,10 @@ export interface CreateRecordParams {
 export interface ListRecordsParams {
   /** zone_id parameter */
   zone_id: string;
+  /** 1-100, default 100 */
+  limit?: number;
+  /** Cursor from previous response */
+  after?: string;
 }
 
 export interface GetRecordParams {
@@ -471,7 +475,11 @@ export function createDomainClient(
       return unwrap<GetRecordResponse>(res);
     },
     async listRecords(params: ListRecordsParams): Promise<ListRecordsResponse> {
-      const url = `${baseUrl}/v1/zones/${encodeURIComponent(params.zone_id)}/records`;
+      const qs = new URLSearchParams();
+      if (params.limit !== undefined) qs.set("limit", String(params.limit));
+      if (params.after !== undefined) qs.set("after", String(params.after));
+      const query = qs.toString();
+      const url = `${baseUrl}/v1/zones/${encodeURIComponent(params.zone_id)}/records${query ? `?${query}` : ""}`;
       const res = await primFetch(url);
       return unwrap<ListRecordsResponse>(res);
     },

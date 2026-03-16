@@ -134,13 +134,20 @@ export function getServerById(id: string): ServerRow | null {
   return db.query<ServerRow, [string]>("SELECT * FROM servers WHERE id = ?").get(id) ?? null;
 }
 
-export function getServersByOwner(owner: string, limit: number, offset: number): ServerRow[] {
+export function getServersByOwner(owner: string, limit: number, after?: string): ServerRow[] {
   const db = getDb();
+  if (after) {
+    return db
+      .query<ServerRow, [string, string, number]>(
+        "SELECT * FROM servers WHERE owner_wallet = ? AND id > ? ORDER BY id ASC LIMIT ?",
+      )
+      .all(owner, after, limit);
+  }
   return db
-    .query<ServerRow, [string, number, number]>(
-      "SELECT * FROM servers WHERE owner_wallet = ? ORDER BY created_at DESC LIMIT ? OFFSET ?",
+    .query<ServerRow, [string, number]>(
+      "SELECT * FROM servers WHERE owner_wallet = ? ORDER BY id ASC LIMIT ?",
     )
-    .all(owner, limit, offset);
+    .all(owner, limit);
 }
 
 export function countServersByOwner(owner: string): number {

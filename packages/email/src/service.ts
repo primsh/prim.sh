@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: Apache-2.0
 import { randomBytes, scryptSync } from "node:crypto";
-import { createLogger } from "@primsh/x402-middleware";
+import { createLogger, paginate } from "@primsh/x402-middleware";
 import type { PaginatedList, ServiceResult } from "@primsh/x402-middleware";
 
 const log = createLogger("email.sh", { module: "service" });
@@ -28,10 +28,7 @@ import type {
 import { getJmapContext } from "./context.ts";
 import { encryptPassword } from "./crypto.ts";
 import {
-  countDomainsByOwner,
   countMailboxesByDomain,
-  countMailboxesByOwner,
-  countMailboxesByOwnerAll,
   deleteDomainRow,
   deleteMailboxRow,
   deleteWebhookRow,
@@ -392,28 +389,15 @@ async function finalizeMailbox(
 
 export function listMailboxes(
   callerWallet: string,
-  page: number,
-  perPage: number,
+  limit: number,
+  after: string | undefined,
   includeExpired = false,
 ): PaginatedList<GetMailboxResponse> {
-  const offset = (page - 1) * perPage;
   const rows = includeExpired
-    ? getMailboxesByOwnerAll(callerWallet, perPage, offset)
-    : getMailboxesByOwner(callerWallet, perPage, offset);
-  const total = includeExpired
-    ? countMailboxesByOwnerAll(callerWallet)
-    : countMailboxesByOwner(callerWallet);
+    ? getMailboxesByOwnerAll(callerWallet, limit, after)
+    : getMailboxesByOwner(callerWallet, limit, after);
 
-  return {
-    data: rows.map(rowToResponse),
-    pagination: {
-      total,
-      page,
-      per_page: perPage,
-      cursor: null,
-      has_more: offset + rows.length < total,
-    },
-  };
+  return paginate(rows.map(rowToResponse), limit, (r) => r.id);
 }
 
 export async function getMailbox(
@@ -510,9 +494,8 @@ export async function listMessages(
         data: messages,
         pagination: {
           total: result.total,
-          page: null,
           per_page: limit,
-          cursor: String(result.position + messages.length),
+          next_cursor: String(result.position + messages.length),
           has_more: result.position + messages.length < result.total,
         },
       },
@@ -751,10 +734,9 @@ export function listWebhooks(
     data: {
       data: rows.map(webhookToResponse),
       pagination: {
-        total: rows.length,
-        page: 1,
+        total: null,
         per_page: rows.length,
-        cursor: null,
+        next_cursor: null,
         has_more: false,
       },
     },
@@ -928,22 +910,11 @@ export async function registerDomain(
 
 export function listDomains(
   callerWallet: string,
-  page: number,
-  perPage: number,
+  limit: number,
+  after: string | undefined,
 ): PaginatedList<GetDomainResponse> {
-  const offset = (page - 1) * perPage;
-  const rows = getDomainsByOwner(callerWallet, perPage, offset);
-  const total = countDomainsByOwner(callerWallet);
-  return {
-    data: rows.map(domainToResponse),
-    pagination: {
-      total,
-      page,
-      per_page: perPage,
-      cursor: null,
-      has_more: offset + rows.length < total,
-    },
-  };
+  const rows = getDomainsByOwner(callerWallet, limit, after);
+  return paginate(rows.map(domainToResponse), limit, (r) => r.id);
 }
 
 export function getDomain(id: string, callerWallet: string): ServiceResult<GetDomainResponse> {

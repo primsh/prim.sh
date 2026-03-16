@@ -98,9 +98,9 @@ app.get("/v1/collections", (c) => {
   const caller = callerOrRes;
 
   const limit = Math.min(Number(c.req.query("limit")) || 20, 100);
-  const page = Math.max(Number(c.req.query("page")) || 1, 1);
+  const after = c.req.query("after") || undefined;
 
-  const data = listCollections(caller, limit, page);
+  const data = listCollections(caller, limit, after);
   return c.json(data as PaginatedList<GetCollectionResponse>, 200);
 });
 

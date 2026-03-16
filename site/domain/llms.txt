@@ -406,6 +406,10 @@ Price: $0.001
 Path params:
   zone_id  string  required  zone_id parameter
 
+Query params:
+  limit  integer  optional  1-100, default 100
+  after  string   optional  Cursor from previous response
+
 Response (200): RecordListResponse
 
 Errors:

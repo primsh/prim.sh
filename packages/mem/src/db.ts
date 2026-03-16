@@ -125,14 +125,21 @@ export function getCollectionByOwnerAndName(owner: string, name: string): Collec
 export function getCollectionsByOwner(
   owner: string,
   limit: number,
-  offset: number,
+  after?: string,
 ): CollectionRow[] {
   const db = getDb();
+  if (after) {
+    return db
+      .query<CollectionRow, [string, string, number]>(
+        "SELECT * FROM collections WHERE owner_wallet = ? AND id > ? ORDER BY id ASC LIMIT ?",
+      )
+      .all(owner, after, limit);
+  }
   return db
-    .query<CollectionRow, [string, number, number]>(
-      "SELECT * FROM collections WHERE owner_wallet = ? ORDER BY created_at DESC LIMIT ? OFFSET ?",
+    .query<CollectionRow, [string, number]>(
+      "SELECT * FROM collections WHERE owner_wallet = ? ORDER BY id ASC LIMIT ?",
     )
-    .all(owner, limit, offset);
+    .all(owner, limit);
 }
 
 export function countCollectionsByOwner(owner: string): number {

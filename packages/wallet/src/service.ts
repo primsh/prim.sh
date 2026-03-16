@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: Apache-2.0
 import { randomBytes } from "node:crypto";
-import { createLogger, getNetworkConfig } from "@primsh/x402-middleware";
+import { createLogger, getNetworkConfig, paginate } from "@primsh/x402-middleware";
 import type { PaginatedList } from "@primsh/x402-middleware";
 import { getAddress, isAddress, verifyMessage } from "viem";
 
@@ -219,6 +219,8 @@ export async function listWallets(
     }),
   );
 
+  // Cursor is based on unfiltered rows (deactivated wallets are filtered out of the response
+  // but still count toward pagination). Use rows.length to determine has_more.
   const lastRow = rows[rows.length - 1];
   const cursor = rows.length === limit && lastRow ? lastRow.address : null;
 
@@ -226,9 +228,8 @@ export async function listWallets(
     data: wallets,
     pagination: {
       total: null,
-      page: null,
       per_page: limit,
-      cursor,
+      next_cursor: cursor,
       has_more: cursor !== null,
     },
   };
@@ -398,21 +399,10 @@ export function listFundRequests(
   if (!check.ok) return check;
 
   const rows = getFundRequestsByWallet(walletAddress, limit, after);
-  const lastRow = rows[rows.length - 1];
-  const cursor = rows.length === limit && lastRow ? lastRow.id : null;
 
   return {
     ok: true,
-    data: {
-      data: rows.map(fundRequestToResponse),
-      pagination: {
-        total: null,
-        page: null,
-        per_page: limit,
-        cursor,
-        has_more: cursor !== null,
-      },
-    },
+    data: paginate(rows.map(fundRequestToResponse), limit, (r) => r.id),
   };
 }
 

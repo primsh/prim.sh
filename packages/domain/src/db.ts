@@ -184,13 +184,20 @@ export function getZoneByDomain(domain: string): ZoneRow | null {
   return db.query<ZoneRow, [string]>("SELECT * FROM zones WHERE domain = ?").get(domain) ?? null;
 }
 
-export function getZonesByOwner(owner: string, limit: number, offset: number): ZoneRow[] {
+export function getZonesByOwner(owner: string, limit: number, after?: string): ZoneRow[] {
   const db = getDb();
+  if (after) {
+    return db
+      .query<ZoneRow, [string, string, number]>(
+        "SELECT * FROM zones WHERE owner_wallet = ? AND id > ? ORDER BY id ASC LIMIT ?",
+      )
+      .all(owner, after, limit);
+  }
   return db
-    .query<ZoneRow, [string, number, number]>(
-      "SELECT * FROM zones WHERE owner_wallet = ? ORDER BY created_at DESC LIMIT ? OFFSET ?",
+    .query<ZoneRow, [string, number]>(
+      "SELECT * FROM zones WHERE owner_wallet = ? ORDER BY id ASC LIMIT ?",
     )
-    .all(owner, limit, offset);
+    .all(owner, limit);
 }
 
 export function countZonesByOwner(owner: string): number {
@@ -259,10 +266,24 @@ export function getRecordByCloudflareId(cfId: string): RecordRow | null {
   );
 }
 
-export function getRecordsByZone(zoneId: string): RecordRow[] {
+export function getRecordsByZone(zoneId: string, limit?: number, after?: string): RecordRow[] {
   const db = getDb();
+  if (limit !== undefined && after) {
+    return db
+      .query<RecordRow, [string, string, number]>(
+        "SELECT * FROM records WHERE zone_id = ? AND id > ? ORDER BY id ASC LIMIT ?",
+      )
+      .all(zoneId, after, limit);
+  }
+  if (limit !== undefined) {
+    return db
+      .query<RecordRow, [string, number]>(
+        "SELECT * FROM records WHERE zone_id = ? ORDER BY id ASC LIMIT ?",
+      )
+      .all(zoneId, limit);
+  }
   return db
-    .query<RecordRow, [string]>("SELECT * FROM records WHERE zone_id = ? ORDER BY created_at DESC")
+    .query<RecordRow, [string]>("SELECT * FROM records WHERE zone_id = ? ORDER BY id ASC")
     .all(zoneId);
 }
 

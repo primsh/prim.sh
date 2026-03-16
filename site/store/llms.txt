@@ -134,7 +134,7 @@ Price: $0.001
 
 Query params:
   limit  integer  optional  1-100, default 20
-  page   integer  optional  1-based page number, default 1
+  after  string   optional  Cursor from previous response's next_cursor
 
 Response (200): BucketListResponse
 

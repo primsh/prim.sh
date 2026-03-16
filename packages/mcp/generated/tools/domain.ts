@@ -280,6 +280,14 @@ export const domainTools: Tool[] = [
             type: "string",
             description: "zone_id parameter",
           },
+          "limit": {
+            type: "integer",
+            description: "1-100, default 100",
+          },
+          "after": {
+            type: "string",
+            description: "Cursor from previous response",
+          },
         },
         required: ["zone_id"],
       },
@@ -514,7 +522,10 @@ export async function handleDomainTool(
       }
 
       case "domain_list_records": {
-        const res = await primFetch(`${baseUrl}/v1/zones/${args.zone_id}/records`);
+        const url = new URL(`${baseUrl}/v1/zones/${args.zone_id}/records`);
+        if (args.limit !== undefined) url.searchParams.set("limit", String(args.limit));
+        if (args.after !== undefined) url.searchParams.set("after", String(args.after));
+        const res = await primFetch(url.toString());
         const data = await res.json();
         if (!res.ok) return errorResult(data);
         return { content: [{ type: "text", text: JSON.stringify(data, null, 2) }] };
