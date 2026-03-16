@@ -361,7 +361,10 @@ export function listRecords(
   if (limit === undefined) {
     return {
       ok: true,
-      data: { data: mapped, pagination: { total: null, per_page: mapped.length, next_cursor: null, has_more: false } },
+      data: {
+        data: mapped,
+        pagination: { total: null, per_page: mapped.length, next_cursor: null, has_more: false },
+      },
     };
   }
 
