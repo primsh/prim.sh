@@ -240,7 +240,12 @@ app.put("/v1/buckets/:id", async (c) => {
   if (callerOrRes instanceof Response) return callerOrRes;
   const caller = callerOrRes;
 
-  const bodyOrRes = await parseJsonBody(c, logger, "PUT /v1/buckets/:id", UpdateBucketRequestSchema);
+  const bodyOrRes = await parseJsonBody(
+    c,
+    logger,
+    "PUT /v1/buckets/:id",
+    UpdateBucketRequestSchema,
+  );
   if (bodyOrRes instanceof Response) return bodyOrRes;
   const body = bodyOrRes;
 
@@ -413,7 +418,12 @@ app.put("/v1/buckets/:id/quota", async (c) => {
   if (callerOrRes instanceof Response) return callerOrRes;
   const caller = callerOrRes;
 
-  const bodyOrRes = await parseJsonBody(c, logger, "PUT /v1/buckets/:id/quota", SetQuotaRequestSchema);
+  const bodyOrRes = await parseJsonBody(
+    c,
+    logger,
+    "PUT /v1/buckets/:id/quota",
+    SetQuotaRequestSchema,
+  );
   if (bodyOrRes instanceof Response) return bodyOrRes;
   const body = bodyOrRes;
 

@@ -45,7 +45,10 @@ export const SearchResultSchema = z.object({
   url: z.string().describe("Page URL."),
   content: z.string().describe("Snippet text extracted from the page."),
   score: z.number().describe("Relevance score (0-1)."),
-  published: z.string().optional().describe("Publication date (ISO 8601). Only present if available."),
+  published: z
+    .string()
+    .optional()
+    .describe("Publication date (ISO 8601). Only present if available."),
 });
 export type SearchResult = z.infer<typeof SearchResultSchema>;
 
@@ -58,9 +61,7 @@ export const SearchResponseSchema = z.object({
       "AI-generated answer summarizing top results. Only present if include_answer was true.",
     ),
   results: z.array(SearchResultSchema).describe("Ranked search results."),
-  response_time: z
-    .number()
-    .describe("Time taken to complete the search in milliseconds."),
+  response_time: z.number().describe("Time taken to complete the search in milliseconds."),
 });
 export type SearchResponse = z.infer<typeof SearchResponseSchema>;
 
@@ -93,9 +94,7 @@ export type FailedExtraction = z.infer<typeof FailedExtractionSchema>;
 export const ExtractResponseSchema = z.object({
   results: z.array(ExtractResultSchema).describe("Successfully extracted pages."),
   failed: z.array(FailedExtractionSchema).describe("Pages that could not be extracted."),
-  response_time: z
-    .number()
-    .describe("Time taken to complete the extraction in milliseconds."),
+  response_time: z.number().describe("Time taken to complete the extraction in milliseconds."),
 });
 export type ExtractResponse = z.infer<typeof ExtractResponseSchema>;
 

@@ -77,7 +77,12 @@ app.post("/v1/collections", async (c) => {
   if (callerOrRes instanceof Response) return callerOrRes;
   const caller = callerOrRes;
 
-  const bodyOrRes = await parseJsonBody(c, logger, "POST /v1/collections", CreateCollectionRequestSchema);
+  const bodyOrRes = await parseJsonBody(
+    c,
+    logger,
+    "POST /v1/collections",
+    CreateCollectionRequestSchema,
+  );
   if (bodyOrRes instanceof Response) return bodyOrRes;
   const body = bodyOrRes;
 
@@ -168,7 +173,12 @@ app.post("/v1/collections/:id/query", async (c) => {
   if (callerOrRes instanceof Response) return callerOrRes;
   const caller = callerOrRes;
 
-  const bodyOrRes = await parseJsonBody(c, logger, "POST /v1/collections/:id/query", QueryRequestSchema);
+  const bodyOrRes = await parseJsonBody(
+    c,
+    logger,
+    "POST /v1/collections/:id/query",
+    QueryRequestSchema,
+  );
   if (bodyOrRes instanceof Response) return bodyOrRes;
   const body = bodyOrRes;
 

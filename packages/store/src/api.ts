@@ -32,9 +32,15 @@ export type ErrorCode = (typeof ERROR_CODES)[number];
 export const GetBucketResponseSchema = z.object({
   id: z.string().describe("Bucket ID (UUID)."),
   name: z.string().describe("Bucket name. Unique per wallet. Alphanumeric, hyphens, underscores."),
-  location: z.string().nullable().describe('Storage region (e.g. "us-east-1"). Null = default region.'),
+  location: z
+    .string()
+    .nullable()
+    .describe('Storage region (e.g. "us-east-1"). Null = default region.'),
   owner_wallet: z.string().describe("Ethereum address of the bucket owner."),
-  quota_bytes: z.number().nullable().describe("Per-bucket quota in bytes. Null = default (100 MB)."),
+  quota_bytes: z
+    .number()
+    .nullable()
+    .describe("Per-bucket quota in bytes. Null = default (100 MB)."),
   usage_bytes: z.number().describe("Current storage usage in bytes."),
   is_public: z.boolean().describe("Whether the bucket is publicly readable."),
   public_url: z
@@ -51,8 +57,14 @@ export const CreateBucketRequestSchema = z.object({
     .min(3)
     .max(63)
     .describe("Bucket name. Unique per wallet. 3-63 chars, alphanumeric + hyphens."),
-  location: z.string().optional().describe('Storage region (e.g. "us-east-1"). Defaults to primary region.'),
-  is_public: z.boolean().optional().describe("Whether the bucket should be publicly readable. Defaults to false."),
+  location: z
+    .string()
+    .optional()
+    .describe('Storage region (e.g. "us-east-1"). Defaults to primary region.'),
+  is_public: z
+    .boolean()
+    .optional()
+    .describe("Whether the bucket should be publicly readable. Defaults to false."),
 });
 export type CreateBucketRequest = z.infer<typeof CreateBucketRequestSchema>;
 
@@ -96,14 +108,23 @@ export type DeleteObjectResponse = z.infer<typeof DeleteObjectResponseSchema>;
 
 export const GetQuotaResponseSchema = z.object({
   bucket_id: z.string().describe("Bucket ID."),
-  quota_bytes: z.number().nullable().describe("Per-bucket quota in bytes. Null = default (100 MB)."),
+  quota_bytes: z
+    .number()
+    .nullable()
+    .describe("Per-bucket quota in bytes. Null = default (100 MB)."),
   usage_bytes: z.number().describe("Current storage usage in bytes."),
-  usage_pct: z.number().nullable().describe("Usage as a percentage (0-100). Null if quota_bytes is null."),
+  usage_pct: z
+    .number()
+    .nullable()
+    .describe("Usage as a percentage (0-100). Null if quota_bytes is null."),
 });
 export type GetQuotaResponse = z.infer<typeof GetQuotaResponseSchema>;
 
 export const SetQuotaRequestSchema = z.object({
-  quota_bytes: z.number().nullable().describe("New quota in bytes. Pass null to reset to default (100 MB)."),
+  quota_bytes: z
+    .number()
+    .nullable()
+    .describe("New quota in bytes. Pass null to reset to default (100 MB)."),
 });
 export type SetQuotaRequest = z.infer<typeof SetQuotaRequestSchema>;
 
@@ -122,7 +143,12 @@ export type ReconcileStorageResponse = z.infer<typeof ReconcileStorageResponseSc
 export const CreatePresignRequestSchema = z.object({
   key: z.string().min(1).describe("Object key to presign."),
   method: z.enum(["GET", "PUT"]).describe('HTTP method: "GET" for download, "PUT" for upload.'),
-  expires_in: z.number().min(60).max(86400).optional().describe("URL lifetime in seconds (60–86400). Defaults to 3600."),
+  expires_in: z
+    .number()
+    .min(60)
+    .max(86400)
+    .optional()
+    .describe("URL lifetime in seconds (60–86400). Defaults to 3600."),
 });
 export type CreatePresignRequest = z.infer<typeof CreatePresignRequestSchema>;
 

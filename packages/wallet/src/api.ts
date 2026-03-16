@@ -17,7 +17,9 @@ export const ApiErrorSchema = z.object({
   error: z.object({
     code: z.string().describe("Machine-readable error code."),
     message: z.string().describe("Human-readable error message."),
-    details: ApiErrorDetailSchema.optional().describe("Additional structured context for the error."),
+    details: ApiErrorDetailSchema.optional().describe(
+      "Additional structured context for the error.",
+    ),
   }),
 });
 export type ApiError = z.infer<typeof ApiErrorSchema>;
@@ -38,7 +40,10 @@ export type ErrorCode = (typeof ERROR_CODES)[number];
 // ─── Cursor pagination ─────────────────────────────────────────────────────
 
 export const CursorPaginationSchema = z.object({
-  cursor: z.string().nullable().describe("Opaque cursor for the next page. Null if this is the last page."),
+  cursor: z
+    .string()
+    .nullable()
+    .describe("Opaque cursor for the next page. Null if this is the last page."),
 });
 export type CursorPagination = z.infer<typeof CursorPaginationSchema>;
 
@@ -46,8 +51,14 @@ export type CursorPagination = z.infer<typeof CursorPaginationSchema>;
 
 export const RegisterWalletRequestSchema = z.object({
   address: z.string().describe("Ethereum address to register (0x... 42 chars, checksummed)."),
-  signature: z.string().describe('EIP-191 signature over "Register <address> with prim.sh at <timestamp>".'),
-  timestamp: z.string().describe("ISO 8601 UTC timestamp used in the signed message. Must be within 5 minutes of server time."),
+  signature: z
+    .string()
+    .describe('EIP-191 signature over "Register <address> with prim.sh at <timestamp>".'),
+  timestamp: z
+    .string()
+    .describe(
+      "ISO 8601 UTC timestamp used in the signed message. Must be within 5 minutes of server time.",
+    ),
   chain: z.string().optional().describe('Chain identifier. Default "base".'),
   label: z.string().optional().describe("Human-readable label for this wallet."),
 });
@@ -76,8 +87,14 @@ export const WalletListItemSchema = z.object({
 export type WalletListItem = z.infer<typeof WalletListItemSchema>;
 
 export const SpendingPolicySchema = z.object({
-  max_per_tx: z.string().nullable().describe("Max USDC per transaction as decimal string. Null = no limit."),
-  max_per_day: z.string().nullable().describe("Max USDC per day as decimal string. Null = no limit."),
+  max_per_tx: z
+    .string()
+    .nullable()
+    .describe("Max USDC per transaction as decimal string. Null = no limit."),
+  max_per_day: z
+    .string()
+    .nullable()
+    .describe("Max USDC per day as decimal string. Null = no limit."),
   daily_spent: z.string().describe("USDC spent today as a decimal string."),
   daily_reset_at: z.string().describe("ISO 8601 timestamp when the daily counter resets."),
 });
@@ -154,16 +171,31 @@ export const GetPolicyResponseSchema = z.object({
   wallet_address: z.string().describe("Wallet address this policy applies to."),
   max_per_tx: z.string().nullable().describe("Max USDC per transaction, null = no limit."),
   max_per_day: z.string().nullable().describe("Max USDC per day, null = no limit."),
-  allowed_primitives: z.array(z.string()).nullable().describe('Allowed primitive hostnames (e.g. ["store.prim.sh"]), null = all allowed.'),
+  allowed_primitives: z
+    .array(z.string())
+    .nullable()
+    .describe('Allowed primitive hostnames (e.g. ["store.prim.sh"]), null = all allowed.'),
   daily_spent: z.string().describe("USDC spent today as a decimal string."),
   daily_reset_at: z.string().describe("ISO 8601 timestamp when the daily counter resets."),
 });
 export type GetPolicyResponse = z.infer<typeof GetPolicyResponseSchema>;
 
 export const UpdatePolicyRequestSchema = z.object({
-  maxPerTx: z.string().nullable().optional().describe("Max USDC per transaction. Pass null to remove the limit."),
-  maxPerDay: z.string().nullable().optional().describe("Max USDC per day. Pass null to remove the limit."),
-  allowedPrimitives: z.array(z.string()).nullable().optional().describe("Allowed primitive hostnames. Pass null to allow all."),
+  maxPerTx: z
+    .string()
+    .nullable()
+    .optional()
+    .describe("Max USDC per transaction. Pass null to remove the limit."),
+  maxPerDay: z
+    .string()
+    .nullable()
+    .optional()
+    .describe("Max USDC per day. Pass null to remove the limit."),
+  allowedPrimitives: z
+    .array(z.string())
+    .nullable()
+    .optional()
+    .describe("Allowed primitive hostnames. Pass null to allow all."),
 });
 export type UpdatePolicyRequest = z.infer<typeof UpdatePolicyRequestSchema>;
 
@@ -172,7 +204,10 @@ export type UpdatePolicyRequest = z.infer<typeof UpdatePolicyRequestSchema>;
 export type PauseScope = "all" | "send" | "swap";
 
 export const PauseWalletRequestSchema = z.object({
-  scope: z.enum(["all", "send", "swap"]).optional().describe('Scope to pause. "all" | "send" | "swap". Default "all".'),
+  scope: z
+    .enum(["all", "send", "swap"])
+    .optional()
+    .describe('Scope to pause. "all" | "send" | "swap". Default "all".'),
 });
 export type PauseWalletRequest = z.infer<typeof PauseWalletRequestSchema>;
 
@@ -185,7 +220,10 @@ export const PauseWalletResponseSchema = z.object({
 export type PauseWalletResponse = z.infer<typeof PauseWalletResponseSchema>;
 
 export const ResumeWalletRequestSchema = z.object({
-  scope: z.enum(["all", "send", "swap"]).optional().describe('Scope to resume. "all" | "send" | "swap". Default "all".'),
+  scope: z
+    .enum(["all", "send", "swap"])
+    .optional()
+    .describe('Scope to resume. "all" | "send" | "swap". Default "all".'),
 });
 export type ResumeWalletRequest = z.infer<typeof ResumeWalletRequestSchema>;
 

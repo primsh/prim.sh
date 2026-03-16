@@ -77,7 +77,12 @@ app.get("/", (c) => {
 
 // POST /v1/redeem — Redeem an invite code (free)
 app.post("/v1/redeem", async (c) => {
-  const bodyOrRes = await parseJsonBody(c, logger, "POST /v1/redeem", RedeemRequestSchema.partial());
+  const bodyOrRes = await parseJsonBody(
+    c,
+    logger,
+    "POST /v1/redeem",
+    RedeemRequestSchema.partial(),
+  );
   if (bodyOrRes instanceof Response) return bodyOrRes;
   const body = bodyOrRes;
 

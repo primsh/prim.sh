@@ -12,11 +12,7 @@ import {
 import type { ApiError } from "@primsh/x402-middleware";
 import { createPrimApp } from "@primsh/x402-middleware/create-prim-app";
 import type { ContentfulStatusCode } from "hono/utils/http-status";
-import {
-  CreatePoolRequestSchema,
-  CreateTokenRequestSchema,
-  MintRequestSchema,
-} from "./api.ts";
+import { CreatePoolRequestSchema, CreateTokenRequestSchema, MintRequestSchema } from "./api.ts";
 import {
   createPool,
   deployToken,
@@ -160,7 +156,12 @@ app.post("/v1/tokens/:id/pool", async (c) => {
   if (callerOrRes instanceof Response) return callerOrRes;
   const caller = callerOrRes;
 
-  const bodyOrRes = await parseJsonBody(c, logger, "POST /v1/tokens/:id/pool", CreatePoolRequestSchema);
+  const bodyOrRes = await parseJsonBody(
+    c,
+    logger,
+    "POST /v1/tokens/:id/pool",
+    CreatePoolRequestSchema,
+  );
   if (bodyOrRes instanceof Response) return bodyOrRes;
   const body = bodyOrRes;
 

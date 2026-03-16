@@ -30,13 +30,13 @@ export type ErrorCode = (typeof ERROR_CODES)[number];
 // ─── Token types ─────────────────────────────────────────────────────────
 
 export const CreateTokenRequestSchema = z.object({
-  name: z.string().describe("Token name (e.g. \"AgentCoin\")."),
-  symbol: z.string().describe("Token symbol (e.g. \"AGT\")."),
+  name: z.string().describe('Token name (e.g. "AgentCoin").'),
+  symbol: z.string().describe('Token symbol (e.g. "AGT").'),
   decimals: z.number().optional().describe("Decimal places. Default 18."),
   initialSupply: z
     .string()
     .describe(
-      "Initial supply as a raw integer string (e.g. \"1000000000000000000\" = 1 token at 18 decimals).",
+      'Initial supply as a raw integer string (e.g. "1000000000000000000" = 1 token at 18 decimals).',
     ),
   mintable: z
     .boolean()
@@ -53,11 +53,11 @@ export const CreateTokenRequestSchema = z.object({
 export type CreateTokenRequest = z.infer<typeof CreateTokenRequestSchema>;
 
 export const GetTokenResponseSchema = z.object({
-  id: z.string().describe("Token ID (e.g. \"tok_abc123\")."),
+  id: z.string().describe('Token ID (e.g. "tok_abc123").'),
   contract_address: z
     .string()
     .nullable()
-    .describe("Deployed contract address. Null while deploy_status is \"pending\"."),
+    .describe('Deployed contract address. Null while deploy_status is "pending".'),
   owner_wallet: z.string().describe("Ethereum address of the wallet that deployed the token."),
   name: z.string().describe("Token name."),
   symbol: z.string().describe("Token symbol."),
@@ -72,9 +72,7 @@ export const GetTokenResponseSchema = z.object({
   tx_hash: z.string().describe("Deployment transaction hash."),
   deploy_status: z
     .enum(["pending", "confirmed", "failed"])
-    .describe(
-      "Deployment status. Poll until \"confirmed\" before minting or creating a pool.",
-    ),
+    .describe('Deployment status. Poll until "confirmed" before minting or creating a pool.'),
   created_at: z.string().describe("ISO 8601 timestamp when the token was created."),
 });
 export type GetTokenResponse = z.infer<typeof GetTokenResponseSchema>;
@@ -91,7 +89,7 @@ export const MintResponseSchema = z.object({
   amount: z.string().describe("Amount minted as a raw integer string."),
   status: z
     .literal("pending")
-    .describe("Always \"pending\" — mint is submitted on-chain asynchronously."),
+    .describe('Always "pending" — mint is submitted on-chain asynchronously.'),
 });
 export type MintResponse = z.infer<typeof MintResponseSchema>;
 
@@ -107,11 +105,8 @@ export type GetSupplyResponse = z.infer<typeof GetSupplyResponseSchema>;
 export const CreatePoolRequestSchema = z.object({
   pricePerToken: z
     .string()
-    .describe("Initial price per token in USDC as a decimal string (e.g. \"0.001\")."),
-  feeTier: z
-    .number()
-    .optional()
-    .describe("Uniswap V3 fee tier. 500 | 3000 | 10000, default 3000."),
+    .describe('Initial price per token in USDC as a decimal string (e.g. "0.001").'),
+  feeTier: z.number().optional().describe("Uniswap V3 fee tier. 500 | 3000 | 10000, default 3000."),
 });
 export type CreatePoolRequest = z.infer<typeof CreatePoolRequestSchema>;
 
@@ -142,12 +137,8 @@ export const GetLiquidityParamsResponseSchema = z.object({
   fee: z.number().describe("Fee tier."),
   tick_lower: z.number().describe("Lower tick bound for the liquidity range."),
   tick_upper: z.number().describe("Upper tick bound for the liquidity range."),
-  amount0_desired: z
-    .string()
-    .describe("Desired amount of token0 to add as a raw integer string."),
-  amount1_desired: z
-    .string()
-    .describe("Desired amount of token1 to add as a raw integer string."),
+  amount0_desired: z.string().describe("Desired amount of token0 to add as a raw integer string."),
+  amount1_desired: z.string().describe("Desired amount of token1 to add as a raw integer string."),
   amount0_min: z
     .string()
     .describe("Minimum amount of token0 (slippage protection) as a raw integer string."),

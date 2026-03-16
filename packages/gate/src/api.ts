@@ -4,32 +4,26 @@
 import { z } from "zod";
 
 export const RedeemRequestSchema = z.object({
-  code: z.string().describe("Invite code (e.g. \"PRIM-a1b2c3d4\")."),
-  wallet: z
-    .string()
-    .describe("EVM wallet address to allowlist and fund (0x... checksummed)."),
+  code: z.string().describe('Invite code (e.g. "PRIM-a1b2c3d4").'),
+  wallet: z.string().describe("EVM wallet address to allowlist and fund (0x... checksummed)."),
 });
 export type RedeemRequest = z.infer<typeof RedeemRequestSchema>;
 
 export const FundingDetailSchema = z.object({
-  usdc: z.string().describe("USDC amount funded as decimal string (e.g. \"5.00\")."),
-  eth: z.string().describe("ETH amount funded as decimal string (e.g. \"0.001\")."),
+  usdc: z.string().describe('USDC amount funded as decimal string (e.g. "5.00").'),
+  eth: z.string().describe('ETH amount funded as decimal string (e.g. "0.001").'),
   usdc_tx: z.string().describe("USDC transfer transaction hash."),
   eth_tx: z.string().describe("ETH transfer transaction hash."),
 });
 export type FundingDetail = z.infer<typeof FundingDetailSchema>;
 
 export const RedeemResponseSchema = z.object({
-  status: z.literal("redeemed").describe("Always \"redeemed\" on success."),
+  status: z.literal("redeemed").describe('Always "redeemed" on success.'),
   wallet: z.string().describe("Checksummed wallet address that was funded."),
-  network: z.string().describe("Network the funds were sent on (e.g. \"eip155:8453\")."),
+  network: z.string().describe('Network the funds were sent on (e.g. "eip155:8453").'),
   funded: FundingDetailSchema.describe("Funding details."),
-  wallet_registered: z
-    .boolean()
-    .describe("Whether the wallet was auto-registered on wallet.sh."),
-  credit_seeded: z
-    .boolean()
-    .describe("Whether infer.sh credit was seeded for instant responses."),
+  wallet_registered: z.boolean().describe("Whether the wallet was auto-registered on wallet.sh."),
+  credit_seeded: z.boolean().describe("Whether infer.sh credit was seeded for instant responses."),
 });
 export type RedeemResponse = z.infer<typeof RedeemResponseSchema>;
 
@@ -38,7 +32,7 @@ export type RedeemResponse = z.infer<typeof RedeemResponseSchema>;
 export const CreateCodesRequestSchema = z.object({
   count: z.number().optional().describe("Generate N random codes (1–100)."),
   codes: z.array(z.string()).optional().describe("Add specific codes."),
-  label: z.string().optional().describe("Optional batch label (e.g. \"beta-batch-1\")."),
+  label: z.string().optional().describe('Optional batch label (e.g. "beta-batch-1").'),
 });
 export type CreateCodesRequest = z.infer<typeof CreateCodesRequestSchema>;
 

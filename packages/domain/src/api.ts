@@ -36,7 +36,9 @@ export type ZoneStatus = "pending" | "active" | "moved";
 export const GetZoneResponseSchema = z.object({
   id: z.string().describe("Cloudflare zone ID."),
   domain: z.string().describe('Domain name (e.g. "example.com").'),
-  status: z.enum(["pending", "active", "moved"]).describe('Zone status: "pending" | "active" | "moved".'),
+  status: z
+    .enum(["pending", "active", "moved"])
+    .describe('Zone status: "pending" | "active" | "moved".'),
   name_servers: z.array(z.string()).describe("Cloudflare nameservers to delegate to."),
   owner_wallet: z.string().describe("Ethereum address of the zone owner."),
   created_at: z.string().describe("ISO 8601 timestamp when the zone was created."),
@@ -67,7 +69,10 @@ export const GetRecordResponseSchema = z.object({
   content: z.string().describe("DNS record value."),
   ttl: z.number().describe("TTL in seconds."),
   proxied: z.boolean().describe("Whether Cloudflare proxying is enabled."),
-  priority: z.number().nullable().describe("Priority for MX and SRV records. Null for other types."),
+  priority: z
+    .number()
+    .nullable()
+    .describe("Priority for MX and SRV records. Null for other types."),
   created_at: z.string().describe("ISO 8601 timestamp when the record was created."),
   updated_at: z.string().describe("ISO 8601 timestamp when the record was last updated."),
 });
@@ -97,7 +102,12 @@ export type UpdateRecordRequest = z.infer<typeof UpdateRecordRequestSchema>;
 
 export const DomainSearchPriceSchema = z.object({
   register: z.number().describe("Registration cost in USD."),
-  renew: z.number().optional().describe("Renewal cost in USD. Not returned by checkRegisterAvailability; omitted means unknown."),
+  renew: z
+    .number()
+    .optional()
+    .describe(
+      "Renewal cost in USD. Not returned by checkRegisterAvailability; omitted means unknown.",
+    ),
   currency: z.string().describe('Currency code (e.g. "USD").'),
 });
 export type DomainSearchPrice = z.infer<typeof DomainSearchPriceSchema>;
@@ -105,7 +115,9 @@ export type DomainSearchPrice = z.infer<typeof DomainSearchPriceSchema>;
 export const DomainSearchResultSchema = z.object({
   domain: z.string().describe("Domain name queried."),
   available: z.boolean().describe("Whether the domain is available for registration."),
-  price: DomainSearchPriceSchema.optional().describe("Pricing info. Only present if available is true."),
+  price: DomainSearchPriceSchema.optional().describe(
+    "Pricing info. Only present if available is true.",
+  ),
   premium: z.boolean().optional().describe("Whether this is a premium domain with higher pricing."),
 });
 export type DomainSearchResult = z.infer<typeof DomainSearchResultSchema>;
@@ -168,12 +180,18 @@ export type QuoteRequest = z.infer<typeof QuoteRequestSchema>;
 export const QuoteResponseSchema = z.object({
   quote_id: z.string().describe("Quote ID to use when calling POST /v1/domains/register."),
   domain: z.string().describe("Domain name quoted."),
-  available: z.literal(true).describe("Always true — quote is only returned for available domains."),
+  available: z
+    .literal(true)
+    .describe("Always true — quote is only returned for available domains."),
   years: z.number().describe("Number of years in the quote."),
   registrar_cost_usd: z.number().describe("Registrar cost in USD (internal cost)."),
   total_cost_usd: z.number().describe("Total cost in USD charged to the caller."),
   currency: z.string().describe('Currency code (e.g. "USD").'),
-  expires_at: z.string().describe("ISO 8601 timestamp when the quote expires. Use within the window to avoid quote_expired."),
+  expires_at: z
+    .string()
+    .describe(
+      "ISO 8601 timestamp when the quote expires. Use within the window to avoid quote_expired.",
+    ),
 });
 export type QuoteResponse = z.infer<typeof QuoteResponseSchema>;
 
@@ -186,10 +204,18 @@ export const RegisterResponseSchema = z.object({
   domain: z.string().describe("Registered domain name."),
   registered: z.literal(true).describe("Always true on success."),
   zone_id: z.string().nullable().describe("Cloudflare zone ID. Null if zone creation failed."),
-  nameservers: z.array(z.string()).nullable().describe("Cloudflare nameservers to delegate to. Null if zone creation failed."),
+  nameservers: z
+    .array(z.string())
+    .nullable()
+    .describe("Cloudflare nameservers to delegate to. Null if zone creation failed."),
   order_amount_usd: z.number().describe("Order amount charged in USD."),
   ns_configured: z.boolean().describe("Whether nameservers were configured at the registrar."),
-  recovery_token: z.string().nullable().describe("Recovery token to restore zone access. Store securely. Null if zone creation failed."),
+  recovery_token: z
+    .string()
+    .nullable()
+    .describe(
+      "Recovery token to restore zone access. Store securely. Null if zone creation failed.",
+    ),
 });
 export type RegisterResponse = z.infer<typeof RegisterResponseSchema>;
 
@@ -236,7 +262,10 @@ export const VerifyDomainResponseSchema = z.object({
   nameservers: NsVerifyResultSchema.describe("Nameserver propagation result."),
   records: z.array(RecordVerifyResultSchema).describe("Per-record propagation results."),
   all_propagated: z.boolean().describe("Whether all records and nameservers have propagated."),
-  zone_status: z.enum(["pending", "active", "moved"]).nullable().describe("Current Cloudflare zone status. Null if zone not found."),
+  zone_status: z
+    .enum(["pending", "active", "moved"])
+    .nullable()
+    .describe("Current Cloudflare zone status. Null if zone not found."),
 });
 export type VerifyDomainResponse = z.infer<typeof VerifyDomainResponseSchema>;
 
@@ -246,21 +275,31 @@ export const GetRegistrationStatusResponseSchema = z.object({
   domain: z.string().describe("Domain name."),
   purchased: z.literal(true).describe("Always true — only returned for registered domains."),
   zone_id: z.string().nullable().describe("Cloudflare zone ID. Null if zone not yet created."),
-  zone_status: z.enum(["pending", "active", "moved"]).nullable().describe("Current zone status. Null if zone not yet created."),
-  ns_configured_at_registrar: z.boolean().describe("Whether nameservers are configured at the registrar."),
+  zone_status: z
+    .enum(["pending", "active", "moved"])
+    .nullable()
+    .describe("Current zone status. Null if zone not yet created."),
+  ns_configured_at_registrar: z
+    .boolean()
+    .describe("Whether nameservers are configured at the registrar."),
   ns_propagated: z.boolean().describe("Whether nameservers have propagated in DNS."),
   ns_expected: z.array(z.string()).describe("Expected Cloudflare nameservers."),
   ns_actual: z.array(z.string()).describe("Nameservers currently found in DNS."),
   zone_active: z.boolean().describe("Whether the Cloudflare zone is active."),
   all_ready: z.boolean().describe("Whether the domain is fully set up and ready."),
-  next_action: z.string().nullable().describe("Human-readable next action required. Null if all_ready is true."),
+  next_action: z
+    .string()
+    .nullable()
+    .describe("Human-readable next action required. Null if all_ready is true."),
 });
 export type GetRegistrationStatusResponse = z.infer<typeof GetRegistrationStatusResponseSchema>;
 
 export const ActivateDomainResponseSchema = z.object({
   zone_id: z.string().describe("Cloudflare zone ID."),
   status: z.enum(["pending", "active", "moved"]).describe("Updated zone status."),
-  activation_requested: z.literal(true).describe("Always true — activation was requested from Cloudflare."),
+  activation_requested: z
+    .literal(true)
+    .describe("Always true — activation was requested from Cloudflare."),
 });
 export type ActivateDomainResponse = z.infer<typeof ActivateDomainResponseSchema>;
 
@@ -293,6 +332,8 @@ export const MailSetupRecordResultSchema = z.object({
 export type MailSetupRecordResult = z.infer<typeof MailSetupRecordResultSchema>;
 
 export const SetupMailResponseSchema = z.object({
-  records: z.array(MailSetupRecordResultSchema).describe("DNS records created or updated by the mail setup."),
+  records: z
+    .array(MailSetupRecordResultSchema)
+    .describe("DNS records created or updated by the mail setup."),
 });
 export type SetupMailResponse = z.infer<typeof SetupMailResponseSchema>;

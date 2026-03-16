@@ -35,11 +35,7 @@ import type {
   ResumeWalletResponse,
   WalletListItem,
 } from "./api.ts";
-import type {
-  DenyFundRequestRequest,
-  PauseWalletRequest,
-  ResumeWalletRequest,
-} from "./api.ts";
+import type { DenyFundRequestRequest, PauseWalletRequest, ResumeWalletRequest } from "./api.ts";
 import { getState, pause, resume } from "./circuit-breaker.ts";
 import {
   approveFundRequest,
@@ -194,12 +190,7 @@ app.use(
 
 // POST /v1/wallets — Register wallet via EIP-191 signature (FREE)
 app.post("/v1/wallets", async (c) => {
-  const bodyOrRes = await parseJsonBody(
-    c,
-    logger,
-    "POST /v1/wallets",
-    RegisterWalletRequestSchema,
-  );
+  const bodyOrRes = await parseJsonBody(c, logger, "POST /v1/wallets", RegisterWalletRequestSchema);
   if (bodyOrRes instanceof Response) return bodyOrRes;
   const body = bodyOrRes;
 

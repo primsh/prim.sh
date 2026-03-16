@@ -5,7 +5,10 @@ import { z } from "zod";
 
 export const TrackRequestSchema = z.object({
   tracking_number: z.string().describe("Shipment tracking number."),
-  carrier: z.string().optional().describe('Carrier slug (e.g. "usps", "ups", "fedex"). Omit to auto-detect.'),
+  carrier: z
+    .string()
+    .optional()
+    .describe('Carrier slug (e.g. "usps", "ups", "fedex"). Omit to auto-detect.'),
 });
 export type TrackRequest = z.infer<typeof TrackRequestSchema>;
 
@@ -30,9 +33,16 @@ export const TrackResponseSchema = z.object({
   carrier: z.string().describe("Detected or specified carrier slug."),
   status: z.string().describe('Current status summary (e.g. "Delivered").'),
   status_detail: z.string().describe("Detailed current status description."),
-  eta: z.string().optional().describe("Estimated delivery date (ISO 8601). Only present if available."),
-  location: TrackLocationSchema.optional().describe("Current package location. Only present if available."),
-  events: z.array(TrackEventSchema).describe("Chronological list of tracking events (newest first)."),
+  eta: z
+    .string()
+    .optional()
+    .describe("Estimated delivery date (ISO 8601). Only present if available."),
+  location: TrackLocationSchema.optional().describe(
+    "Current package location. Only present if available.",
+  ),
+  events: z
+    .array(TrackEventSchema)
+    .describe("Chronological list of tracking events (newest first)."),
 });
 export type TrackResponse = z.infer<typeof TrackResponseSchema>;
 

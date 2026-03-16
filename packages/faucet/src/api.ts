@@ -11,7 +11,10 @@ export const ApiErrorSchema = z.object({
   error: z.object({
     code: z.string().describe("Machine-readable error code."),
     message: z.string().describe("Human-readable error message."),
-    retryAfter: z.number().optional().describe("Seconds until rate limit resets. Only present on 429 responses."),
+    retryAfter: z
+      .number()
+      .optional()
+      .describe("Seconds until rate limit resets. Only present on 429 responses."),
   }),
 });
 export type ApiError = z.infer<typeof ApiErrorSchema>;
@@ -36,7 +39,9 @@ export type DripRequest = z.infer<typeof DripRequestSchema>;
 
 export const DripResponseSchema = z.object({
   tx_hash: z.string().describe("Transaction hash on Base Sepolia."),
-  amount: z.string().describe('Amount dispensed as a decimal string (e.g. "10.00" for USDC, "0.01" for ETH).'),
+  amount: z
+    .string()
+    .describe('Amount dispensed as a decimal string (e.g. "10.00" for USDC, "0.01" for ETH).'),
   currency: z.string().describe('Currency dispensed: "USDC" or "ETH".'),
   chain: z.string().describe('CAIP-2 chain identifier (e.g. "eip155:84532").'),
   source: z.string().optional().describe('Backend that dispensed the tokens. "cdp" | "treasury".'),

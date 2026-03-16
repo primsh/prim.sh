@@ -37,21 +37,32 @@ export const GetMailboxResponseSchema = z.object({
   address: z.string().describe('Full email address (e.g. "abc123@mail.prim.sh").'),
   username: z.string().describe("Username portion of the email address."),
   domain: z.string().describe("Domain portion of the email address."),
-  status: z.enum(["active", "expired", "deleted"]).describe('Current status: "active" | "expired" | "deleted".'),
+  status: z
+    .enum(["active", "expired", "deleted"])
+    .describe('Current status: "active" | "expired" | "deleted".'),
   created_at: z.string().describe("ISO 8601 timestamp when the mailbox was created."),
-  expires_at: z.string().nullable().describe("ISO 8601 timestamp when the mailbox expires. Null if permanent."),
+  expires_at: z
+    .string()
+    .nullable()
+    .describe("ISO 8601 timestamp when the mailbox expires. Null if permanent."),
 });
 export type GetMailboxResponse = z.infer<typeof GetMailboxResponseSchema>;
 
 export const CreateMailboxRequestSchema = z.object({
   username: z.string().optional().describe("Desired username. Omit for random generation."),
-  domain: z.string().optional().describe("Domain for the mailbox (must be registered). Omit for default domain."),
+  domain: z
+    .string()
+    .optional()
+    .describe("Domain for the mailbox (must be registered). Omit for default domain."),
   ttl_ms: z.number().optional().describe("TTL in milliseconds. Omit for permanent mailbox."),
 });
 export type CreateMailboxRequest = z.infer<typeof CreateMailboxRequestSchema>;
 
 export const RenewMailboxRequestSchema = z.object({
-  ttl_ms: z.number().optional().describe("Extension duration in milliseconds. Omit to apply default TTL."),
+  ttl_ms: z
+    .number()
+    .optional()
+    .describe("Extension duration in milliseconds. Omit to apply default TTL."),
 });
 export type RenewMailboxRequest = z.infer<typeof RenewMailboxRequestSchema>;
 
@@ -111,7 +122,10 @@ export type SendMessageResponse = z.infer<typeof SendMessageResponseSchema>;
 export const RegisterWebhookRequestSchema = z.object({
   url: z.string().describe("HTTPS URL to receive webhook POST requests."),
   secret: z.string().optional().describe("HMAC secret for X-Prim-Signature verification."),
-  events: z.array(z.string()).optional().describe('Events to subscribe to. Defaults to ["message.received"].'),
+  events: z
+    .array(z.string())
+    .optional()
+    .describe('Events to subscribe to. Defaults to ["message.received"].'),
 });
 export type RegisterWebhookRequest = z.infer<typeof RegisterWebhookRequestSchema>;
 
@@ -135,7 +149,9 @@ export const WebhookPayloadSchema = z.object({
   mailbox_id: z.string().describe("Mailbox ID that received the message."),
   message_id: z.string().describe("Message ID."),
   from: z.object({ name: z.string().nullable(), email: z.string() }).describe("Sender address."),
-  to: z.array(z.object({ name: z.string().nullable(), email: z.string() })).describe("Recipient addresses."),
+  to: z
+    .array(z.object({ name: z.string().nullable(), email: z.string() }))
+    .describe("Recipient addresses."),
   subject: z.string().describe("Email subject line."),
   preview: z.string().describe("Short preview of the message body."),
   received_at: z.string().describe("ISO 8601 timestamp when the message was received."),
@@ -166,9 +182,17 @@ export const GetDomainResponseSchema = z.object({
   status: z.string().describe('Verification status ("pending" | "verified").'),
   owner_wallet: z.string().describe("Ethereum address of the domain owner."),
   created_at: z.string().describe("ISO 8601 timestamp when the domain was registered."),
-  verified_at: z.string().nullable().describe("ISO 8601 timestamp when the domain was verified. Null if unverified."),
-  required_records: z.array(DnsRecordSchema).describe("DNS records that must be added to verify the domain."),
-  dkim_records: z.array(DnsRecordSchema).optional().describe("DKIM DNS records. Only present after successful verification."),
+  verified_at: z
+    .string()
+    .nullable()
+    .describe("ISO 8601 timestamp when the domain was verified. Null if unverified."),
+  required_records: z
+    .array(DnsRecordSchema)
+    .describe("DNS records that must be added to verify the domain."),
+  dkim_records: z
+    .array(DnsRecordSchema)
+    .optional()
+    .describe("DKIM DNS records. Only present after successful verification."),
 });
 export type GetDomainResponse = z.infer<typeof GetDomainResponseSchema>;
 
@@ -192,9 +216,18 @@ export const VerifyDomainResponseSchema = z.object({
   id: z.string().describe("Domain registration ID."),
   domain: z.string().describe("Domain name."),
   status: z.string().describe("Updated verification status."),
-  verified_at: z.string().nullable().describe("ISO 8601 timestamp when the domain was verified. Null if not yet verified."),
-  verification_results: z.array(VerificationResultSchema).optional().describe("Per-record verification results."),
-  dkim_records: z.array(DnsRecordSchema).optional().describe("DKIM records to add to DNS. Only present on successful verification."),
+  verified_at: z
+    .string()
+    .nullable()
+    .describe("ISO 8601 timestamp when the domain was verified. Null if not yet verified."),
+  verification_results: z
+    .array(VerificationResultSchema)
+    .optional()
+    .describe("Per-record verification results."),
+  dkim_records: z
+    .array(DnsRecordSchema)
+    .optional()
+    .describe("DKIM records to add to DNS. Only present on successful verification."),
 });
 export type VerifyDomainResponse = z.infer<typeof VerifyDomainResponseSchema>;
 

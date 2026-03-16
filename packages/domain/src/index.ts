@@ -262,7 +262,12 @@ app.post("/v1/domains/register", async (c) => {
 // POST /v1/domains/recover — Retry Cloudflare setup after NameSilo succeeded
 // Free route — recovery_token is sufficient auth.
 app.post("/v1/domains/recover", async (c) => {
-  const bodyOrRes = await parseJsonBody(c, logger, "POST /v1/domains/recover", RecoverRequestSchema);
+  const bodyOrRes = await parseJsonBody(
+    c,
+    logger,
+    "POST /v1/domains/recover",
+    RecoverRequestSchema,
+  );
   if (bodyOrRes instanceof Response) return bodyOrRes;
   const body = bodyOrRes;
 
