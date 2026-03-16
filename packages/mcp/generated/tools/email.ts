@@ -204,10 +204,10 @@ export const emailTools: Tool[] = [
           },
           "events": {
             type: "array",
+            description: "Events to subscribe to. Defaults to [\"message.received\"].",
             items: {
               type: "string",
             },
-            description: "Events to subscribe to. Defaults to [\"message.received\"].",
           },
         },
         required: ["id","url"],

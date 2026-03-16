@@ -49,29 +49,24 @@ components:
               description: Human-readable error message.
     CreateCollectionRequest:
       type: object
-      required:
-        - name
       properties:
         name:
           type: string
           description: Collection name. Unique per wallet.
         distance:
+          description: Distance metric for similarity search. Default "Cosine".
           type: string
           enum:
             - Cosine
             - Euclid
             - Dot
-          description: Distance metric for similarity search. Default "Cosine".
         dimension:
-          type: number
           description: Vector dimension. Must match the embedding model used. Default 1536.
+          type: number
+      required:
+        - name
     GetCacheResponse:
       type: object
-      required:
-        - namespace
-        - key
-        - value
-        - expires_at
       properties:
         namespace:
           type: string
@@ -80,23 +75,19 @@ components:
           type: string
           description: Cache key.
         value:
-          type: string
           description: Stored value.
         expires_at:
-          type:
-            - string
-            - "null"
+          anyOf:
+            - type: string
+            - type: "null"
           description: ISO string expiry time, or null if permanent.
+      required:
+        - namespace
+        - key
+        - value
+        - expires_at
     GetCollectionResponse:
       type: object
-      required:
-        - id
-        - name
-        - owner_wallet
-        - dimension
-        - distance
-        - document_count
-        - created_at
       properties:
         id:
           type: string
@@ -114,20 +105,23 @@ components:
           type: string
           description: 'Distance metric: "Cosine" | "Euclid" | "Dot".'
         document_count:
-          type:
-            - number
-            - "null"
+          anyOf:
+            - type: number
+            - type: "null"
           description: Live Qdrant points_count — null in list responses to avoid N+1 calls.
         created_at:
           type: string
           description: ISO 8601 timestamp when the collection was created.
-    QueryMatch:
-      type: object
       required:
         - id
-        - score
-        - text
-        - metadata
+        - name
+        - owner_wallet
+        - dimension
+        - distance
+        - document_count
+        - created_at
+    QueryMatch:
+      type: object
       properties:
         id:
           type: string
@@ -139,74 +133,78 @@ components:
           type: string
           description: Original document text.
         metadata:
-          type: string
+          type: object
+          propertyNames:
+            type: string
           description: Document metadata.
+      required:
+        - id
+        - score
+        - text
+        - metadata
     QueryRequest:
       type: object
-      required:
-        - text
       properties:
         text:
           type: string
           description: Query text to embed and search against.
         top_k:
-          type: number
           description: Number of nearest neighbors to return. Default 10.
+          type: number
         filter:
-          type: string
           description: Qdrant-native filter passthrough.
+      required:
+        - text
     QueryResponse:
       type: object
-      required:
-        - matches
       properties:
         matches:
           type: array
           items:
             $ref: "#/components/schemas/QueryMatch"
           description: Nearest neighbor matches, ordered by descending score.
+      required:
+        - matches
     SetCacheRequest:
       type: object
-      required:
-        - value
       properties:
         value:
-          type: string
           description: Value to store. Any JSON-serializable value.
         ttl:
-          type:
-            - number
-            - "null"
           description: TTL in seconds. Omit or null for permanent.
+          anyOf:
+            - type: number
+            - type: "null"
+      required:
+        - value
     UpsertDocument:
       type: object
-      required:
-        - text
       properties:
         id:
-          type: string
           description: Must be UUID v4 if provided; omit to auto-generate.
+          type: string
         text:
           type: string
           description: Document text to embed and store.
         metadata:
-          type: string
           description: Arbitrary JSON metadata to store alongside the vector.
+          type: object
+          propertyNames:
+            type: string
+      required:
+        - text
     UpsertRequest:
       type: object
-      required:
-        - documents
       properties:
         documents:
           type: array
           items:
             $ref: "#/components/schemas/UpsertDocument"
           description: Documents to upsert. Existing IDs are overwritten.
+      required:
+        - documents
     UpsertResponse:
       type: object
-      required:
-        - upserted
-        - ids
       properties:
         upserted:
           type: number
@@ -216,6 +214,9 @@ components:
           items:
             type: string
           description: IDs of upserted documents (auto-generated UUIDs if not provided).
+      required:
+        - upserted
+        - ids
 paths:
   /:
     get:

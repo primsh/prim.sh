@@ -167,17 +167,17 @@ Path params:
   id  string  required  id parameter
 
 Response (200):
-  id            string        Prim server ID (e.g. "srv_abc123").
-  provider      string        Cloud provider (e.g. "digitalocean").
-  provider_id   string        Provider-assigned server ID.
-  name          string        Server name (label).
-  type          string        Server type slug (e.g. "small").
-  status        ServerStatus  Current server lifecycle status.
-  image         string        OS image slug (e.g. "ubuntu-24.04").
-  location      string        Data center slug (e.g. "nyc3").
-  public_net    PublicNet     Public IP addresses.
-  owner_wallet  string        Ethereum address of the server owner.
-  created_at    string        ISO 8601 timestamp when the server was created.
+  id            string                                                                                      Prim server ID (e.g. "srv_abc123").
+  provider      string                                                                                      Cloud provider (e.g. "digitalocean").
+  provider_id   string                                                                                      Provider-assigned server ID.
+  name          string                                                                                      Server name (label).
+  type          string                                                                                      Server type slug (e.g. "small").
+  status        "initializing" | "running" | "off" | "rebuilding" | "migrating" | "destroying" | "deleted"  Current server lifecycle status.
+  image         string                                                                                      OS image slug (e.g. "ubuntu-24.04").
+  location      string                                                                                      Data center slug (e.g. "nyc3").
+  public_net    PublicNet                                                                                   Public IP addresses.
+  owner_wallet  string                                                                                      Ethereum address of the server owner.
+  created_at    string                                                                                      ISO 8601 timestamp when the server was created.
 
 Errors:
   402  payment_required  x402 payment needed

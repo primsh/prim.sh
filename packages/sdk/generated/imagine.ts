@@ -7,19 +7,26 @@ import { unwrap } from "../src/shared.js";
 
 // ── Types ──────────────────────────────────────────────────────────────────
 
-export type DescribeRequest = Record<string, unknown>;
+export interface DescribeRequest {
+}
 
-export type DescribeResponse = Record<string, unknown>;
+export interface DescribeResponse {
+}
 
-export type GenerateRequest = Record<string, unknown>;
+export interface GenerateRequest {
+}
 
-export type GenerateResponse = Record<string, unknown>;
+export interface GenerateResponse {
+}
 
-export type ListModelsResponse = Record<string, unknown>;
+export interface ListModelsResponse {
+}
 
-export type UpscaleRequest = Record<string, unknown>;
+export interface UpscaleRequest {
+}
 
-export type UpscaleResponse = Record<string, unknown>;
+export interface UpscaleResponse {
+}
 
 // ── Client ─────────────────────────────────────────────────────────────────
 

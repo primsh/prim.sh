@@ -137,7 +137,6 @@
             "description": "Number of nearest neighbors to return. Default 10."
           },
           "filter": {
-            "type": "string",
             "description": "Qdrant-native filter passthrough."
           }
         },
@@ -165,11 +164,9 @@
             "description": "key parameter"
           },
           "value": {
-            "type": "string",
             "description": "Value to store. Any JSON-serializable value."
           },
           "ttl": {
-            "type": "number",
             "description": "TTL in seconds. Omit or null for permanent."
           }
         },

@@ -13,7 +13,7 @@
 
 import { existsSync, readFileSync, writeFileSync } from "node:fs";
 import { join, resolve } from "node:path";
-import { parseApiFile } from "./lib/parse-api.js";
+import { extractApiFromSchemas } from "./lib/extract-schemas.js";
 import { loadPrimitives, withPackage } from "./lib/primitives.js";
 import { parseRoutePrices } from "./lib/render-llms-txt.js";
 import { renderReadme } from "./lib/render-readme.js";
@@ -151,7 +151,7 @@ for (const p of packaged) {
   const indexPath = join(pkgDir, "src/index.ts");
   const readmePath = join(pkgDir, "README.md");
 
-  const api = existsSync(apiPath) ? parseApiFile(apiPath) : null;
+  const api = existsSync(apiPath) ? await extractApiFromSchemas(apiPath) : null;
   const prices = existsSync(indexPath) ? parseRoutePrices(indexPath) : new Map<string, string>();
 
   const content = renderReadme(p, api, prices);

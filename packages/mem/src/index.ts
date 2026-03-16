@@ -11,14 +11,16 @@ import {
 } from "@primsh/x402-middleware";
 import type { ApiError, PaginatedList } from "@primsh/x402-middleware";
 import { createPrimApp } from "@primsh/x402-middleware/create-prim-app";
+import {
+  CreateCollectionRequestSchema,
+  QueryRequestSchema,
+  SetCacheRequestSchema,
+  UpsertRequestSchema,
+} from "./api.ts";
 import type {
   GetCollectionResponse,
-  CreateCollectionRequest,
   GetCacheResponse,
-  QueryRequest,
   QueryResponse,
-  SetCacheRequest,
-  UpsertRequest,
   UpsertResponse,
 } from "./api.ts";
 import {
@@ -75,7 +77,7 @@ app.post("/v1/collections", async (c) => {
   if (callerOrRes instanceof Response) return callerOrRes;
   const caller = callerOrRes;
 
-  const bodyOrRes = await parseJsonBody<CreateCollectionRequest>(c, logger, "POST /v1/collections");
+  const bodyOrRes = await parseJsonBody(c, logger, "POST /v1/collections", CreateCollectionRequestSchema);
   if (bodyOrRes instanceof Response) return bodyOrRes;
   const body = bodyOrRes;
 
@@ -141,10 +143,11 @@ app.post("/v1/collections/:id/upsert", async (c) => {
   if (callerOrRes instanceof Response) return callerOrRes;
   const caller = callerOrRes;
 
-  const bodyOrRes = await parseJsonBody<UpsertRequest>(
+  const bodyOrRes = await parseJsonBody(
     c,
     logger,
     "POST /v1/collections/:id/upsert",
+    UpsertRequestSchema,
   );
   if (bodyOrRes instanceof Response) return bodyOrRes;
   const body = bodyOrRes;
@@ -165,7 +168,7 @@ app.post("/v1/collections/:id/query", async (c) => {
   if (callerOrRes instanceof Response) return callerOrRes;
   const caller = callerOrRes;
 
-  const bodyOrRes = await parseJsonBody<QueryRequest>(c, logger, "POST /v1/collections/:id/query");
+  const bodyOrRes = await parseJsonBody(c, logger, "POST /v1/collections/:id/query", QueryRequestSchema);
   if (bodyOrRes instanceof Response) return bodyOrRes;
   const body = bodyOrRes;
 
@@ -187,10 +190,11 @@ app.put("/v1/cache/:namespace/:key", async (c) => {
   if (callerOrRes instanceof Response) return callerOrRes;
   const caller = callerOrRes;
 
-  const bodyOrRes = await parseJsonBody<SetCacheRequest>(
+  const bodyOrRes = await parseJsonBody(
     c,
     logger,
     "PUT /v1/cache/:namespace/:key",
+    SetCacheRequestSchema,
   );
   if (bodyOrRes instanceof Response) return bodyOrRes;
   const body = bodyOrRes;

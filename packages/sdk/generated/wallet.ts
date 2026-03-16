@@ -11,7 +11,7 @@ export interface ApproveFundRequestResponse {
   /** Fund request ID. */
   id: string;
   /** Always "approved" on success. */
-  status: "approved";
+  status: string;
   /** Send USDC to this address to fulfill the request. */
   funding_address: string;
   /** Approved USDC amount as a decimal string. */
@@ -47,7 +47,7 @@ export interface DenyFundRequestResponse {
   /** Fund request ID. */
   id: string;
   /** Always "denied" on success. */
-  status: "denied";
+  status: string;
   /** Denial reason if provided, null otherwise. */
   reason: string | null;
   /** ISO 8601 timestamp when the request was denied. */
@@ -64,7 +64,7 @@ export interface GetFundRequestResponse {
   /** Reason provided by the requester. */
   reason: string;
   /** Current status of the fund request. */
-  status: string;
+  status: "pending" | "approved" | "denied";
   /** ISO 8601 timestamp when the request was created. */
   created_at: string;
 }
@@ -77,7 +77,7 @@ export interface GetPolicyResponse {
   /** Max USDC per day, null = no limit. */
   max_per_day: string | null;
   /** Allowed primitive hostnames (e.g. ["store.prim.sh"]), null = all allowed. */
-  allowed_primitives: unknown | null;
+  allowed_primitives: string[] | null;
   /** USDC spent today as a decimal string. */
   daily_spent: string;
   /** ISO 8601 timestamp when the daily counter resets. */
@@ -107,7 +107,7 @@ export interface GetWalletResponse {
 
 export interface PauseWalletRequest {
   /** Scope to pause. "all" | "send" | "swap". Default "all". */
-  scope?: string;
+  scope?: "all" | "send" | "swap";
 }
 
 export interface PauseWalletResponse {
@@ -116,7 +116,7 @@ export interface PauseWalletResponse {
   /** Always true on success. */
   paused: boolean;
   /** Scope that was paused. */
-  scope: string;
+  scope: "all" | "send" | "swap";
   /** ISO 8601 timestamp when the wallet was paused. */
   paused_at: string;
 }
@@ -149,7 +149,7 @@ export interface RegisterWalletResponse {
 
 export interface ResumeWalletRequest {
   /** Scope to resume. "all" | "send" | "swap". Default "all". */
-  scope?: string;
+  scope?: "all" | "send" | "swap";
 }
 
 export interface ResumeWalletResponse {
@@ -158,7 +158,7 @@ export interface ResumeWalletResponse {
   /** Always false on success (wallet is unpaused). */
   paused: boolean;
   /** Scope that was resumed. */
-  scope: string;
+  scope: "all" | "send" | "swap";
   /** ISO 8601 timestamp when the wallet was resumed. */
   resumed_at: string;
 }
@@ -180,7 +180,7 @@ export interface UpdatePolicyRequest {
   /** Max USDC per day. Pass null to remove the limit. */
   maxPerDay?: string | null;
   /** Allowed primitive hostnames. Pass null to allow all. */
-  allowedPrimitives?: unknown | null;
+  allowedPrimitives?: string[] | null;
 }
 
 export interface ListWalletsParams {

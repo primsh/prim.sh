@@ -73,7 +73,7 @@ Part of [prim.sh](https://prim.sh) — zero signup, one payment token, infinite 
 | `domain` | `string` | Domain name. |
 | `purchased` | `true` | Always true — only returned for registered domains. |
 | `zone_id` | `string | null` | Cloudflare zone ID. Null if zone not yet created. |
-| `zone_status` | `ZoneStatus | null` | Current zone status. Null if zone not yet created. |
+| `zone_status` | `"pending" | "active" | "moved" | null` | Current zone status. Null if zone not yet created. |
 | `ns_configured_at_registrar` | `boolean` | Whether nameservers are configured at the registrar. |
 | `ns_propagated` | `boolean` | Whether nameservers have propagated in DNS. |
 | `ns_expected` | `string[]` | Expected Cloudflare nameservers. |
@@ -100,7 +100,7 @@ Part of [prim.sh](https://prim.sh) — zero signup, one payment token, infinite 
 |-------|------|-------------|
 | `id` | `string` | Cloudflare zone ID. |
 | `domain` | `string` | Domain name (e.g. "example.com"). |
-| `status` | `ZoneStatus` | Zone status: "pending" | "active" | "moved". |
+| `status` | `"pending" | "active" | "moved"` | Zone status: "pending" | "active" | "moved". |
 | `name_servers` | `string[]` | Cloudflare nameservers to delegate to. |
 | `owner_wallet` | `string` | Ethereum address of the zone owner. |
 | `created_at` | `string` | ISO 8601 timestamp when the zone was created. |
@@ -110,7 +110,7 @@ Part of [prim.sh](https://prim.sh) — zero signup, one payment token, infinite 
 | Field | Type | Description |
 |-------|------|-------------|
 | `zone_id` | `string` | Cloudflare zone ID. |
-| `status` | `ZoneStatus` | Updated zone status. |
+| `status` | `"pending" | "active" | "moved"` | Updated zone status. |
 | `activation_requested` | `true` | Always true — activation was requested from Cloudflare. |
 
 ### `VerifyDomainResponse`
@@ -121,7 +121,7 @@ Part of [prim.sh](https://prim.sh) — zero signup, one payment token, infinite 
 | `nameservers` | `NsVerifyResult` | Nameserver propagation result. |
 | `records` | `RecordVerifyResult[]` | Per-record propagation results. |
 | `all_propagated` | `boolean` | Whether all records and nameservers have propagated. |
-| `zone_status` | `ZoneStatus | null` | Current Cloudflare zone status. Null if zone not found. |
+| `zone_status` | `"pending" | "active" | "moved" | null` | Current Cloudflare zone status. Null if zone not found. |
 
 ### `SetupMailRequest`
 
@@ -151,13 +151,13 @@ Part of [prim.sh](https://prim.sh) — zero signup, one payment token, infinite 
 |-------|------|-------------|
 | `created` | `GetRecordResponse[]` | Successfully created records. |
 | `updated` | `GetRecordResponse[]` | Successfully updated records. |
-| `deleted` | `object` | IDs of deleted records. |
+| `deleted` | `object[]` | IDs of deleted records. |
 
 ### `CreateRecordRequest`
 
 | Field | Type | Required |
 |-------|------|----------|
-| `type` | `RecordType` | required |
+| `type` | `"A" | "AAAA" | "CNAME" | "MX" | "TXT" | "SRV" | "CAA" | "NS"` | required |
 | `name` | `string` | required |
 | `content` | `string` | required |
 | `ttl` | `number` | optional |
@@ -170,7 +170,7 @@ Part of [prim.sh](https://prim.sh) — zero signup, one payment token, infinite 
 |-------|------|-------------|
 | `id` | `string` | DNS record ID. |
 | `zone_id` | `string` | Zone ID this record belongs to. |
-| `type` | `RecordType` | DNS record type. |
+| `type` | `"A" | "AAAA" | "CNAME" | "MX" | "TXT" | "SRV" | "CAA" | "NS"` | DNS record type. |
 | `name` | `string` | DNS record name (hostname, relative to zone). |
 | `content` | `string` | DNS record value. |
 | `ttl` | `number` | TTL in seconds. |
@@ -183,7 +183,7 @@ Part of [prim.sh](https://prim.sh) — zero signup, one payment token, infinite 
 
 | Field | Type | Required |
 |-------|------|----------|
-| `type` | `RecordType` | optional |
+| `type` | `"A" | "AAAA" | "CNAME" | "MX" | "TXT" | "SRV" | "CAA" | "NS"` | optional |
 | `name` | `string` | optional |
 | `content` | `string` | optional |
 | `ttl` | `number` | optional |

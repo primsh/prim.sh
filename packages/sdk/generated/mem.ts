@@ -22,7 +22,7 @@ export interface GetCacheResponse {
   /** Cache key. */
   key: string;
   /** Stored value. */
-  value: string;
+  value: unknown;
   /** ISO string expiry time, or null if permanent. */
   expires_at: string | null;
 }
@@ -52,7 +52,7 @@ export interface QueryMatch {
   /** Original document text. */
   text: string;
   /** Document metadata. */
-  metadata: string;
+  metadata: Record<string, unknown>;
 }
 
 export interface QueryRequest {
@@ -61,7 +61,7 @@ export interface QueryRequest {
   /** Number of nearest neighbors to return. Default 10. */
   top_k?: number;
   /** Qdrant-native filter passthrough. */
-  filter?: string;
+  filter?: unknown;
 }
 
 export interface QueryResponse {
@@ -71,7 +71,7 @@ export interface QueryResponse {
 
 export interface SetCacheRequest {
   /** Value to store. Any JSON-serializable value. */
-  value: string;
+  value: unknown;
   /** TTL in seconds. Omit or null for permanent. */
   ttl?: number | null;
 }
@@ -82,7 +82,7 @@ export interface UpsertDocument {
   /** Document text to embed and store. */
   text: string;
   /** Arbitrary JSON metadata to store alongside the vector. */
-  metadata?: string;
+  metadata?: Record<string, unknown>;
 }
 
 export interface UpsertRequest {

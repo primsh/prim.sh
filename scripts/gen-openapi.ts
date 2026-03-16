@@ -15,7 +15,7 @@
 
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
-import { parseApiFile } from "./lib/parse-api.js";
+import { extractSchemas } from "./lib/extract-schemas.js";
 import { loadPrimitives, specPath, withPackage } from "./lib/primitives.js";
 import { parseRoutePrices } from "./lib/render-llms-txt.js";
 import { renderOpenApi } from "./lib/render-openapi.js";
@@ -89,10 +89,10 @@ for (const p of eligible) {
   const indexPath = join(ROOT, "packages", p.id, "src/index.ts");
   const outPath = specPath(p.id);
 
-  const api = parseApiFile(apiPath);
+  const { api, jsonSchemas } = await extractSchemas(apiPath);
   const prices = existsSync(indexPath) ? parseRoutePrices(indexPath) : new Map<string, string>();
 
-  const specYaml = renderOpenApi(p, api, prices);
+  const specYaml = renderOpenApi(p, api, prices, jsonSchemas);
   const header = `${GENERATED_MARKER}\n# THIS FILE IS GENERATED — DO NOT EDIT\n# Source: packages/${p.id}/prim.yaml + packages/${p.id}/src/api.ts\n# Regenerate: pnpm gen:openapi\n\n`;
   applyFullFile(outPath, header + specYaml);
 }

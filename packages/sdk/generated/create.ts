@@ -9,7 +9,7 @@ import { unwrap } from "../src/shared.js";
 
 export interface GetSchemaResponse {
   /** JSON Schema for prim.yaml */
-  schema: string;
+  schema: Record<string, unknown>;
 }
 
 export interface ListPortsResponse {

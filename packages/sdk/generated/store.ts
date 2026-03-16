@@ -43,7 +43,7 @@ export interface CreatePresignResponse {
 
 export interface DeleteObjectResponse {
   /** Always "deleted" on success. */
-  status: "deleted";
+  status: string;
 }
 
 export interface GetBucketResponse {

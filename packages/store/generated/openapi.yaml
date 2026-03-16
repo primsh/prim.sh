@@ -49,34 +49,34 @@ components:
               description: Human-readable error message.
     CreateBucketRequest:
       type: object
-      required:
-        - name
       properties:
         name:
           type: string
+          minLength: 3
+          maxLength: 63
           description: Bucket name. Unique per wallet. 3-63 chars, alphanumeric + hyphens.
         location:
-          type: string
           description: Storage region (e.g. "us-east-1"). Defaults to primary region.
+          type: string
         is_public:
-          type: boolean
           description: Whether the bucket should be publicly readable. Defaults to false.
+          type: boolean
+      required:
+        - name
     CreateBucketResponse:
       type: object
-      required:
-        - bucket
       properties:
         bucket:
-          $ref: "#/components/schemas/GetBucketResponse"
           description: The created bucket.
+          $ref: "#/components/schemas/GetBucketResponse"
+      required:
+        - bucket
     CreatePresignRequest:
       type: object
-      required:
-        - key
-        - method
       properties:
         key:
           type: string
+          minLength: 1
           description: Object key to presign.
         method:
           type: string
@@ -85,15 +85,15 @@ components:
             - PUT
           description: 'HTTP method: "GET" for download, "PUT" for upload.'
         expires_in:
-          type: number
           description: URL lifetime in seconds (60–86400). Defaults to 3600.
+          type: number
+          minimum: 60
+          maximum: 86400
+      required:
+        - key
+        - method
     CreatePresignResponse:
       type: object
-      required:
-        - url
-        - method
-        - key
-        - expires_at
       properties:
         url:
           type: string
@@ -110,18 +110,54 @@ components:
         expires_at:
           type: string
           description: ISO 8601 timestamp when the URL expires.
+      required:
+        - url
+        - method
+        - key
+        - expires_at
     DeleteObjectResponse:
       type: object
-      required:
-        - status
       properties:
         status:
           type: string
-          enum:
-            - deleted
+          const: deleted
           description: Always "deleted" on success.
+      required:
+        - status
     GetBucketResponse:
       type: object
+      properties:
+        id:
+          type: string
+          description: Bucket ID (UUID).
+        name:
+          type: string
+          description: Bucket name. Unique per wallet. Alphanumeric, hyphens, underscores.
+        location:
+          anyOf:
+            - type: string
+            - type: "null"
+          description: Storage region (e.g. "us-east-1"). Null = default region.
+        owner_wallet:
+          type: string
+          description: Ethereum address of the bucket owner.
+        quota_bytes:
+          anyOf:
+            - type: number
+            - type: "null"
+          description: Per-bucket quota in bytes. Null = default (100 MB).
+        usage_bytes:
+          type: number
+          description: Current storage usage in bytes.
+        is_public:
+          type: boolean
+          description: Whether the bucket is publicly readable.
+        public_url:
+          description: Stable public URL prefix for this bucket. Only present when is_public is true.
+          type: string
+        created_at:
+          type: string
+          description: ISO 8601 timestamp when the bucket was created.
       required:
         - id
         - name
@@ -131,68 +167,32 @@ components:
         - usage_bytes
         - is_public
         - created_at
-      properties:
-        id:
-          type: string
-          description: Bucket ID (UUID).
-        name:
-          type: string
-          description: Bucket name. Unique per wallet. Alphanumeric, hyphens, underscores.
-        location:
-          type:
-            - string
-            - "null"
-          description: Storage region (e.g. "us-east-1"). Null = default region.
-        owner_wallet:
-          type: string
-          description: Ethereum address of the bucket owner.
-        quota_bytes:
-          type:
-            - number
-            - "null"
-          description: Per-bucket quota in bytes. Null = default (100 MB).
-        usage_bytes:
-          type: number
-          description: Current storage usage in bytes.
-        is_public:
-          type: boolean
-          description: Whether the bucket is publicly readable.
-        public_url:
-          type: string
-          description: Stable public URL prefix for this bucket. Only present when is_public is true.
-        created_at:
-          type: string
-          description: ISO 8601 timestamp when the bucket was created.
     GetQuotaResponse:
       type: object
-      required:
-        - bucket_id
-        - quota_bytes
-        - usage_bytes
-        - usage_pct
       properties:
         bucket_id:
           type: string
           description: Bucket ID.
         quota_bytes:
-          type:
-            - number
-            - "null"
+          anyOf:
+            - type: number
+            - type: "null"
           description: Per-bucket quota in bytes. Null = default (100 MB).
         usage_bytes:
           type: number
           description: Current storage usage in bytes.
         usage_pct:
-          type:
-            - number
-            - "null"
+          anyOf:
+            - type: number
+            - type: "null"
           description: Usage as a percentage (0-100). Null if quota_bytes is null.
+      required:
+        - bucket_id
+        - quota_bytes
+        - usage_bytes
+        - usage_pct
     PutObjectResponse:
       type: object
-      required:
-        - key
-        - size
-        - etag
       properties:
         key:
           type: string
@@ -204,15 +204,14 @@ components:
           type: string
           description: ETag (MD5 hash).
         public_url:
-          type: string
           description: Stable public URL for this object. Only present when bucket is public.
+          type: string
+      required:
+        - key
+        - size
+        - etag
     ReconcileStorageResponse:
       type: object
-      required:
-        - bucket_id
-        - previous_bytes
-        - actual_bytes
-        - delta_bytes
       properties:
         bucket_id:
           type: string
@@ -226,16 +225,21 @@ components:
         delta_bytes:
           type: number
           description: Difference (actual - previous). Negative means recorded was overstated.
+      required:
+        - bucket_id
+        - previous_bytes
+        - actual_bytes
+        - delta_bytes
     SetQuotaRequest:
       type: object
-      required:
-        - quota_bytes
       properties:
         quota_bytes:
-          type:
-            - number
-            - "null"
+          anyOf:
+            - type: number
+            - type: "null"
           description: New quota in bytes. Pass null to reset to default (100 MB).
+      required:
+        - quota_bytes
 paths:
   /:
     get:

@@ -8,13 +8,28 @@
       "id": "discovery",
       "name": "Discovery & Health",
       "prompt": "Read https://prim.sh/llms.txt to learn about the prim.sh platform. Then check the health of each live service by making a GET request to the root URL of each one listed. Report which services are up and their response bodies.",
-      "tests": ["H-1", "H-2", "H-3", "H-4", "H-5", "H-6"]
+      "tests": [
+        "H-1",
+        "H-2",
+        "H-3",
+        "H-4",
+        "H-5",
+        "H-6"
+      ]
     },
     {
       "id": "onboarding",
       "name": "Wallet Registration & Funding",
       "prompt": "Follow the Getting Started steps in https://prim.sh/llms.txt. Generate a new wallet, register it with wallet.prim.sh using an EIP-191 signature, then request test USDC and test ETH from faucet.prim.sh. After funding, check your rate limit status and retrieve your wallet details and spending policy. Report your wallet address, balances received, and policy limits.",
-      "tests": ["W-1", "W-2", "W-3", "W-4", "F-1", "F-2", "F-3"]
+      "tests": [
+        "W-1",
+        "W-2",
+        "W-3",
+        "W-4",
+        "F-1",
+        "F-2",
+        "F-3"
+      ]
     },
     {
       "id": "store",
@@ -31,14 +46,19 @@
         "ST-8",
         "ST-9",
         "ST-10",
-        "ST-11"
+        "ST-11",
+        "ST-12"
       ]
     },
     {
       "id": "search",
       "name": "Web Search (search.sh)",
       "prompt": "Using your funded wallet, test all three search capabilities on search.prim.sh: (1) Run a web search for 'TypeScript programming language' with max_results=3, (2) run a news search for 'artificial intelligence' with max_results=3, (3) extract the content of https://www.typescriptlang.org in markdown format. Report the number of results, titles, and content length for each.",
-      "tests": ["SE-1", "SE-2", "SE-3"]
+      "tests": [
+        "SE-1",
+        "SE-2",
+        "SE-3"
+      ]
     },
     {
       "id": "email",
@@ -86,13 +106,28 @@
       "id": "infer",
       "name": "LLM Inference (infer.sh)",
       "prompt": "Using your funded wallet, test the infer.sh LLM inference service on infer.prim.sh: (1) Check the health endpoint, (2) attempt a chat completion to confirm x402 gating, then pay and verify a valid ChatResponse, (3) attempt an embeddings call to confirm x402 gating, then pay and verify a valid EmbedResponse, (4) attempt to list models to confirm x402 gating, then pay and verify a valid models list. Report each step's result including response shapes and status codes.",
-      "tests": ["INF-H1", "INF-T1", "INF-T2", "INF-T3"]
+      "tests": [
+        "INF-H1",
+        "INF-T1",
+        "INF-T2",
+        "INF-T3"
+      ]
     },
     {
       "id": "wallet",
       "name": "wallet (wallet.sh)",
       "prompt": "Test all wallet.sh endpoints on wallet.prim.sh.",
-      "tests": ["W-5", "W-6", "W-7", "W-8", "W-9", "W-10", "W-11", "W-12", "W-13"]
+      "tests": [
+        "W-5",
+        "W-6",
+        "W-7",
+        "W-8",
+        "W-9",
+        "W-10",
+        "W-11",
+        "W-12",
+        "W-13"
+      ]
     },
     {
       "id": "onboarding_e2e",
@@ -103,6 +138,34 @@
       "cleanup": "onboarding_e2e",
       "prompt": "Run these two commands:\n\ncurl -fsSL prim.sh/install.sh | sh\nexport PATH=\"$HOME/.prim/bin:$PATH\"\nprim skill onboard --code {{invite_code}}\n\nFollow every step the onboard skill outputs. Report what passed and what failed.",
       "tests": []
+    },
+    {
+      "id": "faucet",
+      "name": "faucet (faucet.sh)",
+      "prompt": "Test all faucet.sh endpoints on faucet.prim.sh.",
+      "tests": [
+        "FC-1",
+        "FC-2"
+      ]
+    },
+    {
+      "id": "gate",
+      "name": "gate (gate.sh)",
+      "prompt": "Test all gate.sh endpoints on gate.prim.sh.",
+      "tests": [
+        "GATE-H1",
+        "GATE-1"
+      ]
+    },
+    {
+      "id": "feedback",
+      "name": "feedback (feedback.sh)",
+      "prompt": "Test all feedback.sh endpoints on feedback.prim.sh.",
+      "tests": [
+        "FEEDBACK-H1",
+        "FEEDBACK-1",
+        "FEEDBACK-2"
+      ]
     }
   ],
   "tests": [
@@ -270,7 +333,9 @@
           "address": "{{agent_address}}"
         }
       },
-      "depends_on": ["H-1"],
+      "depends_on": [
+        "H-1"
+      ],
       "captures": {},
       "notes": "EIP-191 signature of 'Register {address} with prim.sh at {timestamp}'. 409 = already registered, counts as pass.",
       "actual_status": 409,
@@ -292,7 +357,9 @@
           "status": "active"
         }
       },
-      "depends_on": ["W-1"],
+      "depends_on": [
+        "W-1"
+      ],
       "captures": {},
       "notes": "x402 paid ($0.001).",
       "actual_status": 402,
@@ -314,7 +381,9 @@
           "daily_limit": "string"
         }
       },
-      "depends_on": ["W-1"],
+      "depends_on": [
+        "W-1"
+      ],
       "captures": {},
       "notes": "x402 paid.",
       "actual_status": 402,
@@ -335,7 +404,9 @@
           "service": "wallet.prim.sh"
         }
       },
-      "depends_on": ["H-1"],
+      "depends_on": [
+        "H-1"
+      ],
       "captures": {},
       "notes": "Free route.",
       "actual_status": 200,
@@ -359,7 +430,9 @@
           "tx_hash": "string"
         }
       },
-      "depends_on": ["W-1"],
+      "depends_on": [
+        "W-1"
+      ],
       "captures": {},
       "notes": "Free, rate-limited (2h). 429 = rate limited, counts as pass. Wallet must be in allowlist.",
       "actual_status": 200,
@@ -387,7 +460,9 @@
           "tx_hash": "string"
         }
       },
-      "depends_on": ["W-1"],
+      "depends_on": [
+        "W-1"
+      ],
       "captures": {},
       "notes": "Free, rate-limited (1h). 429 = rate limited, counts as pass.",
       "actual_status": 502,
@@ -419,7 +494,9 @@
           }
         }
       },
-      "depends_on": ["H-3"],
+      "depends_on": [
+        "H-3"
+      ],
       "captures": {},
       "notes": "Free.",
       "actual_status": 200,
@@ -454,7 +531,9 @@
           }
         }
       },
-      "depends_on": ["F-1"],
+      "depends_on": [
+        "F-1"
+      ],
       "captures": {
         "bucket_id": "$.bucket.id"
       },
@@ -476,7 +555,9 @@
           "buckets": "array"
         }
       },
-      "depends_on": ["ST-1"],
+      "depends_on": [
+        "ST-1"
+      ],
       "captures": {},
       "notes": "x402 paid ($0.001). Should include the bucket just created.",
       "actual_status": 200,
@@ -493,7 +574,9 @@
       "expected": {
         "status": 200
       },
-      "depends_on": ["ST-1"],
+      "depends_on": [
+        "ST-1"
+      ],
       "captures": {},
       "notes": "x402 paid ($0.001). Content-Type: text/plain. Raw string body.",
       "actual_status": 200,
@@ -511,7 +594,9 @@
         "status": 200,
         "body_equals": "hello from {{runner}}"
       },
-      "depends_on": ["ST-3"],
+      "depends_on": [
+        "ST-3"
+      ],
       "captures": {},
       "notes": "x402 paid ($0.001). Exact body match.",
       "actual_status": 200,
@@ -531,7 +616,9 @@
           "objects": "array"
         }
       },
-      "depends_on": ["ST-3"],
+      "depends_on": [
+        "ST-3"
+      ],
       "captures": {},
       "notes": "x402 paid ($0.001). Should include hello.txt.",
       "actual_status": 200,
@@ -552,7 +639,9 @@
           "usage_bytes": "number"
         }
       },
-      "depends_on": ["ST-3"],
+      "depends_on": [
+        "ST-3"
+      ],
       "captures": {},
       "notes": "x402 paid ($0.001).",
       "actual_status": 200,
@@ -573,7 +662,9 @@
       "expected": {
         "status": 200
       },
-      "depends_on": ["ST-4"],
+      "depends_on": [
+        "ST-4"
+      ],
       "captures": {},
       "notes": "x402 paid ($0.001).",
       "actual_status": 200,
@@ -592,7 +683,9 @@
       "expected": {
         "status": 200
       },
-      "depends_on": ["ST-7"],
+      "depends_on": [
+        "ST-7"
+      ],
       "captures": {},
       "notes": "x402 paid ($0.01). Bucket must be empty.",
       "actual_status": 200,
@@ -617,7 +710,9 @@
           "results": "array (non-empty)"
         }
       },
-      "depends_on": ["F-1"],
+      "depends_on": [
+        "F-1"
+      ],
       "captures": {},
       "notes": "x402 paid ($0.01).",
       "actual_status": 200,
@@ -640,7 +735,9 @@
           "results": "array (non-empty)"
         }
       },
-      "depends_on": ["F-1"],
+      "depends_on": [
+        "F-1"
+      ],
       "captures": {},
       "notes": "x402 paid ($0.01).",
       "actual_status": 200,
@@ -668,7 +765,9 @@
           ]
         }
       },
-      "depends_on": ["F-1"],
+      "depends_on": [
+        "F-1"
+      ],
       "captures": {},
       "notes": "x402 paid ($0.005).",
       "actual_status": 200,
@@ -689,7 +788,9 @@
           "address": "string"
         }
       },
-      "depends_on": ["F-1"],
+      "depends_on": [
+        "F-1"
+      ],
       "captures": {
         "mailbox_id": "$.id",
         "mailbox_address": "$.address"
@@ -714,7 +815,9 @@
           "total": "number >= 1"
         }
       },
-      "depends_on": ["E-1"],
+      "depends_on": [
+        "E-1"
+      ],
       "captures": {},
       "notes": "x402 paid ($0.001).",
       "actual_status": 200,
@@ -741,7 +844,9 @@
           "address": "string"
         }
       },
-      "depends_on": ["E-1"],
+      "depends_on": [
+        "E-1"
+      ],
       "captures": {},
       "notes": "x402 paid ($0.001).",
       "actual_status": null,
@@ -763,7 +868,9 @@
       "expected": {
         "status": 200
       },
-      "depends_on": ["E-1"],
+      "depends_on": [
+        "E-1"
+      ],
       "captures": {},
       "notes": "x402 paid ($0.01).",
       "actual_status": null,
@@ -785,7 +892,9 @@
           "total": "number >= 1"
         }
       },
-      "depends_on": ["E-4"],
+      "depends_on": [
+        "E-4"
+      ],
       "captures": {
         "message_id": "$.messages[0].id"
       },
@@ -808,7 +917,9 @@
           "subject": "Smoke test"
         }
       },
-      "depends_on": ["E-5"],
+      "depends_on": [
+        "E-5"
+      ],
       "captures": {},
       "notes": "x402 paid ($0.001).",
       "actual_status": null,
@@ -826,7 +937,9 @@
       "expected": {
         "status": 200
       },
-      "depends_on": ["E-6"],
+      "depends_on": [
+        "E-6"
+      ],
       "captures": {},
       "notes": "x402 paid ($0.01).",
       "actual_status": null,
@@ -850,7 +963,9 @@
           "id": "string"
         }
       },
-      "depends_on": ["F-1"],
+      "depends_on": [
+        "F-1"
+      ],
       "captures": {
         "ssh_key_id": "$.id"
       },
@@ -874,7 +989,9 @@
           "ssh_keys": "array"
         }
       },
-      "depends_on": ["SP-1"],
+      "depends_on": [
+        "SP-1"
+      ],
       "captures": {},
       "notes": "x402 paid ($0.001).",
       "actual_status": 200,
@@ -892,7 +1009,9 @@
         "type": "small",
         "image": "ubuntu-24.04",
         "location": "nyc3",
-        "ssh_keys": ["{{ssh_key_id}}"]
+        "ssh_keys": [
+          "{{ssh_key_id}}"
+        ]
       },
       "expected": {
         "status": 200,
@@ -902,7 +1021,9 @@
           }
         }
       },
-      "depends_on": ["SP-1"],
+      "depends_on": [
+        "SP-1"
+      ],
       "captures": {
         "server_id": "$.server.id"
       },
@@ -928,7 +1049,9 @@
           "status": "active"
         }
       },
-      "depends_on": ["SP-3"],
+      "depends_on": [
+        "SP-3"
+      ],
       "captures": {},
       "notes": "x402 paid ($0.001). Poll every 5s, max 120s.",
       "actual_status": 200,
@@ -949,7 +1072,9 @@
           "servers": "array"
         }
       },
-      "depends_on": ["SP-3"],
+      "depends_on": [
+        "SP-3"
+      ],
       "captures": {},
       "notes": "x402 paid ($0.001).",
       "actual_status": 200,
@@ -966,7 +1091,9 @@
       "expected": {
         "status": 200
       },
-      "depends_on": ["SP-4"],
+      "depends_on": [
+        "SP-4"
+      ],
       "captures": {},
       "notes": "x402 paid ($0.005). MUST run to avoid charges.",
       "actual_status": 200,
@@ -986,7 +1113,9 @@
       "expected": {
         "status": 200
       },
-      "depends_on": ["SP-6"],
+      "depends_on": [
+        "SP-6"
+      ],
       "captures": {},
       "notes": "x402 paid ($0.001).",
       "actual_status": 200,
@@ -1039,7 +1168,10 @@
           "choices": "array (non-empty)"
         }
       },
-      "depends_on": ["INF-H1", "F-1"],
+      "depends_on": [
+        "INF-H1",
+        "F-1"
+      ],
       "captures": {},
       "notes": "x402 paid ($0.01). Verify response has id, object='chat.completion', choices array with at least one choice containing message.content.",
       "actual_status": null,
@@ -1063,7 +1195,10 @@
           "data": "array (non-empty)"
         }
       },
-      "depends_on": ["INF-H1", "F-1"],
+      "depends_on": [
+        "INF-H1",
+        "F-1"
+      ],
       "captures": {},
       "notes": "x402 paid ($0.001). OpenRouter may not support embeddings — 502 with provider_error counts as soft_fail, not fail.",
       "actual_status": null,
@@ -1083,7 +1218,10 @@
           "data": "array (non-empty)"
         }
       },
-      "depends_on": ["INF-H1", "F-1"],
+      "depends_on": [
+        "INF-H1",
+        "F-1"
+      ],
       "captures": {},
       "notes": "x402 paid ($0.01). Verify data array contains model objects with id and pricing fields.",
       "actual_status": null,
@@ -1100,7 +1238,10 @@
       "expected": {
         "status": 200
       },
-      "depends_on": ["H-1", "F-1"],
+      "depends_on": [
+        "H-1",
+        "F-1"
+      ],
       "captures": {},
       "notes": "x402 paid. List registered wallets owned by the calling wallet",
       "actual_status": null,
@@ -1123,7 +1264,11 @@
           "deactivated_at": "string"
         }
       },
-      "depends_on": ["H-1", "F-1", "W-1"],
+      "depends_on": [
+        "H-1",
+        "F-1",
+        "W-1"
+      ],
       "captures": {},
       "skip": true,
       "notes": "SKIP: destructive — deactivates the test wallet, breaking subsequent runs. Needs isolated wallet.",
@@ -1153,7 +1298,11 @@
           "created_at": "string"
         }
       },
-      "depends_on": ["H-1", "F-1", "W-1"],
+      "depends_on": [
+        "H-1",
+        "F-1",
+        "W-1"
+      ],
       "captures": {},
       "notes": "x402 paid. Request USDC funding for a wallet. A human operator can approve or deny.",
       "actual_status": null,
@@ -1171,7 +1320,11 @@
       "expected": {
         "status": 200
       },
-      "depends_on": ["H-1", "F-1", "W-1"],
+      "depends_on": [
+        "H-1",
+        "F-1",
+        "W-1"
+      ],
       "captures": {},
       "notes": "x402 paid. List all fund requests for a wallet",
       "actual_status": null,
@@ -1197,7 +1350,10 @@
           "approved_at": "string"
         }
       },
-      "depends_on": ["H-1", "F-1"],
+      "depends_on": [
+        "H-1",
+        "F-1"
+      ],
       "captures": {},
       "notes": "x402 paid. Approve a pending fund request. Returns the address to send USDC to.",
       "actual_status": null,
@@ -1221,7 +1377,10 @@
           "denied_at": "string"
         }
       },
-      "depends_on": ["H-1", "F-1"],
+      "depends_on": [
+        "H-1",
+        "F-1"
+      ],
       "captures": {},
       "notes": "x402 paid. Deny a pending fund request",
       "actual_status": null,
@@ -1247,7 +1406,11 @@
           "daily_reset_at": "string"
         }
       },
-      "depends_on": ["H-1", "F-1", "W-1"],
+      "depends_on": [
+        "H-1",
+        "F-1",
+        "W-1"
+      ],
       "captures": {},
       "notes": "x402 paid. Update spending policy for a wallet. All fields optional. Pass null to remove a limit.",
       "actual_status": null,
@@ -1271,7 +1434,11 @@
           "paused_at": "string"
         }
       },
-      "depends_on": ["H-1", "F-1", "W-1"],
+      "depends_on": [
+        "H-1",
+        "F-1",
+        "W-1"
+      ],
       "captures": {},
       "notes": "x402 paid. Pause operations for a wallet. Temporarily halts spending without deactivating.",
       "actual_status": null,
@@ -1295,7 +1462,11 @@
           "resumed_at": "string"
         }
       },
-      "depends_on": ["H-1", "F-1", "W-1"],
+      "depends_on": [
+        "H-1",
+        "F-1",
+        "W-1"
+      ],
       "captures": {},
       "notes": "x402 paid. Resume operations for a paused wallet",
       "actual_status": null,
@@ -1322,7 +1493,11 @@
           }
         }
       },
-      "depends_on": ["H-4", "F-1", "SP-3"],
+      "depends_on": [
+        "H-4",
+        "F-1",
+        "SP-3"
+      ],
       "captures": {},
       "notes": "x402 paid. Start a stopped server",
       "actual_status": null,
@@ -1349,7 +1524,11 @@
           }
         }
       },
-      "depends_on": ["H-4", "F-1", "SP-3"],
+      "depends_on": [
+        "H-4",
+        "F-1",
+        "SP-3"
+      ],
       "captures": {},
       "notes": "x402 paid. Stop a running server (graceful shutdown)",
       "actual_status": null,
@@ -1376,7 +1555,11 @@
           }
         }
       },
-      "depends_on": ["H-4", "F-1", "SP-3"],
+      "depends_on": [
+        "H-4",
+        "F-1",
+        "SP-3"
+      ],
       "captures": {},
       "notes": "x402 paid. Reboot a running server",
       "actual_status": null,
@@ -1407,7 +1590,11 @@
           "deposit_delta": "string"
         }
       },
-      "depends_on": ["H-4", "F-1", "SP-3"],
+      "depends_on": [
+        "H-4",
+        "F-1",
+        "SP-3"
+      ],
       "captures": {},
       "notes": "x402 paid. Change server type (CPU/RAM). Server must be stopped first. Deposit adjusted.",
       "actual_status": null,
@@ -1437,7 +1624,11 @@
           "root_password": "string"
         }
       },
-      "depends_on": ["H-4", "F-1", "SP-3"],
+      "depends_on": [
+        "H-4",
+        "F-1",
+        "SP-3"
+      ],
       "captures": {},
       "notes": "x402 paid. Reinstall from a fresh OS image. All data on server is destroyed.",
       "actual_status": null,
@@ -1464,7 +1655,11 @@
           "created_at": "string"
         }
       },
-      "depends_on": ["H-2", "F-1", "ST-1"],
+      "depends_on": [
+        "H-2",
+        "F-1",
+        "ST-1"
+      ],
       "captures": {},
       "notes": "x402 paid. Get details for a single bucket. Caller must own the bucket.",
       "actual_status": null,
@@ -1490,7 +1685,11 @@
           "usage_pct": "number"
         }
       },
-      "depends_on": ["H-2", "F-1", "ST-1"],
+      "depends_on": [
+        "H-2",
+        "F-1",
+        "ST-1"
+      ],
       "captures": {},
       "notes": "x402 paid. Set the storage quota for a bucket. Pass null to reset to default (100 MB).",
       "actual_status": null,
@@ -1514,7 +1713,11 @@
           "delta_bytes": "number"
         }
       },
-      "depends_on": ["H-2", "F-1", "ST-1"],
+      "depends_on": [
+        "H-2",
+        "F-1",
+        "ST-1"
+      ],
       "captures": {},
       "notes": "x402 paid. Recompute bucket usage by scanning actual R2 storage. Use when usage_bytes appears incorrect.",
       "actual_status": null,
@@ -1541,7 +1744,11 @@
           "expires_at": "string"
         }
       },
-      "depends_on": ["H-6", "F-1", "E-1"],
+      "depends_on": [
+        "H-6",
+        "F-1",
+        "E-1"
+      ],
       "captures": {},
       "notes": "x402 paid. Extend mailbox TTL by ttl_ms milliseconds",
       "actual_status": null,
@@ -1568,7 +1775,11 @@
           "created_at": "string"
         }
       },
-      "depends_on": ["H-6", "F-1", "E-1"],
+      "depends_on": [
+        "H-6",
+        "F-1",
+        "E-1"
+      ],
       "captures": {},
       "notes": "x402 paid. Register a webhook URL for message.received events. Optional secret for HMAC signing.",
       "actual_status": null,
@@ -1586,7 +1797,11 @@
       "expected": {
         "status": 200
       },
-      "depends_on": ["H-6", "F-1", "E-1"],
+      "depends_on": [
+        "H-6",
+        "F-1",
+        "E-1"
+      ],
       "captures": {},
       "notes": "x402 paid. List webhooks for a mailbox",
       "actual_status": null,
@@ -1608,7 +1823,11 @@
           "deleted": "string"
         }
       },
-      "depends_on": ["H-6", "F-1", "E-1"],
+      "depends_on": [
+        "H-6",
+        "F-1",
+        "E-1"
+      ],
       "captures": {},
       "notes": "x402 paid. Delete a webhook",
       "actual_status": null,
@@ -1637,7 +1856,10 @@
           "required_records": "array (non-empty)"
         }
       },
-      "depends_on": ["H-6", "F-1"],
+      "depends_on": [
+        "H-6",
+        "F-1"
+      ],
       "captures": {
         "domain_id": "$.id"
       },
@@ -1657,7 +1879,10 @@
       "expected": {
         "status": 200
       },
-      "depends_on": ["H-6", "F-1"],
+      "depends_on": [
+        "H-6",
+        "F-1"
+      ],
       "captures": {},
       "notes": "x402 paid. List registered custom domains (paginated)",
       "actual_status": null,
@@ -1684,7 +1909,11 @@
           "required_records": "array (non-empty)"
         }
       },
-      "depends_on": ["H-6", "F-1", "E-12"],
+      "depends_on": [
+        "H-6",
+        "F-1",
+        "E-12"
+      ],
       "captures": {},
       "notes": "x402 paid. Get domain details and verification status",
       "actual_status": null,
@@ -1708,7 +1937,11 @@
           "verified_at": "string"
         }
       },
-      "depends_on": ["H-6", "F-1", "E-12"],
+      "depends_on": [
+        "H-6",
+        "F-1",
+        "E-12"
+      ],
       "captures": {},
       "notes": "x402 paid. Verify DNS records. On success: status → verified, dkim_records returned.",
       "actual_status": null,
@@ -1730,9 +1963,188 @@
           "deleted": "string"
         }
       },
-      "depends_on": ["H-6", "F-1", "E-12"],
+      "depends_on": [
+        "H-6",
+        "F-1",
+        "E-12"
+      ],
       "captures": {},
       "notes": "x402 paid. Remove a custom domain registration",
+      "actual_status": null,
+      "actual_body": null,
+      "result": null,
+      "generated": true
+    },
+    {
+      "id": "FC-1",
+      "service": "faucet.sh",
+      "test": "Check treasury wallet ETH balance and refill status.",
+      "method": "GET",
+      "endpoint": "https://faucet.prim.sh/v1/faucet/treasury",
+      "input": null,
+      "expected": {
+        "status": 200
+      },
+      "depends_on": [
+        "H-3"
+      ],
+      "captures": {},
+      "notes": "Free. Check treasury wallet ETH balance and refill status.",
+      "actual_status": null,
+      "actual_body": null,
+      "result": null,
+      "generated": true
+    },
+    {
+      "id": "FC-2",
+      "service": "faucet.sh",
+      "test": "Batch-claim testnet ETH from Coinbase CDP faucet into treasury. Rate limited to once per 10 minutes.",
+      "method": "POST",
+      "endpoint": "https://faucet.prim.sh/v1/faucet/refill",
+      "input": null,
+      "expected": {
+        "status": 200
+      },
+      "depends_on": [
+        "H-3"
+      ],
+      "captures": {},
+      "notes": "Free. Batch-claim testnet ETH from Coinbase CDP faucet into treasury. Rate limited to once per 10 minutes.",
+      "actual_status": null,
+      "actual_body": null,
+      "result": null,
+      "generated": true
+    },
+    {
+      "id": "GATE-H1",
+      "service": "gate.sh",
+      "test": "Health check",
+      "method": "GET",
+      "endpoint": "https://gate.prim.sh/",
+      "input": null,
+      "expected": {
+        "status": 200,
+        "body": {
+          "service": "gate.sh",
+          "status": "ok"
+        }
+      },
+      "depends_on": [],
+      "captures": {},
+      "notes": null,
+      "actual_status": null,
+      "actual_body": null,
+      "result": null,
+      "generated": true
+    },
+    {
+      "id": "GATE-1",
+      "service": "gate.sh",
+      "test": "Redeem an invite code. Wallet is allowlisted and funded with USDC + ETH.",
+      "method": "POST",
+      "endpoint": "https://gate.prim.sh/v1/redeem",
+      "input": null,
+      "expected": {
+        "status": 200
+      },
+      "depends_on": [
+        "GATE-H1"
+      ],
+      "captures": {},
+      "notes": "Free. Redeem an invite code. Wallet is allowlisted and funded with USDC + ETH.",
+      "actual_status": null,
+      "actual_body": null,
+      "result": null,
+      "generated": true
+    },
+    {
+      "id": "ST-12",
+      "service": "store.sh",
+      "test": "Generate a presigned URL for direct GET or PUT access to an object. GET presign requires object to exist.",
+      "method": "POST",
+      "endpoint": "https://store.prim.sh/v1/buckets/{{bucket_id}}/presign",
+      "input": {
+        "key": "test",
+        "method": "test"
+      },
+      "expected": {
+        "status": 200,
+        "body": {
+          "url": "string",
+          "method": "string",
+          "key": "string",
+          "expires_at": "string"
+        }
+      },
+      "depends_on": [
+        "H-2",
+        "F-1",
+        "ST-1"
+      ],
+      "captures": {},
+      "notes": "x402 paid. Generate a presigned URL for direct GET or PUT access to an object. GET presign requires object to exist.",
+      "actual_status": null,
+      "actual_body": null,
+      "result": null,
+      "generated": true
+    },
+    {
+      "id": "FEEDBACK-H1",
+      "service": "feedback.sh",
+      "test": "Health check",
+      "method": "GET",
+      "endpoint": "https://feedback.prim.sh/",
+      "input": null,
+      "expected": {
+        "status": 200,
+        "body": {
+          "service": "feedback.sh",
+          "status": "ok"
+        }
+      },
+      "depends_on": [],
+      "captures": {},
+      "notes": null,
+      "actual_status": null,
+      "actual_body": null,
+      "result": null,
+      "generated": true
+    },
+    {
+      "id": "FEEDBACK-1",
+      "service": "feedback.sh",
+      "test": "Submit feedback about any prim.",
+      "method": "POST",
+      "endpoint": "https://feedback.prim.sh/v1/submit",
+      "input": {},
+      "expected": {
+        "status": 200
+      },
+      "depends_on": [
+        "FEEDBACK-H1"
+      ],
+      "captures": {},
+      "notes": "Free. Submit feedback about any prim.",
+      "actual_status": null,
+      "actual_body": null,
+      "result": null,
+      "generated": true
+    },
+    {
+      "id": "FEEDBACK-2",
+      "service": "feedback.sh",
+      "test": "List recent feedback (internal, requires x-internal-key).",
+      "method": "GET",
+      "endpoint": "https://feedback.prim.sh/v1/feed",
+      "input": null,
+      "expected": {
+        "status": 200
+      },
+      "depends_on": [
+        "FEEDBACK-H1"
+      ],
+      "captures": {},
+      "notes": "Free. List recent feedback (internal, requires x-internal-key).",
       "actual_status": null,
       "actual_body": null,
       "result": null,

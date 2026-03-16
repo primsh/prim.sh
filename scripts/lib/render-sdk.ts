@@ -106,6 +106,15 @@ function schemaToTsType(spec: OpenApiSpec, schema: OpenApiProperty, indent = 2):
     return types.join(" | ");
   }
 
+  // anyOf → union (Zod 4 uses anyOf for nullable types)
+  if (schema.anyOf) {
+    const types = (schema.anyOf as OpenApiProperty[]).map((s) => {
+      if (s.type === "null") return "null";
+      return schemaToTsType(spec, s, indent);
+    });
+    return types.join(" | ");
+  }
+
   // enum → string literal union
   if (schema.enum) {
     return schema.enum.map((v) => (typeof v === "string" ? `"${v}"` : String(v))).join(" | ");

@@ -134,10 +134,6 @@
         "type": "object",
         "properties": {
           "urls": {
-            "type": "array",
-            "items": {
-              "type": "string"
-            },
             "description": "URL string or array of URLs to extract content from."
           },
           "format": {

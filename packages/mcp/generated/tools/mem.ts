@@ -37,8 +37,8 @@ export const memTools: Tool[] = [
           },
           "distance": {
             type: "string",
-            enum: ["Cosine","Euclid","Dot"],
             description: "Distance metric for similarity search. Default \"Cosine\".",
+            enum: ["Cosine","Euclid","Dot"],
           },
           "dimension": {
             type: "number",
@@ -90,7 +90,6 @@ export const memTools: Tool[] = [
             type: "array",
             items: {
               type: "object",
-              required: ["text"],
               properties: {
                 "id": {
                   type: "string",
@@ -101,10 +100,14 @@ export const memTools: Tool[] = [
                   description: "Document text to embed and store.",
                 },
                 "metadata": {
-                  type: "string",
+                  type: "object",
                   description: "Arbitrary JSON metadata to store alongside the vector.",
+                  propertyNames: {
+                    type: "string",
+                  },
                 },
               },
+              required: ["text"],
             },
             description: "Documents to upsert. Existing IDs are overwritten.",
           },
@@ -131,7 +134,6 @@ export const memTools: Tool[] = [
             description: "Number of nearest neighbors to return. Default 10.",
           },
           "filter": {
-            type: "string",
             description: "Qdrant-native filter passthrough.",
           },
         },
@@ -171,12 +173,18 @@ export const memTools: Tool[] = [
             description: "key parameter",
           },
           "value": {
-            type: "string",
             description: "Value to store. Any JSON-serializable value.",
           },
           "ttl": {
-            type: ["number","null"],
             description: "TTL in seconds. Omit or null for permanent.",
+            anyOf: [
+              {
+                type: "number",
+              },
+              {
+                type: "null",
+              },
+            ],
           },
         },
         required: ["namespace","key","value"],

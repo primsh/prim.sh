@@ -8,7 +8,7 @@ import {
 } from "@primsh/x402-middleware";
 import type { ApiError } from "@primsh/x402-middleware";
 import { createPrimApp } from "@primsh/x402-middleware/create-prim-app";
-import type { DescribeRequest, GenerateRequest, UpscaleRequest } from "./api.ts";
+import { DescribeRequestSchema, GenerateRequestSchema, UpscaleRequestSchema } from "./api.ts";
 import { describe, generate, models, upscale } from "./service.ts";
 
 const IMAGINE_ROUTES = {
@@ -71,7 +71,7 @@ const logger = app.logger;
 
 // POST /v1/generate — Generate an image from a text prompt. Returns base64 or URL.
 app.post("/v1/generate", async (c) => {
-  const bodyOrRes = await parseJsonBody<GenerateRequest>(c, logger, "POST /v1/generate");
+  const bodyOrRes = await parseJsonBody(c, logger, "POST /v1/generate", GenerateRequestSchema);
   if (bodyOrRes instanceof Response) return bodyOrRes;
   const body = bodyOrRes;
 
@@ -96,7 +96,7 @@ app.post("/v1/generate", async (c) => {
 
 // POST /v1/describe — Describe an image. Accepts base64 or URL. Returns text description.
 app.post("/v1/describe", async (c) => {
-  const bodyOrRes = await parseJsonBody<DescribeRequest>(c, logger, "POST /v1/describe");
+  const bodyOrRes = await parseJsonBody(c, logger, "POST /v1/describe", DescribeRequestSchema);
   if (bodyOrRes instanceof Response) return bodyOrRes;
   const body = bodyOrRes;
 
@@ -121,7 +121,7 @@ app.post("/v1/describe", async (c) => {
 
 // POST /v1/upscale — Upscale an image to higher resolution. Accepts base64 or URL.
 app.post("/v1/upscale", async (c) => {
-  const bodyOrRes = await parseJsonBody<UpscaleRequest>(c, logger, "POST /v1/upscale");
+  const bodyOrRes = await parseJsonBody(c, logger, "POST /v1/upscale", UpscaleRequestSchema);
   if (bodyOrRes instanceof Response) return bodyOrRes;
   const body = bodyOrRes;
 

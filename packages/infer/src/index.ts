@@ -9,7 +9,7 @@ import {
 import type { ApiError, CreditLedger, RouteConfig } from "@primsh/x402-middleware";
 import { createPrimApp } from "@primsh/x402-middleware/create-prim-app";
 import type { Context } from "hono";
-import type { ChatRequest, EmbedRequest } from "./api.ts";
+import { ChatRequestSchema, EmbedRequestSchema } from "./api.ts";
 import { createInferCalculator, createInferEstimator, initModelPricing } from "./pricing.ts";
 import { chat, chatStream, embed, models } from "./service.ts";
 
@@ -161,7 +161,7 @@ function createUsageExtractor(): {
 
 // POST /v1/chat + /v1/chat/completions (OpenAI-compatible alias)
 async function handleChat(c: Context) {
-  const bodyOrRes = await parseJsonBody<ChatRequest>(c, logger, "POST /v1/chat");
+  const bodyOrRes = await parseJsonBody(c, logger, "POST /v1/chat", ChatRequestSchema);
   if (bodyOrRes instanceof Response) return bodyOrRes;
   const body = bodyOrRes;
 
@@ -236,7 +236,7 @@ app.post("/v1/chat/completions", handleChat);
 
 // POST /v1/embed — Generate embeddings for text input. Returns vector array.
 app.post("/v1/embed", async (c) => {
-  const bodyOrRes = await parseJsonBody<EmbedRequest>(c, logger, "POST /v1/embed");
+  const bodyOrRes = await parseJsonBody(c, logger, "POST /v1/embed", EmbedRequestSchema);
   if (bodyOrRes instanceof Response) return bodyOrRes;
   const body = bodyOrRes;
 

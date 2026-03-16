@@ -6,7 +6,7 @@
  * emits a complete README.md markdown string.
  */
 
-import type { ParsedApi, ParsedField } from "./parse-api.js";
+import type { ParsedApi, ParsedField } from "./extract-schemas.js";
 import type { Primitive, RouteMapping } from "./primitives.js";
 import { inferTypeNames } from "./render-openapi.js";
 

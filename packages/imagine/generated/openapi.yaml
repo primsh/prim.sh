@@ -46,18 +46,25 @@ components:
               description: Human-readable error message.
     DescribeRequest:
       type: object
+      properties: {}
     DescribeResponse:
       type: object
+      properties: {}
     GenerateRequest:
       type: object
+      properties: {}
     GenerateResponse:
       type: object
+      properties: {}
     ListModelsResponse:
       type: object
+      properties: {}
     UpscaleRequest:
       type: object
+      properties: {}
     UpscaleResponse:
       type: object
+      properties: {}
 paths:
   /:
     get:

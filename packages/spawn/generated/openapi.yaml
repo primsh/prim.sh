@@ -51,11 +51,6 @@ components:
               description: Human-readable error message.
     CreateServerRequest:
       type: object
-      required:
-        - name
-        - type
-        - image
-        - location
       properties:
         name:
           type: string
@@ -70,41 +65,43 @@ components:
           type: string
           description: Data center slug (e.g. "nyc3", "sfo3", "lon1").
         provider:
-          type: string
           description: Cloud provider. Default "digitalocean".
+          type: string
         ssh_keys:
+          description: SSH key IDs from POST /v1/ssh-keys to install on the server.
           type: array
           items:
             type: string
-          description: SSH key IDs from POST /v1/ssh-keys to install on the server.
         user_data:
-          type: string
           description: Cloud-init script to run on first boot.
+          type: string
+      required:
+        - name
+        - type
+        - image
+        - location
     CreateServerResponse:
       type: object
-      required:
-        - server
-        - action
-        - deposit_charged
-        - deposit_remaining
       properties:
         server:
-          $ref: "#/components/schemas/GetServerResponse"
           description: 'Created server object (initial status: "initializing").'
+          $ref: "#/components/schemas/GetServerResponse"
         action:
-          $ref: "#/components/schemas/GetActionResponse"
           description: Action object tracking the provisioning progress.
+          $ref: "#/components/schemas/GetActionResponse"
         deposit_charged:
           type: string
           description: USDC charged for this server as a decimal string.
         deposit_remaining:
           type: string
           description: Remaining USDC deposit balance as a decimal string.
+      required:
+        - server
+        - action
+        - deposit_charged
+        - deposit_remaining
     CreateSshKeyRequest:
       type: object
-      required:
-        - name
-        - public_key
       properties:
         name:
           type: string
@@ -112,36 +109,32 @@ components:
         public_key:
           type: string
           description: Public key string (e.g. "ssh-ed25519 AAAA...").
+      required:
+        - name
+        - public_key
     DeleteServerResponse:
       type: object
-      required:
-        - status
-        - deposit_refunded
       properties:
         status:
           type: string
-          enum:
-            - deleted
+          const: deleted
           description: Always "deleted" on success.
         deposit_refunded:
           type: string
           description: USDC refunded to wallet as a decimal string.
+      required:
+        - status
+        - deposit_refunded
     GetActionOnlyResponse:
       type: object
-      required:
-        - action
       properties:
         action:
-          $ref: "#/components/schemas/GetActionResponse"
           description: Action object for the requested operation.
+          $ref: "#/components/schemas/GetActionResponse"
+      required:
+        - action
     GetActionResponse:
       type: object
-      required:
-        - id
-        - command
-        - status
-        - started_at
-        - finished_at
       properties:
         id:
           type: string
@@ -156,24 +149,18 @@ components:
           type: string
           description: ISO 8601 timestamp when the action started.
         finished_at:
-          type:
-            - string
-            - "null"
+          anyOf:
+            - type: string
+            - type: "null"
           description: ISO 8601 timestamp when the action finished. Null if still running.
-    GetServerResponse:
-      type: object
       required:
         - id
-        - provider
-        - provider_id
-        - name
-        - type
+        - command
         - status
-        - image
-        - location
-        - public_net
-        - owner_wallet
-        - created_at
+        - started_at
+        - finished_at
+    GetServerResponse:
+      type: object
       properties:
         id:
           type: string
@@ -192,6 +179,14 @@ components:
           description: Server type slug (e.g. "small").
         status:
           type: string
+          enum:
+            - initializing
+            - running
+            - off
+            - rebuilding
+            - migrating
+            - destroying
+            - deleted
           description: Current server lifecycle status.
         image:
           type: string
@@ -200,24 +195,28 @@ components:
           type: string
           description: Data center slug (e.g. "nyc3").
         public_net:
-          $ref: "#/components/schemas/PublicNet"
           description: Public IP addresses.
+          $ref: "#/components/schemas/PublicNet"
         owner_wallet:
           type: string
           description: Ethereum address of the server owner.
         created_at:
           type: string
           description: ISO 8601 timestamp when the server was created.
-    GetSshKeyResponse:
-      type: object
       required:
         - id
         - provider
         - provider_id
         - name
-        - fingerprint
+        - type
+        - status
+        - image
+        - location
+        - public_net
         - owner_wallet
         - created_at
+    GetSshKeyResponse:
+      type: object
       properties:
         id:
           type: string
@@ -240,67 +239,93 @@ components:
         created_at:
           type: string
           description: ISO 8601 timestamp when the key was registered.
+      required:
+        - id
+        - provider
+        - provider_id
+        - name
+        - fingerprint
+        - owner_wallet
+        - created_at
     PublicNet:
       type: object
+      properties:
+        ipv4:
+          anyOf:
+            - type: object
+              properties:
+                ip:
+                  anyOf:
+                    - type: string
+                    - type: "null"
+              required:
+                - ip
+            - type: "null"
+          description: IPv4 address info. Null until assigned.
+        ipv6:
+          anyOf:
+            - type: object
+              properties:
+                ip:
+                  anyOf:
+                    - type: string
+                    - type: "null"
+              required:
+                - ip
+            - type: "null"
+          description: IPv6 address info. Null until assigned.
       required:
         - ipv4
         - ipv6
-      properties:
-        ipv4:
-          type: object
-          description: IPv4 address info. Null until assigned.
-        ipv6:
-          type: object
-          description: IPv6 address info. Null until assigned.
     RebuildServerRequest:
       type: object
-      required:
-        - image
       properties:
         image:
           type: string
           description: OS image slug to rebuild with (e.g. "debian-12").
+      required:
+        - image
     RebuildServerResponse:
       type: object
+      properties:
+        action:
+          description: 'Action object (command: "rebuild").'
+          $ref: "#/components/schemas/GetActionResponse"
+        root_password:
+          anyOf:
+            - type: string
+            - type: "null"
+          description: New root password if no SSH keys configured. Null if SSH keys are installed.
       required:
         - action
         - root_password
-      properties:
-        action:
-          $ref: "#/components/schemas/GetActionResponse"
-          description: 'Action object (command: "rebuild").'
-        root_password:
-          type:
-            - string
-            - "null"
-          description: New root password if no SSH keys configured. Null if SSH keys are installed.
     ResizeServerRequest:
       type: object
-      required:
-        - type
       properties:
         type:
           type: string
           description: Target server type slug.
         upgrade_disk:
-          type: boolean
           description: Upgrade disk along with CPU/RAM. Irreversible if true. Default false.
+          type: boolean
+      required:
+        - type
     ResizeServerResponse:
       type: object
-      required:
-        - action
-        - new_type
-        - deposit_delta
       properties:
         action:
-          $ref: "#/components/schemas/GetActionResponse"
           description: 'Action object (command: "resize").'
+          $ref: "#/components/schemas/GetActionResponse"
         new_type:
           type: string
           description: Target server type after resize.
         deposit_delta:
           type: string
           description: USDC deposit change as a decimal string. Positive = charged, negative = refunded.
+      required:
+        - action
+        - new_type
+        - deposit_delta
 paths:
   /:
     get:

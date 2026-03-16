@@ -24,8 +24,8 @@ export const searchTools: Tool[] = [
           },
           "search_depth": {
             type: "string",
-            enum: ["basic","advanced"],
             description: "Search depth. \"basic\" | \"advanced\", default \"basic\".",
+            enum: ["basic","advanced"],
           },
           "country": {
             type: "string",
@@ -33,8 +33,8 @@ export const searchTools: Tool[] = [
           },
           "time_range": {
             type: "string",
-            enum: ["day","week","month","year"],
             description: "Restrict results by recency. \"day\" | \"week\" | \"month\" | \"year\".",
+            enum: ["day","week","month","year"],
           },
           "include_answer": {
             type: "boolean",
@@ -42,17 +42,17 @@ export const searchTools: Tool[] = [
           },
           "include_domains": {
             type: "array",
+            description: "Restrict results to these domains only (e.g. [\"docs.base.org\"]).",
             items: {
               type: "string",
             },
-            description: "Restrict results to these domains only (e.g. [\"docs.base.org\"]).",
           },
           "exclude_domains": {
             type: "array",
+            description: "Exclude results from these domains (e.g. [\"reddit.com\"]).",
             items: {
               type: "string",
             },
-            description: "Exclude results from these domains (e.g. [\"reddit.com\"]).",
           },
         },
         required: ["query"],
@@ -74,8 +74,8 @@ export const searchTools: Tool[] = [
           },
           "search_depth": {
             type: "string",
-            enum: ["basic","advanced"],
             description: "Search depth. \"basic\" | \"advanced\", default \"basic\".",
+            enum: ["basic","advanced"],
           },
           "country": {
             type: "string",
@@ -83,8 +83,8 @@ export const searchTools: Tool[] = [
           },
           "time_range": {
             type: "string",
-            enum: ["day","week","month","year"],
             description: "Restrict results by recency. \"day\" | \"week\" | \"month\" | \"year\".",
+            enum: ["day","week","month","year"],
           },
           "include_answer": {
             type: "boolean",
@@ -92,17 +92,17 @@ export const searchTools: Tool[] = [
           },
           "include_domains": {
             type: "array",
+            description: "Restrict results to these domains only (e.g. [\"docs.base.org\"]).",
             items: {
               type: "string",
             },
-            description: "Restrict results to these domains only (e.g. [\"docs.base.org\"]).",
           },
           "exclude_domains": {
             type: "array",
+            description: "Exclude results from these domains (e.g. [\"reddit.com\"]).",
             items: {
               type: "string",
             },
-            description: "Exclude results from these domains (e.g. [\"reddit.com\"]).",
           },
         },
         required: ["query"],
@@ -115,7 +115,7 @@ export const searchTools: Tool[] = [
         type: "object",
         properties: {
           "urls": {
-            oneOf: [
+            anyOf: [
               {
                 type: "string",
               },
@@ -130,8 +130,8 @@ export const searchTools: Tool[] = [
           },
           "format": {
             type: "string",
-            enum: ["markdown","text"],
             description: "Output format. \"markdown\" | \"text\", default \"markdown\".",
+            enum: ["markdown","text"],
           },
         },
         required: ["urls"],

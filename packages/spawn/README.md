@@ -67,7 +67,7 @@ Part of [prim.sh](https://prim.sh) — zero signup, one payment token, infinite 
 | `provider_id` | `string` | Provider-assigned server ID. |
 | `name` | `string` | Server name (label). |
 | `type` | `string` | Server type slug (e.g. "small"). |
-| `status` | `ServerStatus` | Current server lifecycle status. |
+| `status` | `"initializing" | "running" | "off" | "rebuilding" | "migrating" | "destroying" | "deleted"` | Current server lifecycle status. |
 | `image` | `string` | OS image slug (e.g. "ubuntu-24.04"). |
 | `location` | `string` | Data center slug (e.g. "nyc3"). |
 | `public_net` | `PublicNet` | Public IP addresses. |

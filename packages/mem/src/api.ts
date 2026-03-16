@@ -1,18 +1,19 @@
 // SPDX-License-Identifier: Apache-2.0
 /**
- * mem.sh API contract — request/response types and error envelope.
+ * mem.sh API contract — Zod schemas, inferred types, and error envelope.
  */
+
+import { z } from "zod";
 
 // ─── Error envelope ───────────────────────────────────────────────────────
 
-export interface ApiError {
-  error: {
-    /** Machine-readable error code. */
-    code: string;
-    /** Human-readable error message. */
-    message: string;
-  };
-}
+export const ApiErrorSchema = z.object({
+  error: z.object({
+    code: z.string().describe("Machine-readable error code."),
+    message: z.string().describe("Human-readable error message."),
+  }),
+});
+export type ApiError = z.infer<typeof ApiErrorSchema>;
 
 export const ERROR_CODES = [
   "not_found",
@@ -28,96 +29,96 @@ export type ErrorCode = (typeof ERROR_CODES)[number];
 
 // ─── Collection types ─────────────────────────────────────────────────────
 
-export interface GetCollectionResponse {
-  /** Collection ID (UUID). */
-  id: string;
-  /** Collection name. Unique per wallet. */
-  name: string;
-  /** Ethereum address of the collection owner. */
-  owner_wallet: string;
-  /** Embedding vector dimension (e.g. 1536 for text-embedding-3-small). */
-  dimension: number;
-  /** Distance metric: "Cosine" | "Euclid" | "Dot". */
-  distance: string;
-  /** Live Qdrant points_count — null in list responses to avoid N+1 calls. */
-  document_count: number | null;
-  /** ISO 8601 timestamp when the collection was created. */
-  created_at: string;
-}
+export const GetCollectionResponseSchema = z.object({
+  id: z.string().describe("Collection ID (UUID)."),
+  name: z.string().describe("Collection name. Unique per wallet."),
+  owner_wallet: z.string().describe("Ethereum address of the collection owner."),
+  dimension: z
+    .number()
+    .describe("Embedding vector dimension (e.g. 1536 for text-embedding-3-small)."),
+  distance: z.string().describe('Distance metric: "Cosine" | "Euclid" | "Dot".'),
+  document_count: z
+    .number()
+    .nullable()
+    .describe("Live Qdrant points_count — null in list responses to avoid N+1 calls."),
+  created_at: z.string().describe("ISO 8601 timestamp when the collection was created."),
+});
+export type GetCollectionResponse = z.infer<typeof GetCollectionResponseSchema>;
 
-export interface CreateCollectionRequest {
-  /** Collection name. Unique per wallet. */
-  name: string;
-  /** Distance metric for similarity search. Default "Cosine". */
-  distance?: "Cosine" | "Euclid" | "Dot";
-  /** Vector dimension. Must match the embedding model used. Default 1536. */
-  dimension?: number;
-}
+export const CreateCollectionRequestSchema = z.object({
+  name: z.string().describe("Collection name. Unique per wallet."),
+  distance: z
+    .enum(["Cosine", "Euclid", "Dot"])
+    .optional()
+    .describe('Distance metric for similarity search. Default "Cosine".'),
+  dimension: z
+    .number()
+    .optional()
+    .describe("Vector dimension. Must match the embedding model used. Default 1536."),
+});
+export type CreateCollectionRequest = z.infer<typeof CreateCollectionRequestSchema>;
 
 // ─── Vector types ─────────────────────────────────────────────────────────
 
-export interface UpsertDocument {
-  /** Must be UUID v4 if provided; omit to auto-generate. */
-  id?: string;
-  /** Document text to embed and store. */
-  text: string;
-  /** Arbitrary JSON metadata to store alongside the vector. */
-  metadata?: Record<string, unknown>;
-}
+export const UpsertDocumentSchema = z.object({
+  id: z.string().optional().describe("Must be UUID v4 if provided; omit to auto-generate."),
+  text: z.string().describe("Document text to embed and store."),
+  metadata: z
+    .record(z.string(), z.unknown())
+    .optional()
+    .describe("Arbitrary JSON metadata to store alongside the vector."),
+});
+export type UpsertDocument = z.infer<typeof UpsertDocumentSchema>;
 
-export interface UpsertRequest {
-  /** Documents to upsert. Existing IDs are overwritten. */
-  documents: UpsertDocument[];
-}
+export const UpsertRequestSchema = z.object({
+  documents: z
+    .array(UpsertDocumentSchema)
+    .describe("Documents to upsert. Existing IDs are overwritten."),
+});
+export type UpsertRequest = z.infer<typeof UpsertRequestSchema>;
 
-export interface UpsertResponse {
-  /** Number of documents upserted. */
-  upserted: number;
-  /** IDs of upserted documents (auto-generated UUIDs if not provided). */
-  ids: string[];
-}
+export const UpsertResponseSchema = z.object({
+  upserted: z.number().describe("Number of documents upserted."),
+  ids: z
+    .array(z.string())
+    .describe("IDs of upserted documents (auto-generated UUIDs if not provided)."),
+});
+export type UpsertResponse = z.infer<typeof UpsertResponseSchema>;
 
-export interface QueryRequest {
-  /** Query text to embed and search against. */
-  text: string;
-  /** Number of nearest neighbors to return. Default 10. */
-  top_k?: number;
-  /** Qdrant-native filter passthrough. */
-  filter?: unknown;
-}
+export const QueryRequestSchema = z.object({
+  text: z.string().describe("Query text to embed and search against."),
+  top_k: z.number().optional().describe("Number of nearest neighbors to return. Default 10."),
+  filter: z.unknown().optional().describe("Qdrant-native filter passthrough."),
+});
+export type QueryRequest = z.infer<typeof QueryRequestSchema>;
 
-export interface QueryMatch {
-  /** Document ID. */
-  id: string;
-  /** Similarity score (higher = more similar). */
-  score: number;
-  /** Original document text. */
-  text: string;
-  /** Document metadata. */
-  metadata: Record<string, unknown>;
-}
+export const QueryMatchSchema = z.object({
+  id: z.string().describe("Document ID."),
+  score: z.number().describe("Similarity score (higher = more similar)."),
+  text: z.string().describe("Original document text."),
+  metadata: z.record(z.string(), z.unknown()).describe("Document metadata."),
+});
+export type QueryMatch = z.infer<typeof QueryMatchSchema>;
 
-export interface QueryResponse {
-  /** Nearest neighbor matches, ordered by descending score. */
-  matches: QueryMatch[];
-}
+export const QueryResponseSchema = z.object({
+  matches: z
+    .array(QueryMatchSchema)
+    .describe("Nearest neighbor matches, ordered by descending score."),
+});
+export type QueryResponse = z.infer<typeof QueryResponseSchema>;
 
 // ─── Cache types ──────────────────────────────────────────────────────────
 
-export interface SetCacheRequest {
-  /** Value to store. Any JSON-serializable value. */
-  value: unknown;
-  /** TTL in seconds. Omit or null for permanent. */
-  ttl?: number | null;
-}
+export const SetCacheRequestSchema = z.object({
+  value: z.unknown().describe("Value to store. Any JSON-serializable value."),
+  ttl: z.number().nullable().optional().describe("TTL in seconds. Omit or null for permanent."),
+});
+export type SetCacheRequest = z.infer<typeof SetCacheRequestSchema>;
 
-export interface GetCacheResponse {
-  /** Cache namespace (collection name). */
-  namespace: string;
-  /** Cache key. */
-  key: string;
-  /** Stored value. */
-  value: unknown;
-  /** ISO string expiry time, or null if permanent. */
-  expires_at: string | null;
-}
+export const GetCacheResponseSchema = z.object({
+  namespace: z.string().describe("Cache namespace (collection name)."),
+  key: z.string().describe("Cache key."),
+  value: z.unknown().describe("Stored value."),
+  expires_at: z.string().nullable().describe("ISO string expiry time, or null if permanent."),
+});
+export type GetCacheResponse = z.infer<typeof GetCacheResponseSchema>;

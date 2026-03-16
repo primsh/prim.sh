@@ -9,7 +9,7 @@ import {
 } from "@primsh/x402-middleware";
 import type { ApiError } from "@primsh/x402-middleware";
 import { createPrimApp } from "@primsh/x402-middleware/create-prim-app";
-import type { TrackRequest } from "./api.ts";
+import { TrackRequestSchema } from "./api.ts";
 import { trackPackage } from "./service.ts";
 
 const TRACK_ROUTES = {
@@ -40,7 +40,7 @@ const logger = app.logger;
 
 // POST /v1/track — look up a tracking number
 app.post("/v1/track", async (c) => {
-  const bodyOrRes = await parseJsonBody<TrackRequest>(c, logger, "POST /v1/track");
+  const bodyOrRes = await parseJsonBody(c, logger, "POST /v1/track", TrackRequestSchema);
   if (bodyOrRes instanceof Response) return bodyOrRes;
   const body = bodyOrRes;
 

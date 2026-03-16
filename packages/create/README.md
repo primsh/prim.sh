@@ -55,7 +55,7 @@ Part of [prim.sh](https://prim.sh) — zero signup, one payment token, infinite 
 
 | Field | Type | Description |
 |-------|------|-------------|
-| `schema` | `Record<string, unknown>` | JSON Schema for prim.yaml |
+| `schema` | `unknown` | JSON Schema for prim.yaml |
 
 ### `ListPortsResponse`
 

@@ -92,7 +92,7 @@ Part of [prim.sh](https://prim.sh) — zero signup, one payment token, infinite 
 | `wallet_address` | `string` | Wallet address the request is for. |
 | `amount` | `string` | Requested USDC amount as a decimal string. |
 | `reason` | `string` | Reason provided by the requester. |
-| `status` | `FundRequestStatus` | Current status of the fund request. |
+| `status` | `"pending" | "approved" | "denied"` | Current status of the fund request. |
 | `created_at` | `string` | ISO 8601 timestamp when the request was created. |
 
 ### `ApproveFundRequestResponse`
@@ -144,7 +144,7 @@ Part of [prim.sh](https://prim.sh) — zero signup, one payment token, infinite 
 
 | Field | Type | Required |
 |-------|------|----------|
-| `scope` | `PauseScope` | optional |
+| `scope` | `"all" | "send" | "swap"` | optional |
 
 ### `PauseWalletResponse`
 
@@ -152,14 +152,14 @@ Part of [prim.sh](https://prim.sh) — zero signup, one payment token, infinite 
 |-------|------|-------------|
 | `wallet_address` | `string` | Wallet address that was paused. |
 | `paused` | `boolean` | Always true on success. |
-| `scope` | `PauseScope` | Scope that was paused. |
+| `scope` | `"all" | "send" | "swap"` | Scope that was paused. |
 | `paused_at` | `string` | ISO 8601 timestamp when the wallet was paused. |
 
 ### `ResumeWalletRequest`
 
 | Field | Type | Required |
 |-------|------|----------|
-| `scope` | `PauseScope` | optional |
+| `scope` | `"all" | "send" | "swap"` | optional |
 
 ### `ResumeWalletResponse`
 
@@ -167,7 +167,7 @@ Part of [prim.sh](https://prim.sh) — zero signup, one payment token, infinite 
 |-------|------|-------------|
 | `wallet_address` | `string` | Wallet address that was resumed. |
 | `paused` | `boolean` | Always false on success (wallet is unpaused). |
-| `scope` | `PauseScope` | Scope that was resumed. |
+| `scope` | `"all" | "send" | "swap"` | Scope that was resumed. |
 | `resumed_at` | `string` | ISO 8601 timestamp when the wallet was resumed. |
 
 ## Usage

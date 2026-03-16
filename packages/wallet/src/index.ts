@@ -18,6 +18,11 @@ import {
 } from "@primsh/x402-middleware/allowlist-db";
 import { createPrimApp } from "@primsh/x402-middleware/create-prim-app";
 import type { PaginatedList } from "@primsh/x402-middleware";
+import {
+  CreateFundRequestRequestSchema,
+  RegisterWalletRequestSchema,
+  UpdatePolicyRequestSchema,
+} from "./api.ts";
 import type {
   ApiError,
   ApproveFundRequestResponse,
@@ -27,15 +32,12 @@ import type {
   GetPolicyResponse,
   GetWalletResponse,
   PauseWalletResponse,
-  RegisterWalletRequest,
   ResumeWalletResponse,
   WalletListItem,
 } from "./api.ts";
 import type {
-  CreateFundRequestRequest,
   DenyFundRequestRequest,
   PauseWalletRequest,
-  UpdatePolicyRequest,
   ResumeWalletRequest,
 } from "./api.ts";
 import { getState, pause, resume } from "./circuit-breaker.ts";
@@ -192,34 +194,16 @@ app.use(
 
 // POST /v1/wallets — Register wallet via EIP-191 signature (FREE)
 app.post("/v1/wallets", async (c) => {
-  const bodyOrRes = await parseJsonBody<Partial<RegisterWalletRequest>>(
+  const bodyOrRes = await parseJsonBody(
     c,
     logger,
     "POST /v1/wallets",
+    RegisterWalletRequestSchema,
   );
   if (bodyOrRes instanceof Response) return bodyOrRes;
   const body = bodyOrRes;
 
-  const { address, signature, timestamp } = body;
-  if (!address || !signature || !timestamp) {
-    return c.json(
-      {
-        error: {
-          code: "invalid_request",
-          message: "Missing required fields: address, signature, timestamp",
-        },
-      } as ApiError,
-      400,
-    );
-  }
-
-  const result = await registerWallet({
-    address,
-    signature,
-    timestamp,
-    chain: body.chain,
-    label: body.label,
-  });
+  const result = await registerWallet(body);
 
   if (!result.ok) {
     const { status, code, message } = result;
@@ -291,25 +275,16 @@ app.post("/v1/wallets/:address/fund-request", async (c) => {
   if (callerOrRes instanceof Response) return callerOrRes;
   const caller = callerOrRes;
 
-  const bodyOrRes = await parseJsonBody<Partial<CreateFundRequestRequest>>(
+  const bodyOrRes = await parseJsonBody(
     c,
     logger,
     "POST /v1/wallets/:address/fund-request",
+    CreateFundRequestRequestSchema,
   );
   if (bodyOrRes instanceof Response) return bodyOrRes;
   const body = bodyOrRes;
 
-  const { amount, reason } = body;
-  if (!amount || !reason) {
-    return c.json(
-      {
-        error: { code: "invalid_request", message: "Missing required fields: amount, reason" },
-      } as ApiError,
-      400,
-    );
-  }
-
-  const result = createFundRequest(address, { amount, reason }, caller);
+  const result = createFundRequest(address, body, caller);
   if (!result.ok) {
     const { status, code, message } = result;
     return c.json({ error: { code, message } } as ApiError, status as 400 | 403 | 404 | 500);
@@ -398,10 +373,11 @@ app.put("/v1/wallets/:address/policy", async (c) => {
   if (callerOrRes instanceof Response) return callerOrRes;
   const caller = callerOrRes;
 
-  const bodyOrRes = await parseJsonBody<Partial<UpdatePolicyRequest>>(
+  const bodyOrRes = await parseJsonBody(
     c,
     logger,
     "PUT /v1/wallets/:address/policy",
+    UpdatePolicyRequestSchema,
   );
   if (bodyOrRes instanceof Response) return bodyOrRes;
   const body = bodyOrRes;

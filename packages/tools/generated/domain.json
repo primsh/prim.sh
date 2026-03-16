@@ -263,7 +263,17 @@
           },
           "type": {
             "type": "string",
-            "description": "DNS record type."
+            "description": "DNS record type.",
+            "enum": [
+              "A",
+              "AAAA",
+              "CNAME",
+              "MX",
+              "TXT",
+              "SRV",
+              "CAA",
+              "NS"
+            ]
           },
           "name": {
             "type": "string",
@@ -364,7 +374,17 @@
           },
           "type": {
             "type": "string",
-            "description": "DNS record type."
+            "description": "DNS record type.",
+            "enum": [
+              "A",
+              "AAAA",
+              "CNAME",
+              "MX",
+              "TXT",
+              "SRV",
+              "CAA",
+              "NS"
+            ]
           },
           "name": {
             "type": "string",

@@ -165,6 +165,36 @@ export const domainTools: Tool[] = [
           "dkim": {
             type: "object",
             description: "DKIM keys to configure. Provide rsa and/or ed25519.",
+            properties: {
+              "rsa": {
+                type: "object",
+                properties: {
+                  "selector": {
+                    type: "string",
+                    description: "DKIM selector (e.g. \"rsa2048\").",
+                  },
+                  "public_key": {
+                    type: "string",
+                    description: "DKIM public key string.",
+                  },
+                },
+                required: ["selector","public_key"],
+              },
+              "ed25519": {
+                type: "object",
+                properties: {
+                  "selector": {
+                    type: "string",
+                    description: "DKIM selector (e.g. \"rsa2048\").",
+                  },
+                  "public_key": {
+                    type: "string",
+                    description: "DKIM public key string.",
+                  },
+                },
+                required: ["selector","public_key"],
+              },
+            },
           },
         },
         required: ["zone_id","mail_server","mail_server_ip"],
@@ -182,12 +212,13 @@ export const domainTools: Tool[] = [
           },
           "create": {
             type: "array",
+            description: "Records to create.",
             items: {
               type: "object",
-              required: ["type","name","content"],
               properties: {
                 "type": {
                   type: "string",
+                  enum: ["A","AAAA","CNAME","MX","TXT","SRV","CAA","NS"],
                   description: "DNS record type.",
                 },
                 "name": {
@@ -211,14 +242,14 @@ export const domainTools: Tool[] = [
                   description: "Priority for MX and SRV records.",
                 },
               },
+              required: ["type","name","content"],
             },
-            description: "Records to create.",
           },
           "update": {
             type: "array",
+            description: "Records to update.",
             items: {
               type: "object",
-              required: ["id"],
               properties: {
                 "id": {
                   type: "string",
@@ -243,28 +274,29 @@ export const domainTools: Tool[] = [
                 "type": {
                   type: "string",
                   description: "Updated record type.",
+                  enum: ["A","AAAA","CNAME","MX","TXT","SRV","CAA","NS"],
                 },
                 "name": {
                   type: "string",
                   description: "Updated record name.",
                 },
               },
+              required: ["id"],
             },
-            description: "Records to update.",
           },
           "delete": {
             type: "array",
+            description: "Records to delete.",
             items: {
               type: "object",
-              required: ["id"],
               properties: {
                 "id": {
                   type: "string",
                   description: "ID of the record to delete.",
                 },
               },
+              required: ["id"],
             },
-            description: "Records to delete.",
           },
         },
         required: ["zone_id"],
@@ -304,6 +336,7 @@ export const domainTools: Tool[] = [
           },
           "type": {
             type: "string",
+            enum: ["A","AAAA","CNAME","MX","TXT","SRV","CAA","NS"],
             description: "DNS record type.",
           },
           "name": {
@@ -365,6 +398,7 @@ export const domainTools: Tool[] = [
           "type": {
             type: "string",
             description: "DNS record type.",
+            enum: ["A","AAAA","CNAME","MX","TXT","SRV","CAA","NS"],
           },
           "name": {
             type: "string",

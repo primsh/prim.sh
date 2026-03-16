@@ -45,28 +45,24 @@ components:
               description: Human-readable error message.
     ExtractRequest:
       type: object
-      required:
-        - urls
       properties:
         urls:
-          oneOf:
+          anyOf:
             - type: string
             - type: array
               items:
                 type: string
           description: URL string or array of URLs to extract content from.
         format:
+          description: Output format. "markdown" | "text", default "markdown".
           type: string
           enum:
             - markdown
             - text
-          description: Output format. "markdown" | "text", default "markdown".
+      required:
+        - urls
     ExtractResponse:
       type: object
-      required:
-        - results
-        - failed
-        - response_time
       properties:
         results:
           type: array
@@ -81,11 +77,12 @@ components:
         response_time:
           type: number
           description: Time taken to complete the extraction in milliseconds.
+      required:
+        - results
+        - failed
+        - response_time
     ExtractResult:
       type: object
-      required:
-        - url
-        - content
       properties:
         url:
           type: string
@@ -94,15 +91,15 @@ components:
           type: string
           description: Extracted content in the requested format.
         images:
+          description: Image URLs found on the page. May be empty.
           type: array
           items:
             type: string
-          description: Image URLs found on the page. May be empty.
-    FailedExtraction:
-      type: object
       required:
         - url
-        - error
+        - content
+    FailedExtraction:
+      type: object
       properties:
         url:
           type: string
@@ -110,60 +107,59 @@ components:
         error:
           type: string
           description: 'Human-readable reason (e.g. "HTTP 404: page not found").'
+      required:
+        - url
+        - error
     SearchRequest:
       type: object
-      required:
-        - query
       properties:
         query:
           type: string
           description: Search query string.
         max_results:
-          type: number
           description: Maximum number of results to return. 1-20, default 10.
+          type: number
         search_depth:
+          description: Search depth. "basic" | "advanced", default "basic".
           type: string
           enum:
             - basic
             - advanced
-          description: Search depth. "basic" | "advanced", default "basic".
         country:
-          type: string
           description: Two-letter ISO 3166-1 country code to bias results (e.g. "US").
+          type: string
         time_range:
+          description: Restrict results by recency. "day" | "week" | "month" | "year".
           type: string
           enum:
             - day
             - week
             - month
             - year
-          description: Restrict results by recency. "day" | "week" | "month" | "year".
         include_answer:
-          type: boolean
           description: Include AI-generated answer summarizing top results. Default false.
+          type: boolean
         include_domains:
-          type: array
-          items:
-            type: string
           description: Restrict results to these domains only (e.g. ["docs.base.org"]).
-        exclude_domains:
           type: array
           items:
             type: string
+        exclude_domains:
           description: Exclude results from these domains (e.g. ["reddit.com"]).
-    SearchResponse:
-      type: object
+          type: array
+          items:
+            type: string
       required:
         - query
-        - results
-        - response_time
+    SearchResponse:
+      type: object
       properties:
         query:
           type: string
           description: Search query echoed back.
         answer:
-          type: string
           description: AI-generated answer summarizing top results. Only present if include_answer was true.
+          type: string
         results:
           type: array
           items:
@@ -172,13 +168,12 @@ components:
         response_time:
           type: number
           description: Time taken to complete the search in milliseconds.
+      required:
+        - query
+        - results
+        - response_time
     SearchResult:
       type: object
-      required:
-        - title
-        - url
-        - content
-        - score
       properties:
         title:
           type: string
@@ -193,8 +188,13 @@ components:
           type: number
           description: Relevance score (0-1).
         published:
-          type: string
           description: Publication date (ISO 8601). Only present if available.
+          type: string
+      required:
+        - title
+        - url
+        - content
+        - score
 paths:
   /:
     get:

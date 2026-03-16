@@ -51,29 +51,39 @@ components:
               description: Human-readable error message.
     ActivateDomainResponse:
       type: object
-      required:
-        - zone_id
-        - status
-        - activation_requested
       properties:
         zone_id:
           type: string
           description: Cloudflare zone ID.
         status:
           type: string
+          enum:
+            - pending
+            - active
+            - moved
           description: Updated zone status.
         activation_requested:
-          type: string
+          type: boolean
+          const: true
           description: Always true — activation was requested from Cloudflare.
+      required:
+        - zone_id
+        - status
+        - activation_requested
     BatchCreateEntry:
       type: object
-      required:
-        - type
-        - name
-        - content
       properties:
         type:
           type: string
+          enum:
+            - A
+            - AAAA
+            - CNAME
+            - MX
+            - TXT
+            - SRV
+            - CAA
+            - NS
           description: DNS record type.
         name:
           type: string
@@ -82,46 +92,46 @@ components:
           type: string
           description: DNS record value.
         ttl:
-          type: number
           description: TTL in seconds. Default 1 (auto).
-        proxied:
-          type: boolean
-          description: Enable Cloudflare proxying. Default false.
-        priority:
           type: number
+        proxied:
+          description: Enable Cloudflare proxying. Default false.
+          type: boolean
+        priority:
           description: Priority for MX and SRV records.
+          type: number
+      required:
+        - type
+        - name
+        - content
     BatchDeleteEntry:
       type: object
-      required:
-        - id
       properties:
         id:
           type: string
           description: ID of the record to delete.
+      required:
+        - id
     BatchRecordsRequest:
       type: object
       properties:
         create:
+          description: Records to create.
           type: array
           items:
             $ref: "#/components/schemas/BatchCreateEntry"
-          description: Records to create.
         update:
+          description: Records to update.
           type: array
           items:
             $ref: "#/components/schemas/BatchUpdateEntry"
-          description: Records to update.
         delete:
+          description: Records to delete.
           type: array
           items:
             $ref: "#/components/schemas/BatchDeleteEntry"
-          description: Records to delete.
     BatchRecordsResponse:
       type: object
-      required:
-        - created
-        - updated
-        - deleted
       properties:
         created:
           type: array
@@ -134,43 +144,68 @@ components:
             $ref: "#/components/schemas/GetRecordResponse"
           description: Successfully updated records.
         deleted:
-          type: object
+          type: array
+          items:
+            type: object
+            properties:
+              id:
+                type: string
+            required:
+              - id
           description: IDs of deleted records.
+      required:
+        - created
+        - updated
+        - deleted
     BatchUpdateEntry:
       type: object
-      required:
-        - id
       properties:
         id:
           type: string
           description: ID of the record to update.
         content:
-          type: string
           description: New DNS record value.
+          type: string
         ttl:
-          type: number
           description: New TTL in seconds.
-        proxied:
-          type: boolean
-          description: Updated proxying flag.
-        priority:
           type: number
+        proxied:
+          description: Updated proxying flag.
+          type: boolean
+        priority:
           description: Updated priority.
+          type: number
         type:
-          type: string
           description: Updated record type.
-        name:
           type: string
+          enum:
+            - A
+            - AAAA
+            - CNAME
+            - MX
+            - TXT
+            - SRV
+            - CAA
+            - NS
+        name:
           description: Updated record name.
+          type: string
+      required:
+        - id
     CreateRecordRequest:
       type: object
-      required:
-        - type
-        - name
-        - content
       properties:
         type:
           type: string
+          enum:
+            - A
+            - AAAA
+            - CNAME
+            - MX
+            - TXT
+            - SRV
+            - CAA
+            - NS
           description: DNS record type.
         name:
           type: string
@@ -179,50 +214,63 @@ components:
           type: string
           description: DNS record value.
         ttl:
-          type: number
           description: TTL in seconds. Default 1 (auto).
-        proxied:
-          type: boolean
-          description: Enable Cloudflare proxying. Default false.
-        priority:
           type: number
+        proxied:
+          description: Enable Cloudflare proxying. Default false.
+          type: boolean
+        priority:
           description: Priority for MX and SRV records.
+          type: number
+      required:
+        - type
+        - name
+        - content
     CreateZoneRequest:
       type: object
-      required:
-        - domain
       properties:
         domain:
           type: string
           description: Domain name to create a zone for (e.g. "example.com").
+      required:
+        - domain
     CreateZoneResponse:
       type: object
-      required:
-        - zone
       properties:
         zone:
-          $ref: "#/components/schemas/GetZoneResponse"
           description: The created zone.
+          $ref: "#/components/schemas/GetZoneResponse"
+      required:
+        - zone
+    DkimKey:
+      type: object
+      properties:
+        selector:
+          type: string
+          description: DKIM selector (e.g. "rsa2048").
+        public_key:
+          type: string
+          description: DKIM public key string.
+      required:
+        - selector
+        - public_key
     DomainSearchPrice:
       type: object
-      required:
-        - register
-        - currency
       properties:
         register:
           type: number
           description: Registration cost in USD.
         renew:
-          type: number
           description: Renewal cost in USD. Not returned by checkRegisterAvailability; omitted means unknown.
+          type: number
         currency:
           type: string
           description: Currency code (e.g. "USD").
+      required:
+        - register
+        - currency
     DomainSearchResult:
       type: object
-      required:
-        - domain
-        - available
       properties:
         domain:
           type: string
@@ -231,24 +279,16 @@ components:
           type: boolean
           description: Whether the domain is available for registration.
         price:
-          $ref: "#/components/schemas/DomainSearchPrice"
           description: Pricing info. Only present if available is true.
+          $ref: "#/components/schemas/DomainSearchPrice"
         premium:
-          type: boolean
           description: Whether this is a premium domain with higher pricing.
+          type: boolean
+      required:
+        - domain
+        - available
     GetRecordResponse:
       type: object
-      required:
-        - id
-        - zone_id
-        - type
-        - name
-        - content
-        - ttl
-        - proxied
-        - priority
-        - created_at
-        - updated_at
       properties:
         id:
           type: string
@@ -258,6 +298,15 @@ components:
           description: Zone ID this record belongs to.
         type:
           type: string
+          enum:
+            - A
+            - AAAA
+            - CNAME
+            - MX
+            - TXT
+            - SRV
+            - CAA
+            - NS
           description: DNS record type.
         name:
           type: string
@@ -272,9 +321,9 @@ components:
           type: boolean
           description: Whether Cloudflare proxying is enabled.
         priority:
-          type:
-            - number
-            - "null"
+          anyOf:
+            - type: number
+            - type: "null"
           description: Priority for MX and SRV records. Null for other types.
         created_at:
           type: string
@@ -282,36 +331,40 @@ components:
         updated_at:
           type: string
           description: ISO 8601 timestamp when the record was last updated.
+      required:
+        - id
+        - zone_id
+        - type
+        - name
+        - content
+        - ttl
+        - proxied
+        - priority
+        - created_at
+        - updated_at
     GetRegistrationStatusResponse:
       type: object
-      required:
-        - domain
-        - purchased
-        - zone_id
-        - zone_status
-        - ns_configured_at_registrar
-        - ns_propagated
-        - ns_expected
-        - ns_actual
-        - zone_active
-        - all_ready
-        - next_action
       properties:
         domain:
           type: string
           description: Domain name.
         purchased:
-          type: string
+          type: boolean
+          const: true
           description: Always true — only returned for registered domains.
         zone_id:
-          type:
-            - string
-            - "null"
+          anyOf:
+            - type: string
+            - type: "null"
           description: Cloudflare zone ID. Null if zone not yet created.
         zone_status:
-          type:
-            - string
-            - "null"
+          anyOf:
+            - type: string
+              enum:
+                - pending
+                - active
+                - moved
+            - type: "null"
           description: Current zone status. Null if zone not yet created.
         ns_configured_at_registrar:
           type: boolean
@@ -336,19 +389,24 @@ components:
           type: boolean
           description: Whether the domain is fully set up and ready.
         next_action:
-          type:
-            - string
-            - "null"
+          anyOf:
+            - type: string
+            - type: "null"
           description: Human-readable next action required. Null if all_ready is true.
+      required:
+        - domain
+        - purchased
+        - zone_id
+        - zone_status
+        - ns_configured_at_registrar
+        - ns_propagated
+        - ns_expected
+        - ns_actual
+        - zone_active
+        - all_ready
+        - next_action
     GetZoneResponse:
       type: object
-      required:
-        - id
-        - domain
-        - status
-        - name_servers
-        - owner_wallet
-        - created_at
       properties:
         id:
           type: string
@@ -358,6 +416,10 @@ components:
           description: Domain name (e.g. "example.com").
         status:
           type: string
+          enum:
+            - pending
+            - active
+            - moved
           description: 'Zone status: "pending" | "active" | "moved".'
         name_servers:
           type: array
@@ -370,15 +432,27 @@ components:
         created_at:
           type: string
           description: ISO 8601 timestamp when the zone was created.
+      required:
+        - id
+        - domain
+        - status
+        - name_servers
+        - owner_wallet
+        - created_at
     MailSetupRecordResult:
       type: object
-      required:
-        - type
-        - name
-        - action
       properties:
         type:
           type: string
+          enum:
+            - A
+            - AAAA
+            - CNAME
+            - MX
+            - TXT
+            - SRV
+            - CAA
+            - NS
           description: DNS record type.
         name:
           type: string
@@ -389,12 +463,12 @@ components:
             - created
             - updated
           description: Whether the record was created or updated.
+      required:
+        - type
+        - name
+        - action
     NsVerifyResult:
       type: object
-      required:
-        - expected
-        - actual
-        - propagated
       properties:
         expected:
           type: array
@@ -409,28 +483,23 @@ components:
         propagated:
           type: boolean
           description: Whether nameservers have propagated.
+      required:
+        - expected
+        - actual
+        - propagated
     QuoteRequest:
       type: object
-      required:
-        - domain
       properties:
         domain:
           type: string
           description: Domain name to quote (e.g. "example.com").
         years:
-          type: number
           description: Number of years to register. Default 1.
+          type: number
+      required:
+        - domain
     QuoteResponse:
       type: object
-      required:
-        - quote_id
-        - domain
-        - available
-        - years
-        - registrar_cost_usd
-        - total_cost_usd
-        - currency
-        - expires_at
       properties:
         quote_id:
           type: string
@@ -439,7 +508,8 @@ components:
           type: string
           description: Domain name quoted.
         available:
-          type: string
+          type: boolean
+          const: true
           description: Always true — quote is only returned for available domains.
         years:
           type: number
@@ -456,17 +526,29 @@ components:
         expires_at:
           type: string
           description: ISO 8601 timestamp when the quote expires. Use within the window to avoid quote_expired.
+      required:
+        - quote_id
+        - domain
+        - available
+        - years
+        - registrar_cost_usd
+        - total_cost_usd
+        - currency
+        - expires_at
     RecordVerifyResult:
       type: object
-      required:
-        - type
-        - name
-        - expected
-        - actual
-        - propagated
       properties:
         type:
           type: string
+          enum:
+            - A
+            - AAAA
+            - CNAME
+            - MX
+            - TXT
+            - SRV
+            - CAA
+            - NS
           description: DNS record type.
         name:
           type: string
@@ -475,28 +557,31 @@ components:
           type: string
           description: Expected DNS record value.
         actual:
-          type:
-            - string
-            - "null"
+          anyOf:
+            - type: string
+            - type: "null"
           description: Actual DNS record value found. Null if not found.
         propagated:
           type: boolean
           description: Whether the record has propagated.
+      required:
+        - type
+        - name
+        - expected
+        - actual
+        - propagated
     SearchDomainResponse:
       type: object
-      required:
-        - results
       properties:
         results:
           type: array
           items:
             $ref: "#/components/schemas/DomainSearchResult"
           description: Search results for each queried domain.
+      required:
+        - results
     SetupMailRequest:
       type: object
-      required:
-        - mail_server
-        - mail_server_ip
       properties:
         mail_server:
           type: string
@@ -505,54 +590,67 @@ components:
           type: string
           description: Mail server IPv4 address (used for SPF record).
         dkim:
-          type: object
           description: DKIM keys to configure. Provide rsa and/or ed25519.
+          type: object
+          properties:
+            rsa:
+              description: RSA DKIM key.
+              $ref: "#/components/schemas/DkimKey"
+            ed25519:
+              description: Ed25519 DKIM key.
+              $ref: "#/components/schemas/DkimKey"
+      required:
+        - mail_server
+        - mail_server_ip
     SetupMailResponse:
       type: object
-      required:
-        - records
       properties:
         records:
           type: array
           items:
             $ref: "#/components/schemas/MailSetupRecordResult"
           description: DNS records created or updated by the mail setup.
+      required:
+        - records
     UpdateRecordRequest:
       type: object
       properties:
         type:
-          type: string
           description: DNS record type.
+          type: string
+          enum:
+            - A
+            - AAAA
+            - CNAME
+            - MX
+            - TXT
+            - SRV
+            - CAA
+            - NS
         name:
-          type: string
           description: DNS record name.
-        content:
           type: string
+        content:
           description: DNS record value.
+          type: string
         ttl:
-          type: number
           description: TTL in seconds.
-        proxied:
-          type: boolean
-          description: Enable Cloudflare proxying.
-        priority:
           type: number
+        proxied:
+          description: Enable Cloudflare proxying.
+          type: boolean
+        priority:
           description: Priority for MX and SRV records.
+          type: number
     VerifyDomainResponse:
       type: object
-      required:
-        - domain
-        - nameservers
-        - records
-        - all_propagated
-        - zone_status
       properties:
         domain:
           type: string
           description: Domain name.
         nameservers:
-          $ref: "#/components/schemas/NsVerifyResult"
           description: Nameserver propagation result.
+          $ref: "#/components/schemas/NsVerifyResult"
         records:
           type: array
           items:
@@ -562,10 +660,20 @@ components:
           type: boolean
           description: Whether all records and nameservers have propagated.
         zone_status:
-          type:
-            - string
-            - "null"
+          anyOf:
+            - type: string
+              enum:
+                - pending
+                - active
+                - moved
+            - type: "null"
           description: Current Cloudflare zone status. Null if zone not found.
+      required:
+        - domain
+        - nameservers
+        - records
+        - all_propagated
+        - zone_status
 paths:
   /:
     get:

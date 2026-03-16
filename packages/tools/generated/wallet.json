@@ -224,15 +224,12 @@
             "description": "address parameter"
           },
           "maxPerTx": {
-            "type": "string",
             "description": "Max USDC per transaction. Pass null to remove the limit."
           },
           "maxPerDay": {
-            "type": "string",
             "description": "Max USDC per day. Pass null to remove the limit."
           },
           "allowedPrimitives": {
-            "type": "array",
             "description": "Allowed primitive hostnames. Pass null to allow all."
           }
         },
@@ -256,7 +253,12 @@
           },
           "scope": {
             "type": "string",
-            "description": "Scope to pause. \"all\" | \"send\" | \"swap\". Default \"all\"."
+            "description": "Scope to pause. \"all\" | \"send\" | \"swap\". Default \"all\".",
+            "enum": [
+              "all",
+              "send",
+              "swap"
+            ]
           }
         },
         "required": [
@@ -279,7 +281,12 @@
           },
           "scope": {
             "type": "string",
-            "description": "Scope to resume. \"all\" | \"send\" | \"swap\". Default \"all\"."
+            "description": "Scope to resume. \"all\" | \"send\" | \"swap\". Default \"all\".",
+            "enum": [
+              "all",
+              "send",
+              "swap"
+            ]
           }
         },
         "required": [

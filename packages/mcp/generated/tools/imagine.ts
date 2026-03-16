@@ -13,6 +13,7 @@ export const imagineTools: Tool[] = [
     description: "Generate an image from a text prompt. Returns base64 or URL. | Price: $0.02",
     inputSchema: {
         type: "object",
+        properties: {},
       },
   },
   {
@@ -20,6 +21,7 @@ export const imagineTools: Tool[] = [
     description: "Describe an image. Accepts base64 or URL. Returns text description. | Price: $0.005",
     inputSchema: {
         type: "object",
+        properties: {},
       },
   },
   {
@@ -27,6 +29,7 @@ export const imagineTools: Tool[] = [
     description: "Upscale an image to higher resolution. Accepts base64 or URL. | Price: $0.02",
     inputSchema: {
         type: "object",
+        properties: {},
       },
   },
   {

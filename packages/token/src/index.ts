@@ -12,7 +12,11 @@ import {
 import type { ApiError } from "@primsh/x402-middleware";
 import { createPrimApp } from "@primsh/x402-middleware/create-prim-app";
 import type { ContentfulStatusCode } from "hono/utils/http-status";
-import type { CreatePoolRequest, CreateTokenRequest, MintRequest } from "./api.ts";
+import {
+  CreatePoolRequestSchema,
+  CreateTokenRequestSchema,
+  MintRequestSchema,
+} from "./api.ts";
 import {
   createPool,
   deployToken,
@@ -71,7 +75,7 @@ app.post("/v1/tokens", async (c) => {
   if (callerOrRes instanceof Response) return callerOrRes;
   const caller = callerOrRes;
 
-  const bodyOrRes = await parseJsonBody<CreateTokenRequest>(c, logger, "POST /v1/tokens");
+  const bodyOrRes = await parseJsonBody(c, logger, "POST /v1/tokens", CreateTokenRequestSchema);
   if (bodyOrRes instanceof Response) return bodyOrRes;
   const body = bodyOrRes;
 
@@ -117,7 +121,7 @@ app.post("/v1/tokens/:id/mint", async (c) => {
   if (callerOrRes instanceof Response) return callerOrRes;
   const caller = callerOrRes;
 
-  const bodyOrRes = await parseJsonBody<MintRequest>(c, logger, "POST /v1/tokens/:id/mint");
+  const bodyOrRes = await parseJsonBody(c, logger, "POST /v1/tokens/:id/mint", MintRequestSchema);
   if (bodyOrRes instanceof Response) return bodyOrRes;
   const body = bodyOrRes;
 
@@ -156,7 +160,7 @@ app.post("/v1/tokens/:id/pool", async (c) => {
   if (callerOrRes instanceof Response) return callerOrRes;
   const caller = callerOrRes;
 
-  const bodyOrRes = await parseJsonBody<CreatePoolRequest>(c, logger, "POST /v1/tokens/:id/pool");
+  const bodyOrRes = await parseJsonBody(c, logger, "POST /v1/tokens/:id/pool", CreatePoolRequestSchema);
   if (bodyOrRes instanceof Response) return bodyOrRes;
   const body = bodyOrRes;
 

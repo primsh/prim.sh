@@ -1,121 +1,156 @@
 // SPDX-License-Identifier: Apache-2.0
-// ─── infer.sh API types (OpenAI-compatible) ─────────────────────────────
+// ─── infer.sh API types (OpenAI-compatible) — Zod schemas ────────────────
+
+import { z } from "zod";
 
 // ─── Chat ────────────────────────────────────────────────────────────────
 
-export interface ContentPart {
-  type: "text" | "image_url";
-  text?: string;
-  image_url?: { url: string; detail?: "auto" | "low" | "high" };
-}
+export const ContentPartSchema = z.object({
+  type: z.enum(["text", "image_url"]),
+  text: z.string().optional(),
+  image_url: z
+    .object({
+      url: z.string(),
+      detail: z.enum(["auto", "low", "high"]).optional(),
+    })
+    .optional(),
+});
+export type ContentPart = z.infer<typeof ContentPartSchema>;
 
-export interface ToolCall {
-  id: string;
-  type: "function";
-  function: { name: string; arguments: string };
-}
+export const ToolCallSchema = z.object({
+  id: z.string(),
+  type: z.literal("function"),
+  function: z.object({ name: z.string(), arguments: z.string() }),
+});
+export type ToolCall = z.infer<typeof ToolCallSchema>;
 
-export interface Message {
-  role: "system" | "user" | "assistant" | "tool";
-  content: string | ContentPart[] | null;
-  name?: string;
-  tool_call_id?: string;
-  tool_calls?: ToolCall[];
-}
+export const MessageSchema = z.object({
+  role: z.enum(["system", "user", "assistant", "tool"]),
+  content: z.union([z.string(), z.array(ContentPartSchema), z.null()]),
+  name: z.string().optional(),
+  tool_call_id: z.string().optional(),
+  tool_calls: z.array(ToolCallSchema).optional(),
+});
+export type Message = z.infer<typeof MessageSchema>;
 
-export interface Tool {
-  type: "function";
-  function: {
-    name: string;
-    description?: string;
-    parameters?: Record<string, unknown>;
-  };
-}
+export const ToolSchema = z.object({
+  type: z.literal("function"),
+  function: z.object({
+    name: z.string(),
+    description: z.string().optional(),
+    parameters: z.record(z.string(), z.unknown()).optional(),
+  }),
+});
+export type Tool = z.infer<typeof ToolSchema>;
 
-export interface ChatRequest {
-  model: string;
-  messages: Message[];
-  temperature?: number;
-  max_tokens?: number;
-  top_p?: number;
-  frequency_penalty?: number;
-  presence_penalty?: number;
-  stop?: string | string[];
-  stream?: boolean;
-  tools?: Tool[];
-  tool_choice?: "none" | "auto" | "required" | { type: "function"; function: { name: string } };
-  response_format?: { type: "text" | "json_object" };
-}
+export const ChatRequestSchema = z.object({
+  model: z.string(),
+  messages: z.array(MessageSchema),
+  temperature: z.number().optional(),
+  max_tokens: z.number().optional(),
+  top_p: z.number().optional(),
+  frequency_penalty: z.number().optional(),
+  presence_penalty: z.number().optional(),
+  stop: z.union([z.string(), z.array(z.string())]).optional(),
+  stream: z.boolean().optional(),
+  tools: z.array(ToolSchema).optional(),
+  tool_choice: z
+    .union([
+      z.enum(["none", "auto", "required"]),
+      z.object({
+        type: z.literal("function"),
+        function: z.object({ name: z.string() }),
+      }),
+    ])
+    .optional(),
+  response_format: z
+    .object({
+      type: z.enum(["text", "json_object"]),
+    })
+    .optional(),
+});
+export type ChatRequest = z.infer<typeof ChatRequestSchema>;
 
-export interface Choice {
-  index: number;
-  message: Message;
-  finish_reason: "stop" | "length" | "tool_calls" | "content_filter" | null;
-}
+export const ChoiceSchema = z.object({
+  index: z.number(),
+  message: MessageSchema,
+  finish_reason: z.enum(["stop", "length", "tool_calls", "content_filter"]).nullable(),
+});
+export type Choice = z.infer<typeof ChoiceSchema>;
 
-export interface Usage {
-  prompt_tokens: number;
-  completion_tokens: number;
-  total_tokens: number;
-}
+export const UsageSchema = z.object({
+  prompt_tokens: z.number(),
+  completion_tokens: z.number(),
+  total_tokens: z.number(),
+});
+export type Usage = z.infer<typeof UsageSchema>;
 
-export interface ChatResponse {
-  id: string;
-  object: "chat.completion";
-  created: number;
-  model: string;
-  choices: Choice[];
-  usage: Usage;
-}
+export const ChatResponseSchema = z.object({
+  id: z.string(),
+  object: z.literal("chat.completion"),
+  created: z.number(),
+  model: z.string(),
+  choices: z.array(ChoiceSchema),
+  usage: UsageSchema,
+});
+export type ChatResponse = z.infer<typeof ChatResponseSchema>;
 
 // ─── Embeddings ──────────────────────────────────────────────────────────
 
-export interface EmbedRequest {
-  model: string;
-  input: string | string[];
-}
+export const EmbedRequestSchema = z.object({
+  model: z.string(),
+  input: z.union([z.string(), z.array(z.string())]),
+});
+export type EmbedRequest = z.infer<typeof EmbedRequestSchema>;
 
-export interface EmbeddingData {
-  object: "embedding";
-  index: number;
-  embedding: number[];
-}
+export const EmbeddingDataSchema = z.object({
+  object: z.literal("embedding"),
+  index: z.number(),
+  embedding: z.array(z.number()),
+});
+export type EmbeddingData = z.infer<typeof EmbeddingDataSchema>;
 
-export interface EmbedResponse {
-  object: "list";
-  data: EmbeddingData[];
-  model: string;
-  usage: { prompt_tokens: number; total_tokens: number };
-}
+export const EmbedResponseSchema = z.object({
+  object: z.literal("list"),
+  data: z.array(EmbeddingDataSchema),
+  model: z.string(),
+  usage: z.object({
+    prompt_tokens: z.number(),
+    total_tokens: z.number(),
+  }),
+});
+export type EmbedResponse = z.infer<typeof EmbedResponseSchema>;
 
 // ─── Models ──────────────────────────────────────────────────────────────
 
-export interface ModelPricing {
-  prompt: string;
-  completion: string;
-}
+export const ModelPricingSchema = z.object({
+  prompt: z.string(),
+  completion: z.string(),
+});
+export type ModelPricing = z.infer<typeof ModelPricingSchema>;
 
-export interface ModelInfo {
-  id: string;
-  name: string;
-  context_length: number;
-  pricing: ModelPricing;
-}
+export const ModelInfoSchema = z.object({
+  id: z.string(),
+  name: z.string(),
+  context_length: z.number(),
+  pricing: ModelPricingSchema,
+});
+export type ModelInfo = z.infer<typeof ModelInfoSchema>;
 
-export interface ListModelsResponse {
-  data: ModelInfo[];
-}
+export const ListModelsResponseSchema = z.object({
+  data: z.array(ModelInfoSchema),
+});
+export type ListModelsResponse = z.infer<typeof ListModelsResponseSchema>;
 
 // ─── Error ───────────────────────────────────────────────────────────────
 
-export interface ApiError {
-  error: {
-    /** Machine-readable error code. */
-    code: string;
-    /** Human-readable error message. */
-    message: string;
-  };
-}
+export const ApiErrorSchema = z.object({
+  error: z.object({
+    code: z.string().describe("Machine-readable error code."),
+    message: z.string().describe("Human-readable error message."),
+  }),
+});
+export type ApiError = z.infer<typeof ApiErrorSchema>;
 
 export const ERROR_CODES = [
   "invalid_request",

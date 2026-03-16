@@ -31,12 +31,7 @@
           "presence_penalty": {
             "type": "number"
           },
-          "stop": {
-            "type": "array",
-            "items": {
-              "type": "string"
-            }
-          },
+          "stop": {},
           "stream": {
             "type": "boolean"
           },
@@ -46,14 +41,7 @@
               "type": "object"
             }
           },
-          "tool_choice": {
-            "type": "string",
-            "enum": [
-              "none",
-              "auto",
-              "required"
-            ]
-          },
+          "tool_choice": {},
           "response_format": {
             "type": "object"
           }
@@ -76,12 +64,7 @@
           "model": {
             "type": "string"
           },
-          "input": {
-            "type": "array",
-            "items": {
-              "type": "string"
-            }
-          }
+          "input": {}
         },
         "required": [
           "model",

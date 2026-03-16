@@ -9,7 +9,7 @@ import {
 } from "@primsh/x402-middleware";
 import type { ApiError } from "@primsh/x402-middleware";
 import { createPrimApp } from "@primsh/x402-middleware/create-prim-app";
-import type { ExtractRequest, SearchRequest } from "./api.ts";
+import { ExtractRequestSchema, SearchRequestSchema } from "./api.ts";
 import type { ExtractProvider, SearchProvider } from "./provider.ts";
 import { extractUrls, searchNews, searchWeb, setRegistry } from "./service.ts";
 import { TavilyClient } from "./tavily.ts";
@@ -107,7 +107,7 @@ app.get("/health/providers", async (c) => {
 
 // POST /v1/search — Web search
 app.post("/v1/search", async (c) => {
-  const bodyOrRes = await parseJsonBody<SearchRequest>(c, logger, "POST /v1/search");
+  const bodyOrRes = await parseJsonBody(c, logger, "POST /v1/search", SearchRequestSchema);
   if (bodyOrRes instanceof Response) return bodyOrRes;
   const body = bodyOrRes;
 
@@ -130,7 +130,7 @@ app.post("/v1/search", async (c) => {
 
 // POST /v1/search/news — News search
 app.post("/v1/search/news", async (c) => {
-  const bodyOrRes = await parseJsonBody<SearchRequest>(c, logger, "POST /v1/search/news");
+  const bodyOrRes = await parseJsonBody(c, logger, "POST /v1/search/news", SearchRequestSchema);
   if (bodyOrRes instanceof Response) return bodyOrRes;
   const body = bodyOrRes;
 
@@ -153,7 +153,7 @@ app.post("/v1/search/news", async (c) => {
 
 // POST /v1/extract — URL content extraction
 app.post("/v1/extract", async (c) => {
-  const bodyOrRes = await parseJsonBody<ExtractRequest>(c, logger, "POST /v1/extract");
+  const bodyOrRes = await parseJsonBody(c, logger, "POST /v1/extract", ExtractRequestSchema);
   if (bodyOrRes instanceof Response) return bodyOrRes;
   const body = bodyOrRes;
 
