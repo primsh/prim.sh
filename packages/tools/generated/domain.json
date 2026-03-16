@@ -306,6 +306,14 @@
           "zone_id": {
             "type": "string",
             "description": "zone_id parameter"
+          },
+          "limit": {
+            "type": "integer",
+            "description": "1-100, default 100"
+          },
+          "after": {
+            "type": "string",
+            "description": "Cursor from previous response"
           }
         },
         "required": [

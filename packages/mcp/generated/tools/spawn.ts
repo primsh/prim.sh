@@ -18,9 +18,9 @@ export const spawnTools: Tool[] = [
             type: "integer",
             description: "1-100, default 20",
           },
-          "page": {
-            type: "integer",
-            description: "1-based page number, default 1",
+          "after": {
+            type: "string",
+            description: "Cursor from previous response",
           },
         },
       },
@@ -231,7 +231,7 @@ export async function handleSpawnTool(
       case "spawn_list_servers": {
         const url = new URL(`${baseUrl}/v1/servers`);
         if (args.limit !== undefined) url.searchParams.set("limit", String(args.limit));
-        if (args.page !== undefined) url.searchParams.set("page", String(args.page));
+        if (args.after !== undefined) url.searchParams.set("after", String(args.after));
         const res = await primFetch(url.toString());
         const data = await res.json();
         if (!res.ok) return errorResult(data);

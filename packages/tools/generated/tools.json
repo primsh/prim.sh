@@ -403,9 +403,9 @@
             "type": "integer",
             "description": "1-100, default 20"
           },
-          "page": {
-            "type": "integer",
-            "description": "1-based page number, default 1"
+          "after": {
+            "type": "string",
+            "description": "Cursor from previous response's next_cursor"
           }
         }
       }
@@ -868,9 +868,9 @@
             "type": "integer",
             "description": "1-100, default 20"
           },
-          "page": {
-            "type": "integer",
-            "description": "1-based page number, default 1"
+          "after": {
+            "type": "string",
+            "description": "Cursor from previous response"
           }
         }
       }
@@ -2182,6 +2182,14 @@
           "zone_id": {
             "type": "string",
             "description": "zone_id parameter"
+          },
+          "limit": {
+            "type": "integer",
+            "description": "1-100, default 100"
+          },
+          "after": {
+            "type": "string",
+            "description": "Cursor from previous response"
           }
         },
         "required": [
