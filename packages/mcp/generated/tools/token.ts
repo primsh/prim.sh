@@ -43,8 +43,15 @@ export const tokenTools: Tool[] = [
             description: "Whether additional tokens can be minted after deployment. Default false.",
           },
           "maxSupply": {
-            type: ["string","null"],
             description: "Maximum mintable supply as a raw integer string. Null = unlimited. Only applies if mintable is true.",
+            anyOf: [
+              {
+                type: "string",
+              },
+              {
+                type: "null",
+              },
+            ],
           },
         },
         required: ["name","symbol","initialSupply"],

@@ -52,59 +52,58 @@ components:
       type: object
       properties:
         username:
-          type: string
           description: Desired username. Omit for random generation.
-        domain:
           type: string
+        domain:
           description: Domain for the mailbox (must be registered). Omit for default domain.
+          type: string
         ttl_ms:
-          type: number
           description: TTL in milliseconds. Omit for permanent mailbox.
+          type: number
     DeleteDomainResponse:
       type: object
-      required:
-        - id
-        - deleted
       properties:
         id:
           type: string
           description: Domain registration ID that was deleted.
         deleted:
-          type: string
+          type: boolean
+          const: true
           description: Always true on success.
         warning:
-          type: string
           description: Warning message if domain had active mailboxes.
-    DeleteMailboxResponse:
-      type: object
+          type: string
       required:
         - id
         - deleted
+    DeleteMailboxResponse:
+      type: object
       properties:
         id:
           type: string
           description: Mailbox ID that was deleted.
         deleted:
-          type: string
+          type: boolean
+          const: true
           description: Always true on success.
-    DeleteWebhookResponse:
-      type: object
       required:
         - id
         - deleted
+    DeleteWebhookResponse:
+      type: object
       properties:
         id:
           type: string
           description: Webhook ID that was deleted.
         deleted:
-          type: string
+          type: boolean
+          const: true
           description: Always true on success.
+      required:
+        - id
+        - deleted
     DnsRecord:
       type: object
-      required:
-        - type
-        - name
-        - content
       properties:
         type:
           type: string
@@ -116,43 +115,35 @@ components:
           type: string
           description: DNS record value.
         priority:
-          type: number
           description: MX priority. Only present for MX records.
+          type: number
+      required:
+        - type
+        - name
+        - content
     EmailAddress:
       type: object
-      required:
-        - name
-        - email
       properties:
         name:
-          type:
-            - string
-            - "null"
+          anyOf:
+            - type: string
+            - type: "null"
           description: Display name. Null if not present.
         email:
           type: string
           description: Email address string.
+      required:
+        - name
+        - email
     EmailDetail:
       type: object
-      required:
-        - id
-        - from
-        - to
-        - subject
-        - received_at
-        - size
-        - has_attachment
-        - preview
-        - cc
-        - text_body
-        - html_body
       properties:
         id:
           type: string
           description: Message ID.
         from:
-          $ref: "#/components/schemas/EmailAddress"
           description: Sender address.
+          $ref: "#/components/schemas/EmailAddress"
         to:
           type: array
           items:
@@ -179,17 +170,15 @@ components:
             $ref: "#/components/schemas/EmailAddress"
           description: CC recipient addresses.
         text_body:
-          type:
-            - string
-            - "null"
+          anyOf:
+            - type: string
+            - type: "null"
           description: Plain-text body. Null if not present.
         html_body:
-          type:
-            - string
-            - "null"
+          anyOf:
+            - type: string
+            - type: "null"
           description: HTML body. Null if not present.
-    EmailMessage:
-      type: object
       required:
         - id
         - from
@@ -199,43 +188,11 @@ components:
         - size
         - has_attachment
         - preview
-      properties:
-        id:
-          type: string
-          description: Message ID.
-        from:
-          $ref: "#/components/schemas/EmailAddress"
-          description: Sender address.
-        to:
-          type: array
-          items:
-            $ref: "#/components/schemas/EmailAddress"
-          description: Recipient addresses.
-        subject:
-          type: string
-          description: Email subject line.
-        received_at:
-          type: string
-          description: ISO 8601 timestamp when the message was received.
-        size:
-          type: number
-          description: Message size in bytes.
-        has_attachment:
-          type: boolean
-          description: Whether the message has attachments.
-        preview:
-          type: string
-          description: Short preview text (first ~100 chars of body).
+        - cc
+        - text_body
+        - html_body
     GetDomainResponse:
       type: object
-      required:
-        - id
-        - domain
-        - status
-        - owner_wallet
-        - created_at
-        - verified_at
-        - required_records
       properties:
         id:
           type: string
@@ -253,9 +210,9 @@ components:
           type: string
           description: ISO 8601 timestamp when the domain was registered.
         verified_at:
-          type:
-            - string
-            - "null"
+          anyOf:
+            - type: string
+            - type: "null"
           description: ISO 8601 timestamp when the domain was verified. Null if unverified.
         required_records:
           type: array
@@ -263,20 +220,20 @@ components:
             $ref: "#/components/schemas/DnsRecord"
           description: DNS records that must be added to verify the domain.
         dkim_records:
+          description: DKIM DNS records. Only present after successful verification.
           type: array
           items:
             $ref: "#/components/schemas/DnsRecord"
-          description: DKIM DNS records. Only present after successful verification.
-    GetMailboxResponse:
-      type: object
       required:
         - id
-        - address
-        - username
         - domain
         - status
+        - owner_wallet
         - created_at
-        - expires_at
+        - verified_at
+        - required_records
+    GetMailboxResponse:
+      type: object
       properties:
         id:
           type: string
@@ -292,23 +249,29 @@ components:
           description: Domain portion of the email address.
         status:
           type: string
+          enum:
+            - active
+            - expired
+            - deleted
           description: 'Current status: "active" | "expired" | "deleted".'
         created_at:
           type: string
           description: ISO 8601 timestamp when the mailbox was created.
         expires_at:
-          type:
-            - string
-            - "null"
+          anyOf:
+            - type: string
+            - type: "null"
           description: ISO 8601 timestamp when the mailbox expires. Null if permanent.
-    GetWebhookResponse:
-      type: object
       required:
         - id
-        - url
-        - events
+        - address
+        - username
+        - domain
         - status
         - created_at
+        - expires_at
+    GetWebhookResponse:
+      type: object
       properties:
         id:
           type: string
@@ -327,41 +290,44 @@ components:
         created_at:
           type: string
           description: ISO 8601 timestamp when the webhook was created.
+      required:
+        - id
+        - url
+        - events
+        - status
+        - created_at
     RegisterDomainRequest:
       type: object
-      required:
-        - domain
       properties:
         domain:
           type: string
           description: Domain name to register (e.g. "myproject.com").
+      required:
+        - domain
     RegisterWebhookRequest:
       type: object
-      required:
-        - url
       properties:
         url:
           type: string
           description: HTTPS URL to receive webhook POST requests.
         secret:
-          type: string
           description: HMAC secret for X-Prim-Signature verification.
+          type: string
         events:
+          description: Events to subscribe to. Defaults to ["message.received"].
           type: array
           items:
             type: string
-          description: Events to subscribe to. Defaults to ["message.received"].
+      required:
+        - url
     RenewMailboxRequest:
       type: object
       properties:
         ttl_ms:
-          type: number
           description: Extension duration in milliseconds. Omit to apply default TTL.
+          type: number
     SendMessageRequest:
       type: object
-      required:
-        - to
-        - subject
       properties:
         to:
           type: string
@@ -370,39 +336,35 @@ components:
           type: string
           description: Email subject line.
         body:
-          type: string
           description: Plain-text body. Either body or html is required.
+          type: string
         html:
-          type: string
           description: HTML body. Either body or html is required.
+          type: string
         cc:
-          type: string
           description: CC recipient email address.
-        bcc:
           type: string
+        bcc:
           description: BCC recipient email address.
+          type: string
+      required:
+        - to
+        - subject
     SendMessageResponse:
       type: object
-      required:
-        - message_id
-        - status
       properties:
         message_id:
           type: string
           description: Message ID assigned by the mail server.
         status:
           type: string
-          enum:
-            - sent
+          const: sent
           description: Always "sent" on success.
+      required:
+        - message_id
+        - status
     VerificationResult:
       type: object
-      required:
-        - type
-        - name
-        - expected
-        - found
-        - pass
       properties:
         type:
           type: string
@@ -414,20 +376,21 @@ components:
           type: string
           description: Expected DNS record value.
         found:
-          type:
-            - string
-            - "null"
+          anyOf:
+            - type: string
+            - type: "null"
           description: Actual DNS record value found. Null if not found.
         pass:
           type: boolean
           description: Whether the record matched the expected value.
+      required:
+        - type
+        - name
+        - expected
+        - found
+        - pass
     VerifyDomainResponse:
       type: object
-      required:
-        - id
-        - domain
-        - status
-        - verified_at
       properties:
         id:
           type: string
@@ -439,20 +402,25 @@ components:
           type: string
           description: Updated verification status.
         verified_at:
-          type:
-            - string
-            - "null"
+          anyOf:
+            - type: string
+            - type: "null"
           description: ISO 8601 timestamp when the domain was verified. Null if not yet verified.
         verification_results:
+          description: Per-record verification results.
           type: array
           items:
             $ref: "#/components/schemas/VerificationResult"
-          description: Per-record verification results.
         dkim_records:
+          description: DKIM records to add to DNS. Only present on successful verification.
           type: array
           items:
             $ref: "#/components/schemas/DnsRecord"
-          description: DKIM records to add to DNS. Only present on successful verification.
+      required:
+        - id
+        - domain
+        - status
+        - verified_at
 paths:
   /:
     get:

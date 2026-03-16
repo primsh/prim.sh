@@ -1,18 +1,19 @@
 // SPDX-License-Identifier: Apache-2.0
 /**
- * email.sh API contract — request/response types and error envelope.
+ * email.sh API contract — Zod schemas, inferred types, and error envelope.
  */
+
+import { z } from "zod";
 
 // ─── Error envelope ───────────────────────────────────────────────────────
 
-export interface ApiError {
-  error: {
-    /** Machine-readable error code. */
-    code: string;
-    /** Human-readable error message. */
-    message: string;
-  };
-}
+export const ApiErrorSchema = z.object({
+  error: z.object({
+    code: z.string().describe("Machine-readable error code."),
+    message: z.string().describe("Human-readable error message."),
+  }),
+});
+export type ApiError = z.infer<typeof ApiErrorSchema>;
 
 export const ERROR_CODES = [
   "not_found",
@@ -31,234 +32,204 @@ export type ErrorCode = (typeof ERROR_CODES)[number];
 
 export type MailboxStatus = "active" | "expired" | "deleted";
 
-export interface GetMailboxResponse {
-  /** Mailbox ID (e.g. "mbx_abc123"). */
-  id: string;
-  /** Full email address (e.g. "abc123@mail.prim.sh"). */
-  address: string;
-  /** Username portion of the email address. */
-  username: string;
-  /** Domain portion of the email address. */
-  domain: string;
-  /** Current status: "active" | "expired" | "deleted". */
-  status: MailboxStatus;
-  /** ISO 8601 timestamp when the mailbox was created. */
-  created_at: string;
-  /** ISO 8601 timestamp when the mailbox expires. Null if permanent. */
-  expires_at: string | null;
-}
+export const GetMailboxResponseSchema = z.object({
+  id: z.string().describe('Mailbox ID (e.g. "mbx_abc123").'),
+  address: z.string().describe('Full email address (e.g. "abc123@mail.prim.sh").'),
+  username: z.string().describe("Username portion of the email address."),
+  domain: z.string().describe("Domain portion of the email address."),
+  status: z
+    .enum(["active", "expired", "deleted"])
+    .describe('Current status: "active" | "expired" | "deleted".'),
+  created_at: z.string().describe("ISO 8601 timestamp when the mailbox was created."),
+  expires_at: z
+    .string()
+    .nullable()
+    .describe("ISO 8601 timestamp when the mailbox expires. Null if permanent."),
+});
+export type GetMailboxResponse = z.infer<typeof GetMailboxResponseSchema>;
 
-export interface CreateMailboxRequest {
-  /** Desired username. Omit for random generation. */
-  username?: string;
-  /** Domain for the mailbox (must be registered). Omit for default domain. */
-  domain?: string;
-  /** TTL in milliseconds. Omit for permanent mailbox. */
-  ttl_ms?: number;
-}
+export const CreateMailboxRequestSchema = z.object({
+  username: z.string().optional().describe("Desired username. Omit for random generation."),
+  domain: z
+    .string()
+    .optional()
+    .describe("Domain for the mailbox (must be registered). Omit for default domain."),
+  ttl_ms: z.number().optional().describe("TTL in milliseconds. Omit for permanent mailbox."),
+});
+export type CreateMailboxRequest = z.infer<typeof CreateMailboxRequestSchema>;
 
-export interface RenewMailboxRequest {
-  /** Extension duration in milliseconds. Omit to apply default TTL. */
-  ttl_ms?: number;
-}
+export const RenewMailboxRequestSchema = z.object({
+  ttl_ms: z
+    .number()
+    .optional()
+    .describe("Extension duration in milliseconds. Omit to apply default TTL."),
+});
+export type RenewMailboxRequest = z.infer<typeof RenewMailboxRequestSchema>;
 
-export interface DeleteMailboxResponse {
-  /** Mailbox ID that was deleted. */
-  id: string;
-  /** Always true on success. */
-  deleted: true;
-}
+export const DeleteMailboxResponseSchema = z.object({
+  id: z.string().describe("Mailbox ID that was deleted."),
+  deleted: z.literal(true).describe("Always true on success."),
+});
+export type DeleteMailboxResponse = z.infer<typeof DeleteMailboxResponseSchema>;
 
 // ─── Email types (R-5) ─────────────────────────────────────────────────
 
-export interface EmailAddress {
-  /** Display name. Null if not present. */
-  name: string | null;
-  /** Email address string. */
-  email: string;
-}
+export const EmailAddressSchema = z.object({
+  name: z.string().nullable().describe("Display name. Null if not present."),
+  email: z.string().describe("Email address string."),
+});
+export type EmailAddress = z.infer<typeof EmailAddressSchema>;
 
-export interface EmailMessage {
-  /** Message ID. */
-  id: string;
-  /** Sender address. */
-  from: EmailAddress;
-  /** Recipient addresses. */
-  to: EmailAddress[];
-  /** Email subject line. */
-  subject: string;
-  /** ISO 8601 timestamp when the message was received. */
-  received_at: string;
-  /** Message size in bytes. */
-  size: number;
-  /** Whether the message has attachments. */
-  has_attachment: boolean;
-  /** Short preview text (first ~100 chars of body). */
-  preview: string;
-}
+export const EmailMessageSchema = z.object({
+  id: z.string().describe("Message ID."),
+  from: EmailAddressSchema.describe("Sender address."),
+  to: z.array(EmailAddressSchema).describe("Recipient addresses."),
+  subject: z.string().describe("Email subject line."),
+  received_at: z.string().describe("ISO 8601 timestamp when the message was received."),
+  size: z.number().describe("Message size in bytes."),
+  has_attachment: z.boolean().describe("Whether the message has attachments."),
+  preview: z.string().describe("Short preview text (first ~100 chars of body)."),
+});
+export type EmailMessage = z.infer<typeof EmailMessageSchema>;
 
-export interface EmailDetail extends EmailMessage {
-  /** CC recipient addresses. */
-  cc: EmailAddress[];
-  /** Plain-text body. Null if not present. */
-  text_body: string | null;
-  /** HTML body. Null if not present. */
-  html_body: string | null;
-}
+export const EmailDetailSchema = EmailMessageSchema.extend({
+  cc: z.array(EmailAddressSchema).describe("CC recipient addresses."),
+  text_body: z.string().nullable().describe("Plain-text body. Null if not present."),
+  html_body: z.string().nullable().describe("HTML body. Null if not present."),
+});
+export type EmailDetail = z.infer<typeof EmailDetailSchema>;
 
 // ─── Send types (R-6) ─────────────────────────────────────────────────
 
-export interface SendMessageRequest {
-  /** Recipient email address. */
-  to: string;
-  /** Email subject line. */
-  subject: string;
-  /** Plain-text body. Either body or html is required. */
-  body?: string;
-  /** HTML body. Either body or html is required. */
-  html?: string;
-  /** CC recipient email address. */
-  cc?: string;
-  /** BCC recipient email address. */
-  bcc?: string;
-}
+export const SendMessageRequestSchema = z.object({
+  to: z.string().describe("Recipient email address."),
+  subject: z.string().describe("Email subject line."),
+  body: z.string().optional().describe("Plain-text body. Either body or html is required."),
+  html: z.string().optional().describe("HTML body. Either body or html is required."),
+  cc: z.string().optional().describe("CC recipient email address."),
+  bcc: z.string().optional().describe("BCC recipient email address."),
+});
+export type SendMessageRequest = z.infer<typeof SendMessageRequestSchema>;
 
-export interface SendMessageResponse {
-  /** Message ID assigned by the mail server. */
-  message_id: string;
-  /** Always "sent" on success. */
-  status: "sent";
-}
+export const SendMessageResponseSchema = z.object({
+  message_id: z.string().describe("Message ID assigned by the mail server."),
+  status: z.literal("sent").describe('Always "sent" on success.'),
+});
+export type SendMessageResponse = z.infer<typeof SendMessageResponseSchema>;
 
 // ─── Webhook types (R-7) ──────────────────────────────────────────────
 
-export interface RegisterWebhookRequest {
-  /** HTTPS URL to receive webhook POST requests. */
-  url: string;
-  /** HMAC secret for X-Prim-Signature verification. */
-  secret?: string;
-  /** Events to subscribe to. Defaults to ["message.received"]. */
-  events?: string[];
-}
+export const RegisterWebhookRequestSchema = z.object({
+  url: z.string().describe("HTTPS URL to receive webhook POST requests."),
+  secret: z.string().optional().describe("HMAC secret for X-Prim-Signature verification."),
+  events: z
+    .array(z.string())
+    .optional()
+    .describe('Events to subscribe to. Defaults to ["message.received"].'),
+});
+export type RegisterWebhookRequest = z.infer<typeof RegisterWebhookRequestSchema>;
 
-export interface GetWebhookResponse {
-  /** Webhook ID (e.g. "wh_abc123"). */
-  id: string;
-  /** Webhook endpoint URL. */
-  url: string;
-  /** Subscribed events. */
-  events: string[];
-  /** Webhook status. */
-  status: string;
-  /** ISO 8601 timestamp when the webhook was created. */
-  created_at: string;
-}
+export const GetWebhookResponseSchema = z.object({
+  id: z.string().describe('Webhook ID (e.g. "wh_abc123").'),
+  url: z.string().describe("Webhook endpoint URL."),
+  events: z.array(z.string()).describe("Subscribed events."),
+  status: z.string().describe("Webhook status."),
+  created_at: z.string().describe("ISO 8601 timestamp when the webhook was created."),
+});
+export type GetWebhookResponse = z.infer<typeof GetWebhookResponseSchema>;
 
-export interface DeleteWebhookResponse {
-  /** Webhook ID that was deleted. */
-  id: string;
-  /** Always true on success. */
-  deleted: true;
-}
+export const DeleteWebhookResponseSchema = z.object({
+  id: z.string().describe("Webhook ID that was deleted."),
+  deleted: z.literal(true).describe("Always true on success."),
+});
+export type DeleteWebhookResponse = z.infer<typeof DeleteWebhookResponseSchema>;
 
-export interface WebhookPayload {
-  /** Event type (e.g. "message.received"). */
-  event: string;
-  /** Mailbox ID that received the message. */
-  mailbox_id: string;
-  /** Message ID. */
-  message_id: string;
-  /** Sender address. */
-  from: { name: string | null; email: string };
-  /** Recipient addresses. */
-  to: { name: string | null; email: string }[];
-  /** Email subject line. */
-  subject: string;
-  /** Short preview of the message body. */
-  preview: string;
-  /** ISO 8601 timestamp when the message was received. */
-  received_at: string;
-  /** Message size in bytes. */
-  size: number;
-  /** Whether the message has attachments. */
-  has_attachment: boolean;
-  /** ISO 8601 timestamp when the webhook was dispatched. */
-  timestamp: string;
-}
+export const WebhookPayloadSchema = z.object({
+  event: z.string().describe('Event type (e.g. "message.received").'),
+  mailbox_id: z.string().describe("Mailbox ID that received the message."),
+  message_id: z.string().describe("Message ID."),
+  from: z.object({ name: z.string().nullable(), email: z.string() }).describe("Sender address."),
+  to: z
+    .array(z.object({ name: z.string().nullable(), email: z.string() }))
+    .describe("Recipient addresses."),
+  subject: z.string().describe("Email subject line."),
+  preview: z.string().describe("Short preview of the message body."),
+  received_at: z.string().describe("ISO 8601 timestamp when the message was received."),
+  size: z.number().describe("Message size in bytes."),
+  has_attachment: z.boolean().describe("Whether the message has attachments."),
+  timestamp: z.string().describe("ISO 8601 timestamp when the webhook was dispatched."),
+});
+export type WebhookPayload = z.infer<typeof WebhookPayloadSchema>;
 
 // ─── Domain types (R-9) ──────────────────────────────────────────────
 
-export interface DnsRecord {
-  /** DNS record type (e.g. "MX", "TXT"). */
-  type: string;
-  /** DNS record name (hostname). */
-  name: string;
-  /** DNS record value. */
-  content: string;
-  /** MX priority. Only present for MX records. */
-  priority?: number;
-}
+export const DnsRecordSchema = z.object({
+  type: z.string().describe('DNS record type (e.g. "MX", "TXT").'),
+  name: z.string().describe("DNS record name (hostname)."),
+  content: z.string().describe("DNS record value."),
+  priority: z.number().optional().describe("MX priority. Only present for MX records."),
+});
+export type DnsRecord = z.infer<typeof DnsRecordSchema>;
 
-export interface RegisterDomainRequest {
-  /** Domain name to register (e.g. "myproject.com"). */
-  domain: string;
-}
+export const RegisterDomainRequestSchema = z.object({
+  domain: z.string().describe('Domain name to register (e.g. "myproject.com").'),
+});
+export type RegisterDomainRequest = z.infer<typeof RegisterDomainRequestSchema>;
 
-export interface GetDomainResponse {
-  /** Domain registration ID. */
-  id: string;
-  /** Registered domain name. */
-  domain: string;
-  /** Verification status ("pending" | "verified"). */
-  status: string;
-  /** Ethereum address of the domain owner. */
-  owner_wallet: string;
-  /** ISO 8601 timestamp when the domain was registered. */
-  created_at: string;
-  /** ISO 8601 timestamp when the domain was verified. Null if unverified. */
-  verified_at: string | null;
-  /** DNS records that must be added to verify the domain. */
-  required_records: DnsRecord[];
-  /** DKIM DNS records. Only present after successful verification. */
-  dkim_records?: DnsRecord[];
-}
+export const GetDomainResponseSchema = z.object({
+  id: z.string().describe("Domain registration ID."),
+  domain: z.string().describe("Registered domain name."),
+  status: z.string().describe('Verification status ("pending" | "verified").'),
+  owner_wallet: z.string().describe("Ethereum address of the domain owner."),
+  created_at: z.string().describe("ISO 8601 timestamp when the domain was registered."),
+  verified_at: z
+    .string()
+    .nullable()
+    .describe("ISO 8601 timestamp when the domain was verified. Null if unverified."),
+  required_records: z
+    .array(DnsRecordSchema)
+    .describe("DNS records that must be added to verify the domain."),
+  dkim_records: z
+    .array(DnsRecordSchema)
+    .optional()
+    .describe("DKIM DNS records. Only present after successful verification."),
+});
+export type GetDomainResponse = z.infer<typeof GetDomainResponseSchema>;
 
-export interface DeleteDomainResponse {
-  /** Domain registration ID that was deleted. */
-  id: string;
-  /** Always true on success. */
-  deleted: true;
-  /** Warning message if domain had active mailboxes. */
-  warning?: string;
-}
+export const DeleteDomainResponseSchema = z.object({
+  id: z.string().describe("Domain registration ID that was deleted."),
+  deleted: z.literal(true).describe("Always true on success."),
+  warning: z.string().optional().describe("Warning message if domain had active mailboxes."),
+});
+export type DeleteDomainResponse = z.infer<typeof DeleteDomainResponseSchema>;
 
-export interface VerificationResult {
-  /** DNS record type checked. */
-  type: string;
-  /** DNS record name checked. */
-  name: string;
-  /** Expected DNS record value. */
-  expected: string;
-  /** Actual DNS record value found. Null if not found. */
-  found: string | null;
-  /** Whether the record matched the expected value. */
-  pass: boolean;
-}
+export const VerificationResultSchema = z.object({
+  type: z.string().describe("DNS record type checked."),
+  name: z.string().describe("DNS record name checked."),
+  expected: z.string().describe("Expected DNS record value."),
+  found: z.string().nullable().describe("Actual DNS record value found. Null if not found."),
+  pass: z.boolean().describe("Whether the record matched the expected value."),
+});
+export type VerificationResult = z.infer<typeof VerificationResultSchema>;
 
-export interface VerifyDomainResponse {
-  /** Domain registration ID. */
-  id: string;
-  /** Domain name. */
-  domain: string;
-  /** Updated verification status. */
-  status: string;
-  /** ISO 8601 timestamp when the domain was verified. Null if not yet verified. */
-  verified_at: string | null;
-  /** Per-record verification results. */
-  verification_results?: VerificationResult[];
-  /** DKIM records to add to DNS. Only present on successful verification. */
-  dkim_records?: DnsRecord[];
-}
+export const VerifyDomainResponseSchema = z.object({
+  id: z.string().describe("Domain registration ID."),
+  domain: z.string().describe("Domain name."),
+  status: z.string().describe("Updated verification status."),
+  verified_at: z
+    .string()
+    .nullable()
+    .describe("ISO 8601 timestamp when the domain was verified. Null if not yet verified."),
+  verification_results: z
+    .array(VerificationResultSchema)
+    .optional()
+    .describe("Per-record verification results."),
+  dkim_records: z
+    .array(DnsRecordSchema)
+    .optional()
+    .describe("DKIM records to add to DNS. Only present on successful verification."),
+});
+export type VerifyDomainResponse = z.infer<typeof VerifyDomainResponseSchema>;
 
 // ─── JMAP context (used by R-5/R-6) ────────────────────────────────────
 

@@ -219,7 +219,6 @@
             "description": "id parameter"
           },
           "quota_bytes": {
-            "type": "number",
             "description": "New quota in bytes. Pass null to reset to default (100 MB)."
           }
         },
@@ -275,7 +274,9 @@
           },
           "expires_in": {
             "type": "number",
-            "description": "URL lifetime in seconds (60–86400). Defaults to 3600."
+            "description": "URL lifetime in seconds (60–86400). Defaults to 3600.",
+            "minimum": 60,
+            "maximum": 86400
           }
         },
         "required": [

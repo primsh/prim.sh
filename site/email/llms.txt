@@ -117,13 +117,13 @@ Request:
   ttl_ms    number  optional  TTL in milliseconds. Omit for permanent mailbox.
 
 Response (201):
-  id          string         Mailbox ID (e.g. "mbx_abc123").
-  address     string         Full email address (e.g. "abc123@mail.prim.sh").
-  username    string         Username portion of the email address.
-  domain      string         Domain portion of the email address.
-  status      MailboxStatus  Current status: "active" | "expired" | "deleted".
-  created_at  string         ISO 8601 timestamp when the mailbox was created.
-  expires_at  string | null  ISO 8601 timestamp when the mailbox expires. Null if permanent.
+  id          string                            Mailbox ID (e.g. "mbx_abc123").
+  address     string                            Full email address (e.g. "abc123@mail.prim.sh").
+  username    string                            Username portion of the email address.
+  domain      string                            Domain portion of the email address.
+  status      "active" | "expired" | "deleted"  Current status: "active" | "expired" | "deleted".
+  created_at  string                            ISO 8601 timestamp when the mailbox was created.
+  expires_at  string | null                     ISO 8601 timestamp when the mailbox expires. Null if permanent.
 
 Errors:
   400  invalid_request   Missing fields or invalid characters
@@ -160,13 +160,13 @@ Path params:
   id  string  required  id parameter
 
 Response (200):
-  id          string         Mailbox ID (e.g. "mbx_abc123").
-  address     string         Full email address (e.g. "abc123@mail.prim.sh").
-  username    string         Username portion of the email address.
-  domain      string         Domain portion of the email address.
-  status      MailboxStatus  Current status: "active" | "expired" | "deleted".
-  created_at  string         ISO 8601 timestamp when the mailbox was created.
-  expires_at  string | null  ISO 8601 timestamp when the mailbox expires. Null if permanent.
+  id          string                            Mailbox ID (e.g. "mbx_abc123").
+  address     string                            Full email address (e.g. "abc123@mail.prim.sh").
+  username    string                            Username portion of the email address.
+  domain      string                            Domain portion of the email address.
+  status      "active" | "expired" | "deleted"  Current status: "active" | "expired" | "deleted".
+  created_at  string                            ISO 8601 timestamp when the mailbox was created.
+  expires_at  string | null                     ISO 8601 timestamp when the mailbox expires. Null if permanent.
 
 Errors:
   402  payment_required  x402 payment needed
@@ -208,13 +208,13 @@ Request:
   ttl_ms  number  optional  Extension duration in milliseconds. Omit to apply default TTL.
 
 Response (200):
-  id          string         Mailbox ID (e.g. "mbx_abc123").
-  address     string         Full email address (e.g. "abc123@mail.prim.sh").
-  username    string         Username portion of the email address.
-  domain      string         Domain portion of the email address.
-  status      MailboxStatus  Current status: "active" | "expired" | "deleted".
-  created_at  string         ISO 8601 timestamp when the mailbox was created.
-  expires_at  string | null  ISO 8601 timestamp when the mailbox expires. Null if permanent.
+  id          string                            Mailbox ID (e.g. "mbx_abc123").
+  address     string                            Full email address (e.g. "abc123@mail.prim.sh").
+  username    string                            Username portion of the email address.
+  domain      string                            Domain portion of the email address.
+  status      "active" | "expired" | "deleted"  Current status: "active" | "expired" | "deleted".
+  created_at  string                            ISO 8601 timestamp when the mailbox was created.
+  expires_at  string | null                     ISO 8601 timestamp when the mailbox expires. Null if permanent.
 
 Errors:
   402  payment_required  x402 payment needed

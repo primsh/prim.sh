@@ -7,7 +7,9 @@
  */
 
 import { stringify } from "yaml";
-import type { ParsedApi, ParsedInterface } from "./parse-api.js";
+import type { ParsedApi, ParsedInterface } from "./extract-schemas.js";
+
+type JsonSchema = Record<string, unknown>;
 import type { Primitive, RouteMapping } from "./primitives.js";
 
 // ── Type inference from operation_id ─────────────────────────────────────────
@@ -219,9 +221,34 @@ function extractInterfaceRefs(typeStr: string, interfaces: Map<string, ParsedInt
   return tokens.filter((t) => interfaces.has(t) && t !== "ApiError" && t !== "ApiErrorDetail");
 }
 
+/** Extract $ref targets from a JSON Schema object (recursive). */
+function collectJsonSchemaRefs(schema: Schema): string[] {
+  const refs: string[] = [];
+  if (schema.$ref && typeof schema.$ref === "string") {
+    const ref = (schema.$ref as string).replace("#/components/schemas/", "");
+    refs.push(ref);
+  }
+  if (schema.properties && typeof schema.properties === "object") {
+    for (const val of Object.values(schema.properties as Record<string, Schema>)) {
+      if (val && typeof val === "object") refs.push(...collectJsonSchemaRefs(val));
+    }
+  }
+  if (schema.items && typeof schema.items === "object") {
+    refs.push(...collectJsonSchemaRefs(schema.items as Schema));
+  }
+  if (schema.anyOf && Array.isArray(schema.anyOf)) {
+    for (const v of schema.anyOf as Schema[]) refs.push(...collectJsonSchemaRefs(v));
+  }
+  if (schema.oneOf && Array.isArray(schema.oneOf)) {
+    for (const v of schema.oneOf as Schema[]) refs.push(...collectJsonSchemaRefs(v));
+  }
+  return refs;
+}
+
 function collectReferencedInterfaces(
   rootTypes: string[],
   interfaces: Map<string, ParsedInterface>,
+  jsonSchemas?: Record<string, JsonSchema>,
 ): Set<string> {
   const visited = new Set<string>();
   const queue = [...rootTypes];
@@ -231,6 +258,15 @@ function collectReferencedInterfaces(
     if (visited.has(name) || !interfaces.has(name)) continue;
     if (name === "ApiError" || name === "ApiErrorDetail") continue;
     visited.add(name);
+
+    // When JSON schemas are available, walk $ref inside them
+    if (jsonSchemas?.[name]) {
+      for (const ref of collectJsonSchemaRefs(jsonSchemas[name])) {
+        if (!visited.has(ref) && interfaces.has(ref)) queue.push(ref);
+      }
+      continue;
+    }
+
     // biome-ignore lint/style/noNonNullAssertion: guarded by .has() check above
     const iface = interfaces.get(name)!;
     for (const field of iface.fields) {
@@ -277,7 +313,11 @@ function interfaceToSchema(
 
 // ── Schema builders ─────────────────────────────────────────────────────────
 
-function buildSchemas(api: ParsedApi, referenced: Set<string>): Record<string, Schema> {
+function buildSchemas(
+  api: ParsedApi,
+  referenced: Set<string>,
+  jsonSchemas?: Record<string, JsonSchema>,
+): Record<string, Schema> {
   const schemas: Record<string, Schema> = {};
 
   schemas.Error = {
@@ -303,9 +343,13 @@ function buildSchemas(api: ParsedApi, referenced: Set<string>): Record<string, S
   };
 
   for (const name of [...referenced].sort()) {
-    // biome-ignore lint/style/noNonNullAssertion: name comes from referenced set which was built from interfaces keys
-    const iface = api.interfaces.get(name)!;
-    schemas[name] = interfaceToSchema(iface, api.interfaces);
+    if (jsonSchemas?.[name]) {
+      schemas[name] = jsonSchemas[name];
+    } else {
+      // biome-ignore lint/style/noNonNullAssertion: name comes from referenced set which was built from interfaces keys
+      const iface = api.interfaces.get(name)!;
+      schemas[name] = interfaceToSchema(iface, api.interfaces);
+    }
   }
 
   return schemas;
@@ -480,7 +524,12 @@ export function resolveRouteTypes(
   };
 }
 
-export function renderOpenApi(p: Primitive, api: ParsedApi, prices: Map<string, string>): string {
+export function renderOpenApi(
+  p: Primitive,
+  api: ParsedApi,
+  prices: Map<string, string>,
+  jsonSchemas?: Record<string, JsonSchema>,
+): string {
   const endpoint = p.endpoint ?? `${p.id}.prim.sh`;
 
   const rootTypes: string[] = [];
@@ -491,7 +540,7 @@ export function renderOpenApi(p: Primitive, api: ParsedApi, prices: Map<string, 
     if (resolved.request) rootTypes.push(resolved.request);
     if (resolved.response) rootTypes.push(resolved.response);
   }
-  const referenced = collectReferencedInterfaces(rootTypes, api.interfaces);
+  const referenced = collectReferencedInterfaces(rootTypes, api.interfaces, jsonSchemas);
 
   const spec = {
     openapi: "3.1.0",
@@ -512,7 +561,7 @@ export function renderOpenApi(p: Primitive, api: ParsedApi, prices: Map<string, 
             "EIP-3009 signed payment authorization. Server issues a 402 challenge; client signs and retries.\nSee https://prim.sh/pay for the full x402 payment flow.\n",
         },
       },
-      schemas: buildSchemas(api, referenced),
+      schemas: buildSchemas(api, referenced, jsonSchemas),
     },
     paths: buildPaths(p, api, prices, resolvedRoutes),
   };

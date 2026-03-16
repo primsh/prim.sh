@@ -224,15 +224,12 @@
             "description": "address parameter"
           },
           "maxPerTx": {
-            "type": "string",
             "description": "Max USDC per transaction. Pass null to remove the limit."
           },
           "maxPerDay": {
-            "type": "string",
             "description": "Max USDC per day. Pass null to remove the limit."
           },
           "allowedPrimitives": {
-            "type": "array",
             "description": "Allowed primitive hostnames. Pass null to allow all."
           }
         },
@@ -256,7 +253,12 @@
           },
           "scope": {
             "type": "string",
-            "description": "Scope to pause. \"all\" | \"send\" | \"swap\". Default \"all\"."
+            "description": "Scope to pause. \"all\" | \"send\" | \"swap\". Default \"all\".",
+            "enum": [
+              "all",
+              "send",
+              "swap"
+            ]
           }
         },
         "required": [
@@ -279,7 +281,12 @@
           },
           "scope": {
             "type": "string",
-            "description": "Scope to resume. \"all\" | \"send\" | \"swap\". Default \"all\"."
+            "description": "Scope to resume. \"all\" | \"send\" | \"swap\". Default \"all\".",
+            "enum": [
+              "all",
+              "send",
+              "swap"
+            ]
           }
         },
         "required": [
@@ -584,7 +591,6 @@
             "description": "id parameter"
           },
           "quota_bytes": {
-            "type": "number",
             "description": "New quota in bytes. Pass null to reset to default (100 MB)."
           }
         },
@@ -640,7 +646,9 @@
           },
           "expires_in": {
             "type": "number",
-            "description": "URL lifetime in seconds (60–86400). Defaults to 3600."
+            "description": "URL lifetime in seconds (60–86400). Defaults to 3600.",
+            "minimum": 60,
+            "maximum": 86400
           }
         },
         "required": [
@@ -786,10 +794,6 @@
         "type": "object",
         "properties": {
           "urls": {
-            "type": "array",
-            "items": {
-              "type": "string"
-            },
             "description": "URL string or array of URLs to extract content from."
           },
           "format": {
@@ -1481,7 +1485,6 @@
             "description": "Whether additional tokens can be minted after deployment. Default false."
           },
           "maxSupply": {
-            "type": "string",
             "description": "Maximum mintable supply as a raw integer string. Null = unlimited. Only applies if mintable is true."
           }
         },
@@ -1783,7 +1786,6 @@
             "description": "Number of nearest neighbors to return. Default 10."
           },
           "filter": {
-            "type": "string",
             "description": "Qdrant-native filter passthrough."
           }
         },
@@ -1811,11 +1813,9 @@
             "description": "key parameter"
           },
           "value": {
-            "type": "string",
             "description": "Value to store. Any JSON-serializable value."
           },
           "ttl": {
-            "type": "number",
             "description": "TTL in seconds. Omit or null for permanent."
           }
         },
@@ -2139,7 +2139,17 @@
           },
           "type": {
             "type": "string",
-            "description": "DNS record type."
+            "description": "DNS record type.",
+            "enum": [
+              "A",
+              "AAAA",
+              "CNAME",
+              "MX",
+              "TXT",
+              "SRV",
+              "CAA",
+              "NS"
+            ]
           },
           "name": {
             "type": "string",
@@ -2240,7 +2250,17 @@
           },
           "type": {
             "type": "string",
-            "description": "DNS record type."
+            "description": "DNS record type.",
+            "enum": [
+              "A",
+              "AAAA",
+              "CNAME",
+              "MX",
+              "TXT",
+              "SRV",
+              "CAA",
+              "NS"
+            ]
           },
           "name": {
             "type": "string",
@@ -2349,12 +2369,7 @@
           "presence_penalty": {
             "type": "number"
           },
-          "stop": {
-            "type": "array",
-            "items": {
-              "type": "string"
-            }
-          },
+          "stop": {},
           "stream": {
             "type": "boolean"
           },
@@ -2364,14 +2379,7 @@
               "type": "object"
             }
           },
-          "tool_choice": {
-            "type": "string",
-            "enum": [
-              "none",
-              "auto",
-              "required"
-            ]
-          },
+          "tool_choice": {},
           "response_format": {
             "type": "object"
           }
@@ -2394,12 +2402,7 @@
           "model": {
             "type": "string"
           },
-          "input": {
-            "type": "array",
-            "items": {
-              "type": "string"
-            }
-          }
+          "input": {}
         },
         "required": [
           "model",

@@ -40,7 +40,7 @@ Part of [prim.sh](https://prim.sh) — zero signup, one payment token, infinite 
 | `stop` | `string | string[]` | optional |
 | `stream` | `boolean` | optional |
 | `tools` | `Tool[]` | optional |
-| `tool_choice` | `"none" | "auto" | "required" | { type: "function"; function: { name: string } }` | optional |
+| `tool_choice` | `"none" | "auto" | "required" | object` | optional |
 | `response_format` | `object` | optional |
 
 ### `ChatResponse`

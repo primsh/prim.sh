@@ -48,19 +48,14 @@ components:
               description: Human-readable error message.
     DripRequest:
       type: object
-      required:
-        - address
       properties:
         address:
           type: string
           description: EVM wallet address to drip to (0x... 42 chars).
+      required:
+        - address
     DripResponse:
       type: object
-      required:
-        - tx_hash
-        - amount
-        - currency
-        - chain
       properties:
         tx_hash:
           type: string
@@ -75,13 +70,15 @@ components:
           type: string
           description: CAIP-2 chain identifier (e.g. "eip155:84532").
         source:
-          type: string
           description: Backend that dispensed the tokens. "cdp" | "treasury".
+          type: string
+      required:
+        - tx_hash
+        - amount
+        - currency
+        - chain
     FaucetAvailability:
       type: object
-      required:
-        - available
-        - retry_after_ms
       properties:
         available:
           type: boolean
@@ -89,32 +86,27 @@ components:
         retry_after_ms:
           type: number
           description: Milliseconds until rate limit resets. 0 if available.
+      required:
+        - available
+        - retry_after_ms
     GetFaucetStatusResponse:
       type: object
-      required:
-        - address
-        - usdc
-        - eth
       properties:
         address:
           type: string
           description: The queried wallet address (checksummed).
         usdc:
-          $ref: "#/components/schemas/FaucetAvailability"
           description: USDC faucet availability (2-hour cooldown).
-        eth:
           $ref: "#/components/schemas/FaucetAvailability"
+        eth:
           description: ETH faucet availability (1-hour cooldown).
+          $ref: "#/components/schemas/FaucetAvailability"
+      required:
+        - address
+        - usdc
+        - eth
     RefillResult:
       type: object
-      required:
-        - claimed
-        - failed
-        - estimated_eth
-        - usdc_claimed
-        - usdc_failed
-        - estimated_usdc
-        - tx_hashes
       properties:
         claimed:
           type: number
@@ -132,13 +124,16 @@ components:
           type: array
           items:
             type: string
+      required:
+        - claimed
+        - failed
+        - estimated_eth
+        - usdc_claimed
+        - usdc_failed
+        - estimated_usdc
+        - tx_hashes
     TreasuryStatus:
       type: object
-      required:
-        - address
-        - eth_balance
-        - usdc_balance
-        - needs_refill
       properties:
         address:
           type: string
@@ -148,6 +143,11 @@ components:
           type: string
         needs_refill:
           type: boolean
+      required:
+        - address
+        - eth_balance
+        - usdc_balance
+        - needs_refill
 paths:
   /:
     get:

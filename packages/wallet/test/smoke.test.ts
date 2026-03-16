@@ -124,7 +124,7 @@ describe("wallet.sh app", () => {
 
     expect(res.status).toBe(400);
     const body = await res.json();
-    expect(body.error.code).toBe("invalid_request");
+    expect(body.error.code).toBe("validation_error");
   });
 
   // Check 6: HRD-65 — balance for unregistered wallet returns on-chain balance, not 404

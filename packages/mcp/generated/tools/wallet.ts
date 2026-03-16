@@ -184,16 +184,40 @@ export const walletTools: Tool[] = [
             description: "address parameter",
           },
           "maxPerTx": {
-            type: ["string","null"],
             description: "Max USDC per transaction. Pass null to remove the limit.",
+            anyOf: [
+              {
+                type: "string",
+              },
+              {
+                type: "null",
+              },
+            ],
           },
           "maxPerDay": {
-            type: ["string","null"],
             description: "Max USDC per day. Pass null to remove the limit.",
+            anyOf: [
+              {
+                type: "string",
+              },
+              {
+                type: "null",
+              },
+            ],
           },
           "allowedPrimitives": {
-            type: ["array","null"],
             description: "Allowed primitive hostnames. Pass null to allow all.",
+            anyOf: [
+              {
+                type: "array",
+                items: {
+                  type: "string",
+                },
+              },
+              {
+                type: "null",
+              },
+            ],
           },
         },
         required: ["address"],
@@ -212,6 +236,7 @@ export const walletTools: Tool[] = [
           "scope": {
             type: "string",
             description: "Scope to pause. \"all\" | \"send\" | \"swap\". Default \"all\".",
+            enum: ["all","send","swap"],
           },
         },
         required: ["address"],
@@ -230,6 +255,7 @@ export const walletTools: Tool[] = [
           "scope": {
             type: "string",
             description: "Scope to resume. \"all\" | \"send\" | \"swap\". Default \"all\".",
+            enum: ["all","send","swap"],
           },
         },
         required: ["address"],

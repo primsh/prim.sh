@@ -46,9 +46,6 @@ components:
               description: Human-readable error message.
     ChatRequest:
       type: object
-      required:
-        - model
-        - messages
       properties:
         model:
           type: string
@@ -67,7 +64,7 @@ components:
         presence_penalty:
           type: number
         stop:
-          oneOf:
+          anyOf:
             - type: string
             - type: array
               items:
@@ -79,31 +76,48 @@ components:
           items:
             $ref: "#/components/schemas/Tool"
         tool_choice:
-          oneOf:
+          anyOf:
             - type: string
               enum:
                 - none
                 - auto
                 - required
             - type: object
+              properties:
+                type:
+                  type: string
+                  const: function
+                function:
+                  type: object
+                  properties:
+                    name:
+                      type: string
+                  required:
+                    - name
+              required:
+                - type
+                - function
         response_format:
           type: object
+          properties:
+            type:
+              type: string
+              enum:
+                - text
+                - json_object
+          required:
+            - type
+      required:
+        - model
+        - messages
     ChatResponse:
       type: object
-      required:
-        - id
-        - object
-        - created
-        - model
-        - choices
-        - usage
       properties:
         id:
           type: string
         object:
           type: string
-          enum:
-            - chat.completion
+          const: chat.completion
         created:
           type: number
         model:
@@ -114,19 +128,22 @@ components:
             $ref: "#/components/schemas/Choice"
         usage:
           $ref: "#/components/schemas/Usage"
+      required:
+        - id
+        - object
+        - created
+        - model
+        - choices
+        - usage
     Choice:
       type: object
-      required:
-        - index
-        - message
-        - finish_reason
       properties:
         index:
           type: number
         message:
           $ref: "#/components/schemas/Message"
         finish_reason:
-          oneOf:
+          anyOf:
             - type: string
               enum:
                 - stop
@@ -134,10 +151,12 @@ components:
                 - tool_calls
                 - content_filter
             - type: "null"
+      required:
+        - index
+        - message
+        - finish_reason
     ContentPart:
       type: object
-      required:
-        - type
       properties:
         type:
           type: string
@@ -148,32 +167,39 @@ components:
           type: string
         image_url:
           type: object
+          properties:
+            url:
+              type: string
+            detail:
+              type: string
+              enum:
+                - auto
+                - low
+                - high
+          required:
+            - url
+      required:
+        - type
     EmbedRequest:
       type: object
-      required:
-        - model
-        - input
       properties:
         model:
           type: string
         input:
-          oneOf:
+          anyOf:
             - type: string
             - type: array
               items:
                 type: string
+      required:
+        - model
+        - input
     EmbedResponse:
       type: object
-      required:
-        - object
-        - data
-        - model
-        - usage
       properties:
         object:
           type: string
-          enum:
-            - list
+          const: list
         data:
           type: array
           items:
@@ -182,37 +208,46 @@ components:
           type: string
         usage:
           type: object
-    EmbeddingData:
-      type: object
+          properties:
+            prompt_tokens:
+              type: number
+            total_tokens:
+              type: number
+          required:
+            - prompt_tokens
+            - total_tokens
       required:
         - object
-        - index
-        - embedding
+        - data
+        - model
+        - usage
+    EmbeddingData:
+      type: object
       properties:
         object:
           type: string
-          enum:
-            - embedding
+          const: embedding
         index:
           type: number
         embedding:
           type: array
           items:
             type: number
+      required:
+        - object
+        - index
+        - embedding
     ListModelsResponse:
       type: object
-      required:
-        - data
       properties:
         data:
           type: array
           items:
             $ref: "#/components/schemas/ModelInfo"
+      required:
+        - data
     Message:
       type: object
-      required:
-        - role
-        - content
       properties:
         role:
           type: string
@@ -222,7 +257,7 @@ components:
             - assistant
             - tool
         content:
-          oneOf:
+          anyOf:
             - type: string
             - type: array
               items:
@@ -236,13 +271,11 @@ components:
           type: array
           items:
             $ref: "#/components/schemas/ToolCall"
+      required:
+        - role
+        - content
     ModelInfo:
       type: object
-      required:
-        - id
-        - name
-        - context_length
-        - pricing
       properties:
         id:
           type: string
@@ -252,49 +285,67 @@ components:
           type: number
         pricing:
           $ref: "#/components/schemas/ModelPricing"
+      required:
+        - id
+        - name
+        - context_length
+        - pricing
     ModelPricing:
       type: object
-      required:
-        - prompt
-        - completion
       properties:
         prompt:
           type: string
         completion:
           type: string
+      required:
+        - prompt
+        - completion
     Tool:
       type: object
-      required:
-        - type
-        - function
       properties:
         type:
           type: string
-          enum:
-            - function
+          const: function
         function:
           type: object
-    ToolCall:
-      type: object
+          properties:
+            name:
+              type: string
+            description:
+              type: string
+            parameters:
+              type: object
+              propertyNames:
+                type: string
+          required:
+            - name
       required:
-        - id
         - type
         - function
+    ToolCall:
+      type: object
       properties:
         id:
           type: string
         type:
           type: string
-          enum:
-            - function
+          const: function
         function:
           type: object
+          properties:
+            name:
+              type: string
+            arguments:
+              type: string
+          required:
+            - name
+            - arguments
+      required:
+        - id
+        - type
+        - function
     Usage:
       type: object
-      required:
-        - prompt_tokens
-        - completion_tokens
-        - total_tokens
       properties:
         prompt_tokens:
           type: number
@@ -302,6 +353,10 @@ components:
           type: number
         total_tokens:
           type: number
+      required:
+        - prompt_tokens
+        - completion_tokens
+        - total_tokens
 paths:
   /:
     get:

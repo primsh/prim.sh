@@ -27,7 +27,7 @@ export interface RedeemRequest {
 
 export interface RedeemResponse {
   /** Always "redeemed" on success. */
-  status: "redeemed";
+  status: string;
   /** Checksummed wallet address that was funded. */
   wallet: string;
   /** Network the funds were sent on (e.g. "eip155:8453"). */

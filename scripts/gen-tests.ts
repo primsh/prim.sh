@@ -19,7 +19,7 @@
 
 import { existsSync, readFileSync, writeFileSync } from "node:fs";
 import { join, resolve } from "node:path";
-import { type ParsedField, type ParsedInterface, parseApiFile } from "./lib/parse-api.js";
+import { type ParsedField, type ParsedInterface, extractApiFromSchemas } from "./lib/extract-schemas.js";
 import {
   type Primitive,
   type RouteMapping,
@@ -228,7 +228,7 @@ interface GenContext {
   apiInterfaces: Map<string, ParsedInterface>;
 }
 
-function buildContext(p: Primitive): GenContext {
+async function buildContext(p: Primitive): Promise<GenContext> {
   const routes = p.routes_map ?? [];
   const servicePath = join(ROOT, "packages", p.id, "src/service.ts");
   const dbPath = join(ROOT, "packages", p.id, "src/db.ts");
@@ -255,9 +255,11 @@ function buildContext(p: Primitive): GenContext {
   const needsBunSqliteMock = hasDbFile && dbUsesBunSqlite(dbPath);
 
   // Parse api.ts for request type field info
-  const apiInterfaces: Map<string, ParsedInterface> = existsSync(apiPath)
-    ? parseApiFile(apiPath).interfaces
-    : new Map();
+  let apiInterfaces: Map<string, ParsedInterface> = new Map();
+  if (existsSync(apiPath)) {
+    const parsed = await extractApiFromSchemas(apiPath);
+    apiInterfaces = parsed.interfaces;
+  }
 
   return {
     p,
@@ -913,7 +915,7 @@ console.log(`Loaded ${targets.length} prim(s) to process`);
 console.log(CHECK_MODE ? "Mode: check\n" : "Mode: generate\n");
 
 for (const p of targets) {
-  const ctx = buildContext(p);
+  const ctx = await buildContext(p);
 
   console.log(`  ${p.id}:`);
 

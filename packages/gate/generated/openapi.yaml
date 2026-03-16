@@ -48,11 +48,6 @@ components:
               description: Human-readable error message.
     FundingDetail:
       type: object
-      required:
-        - usdc
-        - eth
-        - usdc_tx
-        - eth_tx
       properties:
         usdc:
           type: string
@@ -66,11 +61,13 @@ components:
         eth_tx:
           type: string
           description: ETH transfer transaction hash.
+      required:
+        - usdc
+        - eth
+        - usdc_tx
+        - eth_tx
     RedeemRequest:
       type: object
-      required:
-        - code
-        - wallet
       properties:
         code:
           type: string
@@ -78,20 +75,15 @@ components:
         wallet:
           type: string
           description: EVM wallet address to allowlist and fund (0x... checksummed).
+      required:
+        - code
+        - wallet
     RedeemResponse:
       type: object
-      required:
-        - status
-        - wallet
-        - network
-        - funded
-        - wallet_registered
-        - credit_seeded
       properties:
         status:
           type: string
-          enum:
-            - redeemed
+          const: redeemed
           description: Always "redeemed" on success.
         wallet:
           type: string
@@ -100,14 +92,21 @@ components:
           type: string
           description: Network the funds were sent on (e.g. "eip155:8453").
         funded:
-          $ref: "#/components/schemas/FundingDetail"
           description: Funding details.
+          $ref: "#/components/schemas/FundingDetail"
         wallet_registered:
           type: boolean
           description: Whether the wallet was auto-registered on wallet.sh.
         credit_seeded:
           type: boolean
           description: Whether infer.sh credit was seeded for instant responses.
+      required:
+        - status
+        - wallet
+        - network
+        - funded
+        - wallet_registered
+        - credit_seeded
 paths:
   /:
     get:

@@ -106,7 +106,7 @@ describe("infer.sh app", () => {
     const res = await app.request("/v1/chat", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({}),
+      body: JSON.stringify({ model: "test-model", messages: [{ role: "user", content: "hi" }] }),
     });
 
     expect(res.status).toBe(200);
@@ -123,7 +123,11 @@ describe("infer.sh app", () => {
     const res = await app.request("/v1/chat", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ stream: true }),
+      body: JSON.stringify({
+        model: "test-model",
+        messages: [{ role: "user", content: "hi" }],
+        stream: true,
+      }),
     });
 
     expect(res.status).toBe(200);

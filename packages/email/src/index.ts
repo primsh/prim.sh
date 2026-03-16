@@ -12,6 +12,11 @@ import {
 } from "@primsh/x402-middleware";
 import type { ApiError, PaginatedList } from "@primsh/x402-middleware";
 import { createPrimApp } from "@primsh/x402-middleware/create-prim-app";
+import {
+  RegisterDomainRequestSchema,
+  RegisterWebhookRequestSchema,
+  SendMessageRequestSchema,
+} from "./api.ts";
 import type {
   CreateMailboxRequest,
   DeleteDomainResponse,
@@ -21,10 +26,7 @@ import type {
   EmailDetail,
   EmailMessage,
   GetMailboxResponse,
-  RegisterDomainRequest,
-  RegisterWebhookRequest,
   RenewMailboxRequest,
-  SendMessageRequest,
   SendMessageResponse,
   VerifyDomainResponse,
   GetWebhookResponse,
@@ -308,10 +310,11 @@ app.post("/v1/mailboxes/:id/send", async (c) => {
   if (callerOrRes instanceof Response) return callerOrRes;
   const caller = callerOrRes;
 
-  const bodyOrRes = await parseJsonBody<SendMessageRequest>(
+  const bodyOrRes = await parseJsonBody(
     c,
     logger,
     "POST /v1/mailboxes/:id/send",
+    SendMessageRequestSchema,
   );
   if (bodyOrRes instanceof Response) return bodyOrRes;
   const body = bodyOrRes;
@@ -332,10 +335,11 @@ app.post("/v1/mailboxes/:id/webhooks", async (c) => {
   if (callerOrRes instanceof Response) return callerOrRes;
   const caller = callerOrRes;
 
-  const bodyOrRes = await parseJsonBody<RegisterWebhookRequest>(
+  const bodyOrRes = await parseJsonBody(
     c,
     logger,
     "POST /v1/mailboxes/:id/webhooks",
+    RegisterWebhookRequestSchema,
   );
   if (bodyOrRes instanceof Response) return bodyOrRes;
   const body = bodyOrRes;
@@ -383,7 +387,7 @@ app.post("/v1/domains", async (c) => {
   if (callerOrRes instanceof Response) return callerOrRes;
   const caller = callerOrRes;
 
-  const bodyOrRes = await parseJsonBody<RegisterDomainRequest>(c, logger, "POST /v1/domains");
+  const bodyOrRes = await parseJsonBody(c, logger, "POST /v1/domains", RegisterDomainRequestSchema);
   if (bodyOrRes instanceof Response) return bodyOrRes;
   const body = bodyOrRes;
 

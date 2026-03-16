@@ -161,17 +161,17 @@ Path params:
   domain  string  required  domain parameter
 
 Response (200):
-  domain                      string             Domain name.
-  purchased                   true               Always true — only returned for registered domains.
-  zone_id                     string | null      Cloudflare zone ID. Null if zone not yet created.
-  zone_status                 ZoneStatus | null  Current zone status. Null if zone not yet created.
-  ns_configured_at_registrar  boolean            Whether nameservers are configured at the registrar.
-  ns_propagated               boolean            Whether nameservers have propagated in DNS.
-  ns_expected                 string[]           Expected Cloudflare nameservers.
-  ns_actual                   string[]           Nameservers currently found in DNS.
-  zone_active                 boolean            Whether the Cloudflare zone is active.
-  all_ready                   boolean            Whether the domain is fully set up and ready.
-  next_action                 string | null      Human-readable next action required. Null if all_ready is true.
+  domain                      string                                 Domain name.
+  purchased                   true                                   Always true — only returned for registered domains.
+  zone_id                     string | null                          Cloudflare zone ID. Null if zone not yet created.
+  zone_status                 "pending" | "active" | "moved" | null  Current zone status. Null if zone not yet created.
+  ns_configured_at_registrar  boolean                                Whether nameservers are configured at the registrar.
+  ns_propagated               boolean                                Whether nameservers have propagated in DNS.
+  ns_expected                 string[]                               Expected Cloudflare nameservers.
+  ns_actual                   string[]                               Nameservers currently found in DNS.
+  zone_active                 boolean                                Whether the Cloudflare zone is active.
+  all_ready                   boolean                                Whether the domain is fully set up and ready.
+  next_action                 string | null                          Human-readable next action required. Null if all_ready is true.
 
 Errors:
   402  payment_required  x402 payment needed
@@ -227,12 +227,12 @@ Path params:
   id  string  required  id parameter
 
 Response (200):
-  id            string      Cloudflare zone ID.
-  domain        string      Domain name (e.g. "example.com").
-  status        ZoneStatus  Zone status: "pending" | "active" | "moved".
-  name_servers  string[]    Cloudflare nameservers to delegate to.
-  owner_wallet  string      Ethereum address of the zone owner.
-  created_at    string      ISO 8601 timestamp when the zone was created.
+  id            string                          Cloudflare zone ID.
+  domain        string                          Domain name (e.g. "example.com").
+  status        "pending" | "active" | "moved"  Zone status: "pending" | "active" | "moved".
+  name_servers  string[]                        Cloudflare nameservers to delegate to.
+  owner_wallet  string                          Ethereum address of the zone owner.
+  created_at    string                          ISO 8601 timestamp when the zone was created.
 
 Errors:
   402  payment_required  x402 payment needed
@@ -270,9 +270,9 @@ Path params:
   zone_id  string  required  zone_id parameter
 
 Response (200):
-  zone_id               string      Cloudflare zone ID.
-  status                ZoneStatus  Updated zone status.
-  activation_requested  true        Always true — activation was requested from Cloudflare.
+  zone_id               string                          Cloudflare zone ID.
+  status                "pending" | "active" | "moved"  Updated zone status.
+  activation_requested  true                            Always true — activation was requested from Cloudflare.
 
 Errors:
   402  payment_required  x402 payment needed
@@ -292,11 +292,11 @@ Path params:
   zone_id  string  required  zone_id parameter
 
 Response (200):
-  domain          string                Domain name.
-  nameservers     NsVerifyResult        Nameserver propagation result.
-  records         RecordVerifyResult[]  Per-record propagation results.
-  all_propagated  boolean               Whether all records and nameservers have propagated.
-  zone_status     ZoneStatus | null     Current Cloudflare zone status. Null if zone not found.
+  domain          string                                 Domain name.
+  nameservers     NsVerifyResult                         Nameserver propagation result.
+  records         RecordVerifyResult[]                   Per-record propagation results.
+  all_propagated  boolean                                Whether all records and nameservers have propagated.
+  zone_status     "pending" | "active" | "moved" | null  Current Cloudflare zone status. Null if zone not found.
 
 Errors:
   402  payment_required  x402 payment needed
@@ -348,7 +348,7 @@ Request:
 Response (200):
   created  GetRecordResponse[]  Successfully created records.
   updated  GetRecordResponse[]  Successfully updated records.
-  deleted  object               IDs of deleted records.
+  deleted  object[]             IDs of deleted records.
 
 Errors:
   400  invalid_request   Invalid record fields or values
@@ -369,24 +369,24 @@ Path params:
   zone_id  string  required  zone_id parameter
 
 Request:
-  type      RecordType  required  DNS record type.
-  name      string      required  DNS record name (hostname).
-  content   string      required  DNS record value.
-  ttl       number      optional  TTL in seconds. Default 1 (auto).
-  proxied   boolean     optional  Enable Cloudflare proxying. Default false.
-  priority  number      optional  Priority for MX and SRV records.
+  type      "A" | "AAAA" | "CNAME" | "MX" | "TXT" | "SRV" | "CAA" | "NS"  required  DNS record type.
+  name      string                                                        required  DNS record name (hostname).
+  content   string                                                        required  DNS record value.
+  ttl       number                                                        optional  TTL in seconds. Default 1 (auto).
+  proxied   boolean                                                       optional  Enable Cloudflare proxying. Default false.
+  priority  number                                                        optional  Priority for MX and SRV records.
 
 Response (201):
-  id          string         DNS record ID.
-  zone_id     string         Zone ID this record belongs to.
-  type        RecordType     DNS record type.
-  name        string         DNS record name (hostname, relative to zone).
-  content     string         DNS record value.
-  ttl         number         TTL in seconds.
-  proxied     boolean        Whether Cloudflare proxying is enabled.
-  priority    number | null  Priority for MX and SRV records. Null for other types.
-  created_at  string         ISO 8601 timestamp when the record was created.
-  updated_at  string         ISO 8601 timestamp when the record was last updated.
+  id          string                                                        DNS record ID.
+  zone_id     string                                                        Zone ID this record belongs to.
+  type        "A" | "AAAA" | "CNAME" | "MX" | "TXT" | "SRV" | "CAA" | "NS"  DNS record type.
+  name        string                                                        DNS record name (hostname, relative to zone).
+  content     string                                                        DNS record value.
+  ttl         number                                                        TTL in seconds.
+  proxied     boolean                                                       Whether Cloudflare proxying is enabled.
+  priority    number | null                                                 Priority for MX and SRV records. Null for other types.
+  created_at  string                                                        ISO 8601 timestamp when the record was created.
+  updated_at  string                                                        ISO 8601 timestamp when the record was last updated.
 
 Errors:
   400  invalid_request   Missing or invalid record fields
@@ -430,16 +430,16 @@ Path params:
   id       string  required  id parameter
 
 Response (200):
-  id          string         DNS record ID.
-  zone_id     string         Zone ID this record belongs to.
-  type        RecordType     DNS record type.
-  name        string         DNS record name (hostname, relative to zone).
-  content     string         DNS record value.
-  ttl         number         TTL in seconds.
-  proxied     boolean        Whether Cloudflare proxying is enabled.
-  priority    number | null  Priority for MX and SRV records. Null for other types.
-  created_at  string         ISO 8601 timestamp when the record was created.
-  updated_at  string         ISO 8601 timestamp when the record was last updated.
+  id          string                                                        DNS record ID.
+  zone_id     string                                                        Zone ID this record belongs to.
+  type        "A" | "AAAA" | "CNAME" | "MX" | "TXT" | "SRV" | "CAA" | "NS"  DNS record type.
+  name        string                                                        DNS record name (hostname, relative to zone).
+  content     string                                                        DNS record value.
+  ttl         number                                                        TTL in seconds.
+  proxied     boolean                                                       Whether Cloudflare proxying is enabled.
+  priority    number | null                                                 Priority for MX and SRV records. Null for other types.
+  created_at  string                                                        ISO 8601 timestamp when the record was created.
+  updated_at  string                                                        ISO 8601 timestamp when the record was last updated.
 
 Errors:
   402  payment_required  x402 payment needed
@@ -459,24 +459,24 @@ Path params:
   id       string  required  id parameter
 
 Request:
-  type      RecordType  optional  DNS record type.
-  name      string      optional  DNS record name.
-  content   string      optional  DNS record value.
-  ttl       number      optional  TTL in seconds.
-  proxied   boolean     optional  Enable Cloudflare proxying.
-  priority  number      optional  Priority for MX and SRV records.
+  type      "A" | "AAAA" | "CNAME" | "MX" | "TXT" | "SRV" | "CAA" | "NS"  optional  DNS record type.
+  name      string                                                        optional  DNS record name.
+  content   string                                                        optional  DNS record value.
+  ttl       number                                                        optional  TTL in seconds.
+  proxied   boolean                                                       optional  Enable Cloudflare proxying.
+  priority  number                                                        optional  Priority for MX and SRV records.
 
 Response (200):
-  id          string         DNS record ID.
-  zone_id     string         Zone ID this record belongs to.
-  type        RecordType     DNS record type.
-  name        string         DNS record name (hostname, relative to zone).
-  content     string         DNS record value.
-  ttl         number         TTL in seconds.
-  proxied     boolean        Whether Cloudflare proxying is enabled.
-  priority    number | null  Priority for MX and SRV records. Null for other types.
-  created_at  string         ISO 8601 timestamp when the record was created.
-  updated_at  string         ISO 8601 timestamp when the record was last updated.
+  id          string                                                        DNS record ID.
+  zone_id     string                                                        Zone ID this record belongs to.
+  type        "A" | "AAAA" | "CNAME" | "MX" | "TXT" | "SRV" | "CAA" | "NS"  DNS record type.
+  name        string                                                        DNS record name (hostname, relative to zone).
+  content     string                                                        DNS record value.
+  ttl         number                                                        TTL in seconds.
+  proxied     boolean                                                       Whether Cloudflare proxying is enabled.
+  priority    number | null                                                 Priority for MX and SRV records. Null for other types.
+  created_at  string                                                        ISO 8601 timestamp when the record was created.
+  updated_at  string                                                        ISO 8601 timestamp when the record was last updated.
 
 Errors:
   400  invalid_request   Invalid record fields

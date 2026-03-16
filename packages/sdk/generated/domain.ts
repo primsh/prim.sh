@@ -11,14 +11,14 @@ export interface ActivateDomainResponse {
   /** Cloudflare zone ID. */
   zone_id: string;
   /** Updated zone status. */
-  status: string;
+  status: "pending" | "active" | "moved";
   /** Always true — activation was requested from Cloudflare. */
-  activation_requested: string;
+  activation_requested: boolean;
 }
 
 export interface BatchCreateEntry {
   /** DNS record type. */
-  type: string;
+  type: "A" | "AAAA" | "CNAME" | "MX" | "TXT" | "SRV" | "CAA" | "NS";
   /** DNS record name. */
   name: string;
   /** DNS record value. */
@@ -51,7 +51,9 @@ export interface BatchRecordsResponse {
   /** Successfully updated records. */
   updated: GetRecordResponse[];
   /** IDs of deleted records. */
-  deleted: Record<string, unknown>;
+  deleted: {
+    id: string;
+  }[];
 }
 
 export interface BatchUpdateEntry {
@@ -66,14 +68,14 @@ export interface BatchUpdateEntry {
   /** Updated priority. */
   priority?: number;
   /** Updated record type. */
-  type?: string;
+  type?: "A" | "AAAA" | "CNAME" | "MX" | "TXT" | "SRV" | "CAA" | "NS";
   /** Updated record name. */
   name?: string;
 }
 
 export interface CreateRecordRequest {
   /** DNS record type. */
-  type: string;
+  type: "A" | "AAAA" | "CNAME" | "MX" | "TXT" | "SRV" | "CAA" | "NS";
   /** DNS record name (hostname). */
   name: string;
   /** DNS record value. */
@@ -94,6 +96,13 @@ export interface CreateZoneRequest {
 export interface CreateZoneResponse {
   /** The created zone. */
   zone: GetZoneResponse;
+}
+
+export interface DkimKey {
+  /** DKIM selector (e.g. "rsa2048"). */
+  selector: string;
+  /** DKIM public key string. */
+  public_key: string;
 }
 
 export interface DomainSearchPrice {
@@ -122,7 +131,7 @@ export interface GetRecordResponse {
   /** Zone ID this record belongs to. */
   zone_id: string;
   /** DNS record type. */
-  type: string;
+  type: "A" | "AAAA" | "CNAME" | "MX" | "TXT" | "SRV" | "CAA" | "NS";
   /** DNS record name (hostname, relative to zone). */
   name: string;
   /** DNS record value. */
@@ -143,11 +152,11 @@ export interface GetRegistrationStatusResponse {
   /** Domain name. */
   domain: string;
   /** Always true — only returned for registered domains. */
-  purchased: string;
+  purchased: boolean;
   /** Cloudflare zone ID. Null if zone not yet created. */
   zone_id: string | null;
   /** Current zone status. Null if zone not yet created. */
-  zone_status: string | null;
+  zone_status: "pending" | "active" | "moved" | null;
   /** Whether nameservers are configured at the registrar. */
   ns_configured_at_registrar: boolean;
   /** Whether nameservers have propagated in DNS. */
@@ -170,7 +179,7 @@ export interface GetZoneResponse {
   /** Domain name (e.g. "example.com"). */
   domain: string;
   /** Zone status: "pending" | "active" | "moved". */
-  status: string;
+  status: "pending" | "active" | "moved";
   /** Cloudflare nameservers to delegate to. */
   name_servers: string[];
   /** Ethereum address of the zone owner. */
@@ -181,7 +190,7 @@ export interface GetZoneResponse {
 
 export interface MailSetupRecordResult {
   /** DNS record type. */
-  type: string;
+  type: "A" | "AAAA" | "CNAME" | "MX" | "TXT" | "SRV" | "CAA" | "NS";
   /** DNS record name. */
   name: string;
   /** Whether the record was created or updated. */
@@ -210,7 +219,7 @@ export interface QuoteResponse {
   /** Domain name quoted. */
   domain: string;
   /** Always true — quote is only returned for available domains. */
-  available: string;
+  available: boolean;
   /** Number of years in the quote. */
   years: number;
   /** Registrar cost in USD (internal cost). */
@@ -225,7 +234,7 @@ export interface QuoteResponse {
 
 export interface RecordVerifyResult {
   /** DNS record type. */
-  type: string;
+  type: "A" | "AAAA" | "CNAME" | "MX" | "TXT" | "SRV" | "CAA" | "NS";
   /** DNS record name. */
   name: string;
   /** Expected DNS record value. */
@@ -247,7 +256,10 @@ export interface SetupMailRequest {
   /** Mail server IPv4 address (used for SPF record). */
   mail_server_ip: string;
   /** DKIM keys to configure. Provide rsa and/or ed25519. */
-  dkim?: Record<string, unknown>;
+  dkim?: {
+    rsa?: DkimKey;
+    ed25519?: DkimKey;
+  };
 }
 
 export interface SetupMailResponse {
@@ -257,7 +269,7 @@ export interface SetupMailResponse {
 
 export interface UpdateRecordRequest {
   /** DNS record type. */
-  type?: string;
+  type?: "A" | "AAAA" | "CNAME" | "MX" | "TXT" | "SRV" | "CAA" | "NS";
   /** DNS record name. */
   name?: string;
   /** DNS record value. */
@@ -280,7 +292,7 @@ export interface VerifyDomainResponse {
   /** Whether all records and nameservers have propagated. */
   all_propagated: boolean;
   /** Current Cloudflare zone status. Null if zone not found. */
-  zone_status: string | null;
+  zone_status: "pending" | "active" | "moved" | null;
 }
 
 export interface SearchDomainParams {

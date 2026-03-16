@@ -49,21 +49,17 @@ components:
               description: Human-readable error message.
     CreatePoolRequest:
       type: object
-      required:
-        - pricePerToken
       properties:
         pricePerToken:
           type: string
           description: Initial price per token in USDC as a decimal string (e.g. "0.001").
         feeTier:
-          type: number
           description: Uniswap V3 fee tier. 500 | 3000 | 10000, default 3000.
+          type: number
+      required:
+        - pricePerToken
     CreateTokenRequest:
       type: object
-      required:
-        - name
-        - symbol
-        - initialSupply
       properties:
         name:
           type: string
@@ -72,35 +68,25 @@ components:
           type: string
           description: Token symbol (e.g. "AGT").
         decimals:
-          type: number
           description: Decimal places. Default 18.
+          type: number
         initialSupply:
           type: string
           description: Initial supply as a raw integer string (e.g. "1000000000000000000" = 1 token at 18 decimals).
         mintable:
-          type: boolean
           description: Whether additional tokens can be minted after deployment. Default false.
+          type: boolean
         maxSupply:
-          type:
-            - string
-            - "null"
           description: Maximum mintable supply as a raw integer string. Null = unlimited. Only applies if mintable is true.
+          anyOf:
+            - type: string
+            - type: "null"
+      required:
+        - name
+        - symbol
+        - initialSupply
     GetLiquidityParamsResponse:
       type: object
-      required:
-        - position_manager_address
-        - token0
-        - token1
-        - fee
-        - tick_lower
-        - tick_upper
-        - amount0_desired
-        - amount1_desired
-        - amount0_min
-        - amount1_min
-        - recipient
-        - deadline
-        - approvals
       properties:
         position_manager_address:
           type: string
@@ -143,16 +129,22 @@ components:
           items:
             $ref: "#/components/schemas/LiquidityApproval"
           description: ERC-20 approvals to submit on-chain before calling addLiquidity.
-    GetPoolResponse:
-      type: object
       required:
-        - pool_address
+        - position_manager_address
         - token0
         - token1
         - fee
-        - sqrt_price_x96
-        - tick
-        - tx_hash
+        - tick_lower
+        - tick_upper
+        - amount0_desired
+        - amount1_desired
+        - amount0_min
+        - amount1_min
+        - recipient
+        - deadline
+        - approvals
+    GetPoolResponse:
+      type: object
       properties:
         pool_address:
           type: string
@@ -175,12 +167,16 @@ components:
         tx_hash:
           type: string
           description: Pool creation transaction hash.
+      required:
+        - pool_address
+        - token0
+        - token1
+        - fee
+        - sqrt_price_x96
+        - tick
+        - tx_hash
     GetSupplyResponse:
       type: object
-      required:
-        - token_id
-        - contract_address
-        - total_supply
       properties:
         token_id:
           type: string
@@ -191,30 +187,20 @@ components:
         total_supply:
           type: string
           description: Live on-chain total supply as a raw integer string.
+      required:
+        - token_id
+        - contract_address
+        - total_supply
     GetTokenResponse:
       type: object
-      required:
-        - id
-        - contract_address
-        - owner_wallet
-        - name
-        - symbol
-        - decimals
-        - initial_supply
-        - total_minted
-        - mintable
-        - max_supply
-        - tx_hash
-        - deploy_status
-        - created_at
       properties:
         id:
           type: string
           description: Token ID (e.g. "tok_abc123").
         contract_address:
-          type:
-            - string
-            - "null"
+          anyOf:
+            - type: string
+            - type: "null"
           description: Deployed contract address. Null while deploy_status is "pending".
         owner_wallet:
           type: string
@@ -238,9 +224,9 @@ components:
           type: boolean
           description: Whether additional tokens can be minted.
         max_supply:
-          type:
-            - string
-            - "null"
+          anyOf:
+            - type: string
+            - type: "null"
           description: Maximum mintable supply as a raw integer string. Null = unlimited.
         tx_hash:
           type: string
@@ -255,12 +241,22 @@ components:
         created_at:
           type: string
           description: ISO 8601 timestamp when the token was created.
+      required:
+        - id
+        - contract_address
+        - owner_wallet
+        - name
+        - symbol
+        - decimals
+        - initial_supply
+        - total_minted
+        - mintable
+        - max_supply
+        - tx_hash
+        - deploy_status
+        - created_at
     LiquidityApproval:
       type: object
-      required:
-        - token
-        - spender
-        - amount
       properties:
         token:
           type: string
@@ -271,11 +267,12 @@ components:
         amount:
           type: string
           description: Amount to approve as a raw integer string.
+      required:
+        - token
+        - spender
+        - amount
     MintRequest:
       type: object
-      required:
-        - to
-        - amount
       properties:
         to:
           type: string
@@ -283,13 +280,11 @@ components:
         amount:
           type: string
           description: Amount to mint as a raw integer string.
-    MintResponse:
-      type: object
       required:
-        - tx_hash
         - to
         - amount
-        - status
+    MintResponse:
+      type: object
       properties:
         tx_hash:
           type: string
@@ -302,9 +297,13 @@ components:
           description: Amount minted as a raw integer string.
         status:
           type: string
-          enum:
-            - pending
+          const: pending
           description: Always "pending" — mint is submitted on-chain asynchronously.
+      required:
+        - tx_hash
+        - to
+        - amount
+        - status
 paths:
   /:
     get:

@@ -13,7 +13,7 @@
 
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { join, resolve } from "node:path";
-import { parseApiFile } from "./lib/parse-api.js";
+import { extractApiFromSchemas } from "./lib/extract-schemas.js";
 import {
   type Primitive,
   TYPE_TO_CATEGORY,
@@ -305,7 +305,7 @@ for (const p of primsWithRoutes) {
     console.log(`  – site/${p.id}/llms.txt (no site dir, skipped)`);
     continue;
   }
-  const parsedApi = parseApiFile(apiPath);
+  const parsedApi = await extractApiFromSchemas(apiPath);
   const routePrices = parseRoutePrices(indexPath);
   const llmsBody = renderLlmsTxt(p, parsedApi, routePrices);
   const llmsHeader = `# THIS FILE IS GENERATED — DO NOT EDIT\n# Source: packages/${p.id}/prim.yaml + packages/${p.id}/src/api.ts\n# Regenerate: pnpm gen:prims\n\n`;

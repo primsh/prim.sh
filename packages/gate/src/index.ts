@@ -15,7 +15,7 @@ import {
 import { createPrimApp } from "@primsh/x402-middleware/create-prim-app";
 import type { ContentfulStatusCode } from "hono/utils/http-status";
 import { getAddress, isAddress } from "viem";
-import type { CreateCodesRequest, RedeemRequest } from "./api.ts";
+import { CreateCodesRequestSchema, RedeemRequestSchema } from "./api.ts";
 import { seedCodes } from "./db.ts";
 import { createCodes, deleteCode, getCodes, redeemInvite } from "./service.ts";
 
@@ -77,7 +77,12 @@ app.get("/", (c) => {
 
 // POST /v1/redeem — Redeem an invite code (free)
 app.post("/v1/redeem", async (c) => {
-  const bodyOrRes = await parseJsonBody<Partial<RedeemRequest>>(c, logger, "POST /v1/redeem");
+  const bodyOrRes = await parseJsonBody(
+    c,
+    logger,
+    "POST /v1/redeem",
+    RedeemRequestSchema.partial(),
+  );
   if (bodyOrRes instanceof Response) return bodyOrRes;
   const body = bodyOrRes;
 
@@ -179,10 +184,11 @@ app.post("/internal/codes", async (c) => {
   const denied = internalAuth(c);
   if (denied) return denied;
 
-  const bodyOrRes = await parseJsonBody<Partial<CreateCodesRequest>>(
+  const bodyOrRes = await parseJsonBody(
     c,
     logger,
     "POST /internal/codes",
+    CreateCodesRequestSchema.partial(),
   );
   if (bodyOrRes instanceof Response) return bodyOrRes;
   const body = bodyOrRes;

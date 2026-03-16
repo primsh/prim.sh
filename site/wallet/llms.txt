@@ -210,12 +210,12 @@ Request:
   reason  string  required  Human-readable reason for the funding request.
 
 Response (200):
-  id              string             Fund request ID (e.g. "fr_abc123").
-  wallet_address  string             Wallet address the request is for.
-  amount          string             Requested USDC amount as a decimal string.
-  reason          string             Reason provided by the requester.
-  status          FundRequestStatus  Current status of the fund request.
-  created_at      string             ISO 8601 timestamp when the request was created.
+  id              string                             Fund request ID (e.g. "fr_abc123").
+  wallet_address  string                             Wallet address the request is for.
+  amount          string                             Requested USDC amount as a decimal string.
+  reason          string                             Reason provided by the requester.
+  status          "pending" | "approved" | "denied"  Current status of the fund request.
+  created_at      string                             ISO 8601 timestamp when the request was created.
 
 Errors:
   400  invalid_request   Missing amount or reason
@@ -362,13 +362,13 @@ Path params:
   address  string  required  address parameter
 
 Request:
-  scope  PauseScope  optional  Scope to pause. "all" | "send" | "swap". Default "all".
+  scope  "all" | "send" | "swap"  optional  Scope to pause. "all" | "send" | "swap". Default "all".
 
 Response (200):
-  wallet_address  string      Wallet address that was paused.
-  paused          boolean     Always true on success.
-  scope           PauseScope  Scope that was paused.
-  paused_at       string      ISO 8601 timestamp when the wallet was paused.
+  wallet_address  string                   Wallet address that was paused.
+  paused          boolean                  Always true on success.
+  scope           "all" | "send" | "swap"  Scope that was paused.
+  paused_at       string                   ISO 8601 timestamp when the wallet was paused.
 
 Errors:
   400  invalid_request   Invalid scope value
@@ -388,13 +388,13 @@ Path params:
   address  string  required  address parameter
 
 Request:
-  scope  PauseScope  optional  Scope to resume. "all" | "send" | "swap". Default "all".
+  scope  "all" | "send" | "swap"  optional  Scope to resume. "all" | "send" | "swap". Default "all".
 
 Response (200):
-  wallet_address  string      Wallet address that was resumed.
-  paused          boolean     Always false on success (wallet is unpaused).
-  scope           PauseScope  Scope that was resumed.
-  resumed_at      string      ISO 8601 timestamp when the wallet was resumed.
+  wallet_address  string                   Wallet address that was resumed.
+  paused          boolean                  Always false on success (wallet is unpaused).
+  scope           "all" | "send" | "swap"  Scope that was resumed.
+  resumed_at      string                   ISO 8601 timestamp when the wallet was resumed.
 
 Errors:
   400  invalid_request   Invalid scope value

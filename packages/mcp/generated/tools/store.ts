@@ -33,6 +33,8 @@ export const storeTools: Tool[] = [
         properties: {
           "name": {
             type: "string",
+            minLength: 3,
+            maxLength: 63,
             description: "Bucket name. Unique per wallet. 3-63 chars, alphanumeric + hyphens.",
           },
           "location": {
@@ -180,7 +182,14 @@ export const storeTools: Tool[] = [
             description: "id parameter",
           },
           "quota_bytes": {
-            type: ["number","null"],
+            anyOf: [
+              {
+                type: "number",
+              },
+              {
+                type: "null",
+              },
+            ],
             description: "New quota in bytes. Pass null to reset to default (100 MB).",
           },
         },
@@ -213,6 +222,7 @@ export const storeTools: Tool[] = [
           },
           "key": {
             type: "string",
+            minLength: 1,
             description: "Object key to presign.",
           },
           "method": {
@@ -223,6 +233,8 @@ export const storeTools: Tool[] = [
           "expires_in": {
             type: "number",
             description: "URL lifetime in seconds (60–86400). Defaults to 3600.",
+            minimum: 60,
+            maximum: 86400,
           },
         },
         required: ["id","key","method"],

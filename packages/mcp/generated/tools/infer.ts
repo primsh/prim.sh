@@ -21,14 +21,13 @@ export const inferTools: Tool[] = [
             type: "array",
             items: {
               type: "object",
-              required: ["role","content"],
               properties: {
                 "role": {
                   type: "string",
                   enum: ["system","user","assistant","tool"],
                 },
                 "content": {
-                  oneOf: [
+                  anyOf: [
                     {
                       type: "string",
                     },
@@ -36,7 +35,6 @@ export const inferTools: Tool[] = [
                       type: "array",
                       items: {
                         type: "object",
-                        required: ["type"],
                         properties: {
                           "type": {
                             type: "string",
@@ -47,8 +45,19 @@ export const inferTools: Tool[] = [
                           },
                           "image_url": {
                             type: "object",
+                            properties: {
+                              "url": {
+                                type: "string",
+                              },
+                              "detail": {
+                                type: "string",
+                                enum: ["auto","low","high"],
+                              },
+                            },
+                            required: ["url"],
                           },
                         },
+                        required: ["type"],
                       },
                     },
                     {
@@ -66,22 +75,32 @@ export const inferTools: Tool[] = [
                   type: "array",
                   items: {
                     type: "object",
-                    required: ["id","type","function"],
                     properties: {
                       "id": {
                         type: "string",
                       },
                       "type": {
                         type: "string",
-                        enum: ["function"],
+                        const: "function",
                       },
                       "function": {
                         type: "object",
+                        properties: {
+                          "name": {
+                            type: "string",
+                          },
+                          "arguments": {
+                            type: "string",
+                          },
+                        },
+                        required: ["name","arguments"],
                       },
                     },
+                    required: ["id","type","function"],
                   },
                 },
               },
+              required: ["role","content"],
             },
           },
           "temperature": {
@@ -100,7 +119,7 @@ export const inferTools: Tool[] = [
             type: "number",
           },
           "stop": {
-            oneOf: [
+            anyOf: [
               {
                 type: "string",
               },
@@ -119,31 +138,69 @@ export const inferTools: Tool[] = [
             type: "array",
             items: {
               type: "object",
-              required: ["type","function"],
               properties: {
                 "type": {
                   type: "string",
-                  enum: ["function"],
+                  const: "function",
                 },
                 "function": {
                   type: "object",
+                  properties: {
+                    "name": {
+                      type: "string",
+                    },
+                    "description": {
+                      type: "string",
+                    },
+                    "parameters": {
+                      type: "object",
+                      propertyNames: {
+                        type: "string",
+                      },
+                    },
+                  },
+                  required: ["name"],
                 },
               },
+              required: ["type","function"],
             },
           },
           "tool_choice": {
-            oneOf: [
+            anyOf: [
               {
                 type: "string",
                 enum: ["none","auto","required"],
               },
               {
                 type: "object",
+                properties: {
+                  "type": {
+                    type: "string",
+                    const: "function",
+                  },
+                  "function": {
+                    type: "object",
+                    properties: {
+                      "name": {
+                        type: "string",
+                      },
+                    },
+                    required: ["name"],
+                  },
+                },
+                required: ["type","function"],
               },
             ],
           },
           "response_format": {
             type: "object",
+            properties: {
+              "type": {
+                type: "string",
+                enum: ["text","json_object"],
+              },
+            },
+            required: ["type"],
           },
         },
         required: ["model","messages"],
@@ -159,7 +216,7 @@ export const inferTools: Tool[] = [
             type: "string",
           },
           "input": {
-            oneOf: [
+            anyOf: [
               {
                 type: "string",
               },

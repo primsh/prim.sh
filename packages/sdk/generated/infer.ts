@@ -18,13 +18,20 @@ export interface ChatRequest {
   stop?: string | string[];
   stream?: boolean;
   tools?: Tool[];
-  tool_choice?: "none" | "auto" | "required" | Record<string, unknown>;
-  response_format?: Record<string, unknown>;
+  tool_choice?: "none" | "auto" | "required" | {
+    type: string;
+    function: {
+      name: string;
+    };
+  };
+  response_format?: {
+    type: "text" | "json_object";
+  };
 }
 
 export interface ChatResponse {
   id: string;
-  object: "chat.completion";
+  object: string;
   created: number;
   model: string;
   choices: Choice[];
@@ -40,7 +47,10 @@ export interface Choice {
 export interface ContentPart {
   type: "text" | "image_url";
   text?: string;
-  image_url?: Record<string, unknown>;
+  image_url?: {
+    url: string;
+    detail?: "auto" | "low" | "high";
+  };
 }
 
 export interface EmbedRequest {
@@ -49,14 +59,17 @@ export interface EmbedRequest {
 }
 
 export interface EmbedResponse {
-  object: "list";
+  object: string;
   data: EmbeddingData[];
   model: string;
-  usage: Record<string, unknown>;
+  usage: {
+    prompt_tokens: number;
+    total_tokens: number;
+  };
 }
 
 export interface EmbeddingData {
-  object: "embedding";
+  object: string;
   index: number;
   embedding: number[];
 }
@@ -86,14 +99,21 @@ export interface ModelPricing {
 }
 
 export interface Tool {
-  type: "function";
-  function: Record<string, unknown>;
+  type: string;
+  function: {
+    name: string;
+    description?: string;
+    parameters?: Record<string, unknown>;
+  };
 }
 
 export interface ToolCall {
   id: string;
-  type: "function";
-  function: Record<string, unknown>;
+  type: string;
+  function: {
+    name: string;
+    arguments: string;
+  };
 }
 
 export interface Usage {

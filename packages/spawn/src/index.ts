@@ -12,15 +12,17 @@ import {
 } from "@primsh/x402-middleware";
 import type { ApiError, PaginatedList } from "@primsh/x402-middleware";
 import { createPrimApp } from "@primsh/x402-middleware/create-prim-app";
+import {
+  CreateServerRequestSchema,
+  CreateSshKeyRequestSchema,
+  RebuildServerRequestSchema,
+  ResizeServerRequestSchema,
+} from "./api.ts";
 import type {
   GetActionOnlyResponse,
-  CreateServerRequest,
   CreateServerResponse,
-  CreateSshKeyRequest,
   DeleteServerResponse,
-  RebuildServerRequest,
   RebuildServerResponse,
-  ResizeServerRequest,
   ResizeServerResponse,
   GetServerResponse,
   GetSshKeyResponse,
@@ -135,7 +137,7 @@ app.post("/v1/servers", async (c) => {
   if (callerOrRes instanceof Response) return callerOrRes;
   const caller = callerOrRes;
 
-  const bodyOrRes = await parseJsonBody<CreateServerRequest>(c, logger, "POST /v1/servers");
+  const bodyOrRes = await parseJsonBody(c, logger, "POST /v1/servers", CreateServerRequestSchema);
   if (bodyOrRes instanceof Response) return bodyOrRes;
   const body = bodyOrRes;
 
@@ -246,10 +248,11 @@ app.post("/v1/servers/:id/resize", async (c) => {
   if (callerOrRes instanceof Response) return callerOrRes;
   const caller = callerOrRes;
 
-  const bodyOrRes = await parseJsonBody<ResizeServerRequest>(
+  const bodyOrRes = await parseJsonBody(
     c,
     logger,
     "POST /v1/servers/:id/resize",
+    ResizeServerRequestSchema,
   );
   if (bodyOrRes instanceof Response) return bodyOrRes;
   const body = bodyOrRes;
@@ -270,10 +273,11 @@ app.post("/v1/servers/:id/rebuild", async (c) => {
   if (callerOrRes instanceof Response) return callerOrRes;
   const caller = callerOrRes;
 
-  const bodyOrRes = await parseJsonBody<RebuildServerRequest>(
+  const bodyOrRes = await parseJsonBody(
     c,
     logger,
     "POST /v1/servers/:id/rebuild",
+    RebuildServerRequestSchema,
   );
   if (bodyOrRes instanceof Response) return bodyOrRes;
   const body = bodyOrRes;
@@ -294,7 +298,7 @@ app.post("/v1/ssh-keys", async (c) => {
   if (callerOrRes instanceof Response) return callerOrRes;
   const caller = callerOrRes;
 
-  const bodyOrRes = await parseJsonBody<CreateSshKeyRequest>(c, logger, "POST /v1/ssh-keys");
+  const bodyOrRes = await parseJsonBody(c, logger, "POST /v1/ssh-keys", CreateSshKeyRequestSchema);
   if (bodyOrRes instanceof Response) return bodyOrRes;
   const body = bodyOrRes;
 

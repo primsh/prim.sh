@@ -1,81 +1,72 @@
 // SPDX-License-Identifier: Apache-2.0
 // ─── gate.sh API types ─────────────────────────────────────────────────
 
-export interface RedeemRequest {
-  /** Invite code (e.g. "PRIM-a1b2c3d4"). */
-  code: string;
-  /** EVM wallet address to allowlist and fund (0x... checksummed). */
-  wallet: string;
-}
+import { z } from "zod";
 
-export interface FundingDetail {
-  /** USDC amount funded as decimal string (e.g. "5.00"). */
-  usdc: string;
-  /** ETH amount funded as decimal string (e.g. "0.001"). */
-  eth: string;
-  /** USDC transfer transaction hash. */
-  usdc_tx: string;
-  /** ETH transfer transaction hash. */
-  eth_tx: string;
-}
+export const RedeemRequestSchema = z.object({
+  code: z.string().describe('Invite code (e.g. "PRIM-a1b2c3d4").'),
+  wallet: z.string().describe("EVM wallet address to allowlist and fund (0x... checksummed)."),
+});
+export type RedeemRequest = z.infer<typeof RedeemRequestSchema>;
 
-export interface RedeemResponse {
-  /** Always "redeemed" on success. */
-  status: "redeemed";
-  /** Checksummed wallet address that was funded. */
-  wallet: string;
-  /** Network the funds were sent on (e.g. "eip155:8453"). */
-  network: string;
-  /** Funding details. */
-  funded: FundingDetail;
-  /** Whether the wallet was auto-registered on wallet.sh. */
-  wallet_registered: boolean;
-  /** Whether infer.sh credit was seeded for instant responses. */
-  credit_seeded: boolean;
-}
+export const FundingDetailSchema = z.object({
+  usdc: z.string().describe('USDC amount funded as decimal string (e.g. "5.00").'),
+  eth: z.string().describe('ETH amount funded as decimal string (e.g. "0.001").'),
+  usdc_tx: z.string().describe("USDC transfer transaction hash."),
+  eth_tx: z.string().describe("ETH transfer transaction hash."),
+});
+export type FundingDetail = z.infer<typeof FundingDetailSchema>;
+
+export const RedeemResponseSchema = z.object({
+  status: z.literal("redeemed").describe('Always "redeemed" on success.'),
+  wallet: z.string().describe("Checksummed wallet address that was funded."),
+  network: z.string().describe('Network the funds were sent on (e.g. "eip155:8453").'),
+  funded: FundingDetailSchema.describe("Funding details."),
+  wallet_registered: z.boolean().describe("Whether the wallet was auto-registered on wallet.sh."),
+  credit_seeded: z.boolean().describe("Whether infer.sh credit was seeded for instant responses."),
+});
+export type RedeemResponse = z.infer<typeof RedeemResponseSchema>;
 
 // ─── Code management ─────────────────────────────────────────────────────────
 
-export interface CreateCodesRequest {
-  /** Generate N random codes (1–100). */
-  count?: number;
-  /** Add specific codes. */
-  codes?: string[];
-  /** Optional batch label (e.g. "beta-batch-1"). */
-  label?: string;
-}
+export const CreateCodesRequestSchema = z.object({
+  count: z.number().optional().describe("Generate N random codes (1–100)."),
+  codes: z.array(z.string()).optional().describe("Add specific codes."),
+  label: z.string().optional().describe('Optional batch label (e.g. "beta-batch-1").'),
+});
+export type CreateCodesRequest = z.infer<typeof CreateCodesRequestSchema>;
 
-export interface CreateCodesResponse {
-  /** All created codes. */
-  codes: string[];
-  /** Count actually inserted (excludes dupes). */
-  created: number;
-}
+export const CreateCodesResponseSchema = z.object({
+  codes: z.array(z.string()).describe("All created codes."),
+  created: z.number().describe("Count actually inserted (excludes dupes)."),
+});
+export type CreateCodesResponse = z.infer<typeof CreateCodesResponseSchema>;
 
-export interface CodeDetail {
-  code: string;
-  status: "available" | "redeemed";
-  created_at: string | null;
-  label: string | null;
-  wallet: string | null;
-  redeemed_at: string | null;
-}
+export const CodeDetailSchema = z.object({
+  code: z.string(),
+  status: z.enum(["available", "redeemed"]),
+  created_at: z.string().nullable(),
+  label: z.string().nullable(),
+  wallet: z.string().nullable(),
+  redeemed_at: z.string().nullable(),
+});
+export type CodeDetail = z.infer<typeof CodeDetailSchema>;
 
-export interface ListCodesResponse {
-  codes: CodeDetail[];
-  total: number;
-}
+export const ListCodesResponseSchema = z.object({
+  codes: z.array(CodeDetailSchema),
+  total: z.number(),
+});
+export type ListCodesResponse = z.infer<typeof ListCodesResponseSchema>;
 
 // ─── Error ────────────────────────────────────────────────────────────────────
 
-export interface ApiError {
-  error: {
-    /** Machine-readable error code. */
-    code: string;
-    /** Human-readable error message. */
-    message: string;
-  };
-}
+export const ApiErrorSchema = z.object({
+  error: z.object({
+    code: z.string().describe("Machine-readable error code."),
+    message: z.string().describe("Human-readable error message."),
+  }),
+});
+export type ApiError = z.infer<typeof ApiErrorSchema>;
 
 export const ERROR_CODES = [
   "invalid_request",

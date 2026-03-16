@@ -15,7 +15,7 @@
 
 import { existsSync, readFileSync, writeFileSync } from "node:fs";
 import { join, resolve } from "node:path";
-import { type ParsedField, type ParsedInterface, parseApiFile } from "./lib/parse-api.js";
+import { type ParsedField, type ParsedInterface, extractApiFromSchemas } from "./lib/extract-schemas.js";
 import {
   type Primitive,
   type RouteMapping,
@@ -392,7 +392,7 @@ function inferCaptures(
 
 // ── Main ───────────────────────────────────────────────────────────────────
 
-function main() {
+async function main() {
   // Load existing plan
   if (!existsSync(PLAN_PATH)) {
     console.error(`Plan not found: ${PLAN_PATH}`);
@@ -448,9 +448,11 @@ function main() {
 
     // Parse api.ts for response shapes
     const apiPath = join(ROOT, "packages", prim.id, "src", "api.ts");
-    const interfaces = existsSync(apiPath)
-      ? parseApiFile(apiPath).interfaces
-      : new Map<string, ParsedInterface>();
+    let interfaces: Map<string, ParsedInterface> = new Map();
+    if (existsSync(apiPath)) {
+      const parsed = await extractApiFromSchemas(apiPath);
+      interfaces = parsed.interfaces;
+    }
 
     // Build route → test ID index for this prim (existing + new)
     const routeTestIndex = new Map<string, string>();

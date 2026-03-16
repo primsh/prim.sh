@@ -53,10 +53,10 @@ export const spawnTools: Tool[] = [
           },
           "ssh_keys": {
             type: "array",
+            description: "SSH key IDs from POST /v1/ssh-keys to install on the server.",
             items: {
               type: "string",
             },
-            description: "SSH key IDs from POST /v1/ssh-keys to install on the server.",
           },
           "user_data": {
             type: "string",

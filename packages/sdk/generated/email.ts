@@ -20,7 +20,7 @@ export interface DeleteDomainResponse {
   /** Domain registration ID that was deleted. */
   id: string;
   /** Always true on success. */
-  deleted: string;
+  deleted: boolean;
   /** Warning message if domain had active mailboxes. */
   warning?: string;
 }
@@ -29,14 +29,14 @@ export interface DeleteMailboxResponse {
   /** Mailbox ID that was deleted. */
   id: string;
   /** Always true on success. */
-  deleted: string;
+  deleted: boolean;
 }
 
 export interface DeleteWebhookResponse {
   /** Webhook ID that was deleted. */
   id: string;
   /** Always true on success. */
-  deleted: string;
+  deleted: boolean;
 }
 
 export interface DnsRecord {
@@ -82,25 +82,6 @@ export interface EmailDetail {
   html_body: string | null;
 }
 
-export interface EmailMessage {
-  /** Message ID. */
-  id: string;
-  /** Sender address. */
-  from: EmailAddress;
-  /** Recipient addresses. */
-  to: EmailAddress[];
-  /** Email subject line. */
-  subject: string;
-  /** ISO 8601 timestamp when the message was received. */
-  received_at: string;
-  /** Message size in bytes. */
-  size: number;
-  /** Whether the message has attachments. */
-  has_attachment: boolean;
-  /** Short preview text (first ~100 chars of body). */
-  preview: string;
-}
-
 export interface GetDomainResponse {
   /** Domain registration ID. */
   id: string;
@@ -130,7 +111,7 @@ export interface GetMailboxResponse {
   /** Domain portion of the email address. */
   domain: string;
   /** Current status: "active" | "expired" | "deleted". */
-  status: string;
+  status: "active" | "expired" | "deleted";
   /** ISO 8601 timestamp when the mailbox was created. */
   created_at: string;
   /** ISO 8601 timestamp when the mailbox expires. Null if permanent. */
@@ -188,7 +169,7 @@ export interface SendMessageResponse {
   /** Message ID assigned by the mail server. */
   message_id: string;
   /** Always "sent" on success. */
-  status: "sent";
+  status: string;
 }
 
 export interface VerificationResult {

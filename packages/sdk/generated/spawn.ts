@@ -44,7 +44,7 @@ export interface CreateSshKeyRequest {
 
 export interface DeleteServerResponse {
   /** Always "deleted" on success. */
-  status: "deleted";
+  status: string;
   /** USDC refunded to wallet as a decimal string. */
   deposit_refunded: string;
 }
@@ -79,7 +79,7 @@ export interface GetServerResponse {
   /** Server type slug (e.g. "small"). */
   type: string;
   /** Current server lifecycle status. */
-  status: string;
+  status: "initializing" | "running" | "off" | "rebuilding" | "migrating" | "destroying" | "deleted";
   /** OS image slug (e.g. "ubuntu-24.04"). */
   image: string;
   /** Data center slug (e.g. "nyc3"). */
@@ -111,9 +111,13 @@ export interface GetSshKeyResponse {
 
 export interface PublicNet {
   /** IPv4 address info. Null until assigned. */
-  ipv4: Record<string, unknown>;
+  ipv4: {
+    ip: string | null;
+  } | null;
   /** IPv6 address info. Null until assigned. */
-  ipv6: Record<string, unknown>;
+  ipv6: {
+    ip: string | null;
+  } | null;
 }
 
 export interface RebuildServerRequest {

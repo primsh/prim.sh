@@ -12,10 +12,14 @@ import {
 import type { ApiError, PaginatedList } from "@primsh/x402-middleware";
 import { createPrimApp } from "@primsh/x402-middleware/create-prim-app";
 import { bodyLimit } from "hono/body-limit";
+import {
+  CreateBucketRequestSchema,
+  CreatePresignRequestSchema,
+  SetQuotaRequestSchema,
+  UpdateBucketRequestSchema,
+} from "./api.ts";
 import type {
-  CreateBucketRequest,
   CreateBucketResponse,
-  CreatePresignRequest,
   CreatePresignResponse,
   DeleteObjectResponse,
   GetBucketResponse,
@@ -23,8 +27,6 @@ import type {
   GetQuotaResponse,
   PutObjectResponse,
   ReconcileStorageResponse,
-  SetQuotaRequest,
-  UpdateBucketRequest,
 } from "./api.ts";
 import {
   createBucket,
@@ -188,7 +190,7 @@ app.post("/v1/buckets", async (c) => {
   if (callerOrRes instanceof Response) return callerOrRes;
   const caller = callerOrRes;
 
-  const bodyOrRes = await parseJsonBody<CreateBucketRequest>(c, logger, "POST /v1/buckets");
+  const bodyOrRes = await parseJsonBody(c, logger, "POST /v1/buckets", CreateBucketRequestSchema);
   if (bodyOrRes instanceof Response) return bodyOrRes;
   const body = bodyOrRes;
 
@@ -238,13 +240,14 @@ app.put("/v1/buckets/:id", async (c) => {
   if (callerOrRes instanceof Response) return callerOrRes;
   const caller = callerOrRes;
 
-  const bodyOrRes = await parseJsonBody<UpdateBucketRequest>(c, logger, "PUT /v1/buckets/:id");
+  const bodyOrRes = await parseJsonBody(
+    c,
+    logger,
+    "PUT /v1/buckets/:id",
+    UpdateBucketRequestSchema,
+  );
   if (bodyOrRes instanceof Response) return bodyOrRes;
   const body = bodyOrRes;
-
-  if (typeof body.is_public !== "boolean") {
-    return c.json(invalidRequest("is_public (boolean) is required"), 400);
-  }
 
   const result = updateBucket(c.req.param("id"), caller, body);
   if (!result.ok) {
@@ -368,17 +371,14 @@ app.post("/v1/buckets/:id/presign", async (c) => {
   if (callerOrRes instanceof Response) return callerOrRes;
   const caller = callerOrRes;
 
-  const bodyOrRes = await parseJsonBody<CreatePresignRequest>(
+  const bodyOrRes = await parseJsonBody(
     c,
     logger,
     "POST /v1/buckets/:id/presign",
+    CreatePresignRequestSchema,
   );
   if (bodyOrRes instanceof Response) return bodyOrRes;
   const body = bodyOrRes;
-
-  if (!body.key || !body.method || (body.method !== "GET" && body.method !== "PUT")) {
-    return c.json(invalidRequest("key (string) and method ('GET' | 'PUT') are required"), 400);
-  }
 
   const result = await presignObject(
     c.req.param("id"),
@@ -418,7 +418,12 @@ app.put("/v1/buckets/:id/quota", async (c) => {
   if (callerOrRes instanceof Response) return callerOrRes;
   const caller = callerOrRes;
 
-  const bodyOrRes = await parseJsonBody<SetQuotaRequest>(c, logger, "PUT /v1/buckets/:id/quota");
+  const bodyOrRes = await parseJsonBody(
+    c,
+    logger,
+    "PUT /v1/buckets/:id/quota",
+    SetQuotaRequestSchema,
+  );
   if (bodyOrRes instanceof Response) return bodyOrRes;
   const body = bodyOrRes;
 

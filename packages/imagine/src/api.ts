@@ -1,37 +1,38 @@
 // SPDX-License-Identifier: Apache-2.0
 // ─── imagine.sh API types ─────────────────────────────────────────────────
 
-// biome-ignore lint/suspicious/noEmptyInterface: scaffold — fields added when provider is implemented
-export interface GenerateRequest {}
+import { z } from "zod";
 
-// biome-ignore lint/suspicious/noEmptyInterface: scaffold — fields added when provider is implemented
-export interface GenerateResponse {}
+export const GenerateRequestSchema = z.object({});
+export type GenerateRequest = z.infer<typeof GenerateRequestSchema>;
 
-// biome-ignore lint/suspicious/noEmptyInterface: scaffold — fields added when provider is implemented
-export interface DescribeRequest {}
+export const GenerateResponseSchema = z.object({});
+export type GenerateResponse = z.infer<typeof GenerateResponseSchema>;
 
-// biome-ignore lint/suspicious/noEmptyInterface: scaffold — fields added when provider is implemented
-export interface DescribeResponse {}
+export const DescribeRequestSchema = z.object({});
+export type DescribeRequest = z.infer<typeof DescribeRequestSchema>;
 
-// biome-ignore lint/suspicious/noEmptyInterface: scaffold — fields added when provider is implemented
-export interface UpscaleRequest {}
+export const DescribeResponseSchema = z.object({});
+export type DescribeResponse = z.infer<typeof DescribeResponseSchema>;
 
-// biome-ignore lint/suspicious/noEmptyInterface: scaffold — fields added when provider is implemented
-export interface UpscaleResponse {}
+export const UpscaleRequestSchema = z.object({});
+export type UpscaleRequest = z.infer<typeof UpscaleRequestSchema>;
 
-// biome-ignore lint/suspicious/noEmptyInterface: scaffold — fields added when provider is implemented
-export interface ListModelsResponse {}
+export const UpscaleResponseSchema = z.object({});
+export type UpscaleResponse = z.infer<typeof UpscaleResponseSchema>;
+
+export const ListModelsResponseSchema = z.object({});
+export type ListModelsResponse = z.infer<typeof ListModelsResponseSchema>;
 
 // ─── Error ────────────────────────────────────────────────────────────────────
 
-export interface ApiError {
-  error: {
-    /** Machine-readable error code. */
-    code: string;
-    /** Human-readable error message. */
-    message: string;
-  };
-}
+export const ApiErrorSchema = z.object({
+  error: z.object({
+    code: z.string().describe("Machine-readable error code."),
+    message: z.string().describe("Human-readable error message."),
+  }),
+});
+export type ApiError = z.infer<typeof ApiErrorSchema>;
 
 export const ERROR_CODES = [
   "invalid_request",

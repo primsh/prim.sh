@@ -57,7 +57,7 @@ Part of [prim.sh](https://prim.sh) — zero signup, one payment token, infinite 
 | `address` | `string` | Full email address (e.g. "abc123@mail.prim.sh"). |
 | `username` | `string` | Username portion of the email address. |
 | `domain` | `string` | Domain portion of the email address. |
-| `status` | `MailboxStatus` | Current status: "active" | "expired" | "deleted". |
+| `status` | `"active" | "expired" | "deleted"` | Current status: "active" | "expired" | "deleted". |
 | `created_at` | `string` | ISO 8601 timestamp when the mailbox was created. |
 | `expires_at` | `string | null` | ISO 8601 timestamp when the mailbox expires. Null if permanent. |
 

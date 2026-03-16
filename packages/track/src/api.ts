@@ -1,62 +1,60 @@
 // SPDX-License-Identifier: Apache-2.0
 // ─── Track ───────────────────────────────────────────────────────────────────
 
-export interface TrackRequest {
-  /** Shipment tracking number. */
-  tracking_number: string;
-  /** Carrier slug (e.g. "usps", "ups", "fedex"). Omit to auto-detect. */
-  carrier?: string;
-}
+import { z } from "zod";
 
-export interface TrackLocation {
-  /** City name. */
-  city?: string;
-  /** State or province. */
-  state?: string;
-  /** Postal code. */
-  zip?: string;
-  /** Two-letter ISO 3166-1 country code. */
-  country?: string;
-}
+export const TrackRequestSchema = z.object({
+  tracking_number: z.string().describe("Shipment tracking number."),
+  carrier: z
+    .string()
+    .optional()
+    .describe('Carrier slug (e.g. "usps", "ups", "fedex"). Omit to auto-detect.'),
+});
+export type TrackRequest = z.infer<typeof TrackRequestSchema>;
 
-export interface TrackEvent {
-  /** Event status summary (e.g. "In Transit"). */
-  status: string;
-  /** Detailed status description. */
-  status_detail: string;
-  /** ISO 8601 timestamp of the event. */
-  datetime: string;
-  /** Location where the event occurred. */
-  location?: TrackLocation;
-}
+export const TrackLocationSchema = z.object({
+  city: z.string().optional().describe("City name."),
+  state: z.string().optional().describe("State or province."),
+  zip: z.string().optional().describe("Postal code."),
+  country: z.string().optional().describe("Two-letter ISO 3166-1 country code."),
+});
+export type TrackLocation = z.infer<typeof TrackLocationSchema>;
 
-export interface TrackResponse {
-  /** Tracking number echoed back. */
-  tracking_number: string;
-  /** Detected or specified carrier slug. */
-  carrier: string;
-  /** Current status summary (e.g. "Delivered"). */
-  status: string;
-  /** Detailed current status description. */
-  status_detail: string;
-  /** Estimated delivery date (ISO 8601). Only present if available. */
-  eta?: string;
-  /** Current package location. Only present if available. */
-  location?: TrackLocation;
-  /** Chronological list of tracking events (newest first). */
-  events: TrackEvent[];
-}
+export const TrackEventSchema = z.object({
+  status: z.string().describe('Event status summary (e.g. "In Transit").'),
+  status_detail: z.string().describe("Detailed status description."),
+  datetime: z.string().describe("ISO 8601 timestamp of the event."),
+  location: TrackLocationSchema.optional().describe("Location where the event occurred."),
+});
+export type TrackEvent = z.infer<typeof TrackEventSchema>;
+
+export const TrackResponseSchema = z.object({
+  tracking_number: z.string().describe("Tracking number echoed back."),
+  carrier: z.string().describe("Detected or specified carrier slug."),
+  status: z.string().describe('Current status summary (e.g. "Delivered").'),
+  status_detail: z.string().describe("Detailed current status description."),
+  eta: z
+    .string()
+    .optional()
+    .describe("Estimated delivery date (ISO 8601). Only present if available."),
+  location: TrackLocationSchema.optional().describe(
+    "Current package location. Only present if available.",
+  ),
+  events: z
+    .array(TrackEventSchema)
+    .describe("Chronological list of tracking events (newest first)."),
+});
+export type TrackResponse = z.infer<typeof TrackResponseSchema>;
 
 // ─── Error ───────────────────────────────────────────────────────────────────
 
-export interface ApiError {
-  error: {
-    /** Machine-readable error code. */
-    code: string;
-    /** Human-readable error message. */
-    message: string;
-  };
-}
+export const ApiErrorSchema = z.object({
+  error: z.object({
+    code: z.string().describe("Machine-readable error code."),
+    message: z.string().describe("Human-readable error message."),
+  }),
+});
+export type ApiError = z.infer<typeof ApiErrorSchema>;
 
 export const ERROR_CODES = [
   "invalid_request",

@@ -17,25 +17,27 @@ import {
   decodePaymentSignatureHeader,
   encodePaymentRequiredHeader,
 } from "@x402/core/http";
+import {
+  BatchRecordsRequestSchema,
+  CreateRecordRequestSchema,
+  CreateZoneRequestSchema,
+  QuoteRequestSchema,
+  RecoverRequestSchema,
+  SetupMailRequestSchema,
+  UpdateRecordRequestSchema,
+} from "./api.ts";
 import type {
   ActivateDomainResponse,
-  BatchRecordsRequest,
   BatchRecordsResponse,
   ConfigureNameserversResponse,
-  CreateRecordRequest,
-  CreateZoneRequest,
   CreateZoneResponse,
   SearchDomainResponse,
-  SetupMailRequest,
   SetupMailResponse,
-  QuoteRequest,
   QuoteResponse,
   GetRecordResponse,
-  RecoverRequest,
   RecoverResponse,
   RegisterResponse,
   GetRegistrationStatusResponse,
-  UpdateRecordRequest,
   VerifyDomainResponse,
   GetZoneResponse,
 } from "./api.ts";
@@ -120,7 +122,7 @@ app.post("/v1/domains/quote", async (c) => {
   if (callerOrRes instanceof Response) return callerOrRes;
   const caller = callerOrRes;
 
-  const bodyOrRes = await parseJsonBody<QuoteRequest>(c, logger, "POST /v1/domains/quote");
+  const bodyOrRes = await parseJsonBody(c, logger, "POST /v1/domains/quote", QuoteRequestSchema);
   if (bodyOrRes instanceof Response) return bodyOrRes;
   const body = bodyOrRes;
 
@@ -260,7 +262,12 @@ app.post("/v1/domains/register", async (c) => {
 // POST /v1/domains/recover — Retry Cloudflare setup after NameSilo succeeded
 // Free route — recovery_token is sufficient auth.
 app.post("/v1/domains/recover", async (c) => {
-  const bodyOrRes = await parseJsonBody<RecoverRequest>(c, logger, "POST /v1/domains/recover");
+  const bodyOrRes = await parseJsonBody(
+    c,
+    logger,
+    "POST /v1/domains/recover",
+    RecoverRequestSchema,
+  );
   if (bodyOrRes instanceof Response) return bodyOrRes;
   const body = bodyOrRes;
 
@@ -349,7 +356,7 @@ app.post("/v1/zones", async (c) => {
   if (callerOrRes instanceof Response) return callerOrRes;
   const caller = callerOrRes;
 
-  const bodyOrRes = await parseJsonBody<CreateZoneRequest>(c, logger, "POST /v1/zones");
+  const bodyOrRes = await parseJsonBody(c, logger, "POST /v1/zones", CreateZoneRequestSchema);
   if (bodyOrRes instanceof Response) return bodyOrRes;
   const body = bodyOrRes;
 
@@ -443,10 +450,11 @@ app.post("/v1/zones/:zone_id/mail-setup", async (c) => {
   if (callerOrRes instanceof Response) return callerOrRes;
   const caller = callerOrRes;
 
-  const bodyOrRes = await parseJsonBody<SetupMailRequest>(
+  const bodyOrRes = await parseJsonBody(
     c,
     logger,
     "POST /v1/zones/:zone_id/mail-setup",
+    SetupMailRequestSchema,
   );
   if (bodyOrRes instanceof Response) return bodyOrRes;
   const body = bodyOrRes;
@@ -467,10 +475,11 @@ app.post("/v1/zones/:zone_id/records/batch", async (c) => {
   if (callerOrRes instanceof Response) return callerOrRes;
   const caller = callerOrRes;
 
-  const bodyOrRes = await parseJsonBody<BatchRecordsRequest>(
+  const bodyOrRes = await parseJsonBody(
     c,
     logger,
     "POST /v1/zones/:zone_id/records/batch",
+    BatchRecordsRequestSchema,
   );
   if (bodyOrRes instanceof Response) return bodyOrRes;
   const body = bodyOrRes;
@@ -493,10 +502,11 @@ app.post("/v1/zones/:zone_id/records", async (c) => {
   if (callerOrRes instanceof Response) return callerOrRes;
   const caller = callerOrRes;
 
-  const bodyOrRes = await parseJsonBody<CreateRecordRequest>(
+  const bodyOrRes = await parseJsonBody(
     c,
     logger,
     "POST /v1/zones/:zone_id/records",
+    CreateRecordRequestSchema,
   );
   if (bodyOrRes instanceof Response) return bodyOrRes;
   const body = bodyOrRes;
@@ -548,10 +558,11 @@ app.put("/v1/zones/:zone_id/records/:id", async (c) => {
   if (callerOrRes instanceof Response) return callerOrRes;
   const caller = callerOrRes;
 
-  const bodyOrRes = await parseJsonBody<UpdateRecordRequest>(
+  const bodyOrRes = await parseJsonBody(
     c,
     logger,
     "PUT /v1/zones/:zone_id/records/:id",
+    UpdateRecordRequestSchema,
   );
   if (bodyOrRes instanceof Response) return bodyOrRes;
   const body = bodyOrRes;

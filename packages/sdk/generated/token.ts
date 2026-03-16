@@ -137,7 +137,7 @@ export interface MintResponse {
   /** Amount minted as a raw integer string. */
   amount: string;
   /** Always "pending" — mint is submitted on-chain asynchronously. */
-  status: "pending";
+  status: string;
 }
 
 export interface GetTokenParams {

@@ -7,7 +7,7 @@
  */
 
 import { existsSync, readFileSync } from "node:fs";
-import type { ParsedApi, ParsedField } from "./parse-api.js";
+import type { ParsedApi, ParsedField } from "./extract-schemas.js";
 import type { Primitive, RouteMapping } from "./primitives.js";
 import { inferTypeNames } from "./render-openapi.js";
 
