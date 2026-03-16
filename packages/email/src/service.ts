@@ -396,8 +396,7 @@ export function listMailboxes(
   const rows = includeExpired
     ? getMailboxesByOwnerAll(callerWallet, limit, after)
     : getMailboxesByOwner(callerWallet, limit, after);
-  const nextCursor =
-    rows.length === limit && rows.length > 0 ? rows[rows.length - 1].id : null;
+  const nextCursor = rows.length === limit && rows.length > 0 ? rows[rows.length - 1].id : null;
 
   return {
     data: rows.map(rowToResponse),
@@ -924,8 +923,7 @@ export function listDomains(
   after: string | undefined,
 ): PaginatedList<GetDomainResponse> {
   const rows = getDomainsByOwner(callerWallet, limit, after);
-  const nextCursor =
-    rows.length === limit && rows.length > 0 ? rows[rows.length - 1].id : null;
+  const nextCursor = rows.length === limit && rows.length > 0 ? rows[rows.length - 1].id : null;
   return {
     data: rows.map(domainToResponse),
     pagination: {
