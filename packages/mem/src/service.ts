@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: Apache-2.0
 import { createHash, randomBytes } from "node:crypto";
+import { paginate } from "@primsh/x402-middleware";
 import type { PaginatedList, ServiceResult } from "@primsh/x402-middleware";
 import type {
   GetCollectionResponse,
@@ -169,17 +170,11 @@ export function listCollections(
   after?: string,
 ): PaginatedList<GetCollectionResponse> {
   const rows = getCollectionsByOwner(callerWallet, limit, after);
-  const nextCursor = rows.length === limit && rows.length > 0 ? rows[rows.length - 1].id : null;
-
-  return {
-    data: rows.map((r) => rowToGetCollectionResponse(r, null)),
-    pagination: {
-      total: null,
-      per_page: limit,
-      next_cursor: nextCursor,
-      has_more: nextCursor !== null,
-    },
-  };
+  return paginate(
+    rows.map((r) => rowToGetCollectionResponse(r, null)),
+    limit,
+    (r) => r.id,
+  );
 }
 
 export async function getCollection(

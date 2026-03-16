@@ -18,3 +18,26 @@ export function parsePaginationParams(query: Record<string, string | undefined>)
   const after = query.after ?? query.cursor;
   return { limit, after };
 }
+
+/**
+ * Build a PaginatedList response from a page of rows.
+ * Cursor is derived from the last row's ID when the page is full.
+ */
+export function paginate<T>(
+  rows: T[],
+  limit: number,
+  getId: (row: T) => string,
+  total?: number | null,
+): PaginatedList<T> {
+  const hasMore = rows.length === limit;
+  const nextCursor = hasMore && rows.length > 0 ? getId(rows[rows.length - 1]) : null;
+  return {
+    data: rows,
+    pagination: {
+      total: total ?? null,
+      per_page: limit,
+      next_cursor: nextCursor,
+      has_more: hasMore,
+    },
+  };
+}

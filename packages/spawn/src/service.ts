@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: Apache-2.0
 import { randomBytes } from "node:crypto";
+import { paginate } from "@primsh/x402-middleware";
 import type { PaginatedList, ServiceResult } from "@primsh/x402-middleware";
 import type {
   GetActionOnlyResponse,
@@ -285,17 +286,7 @@ export function listServers(
   after?: string,
 ): PaginatedList<GetServerResponse> {
   const rows = getServersByOwner(callerWallet, limit, after);
-  const nextCursor = rows.length === limit && rows.length > 0 ? rows[rows.length - 1].id : null;
-
-  return {
-    data: rows.map(rowToServerResponse),
-    pagination: {
-      total: null,
-      per_page: limit,
-      next_cursor: nextCursor,
-      has_more: nextCursor !== null,
-    },
-  };
+  return paginate(rows.map(rowToServerResponse), limit, (r) => r.id);
 }
 
 export async function getServer(

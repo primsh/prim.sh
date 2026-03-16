@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: Apache-2.0
 import { randomBytes, scryptSync } from "node:crypto";
-import { createLogger } from "@primsh/x402-middleware";
+import { createLogger, paginate } from "@primsh/x402-middleware";
 import type { PaginatedList, ServiceResult } from "@primsh/x402-middleware";
 
 const log = createLogger("email.sh", { module: "service" });
@@ -396,17 +396,8 @@ export function listMailboxes(
   const rows = includeExpired
     ? getMailboxesByOwnerAll(callerWallet, limit, after)
     : getMailboxesByOwner(callerWallet, limit, after);
-  const nextCursor = rows.length === limit && rows.length > 0 ? rows[rows.length - 1].id : null;
 
-  return {
-    data: rows.map(rowToResponse),
-    pagination: {
-      total: null,
-      per_page: limit,
-      next_cursor: nextCursor,
-      has_more: nextCursor !== null,
-    },
-  };
+  return paginate(rows.map(rowToResponse), limit, (r) => r.id);
 }
 
 export async function getMailbox(
@@ -923,16 +914,7 @@ export function listDomains(
   after: string | undefined,
 ): PaginatedList<GetDomainResponse> {
   const rows = getDomainsByOwner(callerWallet, limit, after);
-  const nextCursor = rows.length === limit && rows.length > 0 ? rows[rows.length - 1].id : null;
-  return {
-    data: rows.map(domainToResponse),
-    pagination: {
-      total: null,
-      per_page: limit,
-      next_cursor: nextCursor,
-      has_more: nextCursor !== null,
-    },
-  };
+  return paginate(rows.map(domainToResponse), limit, (r) => r.id);
 }
 
 export function getDomain(id: string, callerWallet: string): ServiceResult<GetDomainResponse> {

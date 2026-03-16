@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: Apache-2.0
 import { randomBytes } from "node:crypto";
-import { createLogger } from "@primsh/x402-middleware";
+import { createLogger, paginate } from "@primsh/x402-middleware";
 import type { PaginatedList, ServiceResult } from "@primsh/x402-middleware";
 
 const log = createLogger("domain.sh");
@@ -198,17 +198,7 @@ export function listZones(
   after?: string,
 ): PaginatedList<GetZoneResponse> {
   const rows = getZonesByOwner(callerWallet, limit, after);
-  const nextCursor = rows.length === limit && rows.length > 0 ? rows[rows.length - 1].id : null;
-
-  return {
-    data: rows.map(rowToGetZoneResponse),
-    pagination: {
-      total: null,
-      per_page: limit,
-      next_cursor: nextCursor,
-      has_more: nextCursor !== null,
-    },
-  };
+  return paginate(rows.map(rowToGetZoneResponse), limit, (r) => r.id);
 }
 
 export async function refreshZoneStatus(
@@ -365,23 +355,19 @@ export function listRecords(
   if (!check.ok) return check;
 
   const rows = getRecordsByZone(zoneId, limit, after);
-  const effectiveLimit = limit ?? rows.length;
-  const nextCursor =
-    limit !== undefined && rows.length === effectiveLimit && rows.length > 0
-      ? rows[rows.length - 1].id
-      : null;
+  const mapped = rows.map(rowToGetRecordResponse);
+
+  // When limit is undefined, all rows are returned (no pagination cursor)
+  if (limit === undefined) {
+    return {
+      ok: true,
+      data: { data: mapped, pagination: { total: null, per_page: mapped.length, next_cursor: null, has_more: false } },
+    };
+  }
 
   return {
     ok: true,
-    data: {
-      data: rows.map(rowToGetRecordResponse),
-      pagination: {
-        total: null,
-        per_page: effectiveLimit,
-        next_cursor: nextCursor,
-        has_more: nextCursor !== null,
-      },
-    },
+    data: paginate(mapped, limit, (r) => r.id),
   };
 }
 
