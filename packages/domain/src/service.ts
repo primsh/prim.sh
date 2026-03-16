@@ -42,7 +42,6 @@ import {
 } from "./cloudflare.ts";
 import type { CfBatchResult, CfDnsRecord } from "./cloudflare.ts";
 import {
-  countZonesByOwner,
   deleteRecordRow,
   deleteRecordsByZone,
   deleteZoneRow,
@@ -196,20 +195,18 @@ export async function createZone(
 export function listZones(
   callerWallet: string,
   limit: number,
-  page: number,
+  after?: string,
 ): PaginatedList<GetZoneResponse> {
-  const offset = (page - 1) * limit;
-  const rows = getZonesByOwner(callerWallet, limit, offset);
-  const total = countZonesByOwner(callerWallet);
+  const rows = getZonesByOwner(callerWallet, limit, after);
+  const nextCursor = rows.length === limit && rows.length > 0 ? rows[rows.length - 1].id : null;
 
   return {
     data: rows.map(rowToGetZoneResponse),
     pagination: {
-      total,
-      page,
+      total: null,
       per_page: limit,
-      cursor: null,
-      has_more: offset + rows.length < total,
+      next_cursor: nextCursor,
+      has_more: nextCursor !== null,
     },
   };
 }
@@ -361,21 +358,28 @@ export async function createRecord(
 export function listRecords(
   zoneId: string,
   callerWallet: string,
+  limit?: number,
+  after?: string,
 ): ServiceResult<PaginatedList<GetRecordResponse>> {
   const check = checkZoneOwnership(zoneId, callerWallet);
   if (!check.ok) return check;
 
-  const rows = getRecordsByZone(zoneId);
+  const rows = getRecordsByZone(zoneId, limit, after);
+  const effectiveLimit = limit ?? rows.length;
+  const nextCursor =
+    limit !== undefined && rows.length === effectiveLimit && rows.length > 0
+      ? rows[rows.length - 1].id
+      : null;
+
   return {
     ok: true,
     data: {
       data: rows.map(rowToGetRecordResponse),
       pagination: {
-        total: rows.length,
-        page: 1,
-        per_page: rows.length,
-        cursor: null,
-        has_more: false,
+        total: null,
+        per_page: effectiveLimit,
+        next_cursor: nextCursor,
+        has_more: nextCursor !== null,
       },
     },
   };

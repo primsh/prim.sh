@@ -296,39 +296,48 @@ describe("createCollection", () => {
 
 describe("listCollections", () => {
   it("returns empty list when no collections", () => {
-    const result = listCollections(WALLET, 20, 1);
+    const result = listCollections(WALLET, 20);
     expect(result.data).toHaveLength(0);
-    expect(result.pagination.total).toBe(0);
+    expect(result.pagination.has_more).toBe(false);
+    expect(result.pagination.next_cursor).toBeNull();
   });
 
   it("lists owned collections", async () => {
     await createCollection({ name: "col-a" }, WALLET);
     await createCollection({ name: "col-b" }, WALLET);
-    const result = listCollections(WALLET, 20, 1);
+    const result = listCollections(WALLET, 20);
     expect(result.data).toHaveLength(2);
-    expect(result.pagination.total).toBe(2);
+    expect(result.pagination.has_more).toBe(false);
   });
 
   it("excludes other wallet collections", async () => {
     await createCollection({ name: "col-other" }, WALLET_B);
-    const result = listCollections(WALLET, 20, 1);
+    const result = listCollections(WALLET, 20);
     expect(result.data).toHaveLength(0);
   });
 
-  it("paginates correctly", async () => {
+  it("paginates correctly with cursor", async () => {
     for (let i = 0; i < 5; i++) {
       await createCollection({ name: `col-${i}` }, WALLET);
     }
-    const page1 = listCollections(WALLET, 2, 1);
-    const page2 = listCollections(WALLET, 2, 2);
+    const page1 = listCollections(WALLET, 2);
     expect(page1.data).toHaveLength(2);
+    expect(page1.pagination.has_more).toBe(true);
+    expect(page1.pagination.next_cursor).toBeTruthy();
+
+    const page2 = listCollections(WALLET, 2, page1.pagination.next_cursor!);
     expect(page2.data).toHaveLength(2);
-    expect(page1.pagination.total).toBe(5);
+    expect(page2.pagination.has_more).toBe(true);
+
+    const page3 = listCollections(WALLET, 2, page2.pagination.next_cursor!);
+    expect(page3.data).toHaveLength(1);
+    expect(page3.pagination.has_more).toBe(false);
+    expect(page3.pagination.next_cursor).toBeNull();
   });
 
   it("sets document_count to null for all list entries", async () => {
     await createCollection({ name: "listed" }, WALLET);
-    const result = listCollections(WALLET, 20, 1);
+    const result = listCollections(WALLET, 20);
     expect(result.data[0].document_count).toBeNull();
   });
 });
@@ -387,7 +396,7 @@ describe("deleteCollection", () => {
     const created = await createCollection({ name: "gone" }, WALLET);
     if (!created.ok) throw new Error("setup failed");
     await deleteCollection(created.data.id, WALLET);
-    const list = listCollections(WALLET, 20, 1);
+    const list = listCollections(WALLET, 20);
     expect(list.data).toHaveLength(0);
   });
 
@@ -1040,7 +1049,7 @@ describe("Embedding error handling", () => {
 describe("document_count", () => {
   it("is null in list response", async () => {
     await createCollection({ name: "doccount-list" }, WALLET);
-    const list = listCollections(WALLET, 20, 1);
+    const list = listCollections(WALLET, 20);
     expect(list.data[0].document_count).toBeNull();
   });
 

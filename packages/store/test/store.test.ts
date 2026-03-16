@@ -339,23 +339,27 @@ describe("store.sh", () => {
       await createBucket({ name: "caller-bucket" }, CALLER);
       await createBucket({ name: "other-bucket" }, OTHER);
 
-      const list = listBuckets(CALLER, 20, 1);
+      const list = listBuckets(CALLER, 20);
       expect(list.data).toHaveLength(1);
       expect(list.data[0].name).toBe("caller-bucket");
-      expect(list.pagination.total).toBe(1);
+      expect(list.pagination.has_more).toBe(false);
+      expect(list.pagination.next_cursor).toBeNull();
     });
 
-    it("list buckets — pagination works", async () => {
+    it("list buckets — cursor pagination works", async () => {
       await createBucket({ name: "bucket-aaa" }, CALLER);
       await createBucket({ name: "bucket-bbb" }, CALLER);
       await createBucket({ name: "bucket-ccc" }, CALLER);
 
-      const page1 = listBuckets(CALLER, 2, 1);
+      const page1 = listBuckets(CALLER, 2);
       expect(page1.data).toHaveLength(2);
-      expect(page1.pagination.total).toBe(3);
+      expect(page1.pagination.has_more).toBe(true);
+      expect(page1.pagination.next_cursor).toBeTruthy();
 
-      const page2 = listBuckets(CALLER, 2, 2);
+      const page2 = listBuckets(CALLER, 2, page1.pagination.next_cursor!);
       expect(page2.data).toHaveLength(1);
+      expect(page2.pagination.has_more).toBe(false);
+      expect(page2.pagination.next_cursor).toBeNull();
     });
 
     it("get bucket — owner can access", async () => {

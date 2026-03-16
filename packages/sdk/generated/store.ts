@@ -108,8 +108,8 @@ export interface SetQuotaRequest {
 export interface ListBucketsParams {
   /** 1-100, default 20 */
   limit?: number;
-  /** 1-based page number, default 1 */
-  page?: number;
+  /** Cursor from previous response's next_cursor */
+  after?: string;
 }
 
 export interface GetBucketParams {
@@ -201,7 +201,7 @@ export function createStoreClient(
     async listBuckets(params: ListBucketsParams): Promise<ListBucketsResponse> {
       const qs = new URLSearchParams();
       if (params.limit !== undefined) qs.set("limit", String(params.limit));
-      if (params.page !== undefined) qs.set("page", String(params.page));
+      if (params.after !== undefined) qs.set("after", String(params.after));
       const query = qs.toString();
       const url = `${baseUrl}/v1/buckets${query ? `?${query}` : ""}`;
       const res = await primFetch(url);

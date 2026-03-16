@@ -181,20 +181,19 @@ export async function createBucket(
 export function listBuckets(
   callerWallet: string,
   limit: number,
-  page: number,
+  after?: string,
 ): PaginatedList<GetBucketResponse> {
-  const offset = (page - 1) * limit;
-  const rows = getBucketsByOwner(callerWallet, limit, offset);
-  const total = countBucketsByOwner(callerWallet);
+  const rows = getBucketsByOwner(callerWallet, limit, after);
+  const nextCursor =
+    rows.length === limit && rows.length > 0 ? rows[rows.length - 1].id : null;
 
   return {
     data: rows.map(rowToBucketResponse),
     pagination: {
-      total,
-      page,
+      total: null,
       per_page: limit,
-      cursor: null,
-      has_more: offset + rows.length < total,
+      next_cursor: nextCursor,
+      has_more: nextCursor !== null,
     },
   };
 }
@@ -467,9 +466,8 @@ export async function listObjects(
         })),
         pagination: {
           total: null,
-          page: null,
           per_page: maxKeys,
-          cursor: result.nextToken,
+          next_cursor: result.nextToken,
           has_more: result.isTruncated,
         },
       },

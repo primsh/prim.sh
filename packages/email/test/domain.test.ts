@@ -232,10 +232,10 @@ describe("custom domains (R-9)", () => {
       await registerDomain({ domain: "beta.com" }, WALLET_A);
       await registerDomain({ domain: "other.com" }, WALLET_B);
 
-      const result = listDomains(WALLET_A, 1, 25);
+      const result = listDomains(WALLET_A, 25, undefined);
 
-      expect(result.pagination.total).toBe(2);
       expect(result.data).toHaveLength(2);
+      expect(result.pagination.has_more).toBe(false);
     });
   });
 

@@ -371,9 +371,9 @@ app.get("/v1/zones", (c) => {
   const caller = callerOrRes;
 
   const limit = Math.min(Number(c.req.query("limit")) || 20, 100);
-  const page = Math.max(Number(c.req.query("page")) || 1, 1);
+  const after = c.req.query("after") || undefined;
 
-  const data = listZones(caller, limit, page);
+  const data = listZones(caller, limit, after);
   return c.json(data as PaginatedList<GetZoneResponse>, 200);
 });
 
@@ -517,7 +517,10 @@ app.get("/v1/zones/:zone_id/records", (c) => {
   if (callerOrRes instanceof Response) return callerOrRes;
   const caller = callerOrRes;
 
-  const result = listRecords(c.req.param("zone_id"), caller);
+  const limit = Math.min(Number(c.req.query("limit")) || 100, 100);
+  const after = c.req.query("after") || undefined;
+
+  const result = listRecords(c.req.param("zone_id"), caller, limit, after);
   if (!result.ok) {
     if (result.status === 404) return c.json(notFound(result.message), 404);
     return c.json(forbidden(result.message), 403);

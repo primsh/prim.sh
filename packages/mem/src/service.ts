@@ -12,7 +12,6 @@ import type {
   UpsertResponse,
 } from "./api.ts";
 import {
-  countCollectionsByOwner,
   deleteCacheEntry,
   deleteCollectionRow,
   deleteExpiredEntries,
@@ -167,20 +166,19 @@ export async function createCollection(
 export function listCollections(
   callerWallet: string,
   limit: number,
-  page: number,
+  after?: string,
 ): PaginatedList<GetCollectionResponse> {
-  const offset = (page - 1) * limit;
-  const rows = getCollectionsByOwner(callerWallet, limit, offset);
-  const total = countCollectionsByOwner(callerWallet);
+  const rows = getCollectionsByOwner(callerWallet, limit, after);
+  const nextCursor =
+    rows.length === limit && rows.length > 0 ? rows[rows.length - 1].id : null;
 
   return {
     data: rows.map((r) => rowToGetCollectionResponse(r, null)),
     pagination: {
-      total,
-      page,
+      total: null,
       per_page: limit,
-      cursor: null,
-      has_more: offset + rows.length < total,
+      next_cursor: nextCursor,
+      has_more: nextCursor !== null,
     },
   };
 }

@@ -226,9 +226,8 @@ export async function listWallets(
     data: wallets,
     pagination: {
       total: null,
-      page: null,
       per_page: limit,
-      cursor,
+      next_cursor: cursor,
       has_more: cursor !== null,
     },
   };
@@ -407,9 +406,8 @@ export function listFundRequests(
       data: rows.map(fundRequestToResponse),
       pagination: {
         total: null,
-        page: null,
         per_page: limit,
-        cursor,
+        next_cursor: cursor,
         has_more: cursor !== null,
       },
     },

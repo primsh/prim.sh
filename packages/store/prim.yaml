@@ -131,7 +131,7 @@ routes_map:
     operation_id: list_buckets
     query_params:
       - { name: limit, type: integer, description: "1-100, default 20" }
-      - { name: page, type: integer, description: "1-based page number, default 1" }
+      - { name: after, type: string, description: "Cursor from previous response's next_cursor" }
     errors:
       - { status: 402, code: payment_required, description: "x402 payment needed" }
       - { status: 403, code: forbidden, description: "Missing wallet address in payment" }

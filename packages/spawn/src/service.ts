@@ -16,7 +16,6 @@ import type {
 } from "./api.ts";
 import {
   countActiveServersByOwner,
-  countServersByOwner,
   deleteSshKeyRow,
   getServerById,
   getServersByOwner,
@@ -283,20 +282,18 @@ export async function createServer(
 export function listServers(
   callerWallet: string,
   limit: number,
-  page: number,
+  after?: string,
 ): PaginatedList<GetServerResponse> {
-  const offset = (page - 1) * limit;
-  const rows = getServersByOwner(callerWallet, limit, offset);
-  const total = countServersByOwner(callerWallet);
+  const rows = getServersByOwner(callerWallet, limit, after);
+  const nextCursor = rows.length === limit && rows.length > 0 ? rows[rows.length - 1].id : null;
 
   return {
     data: rows.map(rowToServerResponse),
     pagination: {
-      total,
-      page,
+      total: null,
       per_page: limit,
-      cursor: null,
-      has_more: offset + rows.length < total,
+      next_cursor: nextCursor,
+      has_more: nextCursor !== null,
     },
   };
 }
@@ -617,9 +614,8 @@ export function listSshKeys(callerWallet: string): PaginatedList<GetSshKeyRespon
     data: rows.map(rowToGetSshKeyResponse),
     pagination: {
       total: rows.length,
-      page: 1,
       per_page: rows.length,
-      cursor: null,
+      next_cursor: null,
       has_more: false,
     },
   };

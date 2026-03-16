@@ -147,8 +147,8 @@ export interface ResizeServerResponse {
 export interface ListServersParams {
   /** 1-100, default 20 */
   limit?: number;
-  /** 1-based page number, default 1 */
-  page?: number;
+  /** Cursor from previous response */
+  after?: string;
 }
 
 export interface GetServerParams {
@@ -216,7 +216,7 @@ export function createSpawnClient(
     async listServers(params: ListServersParams): Promise<ListServersResponse> {
       const qs = new URLSearchParams();
       if (params.limit !== undefined) qs.set("limit", String(params.limit));
-      if (params.page !== undefined) qs.set("page", String(params.page));
+      if (params.after !== undefined) qs.set("after", String(params.after));
       const query = qs.toString();
       const url = `${baseUrl}/v1/servers${query ? `?${query}` : ""}`;
       const res = await primFetch(url);

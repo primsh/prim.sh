@@ -1081,6 +1081,16 @@ paths:
           description: zone_id parameter
           schema:
             type: string
+        - name: limit
+          in: query
+          description: 1-100, default 100
+          schema:
+            type: integer
+        - name: after
+          in: query
+          description: Cursor from previous response
+          schema:
+            type: string
       responses:
         "200":
           description: List all records in a DNS zone

@@ -420,7 +420,7 @@ describe("listServers", () => {
     insertTestServer({ owner_wallet: CALLER });
     insertTestServer({ owner_wallet: OTHER }); // should not appear
 
-    const result = listServers(CALLER, 20, 1);
+    const result = listServers(CALLER, 20);
     expect(result.data).toHaveLength(2);
     for (const s of result.data) {
       expect(s.owner_wallet).toBe(CALLER);
@@ -428,22 +428,21 @@ describe("listServers", () => {
   });
 
   it("list empty — returns empty array with meta", () => {
-    const result = listServers(CALLER, 20, 1);
+    const result = listServers(CALLER, 20);
     expect(result.data).toHaveLength(0);
-    expect(result.pagination.total).toBe(0);
-    expect(result.pagination.page).toBe(1);
+    expect(result.pagination.has_more).toBe(false);
   });
 
-  it("list — pagination meta is correct", () => {
+  it("list — cursor pagination meta is correct", () => {
     insertTestServer({ owner_wallet: CALLER });
     insertTestServer({ owner_wallet: CALLER });
     insertTestServer({ owner_wallet: CALLER });
 
-    const result = listServers(CALLER, 2, 1);
+    const result = listServers(CALLER, 2);
     expect(result.data).toHaveLength(2);
     expect(result.pagination.per_page).toBe(2);
-    expect(result.pagination.total).toBe(3);
-    expect(result.pagination.page).toBe(1);
+    expect(result.pagination.has_more).toBe(true);
+    expect(result.pagination.next_cursor).not.toBeNull();
   });
 });
 

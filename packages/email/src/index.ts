@@ -6,6 +6,7 @@ import {
   invalidRequest,
   notFound,
   parseJsonBody,
+  parsePaginationParams,
   requireCaller,
   serviceError,
 } from "@primsh/x402-middleware";
@@ -208,11 +209,10 @@ app.get("/v1/mailboxes", (c) => {
   if (callerOrRes instanceof Response) return callerOrRes;
   const caller = callerOrRes;
 
-  const perPage = Math.min(Number(c.req.query("per_page")) || 25, 100);
-  const page = Math.max(Number(c.req.query("page")) || 1, 1);
+  const { limit, after } = parsePaginationParams(c.req.query());
   const includeExpired = c.req.query("include_expired") === "true";
 
-  const data = listMailboxes(caller, page, perPage, includeExpired);
+  const data = listMailboxes(caller, limit, after, includeExpired);
   return c.json(data as PaginatedList<GetMailboxResponse>, 200);
 });
 
@@ -403,10 +403,8 @@ app.get("/v1/domains", (c) => {
   if (callerOrRes instanceof Response) return callerOrRes;
   const caller = callerOrRes;
 
-  const perPage = Math.min(Number(c.req.query("per_page")) || 25, 100);
-  const page = Math.max(Number(c.req.query("page")) || 1, 1);
-
-  const data = listDomains(caller, page, perPage);
+  const { limit, after } = parsePaginationParams(c.req.query());
+  const data = listDomains(caller, limit, after);
   return c.json(data as PaginatedList<GetDomainResponse>, 200);
 });
 
