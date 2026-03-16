@@ -184,8 +184,7 @@ export function listBuckets(
   after?: string,
 ): PaginatedList<GetBucketResponse> {
   const rows = getBucketsByOwner(callerWallet, limit, after);
-  const nextCursor =
-    rows.length === limit && rows.length > 0 ? rows[rows.length - 1].id : null;
+  const nextCursor = rows.length === limit && rows.length > 0 ? rows[rows.length - 1].id : null;
 
   return {
     data: rows.map(rowToBucketResponse),

@@ -96,11 +96,7 @@ export function getBucketByNameAndOwner(name: string, owner: string): BucketRow 
   );
 }
 
-export function getBucketsByOwner(
-  owner: string,
-  limit: number,
-  after?: string,
-): BucketRow[] {
+export function getBucketsByOwner(owner: string, limit: number, after?: string): BucketRow[] {
   const db = getDb();
   if (after) {
     return db
