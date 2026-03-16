@@ -50,6 +50,16 @@ Prim takes a percentage of every x402 transaction across the network.
 
 First-party prims earn 100% (no split — prim is the operator). Third-party prims pay the platform fee. This aligns incentives: prim earns more when the ecosystem grows, not just when first-party prims are used.
 
+### Fee split mechanism
+
+The fee split is **TBD** — three options under consideration:
+
+1. **Splitter contract** — on-chain contract receives payment, splits to operator + prim in one transaction. Cleanest, but requires contract deployment and adds gas.
+2. **Post-settlement sweep** — operator receives full payment to a prim-managed escrow address. Prim sweeps its fee periodically (hourly/daily). Simpler on-chain, but operator doesn't receive funds instantly.
+3. **Facilitator-mediated** — the x402 facilitator (already in the payment flow) holds funds briefly and distributes. Lowest friction, but centralizes trust in the facilitator.
+
+Decision depends on gas costs, trust model, and operator experience. See [whitepaper Section 4 (DeKeys)](whitepaper.md) for how the key proxy layer interacts with payment routing.
+
 ---
 
 ## Registry
@@ -58,20 +68,20 @@ The registry is how agents discover available prims. It progresses through three
 
 ### Level 1: Static catalog (current)
 
-`primitives.yaml` in the repo defines all prims. `discovery.json`, `llms.txt`, and MCP tool definitions are generated from it. First-party only.
+Each package has a `prim.yaml` spec. The root `primitives.yaml` indexes all prims. Generated artifacts (`discovery.json`, `llms.txt`, MCP tool definitions, `x402-manifest.json`) are produced by the gen pipeline. First-party only.
 
 ### Level 2: PR-based registration
 
 External operators submit a PR adding their service to the registry. Requirements:
 - Valid endpoint URL
 - Passes conformance test (`prim test:conformance <url>`)
-- Has `prim.yaml` manifest (or serves equivalent metadata)
+- Has `prim.yaml` manifest (or serves equivalent metadata at `GET /`)
 
 Human reviews and merges. Low volume, high trust.
 
 ### Level 3: Self-serve registry API
 
-`POST /v1/registry/register` with endpoint URL. Prim runs conformance automatically:
+A free platform endpoint (not x402-gated — registration must be frictionless for operators to onboard). Prim runs conformance automatically on the submitted endpoint:
 - Health check (`GET /` returns `{ service, status }`)
 - Pricing endpoint (`GET /pricing` returns route prices)
 - x402 flow (402 → payment → 200)
@@ -79,6 +89,8 @@ Human reviews and merges. Low volume, high trust.
 - Response time and availability
 
 If conformance passes, the prim is listed. No human review — the protocol is the quality gate.
+
+**Cost model for registry operations:** Conformance testing and continuous monitoring are platform costs, subsidized by the fee split on transactions. Operators pay nothing to register — prim earns when their service gets used.
 
 ---
 
@@ -93,19 +105,19 @@ Every prim — first-party or third-party — must implement:
 | x402 payment flow | Returns 402 with payment challenge, accepts payment header |
 | Error envelope | `{ error: { code: string, message: string } }` on all errors |
 | HTTPS | TLS required |
+| `GET /v1/metrics` | Operational metrics (uptime, request counts, latency, error rates) |
 
 Optional but recommended:
-- `GET /v1/metrics` — operational metrics
 - `llms.txt` — machine-readable API documentation
 - OpenAPI spec — full API documentation
 
-Conformance is tested continuously. Prims that fail are delisted.
+All first-party prims implement the full contract including metrics (via `createPrimApp`). Third-party prims are tested continuously against the contract. Prims that fail are delisted.
 
 ---
 
 ## Competition
 
-Multiple prims can offer the same capability. `domain.sh` (first-party) and `mydomain.sh` (third-party) can both provide DNS management. This is by design:
+Multiple prims can offer the same capability. `domain.sh` (first-party) and a third-party DNS prim can both provide domain management. This is by design:
 
 - Agents choose based on price, reliability, features, and availability
 - Competition drives prices down and quality up
@@ -134,7 +146,7 @@ Over time, the ratio shifts. First-party prims are marketing for the platform. T
 
 Services that are thin wrappers around provider APIs with no standalone value. The service logic IS the prim.
 
-Examples: wallet.sh, faucet.sh, gate.sh
+Examples: wallet.sh, store.sh, email.sh
 
 ```
 packages/wallet/src/service.ts  ← provider integration
