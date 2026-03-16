@@ -136,8 +136,8 @@ Removed from roadmap with rationale.
 
 | Category | Count | Prims |
 |----------|-------|-------|
-| Infrastructure | 8 | store, domain, db, pipe, cron, vault, cert, vpn |
-| Compute | 4 | spawn, code, deploy, gpu |
+| Infrastructure | 7 | store, domain, db, pipe, cron, vault, cert |
+| Compute | 5 | spawn, code, deploy, gpu, vpn |
 | Intelligence | 11 | search, infer, mem, imagine, ocr, scrape, seek, embed, cap, grade, know |
 | Communication | 4 | email, ring, chat, notify |
 | Finance | 4 | wallet, token, pay, invoice |
@@ -147,7 +147,7 @@ Removed from roadmap with rationale.
 | Productivity | 2 | cal, form |
 | Social | 1 | post |
 | Media | 2 | render, stream |
-| DevOps | 5 | create, test, ci, git, deploy |
+| DevOps | 4 | create, test, ci, git |
 | Data | 3 | mkt, feed, sitmon |
 | Legal | 1 | sign |
 | Security | 1 | scan |
