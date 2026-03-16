@@ -28,10 +28,10 @@
     "@primsh/wallet": "workspace:*",
     "@primsh/x402-client": "workspace:*",
     "@primsh/x402-middleware": "workspace:*",
-    "@simplewebauthn/server": "^13.2.3",
+    "@simplewebauthn/server": "^13.3.0",
     "ai": "^6.0.116",
-    "hono": "^4.12.7",
-    "viem": "^2.47.0"
+    "hono": "^4.12.8",
+    "viem": "^2.47.4"
   },
   "devDependencies": {
     "typescript": "^5.6.3",
