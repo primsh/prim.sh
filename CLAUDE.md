@@ -153,12 +153,23 @@ Every primitive uses `createPrimApp()` from `@primsh/x402-middleware/create-prim
 - SQL/NoSQL injection vectors
 - Unvalidated user input passed to external APIs
 
-## Smoke Test Standard
+## Test Tier Standard
 
-Every primitive package has two test files:
+Four tiers — never use "canary" or "smoke-live" as tier names:
 
-- **`test/smoke.test.ts`** — Unit-level smoke tests. Included in `pnpm test`. Uses Hono test client + `vi.mock` (no real API keys). Must pass in CI.
-- **`test/smoke-live.test.ts`** — Live integration tests against real providers. Excluded from default `pnpm test`. Run via `pnpm test:smoke`.
+| Tier | File | What | When | Cost |
+|------|------|------|------|------|
+| **unit** | `test/smoke.test.ts` | Mocked service + mocked x402 | Every push/PR | $0 |
+| **integration** | `test/integration.test.ts` | Real provider sandbox, x402 mocked | Nightly cron | $0 |
+| **e2e-local** | `e2e/tests/<prim>.test.ts` | Docker + real provider sandbox + testnet x402 | PR→main | ~$0 |
+| **e2e-prod** | `e2e/prod-runner.ts` | Live deployed endpoint + **mainnet** x402 | Weekly cron | ~$1/wk |
+
+**e2e-prod always uses mainnet** — never testnet. Uses a dedicated canary wallet (separate from treasury/revenue) with a hard budget cap.
+
+Every primitive package has at minimum:
+
+- **`test/smoke.test.ts`** — unit tier. Included in `pnpm test`. Uses Hono test client + `vi.mock` (no real API keys). Must pass in CI.
+- **`test/integration.test.ts`** — integration tier (only for prims with `provider.sandbox` set). Excluded from default `pnpm test`. Run via nightly CI cron.
 
 ### Generated vs hand-maintained tests
 
