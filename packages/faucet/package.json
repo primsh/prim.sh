@@ -32,11 +32,11 @@
   "dependencies": {
     "@coinbase/cdp-sdk": "^1.45.0",
     "@primsh/x402-middleware": "workspace:*",
-    "hono": "^4.12.7",
-    "viem": "^2.47.0"
+    "hono": "^4.12.8",
+    "viem": "^2.47.4"
   },
   "devDependencies": {
-    "@types/node": "^25.3.5",
+    "@types/node": "^25.5.0",
     "typescript": "^5.6.3",
     "vitest": "^1.6.1"
   }
