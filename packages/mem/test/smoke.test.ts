@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: Apache-2.0
-// Manually maintained — per-route expansion deferred to PRIMS-29 W3
+// THIS FILE IS GENERATED — DO NOT EDIT
+// Regenerate: pnpm gen:tests
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 vi.hoisted(() => {
@@ -42,11 +43,29 @@ vi.mock("../src/service.ts", async (importOriginal) => {
 });
 
 import app from "../src/index.ts";
-import { createCollection } from "../src/service.ts";
+import {
+  createCollection,
+  listCollections,
+  getCollection,
+  deleteCollection,
+  upsertDocuments,
+  queryDocuments,
+  cacheSet,
+  cacheGet,
+  cacheDelete,
+} from "../src/service.ts";
 
 describe("mem.sh app", () => {
   beforeEach(() => {
     vi.mocked(createCollection).mockReset();
+    vi.mocked(listCollections).mockReset();
+    vi.mocked(getCollection).mockReset();
+    vi.mocked(deleteCollection).mockReset();
+    vi.mocked(upsertDocuments).mockReset();
+    vi.mocked(queryDocuments).mockReset();
+    vi.mocked(cacheSet).mockReset();
+    vi.mocked(cacheGet).mockReset();
+    vi.mocked(cacheDelete).mockReset();
   });
 
   // Check 1: default export defined
@@ -73,8 +92,8 @@ describe("mem.sh app", () => {
     );
   });
 
-  // Check 4: happy path — handler returns 201 with mocked service response
-  it("POST /v1/collections returns 201 with valid response", async () => {
+  // Check 4: POST /v1/collections — happy path
+  it("POST /v1/collections returns 201 (happy path)", async () => {
     // biome-ignore lint/suspicious/noExplicitAny: mock shape — smoke test only checks status code
     vi.mocked(createCollection).mockResolvedValueOnce({ ok: true, data: {} as any });
 
@@ -86,14 +105,13 @@ describe("mem.sh app", () => {
 
     expect(res.status).toBe(201);
   });
-
-  // Check 5: 400 on missing/invalid input — service returns invalid_request → handler maps to 400
-  it("POST /v1/collections with missing/invalid input returns 400", async () => {
+  // Check 5: POST /v1/collections — error path
+  it("POST /v1/collections returns 400 (invalid_request)", async () => {
     vi.mocked(createCollection).mockResolvedValueOnce({
       ok: false,
       status: 400,
       code: "invalid_request",
-      message: "Missing required fields",
+      message: "Missing name or invalid fields",
     });
 
     const res = await app.request("/v1/collections", {
@@ -102,5 +120,225 @@ describe("mem.sh app", () => {
       body: "{}",
     });
     expect(res.status).toBe(400);
+  });
+
+  // Check 4: GET /v1/collections — happy path
+  it.skip("GET /v1/collections returns 200 (happy path)", async () => {
+    // biome-ignore lint/suspicious/noExplicitAny: mock shape — smoke test only checks status code
+    vi.mocked(listCollections).mockResolvedValueOnce({ ok: true, data: {} as any });
+
+    const res = await app.request("/v1/collections?limit=10&after=test-cursor", {
+      method: "GET",
+    });
+
+    expect(res.status).toBe(200);
+  });
+  // Check 5: GET /v1/collections — error path
+  it.skip("GET /v1/collections returns 403 (forbidden)", async () => {
+    vi.mocked(listCollections).mockResolvedValueOnce({
+      ok: false,
+      status: 403,
+      code: "forbidden",
+      message: "Resource belongs to a different wallet",
+    });
+
+    const res = await app.request("/v1/collections", {
+      method: "GET",
+    });
+    expect(res.status).toBe(403);
+  });
+
+  // Check 4: GET /v1/collections/test-id-001 — happy path
+  it.skip("GET /v1/collections/test-id-001 returns 200 (happy path)", async () => {
+    // biome-ignore lint/suspicious/noExplicitAny: mock shape — smoke test only checks status code
+    vi.mocked(getCollection).mockResolvedValueOnce({ ok: true, data: {} as any });
+
+    const res = await app.request("/v1/collections/test-id-001", {
+      method: "GET",
+    });
+
+    expect(res.status).toBe(200);
+  });
+  // Check 5: GET /v1/collections/test-id-001 — error path
+  it.skip("GET /v1/collections/test-id-001 returns 404 (not_found)", async () => {
+    vi.mocked(getCollection).mockResolvedValueOnce({
+      ok: false,
+      status: 404,
+      code: "not_found",
+      message: "Collection not found",
+    });
+
+    const res = await app.request("/v1/collections/test-id-001", {
+      method: "GET",
+    });
+    expect(res.status).toBe(404);
+  });
+
+  // Check 4: DELETE /v1/collections/test-id-001 — happy path
+  it.skip("DELETE /v1/collections/test-id-001 returns 200 (happy path)", async () => {
+    // biome-ignore lint/suspicious/noExplicitAny: mock shape — smoke test only checks status code
+    vi.mocked(deleteCollection).mockResolvedValueOnce({ ok: true, data: {} as any });
+
+    const res = await app.request("/v1/collections/test-id-001", {
+      method: "DELETE",
+    });
+
+    expect(res.status).toBe(200);
+  });
+  // Check 5: DELETE /v1/collections/test-id-001 — error path
+  it.skip("DELETE /v1/collections/test-id-001 returns 404 (not_found)", async () => {
+    vi.mocked(deleteCollection).mockResolvedValueOnce({
+      ok: false,
+      status: 404,
+      code: "not_found",
+      message: "Collection not found",
+    });
+
+    const res = await app.request("/v1/collections/test-id-001", {
+      method: "DELETE",
+    });
+    expect(res.status).toBe(404);
+  });
+
+  // Check 4: POST /v1/collections/test-id-001/upsert — happy path
+  it.skip("POST /v1/collections/test-id-001/upsert returns 200 (happy path)", async () => {
+    // biome-ignore lint/suspicious/noExplicitAny: mock shape — smoke test only checks status code
+    vi.mocked(upsertDocuments).mockResolvedValueOnce({ ok: true, data: {} as any });
+
+    const res = await app.request("/v1/collections/test-id-001/upsert", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ documents: [] }),
+    });
+
+    expect(res.status).toBe(200);
+  });
+  // Check 5: POST /v1/collections/test-id-001/upsert — error path
+  it.skip("POST /v1/collections/test-id-001/upsert returns 400 (invalid_request)", async () => {
+    vi.mocked(upsertDocuments).mockResolvedValueOnce({
+      ok: false,
+      status: 400,
+      code: "invalid_request",
+      message: "Missing documents or invalid fields",
+    });
+
+    const res = await app.request("/v1/collections/test-id-001/upsert", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: "{}",
+    });
+    expect(res.status).toBe(400);
+  });
+
+  // Check 4: POST /v1/collections/test-id-001/query — happy path
+  it.skip("POST /v1/collections/test-id-001/query returns 200 (happy path)", async () => {
+    // biome-ignore lint/suspicious/noExplicitAny: mock shape — smoke test only checks status code
+    vi.mocked(queryDocuments).mockResolvedValueOnce({ ok: true, data: {} as any });
+
+    const res = await app.request("/v1/collections/test-id-001/query", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ text: "test" }),
+    });
+
+    expect(res.status).toBe(200);
+  });
+  // Check 5: POST /v1/collections/test-id-001/query — error path
+  it.skip("POST /v1/collections/test-id-001/query returns 400 (invalid_request)", async () => {
+    vi.mocked(queryDocuments).mockResolvedValueOnce({
+      ok: false,
+      status: 400,
+      code: "invalid_request",
+      message: "Missing text or invalid filter",
+    });
+
+    const res = await app.request("/v1/collections/test-id-001/query", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: "{}",
+    });
+    expect(res.status).toBe(400);
+  });
+
+  // Check 4: PUT /v1/cache/test-ns/test-key — happy path
+  it.skip("PUT /v1/cache/test-ns/test-key returns 200 (happy path)", async () => {
+    // biome-ignore lint/suspicious/noExplicitAny: mock shape — smoke test only checks status code
+    vi.mocked(cacheSet).mockResolvedValueOnce({ ok: true, data: {} as any });
+
+    const res = await app.request("/v1/cache/test-ns/test-key", {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ value: "test" }),
+    });
+
+    expect(res.status).toBe(200);
+  });
+  // Check 5: PUT /v1/cache/test-ns/test-key — error path
+  it.skip("PUT /v1/cache/test-ns/test-key returns 400 (invalid_request)", async () => {
+    vi.mocked(cacheSet).mockResolvedValueOnce({
+      ok: false,
+      status: 400,
+      code: "invalid_request",
+      message: "Missing value",
+    });
+
+    const res = await app.request("/v1/cache/test-ns/test-key", {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: "{}",
+    });
+    expect(res.status).toBe(400);
+  });
+
+  // Check 4: GET /v1/cache/test-ns/test-key — happy path
+  it.skip("GET /v1/cache/test-ns/test-key returns 200 (happy path)", async () => {
+    // biome-ignore lint/suspicious/noExplicitAny: mock shape — smoke test only checks status code
+    vi.mocked(cacheGet).mockResolvedValueOnce({ ok: true, data: {} as any });
+
+    const res = await app.request("/v1/cache/test-ns/test-key", {
+      method: "GET",
+    });
+
+    expect(res.status).toBe(200);
+  });
+  // Check 5: GET /v1/cache/test-ns/test-key — error path
+  it.skip("GET /v1/cache/test-ns/test-key returns 404 (not_found)", async () => {
+    vi.mocked(cacheGet).mockResolvedValueOnce({
+      ok: false,
+      status: 404,
+      code: "not_found",
+      message: "Cache entry missing or expired",
+    });
+
+    const res = await app.request("/v1/cache/test-ns/test-key", {
+      method: "GET",
+    });
+    expect(res.status).toBe(404);
+  });
+
+  // Check 4: DELETE /v1/cache/test-ns/test-key — happy path
+  it.skip("DELETE /v1/cache/test-ns/test-key returns 200 (happy path)", async () => {
+    // biome-ignore lint/suspicious/noExplicitAny: mock shape — smoke test only checks status code
+    vi.mocked(cacheDelete).mockResolvedValueOnce({ ok: true, data: {} as any });
+
+    const res = await app.request("/v1/cache/test-ns/test-key", {
+      method: "DELETE",
+    });
+
+    expect(res.status).toBe(200);
+  });
+  // Check 5: DELETE /v1/cache/test-ns/test-key — error path
+  it.skip("DELETE /v1/cache/test-ns/test-key returns 404 (not_found)", async () => {
+    vi.mocked(cacheDelete).mockResolvedValueOnce({
+      ok: false,
+      status: 404,
+      code: "not_found",
+      message: "Cache entry not found",
+    });
+
+    const res = await app.request("/v1/cache/test-ns/test-key", {
+      method: "DELETE",
+    });
+    expect(res.status).toBe(404);
   });
 });
