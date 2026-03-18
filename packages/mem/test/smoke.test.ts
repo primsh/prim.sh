@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: Apache-2.0
-// Manually maintained — complex mock setup needed for cache/collection routes
+// Manually maintained — per-route expansion deferred to PRIMS-29 W3
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 vi.hoisted(() => {
