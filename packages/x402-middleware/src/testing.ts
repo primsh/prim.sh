@@ -2,9 +2,17 @@
 export function mockBunSqlite() {
   return {
     Database: class MockDatabase {
+      exec() {}
       run() {}
+      prepare() {
+        return { get: () => null, all: () => [], run: () => {}, finalize: () => {} };
+      }
       query() {
         return { get: () => null, all: () => [], run: () => {} };
+      }
+      close() {}
+      transaction(fn: (...args: unknown[]) => unknown) {
+        return fn;
       }
     },
   };

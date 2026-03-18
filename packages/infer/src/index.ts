@@ -224,8 +224,8 @@ async function handleChat(c: Context) {
   // Set usage data on context for metered billing settlement
   c.set("inferModel" as never, result.data.model);
   c.set("inferUsage" as never, {
-    prompt_tokens: result.data.usage.prompt_tokens,
-    completion_tokens: result.data.usage.completion_tokens,
+    prompt_tokens: result.data.usage?.prompt_tokens ?? 0,
+    completion_tokens: result.data.usage?.completion_tokens ?? 0,
   });
 
   return c.json(result.data, 200);

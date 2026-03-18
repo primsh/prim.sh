@@ -18,8 +18,7 @@ const apiKey = process.env.TRACKINGMORE_API_KEY;
 const client = apiKey ? new TrackingMoreClient(apiKey) : null;
 
 const TEST_CARRIER = process.env.SMOKE_CARRIER ?? "usps";
-const TEST_TRACKING_NUMBER =
-  process.env.SMOKE_TRACKING_NUMBER ?? "9400111899223397910435";
+const TEST_TRACKING_NUMBER = process.env.SMOKE_TRACKING_NUMBER ?? "9400111899223397910435";
 
 describe.skipIf(!apiKey)("track.sh live smoke test (TrackingMore)", () => {
   const c = client as TrackingMoreClient;

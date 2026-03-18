@@ -9,8 +9,13 @@ export default defineConfig({
     },
   },
   test: {
+    exclude: [
+      "node_modules/**",
+      "contracts/**",
+      "test/smoke-live.generated.test.ts",
+      "test/smoke-live.custom.test.ts",
+    ],
     environment: "node",
-    exclude: ["contracts/**", "node_modules/**"],
     coverage: {
       reportsDirectory: "./coverage",
       provider: "v8",
