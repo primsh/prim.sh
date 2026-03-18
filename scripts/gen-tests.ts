@@ -4,17 +4,19 @@
  * gen-tests.ts — Smoke test generator
  *
  * Reads packages/<id>/prim.yaml (routes_map, factory) and src/service.ts (exported functions),
- * then generates a conformant smoke.test.ts with the 5-check contract.
+ * then generates *.generated.test.ts files with per-route Check 4+5 tests.
  *
  * Usage:
  *   bun scripts/gen-tests.ts          # generate for all prims with routes_map
  *   bun scripts/gen-tests.ts track    # generate for a specific prim only
  *   bun scripts/gen-tests.ts --check  # diff against disk, exit 1 if any would change
  *
- * Generation strategy:
- *   - If file does not exist: write full file (create)
- *   - If file exists with GENERATED header: compare and overwrite if changed
- *   - If file exists without GENERATED header: skip (manually maintained)
+ * Output files (always overwritten):
+ *   - test/smoke.generated.test.ts     — per-route happy + error path tests
+ *   - test/smoke-live.generated.test.ts — live endpoint tests (excluded from pnpm test)
+ *   - test/service.generated.test.ts   — unit test stubs with .todo()
+ *
+ * Hand-written tests go in *.custom.test.ts — this generator never touches them.
  */
 
 import { existsSync, readFileSync, writeFileSync } from "node:fs";
@@ -1039,6 +1041,14 @@ function processGeneratedFile(
   }
 
   const existing = readFileSync(filePath, "utf8");
+
+  // Guard: .generated.test.ts files must have the GENERATED header
+  if (filePath.includes(".generated.") && !existing.includes(GENERATED_HEADER)) {
+    console.error(`  ✗ ${filePath} is missing GENERATED header — was it hand-edited?`);
+    anyFailed = true;
+    return;
+  }
+
   const content = generateFull();
   const changed = content !== existing;
 
