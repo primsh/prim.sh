@@ -411,8 +411,9 @@ function generateFullFile(ctx: GenContext): string {
   // Import all unique service functions used across routes
   const uniqueServiceFns = [...new Set(routeServiceFns.values())];
   if (uniqueServiceFns.length > 0) {
-    if (uniqueServiceFns.length <= 3) {
-      lines.push(`import { ${uniqueServiceFns.join(", ")} } from "../src/service.ts";`);
+    const singleLine = `import { ${uniqueServiceFns.join(", ")} } from "../src/service.ts";`;
+    if (singleLine.length <= 100) {
+      lines.push(singleLine);
     } else {
       lines.push("import {");
       for (const fn of uniqueServiceFns) {
@@ -594,9 +595,20 @@ function generateMarkedContent(
       const queryString = queryParams.length > 0
         ? `?${queryParams.map((qp: { name: string }) => `${qp.name}=${encodeURIComponent(syntheticQueryValue(qp.name))}`).join("&")}`
         : "";
-      lines.push(`    const res = await app.request("${path}${queryString}", {`);
-      lines.push(`      method: "${method}",`);
-      lines.push("    });");
+      const fullPath = `${path}${queryString}`;
+      const requestLine = `    const res = await app.request("${fullPath}", {`;
+      if (requestLine.length <= 100) {
+        lines.push(requestLine);
+        lines.push(`      method: "${method}",`);
+        lines.push("    });");
+      } else {
+        lines.push("    const res = await app.request(");
+        lines.push(`      "${fullPath}",`);
+        lines.push("      {");
+        lines.push(`        method: "${method}",`);
+        lines.push("      },");
+        lines.push("    );");
+      }
     } else {
       lines.push(`    const res = await app.request("${path}", {`);
       lines.push(`      method: "${method}",`);
@@ -608,7 +620,6 @@ function generateMarkedContent(
     lines.push("");
     lines.push(`    expect(res.status).toBe(${expectedStatus});`);
     lines.push("  });");
-    lines.push("");
 
     // Check 5: error path — pick error status from route's errors array or defaults
     const errorEntry = pickCheck5Error(route, method, path, serviceUsesOkWrapper);
@@ -639,6 +650,11 @@ function generateMarkedContent(
       lines.push("  });");
     }
     lines.push("");
+  }
+
+  // Remove trailing blank line before closing brace (biome formatting)
+  if (lines.length > 0 && lines[lines.length - 1] === "") {
+    lines.pop();
   }
 
   lines.push("});");

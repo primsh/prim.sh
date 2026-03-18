@@ -70,7 +70,6 @@ describe("faucet.sh app", () => {
 
     expect(res.status).toBe(200);
   });
-
   // Check 5: POST /v1/faucet/usdc — error path
   it("POST /v1/faucet/usdc returns 400 (invalid_request)", async () => {
     const res = await app.request("/v1/faucet/usdc", {
@@ -94,7 +93,6 @@ describe("faucet.sh app", () => {
 
     expect(res.status).toBe(200);
   });
-
   // Check 5: POST /v1/faucet/eth — error path
   it("POST /v1/faucet/eth returns 400 (invalid_request)", async () => {
     const res = await app.request("/v1/faucet/eth", {
@@ -119,7 +117,6 @@ describe("faucet.sh app", () => {
 
     expect(res.status).toBe(200);
   });
-
   // Check 5: GET /v1/faucet/status — error path
   it("GET /v1/faucet/status returns 400 (invalid_request)", async () => {
     const res = await app.request("/v1/faucet/status", {
