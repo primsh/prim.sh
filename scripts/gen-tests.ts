@@ -587,7 +587,7 @@ function generateMarkedContent(
           "    // biome-ignore lint/suspicious/noExplicitAny: mock shape — smoke test only checks status code",
         );
         lines.push(
-          `    vi.mocked(${serviceFn}).mockResolvedValueOnce({ ok: true, data: {} as any });`,
+          `    vi.mocked(${serviceFn}).mockResolvedValueOnce({ ok: true, data: {} } as any);`,
         );
       } else {
         lines.push(
@@ -636,12 +636,15 @@ function generateMarkedContent(
       lines.push(`  // Check 5: ${method} ${path} — error path`);
       lines.push(`  it${skipPrefix}("${method} ${path} returns ${errorEntry.status} (${errorEntry.code})", async () => {`);
       if (serviceFn && serviceUsesOkWrapper) {
+        lines.push(
+          "    // biome-ignore lint/suspicious/noExplicitAny: mock shape — smoke test only checks status code",
+        );
         lines.push(`    vi.mocked(${serviceFn}).mockResolvedValueOnce({`);
         lines.push("      ok: false,");
         lines.push(`      status: ${errorEntry.status},`);
         lines.push(`      code: "${errorEntry.code}",`);
         lines.push(`      message: "${errorEntry.message}",`);
-        lines.push("    });");
+        lines.push("    } as any);");
         lines.push("");
       }
       if (method === "GET" || method === "DELETE") {
