@@ -9,7 +9,11 @@ export default defineConfig({
     },
   },
   test: {
-    exclude: ["node_modules/**", "test/smoke-live.generated.test.ts", "test/smoke-live.custom.test.ts"],
+    exclude: [
+      "node_modules/**",
+      "test/smoke-live.generated.test.ts",
+      "test/smoke-live.custom.test.ts",
+    ],
     environment: "node",
     coverage: {
       reportsDirectory: "./coverage",

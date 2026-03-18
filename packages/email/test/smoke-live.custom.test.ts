@@ -186,7 +186,9 @@ describe("email.sh live smoke test", () => {
     expect(result.ok).toBe(true);
     if (!result.ok) return;
 
-    expect(result.data.address).toBe(`${tag}@${process.env.EMAIL_DEFAULT_DOMAIN ?? "email.prim.sh"}`);
+    expect(result.data.address).toBe(
+      `${tag}@${process.env.EMAIL_DEFAULT_DOMAIN ?? "email.prim.sh"}`,
+    );
     expect(result.data.expires_at).toBeNull();
 
     customMailboxId = result.data.id;
@@ -308,52 +310,53 @@ describe("email.sh live smoke test", () => {
     expect(result.data.textBody).toContain("Hello from the email.sh smoke test");
   });
 
-  it("9. simulate ingest → webhook fires", async () => {
-    const webhookSecret = process.env.STALWART_WEBHOOK_SECRET ?? "";
-    const ingestPayload = JSON.stringify([
-      {
-        type: "message-ingest.ham",
-        data: {
-          rcptTo: [mailboxAddress],
-          from: mailboxAddress,
-          subject: "R-11 smoke test",
-          messageId: "smoke-test-msg-id",
-          size: 128,
+  it(
+    "9. simulate ingest → webhook fires",
+    async () => {
+      const webhookSecret = process.env.STALWART_WEBHOOK_SECRET ?? "";
+      const ingestPayload = JSON.stringify([
+        {
+          type: "message-ingest.ham",
+          data: {
+            rcptTo: [mailboxAddress],
+            from: mailboxAddress,
+            subject: "R-11 smoke test",
+            messageId: "smoke-test-msg-id",
+            size: 128,
+          },
         },
-      },
-    ]);
+      ]);
 
-    const signature = webhookSecret ? signPayload(webhookSecret, ingestPayload) : "";
+      const signature = webhookSecret ? signPayload(webhookSecret, ingestPayload) : "";
 
-    const result = await handleIngestEvent(
-      ingestPayload,
-      webhookSecret ? signature : null,
-    );
-    expect(result.ok).toBe(true);
-    if (!result.ok) return;
-    expect(result.data.accepted).toBe(true);
+      const result = await handleIngestEvent(ingestPayload, webhookSecret ? signature : null);
+      expect(result.ok).toBe(true);
+      if (!result.ok) return;
+      expect(result.data.accepted).toBe(true);
 
-    // Wait for async webhook delivery (fire-and-forget)
-    await poll(
-      async () => webhookCalls.length,
-      (count) => count > 0,
-      200,
-      5_000,
-    );
+      // Wait for async webhook delivery (fire-and-forget)
+      await poll(
+        async () => webhookCalls.length,
+        (count) => count > 0,
+        200,
+        5_000,
+      );
 
-    expect(webhookCalls.length).toBeGreaterThan(0);
-    const call = webhookCalls[0];
-    const payload = JSON.parse(call.body);
-    expect(payload.event).toBe("message.received");
-    expect(payload.mailbox_id).toBe(mailboxId);
-    expect(call.headers["x-webhook-id"]).toMatch(/^wh_/);
+      expect(webhookCalls.length).toBeGreaterThan(0);
+      const call = webhookCalls[0];
+      const payload = JSON.parse(call.body);
+      expect(payload.event).toBe("message.received");
+      expect(payload.mailbox_id).toBe(mailboxId);
+      expect(call.headers["x-webhook-id"]).toMatch(/^wh_/);
 
-    // Verify HMAC signature if secret was set
-    if (call.headers["x-signature"]) {
-      const expected = signPayload("smoke-test-secret", call.body);
-      expect(call.headers["x-signature"]).toBe(expected);
-    }
-  }, { timeout: 10_000 });
+      // Verify HMAC signature if secret was set
+      if (call.headers["x-signature"]) {
+        const expected = signPayload("smoke-test-secret", call.body);
+        expect(call.headers["x-signature"]).toBe(expected);
+      }
+    },
+    { timeout: 10_000 },
+  );
 
   it("10. delete mailbox", async () => {
     const result = await deleteMailbox(mailboxId, WALLET);

@@ -641,7 +641,18 @@ function generateMarkedContent(
       lines.push(`    const res = await app.request("${path}", {`);
       lines.push(`      method: "${method}",`);
       lines.push(`      headers: { "Content-Type": "application/json" },`);
-      lines.push(`      body: JSON.stringify(${minimalBody}),`);
+      const bodyLine = `      body: JSON.stringify(${minimalBody}),`;
+      if (bodyLine.length <= 100) {
+        lines.push(bodyLine);
+      } else {
+        // Wrap long body objects for biome compliance
+        const fields = minimalBody!.replace(/^\{/, "").replace(/\}$/, "").trim();
+        lines.push("      body: JSON.stringify({");
+        for (const field of fields.split(", ")) {
+          lines.push(`        ${field},`);
+        }
+        lines.push("      }),");
+      }
       lines.push("    });");
     }
 

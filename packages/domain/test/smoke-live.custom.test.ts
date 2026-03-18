@@ -286,9 +286,7 @@ describe.skipIf(!HAS_CF)("domain.sh service layer live smoke test", { timeout: 9
     const result = await service.batchRecords(
       p2ZoneId!,
       {
-        create: [
-          { type: "AAAA", name: `ipv6.${p2Domain}`, content: "2001:db8::1", ttl: 300 },
-        ],
+        create: [{ type: "AAAA", name: `ipv6.${p2Domain}`, content: "2001:db8::1", ttl: 300 }],
         delete: [{ id: p2RecordId! }],
       },
       callerWallet,

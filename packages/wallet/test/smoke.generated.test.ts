@@ -102,7 +102,11 @@ describe("wallet.sh app", () => {
     const res = await app.request("/v1/wallets", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ address: "0x0000000000000000000000000000000000000001", signature: "test", timestamp: "test" }),
+      body: JSON.stringify({
+        address: "0x0000000000000000000000000000000000000001",
+        signature: "test",
+        timestamp: "test",
+      }),
     });
 
     expect(res.status).toBe(201);
