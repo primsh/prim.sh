@@ -107,12 +107,12 @@ describe("mem.sh app", () => {
   });
   // Check 5: POST /v1/collections — error path
   it("POST /v1/collections returns 400 (invalid_request)", async () => {
-    // biome-ignore lint/suspicious/noExplicitAny: mock shape — smoke test only checks status code
     vi.mocked(createCollection).mockResolvedValueOnce({
       ok: false,
       status: 400,
       code: "invalid_request",
       message: "Missing name or invalid fields",
+      // biome-ignore lint/suspicious/noExplicitAny: mock shape — smoke test only checks status code
     } as any);
 
     const res = await app.request("/v1/collections", {
@@ -136,12 +136,12 @@ describe("mem.sh app", () => {
   });
   // Check 5: GET /v1/collections — error path
   it.skip("GET /v1/collections returns 403 (forbidden)", async () => {
-    // biome-ignore lint/suspicious/noExplicitAny: mock shape — smoke test only checks status code
     vi.mocked(listCollections).mockResolvedValueOnce({
       ok: false,
       status: 403,
       code: "forbidden",
       message: "Resource belongs to a different wallet",
+      // biome-ignore lint/suspicious/noExplicitAny: mock shape — smoke test only checks status code
     } as any);
 
     const res = await app.request("/v1/collections", {
@@ -163,12 +163,12 @@ describe("mem.sh app", () => {
   });
   // Check 5: GET /v1/collections/test-id-001 — error path
   it.skip("GET /v1/collections/test-id-001 returns 404 (not_found)", async () => {
-    // biome-ignore lint/suspicious/noExplicitAny: mock shape — smoke test only checks status code
     vi.mocked(getCollection).mockResolvedValueOnce({
       ok: false,
       status: 404,
       code: "not_found",
       message: "Collection not found",
+      // biome-ignore lint/suspicious/noExplicitAny: mock shape — smoke test only checks status code
     } as any);
 
     const res = await app.request("/v1/collections/test-id-001", {
@@ -190,12 +190,12 @@ describe("mem.sh app", () => {
   });
   // Check 5: DELETE /v1/collections/test-id-001 — error path
   it.skip("DELETE /v1/collections/test-id-001 returns 404 (not_found)", async () => {
-    // biome-ignore lint/suspicious/noExplicitAny: mock shape — smoke test only checks status code
     vi.mocked(deleteCollection).mockResolvedValueOnce({
       ok: false,
       status: 404,
       code: "not_found",
       message: "Collection not found",
+      // biome-ignore lint/suspicious/noExplicitAny: mock shape — smoke test only checks status code
     } as any);
 
     const res = await app.request("/v1/collections/test-id-001", {
@@ -219,12 +219,12 @@ describe("mem.sh app", () => {
   });
   // Check 5: POST /v1/collections/test-id-001/upsert — error path
   it.skip("POST /v1/collections/test-id-001/upsert returns 400 (invalid_request)", async () => {
-    // biome-ignore lint/suspicious/noExplicitAny: mock shape — smoke test only checks status code
     vi.mocked(upsertDocuments).mockResolvedValueOnce({
       ok: false,
       status: 400,
       code: "invalid_request",
       message: "Missing documents or invalid fields",
+      // biome-ignore lint/suspicious/noExplicitAny: mock shape — smoke test only checks status code
     } as any);
 
     const res = await app.request("/v1/collections/test-id-001/upsert", {
@@ -250,12 +250,12 @@ describe("mem.sh app", () => {
   });
   // Check 5: POST /v1/collections/test-id-001/query — error path
   it.skip("POST /v1/collections/test-id-001/query returns 400 (invalid_request)", async () => {
-    // biome-ignore lint/suspicious/noExplicitAny: mock shape — smoke test only checks status code
     vi.mocked(queryDocuments).mockResolvedValueOnce({
       ok: false,
       status: 400,
       code: "invalid_request",
       message: "Missing text or invalid filter",
+      // biome-ignore lint/suspicious/noExplicitAny: mock shape — smoke test only checks status code
     } as any);
 
     const res = await app.request("/v1/collections/test-id-001/query", {
@@ -281,12 +281,12 @@ describe("mem.sh app", () => {
   });
   // Check 5: PUT /v1/cache/test-ns/test-key — error path
   it.skip("PUT /v1/cache/test-ns/test-key returns 400 (invalid_request)", async () => {
-    // biome-ignore lint/suspicious/noExplicitAny: mock shape — smoke test only checks status code
     vi.mocked(cacheSet).mockResolvedValueOnce({
       ok: false,
       status: 400,
       code: "invalid_request",
       message: "Missing value",
+      // biome-ignore lint/suspicious/noExplicitAny: mock shape — smoke test only checks status code
     } as any);
 
     const res = await app.request("/v1/cache/test-ns/test-key", {
@@ -310,12 +310,12 @@ describe("mem.sh app", () => {
   });
   // Check 5: GET /v1/cache/test-ns/test-key — error path
   it.skip("GET /v1/cache/test-ns/test-key returns 404 (not_found)", async () => {
-    // biome-ignore lint/suspicious/noExplicitAny: mock shape — smoke test only checks status code
     vi.mocked(cacheGet).mockResolvedValueOnce({
       ok: false,
       status: 404,
       code: "not_found",
       message: "Cache entry missing or expired",
+      // biome-ignore lint/suspicious/noExplicitAny: mock shape — smoke test only checks status code
     } as any);
 
     const res = await app.request("/v1/cache/test-ns/test-key", {
@@ -337,12 +337,12 @@ describe("mem.sh app", () => {
   });
   // Check 5: DELETE /v1/cache/test-ns/test-key — error path
   it.skip("DELETE /v1/cache/test-ns/test-key returns 404 (not_found)", async () => {
-    // biome-ignore lint/suspicious/noExplicitAny: mock shape — smoke test only checks status code
     vi.mocked(cacheDelete).mockResolvedValueOnce({
       ok: false,
       status: 404,
       code: "not_found",
       message: "Cache entry not found",
+      // biome-ignore lint/suspicious/noExplicitAny: mock shape — smoke test only checks status code
     } as any);
 
     const res = await app.request("/v1/cache/test-ns/test-key", {
