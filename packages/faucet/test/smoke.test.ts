@@ -34,12 +34,7 @@ vi.mock("../src/service.ts", async (importOriginal) => {
 });
 
 import app from "../src/index.ts";
-import {
-  dripUsdc,
-  dripEth,
-  getTreasuryBalance,
-  refillTreasury,
-} from "../src/service.ts";
+import { dripUsdc, dripEth, getTreasuryBalance, refillTreasury } from "../src/service.ts";
 
 describe("faucet.sh app", () => {
   beforeEach(() => {
@@ -115,9 +110,12 @@ describe("faucet.sh app", () => {
     // biome-ignore lint/suspicious/noExplicitAny: mock shape — smoke test only checks status code
     vi.mocked(getTreasuryBalance).mockResolvedValueOnce({} as any);
 
-    const res = await app.request("/v1/faucet/status?address=0x0000000000000000000000000000000000000001", {
-      method: "GET",
-    });
+    const res = await app.request(
+      "/v1/faucet/status?address=0x0000000000000000000000000000000000000001",
+      {
+        method: "GET",
+      },
+    );
 
     expect(res.status).toBe(200);
   });
@@ -142,7 +140,6 @@ describe("faucet.sh app", () => {
     expect(res.status).toBe(200);
   });
 
-
   // Check 4: POST /v1/faucet/refill — happy path
   it("POST /v1/faucet/refill returns 200 (happy path)", async () => {
     // biome-ignore lint/suspicious/noExplicitAny: mock shape — smoke test only checks status code
@@ -156,6 +153,4 @@ describe("faucet.sh app", () => {
 
     expect(res.status).toBe(200);
   });
-
-
 });
