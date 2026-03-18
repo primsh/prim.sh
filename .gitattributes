@@ -5,3 +5,4 @@ packages/sdk/generated/** linguist-generated=true
 packages/mcp/generated/** linguist-generated=true
 packages/cli/generated/** linguist-generated=true
 packages/tools/generated/** linguist-generated=true
+packages/*/test/*.generated.test.ts linguist-generated=true

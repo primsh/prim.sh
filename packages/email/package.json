@@ -25,7 +25,7 @@
     "lint": "biome lint .",
     "format": "biome format .",
     "typecheck": "tsc -p tsconfig.json --noEmit",
-    "test": "vitest --run --exclude test/smoke-live.test.ts",
+    "test": "vitest --run",
     "test:smoke": "bun test test/smoke-live.test.ts",
     "check": "pnpm lint && pnpm typecheck && pnpm test"
   },
