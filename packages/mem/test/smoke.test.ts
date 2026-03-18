@@ -1,6 +1,5 @@
 // SPDX-License-Identifier: Apache-2.0
-// THIS FILE IS GENERATED — DO NOT EDIT
-// Regenerate: pnpm gen:tests
+// Manually maintained — complex mock setup needed for cache/collection routes
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 vi.hoisted(() => {

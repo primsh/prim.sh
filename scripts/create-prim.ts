@@ -1382,6 +1382,8 @@ async function scaffold(id: string, prim: PrimYaml, force: boolean, root: string
 const args = process.argv.slice(2);
 const force = args.includes("--force");
 const interactive = args.includes("--interactive");
+const researchProviders = args.includes("--research-providers");
+const autoSelectProvider = args.includes("--auto-select-provider");
 
 const ROOT = resolve(import.meta.dir, "..");
 
@@ -1414,6 +1416,8 @@ if (interactive) {
 
   if (!id) {
     console.error("Usage: pnpm create-prim <id> [--force]");
+    console.error("       pnpm create-prim <id> --research-providers");
+    console.error("       pnpm create-prim <id> --auto-select-provider");
     console.error("       pnpm create-prim --interactive");
     process.exit(1);
   }
@@ -1434,6 +1438,40 @@ if (interactive) {
   if (!prim.id || !prim.name || !prim.port) {
     console.error("Error: prim.yaml must have id, name, and port fields");
     process.exit(1);
+  }
+
+  // Provider research mode — shells out to claude -p with the skill prompt
+  if (researchProviders || autoSelectProvider) {
+    const autoFlag = autoSelectProvider ? " --auto-select" : "";
+    const prompt = `/prim_research_providers ${id}${autoFlag}`;
+    console.log(`\n  Researching providers for ${prim.name}...`);
+    console.log(`  Running: claude -p "${prompt}"\n`);
+
+    const { execSync } = await import("node:child_process");
+    try {
+      const result = execSync(`claude -p "${prompt}"`, {
+        cwd: ROOT,
+        encoding: "utf-8",
+        stdio: ["pipe", "pipe", "inherit"],
+        timeout: 120_000,
+      });
+      console.log(result);
+    } catch (err) {
+      const message = err instanceof Error ? err.message : String(err);
+      console.error(`  Provider research failed: ${message}`);
+      process.exit(1);
+    }
+
+    // If only researching (no scaffold), exit
+    if (!force && researchProviders && !autoSelectProvider) {
+      process.exit(0);
+    }
+
+    // Re-read prim.yaml in case --auto-select-provider modified it
+    if (autoSelectProvider) {
+      const updated = readFileSync(yamlPath, "utf-8");
+      Object.assign(prim, parseYaml(updated));
+    }
   }
 
   await scaffold(id, prim, force, ROOT);
