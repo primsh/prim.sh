@@ -20,6 +20,7 @@ bun run packages/email/src/index.ts       # Run email.sh locally
 pnpm -r check                            # Lint + typecheck + test (all packages)
 pnpm -r test                             # Tests only
 pnpm -r lint                             # Biome lint
+pnpm -r format --write && pnpm gen       # Format + regen (run before pushing)
 
 # Landing pages
 bun run site/serve.ts                         # Serves locally on :3000
