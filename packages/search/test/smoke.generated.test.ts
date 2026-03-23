@@ -127,7 +127,7 @@ describe("search.sh app", () => {
   });
 
   // Check 4: POST /v1/extract — happy path
-  it.skip("POST /v1/extract returns 200 (happy path)", async () => {
+  it("POST /v1/extract returns 200 (happy path)", async () => {
     // biome-ignore lint/suspicious/noExplicitAny: mock shape — smoke test only checks status code
     vi.mocked(extractUrls).mockResolvedValueOnce({ ok: true, data: {} } as any);
 
@@ -140,7 +140,7 @@ describe("search.sh app", () => {
     expect(res.status).toBe(200);
   });
   // Check 5: POST /v1/extract — error path
-  it.skip("POST /v1/extract returns 400 (invalid_request)", async () => {
+  it("POST /v1/extract returns 400 (invalid_request)", async () => {
     vi.mocked(extractUrls).mockResolvedValueOnce({
       ok: false,
       status: 400,

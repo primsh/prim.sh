@@ -56,6 +56,7 @@ import {
   listFundRequests,
   approveFundRequest,
   denyFundRequest,
+  getSpendingPolicy,
   updateSpendingPolicy,
   pauseWallet,
   resumeWallet,
@@ -71,6 +72,7 @@ describe("wallet.sh app", () => {
     vi.mocked(listFundRequests).mockReset();
     vi.mocked(approveFundRequest).mockReset();
     vi.mocked(denyFundRequest).mockReset();
+    vi.mocked(getSpendingPolicy).mockReset();
     vi.mocked(updateSpendingPolicy).mockReset();
     vi.mocked(pauseWallet).mockReset();
     vi.mocked(resumeWallet).mockReset();
@@ -95,7 +97,7 @@ describe("wallet.sh app", () => {
   });
 
   // Check 4: POST /v1/wallets — happy path
-  it.skip("POST /v1/wallets returns 201 (happy path)", async () => {
+  it("POST /v1/wallets returns 201 (happy path)", async () => {
     // biome-ignore lint/suspicious/noExplicitAny: mock shape — smoke test only checks status code
     vi.mocked(registerWallet).mockResolvedValueOnce({ ok: true, data: {} } as any);
 
@@ -112,7 +114,7 @@ describe("wallet.sh app", () => {
     expect(res.status).toBe(201);
   });
   // Check 5: POST /v1/wallets — error path
-  it.skip("POST /v1/wallets returns 400 (invalid_request)", async () => {
+  it("POST /v1/wallets returns 400 (invalid_request)", async () => {
     vi.mocked(registerWallet).mockResolvedValueOnce({
       ok: false,
       status: 400,
@@ -130,7 +132,7 @@ describe("wallet.sh app", () => {
   });
 
   // Check 4: GET /v1/wallets — happy path
-  it.skip("GET /v1/wallets returns 200 (happy path)", async () => {
+  it("GET /v1/wallets returns 200 (happy path)", async () => {
     // biome-ignore lint/suspicious/noExplicitAny: mock shape — smoke test only checks status code
     vi.mocked(listWallets).mockResolvedValueOnce({ ok: true, data: {} } as any);
 
@@ -139,21 +141,6 @@ describe("wallet.sh app", () => {
     });
 
     expect(res.status).toBe(200);
-  });
-  // Check 5: GET /v1/wallets — error path
-  it.skip("GET /v1/wallets returns 400 (invalid_request)", async () => {
-    vi.mocked(listWallets).mockResolvedValueOnce({
-      ok: false,
-      status: 400,
-      code: "invalid_request",
-      message: "Missing required query parameter",
-      // biome-ignore lint/suspicious/noExplicitAny: mock shape — smoke test only checks status code
-    } as any);
-
-    const res = await app.request("/v1/wallets", {
-      method: "GET",
-    });
-    expect(res.status).toBe(400);
   });
 
   // Check 4: GET /v1/wallets/test-address — happy path
@@ -186,7 +173,7 @@ describe("wallet.sh app", () => {
   // Check 4: DELETE /v1/wallets/test-address — happy path
   it.skip("DELETE /v1/wallets/test-address returns 200 (happy path)", async () => {
     // biome-ignore lint/suspicious/noExplicitAny: mock shape — smoke test only checks status code
-    vi.mocked(deactivateWallet).mockResolvedValueOnce({ ok: true, data: {} } as any);
+    vi.mocked(deactivateWallet).mockReturnValueOnce({ ok: true, data: {} } as any);
 
     const res = await app.request("/v1/wallets/test-address", {
       method: "DELETE",
@@ -196,7 +183,7 @@ describe("wallet.sh app", () => {
   });
   // Check 5: DELETE /v1/wallets/test-address — error path
   it.skip("DELETE /v1/wallets/test-address returns 404 (not_found)", async () => {
-    vi.mocked(deactivateWallet).mockResolvedValueOnce({
+    vi.mocked(deactivateWallet).mockReturnValueOnce({
       ok: false,
       status: 404,
       code: "not_found",
@@ -213,7 +200,7 @@ describe("wallet.sh app", () => {
   // Check 4: POST /v1/wallets/test-address/fund-request — happy path
   it.skip("POST /v1/wallets/test-address/fund-request returns 200 (happy path)", async () => {
     // biome-ignore lint/suspicious/noExplicitAny: mock shape — smoke test only checks status code
-    vi.mocked(createFundRequest).mockResolvedValueOnce({ ok: true, data: {} } as any);
+    vi.mocked(createFundRequest).mockReturnValueOnce({ ok: true, data: {} } as any);
 
     const res = await app.request("/v1/wallets/test-address/fund-request", {
       method: "POST",
@@ -225,7 +212,7 @@ describe("wallet.sh app", () => {
   });
   // Check 5: POST /v1/wallets/test-address/fund-request — error path
   it.skip("POST /v1/wallets/test-address/fund-request returns 400 (invalid_request)", async () => {
-    vi.mocked(createFundRequest).mockResolvedValueOnce({
+    vi.mocked(createFundRequest).mockReturnValueOnce({
       ok: false,
       status: 400,
       code: "invalid_request",
@@ -244,7 +231,7 @@ describe("wallet.sh app", () => {
   // Check 4: GET /v1/wallets/test-address/fund-requests — happy path
   it.skip("GET /v1/wallets/test-address/fund-requests returns 200 (happy path)", async () => {
     // biome-ignore lint/suspicious/noExplicitAny: mock shape — smoke test only checks status code
-    vi.mocked(listFundRequests).mockResolvedValueOnce({ ok: true, data: {} } as any);
+    vi.mocked(listFundRequests).mockReturnValueOnce({ ok: true, data: {} } as any);
 
     const res = await app.request(
       "/v1/wallets/test-address/fund-requests?limit=10&after=test-cursor",
@@ -256,25 +243,25 @@ describe("wallet.sh app", () => {
     expect(res.status).toBe(200);
   });
   // Check 5: GET /v1/wallets/test-address/fund-requests — error path
-  it.skip("GET /v1/wallets/test-address/fund-requests returns 400 (invalid_request)", async () => {
-    vi.mocked(listFundRequests).mockResolvedValueOnce({
+  it.skip("GET /v1/wallets/test-address/fund-requests returns 404 (not_found)", async () => {
+    vi.mocked(listFundRequests).mockReturnValueOnce({
       ok: false,
-      status: 400,
-      code: "invalid_request",
-      message: "Missing required query parameter",
+      status: 404,
+      code: "not_found",
+      message: "Wallet not found",
       // biome-ignore lint/suspicious/noExplicitAny: mock shape — smoke test only checks status code
     } as any);
 
     const res = await app.request("/v1/wallets/test-address/fund-requests", {
       method: "GET",
     });
-    expect(res.status).toBe(400);
+    expect(res.status).toBe(404);
   });
 
   // Check 4: POST /v1/fund-requests/test-id-001/approve — happy path
   it.skip("POST /v1/fund-requests/test-id-001/approve returns 200 (happy path)", async () => {
     // biome-ignore lint/suspicious/noExplicitAny: mock shape — smoke test only checks status code
-    vi.mocked(approveFundRequest).mockResolvedValueOnce({ ok: true, data: {} } as any);
+    vi.mocked(approveFundRequest).mockReturnValueOnce({ ok: true, data: {} } as any);
 
     const res = await app.request("/v1/fund-requests/test-id-001/approve", {
       method: "POST",
@@ -286,7 +273,7 @@ describe("wallet.sh app", () => {
   });
   // Check 5: POST /v1/fund-requests/test-id-001/approve — error path
   it.skip("POST /v1/fund-requests/test-id-001/approve returns 404 (not_found)", async () => {
-    vi.mocked(approveFundRequest).mockResolvedValueOnce({
+    vi.mocked(approveFundRequest).mockReturnValueOnce({
       ok: false,
       status: 404,
       code: "not_found",
@@ -305,7 +292,7 @@ describe("wallet.sh app", () => {
   // Check 4: POST /v1/fund-requests/test-id-001/deny — happy path
   it.skip("POST /v1/fund-requests/test-id-001/deny returns 200 (happy path)", async () => {
     // biome-ignore lint/suspicious/noExplicitAny: mock shape — smoke test only checks status code
-    vi.mocked(denyFundRequest).mockResolvedValueOnce({ ok: true, data: {} } as any);
+    vi.mocked(denyFundRequest).mockReturnValueOnce({ ok: true, data: {} } as any);
 
     const res = await app.request("/v1/fund-requests/test-id-001/deny", {
       method: "POST",
@@ -317,7 +304,7 @@ describe("wallet.sh app", () => {
   });
   // Check 5: POST /v1/fund-requests/test-id-001/deny — error path
   it.skip("POST /v1/fund-requests/test-id-001/deny returns 404 (not_found)", async () => {
-    vi.mocked(denyFundRequest).mockResolvedValueOnce({
+    vi.mocked(denyFundRequest).mockReturnValueOnce({
       ok: false,
       status: 404,
       code: "not_found",
@@ -335,6 +322,9 @@ describe("wallet.sh app", () => {
 
   // Check 4: GET /v1/wallets/test-address/policy — happy path
   it.skip("GET /v1/wallets/test-address/policy returns 200 (happy path)", async () => {
+    // biome-ignore lint/suspicious/noExplicitAny: mock shape — smoke test only checks status code
+    vi.mocked(getSpendingPolicy).mockReturnValueOnce({ ok: true, data: {} } as any);
+
     const res = await app.request("/v1/wallets/test-address/policy", {
       method: "GET",
     });
@@ -343,6 +333,14 @@ describe("wallet.sh app", () => {
   });
   // Check 5: GET /v1/wallets/test-address/policy — error path
   it.skip("GET /v1/wallets/test-address/policy returns 404 (not_found)", async () => {
+    vi.mocked(getSpendingPolicy).mockReturnValueOnce({
+      ok: false,
+      status: 404,
+      code: "not_found",
+      message: "Wallet not found",
+      // biome-ignore lint/suspicious/noExplicitAny: mock shape — smoke test only checks status code
+    } as any);
+
     const res = await app.request("/v1/wallets/test-address/policy", {
       method: "GET",
     });
@@ -352,7 +350,7 @@ describe("wallet.sh app", () => {
   // Check 4: PUT /v1/wallets/test-address/policy — happy path
   it.skip("PUT /v1/wallets/test-address/policy returns 200 (happy path)", async () => {
     // biome-ignore lint/suspicious/noExplicitAny: mock shape — smoke test only checks status code
-    vi.mocked(updateSpendingPolicy).mockResolvedValueOnce({ ok: true, data: {} } as any);
+    vi.mocked(updateSpendingPolicy).mockReturnValueOnce({ ok: true, data: {} } as any);
 
     const res = await app.request("/v1/wallets/test-address/policy", {
       method: "PUT",
@@ -364,7 +362,7 @@ describe("wallet.sh app", () => {
   });
   // Check 5: PUT /v1/wallets/test-address/policy — error path
   it.skip("PUT /v1/wallets/test-address/policy returns 400 (invalid_request)", async () => {
-    vi.mocked(updateSpendingPolicy).mockResolvedValueOnce({
+    vi.mocked(updateSpendingPolicy).mockReturnValueOnce({
       ok: false,
       status: 400,
       code: "invalid_request",
@@ -383,7 +381,7 @@ describe("wallet.sh app", () => {
   // Check 4: POST /v1/wallets/test-address/pause — happy path
   it.skip("POST /v1/wallets/test-address/pause returns 200 (happy path)", async () => {
     // biome-ignore lint/suspicious/noExplicitAny: mock shape — smoke test only checks status code
-    vi.mocked(pauseWallet).mockResolvedValueOnce({ ok: true, data: {} } as any);
+    vi.mocked(pauseWallet).mockReturnValueOnce({ ok: true, data: {} } as any);
 
     const res = await app.request("/v1/wallets/test-address/pause", {
       method: "POST",
@@ -395,7 +393,7 @@ describe("wallet.sh app", () => {
   });
   // Check 5: POST /v1/wallets/test-address/pause — error path
   it.skip("POST /v1/wallets/test-address/pause returns 400 (invalid_request)", async () => {
-    vi.mocked(pauseWallet).mockResolvedValueOnce({
+    vi.mocked(pauseWallet).mockReturnValueOnce({
       ok: false,
       status: 400,
       code: "invalid_request",
@@ -414,7 +412,7 @@ describe("wallet.sh app", () => {
   // Check 4: POST /v1/wallets/test-address/resume — happy path
   it.skip("POST /v1/wallets/test-address/resume returns 200 (happy path)", async () => {
     // biome-ignore lint/suspicious/noExplicitAny: mock shape — smoke test only checks status code
-    vi.mocked(resumeWallet).mockResolvedValueOnce({ ok: true, data: {} } as any);
+    vi.mocked(resumeWallet).mockReturnValueOnce({ ok: true, data: {} } as any);
 
     const res = await app.request("/v1/wallets/test-address/resume", {
       method: "POST",
@@ -426,7 +424,7 @@ describe("wallet.sh app", () => {
   });
   // Check 5: POST /v1/wallets/test-address/resume — error path
   it.skip("POST /v1/wallets/test-address/resume returns 400 (invalid_request)", async () => {
-    vi.mocked(resumeWallet).mockResolvedValueOnce({
+    vi.mocked(resumeWallet).mockReturnValueOnce({
       ok: false,
       status: 400,
       code: "invalid_request",

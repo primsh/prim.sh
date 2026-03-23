@@ -136,19 +136,4 @@ describe("infer.sh app", () => {
 
     expect(res.status).toBe(200);
   });
-  // Check 5: GET /v1/models — error path
-  it("GET /v1/models returns 502 (provider_error)", async () => {
-    vi.mocked(models).mockResolvedValueOnce({
-      ok: false,
-      status: 502,
-      code: "provider_error",
-      message: "Unable to fetch model list",
-      // biome-ignore lint/suspicious/noExplicitAny: mock shape — smoke test only checks status code
-    } as any);
-
-    const res = await app.request("/v1/models", {
-      method: "GET",
-    });
-    expect(res.status).toBe(502);
-  });
 });

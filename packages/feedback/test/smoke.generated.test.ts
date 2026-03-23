@@ -53,9 +53,9 @@ describe("feedback.sh app", () => {
   });
 
   // Check 4: POST /v1/submit — happy path
-  it.skip("POST /v1/submit returns 200 (happy path)", async () => {
+  it("POST /v1/submit returns 200 (happy path)", async () => {
     // biome-ignore lint/suspicious/noExplicitAny: mock shape — smoke test only checks status code
-    vi.mocked(submit).mockResolvedValueOnce({ ok: true, data: {} } as any);
+    vi.mocked(submit).mockReturnValueOnce({ ok: true, data: {} } as any);
 
     const res = await app.request("/v1/submit", {
       method: "POST",
@@ -66,8 +66,8 @@ describe("feedback.sh app", () => {
     expect(res.status).toBe(200);
   });
   // Check 5: POST /v1/submit — error path
-  it.skip("POST /v1/submit returns 400 (invalid_request)", async () => {
-    vi.mocked(submit).mockResolvedValueOnce({
+  it("POST /v1/submit returns 400 (invalid_request)", async () => {
+    vi.mocked(submit).mockReturnValueOnce({
       ok: false,
       status: 400,
       code: "invalid_request",
@@ -90,12 +90,5 @@ describe("feedback.sh app", () => {
     });
 
     expect(res.status).toBe(200);
-  });
-  // Check 5: GET /v1/feed — error path
-  it.skip("GET /v1/feed returns 400 (invalid_request)", async () => {
-    const res = await app.request("/v1/feed", {
-      method: "GET",
-    });
-    expect(res.status).toBe(400);
   });
 });

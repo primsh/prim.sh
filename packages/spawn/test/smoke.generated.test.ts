@@ -94,7 +94,7 @@ describe("spawn.sh app", () => {
   });
 
   // Check 4: POST /v1/servers — happy path
-  it.skip("POST /v1/servers returns 201 (happy path)", async () => {
+  it("POST /v1/servers returns 201 (happy path)", async () => {
     // biome-ignore lint/suspicious/noExplicitAny: mock shape — smoke test only checks status code
     vi.mocked(createServer).mockResolvedValueOnce({ ok: true, data: {} } as any);
 
@@ -107,7 +107,7 @@ describe("spawn.sh app", () => {
     expect(res.status).toBe(201);
   });
   // Check 5: POST /v1/servers — error path
-  it.skip("POST /v1/servers returns 400 (invalid_request)", async () => {
+  it("POST /v1/servers returns 400 (invalid_request)", async () => {
     vi.mocked(createServer).mockResolvedValueOnce({
       ok: false,
       status: 400,
@@ -125,30 +125,15 @@ describe("spawn.sh app", () => {
   });
 
   // Check 4: GET /v1/servers — happy path
-  it.skip("GET /v1/servers returns 200 (happy path)", async () => {
+  it("GET /v1/servers returns 200 (happy path)", async () => {
     // biome-ignore lint/suspicious/noExplicitAny: mock shape — smoke test only checks status code
-    vi.mocked(listServers).mockResolvedValueOnce({ ok: true, data: {} } as any);
+    vi.mocked(listServers).mockReturnValueOnce({} as any);
 
     const res = await app.request("/v1/servers?limit=10&after=test-cursor", {
       method: "GET",
     });
 
     expect(res.status).toBe(200);
-  });
-  // Check 5: GET /v1/servers — error path
-  it.skip("GET /v1/servers returns 400 (invalid_request)", async () => {
-    vi.mocked(listServers).mockResolvedValueOnce({
-      ok: false,
-      status: 400,
-      code: "invalid_request",
-      message: "Missing required query parameter",
-      // biome-ignore lint/suspicious/noExplicitAny: mock shape — smoke test only checks status code
-    } as any);
-
-    const res = await app.request("/v1/servers", {
-      method: "GET",
-    });
-    expect(res.status).toBe(400);
   });
 
   // Check 4: GET /v1/servers/test-id-001 — happy path
@@ -392,30 +377,15 @@ describe("spawn.sh app", () => {
   });
 
   // Check 4: GET /v1/ssh-keys — happy path
-  it.skip("GET /v1/ssh-keys returns 200 (happy path)", async () => {
+  it("GET /v1/ssh-keys returns 200 (happy path)", async () => {
     // biome-ignore lint/suspicious/noExplicitAny: mock shape — smoke test only checks status code
-    vi.mocked(listSshKeys).mockResolvedValueOnce({ ok: true, data: {} } as any);
+    vi.mocked(listSshKeys).mockReturnValueOnce({} as any);
 
     const res = await app.request("/v1/ssh-keys", {
       method: "GET",
     });
 
     expect(res.status).toBe(200);
-  });
-  // Check 5: GET /v1/ssh-keys — error path
-  it.skip("GET /v1/ssh-keys returns 403 (forbidden)", async () => {
-    vi.mocked(listSshKeys).mockResolvedValueOnce({
-      ok: false,
-      status: 403,
-      code: "forbidden",
-      message: "Missing wallet in payment",
-      // biome-ignore lint/suspicious/noExplicitAny: mock shape — smoke test only checks status code
-    } as any);
-
-    const res = await app.request("/v1/ssh-keys", {
-      method: "GET",
-    });
-    expect(res.status).toBe(403);
   });
 
   // Check 4: DELETE /v1/ssh-keys/test-id-001 — happy path
