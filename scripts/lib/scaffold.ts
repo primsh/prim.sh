@@ -715,7 +715,7 @@ vi.mock("@primsh/x402-middleware", async (importOriginal) => {
   };
 });
 
-// Mock the service so smoke tests don't need a real API key
+// Mock the service so unit tests don't need a real API key
 vi.mock("../src/service.ts", async (importOriginal) => {
   const original = await importOriginal<typeof import("../src/service.ts")>();
   return {
@@ -881,7 +881,7 @@ export function scaffoldPure(prim: PrimYaml): FileManifest[] {
     { path: `packages/${prim.id}/src/api.ts`, content: genApiTs(normalizedPrim) },
     { path: `packages/${prim.id}/src/service.ts`, content: genServiceTs(normalizedPrim) },
     {
-      path: `packages/${prim.id}/test/smoke.test.ts`,
+      path: `packages/${prim.id}/test/unit.test.ts`,
       content: genSmokeTestTs(normalizedPrim, routePrices),
     },
     { path: `packages/${prim.id}/README.md`, content: genReadme(normalizedPrim, routePrices) },

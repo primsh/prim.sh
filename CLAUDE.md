@@ -159,7 +159,7 @@ Four tiers — never use "canary" or "smoke-live" as tier names:
 
 | Tier | File | What | When | Cost |
 |------|------|------|------|------|
-| **unit** | `test/smoke.test.ts` | Mocked service + mocked x402 | Every push/PR | $0 |
+| **unit** | `test/unit.test.ts` | Mocked service + mocked x402 | Every push/PR | $0 |
 | **integration** | `test/integration.test.ts` | Real provider sandbox, x402 mocked | Nightly cron | $0 |
 | **e2e-local** | `e2e/tests/<prim>.test.ts` | Docker + real provider sandbox + testnet x402 | PR→main | ~$0 |
 | **e2e-prod** | `e2e/prod-runner.ts` | Live deployed endpoint + **mainnet** x402 | Weekly cron | ~$1/wk |
@@ -168,7 +168,7 @@ Four tiers — never use "canary" or "smoke-live" as tier names:
 
 Every primitive package has at minimum:
 
-- **`test/smoke.test.ts`** — unit tier. Included in `pnpm test`. Uses Hono test client + `vi.mock` (no real API keys). Must pass in CI.
+- **`test/unit.test.ts`** — unit tier. Included in `pnpm test`. Uses Hono test client + `vi.mock` (no real API keys). Must pass in CI.
 - **`test/integration.test.ts`** — integration tier (only for prims with `provider.sandbox` set). Excluded from default `pnpm test`. Run via nightly CI cron.
 
 ### Generated vs custom tests
@@ -179,9 +179,9 @@ Test files use a **filename convention** — not a header-guard:
 
 The generator auto-skips ownership-gated routes (`:param` paths on non-free prims) with `.skip` — the custom file is where you un-skip and add proper mocks.
 
-### 5-check contract (`smoke.generated.test.ts`)
+### 5-check contract (`unit.generated.test.ts`)
 
-Reference implementation: `packages/track/test/smoke.custom.test.ts`
+Reference implementation: `packages/track/test/unit.custom.test.ts`
 
 1. App default export is defined
 2. `GET /` → 200 + `{ service: "<name>.sh", status: "ok" }`
@@ -296,7 +296,7 @@ Dark-mode, monospace, CSS custom properties:
 | `pnpm gen:mcp` | Regenerate MCP server configs |
 | `pnpm gen:cli` | Regenerate CLI tool definitions |
 | `pnpm gen:tools` | Regenerate function-calling tool definitions |
-| `pnpm gen:tests` | Regenerate smoke test scaffolds |
+| `pnpm gen:tests` | Regenerate unit test scaffolds |
 | `pnpm gen:docs` | Regenerate per-package READMEs + this section |
 
 **Creating a new primitive:**

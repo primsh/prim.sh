@@ -1,7 +1,7 @@
 #!/usr/bin/env bun
 // SPDX-License-Identifier: Apache-2.0
 /**
- * gen-tests.ts — Smoke test generator
+ * gen-tests.ts — Unit test generator
  *
  * Reads packages/<id>/prim.yaml (routes_map, factory) and src/service.ts (exported functions),
  * then generates *.generated.test.ts files with per-route Check 4+5 tests.
@@ -12,11 +12,11 @@
  *   bun scripts/gen-tests.ts --check  # diff against disk, exit 1 if any would change
  *
  * Output files (always overwritten):
- *   - test/smoke.generated.test.ts     — per-route happy + error path tests
+ *   - test/unit.generated.test.ts      — per-route happy + error path tests
  *   - test/smoke-live.generated.test.ts — live endpoint tests (excluded from pnpm test)
  *   - test/service.generated.test.ts   — unit test stubs with .todo()
  *
- * Hand-written tests go in *.custom.test.ts — this generator never touches them.
+ * Hand-written tests go in unit.custom.test.ts — this generator never touches them.
  */
 
 import { existsSync, readFileSync, writeFileSync } from "node:fs";
@@ -404,7 +404,7 @@ async function buildContext(p: Primitive): Promise<GenContext> {
 }
 
 /**
- * Generate the full smoke.test.ts file content.
+ * Generate the full unit.test.ts file content.
  */
 function generateFullFile(ctx: GenContext): string {
   const lines: string[] = [];
@@ -476,7 +476,7 @@ function generateFullFile(ctx: GenContext): string {
 
   // Service mock
   if (ctx.hasServiceFile && ctx.mockableServiceFns.length > 0) {
-    lines.push(`// Mock the service so smoke tests don't need a real API key`);
+    lines.push(`// Mock the service so unit tests don't need a real API key`);
     lines.push(`vi.mock("../src/service.ts", async (importOriginal) => {`);
     lines.push(`  const original = await importOriginal<typeof import("../src/service.ts")>();`);
     lines.push("  return {");
@@ -586,7 +586,7 @@ function pickCheck5Error(
 }
 
 /**
- * Generate the describe block with all smoke test checks.
+ * Generate the describe block with all unit test checks.
  * Emits Check 4 + Check 5 for every route in routes_map (not just the primary).
  */
 function generateMarkedContent(
@@ -691,14 +691,14 @@ function generateMarkedContent(
     if (serviceFn) {
       if (serviceFnUsesOk) {
         lines.push(
-          "    // biome-ignore lint/suspicious/noExplicitAny: mock shape — smoke test only checks status code",
+          "    // biome-ignore lint/suspicious/noExplicitAny: mock shape — unit test only checks status code",
         );
         lines.push(
           `    vi.mocked(${serviceFn}).${mockMethod}({ ok: true, data: {} } as any);`,
         );
       } else {
         lines.push(
-          "    // biome-ignore lint/suspicious/noExplicitAny: mock shape — smoke test only checks status code",
+          "    // biome-ignore lint/suspicious/noExplicitAny: mock shape — unit test only checks status code",
         );
         lines.push(`    vi.mocked(${serviceFn}).${mockMethod}({} as any);`);
       }
@@ -768,7 +768,7 @@ function generateMarkedContent(
         lines.push(`      code: "${errorEntry.code}",`);
         lines.push(`      message: "${errorEntry.message}",`);
         lines.push(
-          "      // biome-ignore lint/suspicious/noExplicitAny: mock shape — smoke test only checks status code",
+          "      // biome-ignore lint/suspicious/noExplicitAny: mock shape — unit test only checks status code",
         );
         lines.push("    } as any);");
         lines.push("");
@@ -1186,9 +1186,9 @@ for (const p of targets) {
 
   console.log(`  ${p.id}:`);
 
-  // ── smoke.generated.test.ts ──
-  const smokeTestPath = join(ROOT, "packages", p.id, "test/smoke.generated.test.ts");
-  processGeneratedFile(smokeTestPath, () => generateFullFile(ctx));
+  // ── unit.generated.test.ts ──
+  const unitTestPath = join(ROOT, "packages", p.id, "test/unit.generated.test.ts");
+  processGeneratedFile(unitTestPath, () => generateFullFile(ctx));
 
   // ── smoke-live.generated.test.ts ──
   const smokeLivePath = join(ROOT, "packages", p.id, "test/smoke-live.generated.test.ts");

@@ -23,25 +23,25 @@ vi.mock("@primsh/x402-middleware", async (importOriginal) => {
   };
 });
 
-// Mock the service so smoke tests don't need a real API key
+// Mock the service so unit tests don't need a real API key
 vi.mock("../src/service.ts", async (importOriginal) => {
   const original = await importOriginal<typeof import("../src/service.ts")>();
   return {
     ...original,
-    generate: vi.fn(),
-    describe: vi.fn(),
-    upscale: vi.fn(),
+    chat: vi.fn(),
+    chatStream: vi.fn(),
+    embed: vi.fn(),
     models: vi.fn(),
   };
 });
 
 import app from "../src/index.ts";
-import { generate, upscale, models } from "../src/service.ts";
+import { chat, embed, models } from "../src/service.ts";
 
-describe("imagine.sh app", () => {
+describe("infer.sh app", () => {
   beforeEach(() => {
-    vi.mocked(generate).mockReset();
-    vi.mocked(upscale).mockReset();
+    vi.mocked(chat).mockReset();
+    vi.mocked(embed).mockReset();
     vi.mocked(models).mockReset();
   });
 
@@ -51,11 +51,11 @@ describe("imagine.sh app", () => {
   });
 
   // Check 2: GET / returns health response
-  it("GET / returns { service: 'imagine.sh', status: 'ok' }", async () => {
+  it("GET / returns { service: 'infer.sh', status: 'ok' }", async () => {
     const res = await app.request("/");
     expect(res.status).toBe(200);
     const body = await res.json();
-    expect(body).toMatchObject({ service: "imagine.sh", status: "ok" });
+    expect(body).toMatchObject({ service: "infer.sh", status: "ok" });
   });
 
   // Check 3: x402 middleware is wired with the correct paid routes and payTo address
@@ -63,30 +63,30 @@ describe("imagine.sh app", () => {
     expect(createAgentStackMiddlewareSpy).toHaveBeenCalled();
   });
 
-  // Check 4: POST /v1/generate — happy path
-  it("POST /v1/generate returns 200 (happy path)", async () => {
-    // biome-ignore lint/suspicious/noExplicitAny: mock shape — smoke test only checks status code
-    vi.mocked(generate).mockResolvedValueOnce({ ok: true, data: {} } as any);
+  // Check 4: POST /v1/chat — happy path
+  it("POST /v1/chat returns 200 (happy path)", async () => {
+    // biome-ignore lint/suspicious/noExplicitAny: mock shape — unit test only checks status code
+    vi.mocked(chat).mockResolvedValueOnce({ ok: true, data: {} } as any);
 
-    const res = await app.request("/v1/generate", {
+    const res = await app.request("/v1/chat", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({}),
+      body: JSON.stringify({ model: "test", messages: [] }),
     });
 
     expect(res.status).toBe(200);
   });
-  // Check 5: POST /v1/generate — error path
-  it("POST /v1/generate returns 400 (invalid_request)", async () => {
-    vi.mocked(generate).mockResolvedValueOnce({
+  // Check 5: POST /v1/chat — error path
+  it("POST /v1/chat returns 400 (invalid_request)", async () => {
+    vi.mocked(chat).mockResolvedValueOnce({
       ok: false,
       status: 400,
       code: "invalid_request",
-      message: "Missing or invalid prompt",
-      // biome-ignore lint/suspicious/noExplicitAny: mock shape — smoke test only checks status code
+      message: "Missing or invalid model/messages",
+      // biome-ignore lint/suspicious/noExplicitAny: mock shape — unit test only checks status code
     } as any);
 
-    const res = await app.request("/v1/generate", {
+    const res = await app.request("/v1/chat", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: "{}",
@@ -94,50 +94,30 @@ describe("imagine.sh app", () => {
     expect(res.status).toBe(400);
   });
 
-  // Check 4: POST /v1/describe — happy path
-  it.skip("POST /v1/describe returns 200 (happy path)", async () => {
-    const res = await app.request("/v1/describe", {
+  // Check 4: POST /v1/embed — happy path
+  it("POST /v1/embed returns 200 (happy path)", async () => {
+    // biome-ignore lint/suspicious/noExplicitAny: mock shape — unit test only checks status code
+    vi.mocked(embed).mockResolvedValueOnce({ ok: true, data: {} } as any);
+
+    const res = await app.request("/v1/embed", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({}),
+      body: JSON.stringify({ model: "test", input: "test" }),
     });
 
     expect(res.status).toBe(200);
   });
-  // Check 5: POST /v1/describe — error path
-  it.skip("POST /v1/describe returns 400 (invalid_request)", async () => {
-    const res = await app.request("/v1/describe", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: "{}",
-    });
-    expect(res.status).toBe(400);
-  });
-
-  // Check 4: POST /v1/upscale — happy path
-  it("POST /v1/upscale returns 200 (happy path)", async () => {
-    // biome-ignore lint/suspicious/noExplicitAny: mock shape — smoke test only checks status code
-    vi.mocked(upscale).mockResolvedValueOnce({ ok: true, data: {} } as any);
-
-    const res = await app.request("/v1/upscale", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({}),
-    });
-
-    expect(res.status).toBe(200);
-  });
-  // Check 5: POST /v1/upscale — error path
-  it("POST /v1/upscale returns 400 (invalid_request)", async () => {
-    vi.mocked(upscale).mockResolvedValueOnce({
+  // Check 5: POST /v1/embed — error path
+  it("POST /v1/embed returns 400 (invalid_request)", async () => {
+    vi.mocked(embed).mockResolvedValueOnce({
       ok: false,
       status: 400,
       code: "invalid_request",
-      message: "Missing or invalid image input",
-      // biome-ignore lint/suspicious/noExplicitAny: mock shape — smoke test only checks status code
+      message: "Missing or invalid input",
+      // biome-ignore lint/suspicious/noExplicitAny: mock shape — unit test only checks status code
     } as any);
 
-    const res = await app.request("/v1/upscale", {
+    const res = await app.request("/v1/embed", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: "{}",
@@ -147,7 +127,7 @@ describe("imagine.sh app", () => {
 
   // Check 4: GET /v1/models — happy path
   it("GET /v1/models returns 200 (happy path)", async () => {
-    // biome-ignore lint/suspicious/noExplicitAny: mock shape — smoke test only checks status code
+    // biome-ignore lint/suspicious/noExplicitAny: mock shape — unit test only checks status code
     vi.mocked(models).mockResolvedValueOnce({ ok: true, data: {} } as any);
 
     const res = await app.request("/v1/models", {

@@ -20,7 +20,7 @@ vi.mock("@primsh/x402-middleware", async (importOriginal) => {
   };
 });
 
-// Mock the service so smoke tests don't need a real API key
+// Mock the service so unit tests don't need a real API key
 vi.mock("../src/service.ts", async (importOriginal) => {
   const original = await importOriginal<typeof import("../src/service.ts")>();
   return {
@@ -56,7 +56,7 @@ describe("create.sh app", () => {
 
   // Check 4: POST /v1/scaffold — happy path
   it("POST /v1/scaffold returns 200 (happy path)", async () => {
-    // biome-ignore lint/suspicious/noExplicitAny: mock shape — smoke test only checks status code
+    // biome-ignore lint/suspicious/noExplicitAny: mock shape — unit test only checks status code
     vi.mocked(scaffold).mockResolvedValueOnce({ ok: true, data: {} } as any);
 
     const res = await app.request("/v1/scaffold", {
@@ -74,7 +74,7 @@ describe("create.sh app", () => {
       status: 400,
       code: "invalid_request",
       message: "Invalid or missing prim.yaml spec",
-      // biome-ignore lint/suspicious/noExplicitAny: mock shape — smoke test only checks status code
+      // biome-ignore lint/suspicious/noExplicitAny: mock shape — unit test only checks status code
     } as any);
 
     const res = await app.request("/v1/scaffold", {
@@ -107,7 +107,7 @@ describe("create.sh app", () => {
 
   // Check 4: GET /v1/schema — happy path
   it("GET /v1/schema returns 200 (happy path)", async () => {
-    // biome-ignore lint/suspicious/noExplicitAny: mock shape — smoke test only checks status code
+    // biome-ignore lint/suspicious/noExplicitAny: mock shape — unit test only checks status code
     vi.mocked(schema).mockResolvedValueOnce({ ok: true, data: {} } as any);
 
     const res = await app.request("/v1/schema", {
@@ -119,7 +119,7 @@ describe("create.sh app", () => {
 
   // Check 4: GET /v1/ports — happy path
   it("GET /v1/ports returns 200 (happy path)", async () => {
-    // biome-ignore lint/suspicious/noExplicitAny: mock shape — smoke test only checks status code
+    // biome-ignore lint/suspicious/noExplicitAny: mock shape — unit test only checks status code
     vi.mocked(ports).mockResolvedValueOnce({ ok: true, data: {} } as any);
 
     const res = await app.request("/v1/ports", {

@@ -25,7 +25,7 @@ vi.mock("@primsh/x402-middleware", async (importOriginal) => {
   };
 });
 
-// Mock the service so smoke tests don't need a real API key
+// Mock the service so unit tests don't need a real API key
 vi.mock("../src/service.ts", async (importOriginal) => {
   const original = await importOriginal<typeof import("../src/service.ts")>();
   return {
@@ -110,7 +110,7 @@ describe("email.sh app", () => {
 
   // Check 4: POST /v1/mailboxes — happy path
   it("POST /v1/mailboxes returns 201 (happy path)", async () => {
-    // biome-ignore lint/suspicious/noExplicitAny: mock shape — smoke test only checks status code
+    // biome-ignore lint/suspicious/noExplicitAny: mock shape — unit test only checks status code
     vi.mocked(createMailbox).mockResolvedValueOnce({ ok: true, data: {} } as any);
 
     const res = await app.request("/v1/mailboxes", {
@@ -128,7 +128,7 @@ describe("email.sh app", () => {
       status: 400,
       code: "invalid_request",
       message: "Missing fields or invalid characters",
-      // biome-ignore lint/suspicious/noExplicitAny: mock shape — smoke test only checks status code
+      // biome-ignore lint/suspicious/noExplicitAny: mock shape — unit test only checks status code
     } as any);
 
     const res = await app.request("/v1/mailboxes", {
@@ -141,7 +141,7 @@ describe("email.sh app", () => {
 
   // Check 4: GET /v1/mailboxes — happy path
   it("GET /v1/mailboxes returns 200 (happy path)", async () => {
-    // biome-ignore lint/suspicious/noExplicitAny: mock shape — smoke test only checks status code
+    // biome-ignore lint/suspicious/noExplicitAny: mock shape — unit test only checks status code
     vi.mocked(listMailboxes).mockReturnValueOnce({} as any);
 
     const res = await app.request("/v1/mailboxes?limit=10&after=test-cursor", {
@@ -153,7 +153,7 @@ describe("email.sh app", () => {
 
   // Check 4: GET /v1/mailboxes/test-id-001 — happy path
   it.skip("GET /v1/mailboxes/test-id-001 returns 200 (happy path)", async () => {
-    // biome-ignore lint/suspicious/noExplicitAny: mock shape — smoke test only checks status code
+    // biome-ignore lint/suspicious/noExplicitAny: mock shape — unit test only checks status code
     vi.mocked(getMailbox).mockResolvedValueOnce({ ok: true, data: {} } as any);
 
     const res = await app.request("/v1/mailboxes/test-id-001", {
@@ -169,7 +169,7 @@ describe("email.sh app", () => {
       status: 404,
       code: "not_found",
       message: "Mailbox not found",
-      // biome-ignore lint/suspicious/noExplicitAny: mock shape — smoke test only checks status code
+      // biome-ignore lint/suspicious/noExplicitAny: mock shape — unit test only checks status code
     } as any);
 
     const res = await app.request("/v1/mailboxes/test-id-001", {
@@ -180,7 +180,7 @@ describe("email.sh app", () => {
 
   // Check 4: DELETE /v1/mailboxes/test-id-001 — happy path
   it.skip("DELETE /v1/mailboxes/test-id-001 returns 200 (happy path)", async () => {
-    // biome-ignore lint/suspicious/noExplicitAny: mock shape — smoke test only checks status code
+    // biome-ignore lint/suspicious/noExplicitAny: mock shape — unit test only checks status code
     vi.mocked(deleteMailbox).mockResolvedValueOnce({ ok: true, data: {} } as any);
 
     const res = await app.request("/v1/mailboxes/test-id-001", {
@@ -196,7 +196,7 @@ describe("email.sh app", () => {
       status: 404,
       code: "not_found",
       message: "Mailbox not found",
-      // biome-ignore lint/suspicious/noExplicitAny: mock shape — smoke test only checks status code
+      // biome-ignore lint/suspicious/noExplicitAny: mock shape — unit test only checks status code
     } as any);
 
     const res = await app.request("/v1/mailboxes/test-id-001", {
@@ -207,7 +207,7 @@ describe("email.sh app", () => {
 
   // Check 4: POST /v1/mailboxes/test-id-001/renew — happy path
   it.skip("POST /v1/mailboxes/test-id-001/renew returns 200 (happy path)", async () => {
-    // biome-ignore lint/suspicious/noExplicitAny: mock shape — smoke test only checks status code
+    // biome-ignore lint/suspicious/noExplicitAny: mock shape — unit test only checks status code
     vi.mocked(renewMailbox).mockResolvedValueOnce({ ok: true, data: {} } as any);
 
     const res = await app.request("/v1/mailboxes/test-id-001/renew", {
@@ -225,7 +225,7 @@ describe("email.sh app", () => {
       status: 404,
       code: "not_found",
       message: "Mailbox not found",
-      // biome-ignore lint/suspicious/noExplicitAny: mock shape — smoke test only checks status code
+      // biome-ignore lint/suspicious/noExplicitAny: mock shape — unit test only checks status code
     } as any);
 
     const res = await app.request("/v1/mailboxes/test-id-001/renew", {
@@ -238,7 +238,7 @@ describe("email.sh app", () => {
 
   // Check 4: GET /v1/mailboxes/test-id-001/messages — happy path
   it.skip("GET /v1/mailboxes/test-id-001/messages returns 200 (happy path)", async () => {
-    // biome-ignore lint/suspicious/noExplicitAny: mock shape — smoke test only checks status code
+    // biome-ignore lint/suspicious/noExplicitAny: mock shape — unit test only checks status code
     vi.mocked(listMessages).mockResolvedValueOnce({ ok: true, data: {} } as any);
 
     const res = await app.request("/v1/mailboxes/test-id-001/messages?limit=10&after=test-cursor", {
@@ -254,7 +254,7 @@ describe("email.sh app", () => {
       status: 404,
       code: "not_found",
       message: "Mailbox not found",
-      // biome-ignore lint/suspicious/noExplicitAny: mock shape — smoke test only checks status code
+      // biome-ignore lint/suspicious/noExplicitAny: mock shape — unit test only checks status code
     } as any);
 
     const res = await app.request("/v1/mailboxes/test-id-001/messages", {
@@ -265,7 +265,7 @@ describe("email.sh app", () => {
 
   // Check 4: GET /v1/mailboxes/test-id-001/messages/test-msgId — happy path
   it.skip("GET /v1/mailboxes/test-id-001/messages/test-msgId returns 200 (happy path)", async () => {
-    // biome-ignore lint/suspicious/noExplicitAny: mock shape — smoke test only checks status code
+    // biome-ignore lint/suspicious/noExplicitAny: mock shape — unit test only checks status code
     vi.mocked(getMessage).mockResolvedValueOnce({ ok: true, data: {} } as any);
 
     const res = await app.request("/v1/mailboxes/test-id-001/messages/test-msgId", {
@@ -281,7 +281,7 @@ describe("email.sh app", () => {
       status: 404,
       code: "not_found",
       message: "Mailbox or message not found",
-      // biome-ignore lint/suspicious/noExplicitAny: mock shape — smoke test only checks status code
+      // biome-ignore lint/suspicious/noExplicitAny: mock shape — unit test only checks status code
     } as any);
 
     const res = await app.request("/v1/mailboxes/test-id-001/messages/test-msgId", {
@@ -292,7 +292,7 @@ describe("email.sh app", () => {
 
   // Check 4: POST /v1/mailboxes/test-id-001/send — happy path
   it.skip("POST /v1/mailboxes/test-id-001/send returns 200 (happy path)", async () => {
-    // biome-ignore lint/suspicious/noExplicitAny: mock shape — smoke test only checks status code
+    // biome-ignore lint/suspicious/noExplicitAny: mock shape — unit test only checks status code
     vi.mocked(sendMessage).mockResolvedValueOnce({ ok: true, data: {} } as any);
 
     const res = await app.request("/v1/mailboxes/test-id-001/send", {
@@ -310,7 +310,7 @@ describe("email.sh app", () => {
       status: 400,
       code: "invalid_request",
       message: "Missing required fields",
-      // biome-ignore lint/suspicious/noExplicitAny: mock shape — smoke test only checks status code
+      // biome-ignore lint/suspicious/noExplicitAny: mock shape — unit test only checks status code
     } as any);
 
     const res = await app.request("/v1/mailboxes/test-id-001/send", {
@@ -323,7 +323,7 @@ describe("email.sh app", () => {
 
   // Check 4: POST /v1/mailboxes/test-id-001/webhooks — happy path
   it.skip("POST /v1/mailboxes/test-id-001/webhooks returns 201 (happy path)", async () => {
-    // biome-ignore lint/suspicious/noExplicitAny: mock shape — smoke test only checks status code
+    // biome-ignore lint/suspicious/noExplicitAny: mock shape — unit test only checks status code
     vi.mocked(registerWebhook).mockResolvedValueOnce({ ok: true, data: {} } as any);
 
     const res = await app.request("/v1/mailboxes/test-id-001/webhooks", {
@@ -341,7 +341,7 @@ describe("email.sh app", () => {
       status: 400,
       code: "invalid_request",
       message: "Missing or invalid webhook URL",
-      // biome-ignore lint/suspicious/noExplicitAny: mock shape — smoke test only checks status code
+      // biome-ignore lint/suspicious/noExplicitAny: mock shape — unit test only checks status code
     } as any);
 
     const res = await app.request("/v1/mailboxes/test-id-001/webhooks", {
@@ -354,7 +354,7 @@ describe("email.sh app", () => {
 
   // Check 4: GET /v1/mailboxes/test-id-001/webhooks — happy path
   it.skip("GET /v1/mailboxes/test-id-001/webhooks returns 200 (happy path)", async () => {
-    // biome-ignore lint/suspicious/noExplicitAny: mock shape — smoke test only checks status code
+    // biome-ignore lint/suspicious/noExplicitAny: mock shape — unit test only checks status code
     vi.mocked(listWebhooks).mockReturnValueOnce({ ok: true, data: {} } as any);
 
     const res = await app.request("/v1/mailboxes/test-id-001/webhooks", {
@@ -370,7 +370,7 @@ describe("email.sh app", () => {
       status: 404,
       code: "not_found",
       message: "Mailbox not found",
-      // biome-ignore lint/suspicious/noExplicitAny: mock shape — smoke test only checks status code
+      // biome-ignore lint/suspicious/noExplicitAny: mock shape — unit test only checks status code
     } as any);
 
     const res = await app.request("/v1/mailboxes/test-id-001/webhooks", {
@@ -381,7 +381,7 @@ describe("email.sh app", () => {
 
   // Check 4: DELETE /v1/mailboxes/test-id-001/webhooks/test-whId — happy path
   it.skip("DELETE /v1/mailboxes/test-id-001/webhooks/test-whId returns 200 (happy path)", async () => {
-    // biome-ignore lint/suspicious/noExplicitAny: mock shape — smoke test only checks status code
+    // biome-ignore lint/suspicious/noExplicitAny: mock shape — unit test only checks status code
     vi.mocked(deleteWebhook).mockReturnValueOnce({ ok: true, data: {} } as any);
 
     const res = await app.request("/v1/mailboxes/test-id-001/webhooks/test-whId", {
@@ -397,7 +397,7 @@ describe("email.sh app", () => {
       status: 404,
       code: "not_found",
       message: "Mailbox or webhook not found",
-      // biome-ignore lint/suspicious/noExplicitAny: mock shape — smoke test only checks status code
+      // biome-ignore lint/suspicious/noExplicitAny: mock shape — unit test only checks status code
     } as any);
 
     const res = await app.request("/v1/mailboxes/test-id-001/webhooks/test-whId", {
@@ -408,7 +408,7 @@ describe("email.sh app", () => {
 
   // Check 4: POST /v1/domains — happy path
   it("POST /v1/domains returns 201 (happy path)", async () => {
-    // biome-ignore lint/suspicious/noExplicitAny: mock shape — smoke test only checks status code
+    // biome-ignore lint/suspicious/noExplicitAny: mock shape — unit test only checks status code
     vi.mocked(registerDomain).mockResolvedValueOnce({ ok: true, data: {} } as any);
 
     const res = await app.request("/v1/domains", {
@@ -426,7 +426,7 @@ describe("email.sh app", () => {
       status: 400,
       code: "invalid_request",
       message: "Invalid domain name",
-      // biome-ignore lint/suspicious/noExplicitAny: mock shape — smoke test only checks status code
+      // biome-ignore lint/suspicious/noExplicitAny: mock shape — unit test only checks status code
     } as any);
 
     const res = await app.request("/v1/domains", {
@@ -439,7 +439,7 @@ describe("email.sh app", () => {
 
   // Check 4: GET /v1/domains — happy path
   it("GET /v1/domains returns 200 (happy path)", async () => {
-    // biome-ignore lint/suspicious/noExplicitAny: mock shape — smoke test only checks status code
+    // biome-ignore lint/suspicious/noExplicitAny: mock shape — unit test only checks status code
     vi.mocked(listDomains).mockReturnValueOnce({} as any);
 
     const res = await app.request("/v1/domains?limit=10&after=test-cursor", {
@@ -451,7 +451,7 @@ describe("email.sh app", () => {
 
   // Check 4: GET /v1/domains/test-id-001 — happy path
   it.skip("GET /v1/domains/test-id-001 returns 200 (happy path)", async () => {
-    // biome-ignore lint/suspicious/noExplicitAny: mock shape — smoke test only checks status code
+    // biome-ignore lint/suspicious/noExplicitAny: mock shape — unit test only checks status code
     vi.mocked(getDomain).mockReturnValueOnce({ ok: true, data: {} } as any);
 
     const res = await app.request("/v1/domains/test-id-001", {
@@ -467,7 +467,7 @@ describe("email.sh app", () => {
       status: 404,
       code: "not_found",
       message: "Domain not found",
-      // biome-ignore lint/suspicious/noExplicitAny: mock shape — smoke test only checks status code
+      // biome-ignore lint/suspicious/noExplicitAny: mock shape — unit test only checks status code
     } as any);
 
     const res = await app.request("/v1/domains/test-id-001", {
@@ -478,7 +478,7 @@ describe("email.sh app", () => {
 
   // Check 4: POST /v1/domains/test-id-001/verify — happy path
   it.skip("POST /v1/domains/test-id-001/verify returns 200 (happy path)", async () => {
-    // biome-ignore lint/suspicious/noExplicitAny: mock shape — smoke test only checks status code
+    // biome-ignore lint/suspicious/noExplicitAny: mock shape — unit test only checks status code
     vi.mocked(verifyDomain).mockResolvedValueOnce({ ok: true, data: {} } as any);
 
     const res = await app.request("/v1/domains/test-id-001/verify", {
@@ -496,7 +496,7 @@ describe("email.sh app", () => {
       status: 404,
       code: "not_found",
       message: "Domain not found",
-      // biome-ignore lint/suspicious/noExplicitAny: mock shape — smoke test only checks status code
+      // biome-ignore lint/suspicious/noExplicitAny: mock shape — unit test only checks status code
     } as any);
 
     const res = await app.request("/v1/domains/test-id-001/verify", {
@@ -509,7 +509,7 @@ describe("email.sh app", () => {
 
   // Check 4: DELETE /v1/domains/test-id-001 — happy path
   it.skip("DELETE /v1/domains/test-id-001 returns 200 (happy path)", async () => {
-    // biome-ignore lint/suspicious/noExplicitAny: mock shape — smoke test only checks status code
+    // biome-ignore lint/suspicious/noExplicitAny: mock shape — unit test only checks status code
     vi.mocked(deleteDomain).mockResolvedValueOnce({ ok: true, data: {} } as any);
 
     const res = await app.request("/v1/domains/test-id-001", {
@@ -525,7 +525,7 @@ describe("email.sh app", () => {
       status: 404,
       code: "not_found",
       message: "Domain not found",
-      // biome-ignore lint/suspicious/noExplicitAny: mock shape — smoke test only checks status code
+      // biome-ignore lint/suspicious/noExplicitAny: mock shape — unit test only checks status code
     } as any);
 
     const res = await app.request("/v1/domains/test-id-001", {

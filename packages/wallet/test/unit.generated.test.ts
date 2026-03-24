@@ -25,7 +25,7 @@ vi.mock("@primsh/x402-middleware", async (importOriginal) => {
   };
 });
 
-// Mock the service so smoke tests don't need a real API key
+// Mock the service so unit tests don't need a real API key
 vi.mock("../src/service.ts", async (importOriginal) => {
   const original = await importOriginal<typeof import("../src/service.ts")>();
   return {
@@ -98,7 +98,7 @@ describe("wallet.sh app", () => {
 
   // Check 4: POST /v1/wallets — happy path
   it("POST /v1/wallets returns 201 (happy path)", async () => {
-    // biome-ignore lint/suspicious/noExplicitAny: mock shape — smoke test only checks status code
+    // biome-ignore lint/suspicious/noExplicitAny: mock shape — unit test only checks status code
     vi.mocked(registerWallet).mockResolvedValueOnce({ ok: true, data: {} } as any);
 
     const res = await app.request("/v1/wallets", {
@@ -120,7 +120,7 @@ describe("wallet.sh app", () => {
       status: 400,
       code: "invalid_request",
       message: "Missing fields or invalid signature format",
-      // biome-ignore lint/suspicious/noExplicitAny: mock shape — smoke test only checks status code
+      // biome-ignore lint/suspicious/noExplicitAny: mock shape — unit test only checks status code
     } as any);
 
     const res = await app.request("/v1/wallets", {
@@ -133,7 +133,7 @@ describe("wallet.sh app", () => {
 
   // Check 4: GET /v1/wallets — happy path
   it("GET /v1/wallets returns 200 (happy path)", async () => {
-    // biome-ignore lint/suspicious/noExplicitAny: mock shape — smoke test only checks status code
+    // biome-ignore lint/suspicious/noExplicitAny: mock shape — unit test only checks status code
     vi.mocked(listWallets).mockResolvedValueOnce({ ok: true, data: {} } as any);
 
     const res = await app.request("/v1/wallets?limit=10&after=test-cursor", {
@@ -145,7 +145,7 @@ describe("wallet.sh app", () => {
 
   // Check 4: GET /v1/wallets/test-address — happy path
   it.skip("GET /v1/wallets/test-address returns 200 (happy path)", async () => {
-    // biome-ignore lint/suspicious/noExplicitAny: mock shape — smoke test only checks status code
+    // biome-ignore lint/suspicious/noExplicitAny: mock shape — unit test only checks status code
     vi.mocked(getWallet).mockResolvedValueOnce({ ok: true, data: {} } as any);
 
     const res = await app.request("/v1/wallets/test-address", {
@@ -161,7 +161,7 @@ describe("wallet.sh app", () => {
       status: 404,
       code: "not_found",
       message: "Wallet not found",
-      // biome-ignore lint/suspicious/noExplicitAny: mock shape — smoke test only checks status code
+      // biome-ignore lint/suspicious/noExplicitAny: mock shape — unit test only checks status code
     } as any);
 
     const res = await app.request("/v1/wallets/test-address", {
@@ -172,7 +172,7 @@ describe("wallet.sh app", () => {
 
   // Check 4: DELETE /v1/wallets/test-address — happy path
   it.skip("DELETE /v1/wallets/test-address returns 200 (happy path)", async () => {
-    // biome-ignore lint/suspicious/noExplicitAny: mock shape — smoke test only checks status code
+    // biome-ignore lint/suspicious/noExplicitAny: mock shape — unit test only checks status code
     vi.mocked(deactivateWallet).mockReturnValueOnce({ ok: true, data: {} } as any);
 
     const res = await app.request("/v1/wallets/test-address", {
@@ -188,7 +188,7 @@ describe("wallet.sh app", () => {
       status: 404,
       code: "not_found",
       message: "Wallet not found",
-      // biome-ignore lint/suspicious/noExplicitAny: mock shape — smoke test only checks status code
+      // biome-ignore lint/suspicious/noExplicitAny: mock shape — unit test only checks status code
     } as any);
 
     const res = await app.request("/v1/wallets/test-address", {
@@ -199,7 +199,7 @@ describe("wallet.sh app", () => {
 
   // Check 4: POST /v1/wallets/test-address/fund-request — happy path
   it.skip("POST /v1/wallets/test-address/fund-request returns 200 (happy path)", async () => {
-    // biome-ignore lint/suspicious/noExplicitAny: mock shape — smoke test only checks status code
+    // biome-ignore lint/suspicious/noExplicitAny: mock shape — unit test only checks status code
     vi.mocked(createFundRequest).mockReturnValueOnce({ ok: true, data: {} } as any);
 
     const res = await app.request("/v1/wallets/test-address/fund-request", {
@@ -217,7 +217,7 @@ describe("wallet.sh app", () => {
       status: 400,
       code: "invalid_request",
       message: "Missing amount or reason",
-      // biome-ignore lint/suspicious/noExplicitAny: mock shape — smoke test only checks status code
+      // biome-ignore lint/suspicious/noExplicitAny: mock shape — unit test only checks status code
     } as any);
 
     const res = await app.request("/v1/wallets/test-address/fund-request", {
@@ -230,7 +230,7 @@ describe("wallet.sh app", () => {
 
   // Check 4: GET /v1/wallets/test-address/fund-requests — happy path
   it.skip("GET /v1/wallets/test-address/fund-requests returns 200 (happy path)", async () => {
-    // biome-ignore lint/suspicious/noExplicitAny: mock shape — smoke test only checks status code
+    // biome-ignore lint/suspicious/noExplicitAny: mock shape — unit test only checks status code
     vi.mocked(listFundRequests).mockReturnValueOnce({ ok: true, data: {} } as any);
 
     const res = await app.request(
@@ -249,7 +249,7 @@ describe("wallet.sh app", () => {
       status: 404,
       code: "not_found",
       message: "Wallet not found",
-      // biome-ignore lint/suspicious/noExplicitAny: mock shape — smoke test only checks status code
+      // biome-ignore lint/suspicious/noExplicitAny: mock shape — unit test only checks status code
     } as any);
 
     const res = await app.request("/v1/wallets/test-address/fund-requests", {
@@ -260,7 +260,7 @@ describe("wallet.sh app", () => {
 
   // Check 4: POST /v1/fund-requests/test-id-001/approve — happy path
   it.skip("POST /v1/fund-requests/test-id-001/approve returns 200 (happy path)", async () => {
-    // biome-ignore lint/suspicious/noExplicitAny: mock shape — smoke test only checks status code
+    // biome-ignore lint/suspicious/noExplicitAny: mock shape — unit test only checks status code
     vi.mocked(approveFundRequest).mockReturnValueOnce({ ok: true, data: {} } as any);
 
     const res = await app.request("/v1/fund-requests/test-id-001/approve", {
@@ -278,7 +278,7 @@ describe("wallet.sh app", () => {
       status: 404,
       code: "not_found",
       message: "Fund request not found",
-      // biome-ignore lint/suspicious/noExplicitAny: mock shape — smoke test only checks status code
+      // biome-ignore lint/suspicious/noExplicitAny: mock shape — unit test only checks status code
     } as any);
 
     const res = await app.request("/v1/fund-requests/test-id-001/approve", {
@@ -291,7 +291,7 @@ describe("wallet.sh app", () => {
 
   // Check 4: POST /v1/fund-requests/test-id-001/deny — happy path
   it.skip("POST /v1/fund-requests/test-id-001/deny returns 200 (happy path)", async () => {
-    // biome-ignore lint/suspicious/noExplicitAny: mock shape — smoke test only checks status code
+    // biome-ignore lint/suspicious/noExplicitAny: mock shape — unit test only checks status code
     vi.mocked(denyFundRequest).mockReturnValueOnce({ ok: true, data: {} } as any);
 
     const res = await app.request("/v1/fund-requests/test-id-001/deny", {
@@ -309,7 +309,7 @@ describe("wallet.sh app", () => {
       status: 404,
       code: "not_found",
       message: "Fund request not found",
-      // biome-ignore lint/suspicious/noExplicitAny: mock shape — smoke test only checks status code
+      // biome-ignore lint/suspicious/noExplicitAny: mock shape — unit test only checks status code
     } as any);
 
     const res = await app.request("/v1/fund-requests/test-id-001/deny", {
@@ -322,7 +322,7 @@ describe("wallet.sh app", () => {
 
   // Check 4: GET /v1/wallets/test-address/policy — happy path
   it.skip("GET /v1/wallets/test-address/policy returns 200 (happy path)", async () => {
-    // biome-ignore lint/suspicious/noExplicitAny: mock shape — smoke test only checks status code
+    // biome-ignore lint/suspicious/noExplicitAny: mock shape — unit test only checks status code
     vi.mocked(getSpendingPolicy).mockReturnValueOnce({ ok: true, data: {} } as any);
 
     const res = await app.request("/v1/wallets/test-address/policy", {
@@ -338,7 +338,7 @@ describe("wallet.sh app", () => {
       status: 404,
       code: "not_found",
       message: "Wallet not found",
-      // biome-ignore lint/suspicious/noExplicitAny: mock shape — smoke test only checks status code
+      // biome-ignore lint/suspicious/noExplicitAny: mock shape — unit test only checks status code
     } as any);
 
     const res = await app.request("/v1/wallets/test-address/policy", {
@@ -349,7 +349,7 @@ describe("wallet.sh app", () => {
 
   // Check 4: PUT /v1/wallets/test-address/policy — happy path
   it.skip("PUT /v1/wallets/test-address/policy returns 200 (happy path)", async () => {
-    // biome-ignore lint/suspicious/noExplicitAny: mock shape — smoke test only checks status code
+    // biome-ignore lint/suspicious/noExplicitAny: mock shape — unit test only checks status code
     vi.mocked(updateSpendingPolicy).mockReturnValueOnce({ ok: true, data: {} } as any);
 
     const res = await app.request("/v1/wallets/test-address/policy", {
@@ -367,7 +367,7 @@ describe("wallet.sh app", () => {
       status: 400,
       code: "invalid_request",
       message: "Invalid JSON body or field values",
-      // biome-ignore lint/suspicious/noExplicitAny: mock shape — smoke test only checks status code
+      // biome-ignore lint/suspicious/noExplicitAny: mock shape — unit test only checks status code
     } as any);
 
     const res = await app.request("/v1/wallets/test-address/policy", {
@@ -380,7 +380,7 @@ describe("wallet.sh app", () => {
 
   // Check 4: POST /v1/wallets/test-address/pause — happy path
   it.skip("POST /v1/wallets/test-address/pause returns 200 (happy path)", async () => {
-    // biome-ignore lint/suspicious/noExplicitAny: mock shape — smoke test only checks status code
+    // biome-ignore lint/suspicious/noExplicitAny: mock shape — unit test only checks status code
     vi.mocked(pauseWallet).mockReturnValueOnce({ ok: true, data: {} } as any);
 
     const res = await app.request("/v1/wallets/test-address/pause", {
@@ -398,7 +398,7 @@ describe("wallet.sh app", () => {
       status: 400,
       code: "invalid_request",
       message: "Invalid scope value",
-      // biome-ignore lint/suspicious/noExplicitAny: mock shape — smoke test only checks status code
+      // biome-ignore lint/suspicious/noExplicitAny: mock shape — unit test only checks status code
     } as any);
 
     const res = await app.request("/v1/wallets/test-address/pause", {
@@ -411,7 +411,7 @@ describe("wallet.sh app", () => {
 
   // Check 4: POST /v1/wallets/test-address/resume — happy path
   it.skip("POST /v1/wallets/test-address/resume returns 200 (happy path)", async () => {
-    // biome-ignore lint/suspicious/noExplicitAny: mock shape — smoke test only checks status code
+    // biome-ignore lint/suspicious/noExplicitAny: mock shape — unit test only checks status code
     vi.mocked(resumeWallet).mockReturnValueOnce({ ok: true, data: {} } as any);
 
     const res = await app.request("/v1/wallets/test-address/resume", {
@@ -429,7 +429,7 @@ describe("wallet.sh app", () => {
       status: 400,
       code: "invalid_request",
       message: "Invalid scope value",
-      // biome-ignore lint/suspicious/noExplicitAny: mock shape — smoke test only checks status code
+      // biome-ignore lint/suspicious/noExplicitAny: mock shape — unit test only checks status code
     } as any);
 
     const res = await app.request("/v1/wallets/test-address/resume", {

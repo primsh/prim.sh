@@ -25,7 +25,7 @@ vi.mock("@primsh/x402-middleware", async (importOriginal) => {
   };
 });
 
-// Mock the service so smoke tests don't need a real API key
+// Mock the service so unit tests don't need a real API key
 vi.mock("../src/service.ts", async (importOriginal) => {
   const original = await importOriginal<typeof import("../src/service.ts")>();
   return {
@@ -116,7 +116,7 @@ describe("domain.sh app", () => {
 
   // Check 4: GET /v1/domains/search — happy path
   it("GET /v1/domains/search returns 200 (happy path)", async () => {
-    // biome-ignore lint/suspicious/noExplicitAny: mock shape — smoke test only checks status code
+    // biome-ignore lint/suspicious/noExplicitAny: mock shape — unit test only checks status code
     vi.mocked(searchDomains).mockResolvedValueOnce({ ok: true, data: {} } as any);
 
     const res = await app.request("/v1/domains/search?query=test&tlds=test", {
@@ -128,7 +128,7 @@ describe("domain.sh app", () => {
 
   // Check 4: POST /v1/domains/quote — happy path
   it("POST /v1/domains/quote returns 200 (happy path)", async () => {
-    // biome-ignore lint/suspicious/noExplicitAny: mock shape — smoke test only checks status code
+    // biome-ignore lint/suspicious/noExplicitAny: mock shape — unit test only checks status code
     vi.mocked(quoteDomain).mockResolvedValueOnce({ ok: true, data: {} } as any);
 
     const res = await app.request("/v1/domains/quote", {
@@ -146,7 +146,7 @@ describe("domain.sh app", () => {
       status: 400,
       code: "invalid_request",
       message: "Missing domain or invalid years",
-      // biome-ignore lint/suspicious/noExplicitAny: mock shape — smoke test only checks status code
+      // biome-ignore lint/suspicious/noExplicitAny: mock shape — unit test only checks status code
     } as any);
 
     const res = await app.request("/v1/domains/quote", {
@@ -159,7 +159,7 @@ describe("domain.sh app", () => {
 
   // Check 4: GET /v1/domains/test-domain/status — happy path
   it("GET /v1/domains/test-domain/status returns 200 (happy path)", async () => {
-    // biome-ignore lint/suspicious/noExplicitAny: mock shape — smoke test only checks status code
+    // biome-ignore lint/suspicious/noExplicitAny: mock shape — unit test only checks status code
     vi.mocked(getRegistrationStatus).mockResolvedValueOnce({ ok: true, data: {} } as any);
 
     const res = await app.request("/v1/domains/test-domain/status", {
@@ -175,7 +175,7 @@ describe("domain.sh app", () => {
       status: 404,
       code: "not_found",
       message: "Domain not found",
-      // biome-ignore lint/suspicious/noExplicitAny: mock shape — smoke test only checks status code
+      // biome-ignore lint/suspicious/noExplicitAny: mock shape — unit test only checks status code
     } as any);
 
     const res = await app.request("/v1/domains/test-domain/status", {
@@ -186,7 +186,7 @@ describe("domain.sh app", () => {
 
   // Check 4: POST /v1/zones — happy path
   it("POST /v1/zones returns 201 (happy path)", async () => {
-    // biome-ignore lint/suspicious/noExplicitAny: mock shape — smoke test only checks status code
+    // biome-ignore lint/suspicious/noExplicitAny: mock shape — unit test only checks status code
     vi.mocked(createZone).mockResolvedValueOnce({ ok: true, data: {} } as any);
 
     const res = await app.request("/v1/zones", {
@@ -204,7 +204,7 @@ describe("domain.sh app", () => {
       status: 400,
       code: "invalid_request",
       message: "Missing domain or invalid domain name",
-      // biome-ignore lint/suspicious/noExplicitAny: mock shape — smoke test only checks status code
+      // biome-ignore lint/suspicious/noExplicitAny: mock shape — unit test only checks status code
     } as any);
 
     const res = await app.request("/v1/zones", {
@@ -217,7 +217,7 @@ describe("domain.sh app", () => {
 
   // Check 4: GET /v1/zones — happy path
   it("GET /v1/zones returns 200 (happy path)", async () => {
-    // biome-ignore lint/suspicious/noExplicitAny: mock shape — smoke test only checks status code
+    // biome-ignore lint/suspicious/noExplicitAny: mock shape — unit test only checks status code
     vi.mocked(listZones).mockReturnValueOnce({} as any);
 
     const res = await app.request("/v1/zones?limit=10&after=test-cursor", {
@@ -229,7 +229,7 @@ describe("domain.sh app", () => {
 
   // Check 4: GET /v1/zones/test-id-001 — happy path
   it.skip("GET /v1/zones/test-id-001 returns 200 (happy path)", async () => {
-    // biome-ignore lint/suspicious/noExplicitAny: mock shape — smoke test only checks status code
+    // biome-ignore lint/suspicious/noExplicitAny: mock shape — unit test only checks status code
     vi.mocked(getZone).mockResolvedValueOnce({ ok: true, data: {} } as any);
 
     const res = await app.request("/v1/zones/test-id-001", {
@@ -245,7 +245,7 @@ describe("domain.sh app", () => {
       status: 404,
       code: "not_found",
       message: "Zone not found",
-      // biome-ignore lint/suspicious/noExplicitAny: mock shape — smoke test only checks status code
+      // biome-ignore lint/suspicious/noExplicitAny: mock shape — unit test only checks status code
     } as any);
 
     const res = await app.request("/v1/zones/test-id-001", {
@@ -256,7 +256,7 @@ describe("domain.sh app", () => {
 
   // Check 4: DELETE /v1/zones/test-id-001 — happy path
   it.skip("DELETE /v1/zones/test-id-001 returns 200 (happy path)", async () => {
-    // biome-ignore lint/suspicious/noExplicitAny: mock shape — smoke test only checks status code
+    // biome-ignore lint/suspicious/noExplicitAny: mock shape — unit test only checks status code
     vi.mocked(deleteZone).mockResolvedValueOnce({ ok: true, data: {} } as any);
 
     const res = await app.request("/v1/zones/test-id-001", {
@@ -272,7 +272,7 @@ describe("domain.sh app", () => {
       status: 404,
       code: "not_found",
       message: "Zone not found",
-      // biome-ignore lint/suspicious/noExplicitAny: mock shape — smoke test only checks status code
+      // biome-ignore lint/suspicious/noExplicitAny: mock shape — unit test only checks status code
     } as any);
 
     const res = await app.request("/v1/zones/test-id-001", {
@@ -283,7 +283,7 @@ describe("domain.sh app", () => {
 
   // Check 4: PUT /v1/zones/test-zone_id/activate — happy path
   it.skip("PUT /v1/zones/test-zone_id/activate returns 200 (happy path)", async () => {
-    // biome-ignore lint/suspicious/noExplicitAny: mock shape — smoke test only checks status code
+    // biome-ignore lint/suspicious/noExplicitAny: mock shape — unit test only checks status code
     vi.mocked(activateZone).mockResolvedValueOnce({ ok: true, data: {} } as any);
 
     const res = await app.request("/v1/zones/test-zone_id/activate", {
@@ -301,7 +301,7 @@ describe("domain.sh app", () => {
       status: 404,
       code: "not_found",
       message: "Zone not found",
-      // biome-ignore lint/suspicious/noExplicitAny: mock shape — smoke test only checks status code
+      // biome-ignore lint/suspicious/noExplicitAny: mock shape — unit test only checks status code
     } as any);
 
     const res = await app.request("/v1/zones/test-zone_id/activate", {
@@ -314,7 +314,7 @@ describe("domain.sh app", () => {
 
   // Check 4: GET /v1/zones/test-zone_id/verify — happy path
   it.skip("GET /v1/zones/test-zone_id/verify returns 200 (happy path)", async () => {
-    // biome-ignore lint/suspicious/noExplicitAny: mock shape — smoke test only checks status code
+    // biome-ignore lint/suspicious/noExplicitAny: mock shape — unit test only checks status code
     vi.mocked(verifyZone).mockResolvedValueOnce({ ok: true, data: {} } as any);
 
     const res = await app.request("/v1/zones/test-zone_id/verify", {
@@ -330,7 +330,7 @@ describe("domain.sh app", () => {
       status: 404,
       code: "not_found",
       message: "Zone not found",
-      // biome-ignore lint/suspicious/noExplicitAny: mock shape — smoke test only checks status code
+      // biome-ignore lint/suspicious/noExplicitAny: mock shape — unit test only checks status code
     } as any);
 
     const res = await app.request("/v1/zones/test-zone_id/verify", {
@@ -341,7 +341,7 @@ describe("domain.sh app", () => {
 
   // Check 4: POST /v1/zones/test-zone_id/mail-setup — happy path
   it.skip("POST /v1/zones/test-zone_id/mail-setup returns 200 (happy path)", async () => {
-    // biome-ignore lint/suspicious/noExplicitAny: mock shape — smoke test only checks status code
+    // biome-ignore lint/suspicious/noExplicitAny: mock shape — unit test only checks status code
     vi.mocked(mailSetup).mockResolvedValueOnce({ ok: true, data: {} } as any);
 
     const res = await app.request("/v1/zones/test-zone_id/mail-setup", {
@@ -359,7 +359,7 @@ describe("domain.sh app", () => {
       status: 400,
       code: "invalid_request",
       message: "Missing required mail server fields",
-      // biome-ignore lint/suspicious/noExplicitAny: mock shape — smoke test only checks status code
+      // biome-ignore lint/suspicious/noExplicitAny: mock shape — unit test only checks status code
     } as any);
 
     const res = await app.request("/v1/zones/test-zone_id/mail-setup", {
@@ -372,7 +372,7 @@ describe("domain.sh app", () => {
 
   // Check 4: POST /v1/zones/test-zone_id/records/batch — happy path
   it.skip("POST /v1/zones/test-zone_id/records/batch returns 200 (happy path)", async () => {
-    // biome-ignore lint/suspicious/noExplicitAny: mock shape — smoke test only checks status code
+    // biome-ignore lint/suspicious/noExplicitAny: mock shape — unit test only checks status code
     vi.mocked(batchRecords).mockResolvedValueOnce({ ok: true, data: {} } as any);
 
     const res = await app.request("/v1/zones/test-zone_id/records/batch", {
@@ -390,7 +390,7 @@ describe("domain.sh app", () => {
       status: 400,
       code: "invalid_request",
       message: "Invalid record fields or values",
-      // biome-ignore lint/suspicious/noExplicitAny: mock shape — smoke test only checks status code
+      // biome-ignore lint/suspicious/noExplicitAny: mock shape — unit test only checks status code
     } as any);
 
     const res = await app.request("/v1/zones/test-zone_id/records/batch", {
@@ -403,7 +403,7 @@ describe("domain.sh app", () => {
 
   // Check 4: POST /v1/zones/test-zone_id/records — happy path
   it.skip("POST /v1/zones/test-zone_id/records returns 201 (happy path)", async () => {
-    // biome-ignore lint/suspicious/noExplicitAny: mock shape — smoke test only checks status code
+    // biome-ignore lint/suspicious/noExplicitAny: mock shape — unit test only checks status code
     vi.mocked(createRecord).mockResolvedValueOnce({ ok: true, data: {} } as any);
 
     const res = await app.request("/v1/zones/test-zone_id/records", {
@@ -421,7 +421,7 @@ describe("domain.sh app", () => {
       status: 400,
       code: "invalid_request",
       message: "Missing or invalid record fields",
-      // biome-ignore lint/suspicious/noExplicitAny: mock shape — smoke test only checks status code
+      // biome-ignore lint/suspicious/noExplicitAny: mock shape — unit test only checks status code
     } as any);
 
     const res = await app.request("/v1/zones/test-zone_id/records", {
@@ -434,7 +434,7 @@ describe("domain.sh app", () => {
 
   // Check 4: GET /v1/zones/test-zone_id/records — happy path
   it.skip("GET /v1/zones/test-zone_id/records returns 200 (happy path)", async () => {
-    // biome-ignore lint/suspicious/noExplicitAny: mock shape — smoke test only checks status code
+    // biome-ignore lint/suspicious/noExplicitAny: mock shape — unit test only checks status code
     vi.mocked(listRecords).mockReturnValueOnce({ ok: true, data: {} } as any);
 
     const res = await app.request("/v1/zones/test-zone_id/records?limit=10&after=test-cursor", {
@@ -450,7 +450,7 @@ describe("domain.sh app", () => {
       status: 404,
       code: "not_found",
       message: "Zone not found",
-      // biome-ignore lint/suspicious/noExplicitAny: mock shape — smoke test only checks status code
+      // biome-ignore lint/suspicious/noExplicitAny: mock shape — unit test only checks status code
     } as any);
 
     const res = await app.request("/v1/zones/test-zone_id/records", {
@@ -461,7 +461,7 @@ describe("domain.sh app", () => {
 
   // Check 4: GET /v1/zones/test-zone_id/records/test-id-001 — happy path
   it.skip("GET /v1/zones/test-zone_id/records/test-id-001 returns 200 (happy path)", async () => {
-    // biome-ignore lint/suspicious/noExplicitAny: mock shape — smoke test only checks status code
+    // biome-ignore lint/suspicious/noExplicitAny: mock shape — unit test only checks status code
     vi.mocked(getRecord).mockReturnValueOnce({ ok: true, data: {} } as any);
 
     const res = await app.request("/v1/zones/test-zone_id/records/test-id-001", {
@@ -477,7 +477,7 @@ describe("domain.sh app", () => {
       status: 404,
       code: "not_found",
       message: "Zone or record not found",
-      // biome-ignore lint/suspicious/noExplicitAny: mock shape — smoke test only checks status code
+      // biome-ignore lint/suspicious/noExplicitAny: mock shape — unit test only checks status code
     } as any);
 
     const res = await app.request("/v1/zones/test-zone_id/records/test-id-001", {
@@ -488,7 +488,7 @@ describe("domain.sh app", () => {
 
   // Check 4: PUT /v1/zones/test-zone_id/records/test-id-001 — happy path
   it.skip("PUT /v1/zones/test-zone_id/records/test-id-001 returns 200 (happy path)", async () => {
-    // biome-ignore lint/suspicious/noExplicitAny: mock shape — smoke test only checks status code
+    // biome-ignore lint/suspicious/noExplicitAny: mock shape — unit test only checks status code
     vi.mocked(updateRecord).mockResolvedValueOnce({ ok: true, data: {} } as any);
 
     const res = await app.request("/v1/zones/test-zone_id/records/test-id-001", {
@@ -506,7 +506,7 @@ describe("domain.sh app", () => {
       status: 400,
       code: "invalid_request",
       message: "Invalid record fields",
-      // biome-ignore lint/suspicious/noExplicitAny: mock shape — smoke test only checks status code
+      // biome-ignore lint/suspicious/noExplicitAny: mock shape — unit test only checks status code
     } as any);
 
     const res = await app.request("/v1/zones/test-zone_id/records/test-id-001", {
@@ -519,7 +519,7 @@ describe("domain.sh app", () => {
 
   // Check 4: DELETE /v1/zones/test-zone_id/records/test-id-001 — happy path
   it.skip("DELETE /v1/zones/test-zone_id/records/test-id-001 returns 200 (happy path)", async () => {
-    // biome-ignore lint/suspicious/noExplicitAny: mock shape — smoke test only checks status code
+    // biome-ignore lint/suspicious/noExplicitAny: mock shape — unit test only checks status code
     vi.mocked(deleteRecord).mockResolvedValueOnce({ ok: true, data: {} } as any);
 
     const res = await app.request("/v1/zones/test-zone_id/records/test-id-001", {
@@ -535,7 +535,7 @@ describe("domain.sh app", () => {
       status: 404,
       code: "not_found",
       message: "Zone or record not found",
-      // biome-ignore lint/suspicious/noExplicitAny: mock shape — smoke test only checks status code
+      // biome-ignore lint/suspicious/noExplicitAny: mock shape — unit test only checks status code
     } as any);
 
     const res = await app.request("/v1/zones/test-zone_id/records/test-id-001", {

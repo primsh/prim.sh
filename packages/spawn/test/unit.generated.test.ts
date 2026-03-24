@@ -25,7 +25,7 @@ vi.mock("@primsh/x402-middleware", async (importOriginal) => {
   };
 });
 
-// Mock the service so smoke tests don't need a real API key
+// Mock the service so unit tests don't need a real API key
 vi.mock("../src/service.ts", async (importOriginal) => {
   const original = await importOriginal<typeof import("../src/service.ts")>();
   return {
@@ -95,7 +95,7 @@ describe("spawn.sh app", () => {
 
   // Check 4: POST /v1/servers — happy path
   it("POST /v1/servers returns 201 (happy path)", async () => {
-    // biome-ignore lint/suspicious/noExplicitAny: mock shape — smoke test only checks status code
+    // biome-ignore lint/suspicious/noExplicitAny: mock shape — unit test only checks status code
     vi.mocked(createServer).mockResolvedValueOnce({ ok: true, data: {} } as any);
 
     const res = await app.request("/v1/servers", {
@@ -113,7 +113,7 @@ describe("spawn.sh app", () => {
       status: 400,
       code: "invalid_request",
       message: "Missing required fields",
-      // biome-ignore lint/suspicious/noExplicitAny: mock shape — smoke test only checks status code
+      // biome-ignore lint/suspicious/noExplicitAny: mock shape — unit test only checks status code
     } as any);
 
     const res = await app.request("/v1/servers", {
@@ -126,7 +126,7 @@ describe("spawn.sh app", () => {
 
   // Check 4: GET /v1/servers — happy path
   it("GET /v1/servers returns 200 (happy path)", async () => {
-    // biome-ignore lint/suspicious/noExplicitAny: mock shape — smoke test only checks status code
+    // biome-ignore lint/suspicious/noExplicitAny: mock shape — unit test only checks status code
     vi.mocked(listServers).mockReturnValueOnce({} as any);
 
     const res = await app.request("/v1/servers?limit=10&after=test-cursor", {
@@ -138,7 +138,7 @@ describe("spawn.sh app", () => {
 
   // Check 4: GET /v1/servers/test-id-001 — happy path
   it.skip("GET /v1/servers/test-id-001 returns 200 (happy path)", async () => {
-    // biome-ignore lint/suspicious/noExplicitAny: mock shape — smoke test only checks status code
+    // biome-ignore lint/suspicious/noExplicitAny: mock shape — unit test only checks status code
     vi.mocked(getServer).mockResolvedValueOnce({ ok: true, data: {} } as any);
 
     const res = await app.request("/v1/servers/test-id-001", {
@@ -154,7 +154,7 @@ describe("spawn.sh app", () => {
       status: 404,
       code: "not_found",
       message: "Server not found",
-      // biome-ignore lint/suspicious/noExplicitAny: mock shape — smoke test only checks status code
+      // biome-ignore lint/suspicious/noExplicitAny: mock shape — unit test only checks status code
     } as any);
 
     const res = await app.request("/v1/servers/test-id-001", {
@@ -165,7 +165,7 @@ describe("spawn.sh app", () => {
 
   // Check 4: DELETE /v1/servers/test-id-001 — happy path
   it.skip("DELETE /v1/servers/test-id-001 returns 200 (happy path)", async () => {
-    // biome-ignore lint/suspicious/noExplicitAny: mock shape — smoke test only checks status code
+    // biome-ignore lint/suspicious/noExplicitAny: mock shape — unit test only checks status code
     vi.mocked(deleteServer).mockResolvedValueOnce({ ok: true, data: {} } as any);
 
     const res = await app.request("/v1/servers/test-id-001", {
@@ -181,7 +181,7 @@ describe("spawn.sh app", () => {
       status: 404,
       code: "not_found",
       message: "Server not found",
-      // biome-ignore lint/suspicious/noExplicitAny: mock shape — smoke test only checks status code
+      // biome-ignore lint/suspicious/noExplicitAny: mock shape — unit test only checks status code
     } as any);
 
     const res = await app.request("/v1/servers/test-id-001", {
@@ -192,7 +192,7 @@ describe("spawn.sh app", () => {
 
   // Check 4: POST /v1/servers/test-id-001/start — happy path
   it.skip("POST /v1/servers/test-id-001/start returns 200 (happy path)", async () => {
-    // biome-ignore lint/suspicious/noExplicitAny: mock shape — smoke test only checks status code
+    // biome-ignore lint/suspicious/noExplicitAny: mock shape — unit test only checks status code
     vi.mocked(startServer).mockResolvedValueOnce({ ok: true, data: {} } as any);
 
     const res = await app.request("/v1/servers/test-id-001/start", {
@@ -210,7 +210,7 @@ describe("spawn.sh app", () => {
       status: 404,
       code: "not_found",
       message: "Server not found",
-      // biome-ignore lint/suspicious/noExplicitAny: mock shape — smoke test only checks status code
+      // biome-ignore lint/suspicious/noExplicitAny: mock shape — unit test only checks status code
     } as any);
 
     const res = await app.request("/v1/servers/test-id-001/start", {
@@ -223,7 +223,7 @@ describe("spawn.sh app", () => {
 
   // Check 4: POST /v1/servers/test-id-001/stop — happy path
   it.skip("POST /v1/servers/test-id-001/stop returns 200 (happy path)", async () => {
-    // biome-ignore lint/suspicious/noExplicitAny: mock shape — smoke test only checks status code
+    // biome-ignore lint/suspicious/noExplicitAny: mock shape — unit test only checks status code
     vi.mocked(stopServer).mockResolvedValueOnce({ ok: true, data: {} } as any);
 
     const res = await app.request("/v1/servers/test-id-001/stop", {
@@ -241,7 +241,7 @@ describe("spawn.sh app", () => {
       status: 404,
       code: "not_found",
       message: "Server not found",
-      // biome-ignore lint/suspicious/noExplicitAny: mock shape — smoke test only checks status code
+      // biome-ignore lint/suspicious/noExplicitAny: mock shape — unit test only checks status code
     } as any);
 
     const res = await app.request("/v1/servers/test-id-001/stop", {
@@ -254,7 +254,7 @@ describe("spawn.sh app", () => {
 
   // Check 4: POST /v1/servers/test-id-001/reboot — happy path
   it.skip("POST /v1/servers/test-id-001/reboot returns 200 (happy path)", async () => {
-    // biome-ignore lint/suspicious/noExplicitAny: mock shape — smoke test only checks status code
+    // biome-ignore lint/suspicious/noExplicitAny: mock shape — unit test only checks status code
     vi.mocked(rebootServer).mockResolvedValueOnce({ ok: true, data: {} } as any);
 
     const res = await app.request("/v1/servers/test-id-001/reboot", {
@@ -272,7 +272,7 @@ describe("spawn.sh app", () => {
       status: 404,
       code: "not_found",
       message: "Server not found",
-      // biome-ignore lint/suspicious/noExplicitAny: mock shape — smoke test only checks status code
+      // biome-ignore lint/suspicious/noExplicitAny: mock shape — unit test only checks status code
     } as any);
 
     const res = await app.request("/v1/servers/test-id-001/reboot", {
@@ -285,7 +285,7 @@ describe("spawn.sh app", () => {
 
   // Check 4: POST /v1/servers/test-id-001/resize — happy path
   it.skip("POST /v1/servers/test-id-001/resize returns 200 (happy path)", async () => {
-    // biome-ignore lint/suspicious/noExplicitAny: mock shape — smoke test only checks status code
+    // biome-ignore lint/suspicious/noExplicitAny: mock shape — unit test only checks status code
     vi.mocked(resizeServer).mockResolvedValueOnce({ ok: true, data: {} } as any);
 
     const res = await app.request("/v1/servers/test-id-001/resize", {
@@ -303,7 +303,7 @@ describe("spawn.sh app", () => {
       status: 400,
       code: "invalid_request",
       message: "Missing type field or invalid value",
-      // biome-ignore lint/suspicious/noExplicitAny: mock shape — smoke test only checks status code
+      // biome-ignore lint/suspicious/noExplicitAny: mock shape — unit test only checks status code
     } as any);
 
     const res = await app.request("/v1/servers/test-id-001/resize", {
@@ -316,7 +316,7 @@ describe("spawn.sh app", () => {
 
   // Check 4: POST /v1/servers/test-id-001/rebuild — happy path
   it.skip("POST /v1/servers/test-id-001/rebuild returns 200 (happy path)", async () => {
-    // biome-ignore lint/suspicious/noExplicitAny: mock shape — smoke test only checks status code
+    // biome-ignore lint/suspicious/noExplicitAny: mock shape — unit test only checks status code
     vi.mocked(rebuildServer).mockResolvedValueOnce({ ok: true, data: {} } as any);
 
     const res = await app.request("/v1/servers/test-id-001/rebuild", {
@@ -334,7 +334,7 @@ describe("spawn.sh app", () => {
       status: 400,
       code: "invalid_request",
       message: "Missing image field",
-      // biome-ignore lint/suspicious/noExplicitAny: mock shape — smoke test only checks status code
+      // biome-ignore lint/suspicious/noExplicitAny: mock shape — unit test only checks status code
     } as any);
 
     const res = await app.request("/v1/servers/test-id-001/rebuild", {
@@ -347,7 +347,7 @@ describe("spawn.sh app", () => {
 
   // Check 4: POST /v1/ssh-keys — happy path
   it.skip("POST /v1/ssh-keys returns 201 (happy path)", async () => {
-    // biome-ignore lint/suspicious/noExplicitAny: mock shape — smoke test only checks status code
+    // biome-ignore lint/suspicious/noExplicitAny: mock shape — unit test only checks status code
     vi.mocked(createServer).mockResolvedValueOnce({ ok: true, data: {} } as any);
 
     const res = await app.request("/v1/ssh-keys", {
@@ -365,7 +365,7 @@ describe("spawn.sh app", () => {
       status: 400,
       code: "invalid_request",
       message: "Missing name or public_key",
-      // biome-ignore lint/suspicious/noExplicitAny: mock shape — smoke test only checks status code
+      // biome-ignore lint/suspicious/noExplicitAny: mock shape — unit test only checks status code
     } as any);
 
     const res = await app.request("/v1/ssh-keys", {
@@ -378,7 +378,7 @@ describe("spawn.sh app", () => {
 
   // Check 4: GET /v1/ssh-keys — happy path
   it("GET /v1/ssh-keys returns 200 (happy path)", async () => {
-    // biome-ignore lint/suspicious/noExplicitAny: mock shape — smoke test only checks status code
+    // biome-ignore lint/suspicious/noExplicitAny: mock shape — unit test only checks status code
     vi.mocked(listSshKeys).mockReturnValueOnce({} as any);
 
     const res = await app.request("/v1/ssh-keys", {
@@ -390,7 +390,7 @@ describe("spawn.sh app", () => {
 
   // Check 4: DELETE /v1/ssh-keys/test-id-001 — happy path
   it.skip("DELETE /v1/ssh-keys/test-id-001 returns 200 (happy path)", async () => {
-    // biome-ignore lint/suspicious/noExplicitAny: mock shape — smoke test only checks status code
+    // biome-ignore lint/suspicious/noExplicitAny: mock shape — unit test only checks status code
     vi.mocked(deleteSshKey).mockResolvedValueOnce({ ok: true, data: {} } as any);
 
     const res = await app.request("/v1/ssh-keys/test-id-001", {
@@ -406,7 +406,7 @@ describe("spawn.sh app", () => {
       status: 404,
       code: "not_found",
       message: "SSH key not found",
-      // biome-ignore lint/suspicious/noExplicitAny: mock shape — smoke test only checks status code
+      // biome-ignore lint/suspicious/noExplicitAny: mock shape — unit test only checks status code
     } as any);
 
     const res = await app.request("/v1/ssh-keys/test-id-001", {
