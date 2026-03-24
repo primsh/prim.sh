@@ -164,6 +164,10 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+      - uses: actions/checkout@v4
+
+      - uses: oven-sh/setup-bun@v2
+
       - name: Verify site build ID
         run: |
           expected="${{ github.sha }}"
@@ -178,3 +182,6 @@ jobs:
           done
           echo "Smoke check failed: expected $expected"
           exit 1
+
+      - name: Verify live primitives
+        run: bun scripts/deploy-smoke.generated.ts
