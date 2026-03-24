@@ -11,7 +11,7 @@
 
 import { spawn } from "node:child_process";
 import type { ChildProcess } from "node:child_process";
-import { createPrimFetch } from "@primsh/x402-client";
+import { createPrimFetch } from "../../packages/x402-client/src/index.ts";
 
 const PORT = 3005;
 const URL = `http://localhost:${PORT}`;
@@ -32,10 +32,22 @@ const agentKey = requireEnv("AGENT_PRIVATE_KEY");
 let proc: ChildProcess;
 
 async function start(): Promise<void> {
+  const { mkdirSync } = await import("node:fs");
+  const tmpHome = `/tmp/prim-e2e-search-${Date.now()}`;
+  mkdirSync(tmpHome, { recursive: true });
+  mkdirSync(`${tmpHome}/data`, { recursive: true });
   proc = spawn("bun", ["run", "packages/search/src/index.ts"], {
-    env: { ...process.env, SEARCH_PORT: String(PORT) },
+    env: {
+      ...process.env,
+      PORT: String(PORT),
+      BUN_PORT: String(PORT),
+      PRIM_HOME: tmpHome,
+      PRIM_DATA_DIR: `${tmpHome}/data`,
+    },
     stdio: ["ignore", "pipe", "pipe"],
   });
+  let stderr = "";
+  proc.stderr?.on("data", (d: Buffer) => { stderr += d.toString(); });
   for (let i = 0; i < 30; i++) {
     try {
       const res = await fetch(`${URL}/`);
@@ -43,6 +55,7 @@ async function start(): Promise<void> {
     } catch { /* not ready */ }
     await new Promise((r) => setTimeout(r, 500));
   }
+  if (stderr) console.error("Service stderr:", stderr.slice(0, 500));
   throw new Error("search.sh failed to start within 15s");
 }
 

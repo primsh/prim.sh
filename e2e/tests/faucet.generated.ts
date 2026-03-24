@@ -30,10 +30,22 @@ if (network !== "eip155:84532") {
 let proc: ChildProcess;
 
 async function start(): Promise<void> {
+  const { mkdirSync } = await import("node:fs");
+  const tmpHome = `/tmp/prim-e2e-faucet-${Date.now()}`;
+  mkdirSync(tmpHome, { recursive: true });
+  mkdirSync(`${tmpHome}/data`, { recursive: true });
   proc = spawn("bun", ["run", "packages/faucet/src/index.ts"], {
-    env: { ...process.env, FAUCET_PORT: String(PORT) },
+    env: {
+      ...process.env,
+      PORT: String(PORT),
+      BUN_PORT: String(PORT),
+      PRIM_HOME: tmpHome,
+      PRIM_DATA_DIR: `${tmpHome}/data`,
+    },
     stdio: ["ignore", "pipe", "pipe"],
   });
+  let stderr = "";
+  proc.stderr?.on("data", (d: Buffer) => { stderr += d.toString(); });
   for (let i = 0; i < 30; i++) {
     try {
       const res = await fetch(`${URL}/`);
@@ -41,6 +53,7 @@ async function start(): Promise<void> {
     } catch { /* not ready */ }
     await new Promise((r) => setTimeout(r, 500));
   }
+  if (stderr) console.error("Service stderr:", stderr.slice(0, 500));
   throw new Error("faucet.sh failed to start within 15s");
 }
 

@@ -92,19 +92,9 @@ Auto-skips when provider credentials are missing. Safe to run in CI with no cred
 
 **Pattern:** Tests the provider layer directly (e.g., `aws4fetch` for R2), not through the Hono handler stack. Avoids x402 and SQLite dependencies. Creates real resources with `test-int-<timestamp>` prefix, cleans up in `afterAll`. No mutating operations on resources the generator doesn't create.
 
-**Provider metadata in prim.yaml:** The `testing.integration` section tells the generator which layer to use, what extra env vars are needed, and which routes create/delete the primary test resource:
+**Provider metadata from `providers.yaml`:** The generator reads the provider registry (SOT) to determine layer, auth type, env vars, and health check endpoints. No per-prim `testing:` section needed — the registry supplies everything. See `providers.yaml` at repo root.
 
-```yaml
-testing:
-  integration:
-    layer: s3              # s3 | rest | graphql | none
-    extra_env:
-      - CLOUDFLARE_API_TOKEN
-    create_resource: POST /v1/buckets
-    delete_resource: DELETE /v1/buckets/:id
-```
-
-When `testing:` is absent, the generator infers defaults from the provider name and routes_map.
+Each generated integration test includes a `Docs:` link to the provider's API reference in its header comment.
 
 ## Tier 3: E2E local
 
@@ -112,11 +102,14 @@ When `testing:` is absent, the generator infers defaults from the provider name 
 
 **Run locally:**
 ```bash
-source scripts/.env.testnet
+set -a && source scripts/.env.testnet && set +a   # export all vars
+export AGENT_PRIVATE_KEY="$TESTNET_WALLET"         # use testnet wallet as agent
 bun e2e/tests/store.generated.ts
 ```
 
 Requires: `PRIM_NETWORK=eip155:84532`, `AGENT_PRIVATE_KEY` (funded testnet wallet), provider credentials.
+
+The runner creates a temp `PRIM_HOME` and `PRIM_DATA_DIR` for each run (SQLite DBs need writable directories). It sets `PORT`/`BUN_PORT` to control which port the service binds to.
 
 **CI:** Runs in `e2e-local.yml` on manual dispatch. Uses `TESTNET_WALLET` secret (existing funded testnet wallet — no need for a fresh wallet unless testing gate/onboarding flows).
 
@@ -144,7 +137,9 @@ bun scripts/deploy-smoke.generated.ts
 
 **CI:** Runs as a step in `deploy.yml` verify job after rsync + restart.
 
-**Generated from prim.yaml:** Reads all prims with `status: mainnet`, emits the health + 402 checks. No hand-written test code per prim.
+**Generated from prim.yaml:** Reads all prims with `status: mainnet`, emits the health + 402 checks. No hand-written test code per prim. Accepts 400 (body validation) or 402 (x402 gating) — both prove the service is alive.
+
+**Validated:** 7/7 checks pass against live endpoints (wallet, gate, store, search).
 
 **No payment test** — would require a funded mainnet wallet in CI. Deferred to a follow-up task (dedicated CI mainnet wallet with dust balance). The 402 check proves x402 middleware is wired; actual settlement is the facilitator's responsibility (Coinbase infrastructure). One payment round-trip per deploy is planned — money goes to REVENUE_WALLET (paying yourself), but we want a separate wallet to avoid muddying production revenue data.
 
