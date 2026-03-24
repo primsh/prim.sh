@@ -752,7 +752,7 @@ vi.mock("@primsh/x402-middleware", async (importOriginal) => {
   };
 });
 
-// Mock the service so smoke tests don't need a real API key
+// Mock the service so unit tests don't need a real API key
 vi.mock("../src/service.ts", async (importOriginal) => {
   const original = await importOriginal<typeof import("../src/service.ts")>();
   return {
@@ -1355,8 +1355,8 @@ async function scaffold(id: string, prim: PrimYaml, force: boolean, root: string
     writeFile(join(pkgDir, "src", vendorFile.filename), vendorFile.content, force);
   }
 
-  // test/smoke.test.ts
-  writeFile(join(pkgDir, "test", "smoke.test.ts"), genSmokeTestTs(prim, routePrices), force);
+  // test/unit.test.ts
+  writeFile(join(pkgDir, "test", "unit.test.ts"), genSmokeTestTs(prim, routePrices), force);
 
   // test/smoke-live.test.ts
   writeFile(join(pkgDir, "test", "smoke-live.test.ts"), genSmokeLiveTestTs(prim), force);
@@ -1374,7 +1374,7 @@ async function scaffold(id: string, prim: PrimYaml, force: boolean, root: string
         `  3. Implement src/${(prim.providers?.[0].name ?? "vendor").toLowerCase().replace(/\s+/g, "")}.ts — provider client`,
       );
     }
-    console.log("  4. Update test/smoke.test.ts — fill in MOCK_RESPONSE");
+    console.log("  4. Update test/unit.test.ts — fill in MOCK_RESPONSE");
     console.log(`  5. pnpm -F @primsh/${id} check`);
   }
 }

@@ -25,7 +25,7 @@ vi.mock("@primsh/x402-middleware", async (importOriginal) => {
   };
 });
 
-// Mock the service so smoke tests don't need a real API key
+// Mock the service so unit tests don't need a real API key
 vi.mock("../src/service.ts", async (importOriginal) => {
   const original = await importOriginal<typeof import("../src/service.ts")>();
   return {
@@ -97,7 +97,7 @@ describe("store.sh app", () => {
 
   // Check 4: POST /v1/buckets — happy path
   it("POST /v1/buckets returns 201 (happy path)", async () => {
-    // biome-ignore lint/suspicious/noExplicitAny: mock shape — smoke test only checks status code
+    // biome-ignore lint/suspicious/noExplicitAny: mock shape — unit test only checks status code
     vi.mocked(createBucket).mockResolvedValueOnce({ ok: true, data: {} } as any);
 
     const res = await app.request("/v1/buckets", {
@@ -115,7 +115,7 @@ describe("store.sh app", () => {
       status: 400,
       code: "invalid_request",
       message: "Invalid bucket name or name already taken",
-      // biome-ignore lint/suspicious/noExplicitAny: mock shape — smoke test only checks status code
+      // biome-ignore lint/suspicious/noExplicitAny: mock shape — unit test only checks status code
     } as any);
 
     const res = await app.request("/v1/buckets", {
@@ -128,7 +128,7 @@ describe("store.sh app", () => {
 
   // Check 4: GET /v1/buckets — happy path
   it("GET /v1/buckets returns 200 (happy path)", async () => {
-    // biome-ignore lint/suspicious/noExplicitAny: mock shape — smoke test only checks status code
+    // biome-ignore lint/suspicious/noExplicitAny: mock shape — unit test only checks status code
     vi.mocked(listBuckets).mockReturnValueOnce({} as any);
 
     const res = await app.request("/v1/buckets?limit=10&after=test-cursor", {
@@ -140,7 +140,7 @@ describe("store.sh app", () => {
 
   // Check 4: GET /v1/buckets/test-id-001 — happy path
   it.skip("GET /v1/buckets/test-id-001 returns 200 (happy path)", async () => {
-    // biome-ignore lint/suspicious/noExplicitAny: mock shape — smoke test only checks status code
+    // biome-ignore lint/suspicious/noExplicitAny: mock shape — unit test only checks status code
     vi.mocked(getBucket).mockReturnValueOnce({ ok: true, data: {} } as any);
 
     const res = await app.request("/v1/buckets/test-id-001", {
@@ -156,7 +156,7 @@ describe("store.sh app", () => {
       status: 404,
       code: "not_found",
       message: "Bucket not found",
-      // biome-ignore lint/suspicious/noExplicitAny: mock shape — smoke test only checks status code
+      // biome-ignore lint/suspicious/noExplicitAny: mock shape — unit test only checks status code
     } as any);
 
     const res = await app.request("/v1/buckets/test-id-001", {
@@ -167,7 +167,7 @@ describe("store.sh app", () => {
 
   // Check 4: DELETE /v1/buckets/test-id-001 — happy path
   it.skip("DELETE /v1/buckets/test-id-001 returns 200 (happy path)", async () => {
-    // biome-ignore lint/suspicious/noExplicitAny: mock shape — smoke test only checks status code
+    // biome-ignore lint/suspicious/noExplicitAny: mock shape — unit test only checks status code
     vi.mocked(deleteBucket).mockResolvedValueOnce({ ok: true, data: {} } as any);
 
     const res = await app.request("/v1/buckets/test-id-001", {
@@ -183,7 +183,7 @@ describe("store.sh app", () => {
       status: 404,
       code: "not_found",
       message: "Bucket not found",
-      // biome-ignore lint/suspicious/noExplicitAny: mock shape — smoke test only checks status code
+      // biome-ignore lint/suspicious/noExplicitAny: mock shape — unit test only checks status code
     } as any);
 
     const res = await app.request("/v1/buckets/test-id-001", {
@@ -194,7 +194,7 @@ describe("store.sh app", () => {
 
   // Check 4: PUT /v1/buckets/test-id-001/objects/test-key — happy path
   it.skip("PUT /v1/buckets/test-id-001/objects/test-key returns 200 (happy path)", async () => {
-    // biome-ignore lint/suspicious/noExplicitAny: mock shape — smoke test only checks status code
+    // biome-ignore lint/suspicious/noExplicitAny: mock shape — unit test only checks status code
     vi.mocked(putObject).mockResolvedValueOnce({ ok: true, data: {} } as any);
 
     const res = await app.request("/v1/buckets/test-id-001/objects/test-key", {
@@ -212,7 +212,7 @@ describe("store.sh app", () => {
       status: 400,
       code: "invalid_request",
       message: "Missing or invalid body",
-      // biome-ignore lint/suspicious/noExplicitAny: mock shape — smoke test only checks status code
+      // biome-ignore lint/suspicious/noExplicitAny: mock shape — unit test only checks status code
     } as any);
 
     const res = await app.request("/v1/buckets/test-id-001/objects/test-key", {
@@ -225,7 +225,7 @@ describe("store.sh app", () => {
 
   // Check 4: GET /v1/buckets/test-id-001/objects — happy path
   it.skip("GET /v1/buckets/test-id-001/objects returns 200 (happy path)", async () => {
-    // biome-ignore lint/suspicious/noExplicitAny: mock shape — smoke test only checks status code
+    // biome-ignore lint/suspicious/noExplicitAny: mock shape — unit test only checks status code
     vi.mocked(listObjects).mockResolvedValueOnce({ ok: true, data: {} } as any);
 
     const res = await app.request(
@@ -244,7 +244,7 @@ describe("store.sh app", () => {
       status: 404,
       code: "not_found",
       message: "Bucket not found",
-      // biome-ignore lint/suspicious/noExplicitAny: mock shape — smoke test only checks status code
+      // biome-ignore lint/suspicious/noExplicitAny: mock shape — unit test only checks status code
     } as any);
 
     const res = await app.request("/v1/buckets/test-id-001/objects", {
@@ -255,7 +255,7 @@ describe("store.sh app", () => {
 
   // Check 4: GET /v1/buckets/test-id-001/objects/test-key — happy path
   it.skip("GET /v1/buckets/test-id-001/objects/test-key returns 200 (happy path)", async () => {
-    // biome-ignore lint/suspicious/noExplicitAny: mock shape — smoke test only checks status code
+    // biome-ignore lint/suspicious/noExplicitAny: mock shape — unit test only checks status code
     vi.mocked(getObject).mockResolvedValueOnce({ ok: true, data: {} } as any);
 
     const res = await app.request("/v1/buckets/test-id-001/objects/test-key", {
@@ -271,7 +271,7 @@ describe("store.sh app", () => {
       status: 404,
       code: "not_found",
       message: "Bucket or object not found",
-      // biome-ignore lint/suspicious/noExplicitAny: mock shape — smoke test only checks status code
+      // biome-ignore lint/suspicious/noExplicitAny: mock shape — unit test only checks status code
     } as any);
 
     const res = await app.request("/v1/buckets/test-id-001/objects/test-key", {
@@ -282,7 +282,7 @@ describe("store.sh app", () => {
 
   // Check 4: DELETE /v1/buckets/test-id-001/objects/test-key — happy path
   it.skip("DELETE /v1/buckets/test-id-001/objects/test-key returns 200 (happy path)", async () => {
-    // biome-ignore lint/suspicious/noExplicitAny: mock shape — smoke test only checks status code
+    // biome-ignore lint/suspicious/noExplicitAny: mock shape — unit test only checks status code
     vi.mocked(deleteObject).mockResolvedValueOnce({ ok: true, data: {} } as any);
 
     const res = await app.request("/v1/buckets/test-id-001/objects/test-key", {
@@ -298,7 +298,7 @@ describe("store.sh app", () => {
       status: 404,
       code: "not_found",
       message: "Bucket or object not found",
-      // biome-ignore lint/suspicious/noExplicitAny: mock shape — smoke test only checks status code
+      // biome-ignore lint/suspicious/noExplicitAny: mock shape — unit test only checks status code
     } as any);
 
     const res = await app.request("/v1/buckets/test-id-001/objects/test-key", {
@@ -325,7 +325,7 @@ describe("store.sh app", () => {
 
   // Check 4: PUT /v1/buckets/test-id-001/quota — happy path
   it.skip("PUT /v1/buckets/test-id-001/quota returns 200 (happy path)", async () => {
-    // biome-ignore lint/suspicious/noExplicitAny: mock shape — smoke test only checks status code
+    // biome-ignore lint/suspicious/noExplicitAny: mock shape — unit test only checks status code
     vi.mocked(setQuotaForBucket).mockReturnValueOnce({ ok: true, data: {} } as any);
 
     const res = await app.request("/v1/buckets/test-id-001/quota", {
@@ -343,7 +343,7 @@ describe("store.sh app", () => {
       status: 400,
       code: "invalid_request",
       message: "Invalid quota value",
-      // biome-ignore lint/suspicious/noExplicitAny: mock shape — smoke test only checks status code
+      // biome-ignore lint/suspicious/noExplicitAny: mock shape — unit test only checks status code
     } as any);
 
     const res = await app.request("/v1/buckets/test-id-001/quota", {
@@ -356,7 +356,7 @@ describe("store.sh app", () => {
 
   // Check 4: POST /v1/buckets/test-id-001/quota/reconcile — happy path
   it.skip("POST /v1/buckets/test-id-001/quota/reconcile returns 200 (happy path)", async () => {
-    // biome-ignore lint/suspicious/noExplicitAny: mock shape — smoke test only checks status code
+    // biome-ignore lint/suspicious/noExplicitAny: mock shape — unit test only checks status code
     vi.mocked(reconcileUsage).mockResolvedValueOnce({ ok: true, data: {} } as any);
 
     const res = await app.request("/v1/buckets/test-id-001/quota/reconcile", {
@@ -374,7 +374,7 @@ describe("store.sh app", () => {
       status: 404,
       code: "not_found",
       message: "Bucket not found",
-      // biome-ignore lint/suspicious/noExplicitAny: mock shape — smoke test only checks status code
+      // biome-ignore lint/suspicious/noExplicitAny: mock shape — unit test only checks status code
     } as any);
 
     const res = await app.request("/v1/buckets/test-id-001/quota/reconcile", {
@@ -387,7 +387,7 @@ describe("store.sh app", () => {
 
   // Check 4: POST /v1/buckets/test-id-001/presign — happy path
   it.skip("POST /v1/buckets/test-id-001/presign returns 200 (happy path)", async () => {
-    // biome-ignore lint/suspicious/noExplicitAny: mock shape — smoke test only checks status code
+    // biome-ignore lint/suspicious/noExplicitAny: mock shape — unit test only checks status code
     vi.mocked(presignObject).mockResolvedValueOnce({ ok: true, data: {} } as any);
 
     const res = await app.request("/v1/buckets/test-id-001/presign", {
@@ -405,7 +405,7 @@ describe("store.sh app", () => {
       status: 400,
       code: "invalid_request",
       message: "Invalid key, method, or expires_in",
-      // biome-ignore lint/suspicious/noExplicitAny: mock shape — smoke test only checks status code
+      // biome-ignore lint/suspicious/noExplicitAny: mock shape — unit test only checks status code
     } as any);
 
     const res = await app.request("/v1/buckets/test-id-001/presign", {

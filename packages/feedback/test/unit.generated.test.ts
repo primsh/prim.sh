@@ -22,24 +22,21 @@ vi.mock("@primsh/x402-middleware", async (importOriginal) => {
   };
 });
 
-// Mock the service so smoke tests don't need a real API key
+// Mock the service so unit tests don't need a real API key
 vi.mock("../src/service.ts", async (importOriginal) => {
   const original = await importOriginal<typeof import("../src/service.ts")>();
   return {
     ...original,
-    redeemInvite: vi.fn(),
-    createCodes: vi.fn(),
-    getCodes: vi.fn(),
-    deleteCode: vi.fn(),
+    submit: vi.fn(),
   };
 });
 
 import app from "../src/index.ts";
-import { redeemInvite } from "../src/service.ts";
+import { submit } from "../src/service.ts";
 
-describe("gate.sh app", () => {
+describe("feedback.sh app", () => {
   beforeEach(() => {
-    vi.mocked(redeemInvite).mockReset();
+    vi.mocked(submit).mockReset();
   });
 
   // Check 1: default export defined
@@ -48,41 +45,50 @@ describe("gate.sh app", () => {
   });
 
   // Check 2: GET / returns health response
-  it("GET / returns { service: 'gate.sh', status: 'ok' }", async () => {
+  it("GET / returns { service: 'feedback.sh', status: 'ok' }", async () => {
     const res = await app.request("/");
     expect(res.status).toBe(200);
     const body = await res.json();
-    expect(body).toMatchObject({ service: "gate.sh", status: "ok" });
+    expect(body).toMatchObject({ service: "feedback.sh", status: "ok" });
   });
 
-  // Check 4: POST /v1/redeem — happy path
-  it("POST /v1/redeem returns 200 (happy path)", async () => {
-    // biome-ignore lint/suspicious/noExplicitAny: mock shape — smoke test only checks status code
-    vi.mocked(redeemInvite).mockResolvedValueOnce({ ok: true, data: {} } as any);
+  // Check 4: POST /v1/submit — happy path
+  it("POST /v1/submit returns 200 (happy path)", async () => {
+    // biome-ignore lint/suspicious/noExplicitAny: mock shape — unit test only checks status code
+    vi.mocked(submit).mockReturnValueOnce({ ok: true, data: {} } as any);
 
-    const res = await app.request("/v1/redeem", {
+    const res = await app.request("/v1/submit", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ code: "test", wallet: "0x0000000000000000000000000000000000000001" }),
+      body: JSON.stringify({}),
     });
 
     expect(res.status).toBe(200);
   });
-  // Check 5: POST /v1/redeem — error path
-  it("POST /v1/redeem returns 400 (invalid_request)", async () => {
-    vi.mocked(redeemInvite).mockResolvedValueOnce({
+  // Check 5: POST /v1/submit — error path
+  it("POST /v1/submit returns 400 (invalid_request)", async () => {
+    vi.mocked(submit).mockReturnValueOnce({
       ok: false,
       status: 400,
       code: "invalid_request",
-      message: "Missing or invalid wallet address",
-      // biome-ignore lint/suspicious/noExplicitAny: mock shape — smoke test only checks status code
+      message: "Missing or invalid fields",
+      // biome-ignore lint/suspicious/noExplicitAny: mock shape — unit test only checks status code
     } as any);
 
-    const res = await app.request("/v1/redeem", {
+    const res = await app.request("/v1/submit", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: "{}",
     });
     expect(res.status).toBe(400);
+  });
+
+  // Check 4: GET /v1/feed — happy path
+  it.skip("GET /v1/feed returns 200 (happy path)", async () => {
+    const res = await app.request("/v1/feed?primitive=test&limit=10&offset=test", {
+      method: "GET",
+    });
+
+    expect(res.status).toBe(200);
   });
 });

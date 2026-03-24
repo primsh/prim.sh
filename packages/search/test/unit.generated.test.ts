@@ -23,7 +23,7 @@ vi.mock("@primsh/x402-middleware", async (importOriginal) => {
   };
 });
 
-// Mock the service so smoke tests don't need a real API key
+// Mock the service so unit tests don't need a real API key
 vi.mock("../src/service.ts", async (importOriginal) => {
   const original = await importOriginal<typeof import("../src/service.ts")>();
   return {
@@ -66,7 +66,7 @@ describe("search.sh app", () => {
 
   // Check 4: POST /v1/search — happy path
   it("POST /v1/search returns 200 (happy path)", async () => {
-    // biome-ignore lint/suspicious/noExplicitAny: mock shape — smoke test only checks status code
+    // biome-ignore lint/suspicious/noExplicitAny: mock shape — unit test only checks status code
     vi.mocked(searchWeb).mockResolvedValueOnce({ ok: true, data: {} } as any);
 
     const res = await app.request("/v1/search", {
@@ -84,7 +84,7 @@ describe("search.sh app", () => {
       status: 400,
       code: "invalid_request",
       message: "Missing or invalid query",
-      // biome-ignore lint/suspicious/noExplicitAny: mock shape — smoke test only checks status code
+      // biome-ignore lint/suspicious/noExplicitAny: mock shape — unit test only checks status code
     } as any);
 
     const res = await app.request("/v1/search", {
@@ -97,7 +97,7 @@ describe("search.sh app", () => {
 
   // Check 4: POST /v1/search/news — happy path
   it("POST /v1/search/news returns 200 (happy path)", async () => {
-    // biome-ignore lint/suspicious/noExplicitAny: mock shape — smoke test only checks status code
+    // biome-ignore lint/suspicious/noExplicitAny: mock shape — unit test only checks status code
     vi.mocked(searchNews).mockResolvedValueOnce({ ok: true, data: {} } as any);
 
     const res = await app.request("/v1/search/news", {
@@ -115,7 +115,7 @@ describe("search.sh app", () => {
       status: 400,
       code: "invalid_request",
       message: "Missing or invalid query",
-      // biome-ignore lint/suspicious/noExplicitAny: mock shape — smoke test only checks status code
+      // biome-ignore lint/suspicious/noExplicitAny: mock shape — unit test only checks status code
     } as any);
 
     const res = await app.request("/v1/search/news", {
@@ -128,7 +128,7 @@ describe("search.sh app", () => {
 
   // Check 4: POST /v1/extract — happy path
   it("POST /v1/extract returns 200 (happy path)", async () => {
-    // biome-ignore lint/suspicious/noExplicitAny: mock shape — smoke test only checks status code
+    // biome-ignore lint/suspicious/noExplicitAny: mock shape — unit test only checks status code
     vi.mocked(extractUrls).mockResolvedValueOnce({ ok: true, data: {} } as any);
 
     const res = await app.request("/v1/extract", {
@@ -146,7 +146,7 @@ describe("search.sh app", () => {
       status: 400,
       code: "invalid_request",
       message: "Missing urls field or invalid URL format",
-      // biome-ignore lint/suspicious/noExplicitAny: mock shape — smoke test only checks status code
+      // biome-ignore lint/suspicious/noExplicitAny: mock shape — unit test only checks status code
     } as any);
 
     const res = await app.request("/v1/extract", {

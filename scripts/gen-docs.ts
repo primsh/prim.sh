@@ -112,7 +112,7 @@ function genFactorySection(): string {
 | \`pnpm gen:mcp\` | Regenerate MCP server configs |
 | \`pnpm gen:cli\` | Regenerate CLI tool definitions |
 | \`pnpm gen:tools\` | Regenerate function-calling tool definitions |
-| \`pnpm gen:tests\` | Regenerate smoke test scaffolds |
+| \`pnpm gen:tests\` | Regenerate unit test scaffolds |
 | \`pnpm gen:docs\` | Regenerate per-package READMEs + this section |
 
 **Creating a new primitive:**

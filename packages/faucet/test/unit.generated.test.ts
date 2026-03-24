@@ -22,7 +22,7 @@ vi.mock("@primsh/x402-middleware", async (importOriginal) => {
   };
 });
 
-// Mock the service so smoke tests don't need a real API key
+// Mock the service so unit tests don't need a real API key
 vi.mock("../src/service.ts", async (importOriginal) => {
   const original = await importOriginal<typeof import("../src/service.ts")>();
   return {
@@ -60,7 +60,7 @@ describe("faucet.sh app", () => {
 
   // Check 4: POST /v1/faucet/usdc — happy path
   it("POST /v1/faucet/usdc returns 200 (happy path)", async () => {
-    // biome-ignore lint/suspicious/noExplicitAny: mock shape — smoke test only checks status code
+    // biome-ignore lint/suspicious/noExplicitAny: mock shape — unit test only checks status code
     vi.mocked(dripUsdc).mockResolvedValueOnce({} as any);
 
     const res = await app.request("/v1/faucet/usdc", {
@@ -83,7 +83,7 @@ describe("faucet.sh app", () => {
 
   // Check 4: POST /v1/faucet/eth — happy path
   it("POST /v1/faucet/eth returns 200 (happy path)", async () => {
-    // biome-ignore lint/suspicious/noExplicitAny: mock shape — smoke test only checks status code
+    // biome-ignore lint/suspicious/noExplicitAny: mock shape — unit test only checks status code
     vi.mocked(dripEth).mockResolvedValueOnce({} as any);
 
     const res = await app.request("/v1/faucet/eth", {
@@ -106,7 +106,7 @@ describe("faucet.sh app", () => {
 
   // Check 4: GET /v1/faucet/status — happy path
   it.skip("GET /v1/faucet/status returns 200 (happy path)", async () => {
-    // biome-ignore lint/suspicious/noExplicitAny: mock shape — smoke test only checks status code
+    // biome-ignore lint/suspicious/noExplicitAny: mock shape — unit test only checks status code
     vi.mocked(getTreasuryBalance).mockResolvedValueOnce({} as any);
 
     const res = await app.request(
@@ -128,7 +128,7 @@ describe("faucet.sh app", () => {
 
   // Check 4: GET /v1/faucet/treasury — happy path
   it("GET /v1/faucet/treasury returns 200 (happy path)", async () => {
-    // biome-ignore lint/suspicious/noExplicitAny: mock shape — smoke test only checks status code
+    // biome-ignore lint/suspicious/noExplicitAny: mock shape — unit test only checks status code
     vi.mocked(getTreasuryBalance).mockResolvedValueOnce({} as any);
 
     const res = await app.request("/v1/faucet/treasury", {
@@ -140,7 +140,7 @@ describe("faucet.sh app", () => {
 
   // Check 4: POST /v1/faucet/refill — happy path
   it("POST /v1/faucet/refill returns 200 (happy path)", async () => {
-    // biome-ignore lint/suspicious/noExplicitAny: mock shape — smoke test only checks status code
+    // biome-ignore lint/suspicious/noExplicitAny: mock shape — unit test only checks status code
     vi.mocked(refillTreasury).mockResolvedValueOnce({} as any);
 
     const res = await app.request("/v1/faucet/refill", {
