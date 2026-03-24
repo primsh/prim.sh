@@ -59,7 +59,7 @@ describe("faucet.sh app", () => {
   });
 
   // Check 4: POST /v1/faucet/usdc — happy path
-  it.skip("POST /v1/faucet/usdc returns 200 (happy path)", async () => {
+  it("POST /v1/faucet/usdc returns 200 (happy path)", async () => {
     // biome-ignore lint/suspicious/noExplicitAny: mock shape — smoke test only checks status code
     vi.mocked(dripUsdc).mockResolvedValueOnce({} as any);
 
@@ -72,7 +72,7 @@ describe("faucet.sh app", () => {
     expect(res.status).toBe(200);
   });
   // Check 5: POST /v1/faucet/usdc — error path
-  it.skip("POST /v1/faucet/usdc returns 400 (invalid_request)", async () => {
+  it("POST /v1/faucet/usdc returns 400 (invalid_request)", async () => {
     const res = await app.request("/v1/faucet/usdc", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -82,7 +82,7 @@ describe("faucet.sh app", () => {
   });
 
   // Check 4: POST /v1/faucet/eth — happy path
-  it.skip("POST /v1/faucet/eth returns 200 (happy path)", async () => {
+  it("POST /v1/faucet/eth returns 200 (happy path)", async () => {
     // biome-ignore lint/suspicious/noExplicitAny: mock shape — smoke test only checks status code
     vi.mocked(dripEth).mockResolvedValueOnce({} as any);
 
@@ -95,7 +95,7 @@ describe("faucet.sh app", () => {
     expect(res.status).toBe(200);
   });
   // Check 5: POST /v1/faucet/eth — error path
-  it.skip("POST /v1/faucet/eth returns 400 (invalid_request)", async () => {
+  it("POST /v1/faucet/eth returns 400 (invalid_request)", async () => {
     const res = await app.request("/v1/faucet/eth", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -127,7 +127,7 @@ describe("faucet.sh app", () => {
   });
 
   // Check 4: GET /v1/faucet/treasury — happy path
-  it.skip("GET /v1/faucet/treasury returns 200 (happy path)", async () => {
+  it("GET /v1/faucet/treasury returns 200 (happy path)", async () => {
     // biome-ignore lint/suspicious/noExplicitAny: mock shape — smoke test only checks status code
     vi.mocked(getTreasuryBalance).mockResolvedValueOnce({} as any);
 

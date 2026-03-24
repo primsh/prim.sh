@@ -59,6 +59,7 @@ import {
   deleteObject,
   setQuotaForBucket,
   reconcileUsage,
+  presignObject,
 } from "../src/service.ts";
 
 describe("store.sh app", () => {
@@ -73,6 +74,7 @@ describe("store.sh app", () => {
     vi.mocked(deleteObject).mockReset();
     vi.mocked(setQuotaForBucket).mockReset();
     vi.mocked(reconcileUsage).mockReset();
+    vi.mocked(presignObject).mockReset();
   });
 
   // Check 1: default export defined
@@ -94,7 +96,7 @@ describe("store.sh app", () => {
   });
 
   // Check 4: POST /v1/buckets — happy path
-  it.skip("POST /v1/buckets returns 201 (happy path)", async () => {
+  it("POST /v1/buckets returns 201 (happy path)", async () => {
     // biome-ignore lint/suspicious/noExplicitAny: mock shape — smoke test only checks status code
     vi.mocked(createBucket).mockResolvedValueOnce({ ok: true, data: {} } as any);
 
@@ -107,7 +109,7 @@ describe("store.sh app", () => {
     expect(res.status).toBe(201);
   });
   // Check 5: POST /v1/buckets — error path
-  it.skip("POST /v1/buckets returns 400 (invalid_request)", async () => {
+  it("POST /v1/buckets returns 400 (invalid_request)", async () => {
     vi.mocked(createBucket).mockResolvedValueOnce({
       ok: false,
       status: 400,
@@ -125,9 +127,9 @@ describe("store.sh app", () => {
   });
 
   // Check 4: GET /v1/buckets — happy path
-  it.skip("GET /v1/buckets returns 200 (happy path)", async () => {
+  it("GET /v1/buckets returns 200 (happy path)", async () => {
     // biome-ignore lint/suspicious/noExplicitAny: mock shape — smoke test only checks status code
-    vi.mocked(listBuckets).mockResolvedValueOnce({ ok: true, data: {} } as any);
+    vi.mocked(listBuckets).mockReturnValueOnce({} as any);
 
     const res = await app.request("/v1/buckets?limit=10&after=test-cursor", {
       method: "GET",
@@ -135,26 +137,11 @@ describe("store.sh app", () => {
 
     expect(res.status).toBe(200);
   });
-  // Check 5: GET /v1/buckets — error path
-  it.skip("GET /v1/buckets returns 400 (invalid_request)", async () => {
-    vi.mocked(listBuckets).mockResolvedValueOnce({
-      ok: false,
-      status: 400,
-      code: "invalid_request",
-      message: "Missing required query parameter",
-      // biome-ignore lint/suspicious/noExplicitAny: mock shape — smoke test only checks status code
-    } as any);
-
-    const res = await app.request("/v1/buckets", {
-      method: "GET",
-    });
-    expect(res.status).toBe(400);
-  });
 
   // Check 4: GET /v1/buckets/test-id-001 — happy path
   it.skip("GET /v1/buckets/test-id-001 returns 200 (happy path)", async () => {
     // biome-ignore lint/suspicious/noExplicitAny: mock shape — smoke test only checks status code
-    vi.mocked(getBucket).mockResolvedValueOnce({ ok: true, data: {} } as any);
+    vi.mocked(getBucket).mockReturnValueOnce({ ok: true, data: {} } as any);
 
     const res = await app.request("/v1/buckets/test-id-001", {
       method: "GET",
@@ -164,7 +151,7 @@ describe("store.sh app", () => {
   });
   // Check 5: GET /v1/buckets/test-id-001 — error path
   it.skip("GET /v1/buckets/test-id-001 returns 404 (not_found)", async () => {
-    vi.mocked(getBucket).mockResolvedValueOnce({
+    vi.mocked(getBucket).mockReturnValueOnce({
       ok: false,
       status: 404,
       code: "not_found",
@@ -251,19 +238,19 @@ describe("store.sh app", () => {
     expect(res.status).toBe(200);
   });
   // Check 5: GET /v1/buckets/test-id-001/objects — error path
-  it.skip("GET /v1/buckets/test-id-001/objects returns 400 (invalid_request)", async () => {
+  it.skip("GET /v1/buckets/test-id-001/objects returns 404 (not_found)", async () => {
     vi.mocked(listObjects).mockResolvedValueOnce({
       ok: false,
-      status: 400,
-      code: "invalid_request",
-      message: "Missing required query parameter",
+      status: 404,
+      code: "not_found",
+      message: "Bucket not found",
       // biome-ignore lint/suspicious/noExplicitAny: mock shape — smoke test only checks status code
     } as any);
 
     const res = await app.request("/v1/buckets/test-id-001/objects", {
       method: "GET",
     });
-    expect(res.status).toBe(400);
+    expect(res.status).toBe(404);
   });
 
   // Check 4: GET /v1/buckets/test-id-001/objects/test-key — happy path
@@ -339,19 +326,19 @@ describe("store.sh app", () => {
   // Check 4: PUT /v1/buckets/test-id-001/quota — happy path
   it.skip("PUT /v1/buckets/test-id-001/quota returns 200 (happy path)", async () => {
     // biome-ignore lint/suspicious/noExplicitAny: mock shape — smoke test only checks status code
-    vi.mocked(setQuotaForBucket).mockResolvedValueOnce({ ok: true, data: {} } as any);
+    vi.mocked(setQuotaForBucket).mockReturnValueOnce({ ok: true, data: {} } as any);
 
     const res = await app.request("/v1/buckets/test-id-001/quota", {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ quota_bytes: "test" }),
+      body: JSON.stringify({ quota_bytes: 1 }),
     });
 
     expect(res.status).toBe(200);
   });
   // Check 5: PUT /v1/buckets/test-id-001/quota — error path
   it.skip("PUT /v1/buckets/test-id-001/quota returns 400 (invalid_request)", async () => {
-    vi.mocked(setQuotaForBucket).mockResolvedValueOnce({
+    vi.mocked(setQuotaForBucket).mockReturnValueOnce({
       ok: false,
       status: 400,
       code: "invalid_request",
@@ -401,19 +388,19 @@ describe("store.sh app", () => {
   // Check 4: POST /v1/buckets/test-id-001/presign — happy path
   it.skip("POST /v1/buckets/test-id-001/presign returns 200 (happy path)", async () => {
     // biome-ignore lint/suspicious/noExplicitAny: mock shape — smoke test only checks status code
-    vi.mocked(createBucket).mockResolvedValueOnce({ ok: true, data: {} } as any);
+    vi.mocked(presignObject).mockResolvedValueOnce({ ok: true, data: {} } as any);
 
     const res = await app.request("/v1/buckets/test-id-001/presign", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ key: "test", method: "test" }),
+      body: JSON.stringify({ key: "test", method: "GET" }),
     });
 
     expect(res.status).toBe(200);
   });
   // Check 5: POST /v1/buckets/test-id-001/presign — error path
   it.skip("POST /v1/buckets/test-id-001/presign returns 400 (invalid_request)", async () => {
-    vi.mocked(createBucket).mockResolvedValueOnce({
+    vi.mocked(presignObject).mockResolvedValueOnce({
       ok: false,
       status: 400,
       code: "invalid_request",

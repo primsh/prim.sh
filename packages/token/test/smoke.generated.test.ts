@@ -113,9 +113,9 @@ describe("token.sh app", () => {
   });
 
   // Check 4: GET /v1/tokens — happy path
-  it.skip("GET /v1/tokens returns 200 (happy path)", async () => {
+  it("GET /v1/tokens returns 200 (happy path)", async () => {
     // biome-ignore lint/suspicious/noExplicitAny: mock shape — smoke test only checks status code
-    vi.mocked(listTokens).mockResolvedValueOnce({ ok: true, data: {} } as any);
+    vi.mocked(listTokens).mockReturnValueOnce({ ok: true, data: {} } as any);
 
     const res = await app.request("/v1/tokens", {
       method: "GET",
@@ -123,26 +123,11 @@ describe("token.sh app", () => {
 
     expect(res.status).toBe(200);
   });
-  // Check 5: GET /v1/tokens — error path
-  it.skip("GET /v1/tokens returns 403 (forbidden)", async () => {
-    vi.mocked(listTokens).mockResolvedValueOnce({
-      ok: false,
-      status: 403,
-      code: "forbidden",
-      message: "Missing wallet in payment",
-      // biome-ignore lint/suspicious/noExplicitAny: mock shape — smoke test only checks status code
-    } as any);
-
-    const res = await app.request("/v1/tokens", {
-      method: "GET",
-    });
-    expect(res.status).toBe(403);
-  });
 
   // Check 4: GET /v1/tokens/test-id-001 — happy path
   it.skip("GET /v1/tokens/test-id-001 returns 200 (happy path)", async () => {
     // biome-ignore lint/suspicious/noExplicitAny: mock shape — smoke test only checks status code
-    vi.mocked(getToken).mockResolvedValueOnce({ ok: true, data: {} } as any);
+    vi.mocked(getToken).mockReturnValueOnce({ ok: true, data: {} } as any);
 
     const res = await app.request("/v1/tokens/test-id-001", {
       method: "GET",
@@ -152,7 +137,7 @@ describe("token.sh app", () => {
   });
   // Check 5: GET /v1/tokens/test-id-001 — error path
   it.skip("GET /v1/tokens/test-id-001 returns 404 (not_found)", async () => {
-    vi.mocked(getToken).mockResolvedValueOnce({
+    vi.mocked(getToken).mockReturnValueOnce({
       ok: false,
       status: 404,
       code: "not_found",
@@ -258,7 +243,7 @@ describe("token.sh app", () => {
   // Check 4: GET /v1/tokens/test-id-001/pool — happy path
   it.skip("GET /v1/tokens/test-id-001/pool returns 200 (happy path)", async () => {
     // biome-ignore lint/suspicious/noExplicitAny: mock shape — smoke test only checks status code
-    vi.mocked(getPool).mockResolvedValueOnce({ ok: true, data: {} } as any);
+    vi.mocked(getPool).mockReturnValueOnce({ ok: true, data: {} } as any);
 
     const res = await app.request("/v1/tokens/test-id-001/pool", {
       method: "GET",
@@ -268,7 +253,7 @@ describe("token.sh app", () => {
   });
   // Check 5: GET /v1/tokens/test-id-001/pool — error path
   it.skip("GET /v1/tokens/test-id-001/pool returns 404 (not_found)", async () => {
-    vi.mocked(getPool).mockResolvedValueOnce({
+    vi.mocked(getPool).mockReturnValueOnce({
       ok: false,
       status: 404,
       code: "not_found",
@@ -285,7 +270,7 @@ describe("token.sh app", () => {
   // Check 4: GET /v1/tokens/test-id-001/pool/liquidity-params — happy path
   it.skip("GET /v1/tokens/test-id-001/pool/liquidity-params returns 200 (happy path)", async () => {
     // biome-ignore lint/suspicious/noExplicitAny: mock shape — smoke test only checks status code
-    vi.mocked(getLiquidityParams).mockResolvedValueOnce({ ok: true, data: {} } as any);
+    vi.mocked(getLiquidityParams).mockReturnValueOnce({ ok: true, data: {} } as any);
 
     const res = await app.request(
       "/v1/tokens/test-id-001/pool/liquidity-params?tokenAmount=test&usdcAmount=test",
@@ -298,7 +283,7 @@ describe("token.sh app", () => {
   });
   // Check 5: GET /v1/tokens/test-id-001/pool/liquidity-params — error path
   it.skip("GET /v1/tokens/test-id-001/pool/liquidity-params returns 400 (invalid_request)", async () => {
-    vi.mocked(getLiquidityParams).mockResolvedValueOnce({
+    vi.mocked(getLiquidityParams).mockReturnValueOnce({
       ok: false,
       status: 400,
       code: "invalid_request",

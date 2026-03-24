@@ -140,30 +140,15 @@ describe("email.sh app", () => {
   });
 
   // Check 4: GET /v1/mailboxes — happy path
-  it.skip("GET /v1/mailboxes returns 200 (happy path)", async () => {
+  it("GET /v1/mailboxes returns 200 (happy path)", async () => {
     // biome-ignore lint/suspicious/noExplicitAny: mock shape — smoke test only checks status code
-    vi.mocked(listMailboxes).mockResolvedValueOnce({ ok: true, data: {} } as any);
+    vi.mocked(listMailboxes).mockReturnValueOnce({} as any);
 
     const res = await app.request("/v1/mailboxes?limit=10&after=test-cursor", {
       method: "GET",
     });
 
     expect(res.status).toBe(200);
-  });
-  // Check 5: GET /v1/mailboxes — error path
-  it.skip("GET /v1/mailboxes returns 400 (invalid_request)", async () => {
-    vi.mocked(listMailboxes).mockResolvedValueOnce({
-      ok: false,
-      status: 400,
-      code: "invalid_request",
-      message: "Missing required query parameter",
-      // biome-ignore lint/suspicious/noExplicitAny: mock shape — smoke test only checks status code
-    } as any);
-
-    const res = await app.request("/v1/mailboxes", {
-      method: "GET",
-    });
-    expect(res.status).toBe(400);
   });
 
   // Check 4: GET /v1/mailboxes/test-id-001 — happy path
@@ -263,19 +248,19 @@ describe("email.sh app", () => {
     expect(res.status).toBe(200);
   });
   // Check 5: GET /v1/mailboxes/test-id-001/messages — error path
-  it.skip("GET /v1/mailboxes/test-id-001/messages returns 400 (invalid_request)", async () => {
+  it.skip("GET /v1/mailboxes/test-id-001/messages returns 404 (not_found)", async () => {
     vi.mocked(listMessages).mockResolvedValueOnce({
       ok: false,
-      status: 400,
-      code: "invalid_request",
-      message: "Missing required query parameter",
+      status: 404,
+      code: "not_found",
+      message: "Mailbox not found",
       // biome-ignore lint/suspicious/noExplicitAny: mock shape — smoke test only checks status code
     } as any);
 
     const res = await app.request("/v1/mailboxes/test-id-001/messages", {
       method: "GET",
     });
-    expect(res.status).toBe(400);
+    expect(res.status).toBe(404);
   });
 
   // Check 4: GET /v1/mailboxes/test-id-001/messages/test-msgId — happy path
@@ -370,7 +355,7 @@ describe("email.sh app", () => {
   // Check 4: GET /v1/mailboxes/test-id-001/webhooks — happy path
   it.skip("GET /v1/mailboxes/test-id-001/webhooks returns 200 (happy path)", async () => {
     // biome-ignore lint/suspicious/noExplicitAny: mock shape — smoke test only checks status code
-    vi.mocked(listWebhooks).mockResolvedValueOnce({ ok: true, data: {} } as any);
+    vi.mocked(listWebhooks).mockReturnValueOnce({ ok: true, data: {} } as any);
 
     const res = await app.request("/v1/mailboxes/test-id-001/webhooks", {
       method: "GET",
@@ -380,7 +365,7 @@ describe("email.sh app", () => {
   });
   // Check 5: GET /v1/mailboxes/test-id-001/webhooks — error path
   it.skip("GET /v1/mailboxes/test-id-001/webhooks returns 404 (not_found)", async () => {
-    vi.mocked(listWebhooks).mockResolvedValueOnce({
+    vi.mocked(listWebhooks).mockReturnValueOnce({
       ok: false,
       status: 404,
       code: "not_found",
@@ -397,7 +382,7 @@ describe("email.sh app", () => {
   // Check 4: DELETE /v1/mailboxes/test-id-001/webhooks/test-whId — happy path
   it.skip("DELETE /v1/mailboxes/test-id-001/webhooks/test-whId returns 200 (happy path)", async () => {
     // biome-ignore lint/suspicious/noExplicitAny: mock shape — smoke test only checks status code
-    vi.mocked(deleteWebhook).mockResolvedValueOnce({ ok: true, data: {} } as any);
+    vi.mocked(deleteWebhook).mockReturnValueOnce({ ok: true, data: {} } as any);
 
     const res = await app.request("/v1/mailboxes/test-id-001/webhooks/test-whId", {
       method: "DELETE",
@@ -407,7 +392,7 @@ describe("email.sh app", () => {
   });
   // Check 5: DELETE /v1/mailboxes/test-id-001/webhooks/test-whId — error path
   it.skip("DELETE /v1/mailboxes/test-id-001/webhooks/test-whId returns 404 (not_found)", async () => {
-    vi.mocked(deleteWebhook).mockResolvedValueOnce({
+    vi.mocked(deleteWebhook).mockReturnValueOnce({
       ok: false,
       status: 404,
       code: "not_found",
@@ -453,9 +438,9 @@ describe("email.sh app", () => {
   });
 
   // Check 4: GET /v1/domains — happy path
-  it.skip("GET /v1/domains returns 200 (happy path)", async () => {
+  it("GET /v1/domains returns 200 (happy path)", async () => {
     // biome-ignore lint/suspicious/noExplicitAny: mock shape — smoke test only checks status code
-    vi.mocked(listDomains).mockResolvedValueOnce({ ok: true, data: {} } as any);
+    vi.mocked(listDomains).mockReturnValueOnce({} as any);
 
     const res = await app.request("/v1/domains?limit=10&after=test-cursor", {
       method: "GET",
@@ -463,26 +448,11 @@ describe("email.sh app", () => {
 
     expect(res.status).toBe(200);
   });
-  // Check 5: GET /v1/domains — error path
-  it.skip("GET /v1/domains returns 400 (invalid_request)", async () => {
-    vi.mocked(listDomains).mockResolvedValueOnce({
-      ok: false,
-      status: 400,
-      code: "invalid_request",
-      message: "Missing required query parameter",
-      // biome-ignore lint/suspicious/noExplicitAny: mock shape — smoke test only checks status code
-    } as any);
-
-    const res = await app.request("/v1/domains", {
-      method: "GET",
-    });
-    expect(res.status).toBe(400);
-  });
 
   // Check 4: GET /v1/domains/test-id-001 — happy path
   it.skip("GET /v1/domains/test-id-001 returns 200 (happy path)", async () => {
     // biome-ignore lint/suspicious/noExplicitAny: mock shape — smoke test only checks status code
-    vi.mocked(getDomain).mockResolvedValueOnce({ ok: true, data: {} } as any);
+    vi.mocked(getDomain).mockReturnValueOnce({ ok: true, data: {} } as any);
 
     const res = await app.request("/v1/domains/test-id-001", {
       method: "GET",
@@ -492,7 +462,7 @@ describe("email.sh app", () => {
   });
   // Check 5: GET /v1/domains/test-id-001 — error path
   it.skip("GET /v1/domains/test-id-001 returns 404 (not_found)", async () => {
-    vi.mocked(getDomain).mockResolvedValueOnce({
+    vi.mocked(getDomain).mockReturnValueOnce({
       ok: false,
       status: 404,
       code: "not_found",

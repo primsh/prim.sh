@@ -40,28 +40,51 @@ let anyFailed = false;
 
 // ── Service export parser ────────────────────────────────────────────────────
 
+interface ServiceExport {
+  name: string;
+  isAsync: boolean;
+  usesOkPattern: boolean;
+}
+
 /**
- * Extract exported function names from a service.ts file.
+ * Extract exported function names and async status from a service.ts file.
  * Looks for: export function, export async function, export const <fn> =
  */
 function parseServiceExports(servicePath: string): string[] {
+  return parseServiceExportsDetailed(servicePath).map((e) => e.name);
+}
+
+function parseServiceExportsDetailed(servicePath: string): ServiceExport[] {
   if (!existsSync(servicePath)) return [];
   const src = readFileSync(servicePath, "utf8");
-  const fns: string[] = [];
+  const fns: ServiceExport[] = [];
+
+  // Collect all export positions for function body extraction
+  const exportPositions: { name: string; isAsync: boolean; startIdx: number }[] = [];
 
   // export function foo / export async function foo
-  const fnRe = /^export\s+(?:async\s+)?function\s+([A-Za-z_$][A-Za-z0-9_$]*)/gm;
+  const fnRe = /^export\s+(async\s+)?function\s+([A-Za-z_$][A-Za-z0-9_$]*)/gm;
   let m: RegExpExecArray | null;
   // biome-ignore lint/suspicious/noAssignInExpressions: standard regex iteration
   while ((m = fnRe.exec(src)) !== null) {
-    fns.push(m[1]);
+    exportPositions.push({ name: m[2], isAsync: !!m[1], startIdx: m.index });
   }
 
-  // export const foo = ... (arrow functions / values)
-  const constRe = /^export\s+const\s+([A-Za-z_$][A-Za-z0-9_$]*)\s*=/gm;
+  // export const foo = async ... / export const foo = ...
+  const constRe = /^export\s+const\s+([A-Za-z_$][A-Za-z0-9_$]*)\s*=\s*(async\s)?/gm;
   // biome-ignore lint/suspicious/noAssignInExpressions: standard regex iteration
   while ((m = constRe.exec(src)) !== null) {
-    fns.push(m[1]);
+    exportPositions.push({ name: m[1], isAsync: !!m[2], startIdx: m.index });
+  }
+
+  // Sort by position and extract bodies to detect ok pattern per function
+  exportPositions.sort((a, b) => a.startIdx - b.startIdx);
+  for (let i = 0; i < exportPositions.length; i++) {
+    const ep = exportPositions[i];
+    const nextStart = i + 1 < exportPositions.length ? exportPositions[i + 1].startIdx : src.length;
+    const body = src.slice(ep.startIdx, nextStart);
+    const usesOkPattern = body.includes("ok: true") || body.includes("ok: false");
+    fns.push({ name: ep.name, isAsync: ep.isAsync, usesOkPattern });
   }
 
   return fns;
@@ -114,6 +137,7 @@ interface ServiceFnMatch {
 function matchServiceFn(
   operationId: string | undefined,
   serviceExports: string[],
+  routePath?: string,
 ): ServiceFnMatch | undefined {
   if (!operationId) return undefined;
   const camel = toCamelCase(operationId);
@@ -132,16 +156,60 @@ function matchServiceFn(
   const lastWordMatch = serviceExports.find((fn) => fn.toLowerCase() === lastWord.toLowerCase());
   if (lastWordMatch) return { name: lastWordMatch, exact: true };
 
+  // Verb + noun contains: set_quota → "setQuota" in "setQuotaForBucket"
+  // Use full camelCase operation_id for contains, but filter to prefer exact-ish matches
+  const containsMatches = serviceExports.filter((fn) =>
+    fn.toLowerCase().includes(camel.toLowerCase()),
+  );
+  if (containsMatches.length === 1) return { name: containsMatches[0], exact: true };
+
+  // Non-verb word match from operation_id: create_presign → "presign" in "presignObject"
+  // Try each non-verb word, preferring verb-matched results to avoid cross-verb collisions
+  const verbs = new Set(["get", "set", "list", "create", "delete", "update", "reconcile", "put"]);
+  const verb = verbs.has(parts[0]) ? parts[0] : undefined;
+  const nonVerbParts = parts.filter((p) => !verbs.has(p));
+  for (const part of nonVerbParts) {
+    const partMatches = serviceExports.filter((fn) => fn.toLowerCase().includes(part.toLowerCase()));
+    if (verb) {
+      // Prefer matches starting with the same verb (get_quota should not match setQuotaForBucket)
+      const verbFiltered = partMatches.filter((fn) => fn.toLowerCase().startsWith(verb));
+      if (verbFiltered.length === 1) return { name: verbFiltered[0], exact: true };
+    }
+    // Fallback: accept unique match by non-verb word (create_presign → presignObject)
+    // But reject if the match starts with a different verb (get_quota should not match setQuotaForBucket)
+    if (partMatches.length === 1) {
+      const matchLower = partMatches[0].toLowerCase();
+      const startsWithDifferentVerb = verb && [...verbs].some((v) => v !== verb && matchLower.startsWith(v));
+      if (!startsWithDifferentVerb) return { name: partMatches[0], exact: true };
+    }
+  }
+
+  // Route-path match: /v1/buckets/:id/quota → "quota" → getUsage (via route segment)
+  // Extract the last meaningful path segment and match verb + segment
+  if (routePath) {
+    const segments = routePath.split("/").filter((s) => s && !s.startsWith(":") && s !== "v1");
+    const lastSeg = segments[segments.length - 1];
+    if (lastSeg) {
+      const verb = parts[0];
+      const routeBasedCamel = toCamelCase(`${verb}_${lastSeg}`);
+      if (serviceExports.includes(routeBasedCamel)) return { name: routeBasedCamel, exact: true };
+      // Also try verb + singular: "reconcile" + "usage" from "reconcile_storage" won't match,
+      // but "get" + "usage" from route path /quota might if we check fn contains segment
+      const segMatches = serviceExports.filter((fn) => {
+        const fnLower = fn.toLowerCase();
+        return fnLower.startsWith(verb) && fnLower.includes(lastSeg.toLowerCase());
+      });
+      if (segMatches.length === 1) return { name: segMatches[0], exact: true };
+    }
+  }
+
   // First-word prefix match, but only if unambiguous (single match)
   const firstWord = parts[0];
   const prefixMatches = serviceExports.filter((fn) => fn.toLowerCase().startsWith(firstWord.toLowerCase()));
   if (prefixMatches.length === 1) return { name: prefixMatches[0], exact: false };
 
-  // Contains match: query → queryDocuments
-  const containsMatch = serviceExports.find((fn) =>
-    fn.toLowerCase().includes(camel.toLowerCase()),
-  );
-  if (containsMatch) return { name: containsMatch, exact: false };
+  // Broad contains match (fallback — may be wrong, so inexact)
+  if (containsMatches.length > 0) return { name: containsMatches[0], exact: false };
 
   return undefined;
 }
@@ -172,9 +240,11 @@ function buildMinimalBody(
 function syntheticValue(field: ParsedField): string {
   const name = field.name.toLowerCase();
   const type = field.type.toLowerCase();
+  // Strip nullable wrapper for type matching: "number | null" → "number"
+  const baseType = type.replace(/\s*\|\s*null/g, "").trim();
 
   // Special field names
-  if (name === "address" || name.endsWith("_address") || name.endsWith("address")) {
+  if (name === "address" || name === "wallet" || name.endsWith("_address") || name.endsWith("address")) {
     return '"0x0000000000000000000000000000000000000001"';
   }
   if (name === "tracking_number") return '"1Z999AA10123456784"';
@@ -186,12 +256,18 @@ function syntheticValue(field: ParsedField): string {
   if (name === "symbol") return '"TST"';
   if (name === "supply" || name === "initial_supply") return '"1000000"';
   if (name === "years") return "1";
+  if (name === "method") return '"GET"';
 
-  // Type-based fallbacks
-  if (type === "string" || type.startsWith("string")) return '"test"';
-  if (type === "number" || type === "integer") return "1";
-  if (type === "boolean") return "true";
-  if (type.endsWith("[]")) return "[]";
+  // Enum types: pick the first variant — "\"GET\" | \"PUT\"" → "GET"
+  // Use original (non-lowercased) type to preserve case sensitivity
+  const enumMatch = field.type.match(/^"([^"]+)"/);
+  if (enumMatch) return `"${enumMatch[1]}"`;
+
+  // Type-based fallbacks (use baseType to handle nullable)
+  if (baseType === "string" || baseType.startsWith("string")) return '"test"';
+  if (baseType === "number" || baseType === "integer") return "1";
+  if (baseType === "boolean") return "true";
+  if (baseType.endsWith("[]")) return "[]";
 
   return '"test"';
 }
@@ -261,6 +337,7 @@ interface GenContext {
   p: Primitive;
   routes: RouteMapping[];
   serviceExports: string[];
+  serviceExportsDetailed: ServiceExport[];
   mockableServiceFns: string[];
   isFreeService: boolean;
   needsWalletAddress: boolean;
@@ -277,7 +354,8 @@ async function buildContext(p: Primitive): Promise<GenContext> {
   const servicePath = join(ROOT, "packages", p.id, "src/service.ts");
   const dbPath = join(ROOT, "packages", p.id, "src/db.ts");
   const apiPath = join(ROOT, "packages", p.id, "src/api.ts");
-  const serviceExports = parseServiceExports(servicePath);
+  const serviceExportsDetailed = parseServiceExportsDetailed(servicePath);
+  const serviceExports = serviceExportsDetailed.map((e) => e.name);
   const isFreeService = p.factory?.free_service === true;
 
   // Filter to only function-like exports (skip validators, pure helpers, type guards)
@@ -312,6 +390,7 @@ async function buildContext(p: Primitive): Promise<GenContext> {
     p,
     routes,
     serviceExports,
+    serviceExportsDetailed,
     mockableServiceFns,
     isFreeService,
     needsWalletAddress,
@@ -418,7 +497,8 @@ function generateFullFile(ctx: GenContext): string {
   const routeServiceFns = new Map<string, { name: string; exact: boolean }>();
   if (ctx.hasServiceFile) {
     for (const route of ctx.routes) {
-      const matched = matchServiceFn(route.operation_id, ctx.mockableServiceFns);
+      const { path: routePath } = parseRoute(route.route);
+      const matched = matchServiceFn(route.operation_id, ctx.mockableServiceFns, routePath);
       if (matched && ctx.mockableServiceFns.includes(matched.name) && !VITEST_GLOBALS.has(matched.name)) {
         routeServiceFns.set(route.route, matched);
       }
@@ -474,10 +554,6 @@ function pickCheck5Error(
     if (errors.length > 0) {
       const e400 = errors.find((e) => e.status === 400);
       if (e400) return { status: 400, code: e400.code, message: e400.description };
-      // If GET with required query params but no 400 in errors, default to 400 anyway
-      if (hasRequiredQueryParams) {
-        return { status: 400, code: "invalid_request", message: "Missing required query parameter" };
-      }
       const e404 = errors.find((e) => e.status === 404);
       if (e404) return { status: 404, code: e404.code, message: e404.description };
       const nonPayment = errors.find((e) => e.status !== 402);
@@ -578,6 +654,12 @@ function generateMarkedContent(
     const expectedStatus = route.status ?? 200;
     const serviceMatch = routeServiceFns.get(route.route);
     const serviceFn = serviceMatch?.name;
+    const serviceFnDetail = serviceFn
+      ? ctx.serviceExportsDetailed.find((e) => e.name === serviceFn)
+      : undefined;
+    const serviceFnIsAsync = serviceFnDetail?.isAsync ?? true;
+    const serviceFnUsesOk = serviceFnDetail?.usesOkPattern ?? serviceUsesOkWrapper;
+    const mockMethod = serviceFnIsAsync ? "mockResolvedValueOnce" : "mockReturnValueOnce";
     const requestType =
       route.request_type ?? route.request ?? inferTypeNames(route.operation_id, apiInterfaces).request;
     const minimalBody = method !== "GET" && method !== "DELETE" ? buildMinimalBody(requestType, apiInterfaces) : null;
@@ -585,13 +667,17 @@ function generateMarkedContent(
     // Auto-skip routes that the generator can't test reliably:
     // 1. No matched service function → mock won't intercept
     // 2. Inexact match → heuristic match may be wrong function
-    // 3. Parameterized paths on non-free prims → ownership checks against wallet address
-    // 4. Routes with 403 errors → handler checks ownership before service call
+    // 3. Nested param routes on non-free prims that have 403 errors — these do DB-level
+    //    ownership checks before calling the service, so mocking the service isn't enough.
+    //    Single-level params (like /v1/buckets/:id) work because requireCaller() is all
+    //    that's needed. Nested params (like /v1/zones/:id/records) need the parent resource
+    //    to exist in the mock DB.
     const noServiceFn = !serviceFn;
     const inexactMatch = serviceMatch != null && !serviceMatch.exact;
-    const hasOwnershipCheck = !isFreeService && rawPath.includes(":");
-    const has403 = (route.errors ?? []).some((e) => e.status === 403);
-    const needsSkip = noServiceFn || inexactMatch || hasOwnershipCheck || has403;
+    const paramCount = (rawPath.match(/:/g) || []).length;
+    const has403 = (route.errors ?? []).some((e: { status: number }) => e.status === 403);
+    const nestedOwnershipCheck = !isFreeService && paramCount >= 1 && has403;
+    const needsSkip = noServiceFn || inexactMatch || nestedOwnershipCheck;
     const skipPrefix = needsSkip ? ".skip" : "";
 
     // Check 4: happy path
@@ -603,18 +689,18 @@ function generateMarkedContent(
     );
 
     if (serviceFn) {
-      if (serviceUsesOkWrapper) {
+      if (serviceFnUsesOk) {
         lines.push(
           "    // biome-ignore lint/suspicious/noExplicitAny: mock shape — smoke test only checks status code",
         );
         lines.push(
-          `    vi.mocked(${serviceFn}).mockResolvedValueOnce({ ok: true, data: {} } as any);`,
+          `    vi.mocked(${serviceFn}).${mockMethod}({ ok: true, data: {} } as any);`,
         );
       } else {
         lines.push(
           "    // biome-ignore lint/suspicious/noExplicitAny: mock shape — smoke test only checks status code",
         );
-        lines.push(`    vi.mocked(${serviceFn}).mockResolvedValueOnce({} as any);`);
+        lines.push(`    vi.mocked(${serviceFn}).${mockMethod}({} as any);`);
       }
       lines.push("");
     }
@@ -663,12 +749,20 @@ function generateMarkedContent(
     lines.push("  });");
 
     // Check 5: error path — pick error status from route's errors array or defaults
-    const errorEntry = pickCheck5Error(route, method, path, serviceUsesOkWrapper);
+    // Only generate error test if the route has a testable error (400 or 404 in errors list,
+    // or it's a POST/PUT/PATCH that can have body validation). Skip for GET/DELETE list routes
+    // that only have middleware-level errors (402, 403, 429).
+    const routeErrors = route.errors ?? [];
+    const hasTestableError = routeErrors.some(
+      (e: { status: number }) => e.status === 400 || e.status === 404,
+    );
+    const canTriggerError = hasTestableError || method === "POST" || method === "PUT" || method === "PATCH";
+    const errorEntry = canTriggerError ? pickCheck5Error(route, method, path, serviceUsesOkWrapper) : null;
     if (errorEntry) {
       lines.push(`  // Check 5: ${method} ${path} — error path`);
       lines.push(`  it${skipPrefix}("${method} ${path} returns ${errorEntry.status} (${errorEntry.code})", async () => {`);
-      if (serviceFn && serviceUsesOkWrapper) {
-        lines.push(`    vi.mocked(${serviceFn}).mockResolvedValueOnce({`);
+      if (serviceFn && serviceFnUsesOk) {
+        lines.push(`    vi.mocked(${serviceFn}).${mockMethod}({`);
         lines.push("      ok: false,");
         lines.push(`      status: ${errorEntry.status},`);
         lines.push(`      code: "${errorEntry.code}",`);

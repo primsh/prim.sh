@@ -56,20 +56,20 @@ describe("gate.sh app", () => {
   });
 
   // Check 4: POST /v1/redeem — happy path
-  it.skip("POST /v1/redeem returns 200 (happy path)", async () => {
+  it("POST /v1/redeem returns 200 (happy path)", async () => {
     // biome-ignore lint/suspicious/noExplicitAny: mock shape — smoke test only checks status code
     vi.mocked(redeemInvite).mockResolvedValueOnce({ ok: true, data: {} } as any);
 
     const res = await app.request("/v1/redeem", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ code: "test", wallet: "test" }),
+      body: JSON.stringify({ code: "test", wallet: "0x0000000000000000000000000000000000000001" }),
     });
 
     expect(res.status).toBe(200);
   });
   // Check 5: POST /v1/redeem — error path
-  it.skip("POST /v1/redeem returns 400 (invalid_request)", async () => {
+  it("POST /v1/redeem returns 400 (invalid_request)", async () => {
     vi.mocked(redeemInvite).mockResolvedValueOnce({
       ok: false,
       status: 400,
