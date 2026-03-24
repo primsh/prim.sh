@@ -34,7 +34,7 @@ jobs:
         env:
           PRIM_NETWORK: eip155:84532
           REVENUE_WALLET: ${{ secrets.REVENUE_WALLET }}
-          AGENT_PRIVATE_KEY: ${{ secrets.E2E_WALLET_KEY }}
+          AGENT_PRIVATE_KEY: ${{ secrets.TESTNET_WALLET }}
           R2_ACCESS_KEY_ID: ${{ secrets.R2_ACCESS_KEY_ID }}
           R2_SECRET_ACCESS_KEY: ${{ secrets.R2_SECRET_ACCESS_KEY }}
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
