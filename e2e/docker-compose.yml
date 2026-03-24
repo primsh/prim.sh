@@ -1,0 +1,9 @@
+# e2e-local: boots prim services for end-to-end testing on Base Sepolia testnet.
+#
+# Placeholder — Docker-based e2e deferred until after pilot validates the test
+# runner pattern. Current e2e-local uses `bun run` to boot services locally
+# (same as scripts/integration-test.ts). Docker will be added when we need
+# CI-reproducible environments.
+#
+# See: e2e/tests/store.test.ts (test runner)
+# See: .github/workflows/e2e-local.yml (CI workflow)
