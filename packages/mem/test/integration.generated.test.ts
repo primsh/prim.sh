@@ -7,24 +7,24 @@
  * Real qdrant API calls. No x402, no SQLite.
  * Auto-skips when provider credentials are missing.
  *
- * Requires: QDRANT_URL, GOOGLE_API_KEY, WALLET_INTERNAL_URL
+ * Requires: QDRANT_URL, QDRANT_API_KEY
+ * Docs: https://qdrant.tech/documentation/interfaces/
  */
 import { describe, expect, it } from "vitest";
 
-const REQUIRED_ENV = ["QDRANT_URL", "GOOGLE_API_KEY", "WALLET_INTERNAL_URL"];
+const REQUIRED_ENV = ["QDRANT_URL", "QDRANT_API_KEY"];
 const MISSING_ENV = REQUIRED_ENV.filter((k) => !process.env[k]);
 
-describe.skipIf(MISSING_ENV.length > 0)("mem.sh integration — qdrant REST", () => {
+describe.skipIf(MISSING_ENV.length > 0)("mem.sh integration — qdrant", () => {
   if (MISSING_ENV.length > 0) return;
 
-  const apiKey = process.env.QDRANT_URL!;
-
-  it("provider API key is valid (non-empty)", () => {
-    expect(apiKey.length).toBeGreaterThan(0);
+  it("health check — GET Qdrant", async () => {
+    const res = await fetch(`${process.env.QDRANT_URL}/collections`, {
+      method: "GET",
+      headers: {
+        "X-Api-Key": process.env.QDRANT_API_KEY!,
+      },
+    });
+    expect(res.status).toBe(200);
   });
-
-  // TODO: add provider-specific integration tests
-  // Provider: qdrant
-  // Docs: https://qdrant.tech/
-  // Env: QDRANT_URL
 });

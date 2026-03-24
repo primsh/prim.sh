@@ -24,8 +24,12 @@ import { join, resolve } from "node:path";
 import { type ParsedField, type ParsedInterface, extractApiFromSchemas } from "./lib/extract-schemas.js";
 import {
   type Primitive,
+  type ProviderRegistry,
+  type ProviderRegistryEntry,
   type RouteMapping,
   loadPrimitives,
+  loadProviders,
+  providerEnvVars,
   withPackage,
 } from "./lib/primitives.js";
 import { inferTypeNames } from "./lib/render-openapi.js";
@@ -1114,12 +1118,15 @@ function generateUnitMarkedContent(
 // ── Integration test generator (Tier 2) ──────────────────────────────────────
 
 /**
- * Infer the integration test layer from the provider name.
- * S3 layer uses aws4fetch; REST uses plain fetch.
+ * Look up the provider layer from providers.yaml registry.
+ * Falls back to "rest" if the provider isn't in the registry.
  */
-function inferIntegrationLayer(providerName: string): "s3" | "rest" | "none" {
-  const n = providerName.toLowerCase();
-  if (n.includes("r2") || n.includes("s3") || n.includes("minio")) return "s3";
+function getProviderLayer(
+  providerName: string,
+  registry: ProviderRegistry,
+): "s3" | "rest" | "graphql" | "sdk" {
+  const entry = registry[providerName];
+  if (entry) return entry.layer;
   return "rest";
 }
 
@@ -1127,20 +1134,19 @@ function inferIntegrationLayer(providerName: string): "s3" | "rest" | "none" {
  * Generate integration.generated.test.ts — real provider API calls, no x402.
  * Only generated for prims with at least one active provider.
  */
-function generateIntegrationFile(ctx: GenContext): string | null {
+function generateIntegrationFile(
+  ctx: GenContext,
+  registry: ProviderRegistry,
+): string | null {
   const { p, routes } = ctx;
   const activeProvider = p.providers?.find((pr) => pr.status === "active" && pr.default);
   if (!activeProvider) return null;
 
-  const layer = inferIntegrationLayer(activeProvider.name);
-  if (layer === "none") return null;
+  const registryEntry = registry[activeProvider.name];
+  const layer = registryEntry ? registryEntry.layer : "rest";
 
-  // Collect all required env vars from provider + prim-level env
-  const providerEnv = activeProvider.env ?? [];
-  const extraEnv = (p.env ?? []).filter(
-    (e) => !e.startsWith("REVENUE") && !e.startsWith("PRIM_NETWORK") && !providerEnv.includes(e),
-  );
-  const allEnv = [...new Set([...providerEnv, ...extraEnv])];
+  // Env vars from registry (SOT), falling back to prim.yaml
+  const allEnv = registryEntry ? providerEnvVars(registryEntry) : (activeProvider.env ?? []);
 
   // Find create and delete routes for primary resource
   const createRoute = routes.find((r) => r.route.startsWith("POST /v1/"));
@@ -1157,6 +1163,9 @@ function generateIntegrationFile(ctx: GenContext): string | null {
   lines.push(` * Auto-skips when provider credentials are missing.`);
   lines.push(` *`);
   lines.push(` * Requires: ${allEnv.join(", ")}`);
+  if (registryEntry?.docs) {
+    lines.push(` * Docs: ${registryEntry.docs}`);
+  }
   lines.push(" */");
 
   lines.push(`import { afterAll, describe, expect, it } from "vitest";`);
@@ -1183,12 +1192,12 @@ function generateIntegrationFile(ctx: GenContext): string | null {
     lines.push(`import { AwsClient } from "aws4fetch";`);
     lines.push("");
 
-    const accessKeyEnv = providerEnv.find((e) => e.includes("ACCESS_KEY")) ?? "R2_ACCESS_KEY_ID";
-    const secretKeyEnv =
-      providerEnv.find((e) => e.includes("SECRET")) ?? "R2_SECRET_ACCESS_KEY";
-    const accountIdEnv =
-      providerEnv.find((e) => e.includes("ACCOUNT_ID")) ?? "CLOUDFLARE_ACCOUNT_ID";
-    const apiTokenEnv = allEnv.find((e) => e.includes("API_TOKEN")) ?? "CLOUDFLARE_API_TOKEN";
+    const authEnv = registryEntry?.auth.env ?? {};
+    const extraAuthEnv = registryEntry?.auth.extra_env ?? {};
+    const accessKeyEnv = authEnv.access_key ?? "R2_ACCESS_KEY_ID";
+    const secretKeyEnv = authEnv.secret_key ?? "R2_SECRET_ACCESS_KEY";
+    const accountIdEnv = authEnv.account_id ?? "CLOUDFLARE_ACCOUNT_ID";
+    const apiTokenEnv = extraAuthEnv.api_token ?? "CLOUDFLARE_API_TOKEN";
 
     lines.push(`const TEST_BUCKET = \`\${TEST_PREFIX}-bucket\`;`);
     lines.push(`const TEST_KEY = "integration-test.txt";`);
@@ -1301,14 +1310,13 @@ function generateIntegrationFile(ctx: GenContext): string | null {
     lines.push("  });");
     lines.push("});");
   } else {
-    // REST layer — generic fetch-based integration test
-    // Use the provider URL from prim.yaml or infer from provider name
-    // Note: afterAll and TEST_PREFIX are omitted for REST stubs (no resource lifecycle yet)
-    const providerUrl = activeProvider.url ?? "";
-    const apiKeyEnv = providerEnv.find((e) => e.includes("API_KEY") || e.includes("TOKEN")) ?? providerEnv[0];
+    // REST layer — real health check from providers.yaml
+    const hc = registryEntry?.health_check;
+    const authType = registryEntry?.auth.type ?? "api-key";
+    const authEnvRest = registryEntry?.auth.env ?? {};
+    const apiKeyEnvName = authEnvRest.api_key ?? authEnvRest.api_token ?? allEnv[0];
 
-    // Remove unused imports for REST stubs — only need describe, expect, it
-    // Re-emit the import line without afterAll
+    // Remove unused imports for REST — only need describe, expect, it
     lines.length = 0;
     lines.push("// SPDX-License-Identifier: Apache-2.0");
     lines.push(`${GENERATED_HEADER} — DO NOT EDIT`);
@@ -1320,6 +1328,9 @@ function generateIntegrationFile(ctx: GenContext): string | null {
     lines.push(` * Auto-skips when provider credentials are missing.`);
     lines.push(` *`);
     lines.push(` * Requires: ${allEnv.join(", ")}`);
+    if (registryEntry?.docs) {
+      lines.push(` * Docs: ${registryEntry.docs}`);
+    }
     lines.push(" */");
     lines.push(`import { describe, expect, it } from "vitest";`);
     lines.push("");
@@ -1338,28 +1349,92 @@ function generateIntegrationFile(ctx: GenContext): string | null {
     lines.push("");
 
     lines.push(
-      `describe.skipIf(MISSING_ENV.length > 0)("${p.name} integration — ${activeProvider.name} REST", () => {`,
+      `describe.skipIf(MISSING_ENV.length > 0)("${p.name} integration — ${activeProvider.name}", () => {`,
     );
     lines.push("  if (MISSING_ENV.length > 0) return;");
     lines.push("");
-    if (apiKeyEnv) {
-      lines.push(`  const apiKey = process.env.${apiKeyEnv}!;`);
-      lines.push("");
-    }
-    lines.push(`  it("provider API key is valid (non-empty)", () => {`);
-    if (apiKeyEnv) {
-      lines.push(`    expect(apiKey.length).toBeGreaterThan(0);`);
+
+    if (hc) {
+      // Generate a real health check test from the registry
+      const method = hc.method ?? "GET";
+      let url = hc.url;
+      let body = hc.body ?? "";
+      // Replace {env_var_role} placeholders with process.env lookups
+      for (const [role, envName] of Object.entries(authEnvRest)) {
+        url = url.replace(`{${role}}`, `\${process.env.${envName}}`);
+        body = body.replace(`{${role}}`, `\${process.env.${envName}}`);
+      }
+      if (registryEntry?.auth.extra_env) {
+        for (const [role, envName] of Object.entries(registryEntry.auth.extra_env)) {
+          url = url.replace(`{${role}}`, `\${process.env.${envName}}`);
+          body = body.replace(`{${role}}`, `\${process.env.${envName}}`);
+        }
+      }
+
+      lines.push(`  it("health check — ${method} ${registryEntry?.display_name ?? activeProvider.name}", async () => {`);
+      const headers: string[] = [];
+      if (authType === "bearer") {
+        headers.push(`        Authorization: \`Bearer \${process.env.${apiKeyEnvName}}\`,`);
+      } else if (authType === "api-key" && !body) {
+        headers.push(`        "X-Api-Key": process.env.${apiKeyEnvName}!,`);
+      }
+
+      // Extract long URL to a const to stay under 100 chars
+      const fetchLine = `    const res = await fetch(\`${url}\`, {`;
+      const needsUrlConst = fetchLine.length > 100;
+      if (needsUrlConst) {
+        const endpointLine = `    const endpoint = \`${url}\`;`;
+        if (endpointLine.length > 100) {
+          // Split URL at the template literal boundary
+          const parts = url.split("${");
+          if (parts.length > 1) {
+            lines.push(`    const base = "${parts[0]}";`);
+            lines.push(`    const endpoint = \`\${base}\${${parts.slice(1).join("${")}\`;`);
+          } else {
+            lines.push(endpointLine); // can't split, accept the long line
+          }
+        } else {
+          lines.push(endpointLine);
+        }
+      }
+      const fetchTarget = needsUrlConst ? "endpoint" : `\`${url}\``;
+
+      if (body) {
+        const hasInterpolation = body.includes("${");
+        const bodyStr = hasInterpolation ? `\`${body}\`` : `'${body}'`;
+        lines.push(`    const res = await fetch(${fetchTarget}, {`);
+        lines.push(`      method: "${method}",`);
+        if (headers.length > 0) {
+          lines.push("      headers: {");
+          for (const h of headers) lines.push(h);
+          lines.push(`        "Content-Type": "application/json",`);
+          lines.push("      },");
+        } else {
+          lines.push(`      headers: { "Content-Type": "application/json" },`);
+        }
+        lines.push(`      body: ${bodyStr},`);
+        lines.push("    });");
+      } else {
+        lines.push(`    const res = await fetch(${fetchTarget}, {`);
+        lines.push(`      method: "${method}",`);
+        if (headers.length > 0) {
+          lines.push("      headers: {");
+          for (const h of headers) lines.push(h);
+          lines.push("      },");
+        }
+        lines.push("    });");
+      }
+      lines.push(`    expect(res.status).toBe(${hc.expect});`);
+      lines.push("  });");
     } else {
-      lines.push(`    expect(true).toBe(true); // no API key to validate`);
+      // No health check in registry — simple credential validation
+      lines.push(`  it("provider credentials are set", () => {`);
+      lines.push("    for (const key of REQUIRED_ENV) {");
+      lines.push("      expect(process.env[key]).toBeDefined();");
+      lines.push("    }");
+      lines.push("  });");
     }
-    lines.push("  });");
-    lines.push("");
-    lines.push(`  // TODO: add provider-specific integration tests`);
-    lines.push(`  // Provider: ${activeProvider.name}`);
-    if (providerUrl) {
-      lines.push(`  // Docs: ${providerUrl}`);
-    }
-    lines.push(`  // Env: ${providerEnv.join(", ")}`);
+
     lines.push("});");
   }
 
@@ -1600,6 +1675,7 @@ function processGeneratedFile(
 // ── Main ─────────────────────────────────────────────────────────────────────
 
 const prims = loadPrimitives();
+const providerRegistry = loadProviders(ROOT);
 const withPkg = withPackage(prims, ROOT);
 
 // Filter to prims with routes_map
@@ -1647,7 +1723,7 @@ for (const p of targets) {
   }
 
   // ── integration.generated.test.ts (only for prims with active providers) ──
-  const integrationContent = generateIntegrationFile(ctx);
+  const integrationContent = generateIntegrationFile(ctx, providerRegistry);
   if (integrationContent) {
     const integrationPath = join(ROOT, "packages", p.id, "test/integration.generated.test.ts");
     processGeneratedFile(integrationPath, () => integrationContent);

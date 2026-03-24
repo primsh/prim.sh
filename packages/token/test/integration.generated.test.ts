@@ -7,29 +7,23 @@
  * Real viem API calls. No x402, no SQLite.
  * Auto-skips when provider credentials are missing.
  *
- * Requires: BASE_RPC_URL, TOKEN_MASTER_KEY, TOKEN_DEPLOYER_ENCRYPTED_KEY, WALLET_INTERNAL_URL
+ * Requires: BASE_RPC_URL
+ * Docs: https://viem.sh/docs/getting-started
  */
 import { describe, expect, it } from "vitest";
 
-const REQUIRED_ENV = [
-  "BASE_RPC_URL",
-  "TOKEN_MASTER_KEY",
-  "TOKEN_DEPLOYER_ENCRYPTED_KEY",
-  "WALLET_INTERNAL_URL",
-];
+const REQUIRED_ENV = ["BASE_RPC_URL"];
 const MISSING_ENV = REQUIRED_ENV.filter((k) => !process.env[k]);
 
-describe.skipIf(MISSING_ENV.length > 0)("token.sh integration — viem REST", () => {
+describe.skipIf(MISSING_ENV.length > 0)("token.sh integration — viem", () => {
   if (MISSING_ENV.length > 0) return;
 
-  const apiKey = process.env.BASE_RPC_URL!;
-
-  it("provider API key is valid (non-empty)", () => {
-    expect(apiKey.length).toBeGreaterThan(0);
+  it("health check — POST Viem (Base RPC)", async () => {
+    const res = await fetch(`${process.env.BASE_RPC_URL}`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: '{"jsonrpc":"2.0","method":"eth_blockNumber","params":[],"id":1}',
+    });
+    expect(res.status).toBe(200);
   });
-
-  // TODO: add provider-specific integration tests
-  // Provider: viem
-  // Docs: https://viem.sh/
-  // Env: BASE_RPC_URL
 });

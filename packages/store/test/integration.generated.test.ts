@@ -7,15 +7,16 @@
  * Real cloudflare-r2 API calls. No x402, no SQLite.
  * Auto-skips when provider credentials are missing.
  *
- * Requires: CLOUDFLARE_ACCOUNT_ID, R2_ACCESS_KEY_ID, R2_SECRET_ACCESS_KEY, WALLET_INTERNAL_URL
+ * Requires: R2_ACCESS_KEY_ID, R2_SECRET_ACCESS_KEY, CLOUDFLARE_ACCOUNT_ID, CLOUDFLARE_API_TOKEN
+ * Docs: https://developers.cloudflare.com/r2/api/s3/api/
  */
 import { afterAll, describe, expect, it } from "vitest";
 
 const REQUIRED_ENV = [
-  "CLOUDFLARE_ACCOUNT_ID",
   "R2_ACCESS_KEY_ID",
   "R2_SECRET_ACCESS_KEY",
-  "WALLET_INTERNAL_URL",
+  "CLOUDFLARE_ACCOUNT_ID",
+  "CLOUDFLARE_API_TOKEN",
 ];
 const MISSING_ENV = REQUIRED_ENV.filter((k) => !process.env[k]);
 
