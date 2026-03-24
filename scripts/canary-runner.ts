@@ -1,24 +1,24 @@
 #!/usr/bin/env bun
 // SPDX-License-Identifier: Apache-2.0
 /**
- * gate-runner.ts — Deterministic smoke test runner for prim.sh
+ * canary-runner.ts — Deterministic smoke test runner + LLM-driven canary for prim.sh
  *
  * Reads tests/smoke-test-plan.json, executes HTTP requests against live
  * endpoints, asserts on response status/shape, and reports results.
  *
  * Usage:
- *   bun scripts/gate-runner.ts                  # Run all groups
- *   bun scripts/gate-runner.ts --group store    # Run specific group
- *   bun scripts/gate-runner.ts --ci             # CI mode: exit 1 if live prim fails
- *   bun scripts/gate-runner.ts --dry-run        # Show what would be tested
- *   bun scripts/gate-runner.ts --canary         # Agent canary mode
- *   bun scripts/gate-runner.ts --canary --group infer  # Canary for one group
- *   bun scripts/gate-runner.ts --dry-run --canary      # Dry-run canary
- *   bun scripts/gate-runner.ts --canary --group onboarding_e2e --env docker   # Docker backend
- *   bun scripts/gate-runner.ts --canary --group onboarding_e2e --env remote   # DO VPS backend
- *   bun scripts/gate-runner.ts --selftest --env docker    # Validate Docker backend (no LLM/testnet)
- *   bun scripts/gate-runner.ts --selftest --env remote    # Validate remote backend
- *   bun scripts/gate-runner.ts --selftest --env local     # Validate local backend (trivial)
+ *   bun scripts/canary-runner.ts                  # Run all groups
+ *   bun scripts/canary-runner.ts --group store    # Run specific group
+ *   bun scripts/canary-runner.ts --ci             # CI mode: exit 1 if live prim fails
+ *   bun scripts/canary-runner.ts --dry-run        # Show what would be tested
+ *   bun scripts/canary-runner.ts --canary         # Agent canary mode
+ *   bun scripts/canary-runner.ts --canary --group infer  # Canary for one group
+ *   bun scripts/canary-runner.ts --dry-run --canary      # Dry-run canary
+ *   bun scripts/canary-runner.ts --canary --group onboarding_e2e --env docker   # Docker backend
+ *   bun scripts/canary-runner.ts --canary --group onboarding_e2e --env remote   # DO VPS backend
+ *   bun scripts/canary-runner.ts --selftest --env docker    # Validate Docker backend (no LLM/testnet)
+ *   bun scripts/canary-runner.ts --selftest --env remote    # Validate remote backend
+ *   bun scripts/canary-runner.ts --selftest --env local     # Validate local backend (trivial)
  */
 
 import { generateKeyPairSync } from "node:crypto";
@@ -792,7 +792,7 @@ async function generateInviteCode(): Promise<string> {
       "Content-Type": "application/json",
       "x-internal-key": internalKey,
     },
-    body: JSON.stringify({ count: 1, label: "gate-runner-onboarding-e2e" }),
+    body: JSON.stringify({ count: 1, label: "canary-runner-onboarding-e2e" }),
   });
   if (!res.ok) {
     const body = await res.text().catch(() => "(unreadable)");
@@ -2043,7 +2043,7 @@ async function main() {
   const timestamp = new Date().toISOString();
   const testPrefix = `gate-${Date.now()}`;
   captureStore.set("test_prefix", testPrefix);
-  captureStore.set("runner", "gate-runner");
+  captureStore.set("runner", "canary-runner");
 
   // Agent wallet — derive address from private key and pre-sign EIP-191 registration
   // Fall back to TESTNET_WALLET if AGENT_PRIVATE_KEY is not set
