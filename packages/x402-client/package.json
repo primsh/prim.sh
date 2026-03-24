@@ -32,7 +32,7 @@
     "@primsh/x402-middleware": "workspace:*",
     "@primsh/keystore": "workspace:*",
     "@x402/evm": "^2.7.0",
-    "viem": "^2.47.4"
+    "viem": "^2.47.6"
   },
   "devDependencies": {
     "@types/node": "^25.5.0",
