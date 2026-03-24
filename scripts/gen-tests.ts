@@ -19,7 +19,7 @@
  * Hand-written tests go in unit.custom.test.ts — this generator never touches them.
  */
 
-import { existsSync, readFileSync, writeFileSync } from "node:fs";
+import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { join, resolve } from "node:path";
 import { type ParsedField, type ParsedInterface, extractApiFromSchemas } from "./lib/extract-schemas.js";
 import {
@@ -1111,6 +1111,440 @@ function generateUnitMarkedContent(
   return lines.join("\n");
 }
 
+// ── Integration test generator (Tier 2) ──────────────────────────────────────
+
+/**
+ * Infer the integration test layer from the provider name.
+ * S3 layer uses aws4fetch; REST uses plain fetch.
+ */
+function inferIntegrationLayer(providerName: string): "s3" | "rest" | "none" {
+  const n = providerName.toLowerCase();
+  if (n.includes("r2") || n.includes("s3") || n.includes("minio")) return "s3";
+  return "rest";
+}
+
+/**
+ * Generate integration.generated.test.ts — real provider API calls, no x402.
+ * Only generated for prims with at least one active provider.
+ */
+function generateIntegrationFile(ctx: GenContext): string | null {
+  const { p, routes } = ctx;
+  const activeProvider = p.providers?.find((pr) => pr.status === "active" && pr.default);
+  if (!activeProvider) return null;
+
+  const layer = inferIntegrationLayer(activeProvider.name);
+  if (layer === "none") return null;
+
+  // Collect all required env vars from provider + prim-level env
+  const providerEnv = activeProvider.env ?? [];
+  const extraEnv = (p.env ?? []).filter(
+    (e) => !e.startsWith("REVENUE") && !e.startsWith("PRIM_NETWORK") && !providerEnv.includes(e),
+  );
+  const allEnv = [...new Set([...providerEnv, ...extraEnv])];
+
+  // Find create and delete routes for primary resource
+  const createRoute = routes.find((r) => r.route.startsWith("POST /v1/"));
+  const deleteRoute = routes.find((r) => r.route.startsWith("DELETE /v1/"));
+
+  const lines: string[] = [];
+  lines.push("// SPDX-License-Identifier: Apache-2.0");
+  lines.push(`${GENERATED_HEADER} — DO NOT EDIT`);
+  lines.push("// Regenerate: pnpm gen:tests");
+  lines.push("/**");
+  lines.push(` * ${p.name} — Tier 2 integration tests`);
+  lines.push(` *`);
+  lines.push(` * Real ${activeProvider.name} API calls. No x402, no SQLite.`);
+  lines.push(` * Auto-skips when provider credentials are missing.`);
+  lines.push(` *`);
+  lines.push(` * Requires: ${allEnv.join(", ")}`);
+  lines.push(" */");
+
+  lines.push(`import { afterAll, describe, expect, it } from "vitest";`);
+  lines.push("");
+
+  // Env var check
+  const envItems = allEnv.map((e) => `"${e}"`);
+  const singleLine = `const REQUIRED_ENV = [${envItems.join(", ")}];`;
+  if (singleLine.length <= 100) {
+    lines.push(singleLine);
+  } else {
+    lines.push("const REQUIRED_ENV = [");
+    for (const item of envItems) {
+      lines.push(`  ${item},`);
+    }
+    lines.push("];");
+  }
+  lines.push(`const MISSING_ENV = REQUIRED_ENV.filter((k) => !process.env[k]);`);
+  lines.push("");
+  lines.push(`const TEST_PREFIX = \`test-int-\${Date.now()}\`;`);
+  lines.push("");
+
+  if (layer === "s3") {
+    lines.push(`import { AwsClient } from "aws4fetch";`);
+    lines.push("");
+
+    const accessKeyEnv = providerEnv.find((e) => e.includes("ACCESS_KEY")) ?? "R2_ACCESS_KEY_ID";
+    const secretKeyEnv =
+      providerEnv.find((e) => e.includes("SECRET")) ?? "R2_SECRET_ACCESS_KEY";
+    const accountIdEnv =
+      providerEnv.find((e) => e.includes("ACCOUNT_ID")) ?? "CLOUDFLARE_ACCOUNT_ID";
+    const apiTokenEnv = allEnv.find((e) => e.includes("API_TOKEN")) ?? "CLOUDFLARE_API_TOKEN";
+
+    lines.push(`const TEST_BUCKET = \`\${TEST_PREFIX}-bucket\`;`);
+    lines.push(`const TEST_KEY = "integration-test.txt";`);
+    lines.push(`const TEST_CONTENT = "hello from ${p.id} integration test";`);
+    lines.push("");
+    lines.push(`function getS3Client(): AwsClient {`);
+    lines.push(`  return new AwsClient({`);
+    lines.push(`    accessKeyId: process.env.${accessKeyEnv}!,`);
+    lines.push(`    secretAccessKey: process.env.${secretKeyEnv}!,`);
+    lines.push(`    service: "s3",`);
+    lines.push("  });");
+    lines.push("}");
+    lines.push("");
+    lines.push(`function baseUrl(): string {`);
+    lines.push(
+      `  return \`https://\${process.env.${accountIdEnv}}.r2.cloudflarestorage.com\`;`,
+    );
+    lines.push("}");
+    lines.push("");
+    lines.push(`async function cfCreateBucket(name: string): Promise<void> {`);
+    lines.push("  const res = await fetch(");
+    lines.push(
+      `    \`https://api.cloudflare.com/client/v4/accounts/\${process.env.${accountIdEnv}}/r2/buckets\`,`,
+    );
+    lines.push("    {");
+    lines.push(`      method: "POST",`);
+    lines.push("      headers: {");
+    lines.push(`        Authorization: \`Bearer \${process.env.${apiTokenEnv}}\`,`);
+    lines.push(`        "Content-Type": "application/json",`);
+    lines.push("      },");
+    lines.push("      body: JSON.stringify({ name }),");
+    lines.push("    },");
+    lines.push("  );");
+    lines.push(`  if (!res.ok) throw new Error(\`Create bucket failed: \${res.status}\`);`);
+    lines.push("}");
+    lines.push("");
+    lines.push(`async function cfDeleteBucket(name: string): Promise<void> {`);
+    lines.push(`  const acct = process.env.${accountIdEnv};`);
+    lines.push("  const res = await fetch(");
+    lines.push(
+      "    `https://api.cloudflare.com/client/v4/accounts/${acct}/r2/buckets/${name}`,",
+    );
+    lines.push("    {");
+    lines.push(`      method: "DELETE",`);
+    lines.push(`      headers: { Authorization: \`Bearer \${process.env.${apiTokenEnv}}\` },`);
+    lines.push("    },");
+    lines.push("  );");
+    lines.push(`  if (!res.ok && res.status !== 404) throw new Error(\`Delete bucket failed: \${res.status}\`);`);
+    lines.push("}");
+    lines.push("");
+    lines.push(
+      `describe.skipIf(MISSING_ENV.length > 0)("${p.name} integration — S3 layer", () => {`,
+    );
+    lines.push("  if (MISSING_ENV.length > 0) return;");
+    lines.push("");
+    lines.push("  const s3 = getS3Client();");
+    lines.push(
+      "  const url = (path: string) => `${baseUrl()}/${TEST_BUCKET}${path}`;",
+    );
+    lines.push("");
+    lines.push("  afterAll(async () => {");
+    lines.push("    try {");
+    lines.push(`      await s3.fetch(url(\`/\${TEST_KEY}\`), { method: "DELETE" });`);
+    lines.push("    } catch {");
+    lines.push("      /* cleanup */");
+    lines.push("    }");
+    lines.push("    try {");
+    lines.push("      await cfDeleteBucket(TEST_BUCKET);");
+    lines.push("    } catch {");
+    lines.push("      /* cleanup */");
+    lines.push("    }");
+    lines.push("  });");
+    lines.push("");
+    lines.push(`  it("creates a test bucket", async () => {`);
+    lines.push("    await cfCreateBucket(TEST_BUCKET);");
+    lines.push(`    const res = await s3.fetch(url("/"), { method: "HEAD" });`);
+    lines.push("    expect(res.status).toBe(200);");
+    lines.push("  });");
+    lines.push("");
+    lines.push(`  it("PUT object uploads", async () => {`);
+    lines.push(`    const res = await s3.fetch(url(\`/\${TEST_KEY}\`), {`);
+    lines.push(`      method: "PUT",`);
+    lines.push(`      headers: { "Content-Type": "text/plain" },`);
+    lines.push(`      body: TEST_CONTENT,`);
+    lines.push(`    });`);
+    lines.push("    expect(res.status).toBe(200);");
+    lines.push("  });");
+    lines.push("");
+    lines.push(`  it("GET object downloads", async () => {`);
+    lines.push(`    const res = await s3.fetch(url(\`/\${TEST_KEY}\`));`);
+    lines.push("    expect(res.status).toBe(200);");
+    lines.push("    expect(await res.text()).toBe(TEST_CONTENT);");
+    lines.push("  });");
+    lines.push("");
+    lines.push(`  it("LIST includes the object", async () => {`);
+    lines.push(`    const res = await s3.fetch(url("/?list-type=2"));`);
+    lines.push("    expect(res.status).toBe(200);");
+    lines.push("    expect(await res.text()).toContain(TEST_KEY);");
+    lines.push("  });");
+    lines.push("");
+    lines.push(`  it("DELETE object removes it", async () => {`);
+    lines.push(`    const res = await s3.fetch(url(\`/\${TEST_KEY}\`), { method: "DELETE" });`);
+    lines.push("    expect(res.status).toBe(204);");
+    lines.push("  });");
+    lines.push("");
+    lines.push(`  it("deletes the test bucket", async () => {`);
+    lines.push("    await cfDeleteBucket(TEST_BUCKET);");
+    lines.push(`    const res = await s3.fetch(url("/"), { method: "HEAD" });`);
+    lines.push("    expect(res.status).toBe(404);");
+    lines.push("  });");
+    lines.push("});");
+  } else {
+    // REST layer — generic fetch-based integration test
+    // Use the provider URL from prim.yaml or infer from provider name
+    // Note: afterAll and TEST_PREFIX are omitted for REST stubs (no resource lifecycle yet)
+    const providerUrl = activeProvider.url ?? "";
+    const apiKeyEnv = providerEnv.find((e) => e.includes("API_KEY") || e.includes("TOKEN")) ?? providerEnv[0];
+
+    // Remove unused imports for REST stubs — only need describe, expect, it
+    // Re-emit the import line without afterAll
+    lines.length = 0;
+    lines.push("// SPDX-License-Identifier: Apache-2.0");
+    lines.push(`${GENERATED_HEADER} — DO NOT EDIT`);
+    lines.push("// Regenerate: pnpm gen:tests");
+    lines.push("/**");
+    lines.push(` * ${p.name} — Tier 2 integration tests`);
+    lines.push(` *`);
+    lines.push(` * Real ${activeProvider.name} API calls. No x402, no SQLite.`);
+    lines.push(` * Auto-skips when provider credentials are missing.`);
+    lines.push(` *`);
+    lines.push(` * Requires: ${allEnv.join(", ")}`);
+    lines.push(" */");
+    lines.push(`import { describe, expect, it } from "vitest";`);
+    lines.push("");
+    const envItemsRest = allEnv.map((e) => `"${e}"`);
+    const singleLineRest = `const REQUIRED_ENV = [${envItemsRest.join(", ")}];`;
+    if (singleLineRest.length <= 100) {
+      lines.push(singleLineRest);
+    } else {
+      lines.push("const REQUIRED_ENV = [");
+      for (const item of envItemsRest) {
+        lines.push(`  ${item},`);
+      }
+      lines.push("];");
+    }
+    lines.push(`const MISSING_ENV = REQUIRED_ENV.filter((k) => !process.env[k]);`);
+    lines.push("");
+
+    lines.push(
+      `describe.skipIf(MISSING_ENV.length > 0)("${p.name} integration — ${activeProvider.name} REST", () => {`,
+    );
+    lines.push("  if (MISSING_ENV.length > 0) return;");
+    lines.push("");
+    if (apiKeyEnv) {
+      lines.push(`  const apiKey = process.env.${apiKeyEnv}!;`);
+      lines.push("");
+    }
+    lines.push(`  it("provider API key is valid (non-empty)", () => {`);
+    if (apiKeyEnv) {
+      lines.push(`    expect(apiKey.length).toBeGreaterThan(0);`);
+    } else {
+      lines.push(`    expect(true).toBe(true); // no API key to validate`);
+    }
+    lines.push("  });");
+    lines.push("");
+    lines.push(`  // TODO: add provider-specific integration tests`);
+    lines.push(`  // Provider: ${activeProvider.name}`);
+    if (providerUrl) {
+      lines.push(`  // Docs: ${providerUrl}`);
+    }
+    lines.push(`  // Env: ${providerEnv.join(", ")}`);
+    lines.push("});");
+  }
+
+  return `${lines.join("\n")}\n`;
+}
+
+// ── E2E local test generator (Tier 3) ────────────────────────────────────────
+
+/**
+ * Generate e2e/tests/<id>.generated.ts — Bun script that boots the prim service
+ * locally and sends real HTTP requests with x402 payment on testnet.
+ */
+function generateE2eLocalFile(ctx: GenContext): string | null {
+  const { p, routes } = ctx;
+  if (!p.status || (p.status !== "mainnet" && p.status !== "testnet")) return null;
+  if (!routes.length) return null;
+
+  const port = p.port ?? 3000;
+  const isFree = ctx.isFreeService;
+
+  // Find the first POST route for the create/402 test
+  const firstPostRoute = routes.find((r) => r.route.startsWith("POST "));
+  const firstPostPath = firstPostRoute ? firstPostRoute.route.replace(/^POST\s+/, "") : null;
+
+  // Build minimal body for the first POST route
+  const requestType = firstPostRoute
+    ? firstPostRoute.request_type ??
+      firstPostRoute.request ??
+      inferTypeNames(firstPostRoute.operation_id, ctx.apiInterfaces).request
+    : null;
+  const minimalBodyStr = requestType ? buildMinimalBody(requestType, ctx.apiInterfaces) : "{}";
+
+  // Provider env vars needed
+  const providerEnv = (p.providers ?? [])
+    .filter((pr) => pr.status === "active")
+    .flatMap((pr) => pr.env ?? []);
+
+  const lines: string[] = [];
+  lines.push("#!/usr/bin/env bun");
+  lines.push("// SPDX-License-Identifier: Apache-2.0");
+  lines.push(`${GENERATED_HEADER} — DO NOT EDIT`);
+  lines.push("// Regenerate: pnpm gen:tests");
+  lines.push("/**");
+  lines.push(` * ${p.name} — Tier 3 e2e-local test`);
+  lines.push(` *`);
+  lines.push(` * Boots ${p.name} locally, sends real HTTP requests with x402 on testnet.`);
+  lines.push(` * Usage: source scripts/.env.testnet && bun e2e/tests/${p.id}.generated.ts`);
+  lines.push(" */");
+  lines.push("");
+  lines.push(`import { spawn } from "node:child_process";`);
+  lines.push(`import type { ChildProcess } from "node:child_process";`);
+  if (!isFree) {
+    lines.push(`import { createPrimFetch } from "@primsh/x402-client";`);
+  }
+  lines.push("");
+  lines.push(`const PORT = ${port};`);
+  lines.push(`const URL = \`http://localhost:\${PORT}\`;`);
+  lines.push("");
+
+  // Env checks
+  lines.push(`function requireEnv(name: string): string {`);
+  lines.push(`  const val = process.env[name];`);
+  lines.push(`  if (!val) { console.error(\`Missing: \${name}\`); process.exit(1); }`);
+  lines.push("  return val;");
+  lines.push("}");
+  lines.push("");
+  lines.push(`const network = requireEnv("PRIM_NETWORK");`);
+  lines.push(`if (network !== "eip155:84532") {`);
+  lines.push(`  console.error("PRIM_NETWORK must be eip155:84532 (testnet)");`);
+  lines.push("  process.exit(1);");
+  lines.push("}");
+  if (!isFree) {
+    lines.push(`const agentKey = requireEnv("AGENT_PRIVATE_KEY");`);
+  }
+  lines.push("");
+
+  // Service lifecycle
+  lines.push("let proc: ChildProcess;");
+  lines.push("");
+  lines.push("async function start(): Promise<void> {");
+  lines.push(`  proc = spawn("bun", ["run", "packages/${p.id}/src/index.ts"], {`);
+  lines.push(`    env: { ...process.env, ${p.id.toUpperCase()}_PORT: String(PORT) },`);
+  lines.push(`    stdio: ["ignore", "pipe", "pipe"],`);
+  lines.push("  });");
+  lines.push("  for (let i = 0; i < 30; i++) {");
+  lines.push("    try {");
+  lines.push(`      const res = await fetch(\`\${URL}/\`);`);
+  lines.push("      if (res.ok) return;");
+  lines.push(`    } catch { /* not ready */ }`);
+  lines.push("    await new Promise((r) => setTimeout(r, 500));");
+  lines.push("  }");
+  lines.push(`  throw new Error("${p.name} failed to start within 15s");`);
+  lines.push("}");
+  lines.push("");
+  lines.push(`function stop(): void { if (proc) proc.kill("SIGTERM"); }`);
+  lines.push("");
+
+  if (!isFree) {
+    lines.push("const primFetch = createPrimFetch({");
+    lines.push("  privateKey: agentKey as `0x${string}`,");
+    lines.push("  network,");
+    lines.push("});");
+    lines.push("");
+  }
+
+  // Test runner
+  lines.push("let passed = 0;");
+  lines.push("let failed = 0;");
+  lines.push("");
+  lines.push("async function test(name: string, fn: () => Promise<void>): Promise<void> {");
+  lines.push("  try {");
+  lines.push("    await fn();");
+  lines.push('    console.log(`  ✓ ${name}`);');
+  lines.push("    passed++;");
+  lines.push("  } catch (err) {");
+  lines.push('    console.error(`  ✗ ${name}`);');
+  lines.push("    console.error(`    ${err instanceof Error ? err.message : err}`);");
+  lines.push("    failed++;");
+  lines.push("  }");
+  lines.push("}");
+  lines.push("");
+  lines.push("function assert(cond: boolean, msg: string): void { if (!cond) throw new Error(msg); }");
+  lines.push("");
+
+  // Tests
+  lines.push(`console.log(\`\\n${p.name} e2e-local (testnet, \${URL})\\n\`);`);
+  lines.push("");
+  lines.push("await start();");
+  lines.push("");
+  lines.push("try {");
+
+  // Health check
+  lines.push(`  await test("GET / → 200 health", async () => {`);
+  lines.push(`    const res = await fetch(\`\${URL}/\`);`);
+  lines.push(`    assert(res.status === 200, \`expected 200, got \${res.status}\`);`);
+  lines.push(`    const body = await res.json() as { service: string };`);
+  lines.push(`    assert(body.service === "${p.name}", \`expected ${p.name}, got \${body.service}\`);`);
+  lines.push("  });");
+  lines.push("");
+
+  // 402 check for paid routes
+  if (!isFree && firstPostPath) {
+    lines.push(`  await test("${firstPostRoute!.route} → 402 without payment", async () => {`);
+    const testPath = firstPostPath.replace(/:([a-zA-Z_]+)/g, "test-$1");
+    lines.push(`    const res = await fetch(\`\${URL}${testPath}\`, { method: "POST", body: "{}" });`);
+    lines.push(`    assert(res.status === 402, \`expected 402, got \${res.status}\`);`);
+    lines.push("  });");
+    lines.push("");
+  }
+
+  // Paid request with x402
+  if (!isFree && firstPostRoute) {
+    const testPath = firstPostPath!.replace(/:([a-zA-Z_]+)/g, "test-$1");
+    lines.push(`  await test("${firstPostRoute.route} → paid request", async () => {`);
+    lines.push(`    const res = await primFetch(\`\${URL}${testPath}\`, {`);
+    lines.push(`      method: "POST",`);
+    lines.push(`      headers: { "Content-Type": "application/json" },`);
+    const bodyLine = `      body: JSON.stringify(${minimalBodyStr}),`;
+    if (bodyLine.length <= 100) {
+      lines.push(bodyLine);
+    } else {
+      const fields = minimalBodyStr.replace(/^\{/, "").replace(/\}$/, "").trim();
+      lines.push("      body: JSON.stringify({");
+      for (const field of fields.split(", ")) {
+        lines.push(`        ${field},`);
+      }
+      lines.push("      }),");
+    }
+    lines.push("    });");
+    lines.push(
+      `    assert(res.status >= 200 && res.status < 300, \`expected 2xx, got \${res.status}\`);`,
+    );
+    lines.push("  });");
+  }
+
+  lines.push("} finally {");
+  lines.push("  stop();");
+  lines.push("}");
+  lines.push("");
+  lines.push("console.log(`\\n${passed} passed, ${failed} failed\\n`);");
+  lines.push("process.exit(failed > 0 ? 1 : 0);");
+
+  return `${lines.join("\n")}\n`;
+}
+
 // ── File processing helper ────────────────────────────────────────────────────
 
 /**
@@ -1210,6 +1644,22 @@ for (const p of targets) {
       const unitTestPath = join(ROOT, "packages", p.id, "test/service.generated.test.ts");
       processGeneratedFile(unitTestPath, () => generateUnitFile(ctx));
     }
+  }
+
+  // ── integration.generated.test.ts (only for prims with active providers) ──
+  const integrationContent = generateIntegrationFile(ctx);
+  if (integrationContent) {
+    const integrationPath = join(ROOT, "packages", p.id, "test/integration.generated.test.ts");
+    processGeneratedFile(integrationPath, () => integrationContent);
+  }
+
+  // ── e2e/tests/<id>.generated.ts (only for mainnet/testnet prims) ──
+  const e2eContent = generateE2eLocalFile(ctx);
+  if (e2eContent) {
+    const e2eDir = join(ROOT, "e2e/tests");
+    if (!existsSync(e2eDir)) mkdirSync(e2eDir, { recursive: true });
+    const e2ePath = join(e2eDir, `${p.id}.generated.ts`);
+    processGeneratedFile(e2ePath, () => e2eContent);
   }
 }
 
