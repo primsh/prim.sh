@@ -139,7 +139,6 @@ Part of [prim.sh](https://prim.sh) — zero signup, one payment token, infinite 
 | Provider | Status | Default |
 |----------|--------|---------|
 | [digitalocean](https://www.digitalocean.com/) | active | yes |
-| [hetzner](https://www.hetzner.com/cloud/) | active | no |
 
 ## Usage
 
