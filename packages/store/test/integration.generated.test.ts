@@ -11,7 +11,12 @@
  */
 import { afterAll, describe, expect, it } from "vitest";
 
-const REQUIRED_ENV = ["CLOUDFLARE_ACCOUNT_ID","R2_ACCESS_KEY_ID","R2_SECRET_ACCESS_KEY","WALLET_INTERNAL_URL"];
+const REQUIRED_ENV = [
+  "CLOUDFLARE_ACCOUNT_ID",
+  "R2_ACCESS_KEY_ID",
+  "R2_SECRET_ACCESS_KEY",
+  "WALLET_INTERNAL_URL",
+];
 const MISSING_ENV = REQUIRED_ENV.filter((k) => !process.env[k]);
 
 const TEST_PREFIX = `test-int-${Date.now()}`;
@@ -50,9 +55,13 @@ async function cfCreateBucket(name: string): Promise<void> {
 }
 
 async function cfDeleteBucket(name: string): Promise<void> {
+  const acct = process.env.CLOUDFLARE_ACCOUNT_ID;
   const res = await fetch(
-    `https://api.cloudflare.com/client/v4/accounts/${process.env.CLOUDFLARE_ACCOUNT_ID}/r2/buckets/${name}`,
-    { method: "DELETE", headers: { Authorization: `Bearer ${process.env.CLOUDFLARE_API_TOKEN}` } },
+    `https://api.cloudflare.com/client/v4/accounts/${acct}/r2/buckets/${name}`,
+    {
+      method: "DELETE",
+      headers: { Authorization: `Bearer ${process.env.CLOUDFLARE_API_TOKEN}` },
+    },
   );
   if (!res.ok && res.status !== 404) throw new Error(`Delete bucket failed: ${res.status}`);
 }
@@ -64,8 +73,16 @@ describe.skipIf(MISSING_ENV.length > 0)("store.sh integration — S3 layer", () 
   const url = (path: string) => `${baseUrl()}/${TEST_BUCKET}${path}`;
 
   afterAll(async () => {
-    try { await s3.fetch(url(`/${TEST_KEY}`), { method: "DELETE" }); } catch { /* cleanup */ }
-    try { await cfDeleteBucket(TEST_BUCKET); } catch { /* cleanup */ }
+    try {
+      await s3.fetch(url(`/${TEST_KEY}`), { method: "DELETE" });
+    } catch {
+      /* cleanup */
+    }
+    try {
+      await cfDeleteBucket(TEST_BUCKET);
+    } catch {
+      /* cleanup */
+    }
   });
 
   it("creates a test bucket", async () => {
@@ -75,7 +92,11 @@ describe.skipIf(MISSING_ENV.length > 0)("store.sh integration — S3 layer", () 
   });
 
   it("PUT object uploads", async () => {
-    const res = await s3.fetch(url(`/${TEST_KEY}`), { method: "PUT", headers: { "Content-Type": "text/plain" }, body: TEST_CONTENT });
+    const res = await s3.fetch(url(`/${TEST_KEY}`), {
+      method: "PUT",
+      headers: { "Content-Type": "text/plain" },
+      body: TEST_CONTENT,
+    });
     expect(res.status).toBe(200);
   });
 

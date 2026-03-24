@@ -9,12 +9,10 @@
  *
  * Requires: TAVILY_API_KEY, WALLET_INTERNAL_URL
  */
-import { afterAll, describe, expect, it } from "vitest";
+import { describe, expect, it } from "vitest";
 
-const REQUIRED_ENV = ["TAVILY_API_KEY","WALLET_INTERNAL_URL"];
+const REQUIRED_ENV = ["TAVILY_API_KEY", "WALLET_INTERNAL_URL"];
 const MISSING_ENV = REQUIRED_ENV.filter((k) => !process.env[k]);
-
-const TEST_PREFIX = `test-int-${Date.now()}`;
 
 describe.skipIf(MISSING_ENV.length > 0)("search.sh integration — tavily REST", () => {
   if (MISSING_ENV.length > 0) return;

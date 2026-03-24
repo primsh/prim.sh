@@ -57,8 +57,15 @@ let passed = 0;
 let failed = 0;
 
 async function test(name: string, fn: () => Promise<void>): Promise<void> {
-  try { await fn(); console.log(`  ✓ ${name}`); passed++; }
-  catch (err) { console.error(`  ✗ ${name}`); console.error(`    ${err instanceof Error ? err.message : err}`); failed++; }
+  try {
+    await fn();
+    console.log(`  ✓ ${name}`);
+    passed++;
+  } catch (err) {
+    console.error(`  ✗ ${name}`);
+    console.error(`    ${err instanceof Error ? err.message : err}`);
+    failed++;
+  }
 }
 
 function assert(cond: boolean, msg: string): void { if (!cond) throw new Error(msg); }

@@ -9,12 +9,15 @@
  *
  * Requires: CLOUDFLARE_API_TOKEN, CLOUDFLARE_ZONE_ID, NAMESILO_API_KEY, WALLET_INTERNAL_URL
  */
-import { afterAll, describe, expect, it } from "vitest";
+import { describe, expect, it } from "vitest";
 
-const REQUIRED_ENV = ["CLOUDFLARE_API_TOKEN","CLOUDFLARE_ZONE_ID","NAMESILO_API_KEY","WALLET_INTERNAL_URL"];
+const REQUIRED_ENV = [
+  "CLOUDFLARE_API_TOKEN",
+  "CLOUDFLARE_ZONE_ID",
+  "NAMESILO_API_KEY",
+  "WALLET_INTERNAL_URL",
+];
 const MISSING_ENV = REQUIRED_ENV.filter((k) => !process.env[k]);
-
-const TEST_PREFIX = `test-int-${Date.now()}`;
 
 describe.skipIf(MISSING_ENV.length > 0)("domain.sh integration — cloudflare REST", () => {
   if (MISSING_ENV.length > 0) return;

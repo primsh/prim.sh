@@ -1163,7 +1163,17 @@ function generateIntegrationFile(ctx: GenContext): string | null {
   lines.push("");
 
   // Env var check
-  lines.push(`const REQUIRED_ENV = ${JSON.stringify(allEnv)};`);
+  const envItems = allEnv.map((e) => `"${e}"`);
+  const singleLine = `const REQUIRED_ENV = [${envItems.join(", ")}];`;
+  if (singleLine.length <= 100) {
+    lines.push(singleLine);
+  } else {
+    lines.push("const REQUIRED_ENV = [");
+    for (const item of envItems) {
+      lines.push(`  ${item},`);
+    }
+    lines.push("];");
+  }
   lines.push(`const MISSING_ENV = REQUIRED_ENV.filter((k) => !process.env[k]);`);
   lines.push("");
   lines.push(`const TEST_PREFIX = \`test-int-\${Date.now()}\`;`);
@@ -1216,13 +1226,15 @@ function generateIntegrationFile(ctx: GenContext): string | null {
     lines.push("}");
     lines.push("");
     lines.push(`async function cfDeleteBucket(name: string): Promise<void> {`);
+    lines.push(`  const acct = process.env.${accountIdEnv};`);
     lines.push("  const res = await fetch(");
     lines.push(
-      `    \`https://api.cloudflare.com/client/v4/accounts/\${process.env.${accountIdEnv}}/r2/buckets/\${name}\`,`,
+      "    `https://api.cloudflare.com/client/v4/accounts/${acct}/r2/buckets/${name}`,",
     );
-    lines.push(
-      `    { method: "DELETE", headers: { Authorization: \`Bearer \${process.env.${apiTokenEnv}}\` } },`,
-    );
+    lines.push("    {");
+    lines.push(`      method: "DELETE",`);
+    lines.push(`      headers: { Authorization: \`Bearer \${process.env.${apiTokenEnv}}\` },`);
+    lines.push("    },");
     lines.push("  );");
     lines.push(`  if (!res.ok && res.status !== 404) throw new Error(\`Delete bucket failed: \${res.status}\`);`);
     lines.push("}");
@@ -1238,8 +1250,16 @@ function generateIntegrationFile(ctx: GenContext): string | null {
     );
     lines.push("");
     lines.push("  afterAll(async () => {");
-    lines.push(`    try { await s3.fetch(url(\`/\${TEST_KEY}\`), { method: "DELETE" }); } catch { /* cleanup */ }`);
-    lines.push(`    try { await cfDeleteBucket(TEST_BUCKET); } catch { /* cleanup */ }`);
+    lines.push("    try {");
+    lines.push(`      await s3.fetch(url(\`/\${TEST_KEY}\`), { method: "DELETE" });`);
+    lines.push("    } catch {");
+    lines.push("      /* cleanup */");
+    lines.push("    }");
+    lines.push("    try {");
+    lines.push("      await cfDeleteBucket(TEST_BUCKET);");
+    lines.push("    } catch {");
+    lines.push("      /* cleanup */");
+    lines.push("    }");
     lines.push("  });");
     lines.push("");
     lines.push(`  it("creates a test bucket", async () => {`);
@@ -1249,9 +1269,11 @@ function generateIntegrationFile(ctx: GenContext): string | null {
     lines.push("  });");
     lines.push("");
     lines.push(`  it("PUT object uploads", async () => {`);
-    lines.push(
-      `    const res = await s3.fetch(url(\`/\${TEST_KEY}\`), { method: "PUT", headers: { "Content-Type": "text/plain" }, body: TEST_CONTENT });`,
-    );
+    lines.push(`    const res = await s3.fetch(url(\`/\${TEST_KEY}\`), {`);
+    lines.push(`      method: "PUT",`);
+    lines.push(`      headers: { "Content-Type": "text/plain" },`);
+    lines.push(`      body: TEST_CONTENT,`);
+    lines.push(`    });`);
     lines.push("    expect(res.status).toBe(200);");
     lines.push("  });");
     lines.push("");
@@ -1281,8 +1303,39 @@ function generateIntegrationFile(ctx: GenContext): string | null {
   } else {
     // REST layer — generic fetch-based integration test
     // Use the provider URL from prim.yaml or infer from provider name
+    // Note: afterAll and TEST_PREFIX are omitted for REST stubs (no resource lifecycle yet)
     const providerUrl = activeProvider.url ?? "";
     const apiKeyEnv = providerEnv.find((e) => e.includes("API_KEY") || e.includes("TOKEN")) ?? providerEnv[0];
+
+    // Remove unused imports for REST stubs — only need describe, expect, it
+    // Re-emit the import line without afterAll
+    lines.length = 0;
+    lines.push("// SPDX-License-Identifier: Apache-2.0");
+    lines.push(`${GENERATED_HEADER} — DO NOT EDIT`);
+    lines.push("// Regenerate: pnpm gen:tests");
+    lines.push("/**");
+    lines.push(` * ${p.name} — Tier 2 integration tests`);
+    lines.push(` *`);
+    lines.push(` * Real ${activeProvider.name} API calls. No x402, no SQLite.`);
+    lines.push(` * Auto-skips when provider credentials are missing.`);
+    lines.push(` *`);
+    lines.push(` * Requires: ${allEnv.join(", ")}`);
+    lines.push(" */");
+    lines.push(`import { describe, expect, it } from "vitest";`);
+    lines.push("");
+    const envItemsRest = allEnv.map((e) => `"${e}"`);
+    const singleLineRest = `const REQUIRED_ENV = [${envItemsRest.join(", ")}];`;
+    if (singleLineRest.length <= 100) {
+      lines.push(singleLineRest);
+    } else {
+      lines.push("const REQUIRED_ENV = [");
+      for (const item of envItemsRest) {
+        lines.push(`  ${item},`);
+      }
+      lines.push("];");
+    }
+    lines.push(`const MISSING_ENV = REQUIRED_ENV.filter((k) => !process.env[k]);`);
+    lines.push("");
 
     lines.push(
       `describe.skipIf(MISSING_ENV.length > 0)("${p.name} integration — ${activeProvider.name} REST", () => {`,
@@ -1310,7 +1363,7 @@ function generateIntegrationFile(ctx: GenContext): string | null {
     lines.push("});");
   }
 
-  return lines.join("\n");
+  return `${lines.join("\n")}\n`;
 }
 
 // ── E2E local test generator (Tier 3) ────────────────────────────────────────
@@ -1417,8 +1470,15 @@ function generateE2eLocalFile(ctx: GenContext): string | null {
   lines.push("let failed = 0;");
   lines.push("");
   lines.push("async function test(name: string, fn: () => Promise<void>): Promise<void> {");
-  lines.push("  try { await fn(); console.log(`  ✓ ${name}`); passed++; }");
-  lines.push("  catch (err) { console.error(`  ✗ ${name}`); console.error(`    ${err instanceof Error ? err.message : err}`); failed++; }");
+  lines.push("  try {");
+  lines.push("    await fn();");
+  lines.push('    console.log(`  ✓ ${name}`);');
+  lines.push("    passed++;");
+  lines.push("  } catch (err) {");
+  lines.push('    console.error(`  ✗ ${name}`);');
+  lines.push("    console.error(`    ${err instanceof Error ? err.message : err}`);");
+  lines.push("    failed++;");
+  lines.push("  }");
   lines.push("}");
   lines.push("");
   lines.push("function assert(cond: boolean, msg: string): void { if (!cond) throw new Error(msg); }");
@@ -1457,7 +1517,17 @@ function generateE2eLocalFile(ctx: GenContext): string | null {
     lines.push(`    const res = await primFetch(\`\${URL}${testPath}\`, {`);
     lines.push(`      method: "POST",`);
     lines.push(`      headers: { "Content-Type": "application/json" },`);
-    lines.push(`      body: JSON.stringify(${minimalBodyStr}),`);
+    const bodyLine = `      body: JSON.stringify(${minimalBodyStr}),`;
+    if (bodyLine.length <= 100) {
+      lines.push(bodyLine);
+    } else {
+      const fields = minimalBodyStr.replace(/^\{/, "").replace(/\}$/, "").trim();
+      lines.push("      body: JSON.stringify({");
+      for (const field of fields.split(", ")) {
+        lines.push(`        ${field},`);
+      }
+      lines.push("      }),");
+    }
     lines.push("    });");
     lines.push(
       `    assert(res.status >= 200 && res.status < 300, \`expected 2xx, got \${res.status}\`);`,
@@ -1472,7 +1542,7 @@ function generateE2eLocalFile(ctx: GenContext): string | null {
   lines.push("console.log(`\\n${passed} passed, ${failed} failed\\n`);");
   lines.push("process.exit(failed > 0 ? 1 : 0);");
 
-  return lines.join("\n");
+  return `${lines.join("\n")}\n`;
 }
 
 // ── File processing helper ────────────────────────────────────────────────────

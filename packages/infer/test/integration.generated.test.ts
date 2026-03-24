@@ -9,12 +9,10 @@
  *
  * Requires: OPENROUTER_API_KEY, WALLET_INTERNAL_URL, PRIM_INTERNAL_KEY
  */
-import { afterAll, describe, expect, it } from "vitest";
+import { describe, expect, it } from "vitest";
 
-const REQUIRED_ENV = ["OPENROUTER_API_KEY","WALLET_INTERNAL_URL","PRIM_INTERNAL_KEY"];
+const REQUIRED_ENV = ["OPENROUTER_API_KEY", "WALLET_INTERNAL_URL", "PRIM_INTERNAL_KEY"];
 const MISSING_ENV = REQUIRED_ENV.filter((k) => !process.env[k]);
-
-const TEST_PREFIX = `test-int-${Date.now()}`;
 
 describe.skipIf(MISSING_ENV.length > 0)("infer.sh integration — openrouter REST", () => {
   if (MISSING_ENV.length > 0) return;
