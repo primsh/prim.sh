@@ -289,3 +289,61 @@ export function withPackage(prims: Primitive[], root: string): Primitive[] {
   const packagesDir = join(root, "packages");
   return prims.filter((p) => existsSync(join(packagesDir, p.id)));
 }
+
+// ── Provider Registry ─────────────────────────────────────────────────────
+
+export type ProviderLayer = "s3" | "rest" | "graphql" | "sdk";
+export type ProviderAuthType = "aws-sigv4" | "bearer" | "api-key" | "basic" | "custom";
+
+export interface ProviderAuth {
+  type: ProviderAuthType;
+  env: Record<string, string>; // role → env var name (e.g., { api_key: "TAVILY_API_KEY" })
+  extra_env?: Record<string, string>;
+  header?: string;
+}
+
+export interface ProviderHealthCheck {
+  method: string;
+  url: string;
+  body?: string;
+  expect: number;
+}
+
+export interface ProviderIntegration {
+  setup?: string;
+  teardown?: string;
+  crud: string; // template name: s3-object-crud, rest-search, rest-list, rest-health
+}
+
+export interface ProviderRegistryEntry {
+  display_name: string;
+  url: string;
+  docs: string;
+  layer: ProviderLayer;
+  category: string;
+  auth: ProviderAuth;
+  base_url?: string;
+  health_check?: ProviderHealthCheck;
+  integration?: ProviderIntegration;
+}
+
+export type ProviderRegistry = Record<string, ProviderRegistryEntry>;
+
+let _providerRegistryCache: ProviderRegistry | null = null;
+
+export function loadProviders(root?: string): ProviderRegistry {
+  if (_providerRegistryCache) return _providerRegistryCache;
+  const ROOT = root ?? resolve(new URL("../..", import.meta.url).pathname);
+  const yamlPath = join(ROOT, "providers.yaml");
+  if (!existsSync(yamlPath)) return {};
+  const data = parseYaml(readFileSync(yamlPath, "utf8")) as ProviderRegistry;
+  _providerRegistryCache = data;
+  return data;
+}
+
+/** Get all env var names for a provider (auth.env + auth.extra_env values). */
+export function providerEnvVars(entry: ProviderRegistryEntry): string[] {
+  const vars = Object.values(entry.auth.env);
+  if (entry.auth.extra_env) vars.push(...Object.values(entry.auth.extra_env));
+  return vars;
+}

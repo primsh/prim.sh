@@ -1,0 +1,226 @@
+# providers.yaml — Single source of truth for external provider metadata.
+# Each prim.yaml providers[].name references a key here.
+# Used by: gen-tests (integration test templates), create-prim (wizard), gen-deploy-smoke.
+
+cloudflare-r2:
+  display_name: Cloudflare R2
+  url: https://developers.cloudflare.com/r2/
+  docs: https://developers.cloudflare.com/r2/api/s3/api/
+  layer: s3
+  category: storage
+  auth:
+    type: aws-sigv4
+    env:
+      access_key: R2_ACCESS_KEY_ID
+      secret_key: R2_SECRET_ACCESS_KEY
+      account_id: CLOUDFLARE_ACCOUNT_ID
+    extra_env:
+      api_token: CLOUDFLARE_API_TOKEN
+  health_check:
+    method: HEAD
+    url: "https://{account_id}.r2.cloudflarestorage.com"
+    expect: 200
+  integration:
+    setup: cf-api-create-bucket
+    teardown: cf-api-delete-bucket
+    crud: s3-object-crud
+
+cloudflare:
+  display_name: Cloudflare
+  url: https://developers.cloudflare.com/api/
+  docs: https://developers.cloudflare.com/api/operations/zones-get
+  layer: rest
+  category: dns
+  auth:
+    type: bearer
+    env:
+      api_token: CLOUDFLARE_API_TOKEN
+      zone_id: CLOUDFLARE_ZONE_ID
+  base_url: https://api.cloudflare.com/client/v4
+  health_check:
+    method: GET
+    url: "https://api.cloudflare.com/client/v4/zones/{zone_id}"
+    expect: 200
+  integration:
+    crud: rest-list
+
+namesilo:
+  display_name: NameSilo
+  url: https://www.namesilo.com/
+  docs: https://www.namesilo.com/api-reference
+  layer: rest
+  category: domains
+  auth:
+    type: api-key
+    env:
+      api_key: NAMESILO_API_KEY
+  base_url: https://www.namesilo.com/api
+  health_check:
+    method: GET
+    url: "https://www.namesilo.com/api/listDomains?version=1&type=xml&key={api_key}"
+    expect: 200
+  integration:
+    crud: rest-health
+
+tavily:
+  display_name: Tavily
+  url: https://tavily.com/
+  docs: https://docs.tavily.com/documentation/api-reference/search
+  layer: rest
+  category: search
+  auth:
+    type: api-key
+    env:
+      api_key: TAVILY_API_KEY
+  base_url: https://api.tavily.com
+  health_check:
+    method: POST
+    url: https://api.tavily.com/search
+    body: '{"api_key": "{api_key}", "query": "test", "max_results": 1}'
+    expect: 200
+  integration:
+    crud: rest-search
+
+digitalocean:
+  display_name: DigitalOcean
+  url: https://www.digitalocean.com/
+  docs: https://docs.digitalocean.com/reference/api/api-reference/
+  layer: rest
+  category: compute
+  auth:
+    type: bearer
+    env:
+      api_token: DO_API_TOKEN
+  base_url: https://api.digitalocean.com/v2
+  health_check:
+    method: GET
+    url: https://api.digitalocean.com/v2/account
+    expect: 200
+  integration:
+    crud: rest-list
+
+stalwart:
+  display_name: Stalwart Mail Server
+  url: https://stalw.art/
+  docs: https://stalw.art/docs/api/management/overview
+  layer: rest
+  category: email
+  auth:
+    type: basic
+    env:
+      url: STALWART_URL
+      api_key: STALWART_API_KEY
+  health_check:
+    method: GET
+    url: "{url}/api/healthz"
+    expect: 200
+  integration:
+    crud: rest-health
+
+openrouter:
+  display_name: OpenRouter
+  url: https://openrouter.ai/
+  docs: https://openrouter.ai/docs/api-reference/overview
+  layer: rest
+  category: inference
+  auth:
+    type: bearer
+    env:
+      api_key: OPENROUTER_API_KEY
+  base_url: https://openrouter.ai/api/v1
+  health_check:
+    method: GET
+    url: https://openrouter.ai/api/v1/models
+    expect: 200
+  integration:
+    crud: rest-health
+
+google-gemini:
+  display_name: Google Gemini
+  url: https://ai.google.dev/
+  docs: https://ai.google.dev/gemini-api/docs/text-generation
+  layer: rest
+  category: inference
+  auth:
+    type: api-key
+    env:
+      api_key: GEMINI_API_KEY
+  base_url: https://generativelanguage.googleapis.com/v1beta
+  health_check:
+    method: GET
+    url: "https://generativelanguage.googleapis.com/v1beta/models?key={api_key}"
+    expect: 200
+  integration:
+    crud: rest-health
+
+replicate:
+  display_name: Replicate
+  url: https://replicate.com/
+  docs: https://replicate.com/docs/reference/http
+  layer: rest
+  category: inference
+  auth:
+    type: bearer
+    env:
+      api_token: REPLICATE_API_KEY
+  base_url: https://api.replicate.com/v1
+  health_check:
+    method: GET
+    url: https://api.replicate.com/v1/models
+    expect: 200
+  integration:
+    crud: rest-health
+
+qdrant:
+  display_name: Qdrant
+  url: https://qdrant.tech/
+  docs: https://qdrant.tech/documentation/interfaces/
+  layer: rest
+  category: vector-db
+  auth:
+    type: api-key
+    env:
+      url: QDRANT_URL
+      api_key: QDRANT_API_KEY
+  health_check:
+    method: GET
+    url: "{url}/collections"
+    expect: 200
+  integration:
+    crud: rest-health
+
+viem:
+  display_name: Viem (Base RPC)
+  url: https://viem.sh/
+  docs: https://viem.sh/docs/getting-started
+  layer: sdk
+  category: blockchain
+  auth:
+    type: custom
+    env:
+      rpc_url: BASE_RPC_URL
+  health_check:
+    method: POST
+    url: "{rpc_url}"
+    body: '{"jsonrpc":"2.0","method":"eth_blockNumber","params":[],"id":1}'
+    expect: 200
+  integration:
+    crud: rest-health
+
+trackingmore:
+  display_name: TrackingMore
+  url: https://www.trackingmore.com/
+  docs: https://www.trackingmore.com/docs/trackingmore/d5o23goan87lo-getting-started
+  layer: rest
+  category: logistics
+  auth:
+    type: api-key
+    env:
+      api_key: TRACKINGMORE_API_KEY
+  base_url: https://api.trackingmore.com/v4
+  health_check:
+    method: GET
+    url: https://api.trackingmore.com/v4/couriers/all
+    expect: 200
+  integration:
+    crud: rest-health

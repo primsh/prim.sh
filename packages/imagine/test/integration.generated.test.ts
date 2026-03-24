@@ -7,24 +7,26 @@
  * Real google-gemini API calls. No x402, no SQLite.
  * Auto-skips when provider credentials are missing.
  *
- * Requires: GEMINI_API_KEY, WALLET_INTERNAL_URL
+ * Requires: GEMINI_API_KEY
+ * Docs: https://ai.google.dev/gemini-api/docs/text-generation
  */
 import { describe, expect, it } from "vitest";
 
-const REQUIRED_ENV = ["GEMINI_API_KEY", "WALLET_INTERNAL_URL"];
+const REQUIRED_ENV = ["GEMINI_API_KEY"];
 const MISSING_ENV = REQUIRED_ENV.filter((k) => !process.env[k]);
 
-describe.skipIf(MISSING_ENV.length > 0)("imagine.sh integration — google-gemini REST", () => {
+describe.skipIf(MISSING_ENV.length > 0)("imagine.sh integration — google-gemini", () => {
   if (MISSING_ENV.length > 0) return;
 
-  const apiKey = process.env.GEMINI_API_KEY!;
-
-  it("provider API key is valid (non-empty)", () => {
-    expect(apiKey.length).toBeGreaterThan(0);
+  it("health check — GET Google Gemini", async () => {
+    const base = "https://generativelanguage.googleapis.com/v1beta/models?key=";
+    const endpoint = `${base}${process.env.GEMINI_API_KEY}`;
+    const res = await fetch(endpoint, {
+      method: "GET",
+      headers: {
+        "X-Api-Key": process.env.GEMINI_API_KEY!,
+      },
+    });
+    expect(res.status).toBe(200);
   });
-
-  // TODO: add provider-specific integration tests
-  // Provider: google-gemini
-  // Docs: https://ai.google.dev/
-  // Env: GEMINI_API_KEY
 });
