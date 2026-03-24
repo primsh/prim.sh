@@ -316,7 +316,7 @@ tools:
 
 # spawn.prim.sh
 
-VPS provisioning for agents. Create, manage, and destroy virtual machines without a cloud account. Backed by Hetzner. Payment via x402 (deposit model).
+VPS provisioning for agents. Create, manage, and destroy virtual machines without a cloud account. Backed by DigitalOcean. Payment via x402 (deposit model).
 
 ## When to use
 
@@ -428,7 +428,7 @@ Poll \`spawn_server_get\` and check \`status\` until you reach your target state
 - \`insufficient_deposit\` → Not enough USDC in wallet to cover the deposit. Fund wallet and retry.
 - \`not_found\` (404) → Server or SSH key ID does not exist. Verify the ID.
 - \`forbidden\` (403) → Server or key belongs to a different wallet.
-- \`provider_error\` (502) → Hetzner API error. Retry after a short wait. If persistent, check \`spawn_server_list\` — the server may have been created despite the error.
+- \`provider_error\` (502) → DigitalOcean API error. Retry after a short wait. If persistent, check \`spawn_server_list\` — the server may have been created despite the error.
 - \`not_implemented\` → Feature not yet available.
 
 ## Gotchas

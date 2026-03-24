@@ -23,7 +23,7 @@ This paper describes the architecture, the factory system that enables code cont
 
 Every cloud service assumes a human customer:
 
-- **Compute** (AWS, Hetzner, DigitalOcean) — requires account creation, billing setup, SSH key management via web dashboard
+- **Compute** (AWS, DigitalOcean) — requires account creation, billing setup, SSH key management via web dashboard
 - **Email** (SendGrid, Postmark, Gmail) — requires domain verification, identity confirmation, deliverability reputation built over weeks
 - **Storage** (S3, R2, GCS) — requires account, billing, access key generation via console
 - **DNS** (Cloudflare, Route53) — requires account, domain transfer, nameserver configuration
@@ -73,7 +73,7 @@ Prim is not a platform. It is a collection of independent infrastructure service
 
 1. **Each primitive is independent.** No shared database. No coupling between primitives. Use one or all of them.
 2. **x402 payment is the auth layer.** Every endpoint returns 402 → agent pays → gets resource. The wallet address is the identity.
-3. **Each primitive wraps existing services.** email.sh wraps Stalwart. spawn.sh wraps Hetzner/DigitalOcean. store.sh wraps Cloudflare R2. Prim is a shell — thin API layers that make human-gated services accessible to agents.
+3. **Each primitive wraps existing services.** email.sh wraps Stalwart. spawn.sh wraps DigitalOcean. store.sh wraps Cloudflare R2. Prim is a shell — thin API layers that make human-gated services accessible to agents.
 4. **Pay per call.** Micropayments via x402. Every request is priced individually. No subscriptions, no metering, no minimums.
 
 ### 2.3 Multi-interface access
@@ -316,7 +316,7 @@ Every paid prim call generates x402 revenue (USDC on Base). Pricing is per-call,
 Each primitive wraps an external provider. Provider costs are the primary expense:
 
 - **search.sh** — Tavily API ($0.001/query at scale)
-- **spawn.sh** — Hetzner/DigitalOcean API (pass-through VM costs)
+- **spawn.sh** — DigitalOcean API (pass-through VM costs)
 - **store.sh** — Cloudflare R2 (pass-through storage costs)
 - **email.sh** — Stalwart (self-hosted, compute cost only)
 

@@ -91,13 +91,13 @@ Social: hive, ads
 - **Each primitive is independent.** No shared DB. Shared `@primsh/x402-middleware` package only.
 - **wallet.sh** is the keystone — encrypted keystore, execution journal, circuit breaker.
 - **email.sh** wraps Stalwart Mail Server (Rust, JMAP + REST API).
-- **spawn.sh** wraps Hetzner Cloud API.
+- **spawn.sh** wraps DigitalOcean Cloud API.
 
 ## Build Priority
 
 1. wallet.sh — Crypto wallets + x402 integration (foundation for everything)
 2. email.sh — Email (wraps Stalwart, receive-only first)
-3. spawn.sh — VPS provisioning (wraps Hetzner)
+3. spawn.sh — VPS provisioning (wraps DigitalOcean)
 4. llms.txt — Machine-readable primitive catalog
 
 ## Code Conventions

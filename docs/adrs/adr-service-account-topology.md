@@ -7,7 +7,7 @@
 
 ## Context
 
-Prim operates both its own infrastructure and a platform that provisions resources on behalf of customers. This applies across every provider where prim manages accounts — Cloudflare, AWS, Hetzner, etc. Mixing prim-owned and customer-provisioned resources in a single account creates problems:
+Prim operates both its own infrastructure and a platform that provisions resources on behalf of customers. This applies across every provider where prim manages accounts — Cloudflare, AWS, DigitalOcean, etc. Mixing prim-owned and customer-provisioned resources in a single account creates problems:
 
 1. **Blast radius.** A bad API call or billing issue on customer-provisioned resources could take down prim's own services.
 2. **Token scoping.** Platform automation needs broad permissions to manage arbitrary customer resources. Those tokens shouldn't have access to prim's core infrastructure.
@@ -46,7 +46,7 @@ If prim owns it → internal. If prim manages it on behalf of someone else → e
 | Provider | Internal | External |
 |----------|----------|----------|
 | **Cloudflare** | prim.sh zone, R2 buckets, Workers | Customer domains, per-customer Workers |
-| **Hetzner** | VPS running prim services | Servers provisioned via spawn.sh |
+| **DigitalOcean** | VPS running prim services | Servers provisioned via spawn.sh |
 | **AWS** | S3 for dl.prim.sh, SES for prim email | Customer S3 buckets via store.sh |
 
 ### API tokens / credentials

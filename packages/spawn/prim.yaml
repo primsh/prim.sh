@@ -22,11 +22,6 @@ providers:
     status: active
     default: true
     url: https://www.digitalocean.com/
-  - name: hetzner
-    env: [HETZNER_API_KEY]
-    status: active
-    default: false
-    url: https://www.hetzner.com/cloud/
 
 interfaces:
   mcp: true
