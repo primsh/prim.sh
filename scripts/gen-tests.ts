@@ -1487,7 +1487,7 @@ function generateE2eLocalFile(ctx: GenContext): string | null {
   lines.push(`import { spawn } from "node:child_process";`);
   lines.push(`import type { ChildProcess } from "node:child_process";`);
   if (!isFree) {
-    lines.push(`import { createPrimFetch } from "@primsh/x402-client";`);
+    lines.push(`import { createPrimFetch } from "../../packages/x402-client/src/index.ts";`);
   }
   lines.push("");
   lines.push(`const PORT = ${port};`);
@@ -1515,10 +1515,22 @@ function generateE2eLocalFile(ctx: GenContext): string | null {
   lines.push("let proc: ChildProcess;");
   lines.push("");
   lines.push("async function start(): Promise<void> {");
+  lines.push(`  const { mkdirSync } = await import("node:fs");`);
+  lines.push(`  const tmpHome = \`/tmp/prim-e2e-${p.id}-\${Date.now()}\`;`);
+  lines.push(`  mkdirSync(tmpHome, { recursive: true });`);
+  lines.push(`  mkdirSync(\`\${tmpHome}/data\`, { recursive: true });`);
   lines.push(`  proc = spawn("bun", ["run", "packages/${p.id}/src/index.ts"], {`);
-  lines.push(`    env: { ...process.env, ${p.id.toUpperCase()}_PORT: String(PORT) },`);
+  lines.push("    env: {");
+  lines.push("      ...process.env,");
+  lines.push("      PORT: String(PORT),");
+  lines.push("      BUN_PORT: String(PORT),");
+  lines.push("      PRIM_HOME: tmpHome,");
+  lines.push("      PRIM_DATA_DIR: `${tmpHome}/data`,");
+  lines.push("    },");
   lines.push(`    stdio: ["ignore", "pipe", "pipe"],`);
   lines.push("  });");
+  lines.push("  let stderr = \"\";");
+  lines.push("  proc.stderr?.on(\"data\", (d: Buffer) => { stderr += d.toString(); });");
   lines.push("  for (let i = 0; i < 30; i++) {");
   lines.push("    try {");
   lines.push(`      const res = await fetch(\`\${URL}/\`);`);
@@ -1526,6 +1538,7 @@ function generateE2eLocalFile(ctx: GenContext): string | null {
   lines.push(`    } catch { /* not ready */ }`);
   lines.push("    await new Promise((r) => setTimeout(r, 500));");
   lines.push("  }");
+  lines.push("  if (stderr) console.error(\"Service stderr:\", stderr.slice(0, 500));");
   lines.push(`  throw new Error("${p.name} failed to start within 15s");`);
   lines.push("}");
   lines.push("");
