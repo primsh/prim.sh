@@ -85,6 +85,14 @@ Social: hive, ads
 - **vitest** — Test runner.
 - **x402** — Payment protocol (Coinbase). USDC on Base chain. Sub-cent gas.
 
+## Running services locally
+
+Prim services use Bun.serve via Hono's default export. To control the port: `BUN_PORT=3099 bun run packages/store/src/index.ts`. The x402 middleware's access log needs a writable directory: `PRIM_DATA_DIR=/tmp/prim-test bun run packages/store/src/index.ts`. Both `PRIM_DATA_DIR` and `BUN_PORT` must be set for local/e2e testing.
+
+## Provider Registry
+
+`providers.yaml` at repo root is the SOT for external provider metadata (auth types, env var names, API docs, health checks). Each `prim.yaml` `providers[].name` references a key in `providers.yaml`. Generators read the registry — never guess env var roles by string matching.
+
 ## Key Architecture Decisions
 
 - **x402 payment** is the auth layer. Every endpoint returns 402 → agent pays → gets resource.
