@@ -56,7 +56,7 @@
     "clean:worktrees": "git worktree prune && git worktree list"
   },
   "devDependencies": {
-    "@biomejs/biome": "^2.4.8",
+    "@biomejs/biome": "^2.4.10",
     "@coinbase/cdp-sdk": "^1.45.0",
     "@resvg/resvg-js": "^2.6.2",
     "@types/node": "^25.5.0",
