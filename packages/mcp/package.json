@@ -39,10 +39,10 @@
     "check": "pnpm lint && pnpm typecheck && pnpm test"
   },
   "dependencies": {
-    "@modelcontextprotocol/sdk": "^1.0.0",
-    "@x402/core": "^2.7.0",
-    "@x402/evm": "^2.7.0",
-    "@x402/hono": "^2.7.0",
+    "@modelcontextprotocol/sdk": "^1.28.0",
+    "@x402/core": "^2.8.0",
+    "@x402/evm": "^2.8.0",
+    "@x402/hono": "^2.8.0",
     "viem": "^2.47.6"
   },
   "devDependencies": {
