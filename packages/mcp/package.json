@@ -39,16 +39,16 @@
     "check": "pnpm lint && pnpm typecheck && pnpm test"
   },
   "dependencies": {
-    "@modelcontextprotocol/sdk": "^1.0.0",
-    "@x402/core": "^2.7.0",
-    "@x402/evm": "^2.7.0",
-    "@x402/hono": "^2.7.0",
-    "viem": "^2.47.6"
+    "@modelcontextprotocol/sdk": "^1.29.0",
+    "@x402/core": "^2.9.0",
+    "@x402/evm": "^2.9.0",
+    "@x402/hono": "^2.9.0",
+    "viem": "^2.47.10"
   },
   "devDependencies": {
     "@primsh/keystore": "workspace:*",
     "@primsh/x402-client": "workspace:*",
-    "@types/node": "^25.5.0",
+    "@types/node": "^25.5.2",
     "typescript": "^5.6.3",
     "vitest": "^1.6.1"
   }
