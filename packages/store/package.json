@@ -33,7 +33,7 @@
   "dependencies": {
     "@primsh/x402-middleware": "workspace:*",
     "aws4fetch": "^1.0.20",
-    "hono": "^4.12.9"
+    "hono": "^4.12.12"
   },
   "devDependencies": {
     "@x402/core": "^2.7.0",
