@@ -22,16 +22,16 @@
     "check": "pnpm lint && pnpm typecheck && pnpm test"
   },
   "dependencies": {
-    "@ai-sdk/openai-compatible": "^2.0.37",
+    "@ai-sdk/openai-compatible": "^2.0.41",
     "@ai-sdk/provider": "^3.0.8",
-    "@ai-sdk/provider-utils": "^4.0.21",
+    "@ai-sdk/provider-utils": "^4.0.23",
     "@primsh/wallet": "workspace:*",
     "@primsh/x402-client": "workspace:*",
     "@primsh/x402-middleware": "workspace:*",
     "@simplewebauthn/server": "^13.3.0",
-    "ai": "^6.0.135",
-    "hono": "^4.12.9",
-    "viem": "^2.47.6"
+    "ai": "^6.0.158",
+    "hono": "^4.12.12",
+    "viem": "^2.47.16"
   },
   "devDependencies": {
     "typescript": "^5.6.3",

@@ -32,8 +32,8 @@
   },
   "dependencies": {
     "@primsh/x402-middleware": "workspace:*",
-    "hono": "^4.12.9",
-    "viem": "^2.47.6"
+    "hono": "^4.12.12",
+    "viem": "^2.47.16"
   },
   "devDependencies": {
     "@x402/core": "^2.7.0",
