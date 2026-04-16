@@ -29,7 +29,7 @@
   },
   "dependencies": {
     "@primsh/x402-middleware": "workspace:*",
-    "hono": "^4.12.9"
+    "hono": "^4.12.14"
   },
   "devDependencies": {
     "@x402/core": "^2.7.0",
