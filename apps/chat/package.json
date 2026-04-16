@@ -30,7 +30,7 @@
     "@primsh/x402-middleware": "workspace:*",
     "@simplewebauthn/server": "^13.3.0",
     "ai": "^6.0.135",
-    "hono": "^4.12.9",
+    "hono": "^4.12.14",
     "viem": "^2.47.6"
   },
   "devDependencies": {
