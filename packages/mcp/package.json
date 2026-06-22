@@ -39,11 +39,11 @@
     "check": "pnpm lint && pnpm typecheck && pnpm test"
   },
   "dependencies": {
-    "@modelcontextprotocol/sdk": "^1.0.0",
-    "@x402/core": "^2.7.0",
-    "@x402/evm": "^2.7.0",
-    "@x402/hono": "^2.7.0",
-    "viem": "^2.47.6"
+    "@modelcontextprotocol/sdk": "^1.29.0",
+    "@x402/core": "^2.16.0",
+    "@x402/evm": "^2.16.0",
+    "@x402/hono": "^2.16.0",
+    "viem": "^2.53.1"
   },
   "devDependencies": {
     "@primsh/keystore": "workspace:*",

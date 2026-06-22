@@ -28,7 +28,7 @@
   },
   "dependencies": {
     "@primsh/x402-middleware": "workspace:*",
-    "viem": "^2.47.6"
+    "viem": "^2.53.1"
   },
   "devDependencies": {
     "@types/node": "^25.5.0",
