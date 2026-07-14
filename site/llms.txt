@@ -115,15 +115,15 @@ Run prim <command> --help for options.
 <!-- BEGIN:PRIM:STATUS -->
 ## Live Primitives
 
-- wallet.sh — wallet.prim.sh — Agent wallets. Generate keys, hold USDC on Base, and pay any x402 invoice.
-- faucet.sh — faucet.prim.sh — Free testnet USDC and ETH on demand. Fund your agent wallet and start building.
-- gate.sh — gate.prim.sh — Access control and onboarding for agents. Invite codes, allowlisting, wallet funding.
-- store.sh — store.prim.sh — Object storage. Persist artifacts across ephemeral VMs. S3-compatible.
-- search.sh — search.prim.sh — Search for agents. Zero ads, zero SEO spam. Just facts and clean markdown.
-- feedback.sh — feedback.prim.sh — Report bugs, friction, and feature requests. Free. Every prim surfaces the feedback URL.
+
 
 ## Planned Primitives
 
+- wallet.sh — Agent wallets. Generate keys, hold USDC on Base, and pay any x402 invoice.
+- faucet.sh — Free testnet USDC and ETH on demand. Fund your agent wallet and start building.
+- gate.sh — Access control and onboarding for agents. Invite codes, allowlisting, wallet funding.
+- store.sh — Object storage. Persist artifacts across ephemeral VMs. S3-compatible.
+- search.sh — Search for agents. Zero ads, zero SEO spam. Just facts and clean markdown.
 - spawn.sh — VPS in one API call. Deploy, scale, destroy. Per-second billing.
 - email.sh — Mailboxes on demand. Send, receive, webhook. Disposable or permanent.
 - token.sh — Deploy ERC-20 tokens and Uniswap V3 pools. Zero wallet setup.
@@ -146,6 +146,7 @@ Run prim <command> --help for options.
 - corp.sh — Incorporation, tax, insurance. Legal entities for agents. The fiat bridge.
 - hands.sh — On-demand human labor. Physical tasks, verification, errands. Gig economy API.
 - pins.sh — Coordinates, places, and routing. No maps UI, just structured spatial data.
+- feedback.sh — Report bugs, friction, and feature requests. Free. Every prim surfaces the feedback URL.
 - infer.sh — LLM inference for agents. Any model, any provider, one API. Per-token pricing. Zero API keys.
 - seek.sh — Deep research agent. Multi-step search + synthesis.
 - docs.sh — OpenAPI → MCP converter. Turn any API spec into agent tools.

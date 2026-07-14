@@ -1,6 +1,6 @@
 {
   "version": "1.0.0",
-  "generated": "2026-03-24T18:29:36.679Z",
+  "generated": "2026-07-14T20:27:15.439Z",
   "primitives": [
     {
       "id": "auth",
@@ -141,45 +141,14 @@
       "name": "faucet.sh",
       "endpoint": "faucet.prim.sh",
       "description": "Free testnet USDC and ETH on demand. Fund your agent wallet and start building.",
-      "status": "live",
+      "status": "planned",
       "interfaces": {
         "mcp": true,
         "cli": true,
         "tools": true,
         "rest": true
       },
-      "operations": [
-        {
-          "id": "drip_usdc",
-          "route": "POST /v1/faucet/usdc",
-          "description": "Dispense 10 test USDC on Base Sepolia. Rate limit: once per 2 hours per address.",
-          "price": "free"
-        },
-        {
-          "id": "drip_eth",
-          "route": "POST /v1/faucet/eth",
-          "description": "Dispense 0.01 test ETH on Base Sepolia. Rate limit: once per 1 hour per address.",
-          "price": "free"
-        },
-        {
-          "id": "get_faucet_status",
-          "route": "GET /v1/faucet/status",
-          "description": "Check rate limit status for a wallet address across both faucets.",
-          "price": "$0.00"
-        },
-        {
-          "id": "get_treasury_status",
-          "route": "GET /v1/faucet/treasury",
-          "description": "Check treasury wallet ETH balance and refill status.",
-          "price": "$0.00"
-        },
-        {
-          "id": "refill_treasury",
-          "route": "POST /v1/faucet/refill",
-          "description": "Batch-claim testnet ETH from Coinbase CDP faucet into treasury. Rate limited to once per 10 minutes.",
-          "price": "$0.00"
-        }
-      ],
+      "operations": [],
       "providers": []
     },
     {
@@ -261,33 +230,14 @@
       "name": "search.sh",
       "endpoint": "search.prim.sh",
       "description": "Search for agents. Zero ads, zero SEO spam. Just facts and clean markdown.",
-      "status": "live",
+      "status": "planned",
       "interfaces": {
         "mcp": true,
         "cli": true,
         "tools": true,
         "rest": true
       },
-      "operations": [
-        {
-          "id": "search_web",
-          "route": "POST /v1/search",
-          "description": "Search the web and return ranked results with optional AI-generated answer",
-          "price": "$0.005"
-        },
-        {
-          "id": "search_news",
-          "route": "POST /v1/search/news",
-          "description": "Search for recent news articles, ordered by recency",
-          "price": "$0.005"
-        },
-        {
-          "id": "extract_url",
-          "route": "POST /v1/extract",
-          "description": "Extract readable content from one or more URLs as markdown or plain text",
-          "price": "$0.005"
-        }
-      ],
+      "operations": [],
       "providers": [
         {
           "name": "tavily",
@@ -320,87 +270,14 @@
       "name": "store.sh",
       "endpoint": "store.prim.sh",
       "description": "Object storage. Persist artifacts across ephemeral VMs. S3-compatible.",
-      "status": "live",
+      "status": "planned",
       "interfaces": {
         "mcp": true,
         "cli": true,
         "tools": true,
         "rest": true
       },
-      "operations": [
-        {
-          "id": "create_bucket",
-          "route": "POST /v1/buckets",
-          "description": "Create a new storage bucket",
-          "price": "$0.015/GB/mo"
-        },
-        {
-          "id": "list_buckets",
-          "route": "GET /v1/buckets",
-          "description": "List all buckets owned by the calling wallet",
-          "price": "free"
-        },
-        {
-          "id": "get_bucket",
-          "route": "GET /v1/buckets/:id",
-          "description": "Get details for a single bucket. Caller must own the bucket.",
-          "price": "$0.001"
-        },
-        {
-          "id": "delete_bucket",
-          "route": "DELETE /v1/buckets/:id",
-          "description": "Delete a bucket. Bucket must be empty first.",
-          "price": "$0.001"
-        },
-        {
-          "id": "put_object",
-          "route": "PUT /v1/buckets/:id/objects/:key",
-          "description": "Upload an object. Key may include slashes. Content-Length header required.",
-          "price": "$0.00"
-        },
-        {
-          "id": "list_objects",
-          "route": "GET /v1/buckets/:id/objects",
-          "description": "List objects in a bucket. Cursor-based pagination.",
-          "price": "$0.00"
-        },
-        {
-          "id": "get_object",
-          "route": "GET /v1/buckets/:id/objects/:key",
-          "description": "Download an object. Response body is streamed directly.",
-          "price": "$0.00"
-        },
-        {
-          "id": "delete_object",
-          "route": "DELETE /v1/buckets/:id/objects/:key",
-          "description": "Delete an object from a bucket",
-          "price": "$0.00"
-        },
-        {
-          "id": "get_quota",
-          "route": "GET /v1/buckets/:id/quota",
-          "description": "Get quota and usage for a bucket",
-          "price": "$0.00"
-        },
-        {
-          "id": "set_quota",
-          "route": "PUT /v1/buckets/:id/quota",
-          "description": "Set the storage quota for a bucket. Pass null to reset to default (100 MB).",
-          "price": "$0.00"
-        },
-        {
-          "id": "reconcile_storage",
-          "route": "POST /v1/buckets/:id/quota/reconcile",
-          "description": "Recompute bucket usage by scanning actual R2 storage. Use when usage_bytes appears incorrect.",
-          "price": "$0.00"
-        },
-        {
-          "id": "create_presign",
-          "route": "POST /v1/buckets/:id/presign",
-          "description": "Generate a presigned URL for direct GET or PUT access to an object. GET presign requires object to exist.",
-          "price": "$0.00"
-        }
-      ],
+      "operations": [],
       "providers": [
         {
           "name": "cloudflare-r2",
@@ -483,87 +360,14 @@
       "name": "wallet.sh",
       "endpoint": "wallet.prim.sh",
       "description": "Agent wallets. Generate keys, hold USDC on Base, and pay any x402 invoice.",
-      "status": "live",
+      "status": "planned",
       "interfaces": {
         "mcp": true,
         "cli": true,
         "tools": true,
         "rest": true
       },
-      "operations": [
-        {
-          "id": "register_wallet",
-          "route": "POST /v1/wallets",
-          "description": "Register a wallet via EIP-191 signature",
-          "price": "free"
-        },
-        {
-          "id": "list_wallets",
-          "route": "GET /v1/wallets",
-          "description": "List registered wallets owned by the calling wallet",
-          "price": "$0.001"
-        },
-        {
-          "id": "get_wallet",
-          "route": "GET /v1/wallets/:address",
-          "description": "Get full wallet details including balance, policy, and status",
-          "price": "$0.005"
-        },
-        {
-          "id": "deactivate_wallet",
-          "route": "DELETE /v1/wallets/:address",
-          "description": "Permanently deactivate a wallet. Irreversible. Pending fund requests cancelled.",
-          "price": "$0.00"
-        },
-        {
-          "id": "create_fund_request",
-          "route": "POST /v1/wallets/:address/fund-request",
-          "description": "Request USDC funding for a wallet. A human operator can approve or deny.",
-          "price": "$0.00"
-        },
-        {
-          "id": "list_fund_requests",
-          "route": "GET /v1/wallets/:address/fund-requests",
-          "description": "List all fund requests for a wallet",
-          "price": "$0.00"
-        },
-        {
-          "id": "approve_fund_request",
-          "route": "POST /v1/fund-requests/:id/approve",
-          "description": "Approve a pending fund request. Returns the address to send USDC to.",
-          "price": "$0.00"
-        },
-        {
-          "id": "deny_fund_request",
-          "route": "POST /v1/fund-requests/:id/deny",
-          "description": "Deny a pending fund request",
-          "price": "$0.00"
-        },
-        {
-          "id": "get_policy",
-          "route": "GET /v1/wallets/:address/policy",
-          "description": "Get the spending policy for a wallet",
-          "price": "$0.00"
-        },
-        {
-          "id": "update_policy",
-          "route": "PUT /v1/wallets/:address/policy",
-          "description": "Update spending policy for a wallet. All fields optional. Pass null to remove a limit.",
-          "price": "$0.00"
-        },
-        {
-          "id": "pause_wallet",
-          "route": "POST /v1/wallets/:address/pause",
-          "description": "Pause operations for a wallet. Temporarily halts spending without deactivating.",
-          "price": "$0.00"
-        },
-        {
-          "id": "resume_wallet",
-          "route": "POST /v1/wallets/:address/resume",
-          "description": "Resume operations for a paused wallet",
-          "price": "$0.00"
-        }
-      ],
+      "operations": [],
       "providers": []
     },
     {

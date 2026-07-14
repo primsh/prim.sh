@@ -63,10 +63,10 @@ No API keys. No signup. The wallet *is* the identity.
 <!-- BEGIN:PRIM:PRIMS -->
 | Primitive | What it does | Status |
 |-----------|-------------|--------|
-| [wallet.sh](https://wallet.prim.sh) | Agent wallets. Generate keys, hold USDC on Base, and pay any x402 invoice. | Live (mainnet) |
-| [faucet.sh](https://faucet.prim.sh) | Free testnet USDC and ETH on demand. Fund your agent wallet and start building. | Live (testnet) |
-| [store.sh](https://store.prim.sh) | Object storage. Persist artifacts across ephemeral VMs. S3-compatible. | Live (mainnet) |
-| [search.sh](https://search.prim.sh) | Search for agents. Zero ads, zero SEO spam. Just facts and clean markdown. | Live (mainnet) |
+| [wallet.sh](https://wallet.prim.sh) | Agent wallets. Generate keys, hold USDC on Base, and pay any x402 invoice. | Hold |
+| [faucet.sh](https://faucet.prim.sh) | Free testnet USDC and ETH on demand. Fund your agent wallet and start building. | Hold |
+| [store.sh](https://store.prim.sh) | Object storage. Persist artifacts across ephemeral VMs. S3-compatible. | Hold |
+| [search.sh](https://search.prim.sh) | Search for agents. Zero ads, zero SEO spam. Just facts and clean markdown. | Hold |
 | [spawn.sh](https://spawn.prim.sh) | VPS in one API call. Deploy, scale, destroy. Per-second billing. | Hold |
 | [email.sh](https://email.prim.sh) | Mailboxes on demand. Send, receive, webhook. Disposable or permanent. | Hold |
 | [token.sh](https://token.prim.sh) | Deploy ERC-20 tokens and Uniswap V3 pools. Zero wallet setup. | Hold |
