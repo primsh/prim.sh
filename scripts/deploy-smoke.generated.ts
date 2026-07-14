@@ -19,41 +19,7 @@ interface SmokeTarget {
   paidRoute: { method: string; path: string } | null;
 }
 
-const targets: SmokeTarget[] = [
-  {
-    "id": "wallet",
-    "name": "wallet.sh",
-    "endpoint": "wallet.prim.sh",
-    "paidRoute": {
-      "method": "POST",
-      "path": "/v1/wallets"
-    }
-  },
-  {
-    "id": "gate",
-    "name": "gate.sh",
-    "endpoint": "gate.prim.sh",
-    "paidRoute": null
-  },
-  {
-    "id": "store",
-    "name": "store.sh",
-    "endpoint": "store.prim.sh",
-    "paidRoute": {
-      "method": "POST",
-      "path": "/v1/buckets"
-    }
-  },
-  {
-    "id": "search",
-    "name": "search.sh",
-    "endpoint": "search.prim.sh",
-    "paidRoute": {
-      "method": "POST",
-      "path": "/v1/search"
-    }
-  }
-];
+const targets: SmokeTarget[] = [];
 
 let passed = 0;
 let failed = 0;

@@ -19,7 +19,7 @@ Fixed infrastructure ($24.49/mo) is absorbed by Primitive Shell.
 
 ## Per-primitive costs
 
-### wallet.sh (mainnet)
+### wallet.sh (hold)
 
 | Operation | Price | Provider Cost | Type | Verified |
 |-----------|-------|---------------|------|----------|
@@ -27,20 +27,20 @@ Fixed infrastructure ($24.49/mo) is absorbed by Primitive Shell.
 | API call | $0.001 | $0.00 | static | 2026-02 |
 | Policy update | $0.005 | $0.00 | static | 2026-02 |
 
-### faucet.sh (testnet)
+### faucet.sh (hold)
 
 | Operation | Price | Provider Cost | Type | Verified |
 |-----------|-------|---------------|------|----------|
 | USDC drip | free | $0.00 | static | 2026-02 |
 | ETH drip | free | $0.00 | static | 2026-02 |
 
-### gate.sh (mainnet)
+### gate.sh (hold)
 
 | Operation | Price | Provider Cost | Type | Verified |
 |-----------|-------|---------------|------|----------|
 | Redeem invite | free | $0.00 | static | 2026-02 |
 
-### store.sh (mainnet)
+### store.sh (hold)
 
 | Operation | Price | Provider Cost | Type | Verified |
 |-----------|-------|---------------|------|----------|
@@ -49,7 +49,7 @@ Fixed infrastructure ($24.49/mo) is absorbed by Primitive Shell.
 | Download | $0.001 | $0.00 | static | 2026-02 |
 | API calls | $0.001 | $0.00 | static | 2026-02 |
 
-### search.sh (mainnet)
+### search.sh (hold)
 
 | Operation | Price | Provider Cost | Type | Verified |
 |-----------|-------|---------------|------|----------|
@@ -122,7 +122,7 @@ Fixed infrastructure ($24.49/mo) is absorbed by Primitive Shell.
 | TTS | $0.005/min | $0.003/min | static | 2026-02 |
 | Call recording | $0.002/min | — | static | — |
 
-### feedback.sh (testnet)
+### feedback.sh (hold)
 
 | Operation | Price | Provider Cost | Type | Verified |
 |-----------|-------|---------------|------|----------|

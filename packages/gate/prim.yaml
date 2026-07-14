@@ -1,7 +1,7 @@
 id: gate
 name: gate.sh
 endpoint: gate.prim.sh
-status: mainnet
+status: hold
 type: access
 category: access
 card_class: pgate

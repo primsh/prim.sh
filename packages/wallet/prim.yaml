@@ -1,7 +1,7 @@
 id: wallet
 name: wallet.sh
 endpoint: wallet.prim.sh
-status: mainnet
+status: hold
 type: crypto
 category: identity
 card_class: p20

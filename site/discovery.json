@@ -3,54 +3,7 @@
   "description": "Zero signup. One payment token. Infinite primitives.",
   "version": "beta",
   "network": "eip155:84532",
-  "primitives": [
-    {
-      "id": "wallet",
-      "name": "wallet.sh",
-      "status": "mainnet",
-      "endpoint": "https://wallet.prim.sh",
-      "description": "Agent wallets. Generate keys, hold USDC on Base, and pay any x402 invoice.",
-      "llms_txt": "https://prim.sh/wallet/llms.txt"
-    },
-    {
-      "id": "faucet",
-      "name": "faucet.sh",
-      "status": "testnet",
-      "endpoint": "https://faucet.prim.sh",
-      "description": "Free testnet USDC and ETH on demand. Fund your agent wallet and start building.",
-      "llms_txt": "https://prim.sh/faucet/llms.txt"
-    },
-    {
-      "id": "gate",
-      "name": "gate.sh",
-      "status": "mainnet",
-      "endpoint": "https://gate.prim.sh",
-      "description": "Access control and onboarding for agents. Invite codes, allowlisting, wallet funding."
-    },
-    {
-      "id": "store",
-      "name": "store.sh",
-      "status": "mainnet",
-      "endpoint": "https://store.prim.sh",
-      "description": "Object storage. Persist artifacts across ephemeral VMs. S3-compatible.",
-      "llms_txt": "https://prim.sh/store/llms.txt"
-    },
-    {
-      "id": "search",
-      "name": "search.sh",
-      "status": "mainnet",
-      "endpoint": "https://search.prim.sh",
-      "description": "Search for agents. Zero ads, zero SEO spam. Just facts and clean markdown.",
-      "llms_txt": "https://prim.sh/search/llms.txt"
-    },
-    {
-      "id": "feedback",
-      "name": "feedback.sh",
-      "status": "testnet",
-      "endpoint": "https://feedback.prim.sh",
-      "description": "Report bugs, friction, and feature requests. Free. Every prim surfaces the feedback URL."
-    }
-  ],
+  "primitives": [],
   "discovery": {
     "llms_txt": "https://prim.sh/llms.txt",
     "pricing": "https://prim.sh/pricing.json",
